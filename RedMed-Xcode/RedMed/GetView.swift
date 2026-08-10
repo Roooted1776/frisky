@@ -1,9 +1,28 @@
 import SwiftUI
 
+/// Persists owner acceptance of the Get / band-setup gate. NFC tab stays hidden until true.
+final class NFCAccessGate: ObservableObject {
+    static let shared = NFCAccessGate()
+    private static let defaultsKey = "redmed.nfcSetupAccepted"
+
+    @Published var isAccepted: Bool {
+        didSet { UserDefaults.standard.set(isAccepted, forKey: Self.defaultsKey) }
+    }
+
+    private init() {
+        isAccepted = UserDefaults.standard.bool(forKey: Self.defaultsKey)
+    }
+
+    func accept() {
+        isAccepted = true
+    }
+}
+
 /// SwiftUI port of repo-root `get.html` — “Set up your RedMed band”.
+/// Must Accept here before the NFC tab / page becomes visible.
 struct GetView: View {
-    /// In-app: jump to the NFC tab to write the band. Web `get.html` opened App Store.
-    var onSetUpBand: (() -> Void)? = nil
+    /// Called after Accept (e.g. dismiss sheet and open NFC).
+    var onAccept: (() -> Void)? = nil
 
     private let cardBg = Color.white.opacity(0.05)
     private let cardBorder = Color.white.opacity(0.08)
@@ -58,8 +77,11 @@ struct GetView: View {
                 )
                 .padding(.bottom, 20)
 
-            Button(action: { onSetUpBand?() }) {
-                Text("Set up your band")
+            Button {
+                NFCAccessGate.shared.accept()
+                onAccept?()
+            } label: {
+                Text("Accept")
                     .font(.system(size: 16, weight: .bold))
                     .kerning(-0.2)
                     .foregroundColor(.white)
@@ -81,7 +103,7 @@ struct GetView: View {
             stepsList
                 .padding(.top, 20)
 
-            Text("You’re on iPhone — fill RedMed, then write the band on the NFC tab.")
+            Text("Accept to unlock the NFC page and program your band on this iPhone.")
                 .font(.system(size: 12))
                 .foregroundColor(dim)
                 .multilineTextAlignment(.center)
