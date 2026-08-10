@@ -41,10 +41,22 @@ enum EmergencyNumber {
     static let fallback = "112"
 
     /// The number to dial and to show in copy, for this device's region.
-    static var current: String {
+    ///
+    /// Resolved once per process, deliberately. Some callers are SwiftUI view
+    /// bodies that re-evaluate on every render; others are the `let` catalogues
+    /// in `AidTopicCatalog` and `aidPanes`, which Swift initialises lazily and
+    /// exactly once. If this recomputed, changing the device region mid-session
+    /// would update the first group and not the second, and a care step reading
+    /// "Call 911" could sit directly above a button reading "Call 999".
+    ///
+    /// Two numbers on one screen is the worst possible failure for this app, so
+    /// the whole process agrees on one value and a region change takes effect on
+    /// next launch. Region is a Settings choice, not something that moves on its
+    /// own, so that is a cheap price.
+    static let current: String = {
         guard let region = Locale.current.region?.identifier else { return fallback }
         return byRegion[region] ?? fallback
-    }
+    }()
 
     /// `tel://` URL for `current`, ready for `UIApplication.shared.open`.
     static var dialURL: URL? {
