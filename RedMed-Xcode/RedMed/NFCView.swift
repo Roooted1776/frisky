@@ -123,7 +123,12 @@ struct NFCView: View {
                     Text("NFC Bracelet").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedDark)
                 }
             }
-            .sheet(isPresented: $showPublicCard) { PublicCardView(profile: profile) }
+            .fullScreenCover(isPresented: $showPublicCard) {
+                PublicCardView(profile: profile)
+            }
+            .transaction { t in
+                if showPublicCard { t.disablesAnimations = true }
+            }
         }
     }
 

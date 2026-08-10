@@ -35,7 +35,7 @@ struct EmergencyView: View {
                     }
 
                     SecondaryButton("Scan emergency bracelet") { showPublicCard = true }
-                    Text("Tap the band — their browser opens the emergency card.")
+                    Text("Tap the band — instant card: medical ID, 911, roadside aid. NFC setup stays hidden.")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
@@ -134,7 +134,12 @@ struct EmergencyView: View {
                 locationManager.stop()
                 mountSOS = false
             }
-            .sheet(isPresented: $showPublicCard) { PublicCardView(profile: profile) }
+            .fullScreenCover(isPresented: $showPublicCard) {
+                PublicCardView(profile: profile)
+            }
+            .transaction { t in
+                if showPublicCard { t.disablesAnimations = true }
+            }
         }
     }
 }
