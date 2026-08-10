@@ -12,7 +12,8 @@ the Gate 0 decision in [`../08-execution-plan.md`](../08-execution-plan.md).
 ## Product
 
 - Name: RedMed
-- Version / build: ________ (record the release version **and** commit SHA)
+- Version / build: **1.1 (2)** — commit SHA ________ (fill from the actual release
+  build; the version alone does not identify what a buyer assessed)
 - Supplier legal entity: ________
 - Contact: ________
 - Intended purpose summary: store/display self-reported emergency medical ID on device and optionally on a passive NFC bracelet; assist the user in contacting emergency services (GPS display, dial assist, manually-started timer); general public first-aid reference
