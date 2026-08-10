@@ -3,10 +3,13 @@
 **Rule for this folder:** documentation and evidence only. Do not change app code
 to “satisfy” paperwork unless a gap is explicitly approved as a product change.
 
+**Status board:** [00-gap-status.md](00-gap-status.md) — blunt pass/fail vs NHS-ready.
+
 Ordered programme (do not skip):
 
 | Step | Doc | Owner action still required |
 |------|-----|-----------------------------|
+| 0 | [00-gap-status.md](00-gap-status.md) | Track blockers until NHS-ready |
 | 1 | [01-intended-purpose-mhra.md](01-intended-purpose-mhra.md) | Sign-off by founder / product owner |
 | 2 | [02-dcb0129/](02-dcb0129/) | Appoint named Clinical Safety Officer; complete hazard scores |
 | 3 | [03-data-protection/](03-data-protection/) | Lawyer review of UK notice; DSPT if selling into NHS orgs |

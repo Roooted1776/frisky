@@ -26,8 +26,8 @@
 
   <h1 class="legal-doc-title">Privacy Policy</h1>
   <p class="legal-meta">
-    <strong>Effective Date</strong> July 2026<br>
-    <strong>Document Version</strong> 1.0
+    <strong>Effective Date</strong> August 2026<br>
+    <strong>Document Version</strong> 1.1
   </p>
   <p class="legal-parties">Applicable to all users of the RedMed application and associated passive NFC medical bracelet</p>
 
@@ -42,14 +42,15 @@
     <h2><span class="sec-num">1.</span> Scope</h2>
     <p>RedMed is a personal emergency medical identification tool. You enter your profile once and may program it onto a passive NFC bracelet. A smartphone that taps the band may read your emergency card in its browser. The App does not require an account and does not sync your profile to any RedMed server.</p>
 
-    <h2><span class="sec-num">2.</span> HIPAA, PHI, and PII Posture</h2>
-    <p>RedMed is a consumer-controlled tool — analogous to a physical medical ID card — not a healthcare provider portal. The operator does <strong>not</strong> act as a HIPAA covered entity or business associate with respect to self-entered profile data, because <strong>that data is not received by the operator</strong>.</p>
+    <h2><span class="sec-num">2.</span> Health Data Posture (UK GDPR / DPA 2018 and HIPAA framing)</h2>
+    <p>RedMed is a consumer-controlled tool — analogous to a physical medical ID card — not a healthcare provider portal and not an NHS care record. The operator does <strong>not</strong> receive your medical profile on any RedMed server.</p>
     <ul>
-      <li><strong>Protected Health Information (PHI):</strong> health-related information you type (allergies, medications, conditions) remains on-device and/or on-band.</li>
-      <li><strong>Personally Identifiable Information (PII):</strong> name, emergency contacts, and telephone numbers remain on-device and/or on-band.</li>
+      <li><strong>UK GDPR / Data Protection Act 2018:</strong> allergies, medications, conditions, and blood type are special-category health data when they identify you. Processing on your device is under <strong>your control</strong> for emergency identification. Where RedMed is the publisher for residual operator processing (today: none for profile storage), the working lawful bases are Art. 6(1)(a) consent and Art. 9(2)(a) explicit consent, plus Art. 6(1)(b) for providing the App you chose to install. You may withdraw consent by clearing App data and discarding or rewriting the band.</li>
+      <li><strong>Your rights (UK):</strong> access, rectification, erasure, restriction, objection, and complaint to the Information Commissioner’s Office (ICO). Because profile data is not held on RedMed servers, exercise erasure and rectification on-device (edit profile / Clear All Data) and by rewriting or discarding the bracelet.</li>
+      <li><strong>HIPAA framing (US):</strong> the operator does not act as a HIPAA covered entity or business associate for self-entered profile data that never reaches operator systems.</li>
       <li>Nothing in your profile is uploaded, synced, or backed up to operator servers.</li>
     </ul>
-    <p>This reflects a <strong>local-only, HIPAA-adjacent design</strong>: identifiable health and personal data does not leave your control through our systems.</p>
+    <p>This reflects a <strong>local-only design</strong>: identifiable health and personal data does not leave your control through our systems. Anyone who physically taps your band can still read the chip (see Section 8).</p>
 
     <h2><span class="sec-num">3.</span> Information We Do Not Collect</h2>
     <p>Under normal operation, RedMed does not collect, store, transmit, sell, or analyze your medical profile, emergency contacts, bracelet pairing data, or Find 911 coordinates on any operator server. We do not operate advertising networks, analytics identifiers, or cross-app tracking in the App. There is no account registration and no operator contact directory in the App.</p>
@@ -71,14 +72,15 @@
     <ul>
       <li><strong>RedMed / Bracelet:</strong> profile is edited and saved on-device; you choose when to write to the band.</li>
       <li><strong>Roadside Aid:</strong> first-aid reference and CPR timer run offline on your device; no profile fields are shown or transmitted.</li>
-      <li><strong>Find 911:</strong> location and compass heading may be used <strong>only while that screen is visible</strong>; processing stops when you leave the screen or close the App. You may copy coordinates or call a saved emergency contact via the system dialer. RedMed does not place calls or operate a telephony server.</li>
-      <li><strong>Call emergency contacts:</strong> opens your device’s phone dialer with a contact number; you must confirm the call. RedMed does not place calls or operate a telephony server.</li>
+      <li><strong>Find 911:</strong> location and compass heading may be used <strong>only while that screen is visible</strong>; processing stops when you leave the screen or close the App. You may copy coordinates or call a saved emergency contact via the system dialer.</li>
+      <li><strong>Seizure stopwatch (Find 911):</strong> an optional on-screen timer you start yourself. At 5:00 it may open the Phone app to <code>911</code> via the system dialer. It does <strong>not</strong> detect seizures, diagnose epilepsy, or replace calling emergency services earlier if needed.</li>
+      <li><strong>Call emergency contacts:</strong> opens your device’s phone dialer with a contact number; you must confirm the call. RedMed does not operate a telephony server.</li>
     </ul>
-    <p>We do not log, analyze, or transmit this information to the operator as part of normal use.</p>
+    <p>We do not log, analyze, or transmit this information to the operator as part of normal use. There is <strong>no</strong> motion-assist / accelerometer SOS countdown product in the current App.</p>
 
     <h2><span class="sec-num">7.</span> Location Information (Find 911)</h2>
-    <p>Find 911 displays coordinates only while that screen is open. It is not used for advertising, profiling, or background monitoring.</p>
-    <p><strong>RedMed does not display its own in-app location-permission dialog.</strong> By opening Find 911 you consent to device location processing for that screen. Your browser or operating system supplies location using GPS/GNSS (satellite positioning), Wi‑Fi, and cellular signals as available. You may receive a one-time platform prompt from your phone or browser; this is not a separate RedMed permission screen.</p>
+    <p>Find 911 displays coordinates only while that screen is open. It is not used for advertising, profiling, or background monitoring. Continuous GPS updates still start only when Find 911 is visible.</p>
+    <p>On iOS, RedMed shows an in-app Location gate and may keep a suggestion banner until When-In-Use access is granted. Tapping Allow triggers the <strong>system</strong> location permission dialog (<code>requestWhenInUseAuthorization</code>). Your browser or operating system supplies location using GPS/GNSS, Wi‑Fi, and cellular signals as available.</p>
     <p><strong>RedMed has no servers.</strong> Location appears on screen and, only if you choose, in text you copy. RedMed is <strong>not</strong> Apple Emergency SOS via satellite, Apple Crash Detection, Android Satellite SOS, or any carrier satellite messaging service, and cannot start those system features.</p>
     <p>If a Google Maps API key is configured for the hosted web App, Find 911 may send GPS coordinates to <strong>Google Maps Platform</strong> solely to suggest state or county for offline trauma-center lookup and to verify hospital names — not to RedMed. This is optional and limited to the Find 911 screen.</p>
 
