@@ -18,7 +18,7 @@ struct MyIDView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
+            LazyVStack(alignment: .leading, spacing: 0) {
                 // Header — matches Main.dc.html (no wordmark nav bar)
                 header
 

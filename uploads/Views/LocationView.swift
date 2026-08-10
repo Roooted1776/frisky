@@ -13,12 +13,14 @@ struct LocationView: View {
     @State private var copiedCoords = false
     @State private var showSatelliteHelp = false
     @State private var showCallContactPicker = false
+    /// Paint Call 911 + Live GPS first; mount SOS on the next turn.
+    @State private var mountSOS = false
 
     var body: some View {
         NavigationStack {
             ZStack {
                 ScrollView {
-                    VStack(spacing: layout.spaceLG) {
+                    LazyVStack(spacing: layout.spaceLG) {
                         header
 
                         if networkMonitor.isOffline {
@@ -60,11 +62,13 @@ struct LocationView: View {
 
                         coordinateCard
 
-                        Find911SOSSection(
-                            sos: sosController,
-                            motion: motionAssist,
-                            isOffline: networkMonitor.isOffline
-                        )
+                        if mountSOS {
+                            Find911SOSSection(
+                                sos: sosController,
+                                motion: motionAssist,
+                                isOffline: networkMonitor.isOffline
+                            )
+                        }
 
                         if let error = locationManager.errorMessage {
                             Text(error)
@@ -125,8 +129,11 @@ struct LocationView: View {
                     BrandMark(size: .nav)
                 }
             }
-            // After first layout — don't compete with cold-start paint for the main thread.
+            // GPS first; path monitor + SOS after first paint.
             .task {
+                locationManager.requestLocation()
+                await Task.yield()
+                networkMonitor.start()
                 outbound.locationManager = locationManager
                 outbound.profileProvider = { [weak store] in store?.profile ?? MedicalProfile() }
                 outbound.contactPhonesProvider = { [weak store] in
@@ -141,14 +148,16 @@ struct LocationView: View {
                 sosController.onOnlineFire = { [weak outbound] in
                     outbound?.fireOnline()
                 }
-                locationManager.requestLocation()
+                mountSOS = true
                 if motionAssist.isEnabled {
                     motionAssist.start()
                 }
             }
             .onDisappear {
                 locationManager.stopUpdating()
+                networkMonitor.stop()
                 motionAssist.stop()
+                mountSOS = false
                 if sosController.isCountingDown {
                     sosController.cancel()
                 }

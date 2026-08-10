@@ -6,6 +6,8 @@ struct EmergencyView: View {
     @StateObject private var locationManager = LocationManager()
     @State private var showSatellite = false
     @State private var showPublicCard = false
+    /// Mount SOS after first GPS paint so opening 911 stays snappy.
+    @State private var mountSOS = false
 
     func callFirstContact() {
         guard let c = profile.contacts.first else {
@@ -19,7 +21,7 @@ struct EmergencyView: View {
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack(alignment: .leading, spacing: 8) {
+                LazyVStack(alignment: .leading, spacing: 8) {
                     Text("Find 911")
                         .font(.system(size: 22, weight: .bold))
                         .foregroundColor(.redmedDark)
@@ -51,8 +53,10 @@ struct EmergencyView: View {
                     GPSCard(location: locationManager.location)
                         .padding(.vertical, 4)
 
-                    // Emergency SOS — directly under Live GPS
-                    Find911SOSBlock(locationManager: locationManager)
+                    // Emergency SOS — under Live GPS; deferred one frame for fast first paint
+                    if mountSOS {
+                        Find911SOSBlock(locationManager: locationManager)
+                    }
 
                     // COPY COORDINATES
                     Button {
@@ -120,9 +124,16 @@ struct EmergencyView: View {
                     Text("Find 911").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedDark)
                 }
             }
-            // Start after first layout so switching to 911 doesn't hitch the tab chrome.
-            .task { locationManager.start() }
-            .onDisappear { locationManager.stop() }
+            // GPS after first layout; SOS one yield later so the GPS card paints first.
+            .task {
+                locationManager.start()
+                await Task.yield()
+                mountSOS = true
+            }
+            .onDisappear {
+                locationManager.stop()
+                mountSOS = false
+            }
             .sheet(isPresented: $showPublicCard) { PublicCardView(profile: profile) }
         }
     }

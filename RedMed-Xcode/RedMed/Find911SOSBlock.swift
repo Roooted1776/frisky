@@ -112,6 +112,7 @@ struct Find911SOSBlock: View {
             .ignoresSafeArea()
         }
         .onAppear {
+            network.start()
             outbound.locationManager = locationManager
             outbound.profileProvider = { [weak profile] in profile }
             sos.isOfflineCheck = { [weak network] in network?.isOffline ?? false }
@@ -119,6 +120,7 @@ struct Find911SOSBlock: View {
             if motion.isEnabled { motion.start() }
         }
         .onDisappear {
+            network.stop()
             motion.stop()
             stopSeizure(reset: false)
             if sos.isCountingDown { sos.cancel() }
@@ -380,10 +382,14 @@ final class Find911Outbound: ObservableObject {
 
 final class OfflinePathMonitor: ObservableObject {
     @Published private(set) var isOffline = false
-    private let monitor = NWPathMonitor()
+    private var monitor: NWPathMonitor?
     private let queue = DispatchQueue(label: "local.redmed.offline")
 
-    init() {
+    /// Start after first paint — constructing NWPathMonitor in `init` competes with tab chrome.
+    func start() {
+        guard monitor == nil else { return }
+        let monitor = NWPathMonitor()
+        self.monitor = monitor
         monitor.pathUpdateHandler = { [weak self] path in
             DispatchQueue.main.async {
                 self?.isOffline = path.status != .satisfied
@@ -392,7 +398,12 @@ final class OfflinePathMonitor: ObservableObject {
         monitor.start(queue: queue)
     }
 
-    deinit { monitor.cancel() }
+    func stop() {
+        monitor?.cancel()
+        monitor = nil
+    }
+
+    deinit { monitor?.cancel() }
 }
 
 struct Find911SOSCountdownOverlay: View {
