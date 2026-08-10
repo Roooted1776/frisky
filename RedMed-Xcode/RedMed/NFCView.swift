@@ -115,7 +115,11 @@ struct NFCView: View {
                     .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
 
                     // IMPORT
-                    sectionLabel("Import")
+                    Text("IMPORT")
+                        .font(.system(size: 11, weight: .bold))
+                        .kerning(0.5)
+                        .foregroundColor(.redmedDark)
+                        .padding(.horizontal, 4)
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Already own a written tag? Pull it onto this phone's My ID.")
                             .font(.system(size: 13, weight: .medium))
