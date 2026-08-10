@@ -1,6 +1,5 @@
 import SwiftUI
 import CoreLocation
-import MessageUI
 
 /// Read-only emergency card — what a stranger sees after tapping the NFC bracelet.
 /// Mirrors the static hosted `card/` page: identity, allergies, conditions, contacts, roadside aid.

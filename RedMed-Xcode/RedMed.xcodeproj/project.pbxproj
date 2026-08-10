@@ -26,6 +26,11 @@
 		AABB00000000000000000014 /* BiometricAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000014 /* BiometricAuth.swift */; };
 		AABB00000000000000000015 /* CardPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000015 /* CardPayload.swift */; };
 		AABB00000000000000000016 /* NFCManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000016 /* NFCManager.swift */; };
+		AABB00000000000000000017 /* PrivacyPolicy.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000017 /* PrivacyPolicy.html */; };
+		AABB00000000000000000018 /* TOS.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000018 /* TOS.html */; };
+		AABB00000000000000000019 /* security.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000019 /* security.html */; };
+		AABB0000000000000000001A /* HowItWorks.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001A /* HowItWorks.html */; };
+		AABB0000000000000000001B /* legal-doc.css in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001B /* legal-doc.css */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -51,6 +56,11 @@
 		AAAA00000000000000000014 /* BiometricAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuth.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000015 /* CardPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardPayload.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000016 /* NFCManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFCManager.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000017 /* PrivacyPolicy.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = PrivacyPolicy.html; sourceTree = "<group>"; };
+		AAAA00000000000000000018 /* TOS.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = TOS.html; sourceTree = "<group>"; };
+		AAAA00000000000000000019 /* security.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = security.html; sourceTree = "<group>"; };
+		AAAA0000000000000000001A /* HowItWorks.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = HowItWorks.html; sourceTree = "<group>"; };
+		AAAA0000000000000000001B /* legal-doc.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = "legal-doc.css"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,6 +95,11 @@
 				AAAA00000000000000000014 /* BiometricAuth.swift */,
 				AAAA00000000000000000015 /* CardPayload.swift */,
 				AAAA00000000000000000016 /* NFCManager.swift */,
+				AAAA00000000000000000017 /* PrivacyPolicy.html */,
+				AAAA00000000000000000018 /* TOS.html */,
+				AAAA00000000000000000019 /* security.html */,
+				AAAA0000000000000000001A /* HowItWorks.html */,
+				AAAA0000000000000000001B /* legal-doc.css */,
 				AAAA0000000000000000000C /* Assets.xcassets */,
 				AAAA0000000000000000000B /* Info.plist */,
 				AAAA0000000000000000000F /* RedMed.entitlements */,
@@ -167,6 +182,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				AABB0000000000000000000C /* Assets.xcassets in Resources */,
+				AABB00000000000000000017 /* PrivacyPolicy.html in Resources */,
+				AABB00000000000000000018 /* TOS.html in Resources */,
+				AABB00000000000000000019 /* security.html in Resources */,
+				AABB0000000000000000001A /* HowItWorks.html in Resources */,
+				AABB0000000000000000001B /* legal-doc.css in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

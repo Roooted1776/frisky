@@ -180,8 +180,8 @@ struct NFCView: View {
                     break
                 }
             }
-            .onChange(of: nfc.tagCapacityBytes) { updateCapacityNote() }
-            .onChange(of: nfc.lastPayloadBytes) { updateCapacityNote() }
+            .onChange(of: nfc.tagCapacityBytes) { _, _ in updateCapacityNote() }
+            .onChange(of: nfc.lastPayloadBytes) { _, _ in updateCapacityNote() }
             .onAppear {
                 if profile.pendingBraceletWrite {
                     profile.pendingBraceletWrite = false
