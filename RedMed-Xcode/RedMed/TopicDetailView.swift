@@ -6,6 +6,7 @@ extension AidTopic: Identifiable {}
 struct TopicDetailView: View {
     let topic: AidTopic
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var emergencyLocation: EmergencyLocationService
     @StateObject private var hospitalFinder = NearbyHospitalFinder()
     @State private var cprRunning = false
     @State private var cprCount = 0
@@ -183,11 +184,11 @@ struct TopicDetailView: View {
                                 .font(.system(size: 13))
                                 .foregroundColor(.redmedMuted)
                                 .padding(.vertical, 12)
-                            Button("Try again") { hospitalFinder.search() }
+                            Button("Try again") { hospitalFinder.search(near: emergencyLocation.location) }
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundColor(.redmedAccent)
                         } else if hospitalFinder.hospitals.isEmpty {
-                            Button("Find hospitals near me") { hospitalFinder.search() }
+                            Button("Find hospitals near me") { hospitalFinder.search(near: emergencyLocation.location) }
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
@@ -236,7 +237,7 @@ struct TopicDetailView: View {
             }
             .background(Color(red: 0.949, green: 0.949, blue: 0.969))
             .onDisappear { stopCPR() }
-            .onAppear { if isTraumaHospitals { hospitalFinder.search() } }
+            .onAppear { if isTraumaHospitals { hospitalFinder.search(near: emergencyLocation.location) } }
             .navigationTitle(topic.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

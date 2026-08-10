@@ -23,10 +23,18 @@ edits to the `.swift` files are possible, but do not attempt to build/run/test h
 build, run, or manual testing must happen on macOS + Xcode:
 
 ```
+./scripts/run.sh                       # fastest: boot sim, incremental build, launch
 open RedMed-Xcode/RedMed.xcodeproj   # then Run (Cmd+R) against an iOS 17+ Simulator
 # or, headless:
 xcodebuild -project RedMed-Xcode/RedMed.xcodeproj -scheme RedMed \
   -destination 'platform=iOS Simulator,name=iPhone 15' build
 ```
+
+`scripts/run.sh` keeps derived data in `.derivedData/`, skips rebuild when Swift/resources
+are unchanged, and skips reinstall when the built app is unchanged. Override simulator with
+`SIM="iPhone 17 Pro" ./scripts/run.sh`. Location is pre-granted on the simulator (Apple Park
+coords); override with `LOCATION="40.7128,-74.0060" ./scripts/run.sh`.
+
+On a **physical iPhone**, iOS requires a one-time Allow tap — that cannot be bypassed from code.
 
 NFC write and Face ID flows only work on a physical iPhone, not the Simulator.

@@ -11,28 +11,21 @@ struct NearbyHospital: Identifiable {
     let mapItem: MKMapItem
 }
 
-/// Finds real nearby hospitals/trauma centers using the device's current location + MapKit search.
-class NearbyHospitalFinder: NSObject, ObservableObject, CLLocationManagerDelegate {
+/// MapKit hospital search from a known GPS fix (no separate location manager).
+final class NearbyHospitalFinder: ObservableObject {
     @Published var hospitals: [NearbyHospital] = []
     @Published var isLoading = false
-    @Published var errorMessage: String? = nil
+    @Published var errorMessage: String?
 
-    private let manager = CLLocationManager()
-
-    override init() {
-        super.init()
-        manager.delegate = self
-    }
-
-    func search() {
+    func search(near location: CLLocation?) {
+        guard let loc = location else {
+            isLoading = false
+            errorMessage = "Waiting for GPS… allow Location when prompted."
+            return
+        }
         isLoading = true
         errorMessage = nil
-        manager.requestWhenInUseAuthorization()
-        manager.requestLocation()
-    }
 
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let loc = locations.first else { return }
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = "trauma center hospital emergency room"
         request.region = MKCoordinateRegion(center: loc.coordinate, latitudinalMeters: 80000, longitudinalMeters: 80000)
@@ -61,14 +54,10 @@ class NearbyHospitalFinder: NSObject, ObservableObject, CLLocationManagerDelegat
                 .sorted { $0.distanceMiles < $1.distanceMiles }
                 .prefix(8)
                 .map { $0 }
+                if self.hospitals.isEmpty {
+                    self.errorMessage = "No hospitals found nearby."
+                }
             }
-        }
-    }
-
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        DispatchQueue.main.async {
-            self.isLoading = false
-            self.errorMessage = "Couldn't get your location. Check Location permission in Settings."
         }
     }
 }

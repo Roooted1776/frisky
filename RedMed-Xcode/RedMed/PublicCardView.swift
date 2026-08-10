@@ -6,7 +6,7 @@ import CoreLocation
 struct PublicCardView: View {
     @ObservedObject var profile: ProfileData
     @Environment(\.dismiss) var dismiss
-    @StateObject private var locationHelper = LocationHelper()
+    @EnvironmentObject var emergencyLocation: EmergencyLocationService
 
     var body: some View {
         NavigationView {
@@ -28,7 +28,7 @@ struct PublicCardView: View {
                     }
 
                     PrimaryButton(title: "Text My Location to Emergency Contact") {
-                        locationHelper.requestAndSend(to: profile.contacts.first?.detail)
+                        emergencyLocation.sendLocationSMS(to: profile.contacts.first?.detail)
                     }
 
                     Text("Profile last updated \(profile.lastUpdated.isEmpty ? "—" : profile.lastUpdated)")

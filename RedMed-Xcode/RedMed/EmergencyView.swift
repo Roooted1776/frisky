@@ -4,7 +4,7 @@ import MapKit
 
 struct EmergencyView: View {
     @EnvironmentObject var profile: ProfileData
-    @StateObject private var locationManager = LocationManager()
+    @EnvironmentObject var emergencyLocation: EmergencyLocationService
     @StateObject private var hospitalFinder = NearbyHospitalFinder()
     @State private var showSatellite = false
     @State private var showPublicCard = false
@@ -50,12 +50,12 @@ struct EmergencyView: View {
                         .padding(.bottom, 4)
 
                     // GPS CARD
-                    GPSCard(location: locationManager.location)
+                    GPSCard(location: emergencyLocation.location)
                         .padding(.vertical, 4)
 
                     // COPY COORDINATES
                     Button {
-                        if let loc = locationManager.location {
+                        if let loc = emergencyLocation.location {
                             UIPasteboard.general.string = "\(loc.coordinate.latitude), \(loc.coordinate.longitude)"
                         }
                     } label: {
@@ -97,7 +97,7 @@ struct EmergencyView: View {
                     CommonTraumaGrid()
 
                     // NEARBY TRAUMA HOSPITALS
-                    NearbyHospitalsCard(finder: hospitalFinder)
+                    NearbyHospitalsCard(finder: hospitalFinder, location: emergencyLocation.location)
 
                     // NO CELL SIGNAL
                     NoCellSignalCard(showSatellite: $showSatellite)
@@ -122,7 +122,12 @@ struct EmergencyView: View {
                     Text("Find 911").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedDark)
                 }
             }
-            .onAppear { locationManager.start() }
+            .onAppear { hospitalFinder.search(near: emergencyLocation.location) }
+            .onChange(of: emergencyLocation.location) { _, loc in
+                if loc != nil, hospitalFinder.hospitals.isEmpty, !hospitalFinder.isLoading {
+                    hospitalFinder.search(near: loc)
+                }
+            }
             .sheet(isPresented: $showPublicCard) { PublicCardView(profile: profile) }
         }
     }
@@ -260,6 +265,7 @@ struct CommonTraumaGrid: View {
 // MARK: - Nearby Trauma Hospitals
 struct NearbyHospitalsCard: View {
     @ObservedObject var finder: NearbyHospitalFinder
+    let location: CLLocation?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -288,9 +294,9 @@ struct NearbyHospitalsCard: View {
                 Text(err)
                     .font(.system(size: 11))
                     .foregroundColor(.redmedMuted)
-                SecondaryButton("Try again") { finder.search() }
+                SecondaryButton("Try again") { finder.search(near: location) }
             } else if finder.hospitals.isEmpty {
-                PrimaryButton(title: "Find hospitals near me") { finder.search() }
+                PrimaryButton(title: "Find hospitals near me") { finder.search(near: location) }
             } else {
                 VStack(spacing: 0) {
                     ForEach(Array(finder.hospitals.enumerated()), id: \.offset) { i, hosp in
@@ -373,23 +379,3 @@ struct NoCellSignalCard: View {
     }
 }
 
-// MARK: - Location Manager
-class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
-    private let manager = CLLocationManager()
-    @Published var location: CLLocation?
-
-    override init() {
-        super.init()
-        manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyBest
-    }
-
-    func start() {
-        manager.requestWhenInUseAuthorization()
-        manager.startUpdatingLocation()
-    }
-
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        location = locations.last
-    }
-}
