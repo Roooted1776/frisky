@@ -33,7 +33,7 @@ struct Find911SOSSection: View {
 
             Text(isOffline
                  ? "No cell path detected. Countdown ends on Satellite SOS steps — RedMed cannot start Apple Satellite SOS."
-                 : "Cancelable countdown, then Phone asks before dialing 911. Not Apple Crash Detection.")
+                 : "Cancelable countdown → optional third-party alert API (if configured) → Phone dials 911 → Messages texts your contacts. No RedMed server.")
                 .font(layout.captionFont(weight: .medium))
                 .foregroundStyle(AppTheme.muted)
                 .multilineTextAlignment(.leading)

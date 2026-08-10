@@ -18,4 +18,12 @@ enum AppConfig {
     static let legacyHostedCardBaseURL = "https://maxroot1122.github.io/RedMed/card/"
 
     static let privacyPolicyURL = "https://redmed.pages.dev/privacy-policy.html"
+
+    /// Device-direct third-party emergency alert (RapidSOS / Noonlight / HTTPS webhook).
+    /// Empty = disabled (no network). RedMed does not operate a relay server.
+    /// Set at build time for a partner endpoint; never commit a live secret.
+    static let thirdPartyEmergencyAlertURL = ""
+
+    /// Optional Bearer token for `thirdPartyEmergencyAlertURL`. Empty when unused.
+    static let thirdPartyEmergencyAlertToken = ""
 }

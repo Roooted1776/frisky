@@ -2,7 +2,8 @@ import Foundation
 import UIKit
 
 /// Local Emergency SOS state machine for Find 911.
-/// Online → `telprompt:911`. Offline → Satellite SOS coach (cannot invoke Apple APIs).
+/// Online → caller-supplied outbound (third-party API + dial + SMS).
+/// Offline → Satellite SOS coach (cannot invoke Apple Satellite SOS APIs).
 @MainActor
 final class EmergencySOSController: ObservableObject {
     enum Phase: Equatable {
@@ -19,6 +20,12 @@ final class EmergencySOSController: ObservableObject {
     private var countdownTask: Task<Void, Never>?
     /// Fresh offline check at fire time (set by Find 911).
     var isOfflineCheck: () -> Bool = { false }
+    /// Online fire hook — LocationView posts to third-party API, dials 911, opens SMS.
+    /// Default keeps prior behavior: `telprompt:911` only.
+    var onOnlineFire: () -> Void = {
+        guard let url = EmergencySummaryBuilder.call911URL else { return }
+        UIApplication.shared.open(url)
+    }
 
     var isCountingDown: Bool { phase == .countdown }
     var showsSatelliteCoach: Bool { phase == .satelliteCoach }
@@ -62,17 +69,12 @@ final class EmergencySOSController: ObservableObject {
             phase = .satelliteCoach
         } else {
             phase = .idle
-            dial911()
+            onOnlineFire()
         }
     }
 
     private func cancelCountdownTask() {
         countdownTask?.cancel()
         countdownTask = nil
-    }
-
-    private func dial911() {
-        guard let url = EmergencySummaryBuilder.call911URL else { return }
-        UIApplication.shared.open(url)
     }
 }

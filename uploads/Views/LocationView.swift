@@ -9,6 +9,7 @@ struct LocationView: View {
     @StateObject private var networkMonitor = NetworkPathMonitor()
     @StateObject private var sosController = EmergencySOSController()
     @StateObject private var motionAssist = MotionAssistMonitor()
+    @StateObject private var outbound = EmergencyOutboundCoordinator()
     @State private var copiedCoords = false
     @State private var showSatelliteHelp = false
     @State private var showCallContactPicker = false
@@ -52,7 +53,7 @@ struct LocationView: View {
                             .foregroundStyle(AppTheme.muted)
                             .multilineTextAlignment(.center)
 
-                        Text("Tap Call 911 when you have cell service. Emergency SOS below pairs a countdown with dial-out or Satellite SOS coaching. RedMed cannot start Apple Satellite SOS or Crash Detection.")
+                        Text("Tap Call 911 when you have cell service. Emergency SOS below dials 911, texts contacts via Messages (carrier), and can POST to a third-party alert API when configured — RedMed has no relay server.")
                             .font(layout.captionFont(weight: .medium))
                             .foregroundStyle(AppTheme.muted)
                             .multilineTextAlignment(.center)
@@ -96,7 +97,7 @@ struct LocationView: View {
 
                         satelliteDisclosure
 
-                        Text("Coordinates, motion assist, and SOS run on this screen only. RedMed has no servers and is not Apple Crash Detection or Satellite SOS.")
+                        Text("Coordinates, motion assist, and SOS run on this screen only. Alerts go device → carrier / optional third-party API. RedMed has no servers.")
                             .font(layout.caption2Font(weight: .medium))
                             .foregroundStyle(AppTheme.muted)
                             .multilineTextAlignment(.center)
@@ -126,8 +127,19 @@ struct LocationView: View {
             }
             // After first layout — don't compete with cold-start paint for the main thread.
             .task {
+                outbound.locationManager = locationManager
+                outbound.profileProvider = { [weak store] in store?.profile ?? MedicalProfile() }
+                outbound.contactPhonesProvider = { [weak store] in
+                    (store?.profile.contacts ?? []).compactMap { contact in
+                        let phone = EmergencySummaryBuilder.normalizedPhone(contact.phone)
+                        return phone.isEmpty ? nil : phone
+                    }
+                }
                 sosController.isOfflineCheck = { [weak networkMonitor] in
                     networkMonitor?.isOffline ?? false
+                }
+                sosController.onOnlineFire = { [weak outbound] in
+                    outbound?.fireOnline()
                 }
                 locationManager.requestLocation()
                 if motionAssist.isEnabled {
@@ -152,6 +164,14 @@ struct LocationView: View {
                 EmergencyContactCallSheet(contacts: callableContacts) {
                     showCallContactPicker = false
                 }
+            }
+            .sheet(isPresented: $outbound.showSMSComposer) {
+                EmergencySMSComposer(
+                    recipients: outbound.smsRecipients,
+                    body: outbound.smsBody,
+                    onFinish: { outbound.showSMSComposer = false }
+                )
+                .ignoresSafeArea()
             }
             .fullScreenCover(isPresented: Binding(
                 get: { sosController.showsSatelliteCoach },
