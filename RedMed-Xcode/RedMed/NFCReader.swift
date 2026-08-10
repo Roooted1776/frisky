@@ -10,6 +10,7 @@ final class NFCReader: NSObject, ObservableObject {
     private var onProfile: ((NFCChipProfile, String) -> Void)?
     private var didDeliver = false
 
+    /// Starts a CoreNFC session only from an explicit Scan tap — never on proximity.
     func readTag(
         alertMessage: String = "Hold your iPhone near the tag to read the RedMed card.",
         onProfile: @escaping (NFCChipProfile, String) -> Void
