@@ -52,6 +52,7 @@ struct EditProfileView: View {
         Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
     }
 
+    /// Only valid once `birthDate` parses — never invent a date for an empty field.
     private var birthDateBinding: Binding<Date> {
         Binding(
             get: {
@@ -61,6 +62,10 @@ struct EditProfileView: View {
                 birthDate = Self.birthDateFormatter.string(from: $0)
             }
         )
+    }
+
+    private var hasBirthDate: Bool {
+        Self.parseBirthDate(birthDate) != nil
     }
 
     var body: some View {
@@ -101,11 +106,11 @@ struct EditProfileView: View {
                     // YOU
                     editSectionLabel("You")
                     editCard {
-                        editRow(label: "Name",       text: $name,       placeholder: "Full name")
+                        editRow(label: "Name", text: $name, placeholder: "Full name")
                         Divider().padding(.leading, 106)
                         birthDateRow
                         Divider().padding(.leading, 106)
-                        editRow(label: "Blood type", text: $bloodType,  placeholder: "A+, B−, O+…")
+                        bloodTypeRow
                     }
 
                     // ALLERGIES
@@ -117,7 +122,8 @@ struct EditProfileView: View {
                                     TextField("Allergy", text: $line.text)
                                         .font(.system(size: 15))
                                         .foregroundColor(.redmedDark)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                        .contentShape(Rectangle())
                                         .onChange(of: line.text) { _, _ in allergyFocusID = line.id }
                                     removeLineButton {
                                         withAnimation {
@@ -128,7 +134,6 @@ struct EditProfileView: View {
                                 }
                                 .padding(.leading, 16)
                                 .padding(.trailing, 4)
-                                .padding(.vertical, 4)
 
                                 if allergyFocusID == line.id {
                                     let matches = suggestions(from: commonAllergies, for: line, in: allergies)
@@ -177,7 +182,8 @@ struct EditProfileView: View {
                                     TextField("Medication", text: $line.text)
                                         .font(.system(size: 15))
                                         .foregroundColor(.redmedDark)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                        .contentShape(Rectangle())
                                         .onChange(of: line.text) { _, _ in medFocusID = line.id }
                                     removeLineButton {
                                         withAnimation {
@@ -188,7 +194,6 @@ struct EditProfileView: View {
                                 }
                                 .padding(.leading, 16)
                                 .padding(.trailing, 4)
-                                .padding(.vertical, 4)
 
                                 if medFocusID == line.id {
                                     let matches = suggestions(from: commonMedications, for: line, in: medications)
@@ -237,7 +242,8 @@ struct EditProfileView: View {
                                     TextField("Condition", text: $line.text)
                                         .font(.system(size: 15))
                                         .foregroundColor(.redmedDark)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                        .contentShape(Rectangle())
                                         .onChange(of: line.text) { _, _ in conditionFocusID = line.id }
                                     removeLineButton {
                                         withAnimation {
@@ -248,7 +254,6 @@ struct EditProfileView: View {
                                 }
                                 .padding(.leading, 16)
                                 .padding(.trailing, 4)
-                                .padding(.vertical, 4)
 
                                 if conditionFocusID == line.id {
                                     let matches = suggestions(from: commonConditions, for: line, in: conditions)
@@ -292,7 +297,7 @@ struct EditProfileView: View {
                     editSectionLabel("Emergency Contacts")
                     editCard {
                         ForEach($contacts) { $contact in
-                            HStack(alignment: .top, spacing: 8) {
+                            HStack(alignment: .center, spacing: 8) {
                                 VStack(alignment: .leading, spacing: 4) {
                                     TextField("Name", text: $contact.name)
                                         .font(.system(size: 15, weight: .semibold))
@@ -301,15 +306,14 @@ struct EditProfileView: View {
                                         .font(.system(size: 13))
                                         .foregroundColor(.redmedMuted)
                                 }
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                .contentShape(Rectangle())
                                 removeLineButton {
                                     withAnimation { contacts.removeAll { $0.id == contact.id } }
                                 }
-                                .padding(.top, 2)
                             }
                             .padding(.leading, 16)
                             .padding(.trailing, 4)
-                            .padding(.vertical, 4)
                             Divider().padding(.leading, 16)
                         }
                         addButton("Add contact") { contacts.append(EmergencyContact(name: "", detail: "")) }
@@ -364,8 +368,10 @@ struct EditProfileView: View {
         .padding(.horizontal, 16).padding(.vertical, 13)
     }
 
-    /// Compact DatePicker — tappable iOS control that opens the system date dropdown
-    /// (not a free-text field).
+    private static let bloodTypeChoices = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
+
+    /// Compact DatePicker — empty stays empty (no fake default on screen).
+    /// Tap “Select date” to seed, then use the system compact picker.
     private var birthDateRow: some View {
         HStack(spacing: 0) {
             Text("Birth date")
@@ -373,18 +379,78 @@ struct EditProfileView: View {
                 .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
                 .frame(width: 90, alignment: .leading)
                 .padding(.trailing, 12)
-            DatePicker(
-                "",
-                selection: birthDateBinding,
-                in: Self.birthDateRange,
-                displayedComponents: .date
-            )
-            .labelsHidden()
-            .datePickerStyle(.compact)
-            .tint(.redmedAccent)
+
+            if hasBirthDate {
+                DatePicker(
+                    "",
+                    selection: birthDateBinding,
+                    in: Self.birthDateRange,
+                    displayedComponents: .date
+                )
+                .labelsHidden()
+                .datePickerStyle(.compact)
+                .tint(.redmedAccent)
+
+                Button {
+                    birthDate = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 18))
+                        .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48).opacity(0.45))
+                        .frame(width: 36, height: 36)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Clear birth date")
+            } else {
+                Button {
+                    birthDate = Self.birthDateFormatter.string(from: Self.defaultBirthDate)
+                } label: {
+                    Text("Select date")
+                        .font(.system(size: 15))
+                        .foregroundColor(.redmedAccent)
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 16).padding(.vertical, 10)
+        .padding(.horizontal, 16)
+        .padding(.vertical, hasBirthDate ? 10 : 0)
+    }
+
+    /// Closed-set blood type — Menu instead of free text (avoids O+ vs 0+ typos).
+    private var bloodTypeRow: some View {
+        HStack(spacing: 0) {
+            Text("Blood type")
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
+                .frame(width: 90, alignment: .leading)
+                .padding(.trailing, 12)
+
+            Menu {
+                Button("Clear") { bloodType = "" }
+                ForEach(Self.bloodTypeChoices, id: \.self) { type in
+                    Button(type) { bloodType = type }
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Text(bloodType.isEmpty ? "Select" : bloodType)
+                        .font(.system(size: 15))
+                        .foregroundColor(bloodType.isEmpty ? .redmedAccent : .redmedDark)
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48).opacity(0.55))
+                }
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 16)
     }
 
     private static func parseBirthDate(_ raw: String) -> Date? {
@@ -501,7 +567,7 @@ struct EditProfileView: View {
         } else {
             profile.birthDate = birthDate.trimmingCharacters(in: .whitespacesAndNewlines)
         }
-        profile.bloodType = bloodType
+        profile.bloodType = bloodType.trimmingCharacters(in: .whitespacesAndNewlines)
         profile.allergies = allergies.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         profile.medications = medications.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         profile.conditions = conditions.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
