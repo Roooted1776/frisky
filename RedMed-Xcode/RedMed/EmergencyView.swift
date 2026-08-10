@@ -86,12 +86,10 @@ struct EmergencyView: View {
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
-                        .padding(.top, 2)
-                        .padding(.bottom, 8)
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 6)
-                .padding(.bottom, 24)
+                .padding(.bottom, 8)
             }
             .background(Color.redmedBg)
             .navigationTitle("")
