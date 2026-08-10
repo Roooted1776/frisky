@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var profile: ProfileData
+    @EnvironmentObject var nfc: NFCManager
     @State private var tab: AppTab = .myid
 
     var body: some View {
@@ -22,6 +23,12 @@ struct ContentView: View {
         .ignoresSafeArea(edges: .bottom)
         .onChange(of: profile.pendingBraceletWrite) { pending in
             if pending { tab = .nfc }
+        }
+        // Persist pairing even if the user left the NFC tab before write finished.
+        .onChange(of: nfc.lastWriteSucceeded) { ok in
+            guard ok else { return }
+            profile.braceletLinked = true
+            profile.persist()
         }
     }
 }

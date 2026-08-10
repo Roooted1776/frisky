@@ -2,19 +2,14 @@ import SwiftUI
 import CoreNFC
 
 struct NFCView: View {
-    private enum ReadIntent {
-        case none, scanPreview, importToPhone
-    }
-
     @EnvironmentObject var profile: ProfileData
-    @StateObject private var nfc = NFCManager()
+    @EnvironmentObject var nfc: NFCManager
     @State private var showPublicCard = false
     @State private var scannedProfile: ProfileData?
     @State private var showAuthFailedAlert = false
     @State private var showNeedProfileAlert = false
     @State private var importFlash = false
     @State private var capacityNote: String = "Blank tag — write your My ID to pair"
-    @State private var readIntent: ReadIntent = .none
 
     var body: some View {
         NavigationView {
@@ -77,8 +72,8 @@ struct NFCView: View {
                             .clipShape(Capsule())
                             .shadow(color: Color.redmedAccent.opacity(0.28), radius: 7, y: 4)
                         }
-                        .disabled(!profile.hasData)
-                        .opacity(profile.hasData ? 1 : 0.45)
+                        .disabled(!profile.hasData || nfc.isScanning)
+                        .opacity(profile.hasData && !nfc.isScanning ? 1 : 0.45)
 
                         VStack(alignment: .leading, spacing: 6) {
                             syncBullet("Open RedMed → Edit My ID → Save → Write to NFC tag.")
@@ -98,9 +93,10 @@ struct NFCView: View {
                             .foregroundColor(.redmedMuted)
                             .lineSpacing(3)
                         SecondaryButton("Scan your bracelet", icon: "qrcode.viewfinder") {
-                            readIntent = .scanPreview
-                            nfc.beginRead()
+                            _ = nfc.beginRead(for: .scanPreview)
                         }
+                        .disabled(nfc.isScanning)
+                        .opacity(nfc.isScanning ? 0.45 : 1)
                     }
                     .padding(14)
                     .background(Color.redmedSurface)
@@ -116,9 +112,10 @@ struct NFCView: View {
                         SecondaryButton(importFlash ? "Imported ✓" : "Import tag onto this phone",
                                         icon: "arrow.down.circle") {
                             importFlash = false
-                            readIntent = .importToPhone
-                            nfc.beginRead()
+                            _ = nfc.beginRead(for: .importToPhone)
                         }
+                        .disabled(nfc.isScanning)
+                        .opacity(nfc.isScanning ? 0.45 : 1)
                     }
                     .padding(14)
                     .background(Color.redmedSurface)
@@ -163,25 +160,25 @@ struct NFCView: View {
             }
             .onChange(of: nfc.lastWriteSucceeded) { ok in
                 guard ok else { return }
-                profile.braceletLinked = true
-                profile.persist()
                 updateCapacityNote()
             }
             .onChange(of: nfc.lastReadPayload) { payload in
                 guard let payload else { return }
-                switch readIntent {
+                let intent = nfc.readIntent
+                switch intent {
                 case .importToPhone:
                     payload.apply(to: profile, persist: true)
                     importFlash = true
+                    nfc.consumeReadResult()
                 case .scanPreview:
                     let preview = ProfileData.previewShell()
                     payload.apply(to: preview, persist: false)
                     scannedProfile = preview
                     showPublicCard = true
+                    nfc.consumeReadResult()
                 case .none:
                     break
                 }
-                readIntent = .none
             }
             .onChange(of: nfc.tagCapacityBytes) { _ in updateCapacityNote() }
             .onChange(of: nfc.lastPayloadBytes) { _ in updateCapacityNote() }
@@ -206,14 +203,22 @@ struct NFCView: View {
             showNeedProfileAlert = true
             return
         }
-        BiometricAuth.authenticate(reason: "Authenticate to write your medical ID to the bracelet.") { success in
+        guard !nfc.isScanning else {
+            nfc.lastError = "NFC session already in progress. Finish or cancel it first."
+            return
+        }
+        // Generation token: if this view is recreated, a stale Face ID callback must not start NFC.
+        writeGeneration += 1
+        let generation = writeGeneration
+        let snapshot = CardPayload.from(profile: profile)
+        BiometricAuth.authenticate(reason: "Authenticate to write your medical ID to the bracelet.") { [nfc] success in
+            guard generation == writeGeneration else { return }
             guard success else {
                 showAuthFailedAlert = true
                 return
             }
             do {
-                let payload = CardPayload.from(profile: profile)
-                let url = try payload.cardURL()
+                let url = try snapshot.cardURL()
                 nfc.beginWrite(url: url)
             } catch {
                 nfc.lastError = "Could not build card URL: \(error.localizedDescription)"

@@ -2,11 +2,17 @@ import Foundation
 import CoreNFC
 
 /// Real CoreNFC session for writing / reading blank NDEF bracelets.
-/// Write path: Face ID (caller) → encode CardPayload URI → NFCNDEFReaderSession write.
+/// Owned at the app root so tab switches cannot discard an in-flight session.
 final class NFCManager: NSObject, ObservableObject, NFCNDEFReaderSessionDelegate {
     enum Mode {
         case write(NFCNDEFMessage)
         case read
+    }
+
+    enum ReadIntent: Equatable {
+        case none
+        case scanPreview
+        case importToPhone
     }
 
     @Published var isScanning = false
@@ -16,6 +22,8 @@ final class NFCManager: NSObject, ObservableObject, NFCNDEFReaderSessionDelegate
     @Published var lastReadPayload: CardPayload?
     @Published var tagCapacityBytes: Int?
     @Published var lastPayloadBytes: Int?
+    /// Intent captured when the read session starts — not mutable from the UI mid-scan.
+    @Published private(set) var readIntent: ReadIntent = .none
 
     private var session: NFCNDEFReaderSession?
     private var mode: Mode?
@@ -37,8 +45,15 @@ final class NFCManager: NSObject, ObservableObject, NFCNDEFReaderSessionDelegate
             }
             return
         }
+        guard !isScanning else {
+            DispatchQueue.main.async {
+                self.lastError = "NFC session already in progress. Finish or cancel it first."
+            }
+            return
+        }
         invalidateSession()
         mode = .write(message)
+        readIntent = .none
         lastError = nil
         lastWriteSucceeded = false
         lastPayloadBytes = message.length
@@ -49,15 +64,25 @@ final class NFCManager: NSObject, ObservableObject, NFCNDEFReaderSessionDelegate
         s.begin()
     }
 
-    func beginRead() {
+    /// Starts a read session for a single intent. Concurrent reads are rejected so intent cannot be overwritten mid-scan.
+    @discardableResult
+    func beginRead(for intent: ReadIntent) -> Bool {
+        guard intent == .scanPreview || intent == .importToPhone else { return false }
         guard isAvailable else {
             DispatchQueue.main.async {
                 self.lastError = "NFC is not available on this device."
             }
-            return
+            return false
+        }
+        guard !isScanning else {
+            DispatchQueue.main.async {
+                self.lastError = "NFC session already in progress. Finish or cancel it first."
+            }
+            return false
         }
         invalidateSession()
         mode = .read
+        readIntent = intent
         lastError = nil
         lastReadURL = nil
         lastReadPayload = nil
@@ -66,6 +91,7 @@ final class NFCManager: NSObject, ObservableObject, NFCNDEFReaderSessionDelegate
         session = s
         DispatchQueue.main.async { self.isScanning = true }
         s.begin()
+        return true
     }
 
     func cancel() {
@@ -73,10 +99,19 @@ final class NFCManager: NSObject, ObservableObject, NFCNDEFReaderSessionDelegate
         invalidateSession()
     }
 
+    /// Call after the UI has consumed `lastReadPayload` for the active intent.
+    func consumeReadResult() {
+        readIntent = .none
+        lastReadPayload = nil
+        lastReadURL = nil
+    }
+
     private func invalidateSession() {
         session = nil
         mode = nil
-        DispatchQueue.main.async { self.isScanning = false }
+        DispatchQueue.main.async {
+            self.isScanning = false
+        }
     }
 
     // MARK: - NFCNDEFReaderSessionDelegate
@@ -90,13 +125,17 @@ final class NFCManager: NSObject, ObservableObject, NFCNDEFReaderSessionDelegate
             // User cancel / first-read complete — not an error to surface
             if ns.domain == NFCReaderError.errorDomain {
                 let code = NFCReaderError.Code(rawValue: ns.code)
-                if code == .readerSessionInvalidationErrorUserCanceled
-                    || code == .readerSessionInvalidationErrorFirstNDEFTagRead {
+                if code == .readerSessionInvalidationErrorUserCanceled {
+                    self.readIntent = .none
+                    return
+                }
+                if code == .readerSessionInvalidationErrorFirstNDEFTagRead {
                     return
                 }
             }
             if !self.lastWriteSucceeded && self.lastReadPayload == nil {
                 self.lastError = error.localizedDescription
+                self.readIntent = .none
             }
         }
         self.session = nil
@@ -212,6 +251,7 @@ final class NFCManager: NSObject, ObservableObject, NFCNDEFReaderSessionDelegate
                         self.lastReadPayload = payload
                         if payload == nil {
                             self.lastError = "Tag has a URL but no RedMed #d= profile payload."
+                            self.readIntent = .none
                         }
                     }
                     return
@@ -230,6 +270,7 @@ final class NFCManager: NSObject, ObservableObject, NFCNDEFReaderSessionDelegate
         }
         DispatchQueue.main.async {
             self.lastError = "No RedMed card URL found on this tag."
+            self.readIntent = .none
         }
     }
 }
