@@ -21,7 +21,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NFCReaderUsageDescription</key>
-	<string>RedMed uses NFC only when you tap Write or Scan to program or verify your bracelet. It does not scan in the background or when your hand is merely nearby.</string>
+	<string>RedMed uses NFC only when you tap Write or Scan to program or verify your bracelet. It does not scan in the background or fire at hand distance (16″ standoff).</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>RedMed uses Face ID, Touch ID, or your device passcode to unlock editing of your RedMed profile and to authorize writing to your bracelet. Scanned cards are read-only and cannot be changed without your app and authentication.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

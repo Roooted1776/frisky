@@ -11,10 +11,11 @@ shows an error and does **not** fake a successful link.
 - “Paired phone” means this iPhone wrote + verified the chip and stored a local
   link flag. The phone does **not** keep an active RF session or background-scan
   the band (different from Bluetooth pairing on ~2.4 GHz).
-- **No hand-proximity trigger:** `NFCWriter` / `NFCReader` only `begin()` after
-  the user taps Write or Scan. A hand (or the band) being merely nearby does
-  not start a session. Couples at roughly a few centimetres to the phone’s NFC
-  antenna — not arm’s-length motion.
+- **16″ passive standoff (`AppConfig.BraceletRF.passiveNoTriggerInches`):**
+  `NFCWriter` / `NFCReader` only `begin()` after Write or Scan. A hand at 16″
+  (or the band merely nearby) does not start a session. Intentional coupling
+  is still ~cm to the phone antenna — that is HF NFC physics, not a tunable
+  16″ read range.
 - Do **not** source LF (~125 kHz) or UHF chips — CoreNFC cannot program them.
 - Payment POS may share 13.56 MHz but speaks EMV, not RedMed NDEF URLs.
 - Note: unlocked iPhones can still run Apple’s own Background Tag Reading if the

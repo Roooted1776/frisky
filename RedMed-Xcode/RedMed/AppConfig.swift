@@ -16,8 +16,10 @@ enum AppConfig {
     /// - Contactless payment POS also uses 13.56 MHz but speaks EMV, not NDEF
     ///   medical URLs — protocol separation, not a second MHz.
     /// - No proximity / “hand close” trigger in RedMed: CoreNFC sessions start
-    ///   only from Write/Scan buttons. Passive HF NFC couples at roughly a few
-    ///   centimetres to the phone antenna — not arm’s-length hand motion.
+    ///   only from Write/Scan buttons. Product standoff: a hand at
+    ///   `passiveNoTriggerInches` does not set the band off. Intentional
+    ///   ISO 14443 coupling is still only ~cm to the phone antenna — HF NFC
+    ///   cannot be programmed to a 16″ read range on an iPhone.
     enum BraceletRF {
         static let carrierMHz: Double = 13.56
         static let family = "ISO 14443 / NFC Forum Type 2 (NTAG213+)"
@@ -25,7 +27,9 @@ enum AppConfig {
         static let usesBluetooth = false
         /// RedMed never starts NFC because a hand or band is merely nearby.
         static let requiresExplicitUserSession = true
-        /// Typical ISO 14443 coupling distance — not a “nearby hand” sensor.
+        /// Casual / hand-nearby standoff — band must not “set off” at this distance.
+        static let passiveNoTriggerInches = 16
+        /// Typical ISO 14443 coupling for an intentional tap (physics, not a setting).
         static let typicalCouplingCentimeters = 4
     }
 }
