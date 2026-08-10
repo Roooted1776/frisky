@@ -88,9 +88,9 @@ let aidTopics: [String: AidTopic] = [
         care: ["Call 911 for severe cases", "Move them to a warm, sheltered location", "Remove wet clothing gently — cut if needed", "Warm the core first: chest, neck, armpits, groin — not the limbs", "Use blankets, body heat, or warm (not hot) packs wrapped in cloth", "Do NOT rub or massage limbs — it can cause cardiac arrest", "Give warm drinks only if fully conscious and able to swallow"]
     ),
     "heat-stroke": AidTopic(
-        id: "heat-stroke", title: "Heat Exhaustion & Stroke",
-        symptoms: ["Heavy sweating, weakness, cold/pale/clammy skin (exhaustion)", "Hot, red, dry or damp skin, rapid pulse, confusion (stroke)", "Nausea, fainting, body temp above 103°F"],
-        care: ["Heat stroke: call 911 immediately — it is life-threatening", "Move to cool or shaded area", "Cool rapidly: remove extra clothing, apply ice packs to neck/armpits/groin", "If conscious: sip cool water slowly", "Do NOT give fluids to an unconscious person", "Fan them while applying cool water to skin", "Lay them down and elevate legs if no spinal injury"]
+        id: "heat-stroke", title: "Heat Stroke",
+        symptoms: ["Hot skin — may be dry or sweaty", "Confusion, slurred speech, seizure, or unresponsiveness", "Core temperature above 104°F (40°C)"],
+        care: ["Call 911 — heat stroke kills; cooling is the emergency treatment", "Move immediately into shade or air conditioning", "Remove excess clothing to expose as much skin as possible", "Cool NOW by any means: ice bath (most effective), cold wet cloths on neck/armpits/groin, fan with misting", "Do NOT give fluids if confused or unresponsive — aspiration risk", "If fully conscious and able to swallow: cold water only — no aspirin or acetaminophen"]
     ),
     "seizure": AidTopic(
         id: "seizure", title: "Seizure",
@@ -98,9 +98,14 @@ let aidTopics: [String: AidTopic] = [
         care: ["Call 911 if: first seizure, lasts more than 5 minutes, no recovery, injury, or in water", "Time the seizure from the start", "Clear the area — move objects that could cause injury", "Do NOT restrain them — guide gently away from danger", "Do NOT put anything in their mouth", "Cushion the head with something soft", "After it stops: roll them on their side (recovery position) to protect the airway", "Stay calm and reassure them — confusion after a seizure is normal"]
     ),
     "burns": AidTopic(
-        id: "burns", title: "Burns",
-        symptoms: ["Skin red, blistered, or charred", "Pain — may be reduced if nerve damage is deep", "Clothing stuck to the burned skin"],
-        care: ["Stop the burning — remove from the heat source", "Cool with running water 10+ minutes. No ice", "Remove jewelry or tight items before swelling starts", "Cover loosely with a clean, dry cloth — no ointments", "Do NOT peel off clothing stuck to the burn", "Call 911 for large, deep, or facial/airway burns"]
+        id: "burns", title: "Burn Care",
+        symptoms: ["Redness and pain (1st degree)", "Blistering with intense pain (2nd degree)", "White, leathery, or charred skin with little pain (3rd degree — nerve damage)"],
+        care: ["Call 911 for burns larger than the palm, on the face, hands, feet, or genitals, or any 3rd-degree burn", "Cool the burn under cool running water for 10–20 minutes — never use ice", "Remove rings, watches, and tight clothing near the burn before swelling starts", "Cover loosely with a clean, non-stick dressing or cloth", "Do NOT pop blisters or apply butter, oil, or ointment", "Watch for shock: pale, cold, rapid breathing"]
+    ),
+    "electrical-chemical-burns": AidTopic(
+        id: "electrical-chemical-burns", title: "Electrical & Chemical Burns",
+        symptoms: ["Visible entry and exit wound (electrical) — damage often worse than it looks", "Chemical contact with skin, eyes, or clothing", "Irregular heartbeat, confusion, or muscle pain after shock"],
+        care: ["Do NOT touch them until you're sure the power source is off", "Call 911 — electrical burns cause internal damage far beyond the skin", "For chemicals: brush off dry powder first, then flush skin with running water for 20 minutes", "Remove any clothing or jewelry contaminated with the chemical", "Be ready for CPR — electrical shock can stop the heart", "Cover the burn loosely once flushed or the power is confirmed off"]
     ),
     "trauma-hospitals": AidTopic(
         id: "trauma-hospitals", title: "Find Trauma Center",

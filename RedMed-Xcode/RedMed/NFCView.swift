@@ -7,6 +7,7 @@ struct NFCView: View {
     @State private var writeSuccess = false
     @State private var writeError: String? = nil
     @State private var showPublicCard = false
+    @State private var imported = false
 
     var body: some View {
         NavigationView {
@@ -89,7 +90,9 @@ struct NFCView: View {
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.redmedMuted)
                             .lineSpacing(3)
-                        SecondaryButton("Import tag onto this phone", icon: "arrow.down.circle") { profile.name = profile.name.isEmpty ? "Alex Rivera" : profile.name }
+                        SecondaryButton(imported ? "Imported ✓" : "Import tag onto this phone",
+                                        icon: "arrow.down.circle") { imported = true }
+                            .disabled(imported)
                     }
                     .padding(14)
                     .background(Color.redmedSurface)
