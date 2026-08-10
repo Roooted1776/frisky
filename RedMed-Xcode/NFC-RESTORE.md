@@ -1,45 +1,56 @@
 # Restoring the NFC bracelet feature
 
-NFC was removed from the app because **Near Field Communication Tag Reading
-requires a paid Apple Developer Program membership** — it is not available to
-free personal teams. This file is the checklist for putting it back once that
-membership is active.
+NFC Tag Reading needs a **paid Apple Developer Program membership**.
+It is parked until that is active. Do not re-enable entitlements or the
+NFC tab on a free personal team.
 
-Nothing was thrown away. The full feature is preserved two ways:
+## Ped / EMS NFC tap (required product behavior)
 
-- **Branch `nfc`** — a snapshot of `main` at commit `80185c6`, with every NFC
-  file intact, including the `fullScreenCover` change to `NFCView.swift`.
-- **Commit `7fcc66a`** — the removal, written as one self-contained commit
-  against that same point, so it can be reverted cleanly.
+When a stranger taps the bracelet, the NDEF URI opens **`card.html#d=…`**
+in their phone browser (no RedMed app required). That page **must** expose
+the same three tabs as the owner app and the in-app Preview scanner:
 
-## 1. Bring the code back
+| Tab | What they get |
+|-----|----------------|
+| **RedMed** | Read-only medical profile from `#d=` |
+| **911** | Call 911 + local GPS / what to tell dispatch |
+| **Aid** | Roadside aid panes (including Seizure, Hypothermia, Heat) |
 
-```sh
-git revert 7fcc66a
-```
+Hard rules for that tap surface:
 
-One command. Prefer this over merging the `nfc` branch — `nfc` is frozen at
-`80185c6` and `main` moves on, so merging it will conflict on files that have
-changed since. Use `nfc` only as a read-only reference.
+- **All three tabs viewable** — RedMed, 911, Aid. Do not ship a medical-only card.
+- **No Edit** on RedMed.
+- **No NFC / write / pair UI** — writing is owner-app only after Face ID.
+- Keep `card.html` and in-app `PublicCardView` → `ContentView` (scanner session) in sync.
 
-That restores `NFCView.swift`, `NFCView.inactive.swift`, the target membership,
-`AppTab.nfc`, the tab bar item, `ProfileData.braceletLinked`, the MyIDView
-bracelet entry points, and the bracelet copy in `PublicCardView` /
-`EmergencyView` / `Info.plist`.
+`PublicCardView` is the in-app preview of that same shell (snapshot profile,
+`isScannerSession = true`).
 
-The longer `main` runs without NFC, the more the revert will conflict. If it
-gets messy, the removal commit is still the best description of what to undo —
-read it as a checklist rather than fighting the merge.
+## What is parked on this branch
 
-## 2. Fix the entitlement — it was in the wrong file
+- `RedMed/NFCView.swift` — on disk, **not** in the Xcode target (header notes why)
+- Empty `RedMed.entitlements` (no NFC entitlement)
+- No `AppTab.nfc`, no bracelet UI on My ID
+- Owner app tabs: RedMed / 911 / Aid only
 
-This part the revert does **not** get right, and it is very likely why NFC never
-worked before.
+Historical references (older snapshots):
 
-`com.apple.developer.nfc.readersession.formats` was sitting in `Info.plist`.
-`com.apple.developer.*` keys are **entitlements**, not Info.plist keys — it did
-nothing there. After reverting, delete it from `RedMed/Info.plist` and put it in
-`RedMed/RedMed.entitlements`, which is currently an empty `<dict/>`:
+- Branch `nfc` — frozen at `80185c6`
+- Commit `7fcc66a` — earlier self-contained removal (pre–merge-conflict fixes)
+
+Prefer restoring against **current** `main` using the checklist below rather
+than a blind `git revert` of `7fcc66a` (the tree has moved on).
+
+## Restore checklist
+
+### 1. Paid team + capability
+
+1. Developer portal → App ID `com.redmed.app` → enable **NFC Tag Reading**
+2. Xcode → Signing & Capabilities → **Near Field Communication Tag Reading**
+
+### 2. Entitlement + usage string
+
+`RedMed/RedMed.entitlements`:
 
 ```xml
 <key>com.apple.developer.nfc.readersession.formats</key>
@@ -48,37 +59,34 @@ nothing there. After reverting, delete it from `RedMed/Info.plist` and put it in
 </array>
 ```
 
-## 3. Add the missing usage string
-
-`NFCReaderUsageDescription` is required in `RedMed/Info.plist` for
-`NFCNDEFReaderSession`, and it is not currently there. Without it the reader
-session fails at runtime:
+`RedMed/Info.plist` (usage only — never put `com.apple.developer.*` here):
 
 ```xml
 <key>NFCReaderUsageDescription</key>
 <string>RedMed writes your emergency card to your NFC bracelet.</string>
 ```
 
-## 4. Enable the capability
+### 3. App wiring
 
-1. Developer portal → Certificates, Identifiers & Profiles → your App ID
-   (`com.redmed.app`) → enable **NFC Tag Reading**.
-2. Xcode → target `RedMed` → Signing & Capabilities → **+ Capability** →
-   **Near Field Communication Tag Reading**.
-3. Let Xcode regenerate the provisioning profile.
+- Add `NFCView.swift` back to the RedMed target
+- Restore `AppTab.nfc`, tab bar item, My ID bracelet entry points,
+  `ProfileData.braceletLinked`
+- Owner-only: Face ID before write; mark `braceletLinked` only after a
+  successful write
+- Scanners / `#d=` taps: still RedMed + 911 + Aid only (no NFC tab, no Edit)
 
-## 5. Activate the real implementation
+### 4. What the band must contain
 
-`NFCView.swift` is the UI-only stub — the write button is disabled and
-`beginWrite()` is a no-op. The working CoreNFC implementation is
-`NFCView.inactive.swift`, which is **not** in the Xcode target.
+Write an NDEF URI whose HTTPS page is **`card.html`** with profile in `#d=`
+(see `uploads/Services/ProfileLinkBuilder.swift` for the encoding pattern).
+After unarchive, confirm on a physical iPhone:
 
-Copy `NFCView.inactive.swift` over `NFCView.swift` (drop its 10-line header
-comment). Do not add both to the target — they each define `NFCView` and
-`NFCWriteOverlay`.
+1. Write band from owner app
+2. Tap with a second phone (Safari) → RedMed, 911, and Aid all switchable
+3. No edit controls; profile matches last write
 
-Note that the restored implementation is still a **demo**: `NFCWriteOverlay`
-simulates a successful write with a 2-second `Task` rather than running a real
-`NFCNDEFWriterSession`, and `beginWrite()` has a comment marking where `LAContext`
-biometric auth belongs. Wiring up real CoreNFC is step 6, and it needs a physical
-iPhone — NFC does not work in the Simulator.
+### 5. Real CoreNFC
+
+The parked `NFCView.swift` is still a **demo** overlay (`Task.sleep`). Wire a
+real `NFCNDEFWriterSession` (and optional read-back) on device — Simulator
+cannot do NFC.

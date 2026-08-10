@@ -23,9 +23,10 @@ extension EnvironmentValues {
 }
 
 /// Same app shell as `ContentView` for people who scan (ped / EMS):
-/// RedMed + 911 + Aid — **no Edit** (owner settings stay hidden).
+/// **RedMed + 911 + Aid** — all three viewable, **no Edit**.
+/// This mirrors the bracelet NFC tap (`card.html#d=…`) that strangers open
+/// in a browser once NFC write is unarchived — keep them in sync.
 /// Holds a **snapshot** of the profile so scanner UI cannot mutate owner data.
-/// This is the in-app preview / native scanner shell.
 struct PublicCardView: View {
     @StateObject private var snapshot: ProfileData
     @Environment(\.dismiss) private var dismiss
