@@ -110,7 +110,7 @@ struct GetView: View {
                 .lineSpacing(3)
                 .padding(.top, 16)
 
-            Text("Passive NFC only — no battery, no broadcast. RedMed is not a medical device. In an emergency, call \(EmergencyNumber.current).")
+            Text("Passive 13.56 MHz HF NFC only — no battery, no Bluetooth pair. Phone powers the band only on tap. RedMed is not a medical device. In an emergency, call \(EmergencyNumber.current).")
                 .font(.system(size: 12))
                 .foregroundColor(dim)
                 .multilineTextAlignment(.center)

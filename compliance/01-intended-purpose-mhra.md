@@ -3,7 +3,8 @@
 **Document ID:** RM-IP-001  
 **Status:** Draft for sign-off  
 **Date:** 2026-08-10  
-**Product:** RedMed iOS app + passive NFC emergency ID bracelet  
+**Product:** RedMed iOS app + passive 13.56 MHz HF NFC emergency ID bracelet (no Bluetooth pair)  
+ 
 **Decision owner:** [Name / role — required before NHS sales]
 
 ---
@@ -38,7 +39,7 @@ and reassess under UK MDR before release.
 | Capability | Purpose language (allowed) | Forbidden drift |
 |------------|----------------------------|-----------------|
 | Medical profile on device | Store / display emergency ID | “Detects conditions”, “clinical record of truth” |
-| Passive NFC band | Share emergency ID on tap | “Monitors patient”, “alerts clinicians automatically” |
+| Passive HF NFC band (13.56 MHz NTAG; phone-powered on tap only) | Share emergency ID on tap | “Monitors patient”, “alerts clinicians automatically”, “Bluetooth-paired wearable” |
 | Find Help GPS | Show coordinates so user can tell 999/911 | “Locates trauma pathway”, “dispatch recommendation” |
 | Seizure timer | Help user time an event; prompt to call at 5:00 | “Detects seizures”, “diagnoses epilepsy” |
 | Roadside Aid / CPR timer | General public first-aid information | Personalised treatment plan, triage algorithm |

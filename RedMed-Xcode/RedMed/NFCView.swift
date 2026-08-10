@@ -25,7 +25,7 @@ struct NFCView: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 12) {
-                    Text("iPhone only for setup. Fill RedMed, write the band once — Face ID, then hold to pair.")
+                    Text("iPhone only for setup. Fill RedMed, write the band once — Face ID, then hold to pair. No Bluetooth; the band stays passive.")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
@@ -37,6 +37,8 @@ struct NFCView: View {
 
                     let capacity = ProfileNFCCodec.capacityNote(for: profile)
                     VStack(spacing: 0) {
+                        statusRow("Passive band · 13.56 MHz HF NFC (NTAG) — not Bluetooth 2.4 GHz.", showDivider: true)
+                        statusRow("Phone only powers the chip on write/scan. No background pair radio.", showDivider: true)
                         statusRow("Tap the band · phone opens your card · no app for readers", showDivider: true)
                         statusRow(
                             profile.braceletLinked
