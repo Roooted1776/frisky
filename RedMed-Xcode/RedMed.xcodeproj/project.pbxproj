@@ -20,6 +20,9 @@
 		AABB0000000000000000000B /* HelpMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000000E /* HelpMenuView.swift */; };
 		AABB0000000000000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000000C /* Assets.xcassets */; };
 		AABB00000000000000000010 /* NearbyHospitals.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000010 /* NearbyHospitals.swift */; };
+		AABB00000000000000000011 /* LocationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000011 /* LocationHelper.swift */; };
+		AABB00000000000000000012 /* MedicationData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000012 /* MedicationData.swift */; };
+		AABB00000000000000000013 /* PublicCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000013 /* PublicCardView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -39,6 +42,9 @@
 		AAAA0000000000000000000E /* HelpMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpMenuView.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000000F /* RedMed.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RedMed.entitlements; sourceTree = "<group>"; };
 		AAAA00000000000000000010 /* NearbyHospitals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyHospitals.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000011 /* LocationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationHelper.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000012 /* MedicationData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationData.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000013 /* PublicCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicCardView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -67,6 +73,9 @@
 				AAAA0000000000000000000A /* NFCView.swift */,
 				AAAA0000000000000000000E /* HelpMenuView.swift */,
 				AAAA00000000000000000010 /* NearbyHospitals.swift */,
+				AAAA00000000000000000011 /* LocationHelper.swift */,
+				AAAA00000000000000000012 /* MedicationData.swift */,
+				AAAA00000000000000000013 /* PublicCardView.swift */,
 				AAAA0000000000000000000C /* Assets.xcassets */,
 				AAAA0000000000000000000B /* Info.plist */,
 				AAAA0000000000000000000F /* RedMed.entitlements */,
@@ -171,6 +180,9 @@
 				AABB0000000000000000000A /* NFCView.swift in Sources */,
 				AABB0000000000000000000B /* HelpMenuView.swift in Sources */,
 				AABB00000000000000000010 /* NearbyHospitals.swift in Sources */,
+				AABB00000000000000000011 /* LocationHelper.swift in Sources */,
+				AABB00000000000000000012 /* MedicationData.swift in Sources */,
+				AABB00000000000000000013 /* PublicCardView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
