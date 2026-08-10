@@ -109,7 +109,15 @@ struct NFCView: View {
                 }
             }
             .overlay {
-                if showWriteOverlay { NFCWriteOverlay { showWriteOverlay = false } }
+                if showWriteOverlay {
+                    NFCWriteOverlay(
+                        onCancel: { showWriteOverlay = false },
+                        onSuccess: {
+                            showWriteOverlay = false
+                            profile.braceletLinked = true
+                        }
+                    )
+                }
             }
             .sheet(isPresented: $showPublicCard) { PublicCardView(profile: profile) }
         }
@@ -118,9 +126,8 @@ struct NFCView: View {
     func beginWrite() {
         guard profile.hasData else { return }
         // In production: LAContext biometric auth, then NFCNDEFWriterSession
+        // Do not mark braceletLinked until write succeeds (or demo completes).
         showWriteOverlay = true
-        // Demo stub: writing marks the band linked for Main header status
-        profile.braceletLinked = true
     }
 
     @ViewBuilder
@@ -175,6 +182,9 @@ struct NFCView: View {
 // MARK: - Write Overlay
 struct NFCWriteOverlay: View {
     let onCancel: () -> Void
+    let onSuccess: () -> Void
+
+    @State private var cancelled = false
 
     var body: some View {
         ZStack {
@@ -204,7 +214,10 @@ struct NFCWriteOverlay: View {
                         .lineSpacing(3)
                 }
 
-                Button(action: onCancel) {
+                Button {
+                    cancelled = true
+                    onCancel()
+                } label: {
                     Text("Cancel")
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(.white)
@@ -213,6 +226,14 @@ struct NFCWriteOverlay: View {
                         .clipShape(Capsule())
                 }
                 .padding(.top, 8)
+            }
+        }
+        .onAppear {
+            // Demo stub: simulate a completed NFC write after a short hold.
+            // Cancel before this fires leaves braceletLinked unchanged (stale).
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                guard !cancelled else { return }
+                onSuccess()
             }
         }
     }
