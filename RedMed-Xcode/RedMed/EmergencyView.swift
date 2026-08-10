@@ -5,15 +5,11 @@ struct EmergencyView: View {
     @EnvironmentObject var profile: ProfileData
     @StateObject private var locationManager = LocationManager()
     @State private var showSatellite = false
-    @State private var showPublicCard = false
     /// Mount SOS after first GPS paint so opening 911 stays snappy.
     @State private var mountSOS = false
 
     func callFirstContact() {
-        guard let c = profile.contacts.first else {
-            if let url = URL(string: "tel://911") { UIApplication.shared.open(url) }
-            return
-        }
+        guard let c = profile.contacts.first else { return }
         let digits = c.detail.filter(\.isNumber)
         if let url = URL(string: "tel://\(digits)") { UIApplication.shared.open(url) }
     }
@@ -25,21 +21,7 @@ struct EmergencyView: View {
                     Text("Find 911")
                         .font(.system(size: 22, weight: .bold))
                         .foregroundColor(.redmedDark)
-                    Text("Call first. Share GPS second.")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.redmedMuted)
                         .padding(.bottom, 2)
-
-                    PrimaryButton(title: "Call 911") {
-                        if let url = URL(string: "tel://911") { UIApplication.shared.open(url) }
-                    }
-
-                    SecondaryButton("Show emergency card") { showPublicCard = true }
-                    Text("Instant card: medical ID, 911, roadside aid. Read-only — owner settings stay hidden.")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
 
                     SecondaryButton("Call emergency contacts") { callFirstContact() }
                     Text("Pick a saved contact — iPhone asks before placing the call.")
@@ -133,12 +115,6 @@ struct EmergencyView: View {
             .onDisappear {
                 locationManager.stop()
                 mountSOS = false
-            }
-            .fullScreenCover(isPresented: $showPublicCard) {
-                PublicCardView(profile: profile)
-            }
-            .transaction { t in
-                if showPublicCard { t.disablesAnimations = true }
             }
         }
     }

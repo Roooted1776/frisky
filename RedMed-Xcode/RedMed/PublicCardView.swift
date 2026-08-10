@@ -2,7 +2,7 @@ import SwiftUI
 import CoreLocation
 
 /// Instant read-only surface for first responders.
-/// Shows: medical ID, Find 911 actions (dial + GPS + contacts), Roadside Aid.
+/// Shows: medical ID, Live GPS + contacts, Roadside Aid.
 /// Does **not** expose owner settings or any edit path.
 struct PublicCardView: View {
     @ObservedObject var profile: ProfileData
@@ -16,14 +16,7 @@ struct PublicCardView: View {
         NavigationView {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 12) {
-                    banner
-
                     readOnlyLock
-
-                    // --- 911 first (instant) ---
-                    PrimaryButton(title: "Call 911") {
-                        if let url = URL(string: "telprompt:911") { UIApplication.shared.open(url) }
-                    }
 
                     SecondaryButton("Text location to emergency contact") {
                         locationHelper.requestAndSend(to: profile.contacts.first?.detail)
@@ -57,7 +50,7 @@ struct PublicCardView: View {
 
                     // --- Roadside Aid ---
                     SectionLabel(text: "Roadside Aid")
-                    Text("Call 911 first. Tap a pane — expand only what you need.")
+                    Text("Tap a pane — expand only what you need.")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.redmedMuted)
 
@@ -77,7 +70,7 @@ struct PublicCardView: View {
                         }
                     }
 
-                    Text("Scanner view — medical ID, 911, and roadside aid only. Owner settings are hidden. This card cannot be edited here.")
+                    Text("Read-only medical ID and roadside aid. Owner settings are hidden. This card cannot be edited here.")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
@@ -102,20 +95,6 @@ struct PublicCardView: View {
             }
         }
         .navigationViewStyle(.stack)
-    }
-
-    private var banner: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "cross.case.fill")
-                .foregroundColor(.redmedAccent)
-            Text("Emergency card — medical ID · 911 · roadside aid")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(.redmedAccent)
-        }
-        .padding(.horizontal, 14).padding(.vertical, 10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.redmedAccent.opacity(0.1))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 
     /// Scanners cannot alter the card or profile from this surface.
