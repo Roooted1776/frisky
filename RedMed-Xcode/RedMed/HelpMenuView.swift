@@ -40,6 +40,11 @@ struct HelpMenuView: View {
                         .navigationTitle("How It Works")
                         .navigationBarTitleDisplayMode(.inline)
                 }
+                NavigationLink("NFC tap card (local)") {
+                    LocalWebView(filename: "card")
+                        .navigationTitle("NFC tap card")
+                        .navigationBarTitleDisplayMode(.inline)
+                }
             }
             .navigationTitle("Policies")
             .navigationBarTitleDisplayMode(.inline)
