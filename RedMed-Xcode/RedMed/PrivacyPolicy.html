@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RedMed — Privacy Policy</title>
+<link rel="stylesheet" href="assets/legal-doc.css">
+</head>
+<body class="legal-doc">
+<div class="legal-sheet">
+  <header class="legal-letterhead">
+    <p class="legal-firm">RedMed</p>
+    <p class="legal-tagline">Legal · Privacy &amp; Data Protection</p>
+    <p class="legal-entity">Emergency Medical Identification · Local-Only Software</p>
+  </header>
+
+  <nav class="legal-nav legal-nav-top" aria-label="Related legal documents">
+    <a href="terms-of-service.html">Terms Of Service</a>
+    <span aria-hidden="true">|</span>
+    <a href="privacy-policy.html" aria-current="page">Privacy Policy</a>
+    <span aria-hidden="true">|</span>
+    <a href="get.html">Set up your band</a>
+  </nav>
+
+  <hr class="legal-rule-thin" aria-hidden="true">
+
+  <h1 class="legal-doc-title">Privacy Policy</h1>
+  <p class="legal-meta">
+    <strong>Effective Date</strong> July 2026<br>
+    <strong>Document Version</strong> 1.0
+  </p>
+  <p class="legal-parties">Applicable to all users of the RedMed application and associated passive NFC medical bracelet</p>
+
+  <div class="legal-notice">
+    <strong>Executive Summary</strong>
+    RedMed operates no servers for your medical ID. There is no cloud account and no operator-side database of your profile. Data you enter (including PHI and PII) stays on your device and, if you choose, on your passive NFC bracelet. The operator does not collect, profile, or sell user data.
+  </div>
+
+  <article class="legal-body">
+    <p>This Privacy Policy (“Policy”) describes how RedMed handles information in connection with the RedMed mobile and web application (the “App”) and associated passive NFC medical bracelet. This Policy should be read together with our <a href="terms-of-service.html">Terms Of Service</a>.</p>
+
+    <h2><span class="sec-num">1.</span> Scope</h2>
+    <p>RedMed is a personal emergency medical identification tool. You enter your profile once and may program it onto a passive NFC bracelet. A smartphone that taps the band may read your emergency card in its browser. The App does not require an account and does not sync your profile to any RedMed server.</p>
+
+    <h2><span class="sec-num">2.</span> HIPAA, PHI, and PII Posture</h2>
+    <p>RedMed is a consumer-controlled tool — analogous to a physical medical ID card — not a healthcare provider portal. The operator does <strong>not</strong> act as a HIPAA covered entity or business associate with respect to self-entered profile data, because <strong>that data is not received by the operator</strong>.</p>
+    <ul>
+      <li><strong>Protected Health Information (PHI):</strong> health-related information you type (allergies, medications, conditions) remains on-device and/or on-band.</li>
+      <li><strong>Personally Identifiable Information (PII):</strong> name, emergency contacts, and telephone numbers remain on-device and/or on-band.</li>
+      <li>Nothing in your profile is uploaded, synced, or backed up to operator servers.</li>
+    </ul>
+    <p>This reflects a <strong>local-only, HIPAA-adjacent design</strong>: identifiable health and personal data does not leave your control through our systems.</p>
+
+    <h2><span class="sec-num">3.</span> Information We Do Not Collect</h2>
+    <p>Under normal operation, RedMed does not collect, store, transmit, sell, or analyze your medical profile, emergency contacts, bracelet pairing data, or Find 911 coordinates on any operator server. We do not operate advertising networks, analytics identifiers, or cross-app tracking in the App. There is no account registration and no operator contact directory in the App.</p>
+
+    <h2><span class="sec-num">4.</span> Safeguards</h2>
+    <ul>
+      <li><strong>Minimum necessary:</strong> only information you choose to enter for emergency identification is stored locally.</li>
+      <li><strong>No operator transmission:</strong> profile, contacts, and bracelet pairing tokens are not sent to RedMed.</li>
+      <li><strong>User control:</strong> the <strong>Clear data</strong> function removes profile, bracelet link, PIN, and related preferences from the device.</li>
+      <li><strong>Optional PIN lock:</strong> when enabled, the bracelet PIN is stored on-device as a salted PBKDF2 digest (not plain text). The PIN locks SOS/unlock controls on your device only — it does not encrypt or hide data on the NFC chip.</li>
+      <li><strong>No background NFC scanning:</strong> the App does not continuously energize your band.</li>
+    </ul>
+
+    <h2><span class="sec-num">5.</span> Where Data Is Stored</h2>
+    <p>Profile data is stored on your device — in the iOS app’s secure storage (Keychain where applicable), or in your browser’s <code>localStorage</code> on the web version. When you program a bracelet, the same data is encoded onto the passive NFC chip locally. Data is not retrieved from any RedMed server when someone taps the tag.</p>
+    <p><strong>NFC disclosure:</strong> like a wallet medical card, information on the passive tag is readable by any smartphone that taps it. This is intentional for emergency access. Data is not encrypted on the chip so responders do not require an app or password.</p>
+
+    <h2><span class="sec-num">6.</span> Processing While the App Is Open</h2>
+    <ul>
+      <li><strong>My ID / Bracelet:</strong> profile is edited and saved on-device; you choose when to write to the band.</li>
+      <li><strong>Roadside Aid:</strong> first-aid reference and CPR timer run offline on your device; no profile fields are shown or transmitted.</li>
+      <li><strong>Find 911:</strong> location and compass heading may be used <strong>only while that screen is visible</strong>; processing stops when you leave the screen or close the App.</li>
+      <li><strong>Call emergency contacts:</strong> opens your device’s phone dialer with a contact number; you must confirm the call. RedMed does not place calls or operate a telephony server.</li>
+    </ul>
+    <p>We do not log, analyze, or transmit this information to the operator as part of normal use.</p>
+
+    <h2><span class="sec-num">7.</span> Location Information (Find 911)</h2>
+    <p>Find 911 displays coordinates only while that screen is open. It is not used for advertising, profiling, or background monitoring.</p>
+    <p><strong>RedMed does not display its own in-app location-permission dialog.</strong> By opening Find 911 you consent to device location processing for that screen. Your browser or operating system supplies location using GPS/GNSS (satellite positioning), Wi‑Fi, and cellular signals as available. You may receive a one-time platform prompt from your phone or browser; this is not a separate RedMed permission screen.</p>
+    <p><strong>RedMed has no servers.</strong> Location appears on screen and, only if you choose, in text you copy. We do not receive, log, or store coordinates. RedMed is <strong>not</strong> Apple Emergency SOS via satellite, Android Satellite SOS, or any carrier satellite messaging service.</p>
+    <p>If a Google Maps API key is configured for the hosted web App, Find 911 may send GPS coordinates to <strong>Google Maps Platform</strong> solely to suggest state or county for offline trauma-center lookup and to verify hospital names — not to RedMed. This is optional and limited to the Find 911 screen.</p>
+
+    <h2><span class="sec-num">8.</span> Passive NFC Bracelet</h2>
+    <p>Your medical ID is encoded on a passive NFC chip (ISO 14443 / NTAG-style). The chip has no battery and does not broadcast; a smartphone tap powers it briefly. Treat the bracelet as you would a conventional medical ID card with respect to privacy and physical security.</p>
+
+    <h2><span class="sec-num">9.</span> Data Retention and Deletion</h2>
+    <p>Data persists on your device and bracelet until you delete it. Use <strong>Clear data</strong> (web) or <strong>Clear All Data</strong> (iOS) to remove profile, bracelet pairing, PIN, and related preferences from the phone. To clear a programmed bracelet, write a blank tag or replace the band; the operator cannot erase a chip remotely because there is no connection to it.</p>
+
+    <h2><span class="sec-num">10.</span> Children</h2>
+    <p>A parent or legal guardian may create a profile on behalf of a minor or dependent. The guardian is responsible for the accuracy of that information and for decisions regarding bracelet use.</p>
+
+    <h2><span class="sec-num">11.</span> Changes to This Policy</h2>
+    <p>We may update this Policy from time to time. The Effective Date above will reflect the most recent revision. Material changes will be reflected in the App where practicable. Continued use after an update constitutes acceptance of the revised Policy.</p>
+  
+    <h2><span class="sec-num">12.</span> Contact</h2>
+    <p>Questions about this Privacy Policy or your personal data can be directed to <a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a>.</p>
+  </article>
+
+  <footer class="legal-footer">
+    <p>© 2026 RedMed · All rights reserved</p>
+    <p><a href="terms-of-service.html">Terms Of Service</a> · <a href="get.html">Set up your band</a></p>
+    <p class="legal-footer-disclaimer">This document is provided for informational purposes and does not constitute legal advice.</p>
+  </footer>
+</div>
+</body>
+</html>
