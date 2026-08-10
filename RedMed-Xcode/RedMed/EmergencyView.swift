@@ -9,6 +9,7 @@ struct EmergencyView: View {
     func callFirstContact() {
         guard let c = profile.contacts.first else { return }
         let digits = c.detail.filter(\.isNumber)
+        guard !digits.isEmpty else { return }
         if let url = URL(string: "tel://\(digits)") { UIApplication.shared.open(url) }
     }
 
@@ -385,7 +386,10 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        location = locations.last
+        let latest = locations.last
+        DispatchQueue.main.async {
+            self.location = latest
+        }
         // Tighten once we have a fix so the card stays accurate while the tab is open.
         if manager.desiredAccuracy != kCLLocationAccuracyBest {
             manager.desiredAccuracy = kCLLocationAccuracyBest

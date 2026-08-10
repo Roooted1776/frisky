@@ -25,8 +25,8 @@ let aidPanes: [AidPane] = [
             topics: [("Cold (Hypothermia)", "cold-hypothermia")]),
     AidPane(id: "heat", emoji: "🥵", title: "Heat", subtitle: "Cool fast · call 911", iconFilled: false,
             topics: [("Heat (Exhaustion & Stroke)", "heat-stroke")]),
-    AidPane(id: "hospitals", emoji: "🏥", title: "Trauma Hospitals", subtitle: "Nearest Level I/II center", iconFilled: false,
-            topics: [("Find Trauma Center", "trauma-hospitals")]),
+    AidPane(id: "hospitals", emoji: "🏥", title: "Nearby Hospitals", subtitle: "MapKit emergency POIs", iconFilled: false,
+            topics: [("Find Nearby Hospitals", "trauma-hospitals")]),
 ]
 
 struct AidView: View {

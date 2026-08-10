@@ -1,24 +1,19 @@
 // Owner-only NFC bracelet setup. Ped/EMS scanner shells never mount this tab —
 // see ContentView.showsNFC / scannerSafeTab.
-//
-// Apple NFC flags are parked (commented) in RedMed.entitlements + Info.plist.
-// Write uses a local demo overlay until you unhide those and wire CoreNFC —
-// see RedMed-Xcode/NFC-RESTORE.md.
 import SwiftUI
-// UNHIDE WITH APPLE DEV LICENSE:
-// import CoreNFC
+import CoreNFC
 
 struct NFCView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
-    @State private var showWriteOverlay = false
-    @State private var writeSuccess = false
-    @State private var writeError: String? = nil
+    @StateObject private var writer = NFCWriter()
+    @StateObject private var reader = NFCReader()
     @State private var showPublicCard = false
+    @State private var scannedCard: ProfileData?
     @State private var showAuthFailedAlert = false
+    @State private var statusAlert: String?
 
     var body: some View {
-        // Ped/EMS scanner shells must never write or pair bands.
         if isScannerSession {
             Color.redmedBg.ignoresSafeArea()
         } else {
@@ -30,7 +25,6 @@ struct NFCView: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 12) {
-                    // Header
                     Text("iPhone only for setup. Fill My ID, write the band once — Face ID, then hold to pair.")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.redmedMuted)
@@ -41,7 +35,7 @@ struct NFCView: View {
                         .padding(.top, 8)
                         .padding(.bottom, 6)
 
-                    // STATUS
+                    let capacity = ProfileNFCCodec.capacityNote(for: profile)
                     VStack(spacing: 0) {
                         statusRow("Tap the band · phone opens your card · no app for readers", showDivider: true)
                         statusRow(
@@ -50,20 +44,19 @@ struct NFCView: View {
                                 : "Bracelet not linked yet — write once to pair",
                             showDivider: true
                         )
-                        statusRow("Tag capacity: 24% used — plenty of room", showDivider: false)
+                        statusRow(capacity.text, showDivider: false)
                     }
                     .padding(.horizontal, 14)
                     .background(Color.white.opacity(0.7))
                     .clipShape(RoundedRectangle(cornerRadius: 14))
                     .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.redmedDivider, lineWidth: 1))
 
-                    // SET UP
                     sectionLabel("Set up")
                     VStack(spacing: 12) {
                         Button { beginWrite() } label: {
                             HStack(spacing: 8) {
                                 Image(systemName: "wave.3.right")
-                                Text("Write to NFC tag")
+                                Text(writer.isWriting ? "Hold near tag…" : "Write to NFC tag")
                             }
                             .font(.system(size: 16, weight: .bold))
                             .foregroundColor(.white)
@@ -76,7 +69,7 @@ struct NFCView: View {
                             .clipShape(Capsule())
                             .shadow(color: Color.redmedAccent.opacity(0.28), radius: 7, y: 4)
                         }
-                        .disabled(!profile.hasData)
+                        .disabled(!profile.hasData || writer.isWriting)
                         .opacity(profile.hasData ? 1 : 0.55)
                         if !profile.hasData {
                             Text("Add your name on My ID before writing a tag.")
@@ -84,10 +77,16 @@ struct NFCView: View {
                                 .foregroundColor(.redmedAccent)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
+                        if !writer.statusMessage.isEmpty {
+                            Text(writer.statusMessage)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(writer.success ? .redmedMuted : .redmedAccent)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
                         VStack(alignment: .leading, spacing: 6) {
-                            syncBullet("Link your bracelet once (My ID → bracelet icon → write/read).")
+                            syncBullet("Link your bracelet once (write after My ID is filled).")
                             syncBullet("Save after every edit and hold your phone to the band when prompted.")
-                            syncBullet("If you cancel the NFC prompt, the band stays stale until you save again.")
+                            syncBullet("If you cancel the NFC prompt, the band stays stale until you write again.")
                         }
                     }
                     .padding(14)
@@ -95,21 +94,24 @@ struct NFCView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 18))
                     .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
 
-                    // VERIFY
                     sectionLabel("Verify")
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Scan your band to see the same emergency card a stranger gets — no app required for them.")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.redmedMuted)
                             .lineSpacing(3)
-                        SecondaryButton("Scan your bracelet", icon: "qrcode.viewfinder") { showPublicCard = true }
+                        SecondaryButton("Scan your bracelet", icon: "qrcode.viewfinder") { beginScanVerify() }
+                        if reader.isReading {
+                            Text(reader.statusMessage.isEmpty ? "Hold near tag…" : reader.statusMessage)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.redmedMuted)
+                        }
                     }
                     .padding(14)
                     .background(Color.redmedSurface)
                     .clipShape(RoundedRectangle(cornerRadius: 18))
                     .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
 
-                    // IMPORT
                     Text("IMPORT")
                         .font(.system(size: 11, weight: .bold))
                         .kerning(0.5)
@@ -120,9 +122,7 @@ struct NFCView: View {
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.redmedMuted)
                             .lineSpacing(3)
-                        SecondaryButton("Import tag onto this phone", icon: "arrow.down.circle") {
-                            if profile.name.isEmpty { profile.name = "Alex Rivera" }
-                        }
+                        SecondaryButton("Import tag onto this phone", icon: "arrow.down.circle") { beginImport() }
                     }
                     .padding(14)
                     .background(Color.redmedSurface)
@@ -141,22 +141,38 @@ struct NFCView: View {
                     Text("NFC Bracelet").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedDark)
                 }
             }
-            .overlay {
-                if showWriteOverlay {
-                    NFCWriteOverlay(
-                        onCancel: { showWriteOverlay = false },
-                        onSuccess: {
-                            showWriteOverlay = false
-                            profile.braceletLinked = true
-                        }
-                    )
+            .sheet(isPresented: $showPublicCard) {
+                if let card = scannedCard {
+                    PublicCardView(profile: card)
                 }
             }
-            .sheet(isPresented: $showPublicCard) { PublicCardView(profile: profile) }
             .alert("Authentication Failed", isPresented: $showAuthFailedAlert) {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text("Face ID or passcode is required to write your emergency card to the bracelet.")
+            }
+            .alert("NFC", isPresented: Binding(
+                get: { statusAlert != nil },
+                set: { if !$0 { statusAlert = nil } }
+            )) {
+                Button("OK", role: .cancel) { statusAlert = nil }
+            } message: {
+                Text(statusAlert ?? "")
+            }
+            .onChange(of: writer.success) { _, ok in
+                guard ok else { return }
+                profile.braceletLinked = true
+                profile.persist()
+            }
+            .onChange(of: writer.statusMessage) { _, msg in
+                if !writer.isWriting, !writer.success, !msg.isEmpty, msg != "Cancelled." {
+                    statusAlert = msg
+                }
+            }
+            .onChange(of: reader.statusMessage) { _, msg in
+                if !reader.isReading, !msg.isEmpty, msg != "Cancelled." {
+                    statusAlert = msg
+                }
             }
         }
     }
@@ -164,14 +180,43 @@ struct NFCView: View {
     func beginWrite() {
         guard !isScannerSession else { return }
         guard profile.hasData else { return }
-        // Face ID / passcode before write. Do not mark braceletLinked until success.
+        guard let url = ProfileNFCCodec.buildURL(profile: profile) else {
+            statusAlert = "Couldn't build tag payload from My ID."
+            return
+        }
         BiometricAuth.authenticate(
             reason: "Confirm with Face ID, Touch ID, or passcode to write your RedMed card to the bracelet."
         ) { success in
             if success {
-                showWriteOverlay = true
+                writer.writeURL(url.absoluteString)
             } else {
                 showAuthFailedAlert = true
+            }
+        }
+    }
+
+    func beginScanVerify() {
+        reader.readTag(alertMessage: "Hold your iPhone near the bracelet to verify the card.") { chip, _ in
+            let card = ProfileData(persisting: false)
+            ProfileNFCCodec.apply(chip, to: card)
+            scannedCard = card
+            showPublicCard = true
+        }
+    }
+
+    func beginImport() {
+        BiometricAuth.authenticate(
+            reason: "Confirm to import a bracelet onto this phone's My ID."
+        ) { success in
+            guard success else {
+                showAuthFailedAlert = true
+                return
+            }
+            reader.readTag(alertMessage: "Hold your iPhone near the tag to import My ID.") { chip, _ in
+                ProfileNFCCodec.apply(chip, to: profile)
+                profile.braceletLinked = true
+                profile.persist()
+                statusAlert = "Imported onto My ID."
             }
         }
     }
@@ -209,85 +254,6 @@ struct NFCView: View {
                 .font(.system(size: 13, weight: .medium))
                 .foregroundColor(.redmedMuted)
                 .lineSpacing(3)
-        }
-    }
-
-    @ViewBuilder
-    func dividerLabel(_ text: String) -> some View {
-        HStack(spacing: 10) {
-            Rectangle().fill(Color.redmedDivider).frame(height: 0.5)
-            Text(text)
-                .font(.system(size: 10, weight: .bold))
-                .kerning(1)
-                .foregroundColor(.redmedMuted)
-            Rectangle().fill(Color.redmedDivider).frame(height: 0.5)
-        }
-    }
-}
-
-// MARK: - Write Overlay
-struct NFCWriteOverlay: View {
-    let onCancel: () -> Void
-    let onSuccess: () -> Void
-
-    @State private var demoTask: Task<Void, Never>?
-
-    var body: some View {
-        ZStack {
-            Color.black.opacity(0.9).ignoresSafeArea()
-            VStack(spacing: 20) {
-                ZStack {
-                    Circle()
-                        .stroke(Color.redmedAccent.opacity(0.35), lineWidth: 1.5)
-                        .frame(width: 104, height: 104)
-                    Circle()
-                        .fill(Color.redmedAccent.opacity(0.12))
-                        .frame(width: 80, height: 80)
-                    Image(systemName: "wave.3.right")
-                        .font(.system(size: 32))
-                        .foregroundColor(.redmedAccent)
-                }
-
-                VStack(spacing: 8) {
-                    Text("Hold to band")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundColor(.white)
-                    Text("Bring the top of your iPhone close to the NFC bracelet")
-                        .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.5))
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: 260)
-                        .lineSpacing(3)
-                }
-
-                Button {
-                    demoTask?.cancel()
-                    demoTask = nil
-                    onCancel()
-                } label: {
-                    Text("Cancel")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 32).padding(.vertical, 13)
-                        .background(Color.white.opacity(0.1))
-                        .clipShape(Capsule())
-                }
-                .padding(.top, 8)
-            }
-        }
-        .onAppear {
-            // Demo stub: simulate a completed NFC write after a short hold.
-            // Cancel / disappear before this fires leaves braceletLinked unchanged.
-            demoTask?.cancel()
-            demoTask = Task { @MainActor in
-                try? await Task.sleep(nanoseconds: 2_000_000_000)
-                guard !Task.isCancelled else { return }
-                onSuccess()
-            }
-        }
-        .onDisappear {
-            demoTask?.cancel()
-            demoTask = nil
         }
     }
 }

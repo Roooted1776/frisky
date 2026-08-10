@@ -20,10 +20,8 @@
 	<string>1</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<!-- UNHIDE WITH APPLE DEV LICENSE (pair with RedMed.entitlements NFC key):
 	<key>NFCReaderUsageDescription</key>
-	<string>RedMed writes your emergency card to your NFC bracelet.</string>
-	-->
+	<string>RedMed writes and reads your emergency card on an NFC bracelet.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>RedMed uses Face ID, Touch ID, or your device passcode to unlock editing of your RedMed profile and to authorize writing to your bracelet. Scanned cards are read-only and cannot be changed without your app and authentication.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

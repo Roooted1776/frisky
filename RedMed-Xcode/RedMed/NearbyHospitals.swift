@@ -25,8 +25,10 @@ class NearbyHospitalFinder: NSObject, ObservableObject, CLLocationManagerDelegat
     }
 
     func search() {
-        isLoading = true
-        errorMessage = nil
+        DispatchQueue.main.async {
+            self.isLoading = true
+            self.errorMessage = nil
+        }
         manager.requestWhenInUseAuthorization()
         manager.requestLocation()
     }
@@ -34,7 +36,8 @@ class NearbyHospitalFinder: NSObject, ObservableObject, CLLocationManagerDelegat
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let loc = locations.first else { return }
         let request = MKLocalSearch.Request()
-        request.naturalLanguageQuery = "trauma center hospital emergency room"
+        // MapKit POI search — not a certified trauma Level I/II directory.
+        request.naturalLanguageQuery = "hospital emergency room"
         request.region = MKCoordinateRegion(center: loc.coordinate, latitudinalMeters: 80000, longitudinalMeters: 80000)
         request.resultTypes = .pointOfInterest
 

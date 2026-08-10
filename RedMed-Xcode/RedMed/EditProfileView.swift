@@ -8,12 +8,12 @@ struct EditProfileView: View {
     @State private var name = ""
     @State private var birthDate = ""
     @State private var bloodType = ""
-    @State private var allergies: [String] = []
-    @State private var allergyFocusIndex: Int? = nil
-    @State private var medications: [String] = []
-    @State private var medFocusIndex: Int? = nil
-    @State private var conditions: [String] = []
-    @State private var conditionFocusIndex: Int? = nil
+    @State private var allergies: [DraftLine] = []
+    @State private var allergyFocusID: UUID? = nil
+    @State private var medications: [DraftLine] = []
+    @State private var medFocusID: UUID? = nil
+    @State private var conditions: [DraftLine] = []
+    @State private var conditionFocusID: UUID? = nil
     @State private var contacts: [EmergencyContact] = []
 
     var body: some View {
@@ -64,28 +64,35 @@ struct EditProfileView: View {
                     // ALLERGIES
                     editSectionLabel("Allergies")
                     editCard {
-                        ForEach(allergies.indices, id: \.self) { i in
+                        ForEach($allergies) { $line in
                             VStack(alignment: .leading, spacing: 0) {
                                 HStack {
-                                    TextField("Allergy", text: $allergies[i])
+                                    TextField("Allergy", text: $line.text)
                                         .font(.system(size: 15))
                                         .foregroundColor(.redmedDark)
-                                        .onChange(of: allergies[i]) { _, _ in allergyFocusIndex = i }
+                                        .onChange(of: line.text) { _, _ in allergyFocusID = line.id }
                                     Spacer()
-                                    Button { withAnimation { _ = allergies.remove(at: i) } } label: {
+                                    Button {
+                                        withAnimation {
+                                            allergies.removeAll { $0.id == line.id }
+                                            if allergyFocusID == line.id { allergyFocusID = nil }
+                                        }
+                                    } label: {
                                         Text("✕").font(.system(size: 18)).foregroundColor(.redmedAccent)
                                     }
                                 }
                                 .padding(.horizontal, 16).padding(.vertical, 13)
 
-                                if allergyFocusIndex == i && !allergies[i].isEmpty {
-                                    let matches = commonAllergies.filter { $0.localizedCaseInsensitiveContains(allergies[i]) }.prefix(5)
+                                if allergyFocusID == line.id && !line.text.isEmpty {
+                                    let matches = commonAllergies.filter { $0.localizedCaseInsensitiveContains(line.text) }.prefix(5)
                                     if !matches.isEmpty {
                                         VStack(spacing: 0) {
                                             ForEach(Array(matches), id: \.self) { suggestion in
                                                 Button {
-                                                    allergies[i] = suggestion
-                                                    allergyFocusIndex = nil
+                                                    if let idx = allergies.firstIndex(where: { $0.id == line.id }) {
+                                                        allergies[idx].text = suggestion
+                                                    }
+                                                    allergyFocusID = nil
                                                 } label: {
                                                     Text(suggestion)
                                                         .font(.system(size: 14))
@@ -103,34 +110,41 @@ struct EditProfileView: View {
                             }
                             Divider().padding(.leading, 16)
                         }
-                        addButton("Add allergy") { allergies.append("") }
+                        addButton("Add allergy") { allergies.append(DraftLine()) }
                     }
 
                     // MEDICATIONS
                     editSectionLabel("Medications")
                     editCard {
-                        ForEach(medications.indices, id: \.self) { i in
+                        ForEach($medications) { $line in
                             VStack(alignment: .leading, spacing: 0) {
                                 HStack {
-                                    TextField("Medication", text: $medications[i])
+                                    TextField("Medication", text: $line.text)
                                         .font(.system(size: 15))
                                         .foregroundColor(.redmedDark)
-                                        .onChange(of: medications[i]) { _, _ in medFocusIndex = i }
+                                        .onChange(of: line.text) { _, _ in medFocusID = line.id }
                                     Spacer()
-                                    Button { withAnimation { _ = medications.remove(at: i) } } label: {
+                                    Button {
+                                        withAnimation {
+                                            medications.removeAll { $0.id == line.id }
+                                            if medFocusID == line.id { medFocusID = nil }
+                                        }
+                                    } label: {
                                         Text("✕").font(.system(size: 18)).foregroundColor(.redmedAccent)
                                     }
                                 }
                                 .padding(.horizontal, 16).padding(.vertical, 13)
 
-                                if medFocusIndex == i && !medications[i].isEmpty {
-                                    let matches = commonMedications.filter { $0.localizedCaseInsensitiveContains(medications[i]) }.prefix(5)
+                                if medFocusID == line.id && !line.text.isEmpty {
+                                    let matches = commonMedications.filter { $0.localizedCaseInsensitiveContains(line.text) }.prefix(5)
                                     if !matches.isEmpty {
                                         VStack(spacing: 0) {
                                             ForEach(Array(matches), id: \.self) { suggestion in
                                                 Button {
-                                                    medications[i] = suggestion
-                                                    medFocusIndex = nil
+                                                    if let idx = medications.firstIndex(where: { $0.id == line.id }) {
+                                                        medications[idx].text = suggestion
+                                                    }
+                                                    medFocusID = nil
                                                 } label: {
                                                     Text(suggestion)
                                                         .font(.system(size: 14))
@@ -148,34 +162,41 @@ struct EditProfileView: View {
                             }
                             Divider().padding(.leading, 16)
                         }
-                        addButton("Add medication") { medications.append("") }
+                        addButton("Add medication") { medications.append(DraftLine()) }
                     }
 
                     // CONDITIONS
                     editSectionLabel("Conditions")
                     editCard {
-                        ForEach(conditions.indices, id: \.self) { i in
+                        ForEach($conditions) { $line in
                             VStack(alignment: .leading, spacing: 0) {
                                 HStack {
-                                    TextField("Condition", text: $conditions[i])
+                                    TextField("Condition", text: $line.text)
                                         .font(.system(size: 15))
                                         .foregroundColor(.redmedDark)
-                                        .onChange(of: conditions[i]) { _, _ in conditionFocusIndex = i }
+                                        .onChange(of: line.text) { _, _ in conditionFocusID = line.id }
                                     Spacer()
-                                    Button { withAnimation { _ = conditions.remove(at: i) } } label: {
+                                    Button {
+                                        withAnimation {
+                                            conditions.removeAll { $0.id == line.id }
+                                            if conditionFocusID == line.id { conditionFocusID = nil }
+                                        }
+                                    } label: {
                                         Text("✕").font(.system(size: 18)).foregroundColor(.redmedAccent)
                                     }
                                 }
                                 .padding(.horizontal, 16).padding(.vertical, 13)
 
-                                if conditionFocusIndex == i && !conditions[i].isEmpty {
-                                    let matches = commonConditions.filter { $0.localizedCaseInsensitiveContains(conditions[i]) }.prefix(5)
+                                if conditionFocusID == line.id && !line.text.isEmpty {
+                                    let matches = commonConditions.filter { $0.localizedCaseInsensitiveContains(line.text) }.prefix(5)
                                     if !matches.isEmpty {
                                         VStack(spacing: 0) {
                                             ForEach(Array(matches), id: \.self) { suggestion in
                                                 Button {
-                                                    conditions[i] = suggestion
-                                                    conditionFocusIndex = nil
+                                                    if let idx = conditions.firstIndex(where: { $0.id == line.id }) {
+                                                        conditions[idx].text = suggestion
+                                                    }
+                                                    conditionFocusID = nil
                                                 } label: {
                                                     Text(suggestion)
                                                         .font(.system(size: 14))
@@ -193,7 +214,7 @@ struct EditProfileView: View {
                             }
                             Divider().padding(.leading, 16)
                         }
-                        addButton("Add condition") { conditions.append("") }
+                        addButton("Add condition") { conditions.append(DraftLine()) }
                     }
 
                     // CONTACTS
@@ -287,9 +308,9 @@ struct EditProfileView: View {
         name = profile.name
         birthDate = profile.birthDate
         bloodType = profile.bloodType
-        allergies = profile.allergies
-        medications = profile.medications
-        conditions = profile.conditions
+        allergies = profile.allergies.map { DraftLine(text: $0) }
+        medications = profile.medications.map { DraftLine(text: $0) }
+        conditions = profile.conditions.map { DraftLine(text: $0) }
         contacts = profile.contacts
     }
 
@@ -298,13 +319,25 @@ struct EditProfileView: View {
             dismiss()
             return
         }
-        profile.name = name
+        profile.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         profile.birthDate = birthDate
         profile.bloodType = bloodType
-        profile.allergies = allergies.filter { !$0.isEmpty }
-        profile.medications = medications.filter { !$0.isEmpty }
-        profile.conditions = conditions.filter { !$0.isEmpty }
-        profile.contacts = contacts.filter { !$0.name.isEmpty }
+        profile.allergies = allergies.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        profile.medications = medications.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        profile.conditions = conditions.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        profile.contacts = contacts.filter { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }
+        profile.persist()
         dismiss()
+    }
+}
+
+/// Stable identity for editable string rows (avoids ForEach index-as-id crashes on delete).
+struct DraftLine: Identifiable, Equatable {
+    let id: UUID
+    var text: String
+
+    init(text: String = "", id: UUID = UUID()) {
+        self.id = id
+        self.text = text
     }
 }

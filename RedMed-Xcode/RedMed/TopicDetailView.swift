@@ -231,7 +231,7 @@ private struct LiveNearbyHospitalsSection: View {
                     .clipShape(Capsule())
             } else {
                 VStack(spacing: 0) {
-                    ForEach(Array(hospitalFinder.hospitals.enumerated()), id: \.offset) { i, hosp in
+                    ForEach(Array(hospitalFinder.hospitals.enumerated()), id: \.element.id) { i, hosp in
                         Button {
                             hosp.mapItem.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
                         } label: {

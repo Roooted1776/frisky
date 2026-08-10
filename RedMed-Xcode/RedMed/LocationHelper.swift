@@ -181,7 +181,8 @@ class LocationHelper: NSObject, ObservableObject, CLLocationManagerDelegate {
         let body = "This is my current location: \(url)"
         guard let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return }
         let smsURLString = digits.isEmpty ? "sms:&body=\(encodedBody)" : "sms:\(digits)&body=\(encodedBody)"
-        if let smsURL = URL(string: smsURLString) {
+        guard let smsURL = URL(string: smsURLString) else { return }
+        DispatchQueue.main.async {
             UIApplication.shared.open(smsURL)
         }
     }

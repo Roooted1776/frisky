@@ -14,6 +14,29 @@ SRC_DIR="$ROOT/RedMed-Xcode/RedMed"
 # Default to iOS 27.0; override with SIM_OS=26.5 etc.
 SIM_OS="${SIM_OS:-27.0}"
 
+simctl_devices() {
+  # Don't let a missing xcrun abort the script under pipefail.
+  xcrun simctl list devices available 2>/dev/null || true
+}
+
+# Print the iOS runtime version that owns a given device name (first match).
+os_for_device_name() {
+  local name="$1"
+  simctl_devices | awk -v name="$name" '
+    /^-- / {
+      if (match($0, /iOS [0-9]+\.[0-9]+/)) {
+        current = substr($0, RSTART + 4, RLENGTH - 4)
+      } else {
+        current = ""
+      }
+      next
+    }
+    $0 ~ ("^[[:space:]]*" name " \\(") {
+      if (current != "") { print current; exit }
+    }
+  '
+}
+
 pick_simulator() {
   if [[ -n "${SIM:-}" ]]; then
     echo "$SIM"
@@ -21,9 +44,8 @@ pick_simulator() {
   fi
   local runtime_devices=""
   if [[ -n "$SIM_OS" ]]; then
-    # Prefer devices under the requested runtime (e.g. -- iOS 27.0 --).
     runtime_devices="$(
-      xcrun simctl list devices available 2>/dev/null \
+      simctl_devices \
         | awk -v os="$SIM_OS" '
             /^-- / { want = ($0 ~ ("-- iOS " os " --")) }
             want && /^[[:space:]]*iPhone/ {
@@ -40,12 +62,12 @@ pick_simulator() {
     fi
   fi
   for candidate in "iPhone 17 Pro" "iPhone 17" "iPhone 16 Pro" "iPhone 16" "iPhone 15 Pro" "iPhone 15"; do
-    if xcrun simctl list devices available 2>/dev/null | grep -Fq "$candidate ("; then
+    if simctl_devices | grep -Fq "$candidate ("; then
       echo "$candidate"
       return
     fi
   done
-  xcrun simctl list devices available 2>/dev/null \
+  simctl_devices \
     | sed -n 's/^[[:space:]]*\(iPhone[^()]*\) (.*/\1/p' \
     | head -1
 }
@@ -69,10 +91,16 @@ needs_install() {
   [[ "$app_mtime" -gt "$stamp_mtime" ]]
 }
 
-SIMULATOR="$(pick_simulator)"
+SIMULATOR="$(pick_simulator || true)"
 if [[ -z "$SIMULATOR" ]]; then
   echo "No available iPhone simulator found." >&2
   exit 1
+fi
+
+# Align OS with the runtime that actually owns this device name.
+RESOLVED_OS="$(os_for_device_name "$SIMULATOR" || true)"
+if [[ -n "$RESOLVED_OS" ]]; then
+  SIM_OS="$RESOLVED_OS"
 fi
 
 DESTINATION="platform=iOS Simulator,name=$SIMULATOR,OS=$SIM_OS"
@@ -80,9 +108,8 @@ echo "Simulator: $SIMULATOR (iOS $SIM_OS)"
 
 # Boot + show UI immediately so the wait feels shorter.
 open -a Simulator >/dev/null 2>&1 || true
-# Prefer UDID for the requested OS when multiple runtimes share a device name.
 SIM_UDID="$(
-  xcrun simctl list devices available 2>/dev/null \
+  simctl_devices \
     | awk -v os="$SIM_OS" -v name="$SIMULATOR" '
         /^-- / { want = ($0 ~ ("-- iOS " os " --")) }
         want && $0 ~ ("^[[:space:]]*" name " \\(") {

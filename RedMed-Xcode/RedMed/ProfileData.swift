@@ -5,23 +5,29 @@ enum AppTab {
     case myid, emergency, aid, nfc
 }
 
+/// On-device medical ID. Empty on first launch; Keychain-backed when `persists` is true.
 class ProfileData: ObservableObject {
-    @Published var name: String = "Alex Rivera"
-    @Published var birthDate: String = "March 14, 1994"
-    @Published var bloodType: String = "O+"
-    @Published var allergies: [String] = ["Penicillin", "Peanuts"]
-    @Published var medications: [String] = ["Lisinopril 10mg — daily", "Albuterol inhaler — as needed"]
-    @Published var conditions: [String] = ["Type 1 Diabetes", "Asthma"]
-    @Published var contacts: [EmergencyContact] = [
-        EmergencyContact(name: "Jamie Rivera", detail: "Spouse · (555) 201-4488"),
-        EmergencyContact(name: "Dr. Sarah Chen", detail: "Primary Care · (555) 340-9921")
-    ]
+    private static let keychainAccount = "medicalProfile.v1"
+    private let persists: Bool
 
-    var hasData: Bool { !name.isEmpty }
+    @Published var name: String = ""
+    @Published var birthDate: String = ""
+    @Published var bloodType: String = ""
+    @Published var allergies: [String] = []
+    @Published var medications: [String] = []
+    @Published var conditions: [String] = []
+    @Published var contacts: [EmergencyContact] = []
+    @Published var braceletLinked: Bool = false
+    @Published var isOrganDonor: Bool = false
+    @Published var lastUpdated: String = ""
+
+    var hasData: Bool {
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 
     /// Any medical profile content that should require Face ID / passcode to edit.
     var hasSensitiveProfileData: Bool {
-        !name.isEmpty
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             || !birthDate.isEmpty
             || !bloodType.isEmpty
             || !allergies.isEmpty
@@ -30,14 +36,14 @@ class ProfileData: ObservableObject {
             || contacts.contains { !$0.name.isEmpty || !$0.detail.isEmpty }
     }
 
-    /// Whether an NFC band has been written/paired (Main header status).
-    @Published var braceletLinked: Bool = false
-    @Published var isOrganDonor: Bool = true
-    @Published var lastUpdated: String = "Jul 28, 2026"
+    init(persisting: Bool = true) {
+        self.persists = persisting
+        if persisting { loadFromKeychain() }
+    }
 
-    /// Detached copy for scanner / preview — mutations never touch the owner profile.
+    /// Detached copy for scanner / preview — mutations never touch the owner profile or Keychain.
     func snapshot() -> ProfileData {
-        let copy = ProfileData()
+        let copy = ProfileData(persisting: false)
         copy.name = name
         copy.birthDate = birthDate
         copy.bloodType = bloodType
@@ -50,10 +56,63 @@ class ProfileData: ObservableObject {
         copy.lastUpdated = lastUpdated
         return copy
     }
+
+    func persist() {
+        guard persists else { return }
+        let stamp = DateFormatter.localizedString(from: Date(), dateStyle: .medium, timeStyle: .none)
+        if hasSensitiveProfileData { lastUpdated = stamp }
+        let blob = PersistedProfile(
+            name: name,
+            birthDate: birthDate,
+            bloodType: bloodType,
+            allergies: allergies,
+            medications: medications,
+            conditions: conditions,
+            contacts: contacts.map { PersistedContact(name: $0.name, detail: $0.detail) },
+            braceletLinked: braceletLinked,
+            isOrganDonor: isOrganDonor,
+            lastUpdated: lastUpdated
+        )
+        guard let data = try? JSONEncoder().encode(blob) else { return }
+        KeychainStore.save(data, account: Self.keychainAccount)
+    }
+
+    private func loadFromKeychain() {
+        guard let data = KeychainStore.load(account: Self.keychainAccount),
+              let blob = try? JSONDecoder().decode(PersistedProfile.self, from: data) else { return }
+        name = blob.name
+        birthDate = blob.birthDate
+        bloodType = blob.bloodType
+        allergies = blob.allergies
+        medications = blob.medications
+        conditions = blob.conditions
+        contacts = blob.contacts.map { EmergencyContact(name: $0.name, detail: $0.detail) }
+        braceletLinked = blob.braceletLinked
+        isOrganDonor = blob.isOrganDonor
+        lastUpdated = blob.lastUpdated
+    }
 }
 
-struct EmergencyContact: Identifiable {
+struct EmergencyContact: Identifiable, Equatable {
     var id = UUID()
+    var name: String
+    var detail: String
+}
+
+private struct PersistedProfile: Codable {
+    var name: String
+    var birthDate: String
+    var bloodType: String
+    var allergies: [String]
+    var medications: [String]
+    var conditions: [String]
+    var contacts: [PersistedContact]
+    var braceletLinked: Bool
+    var isOrganDonor: Bool
+    var lastUpdated: String
+}
+
+private struct PersistedContact: Codable {
     var name: String
     var detail: String
 }
@@ -136,9 +195,9 @@ enum AidTopicCatalog {
         care: ["Call 911 if: first seizure, lasts more than 5 minutes, no recovery, injury, or in water", "Time the seizure from the start", "Clear the area — move objects that could cause injury", "Do NOT restrain them — guide gently away from danger", "Do NOT put anything in their mouth", "Cushion the head with something soft", "After it stops: roll them on their side (recovery position) to protect the airway", "Stay calm and reassure them — confusion after a seizure is normal"]
     ),
     "trauma-hospitals": AidTopic(
-        id: "trauma-hospitals", title: "Find Trauma Center",
-        symptoms: ["Major trauma: crash, gunshot/stab, severe bleeding, head injury", "Patient unstable or deteriorating", "Unsure whether the nearest ER can handle it"],
-        care: ["Call 911 — dispatch will route to the right trauma level automatically", "Do NOT self-transport a major trauma patient if EMS is available — ambulances can stabilize en route", "Level I centers offer the highest capability for the most severe trauma; Level II/III are also fully equipped for most emergencies", "If you must drive: tell the ER ahead by phone so the trauma team is ready", "Note time of injury and mechanism (e.g. speed, fall height, weapon) to report on arrival"]
+        id: "trauma-hospitals", title: "Find Nearby Hospitals",
+        symptoms: ["Major trauma: crash, gunshot/stab, severe bleeding, head injury", "Patient unstable or deteriorating", "Need the closest ER / hospital POI on the map"],
+        care: ["Call 911 — dispatch will route to the right facility automatically", "Do NOT self-transport a major trauma patient if EMS is available — ambulances can stabilize en route", "The in-app list is a MapKit search for nearby hospital / ER points of interest — it is not a verified Level I/II trauma directory", "If you must drive: tell the ER ahead by phone so the trauma team is ready", "Note time of injury and mechanism (e.g. speed, fall height, weapon) to report on arrival"]
     ),
         ]
     }
