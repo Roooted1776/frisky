@@ -51,6 +51,9 @@ struct EmergencyView: View {
                     GPSCard(location: locationManager.location)
                         .padding(.vertical, 4)
 
+                    // Emergency SOS — directly under Live GPS
+                    Find911SOSBlock(locationManager: locationManager)
+
                     // COPY COORDINATES
                     Button {
                         if let loc = locationManager.location {

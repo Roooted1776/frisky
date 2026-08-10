@@ -60,6 +60,12 @@ struct LocationView: View {
 
                         coordinateCard
 
+                        Find911SOSSection(
+                            sos: sosController,
+                            motion: motionAssist,
+                            isOffline: networkMonitor.isOffline
+                        )
+
                         if let error = locationManager.errorMessage {
                             Text(error)
                                 .font(layout.footnoteFont(weight: .semibold))
@@ -86,12 +92,6 @@ struct LocationView: View {
                                 .foregroundStyle(AppTheme.muted)
                                 .multilineTextAlignment(.center)
                         }
-
-                        Find911SOSSection(
-                            sos: sosController,
-                            motion: motionAssist,
-                            isOffline: networkMonitor.isOffline
-                        )
 
                         TraumaHospitalsSection(gpsCoordinate: locationManager.coordinate)
 
