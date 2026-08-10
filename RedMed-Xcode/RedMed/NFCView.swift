@@ -1,7 +1,12 @@
 // Owner-only NFC bracelet setup. Ped/EMS scanner shells never mount this tab —
-// see ContentView.showsNFC / scannerSafeTab. Write uses a local demo overlay
-// (no NFC entitlement / NFCReaderUsageDescription).
+// see ContentView.showsNFC / scannerSafeTab.
+//
+// Apple NFC flags are parked (commented) in RedMed.entitlements + Info.plist.
+// Write uses a local demo overlay until you unhide those and wire CoreNFC —
+// see RedMed-Xcode/NFC-RESTORE.md.
 import SwiftUI
+// UNHIDE WITH APPLE DEV LICENSE:
+// import CoreNFC
 
 struct NFCView: View {
     @EnvironmentObject var profile: ProfileData
