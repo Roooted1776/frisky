@@ -54,10 +54,10 @@ struct RedMedView: View {
                         ForEach(Array(profile.contacts.enumerated()), id: \.element.id) { i, c in
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(c.name)
-                                    .font(.system(size: 11, weight: .semibold))
+                                    .font(.system(size: 12, weight: .semibold))
                                     .foregroundColor(.redmedDark)
                                 Text(c.detail)
-                                    .font(.system(size: 12, weight: .medium))
+                                    .font(.system(size: 13, weight: .medium))
                                     .foregroundColor(.redmedMuted)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -74,10 +74,10 @@ struct RedMedView: View {
                         Button { openNFCOrGet() } label: {
                             HStack(spacing: 6) {
                                 Image(systemName: "plus.circle")
-                                    .font(.system(size: 16, weight: .semibold))
+                                    .font(.system(size: 17, weight: .semibold))
                                     .foregroundColor(.redmedAccent)
                                 Text("Bracelet")
-                                    .font(.system(size: 11, weight: .semibold))
+                                    .font(.system(size: 12, weight: .semibold))
                                     .foregroundColor(.redmedAccent)
                                     .kerning(-0.1)
                             }
@@ -93,10 +93,10 @@ struct RedMedView: View {
                         Button { showHelp = true } label: {
                             HStack(spacing: 6) {
                                 Image(systemName: "questionmark.circle")
-                                    .font(.system(size: 16, weight: .regular))
+                                    .font(.system(size: 17, weight: .regular))
                                     .foregroundColor(.redmedMuted)
                                 Text("How it works")
-                                    .font(.system(size: 11, weight: .semibold))
+                                    .font(.system(size: 12, weight: .semibold))
                                     .foregroundColor(.redmedMuted)
                                     .kerning(-0.1)
                             }
@@ -109,10 +109,10 @@ struct RedMedView: View {
                             Button { showScannerPreview = true } label: {
                                 HStack(spacing: 6) {
                                     Image(systemName: "eye")
-                                        .font(.system(size: 16, weight: .regular))
+                                        .font(.system(size: 17, weight: .regular))
                                         .foregroundColor(.redmedMuted)
                                     Text("Preview scanner")
-                                        .font(.system(size: 11, weight: .semibold))
+                                        .font(.system(size: 12, weight: .semibold))
                                         .foregroundColor(.redmedMuted)
                                         .kerning(-0.1)
                                 }
@@ -128,7 +128,7 @@ struct RedMedView: View {
                 }
 
                 Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundColor(.redmedDark)
                     .multilineTextAlignment(.center)
                     .lineSpacing(4)
@@ -192,16 +192,16 @@ struct RedMedView: View {
             VStack(alignment: .leading, spacing: 0) {
                 if isScannerSession {
                     Text("Read only — editing needs the owner’s RedMed app + Face ID / passcode.")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .lineSpacing(2)
                         .padding(.bottom, 4)
                 } else if !profile.hasData {
                     (
-                        Text("Tap ").font(.system(size: 11, weight: .medium)).foregroundColor(.redmedMuted)
-                        + Text("Edit").font(.system(size: 11, weight: .bold)).foregroundColor(.redmedAccent)
+                        Text("Tap ").font(.system(size: 12, weight: .medium)).foregroundColor(.redmedMuted)
+                        + Text("Edit").font(.system(size: 12, weight: .bold)).foregroundColor(.redmedAccent)
                         + Text(" to add your name and set up your bracelet.")
-                            .font(.system(size: 11, weight: .medium)).foregroundColor(.redmedMuted)
+                            .font(.system(size: 12, weight: .medium)).foregroundColor(.redmedMuted)
                     )
                     .lineSpacing(2)
                     .padding(.bottom, 4)
@@ -217,7 +217,7 @@ struct RedMedView: View {
                             .opacity(profile.hasData ? 1 : 0.5)
 
                         Text(deviceName)
-                            .font(.system(size: 22, weight: .bold))
+                            .font(.system(size: 23, weight: .bold))
                             .foregroundColor(.redmedDark)
                             .kerning(-0.4)
                             .lineLimit(1)
@@ -235,13 +235,13 @@ struct RedMedView: View {
 
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(deviceName)
-                                    .font(.system(size: 22, weight: .bold))
+                                    .font(.system(size: 23, weight: .bold))
                                     .foregroundColor(.redmedDark)
                                     .kerning(-0.4)
                                     .lineLimit(1)
 
                                 Text(braceletStatusLabel)
-                                    .font(.system(size: 10, weight: .bold))
+                                    .font(.system(size: 11, weight: .bold))
                                     .foregroundColor(
                                         profile.braceletLinked
                                             ? Color.redmedAccent.opacity(0.85)
@@ -264,7 +264,7 @@ struct RedMedView: View {
                     .padding(.top, 4)
             } else {
                 Button("Edit") { requestEdit() }
-                    .font(.system(size: 17, weight: .regular))
+                    .font(.system(size: 18, weight: .regular))
                     .foregroundColor(.redmedAccent)
                     .kerning(-0.2)
                     .padding(.top, 4)
@@ -319,11 +319,11 @@ struct RedMedView: View {
     func profileRow(label: String, value: String) -> some View {
         HStack {
             Text(label)
-                .font(.system(size: 11, weight: .medium))
+                .font(.system(size: 12, weight: .medium))
                 .foregroundColor(.redmedMuted)
             Spacer()
             Text(value.isEmpty ? "—" : value)
-                .font(.system(size: 11, weight: value.isEmpty ? .regular : .semibold))
+                .font(.system(size: 12, weight: value.isEmpty ? .regular : .semibold))
                 .foregroundColor(value.isEmpty ? Color.redmedMuted.opacity(0.4) : .redmedDark)
         }
         .padding(.horizontal, 16)
@@ -333,7 +333,7 @@ struct RedMedView: View {
     @ViewBuilder
     func emptyRow() -> some View {
         Text("—")
-            .font(.system(size: 11))
+            .font(.system(size: 12))
             .foregroundColor(Color.redmedMuted.opacity(0.4))
             .padding(.horizontal, 16)
             .padding(.vertical, 11)
@@ -357,7 +357,7 @@ struct RedMedView: View {
             } else {
                 ForEach(Array(items.enumerated()), id: \.offset) { i, item in
                     Text(item)
-                        .font(.system(size: 11))
+                        .font(.system(size: 12))
                         .foregroundColor(.redmedDark)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 16)
