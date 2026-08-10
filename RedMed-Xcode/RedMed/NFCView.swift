@@ -184,7 +184,7 @@ struct NFCWriteOverlay: View {
     let onCancel: () -> Void
     let onSuccess: () -> Void
 
-    @State private var cancelled = false
+    @State private var demoTask: Task<Void, Never>?
 
     var body: some View {
         ZStack {
@@ -215,7 +215,8 @@ struct NFCWriteOverlay: View {
                 }
 
                 Button {
-                    cancelled = true
+                    demoTask?.cancel()
+                    demoTask = nil
                     onCancel()
                 } label: {
                     Text("Cancel")
@@ -230,11 +231,17 @@ struct NFCWriteOverlay: View {
         }
         .onAppear {
             // Demo stub: simulate a completed NFC write after a short hold.
-            // Cancel before this fires leaves braceletLinked unchanged (stale).
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                guard !cancelled else { return }
+            // Cancel / disappear before this fires leaves braceletLinked unchanged.
+            demoTask?.cancel()
+            demoTask = Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                guard !Task.isCancelled else { return }
                 onSuccess()
             }
+        }
+        .onDisappear {
+            demoTask?.cancel()
+            demoTask = nil
         }
     }
 }
