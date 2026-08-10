@@ -2,6 +2,14 @@
 
 # macOS
 .DS_Store
+**/.DS_Store
+
+# Never commit key material — even empty placeholders invite real secrets.
+uploads/google-api-key
+**/google-api-key
+*.pem
+*.p12
+*.mobileprovision
 
 # Xcode — per-user state. Committing these makes every project open replay a
 # stale window/editor layout and makes every merge conflict on a binary blob.
