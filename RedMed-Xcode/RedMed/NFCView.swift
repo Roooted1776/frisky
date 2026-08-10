@@ -31,20 +31,15 @@ struct NFCView: View {
             ScrollView {
                 VStack(spacing: 12) {
                     // Header
-                    VStack(spacing: 4) {
-                        Text("NFC Bracelet")
-                            .font(.system(size: 22, weight: .bold))
-                            .foregroundColor(.redmedDark)
-                        Text("iPhone only for setup. Fill My ID, write the band once — Face ID, then hold to pair.")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.redmedMuted)
-                            .multilineTextAlignment(.center)
-                            .lineSpacing(3)
-                            .frame(maxWidth: 275)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 8)
-                    .padding(.bottom, 6)
+                    Text("iPhone only for setup. Fill My ID, write the band once — Face ID, then hold to pair.")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.redmedMuted)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(3)
+                        .frame(maxWidth: 275)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 8)
+                        .padding(.bottom, 6)
 
                     // STATUS
                     VStack(spacing: 0) {
