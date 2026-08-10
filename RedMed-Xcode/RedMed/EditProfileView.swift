@@ -389,6 +389,8 @@ struct EditProfileView: View {
             .foregroundColor(.redmedAccent)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 16).padding(.vertical, 13)
+            // Plain buttons only hit opaque glyphs unless the full row is shaped.
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
