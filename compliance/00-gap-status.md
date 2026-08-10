@@ -21,6 +21,22 @@ servers. No motion-assist SOS product.
 | 7 | Refreshed DTAC form submitted to a buyer | Worksheet only | Complete after 1–6; use post-Apr-2026 form |
 | 8 | Buying route / pilot trust | Guidance only | Commercial outreach |
 
+**How to close 1–7:** [08-execution-plan.md](08-execution-plan.md) — sequence,
+owners, lead times, indicative costs, and the outbound briefs to send.
+
+## Gate 0 — open decision that blocks the signature
+
+The repo holds **two source trees**, and they are not the same product. The
+Xcode project references `RedMed-Xcode/` only; `uploads/` is staged and
+unreferenced. `uploads/` adds Keychain persistence, live CoreNFC, a CoreMotion
+assist heuristic, an 8-second SOS countdown, and an optional HTTPS POST of
+profile + GPS to a third-party endpoint.
+
+This pack is written against the **shipping** tree and is accurate for it. If
+`uploads/` ships, the intended purpose, DPIA, pen test scope and DTAC answers
+all change. **Decide before signing anything** — see 08-execution-plan.md,
+Gate 0.
+
 ## What already helps
 
 - Local-only architecture (no profile backend) shrinks IG / cyber surface.

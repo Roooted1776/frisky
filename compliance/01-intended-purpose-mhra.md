@@ -87,11 +87,30 @@ health claims → check against this file before ship.
 
 ## Sign-off
 
+A signature is only meaningful against a **named build**. Fill the binding
+first, then sign. See [08-execution-plan.md](08-execution-plan.md), Move 1 — and
+settle Gate 0 before you sign, because the staged `uploads/` tree would change
+the answers on this page.
+
+**Build binding**
+
+| Field | Value |
+|-------|-------|
+| Source tree signed against | _TBD — `RedMed-Xcode/` or merged `uploads/`_ |
+| Commit SHA | _TBD_ |
+| Release version / build | _TBD_ |
+
+**Signatures**
+
 | Role | Name | Date | Signature |
 |------|------|------|-----------|
 | Product / founder | | | |
 | Clinical Safety Officer (once appointed) | | | |
 | Legal counsel (recommended before UK NHS sales) | | | |
+
+Signing also accepts the claim control above as a live constraint: App Store
+copy, website, decks and UI strings get checked against the allowed / banned
+phrase lists before ship, and someone owns that check.
 
 Revisit this decision if you add: automated triage, condition detection from
 sensors, clinician workflow, NHS Spine / EPR write-back, or treatment dosing.

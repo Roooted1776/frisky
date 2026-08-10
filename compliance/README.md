@@ -17,6 +17,7 @@ Ordered programme (do not skip):
 | 5 | [05-accessibility-wcag/](05-accessibility-wcag/) | External WCAG 2.2 AA audit; fix gaps in a later product PR |
 | 6 | [06-dtac/](06-dtac/) | Fill refreshed NHS England DTAC form with attached evidence |
 | 7 | [07-buying-routes.md](07-buying-routes.md) | Pick a trust / framework / innovation route |
+| 8 | [08-execution-plan.md](08-execution-plan.md) | **Driver for the five moves that leave this repo** — sequence, costs, outbound briefs |
 
 **Product snapshot used for these docs (Aug 2026):** native iOS RedMed under
 `RedMed-Xcode/` — on-device medical ID + passive NFC band, Find 911 GPS assist,
