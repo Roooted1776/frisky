@@ -20,6 +20,9 @@ struct ContentView: View {
             CustomTabBar(tab: $tab)
         }
         .ignoresSafeArea(edges: .bottom)
+        .onChange(of: profile.pendingBraceletWrite) { pending in
+            if pending { tab = .nfc }
+        }
     }
 }
 
