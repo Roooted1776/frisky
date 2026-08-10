@@ -19,7 +19,7 @@ UK GDPR still matters for:
 |------------|--------------------|-------------------------------------|
 | User stores own emergency ID on device | Consent (6(1)(a)) and/or contract (6(1)(b)) | Explicit consent (9(2)(a)) and/or vital interests narrowly (9(2)(c)) — prefer explicit consent + clear UI |
 | Bystander reads NFC card in emergency | Vital interests / public interest debate — **do not DIY**; counsel must confirm narrative | Same — emergency disclosure is the product’s point; document it |
-| Location on Find 911 | Consent via OS permission + in-app purpose limit | Not always special category; treat carefully if combined with health profile |
+| Location on Find Help | Consent via OS permission + in-app purpose limit | Not always special category; treat carefully if combined with health profile |
 | Support email containing health info | Legitimate interests or consent | Explicit consent or other Art. 9 condition |
 
 **Do not** claim “we don’t process personal data because there’s no server.”

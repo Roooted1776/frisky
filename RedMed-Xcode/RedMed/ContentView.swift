@@ -6,7 +6,7 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var tab: AppTab = .myid
 
-    /// Ped/EMS scanners: RedMed + 911 + Aid only. Owner also gets NFC.
+    /// Ped/EMS scanners: RedMed + Help + Aid only. Owner also gets NFC.
     private var showsNFC: Bool { !isScannerSession }
 
     private var scannerSafeTab: Binding<AppTab> {
@@ -77,7 +77,7 @@ struct CustomTabBar: View {
             Divider().overlay(Color(red: 0.9, green: 0.9, blue: 0.9))
             HStack(spacing: -3) {
                 TabBarItem(icon: "person.fill",  label: "RedMed", isOn: tab == .myid)      { tab = .myid }
-                TabBarItem(icon: "phone.fill",   label: "911",    isOn: tab == .emergency)  { tab = .emergency }
+                TabBarItem(icon: "phone.fill",   label: "Help",   isOn: tab == .emergency)  { tab = .emergency }
                 TabBarItem(icon: "cross.case.fill", label: "Aid", isOn: tab == .aid)        { tab = .aid }
                 if showsNFC {
                     TabBarItem(icon: "wave.3.right", label: "NFC", isOn: tab == .nfc)        { tab = .nfc }

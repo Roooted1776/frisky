@@ -10,7 +10,7 @@ docs pack).
 
 ## Scope
 
-Owner app: My ID, Find 911, Aid, NFC; scanner/public card shell; system sheets.
+Owner app: My ID, Find Help, Aid, NFC; scanner/public card shell; system sheets.
 
 ## Likely passes / strengths
 

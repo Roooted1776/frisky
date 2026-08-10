@@ -2,36 +2,19 @@ import SwiftUI
 import CoreLocation
 
 struct EmergencyView: View {
-    @EnvironmentObject var profile: ProfileData
     @StateObject private var locationManager = LocationManager()
     @State private var showSatellite = false
-
-    func callFirstContact() {
-        guard let c = profile.contacts.first else { return }
-        let digits = c.detail.filter(\.isNumber)
-        guard !digits.isEmpty else { return }
-        if let url = URL(string: "tel://\(digits)") {
-            UIApplication.shared.open(url, options: [:], completionHandler: nil)
-        }
-    }
 
     var body: some View {
         NavigationView {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 8) {
-                    SecondaryButton("Call first emergency contact") { callFirstContact() }
-                    Text("Calls your first saved contact — iPhone confirms before dialing.")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .padding(.bottom, 4)
+                    // NO CELL SIGNAL — top of Find Help (replaces call-first-contact)
+                    NoCellSignalCard(showSatellite: $showSatellite)
 
                     // GPS CARD
                     GPSCard(location: locationManager.location)
                         .padding(.vertical, 4)
-
-                    SeizureTimerStrip()
 
                     // COPY COORDINATES
                     Button {
@@ -48,6 +31,8 @@ struct EmergencyView: View {
                             .clipShape(Capsule())
                     }
 
+                    SeizureTimerStrip()
+
                     // ROADSIDE FIRST RESPONSE
                     InfoCard(
                         icon: "cross.fill",
@@ -63,7 +48,7 @@ struct EmergencyView: View {
 
                     InfoCard(
                         icon: "info.circle.fill",
-                        title: "What to Tell 911",
+                        title: "What to Tell \(EmergencyNumber.current)",
                         numbered: false,
                         items: [
                             "Your exact location — read the GPS coordinates above.",
@@ -72,12 +57,6 @@ struct EmergencyView: View {
                             "Stay on the line — let the dispatcher guide you."
                         ]
                     )
-
-                    // COMMON TRAUMA GRID
-                    CommonTraumaGrid()
-
-                    // NO CELL SIGNAL
-                    NoCellSignalCard(showSatellite: $showSatellite)
 
                     Text("Coordinates show on this screen only. RedMed has no servers.")
                         .font(.system(size: 10, weight: .medium))
@@ -94,7 +73,7 @@ struct EmergencyView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("Find 911").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedDark)
+                    Text("Find Help").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedDark)
                 }
             }
             .task {
@@ -107,7 +86,8 @@ struct EmergencyView: View {
     }
 }
 
-/// Compact seizure stopwatch on Find 911 — no aid copy. Auto-dials 911 at 5:00.
+/// Compact seizure stopwatch on Find Help — no aid copy. Auto-dials the local
+/// emergency number at 5:00.
 struct SeizureTimerStrip: View {
     @State private var running = false
     @State private var elapsed: TimeInterval = 0
@@ -131,7 +111,7 @@ struct SeizureTimerStrip: View {
             }
             .frame(minWidth: 64, alignment: .leading)
 
-            Text(pastThreshold ? "5:00 — call" : "→ 911 at 5:00")
+            Text(pastThreshold ? "5:00 — call" : "→ \(EmergencyNumber.current) at 5:00")
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundColor(pastThreshold ? .redmedAccent : .redmedMuted)
                 .lineLimit(1)
@@ -166,7 +146,7 @@ struct SeizureTimerStrip: View {
                 elapsed = Date().timeIntervalSince(started)
                 if elapsed >= Self.callAt {
                     stop(reset: false)
-                    if let url = URL(string: "tel://911") {
+                    if let url = EmergencyNumber.dialURL {
                         // Call the completion-handler overload explicitly: bare
                         // `open(_:)` resolves to the async one in here and would
                         // need `await`.
@@ -269,59 +249,6 @@ struct InfoCard: View {
     }
 }
 
-// MARK: - Common Trauma Grid
-struct CommonTraumaGrid: View {
-    let cells: [(String, String)] = [
-        ("Bleeding", "Press hard. Belt tourniquet on limb 2–3 in above. Note time."),
-        ("Not Breathing", "Tilt head, lift chin. No pulse? 100–120/min hard compressions."),
-        ("Spinal", "Don't move. Keep head still. Move only if fire or traffic."),
-        ("Burns", "Running water 10+ min. No ice. Cover loosely."),
-        ("Shock", "Lay flat, elevate legs. Keep warm. No food or water."),
-        ("Hypothermia", "Remove wet clothes. Warm core slowly. No rubbing."),
-        ("Heat", "Call 911 for stroke. Cool neck/armpits/groin fast."),
-    ]
-
-    let columns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
-                Image(systemName: "person.fill")
-                    .font(.system(size: 15))
-                    .foregroundColor(.white)
-                    .frame(width: 28, height: 28)
-                    .background(Color.redmedAccent)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                Text("Common Trauma Situations")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.redmedDark)
-            }
-            LazyVGrid(columns: columns, spacing: 6) {
-                ForEach(cells, id: \.0) { cell in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(cell.0)
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(.redmedAccent)
-                        Text(cell.1)
-                            .font(.system(size: 9))
-                            .foregroundColor(.redmedDark)
-                            .lineSpacing(2)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(8)
-                    .background(Color.redmedBg)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(Color.redmedSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
-    }
-}
-
 // MARK: - No Cell Signal
 struct NoCellSignalCard: View {
     @Binding var showSatellite: Bool
@@ -344,20 +271,13 @@ struct NoCellSignalCard: View {
             .padding(14)
 
             if showSatellite {
-                VStack(spacing: 8) {
-                    Text("iPhone 14+ (iOS 16.1+): hold Side + Volume until Emergency SOS appears, or Settings → Emergency SOS.")
-                        .font(.system(size: 11))
-                        .foregroundColor(.redmedMuted)
-                        .lineSpacing(3)
-                    SecondaryButton("Open Phone · dial 911") {
-                        if let url = URL(string: "tel://911") {
-                            UIApplication.shared.open(url, options: [:], completionHandler: nil)
-                        }
-                    }
-                }
-                .padding(.horizontal, 14)
-                .padding(.bottom, 14)
-                .transition(.opacity.combined(with: .move(edge: .top)))
+                Text("iPhone 14+ (iOS 16.1+): hold Side + Volume until Emergency SOS appears, or Settings → Emergency SOS.")
+                    .font(.system(size: 11))
+                    .foregroundColor(.redmedMuted)
+                    .lineSpacing(3)
+                    .padding(.horizontal, 14)
+                    .padding(.bottom, 14)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .background(Color.redmedSurface)

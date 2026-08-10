@@ -39,7 +39,7 @@ and reassess under UK MDR before release.
 |------------|----------------------------|-----------------|
 | Medical profile on device | Store / display emergency ID | “Detects conditions”, “clinical record of truth” |
 | Passive NFC band | Share emergency ID on tap | “Monitors patient”, “alerts clinicians automatically” |
-| Find 911 GPS | Show coordinates so user can tell 999/911 | “Locates trauma pathway”, “dispatch recommendation” |
+| Find Help GPS | Show coordinates so user can tell 999/911 | “Locates trauma pathway”, “dispatch recommendation” |
 | Seizure timer | Help user time an event; prompt to call at 5:00 | “Detects seizures”, “diagnoses epilepsy” |
 | Roadside Aid / CPR timer | General public first-aid information | Personalised treatment plan, triage algorithm |
 | Call / dial assist | Help user open Phone to call emergency services | Automated clinical triage |

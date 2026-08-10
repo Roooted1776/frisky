@@ -29,7 +29,7 @@ Owner-side app, four tabs behind a custom tab bar:
 | Tab shell + custom tab bar | `ContentView.swift` | Custom `TabBarItem` controls, not a system `TabView` — focus order and labelling need attention |
 | My ID | `MyIDView.swift` | Medical profile card: name, DOB, blood type, allergies, medications, conditions, contacts, organ donor status |
 | Edit profile | `EditProfileView.swift` | Form entry for all of the above, behind a biometric gate |
-| Find 911 | `EmergencyView.swift` | Live GPS coordinates card, emergency dial buttons, seizure stopwatch that prompts a call at 5:00, nearby-hospital list |
+| Find Help | `EmergencyView.swift` | Live GPS coordinates card, emergency dial buttons, seizure stopwatch that prompts a call at 5:00, nearby-hospital list |
 | Aid | `AidView.swift` | First-aid topic panes, expanding cards, emoji-led pane cues |
 | Aid topic detail | `TopicDetailView.swift` | Symptoms and care steps for a topic, plus a dial control |
 | NFC | `NFCView.swift` | Bracelet pairing and write flow (owner only; hidden in scanner sessions) |
@@ -87,7 +87,7 @@ Audit these end-to-end journeys, since they are the ones that matter under
 stress:
 
 1. Enter a full medical profile from empty, through the biometric gate.
-2. Open Find 911, read the GPS coordinates aloud, and place a call.
+2. Open Find Help, read the GPS coordinates aloud, and place a call.
 3. Start the seizure timer and reach the 5:00 call prompt.
 4. Find and follow a first-aid topic to its care steps.
 5. Pair and write the NFC bracelet.
