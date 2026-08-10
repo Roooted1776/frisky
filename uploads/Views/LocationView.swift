@@ -107,7 +107,8 @@ struct LocationView: View {
                     BrandMark(size: .nav)
                 }
             }
-            .onAppear {
+            // After first layout — don't compete with cold-start paint for the main thread.
+            .task {
                 locationManager.requestLocation()
             }
             .onDisappear { locationManager.stopUpdating() }

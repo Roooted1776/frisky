@@ -117,7 +117,9 @@ struct EmergencyView: View {
                     Text("Find 911").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedDark)
                 }
             }
-            .onAppear { locationManager.start() }
+            // Start after first layout so switching to 911 doesn't hitch the tab chrome.
+            .task { locationManager.start() }
+            .onDisappear { locationManager.stop() }
             .sheet(isPresented: $showPublicCard) { PublicCardView(profile: profile) }
         }
     }
@@ -302,15 +304,32 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     override init() {
         super.init()
         manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyBest
+        // Coarser first fix — Best accuracy waits longer before publishing.
+        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        manager.distanceFilter = 25
     }
 
     func start() {
         manager.requestWhenInUseAuthorization()
+        // One-shot first (fast), then continuous for the live GPS card.
+        manager.requestLocation()
         manager.startUpdatingLocation()
+    }
+
+    func stop() {
+        manager.stopUpdatingLocation()
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         location = locations.last
+        // Tighten once we have a fix so the card stays accurate while the tab is open.
+        if manager.desiredAccuracy != kCLLocationAccuracyBest {
+            manager.desiredAccuracy = kCLLocationAccuracyBest
+            manager.distanceFilter = 5
+        }
+    }
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        // Keep listening — GPS can fail once then recover outdoors.
     }
 }
