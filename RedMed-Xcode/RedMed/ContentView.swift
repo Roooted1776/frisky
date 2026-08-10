@@ -75,7 +75,7 @@ struct CustomTabBar: View {
     var body: some View {
         VStack(spacing: 0) {
             Divider().overlay(Color(red: 0.9, green: 0.9, blue: 0.9))
-            HStack(spacing: 0) {
+            HStack(spacing: -3) {
                 TabBarItem(icon: "person.fill",  label: "RedMed", isOn: tab == .myid)      { tab = .myid }
                 TabBarItem(icon: "phone.fill",   label: "911",    isOn: tab == .emergency)  { tab = .emergency }
                 TabBarItem(icon: "cross.case.fill", label: "Aid", isOn: tab == .aid)        { tab = .aid }
