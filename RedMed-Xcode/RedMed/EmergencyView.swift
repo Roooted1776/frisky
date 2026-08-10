@@ -205,7 +205,9 @@ struct CommonTraumaGrid: View {
         ("Spinal", "Don't move. Keep head still. Move only if fire or traffic."),
         ("Burns", "Running water 10+ min. No ice. Cover loosely."),
         ("Shock", "Lay flat, elevate legs. Keep warm. No food or water."),
-        ("Hypothermia", "Remove wet clothes. Warm slowly. No rubbing."),
+        ("Seizure", "Time it. Don't restrain. Nothing in the mouth."),
+        ("Hypothermia", "Remove wet clothes. Warm core slowly. No rubbing."),
+        ("Heat", "Call 911 for stroke. Cool neck/armpits/groin fast."),
     ]
 
     let columns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]

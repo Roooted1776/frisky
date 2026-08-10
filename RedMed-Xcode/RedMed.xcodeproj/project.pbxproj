@@ -24,8 +24,11 @@
 		AABB00000000000000000013 /* LocationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000013 /* LocationHelper.swift */; };
 		AABB00000000000000000014 /* BiometricAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000014 /* BiometricAuth.swift */; };
 		AABB00000000000000000015 /* Find911SOSBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000015 /* Find911SOSBlock.swift */; };
-=======
->>>>>>> origin/main-tab-design-0ac1
+		AABB00000000000000000016 /* PrivacyPolicy.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000016 /* PrivacyPolicy.html */; };
+		AABB00000000000000000017 /* TOS.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000017 /* TOS.html */; };
+		AABB00000000000000000018 /* security.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000018 /* security.html */; };
+		AABB00000000000000000019 /* HowItWorks.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000019 /* HowItWorks.html */; };
+		AABB0000000000000000001A /* legal-doc.css in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001A /* legal-doc.css */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,8 +52,11 @@
 		AAAA00000000000000000013 /* LocationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationHelper.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000014 /* BiometricAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuth.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000015 /* Find911SOSBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Find911SOSBlock.swift; sourceTree = "<group>"; };
-=======
->>>>>>> origin/main-tab-design-0ac1
+		AAAA00000000000000000016 /* PrivacyPolicy.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = PrivacyPolicy.html; sourceTree = "<group>"; };
+		AAAA00000000000000000017 /* TOS.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = TOS.html; sourceTree = "<group>"; };
+		AAAA00000000000000000018 /* security.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = security.html; sourceTree = "<group>"; };
+		AAAA00000000000000000019 /* HowItWorks.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = HowItWorks.html; sourceTree = "<group>"; };
+		AAAA0000000000000000001A /* legal-doc.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = "legal-doc.css"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -90,9 +96,12 @@
 				AAAA00000000000000000013 /* LocationHelper.swift */,
 				AAAA00000000000000000014 /* BiometricAuth.swift */,
 				AAAA00000000000000000015 /* Find911SOSBlock.swift */,
-				AAAA0000000000000000000A /* NFCView.swift */,
->>>>>>> origin/main-tab-design-0ac1
 				AAAA0000000000000000000E /* HelpMenuView.swift */,
+				AAAA00000000000000000016 /* PrivacyPolicy.html */,
+				AAAA00000000000000000017 /* TOS.html */,
+				AAAA00000000000000000018 /* security.html */,
+				AAAA00000000000000000019 /* HowItWorks.html */,
+				AAAA0000000000000000001A /* legal-doc.css */,
 				AAAA0000000000000000000C /* Assets.xcassets */,
 				AAAA0000000000000000000B /* Info.plist */,
 				AAAA0000000000000000000F /* RedMed.entitlements */,
@@ -167,6 +176,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				AABB0000000000000000000C /* Assets.xcassets in Resources */,
+				AABB00000000000000000016 /* PrivacyPolicy.html in Resources */,
+				AABB00000000000000000017 /* TOS.html in Resources */,
+				AABB00000000000000000018 /* security.html in Resources */,
+				AABB00000000000000000019 /* HowItWorks.html in Resources */,
+				AABB0000000000000000001A /* legal-doc.css in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -192,8 +206,6 @@
 				AABB00000000000000000013 /* LocationHelper.swift in Sources */,
 				AABB00000000000000000014 /* BiometricAuth.swift in Sources */,
 				AABB00000000000000000015 /* Find911SOSBlock.swift in Sources */,
-				AABB0000000000000000000A /* NFCView.swift in Sources */,
->>>>>>> origin/main-tab-design-0ac1
 				AABB0000000000000000000B /* HelpMenuView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

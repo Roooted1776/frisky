@@ -17,10 +17,12 @@ set up a working runtime here:
 **There are no dependencies to install:** no Swift Package Manager, CocoaPods, Carthage, or npm.
 The app has no backend, database, or web service.
 
-**Cold launch:** Do **not** start Core Location / MapKit / trauma JSON at `@main`. Find 911 and
-hospital lookup must start only when that UI is visible (privacy + time-to-first-frame). Newer
-sources under `uploads/` use lazy tab mounting (switch + CustomTabBar), default My ID, and async
-trauma catalog warm-up for the same reason.
+**Cold launch:** Do **not** start Core Location *updates* / MapKit / trauma JSON at
+`@main`. Asking When-In-Use authorization once after first frame (install prompt)
+is OK — continuous GPS and hospital lookup still start only when Find 911 / that
+UI is visible (privacy + time-to-first-frame). Newer sources under `uploads/` use
+lazy tab mounting (switch + CustomTabBar), default My ID, and async trauma catalog
+warm-up for the same reason.
 
 **Consequence for cloud agents:** the update script is intentionally a no-op. Code review and static
 edits to the `.swift` files are possible, but do not attempt to build/run/test here. Any actual

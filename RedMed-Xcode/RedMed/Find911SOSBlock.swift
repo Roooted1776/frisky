@@ -125,10 +125,10 @@ struct Find911SOSBlock: View {
             stopSeizure(reset: false)
             if sos.isCountingDown { sos.cancel() }
         }
-        .onChange(of: motion.isEnabled) { enabled in
+        .onChange(of: motion.isEnabled) { _, enabled in
             if enabled { motion.start() } else { motion.stop() }
         }
-        .onChange(of: motion.didTrigger) { triggered in
+        .onChange(of: motion.didTrigger) { _, triggered in
             guard triggered else { return }
             motion.consumeTrigger()
             guard !sos.isCountingDown, !sos.showsSatelliteCoach else { return }
