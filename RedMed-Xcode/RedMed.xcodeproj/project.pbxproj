@@ -23,6 +23,7 @@
 		AABB00000000000000000011 /* LocationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000011 /* LocationHelper.swift */; };
 		AABB00000000000000000012 /* MedicationData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000012 /* MedicationData.swift */; };
 		AABB00000000000000000013 /* PublicCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000013 /* PublicCardView.swift */; };
+		AABB00000000000000000014 /* BiometricAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000014 /* BiometricAuth.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,6 +46,7 @@
 		AAAA00000000000000000011 /* LocationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationHelper.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000012 /* MedicationData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationData.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000013 /* PublicCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicCardView.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000014 /* BiometricAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuth.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -76,6 +78,7 @@
 				AAAA00000000000000000011 /* LocationHelper.swift */,
 				AAAA00000000000000000012 /* MedicationData.swift */,
 				AAAA00000000000000000013 /* PublicCardView.swift */,
+				AAAA00000000000000000014 /* BiometricAuth.swift */,
 				AAAA0000000000000000000C /* Assets.xcassets */,
 				AAAA0000000000000000000B /* Info.plist */,
 				AAAA0000000000000000000F /* RedMed.entitlements */,
@@ -183,6 +186,7 @@
 				AABB00000000000000000011 /* LocationHelper.swift in Sources */,
 				AABB00000000000000000012 /* MedicationData.swift in Sources */,
 				AABB00000000000000000013 /* PublicCardView.swift in Sources */,
+				AABB00000000000000000014 /* BiometricAuth.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

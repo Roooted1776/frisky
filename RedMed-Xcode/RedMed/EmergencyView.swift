@@ -1,9 +1,11 @@
 import SwiftUI
 import CoreLocation
+import MapKit
 
 struct EmergencyView: View {
     @EnvironmentObject var profile: ProfileData
     @StateObject private var locationManager = LocationManager()
+    @StateObject private var hospitalFinder = NearbyHospitalFinder()
     @State private var showSatellite = false
     @State private var showPublicCard = false
 
@@ -93,6 +95,9 @@ struct EmergencyView: View {
 
                     // COMMON TRAUMA GRID
                     CommonTraumaGrid()
+
+                    // NEARBY TRAUMA HOSPITALS
+                    NearbyHospitalsCard(finder: hospitalFinder)
 
                     // NO CELL SIGNAL
                     NoCellSignalCard(showSatellite: $showSatellite)
@@ -241,6 +246,80 @@ struct CommonTraumaGrid: View {
                     .padding(8)
                     .background(Color.redmedBg)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(Color.redmedSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
+    }
+}
+
+// MARK: - Nearby Trauma Hospitals
+struct NearbyHospitalsCard: View {
+    @ObservedObject var finder: NearbyHospitalFinder
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "cross.case.fill")
+                    .font(.system(size: 15))
+                    .foregroundColor(.white)
+                    .frame(width: 28, height: 28)
+                    .background(Color.redmedAccent)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                Text("Nearby Trauma Hospitals")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.redmedDark)
+            }
+
+            if finder.isLoading {
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text("Finding hospitals near you…")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.redmedMuted)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+            } else if let err = finder.errorMessage {
+                Text(err)
+                    .font(.system(size: 11))
+                    .foregroundColor(.redmedMuted)
+                SecondaryButton("Try again") { finder.search() }
+            } else if finder.hospitals.isEmpty {
+                PrimaryButton(title: "Find hospitals near me") { finder.search() }
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(Array(finder.hospitals.enumerated()), id: \.offset) { i, hosp in
+                        Button {
+                            hosp.mapItem.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
+                        } label: {
+                            HStack(alignment: .top, spacing: 10) {
+                                Text("\(i + 1)")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundColor(.redmedAccent)
+                                    .frame(width: 16, alignment: .leading)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(hosp.name)
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundColor(.redmedDark)
+                                    Text(hosp.address.isEmpty ? String(format: "%.1f mi away", hosp.distanceMiles) : "\(hosp.address) · \(String(format: "%.1f", hosp.distanceMiles)) mi")
+                                        .font(.system(size: 10, weight: .medium))
+                                        .foregroundColor(.redmedMuted)
+                                }
+                                Spacer()
+                                Image(systemName: "arrow.triangle.turn.up.right.circle.fill")
+                                    .font(.system(size: 15))
+                                    .foregroundColor(.redmedAccent)
+                            }
+                            .padding(.vertical, 8)
+                        }
+                        .buttonStyle(.plain)
+                        if i < finder.hospitals.count - 1 { Divider() }
+                    }
                 }
             }
         }
