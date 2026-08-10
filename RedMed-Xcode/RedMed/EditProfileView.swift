@@ -12,18 +12,17 @@ struct EditProfileView: View {
     @State private var birthDate = ""
     @State private var bloodType = ""
     @State private var allergies: [DraftLine] = []
-    @State private var allergyFocusID: UUID? = nil
     @State private var medications: [DraftLine] = []
-    @State private var medFocusID: UUID? = nil
     @State private var conditions: [DraftLine] = []
-    @State private var conditionFocusID: UUID? = nil
     @State private var contacts: [EmergencyContact] = []
     @State private var showAuthFailedAlert = false
 
-    /// Slight rose wash — translucent enough to show the card behind, not ghostly.
-    private static let suggestionFill = Color.redmedAccent.opacity(0.14)
+    /// One focus domain for the whole sheet — separate FocusStates per section freeze
+    /// when moving between You / Allergies / Meds / Conditions / Contacts.
+    @FocusState private var focus: EditFocus?
 
-    /// Display / persist as "Month DD, YYYY" (matches the old text placeholder).
+    private static let bloodTypeChoices = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
+
     private static let birthDateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US_POSIX")
@@ -31,10 +30,8 @@ struct EditProfileView: View {
         return f
     }()
 
-    /// Accept existing free-typed values when opening Edit.
     private static let birthDateParsers: [DateFormatter] = {
-        let formats = ["MMMM d, yyyy", "MMM d, yyyy", "M/d/yyyy", "MM/dd/yyyy", "yyyy-MM-dd"]
-        return formats.map { format in
+        ["MMMM d, yyyy", "MMM d, yyyy", "M/d/yyyy", "MM/dd/yyyy", "yyyy-MM-dd"].map { format in
             let f = DateFormatter()
             f.locale = Locale(identifier: "en_US_POSIX")
             f.dateFormat = format
@@ -43,8 +40,7 @@ struct EditProfileView: View {
     }()
 
     private static var birthDateRange: ClosedRange<Date> {
-        let calendar = Calendar.current
-        let start = calendar.date(byAdding: .year, value: -120, to: Date()) ?? Date.distantPast
+        let start = Calendar.current.date(byAdding: .year, value: -120, to: Date()) ?? Date.distantPast
         return start...Date()
     }
 
@@ -52,22 +48,18 @@ struct EditProfileView: View {
         Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
     }
 
+    private var hasBirthDate: Bool { Self.parseBirthDate(birthDate) != nil }
+
     private var birthDateBinding: Binding<Date> {
         Binding(
-            get: {
-                Self.parseBirthDate(birthDate) ?? Self.defaultBirthDate
-            },
-            set: {
-                birthDate = Self.birthDateFormatter.string(from: $0)
-            }
+            get: { Self.parseBirthDate(birthDate) ?? Self.defaultBirthDate },
+            set: { birthDate = Self.birthDateFormatter.string(from: $0) }
         )
     }
 
     var body: some View {
-        // Ped/EMS scanners never edit — dismiss if this view is ever presented.
         if isScannerSession {
-            Color.clear
-                .onAppear { dismiss() }
+            Color.clear.onAppear { dismiss() }
         } else {
             editorBody
         }
@@ -75,7 +67,6 @@ struct EditProfileView: View {
 
     private var editorBody: some View {
         VStack(spacing: 0) {
-            // Sheet nav bar
             HStack {
                 Button("Cancel") { dismiss() }
                     .font(.system(size: 17))
@@ -98,221 +89,51 @@ struct EditProfileView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    // YOU
                     editSectionLabel("You")
                     editCard {
-                        editRow(label: "Name",       text: $name,       placeholder: "Full name")
+                        nameRow
                         Divider().padding(.leading, 106)
                         birthDateRow
                         Divider().padding(.leading, 106)
-                        editRow(label: "Blood type", text: $bloodType,  placeholder: "A+, B−, O+…")
+                        bloodTypeRow
                     }
 
-                    // ALLERGIES
                     editSectionLabel("Allergies")
                     editCard {
-                        ForEach($allergies) { $line in
-                            VStack(alignment: .leading, spacing: 0) {
-                                HStack(spacing: 8) {
-                                    TextField("Allergy", text: $line.text)
-                                        .font(.system(size: 15))
-                                        .foregroundColor(.redmedDark)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .onChange(of: line.text) { _, _ in allergyFocusID = line.id }
-                                    removeLineButton {
-                                        withAnimation {
-                                            allergies.removeAll { $0.id == line.id }
-                                            if allergyFocusID == line.id { allergyFocusID = nil }
-                                        }
-                                    }
-                                }
-                                .padding(.leading, 16)
-                                .padding(.trailing, 4)
-                                .padding(.vertical, 4)
-
-                                if allergyFocusID == line.id {
-                                    let matches = suggestions(from: commonAllergies, for: line, in: allergies)
-                                    if !matches.isEmpty {
-                                        FlowLayout(spacing: 6) {
-                                            ForEach(matches, id: \.self) { suggestion in
-                                                Button {
-                                                    if let idx = allergies.firstIndex(where: { $0.id == line.id }) {
-                                                        allergies[idx].text = suggestion
-                                                    }
-                                                    allergyFocusID = nil
-                                                } label: {
-                                                    Text(suggestion)
-                                                        .font(.system(size: 13))
-                                                        .foregroundColor(.redmedDark)
-                                                        .multilineTextAlignment(.leading)
-                                                        .fixedSize(horizontal: false, vertical: true)
-                                                        .padding(.horizontal, 10)
-                                                        .padding(.vertical, 7)
-                                                        .background(Self.suggestionFill)
-                                                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                                                }
-                                                .buttonStyle(.plain)
-                                            }
-                                        }
-                                        .padding(.horizontal, 12)
-                                        .padding(.bottom, 10)
-                                    }
-                                }
-                            }
-                            .id(line.id)
-                            Divider().padding(.leading, 16)
-                        }
-                        addButton("Add allergy") {
-                            allergyFocusID = nil
-                            allergies.append(DraftLine())
-                        }
+                        DraftLinesEditor(
+                            lines: $allergies,
+                            focus: $focus,
+                            placeholder: "Allergy",
+                            catalog: commonAllergies,
+                            addLabel: "Add allergy"
+                        )
                     }
 
-                    // MEDICATIONS
                     editSectionLabel("Medications")
                     editCard {
-                        ForEach($medications) { $line in
-                            VStack(alignment: .leading, spacing: 0) {
-                                HStack(spacing: 8) {
-                                    TextField("Medication", text: $line.text)
-                                        .font(.system(size: 15))
-                                        .foregroundColor(.redmedDark)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .onChange(of: line.text) { _, _ in medFocusID = line.id }
-                                    removeLineButton {
-                                        withAnimation {
-                                            medications.removeAll { $0.id == line.id }
-                                            if medFocusID == line.id { medFocusID = nil }
-                                        }
-                                    }
-                                }
-                                .padding(.leading, 16)
-                                .padding(.trailing, 4)
-                                .padding(.vertical, 4)
-
-                                if medFocusID == line.id {
-                                    let matches = suggestions(from: commonMedications, for: line, in: medications)
-                                    if !matches.isEmpty {
-                                        FlowLayout(spacing: 6) {
-                                            ForEach(matches, id: \.self) { suggestion in
-                                                Button {
-                                                    if let idx = medications.firstIndex(where: { $0.id == line.id }) {
-                                                        medications[idx].text = suggestion
-                                                    }
-                                                    medFocusID = nil
-                                                } label: {
-                                                    Text(suggestion)
-                                                        .font(.system(size: 13))
-                                                        .foregroundColor(.redmedDark)
-                                                        .multilineTextAlignment(.leading)
-                                                        .fixedSize(horizontal: false, vertical: true)
-                                                        .padding(.horizontal, 10)
-                                                        .padding(.vertical, 7)
-                                                        .background(Self.suggestionFill)
-                                                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                                                }
-                                                .buttonStyle(.plain)
-                                            }
-                                        }
-                                        .padding(.horizontal, 12)
-                                        .padding(.bottom, 10)
-                                    }
-                                }
-                            }
-                            .id(line.id)
-                            Divider().padding(.leading, 16)
-                        }
-                        addButton("Add medication") {
-                            medFocusID = nil
-                            medications.append(DraftLine())
-                        }
+                        DraftLinesEditor(
+                            lines: $medications,
+                            focus: $focus,
+                            placeholder: "Medication",
+                            catalog: commonMedications,
+                            addLabel: "Add medication"
+                        )
                     }
 
-                    // CONDITIONS
                     editSectionLabel("Conditions")
                     editCard {
-                        ForEach($conditions) { $line in
-                            VStack(alignment: .leading, spacing: 0) {
-                                HStack(spacing: 8) {
-                                    TextField("Condition", text: $line.text)
-                                        .font(.system(size: 15))
-                                        .foregroundColor(.redmedDark)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .onChange(of: line.text) { _, _ in conditionFocusID = line.id }
-                                    removeLineButton {
-                                        withAnimation {
-                                            conditions.removeAll { $0.id == line.id }
-                                            if conditionFocusID == line.id { conditionFocusID = nil }
-                                        }
-                                    }
-                                }
-                                .padding(.leading, 16)
-                                .padding(.trailing, 4)
-                                .padding(.vertical, 4)
-
-                                if conditionFocusID == line.id {
-                                    let matches = suggestions(from: commonConditions, for: line, in: conditions)
-                                    if !matches.isEmpty {
-                                        FlowLayout(spacing: 6) {
-                                            ForEach(matches, id: \.self) { suggestion in
-                                                Button {
-                                                    if let idx = conditions.firstIndex(where: { $0.id == line.id }) {
-                                                        conditions[idx].text = suggestion
-                                                    }
-                                                    conditionFocusID = nil
-                                                } label: {
-                                                    Text(suggestion)
-                                                        .font(.system(size: 13))
-                                                        .foregroundColor(.redmedDark)
-                                                        .multilineTextAlignment(.leading)
-                                                        .fixedSize(horizontal: false, vertical: true)
-                                                        .padding(.horizontal, 10)
-                                                        .padding(.vertical, 7)
-                                                        .background(Self.suggestionFill)
-                                                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                                                }
-                                                .buttonStyle(.plain)
-                                            }
-                                        }
-                                        .padding(.horizontal, 12)
-                                        .padding(.bottom, 10)
-                                    }
-                                }
-                            }
-                            .id(line.id)
-                            Divider().padding(.leading, 16)
-                        }
-                        addButton("Add condition") {
-                            conditionFocusID = nil
-                            conditions.append(DraftLine())
-                        }
+                        DraftLinesEditor(
+                            lines: $conditions,
+                            focus: $focus,
+                            placeholder: "Condition",
+                            catalog: commonConditions,
+                            addLabel: "Add condition"
+                        )
                     }
 
-                    // CONTACTS
                     editSectionLabel("Emergency Contacts")
                     editCard {
-                        ForEach($contacts) { $contact in
-                            HStack(alignment: .top, spacing: 8) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    TextField("Name", text: $contact.name)
-                                        .font(.system(size: 15, weight: .semibold))
-                                        .foregroundColor(.redmedDark)
-                                    TextField("Relationship · phone", text: $contact.detail)
-                                        .font(.system(size: 13))
-                                        .foregroundColor(.redmedMuted)
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                removeLineButton {
-                                    withAnimation { contacts.removeAll { $0.id == contact.id } }
-                                }
-                                .padding(.top, 2)
-                            }
-                            .padding(.leading, 16)
-                            .padding(.trailing, 4)
-                            .padding(.vertical, 4)
-                            Divider().padding(.leading, 16)
-                        }
-                        addButton("Add contact") { contacts.append(EmergencyContact(name: "", detail: "")) }
+                        contactsEditor
                     }
                 }
                 .padding(.top, 20)
@@ -330,42 +151,25 @@ struct EditProfileView: View {
         }
     }
 
-    // MARK: - Helpers
-    @ViewBuilder
-    func editSectionLabel(_ text: String) -> some View {
-        Text(text.uppercased())
-            .font(.system(size: 13, weight: .semibold))
-            .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
-            .kerning(0.5)
-            .padding(.horizontal, 4)
-            .padding(.bottom, 6)
-            .padding(.top, (text == "You") ? 0 : 22)
-    }
+    // MARK: - You
 
-    @ViewBuilder
-    func editCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-        VStack(spacing: 0) { content() }
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-
-    @ViewBuilder
-    func editRow(label: String, text: Binding<String>, placeholder: String) -> some View {
+    private var nameRow: some View {
         HStack(spacing: 0) {
-            Text(label)
+            Text("Name")
                 .font(.system(size: 15, weight: .medium))
                 .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
                 .frame(width: 90, alignment: .leading)
                 .padding(.trailing, 12)
-            TextField(placeholder, text: text)
+            TextField("Full name", text: $name)
                 .font(.system(size: 15))
                 .foregroundColor(.redmedDark)
+                .focused($focus, equals: .name)
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
         }
-        .padding(.horizontal, 16).padding(.vertical, 13)
+        .padding(.horizontal, 16)
     }
 
-    /// Compact DatePicker — tappable iOS control that opens the system date dropdown
-    /// (not a free-text field).
     private var birthDateRow: some View {
         HStack(spacing: 0) {
             Text("Birth date")
@@ -373,19 +177,160 @@ struct EditProfileView: View {
                 .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
                 .frame(width: 90, alignment: .leading)
                 .padding(.trailing, 12)
-            DatePicker(
-                "",
-                selection: birthDateBinding,
-                in: Self.birthDateRange,
-                displayedComponents: .date
-            )
-            .labelsHidden()
-            .datePickerStyle(.compact)
-            .tint(.redmedAccent)
+
+            if hasBirthDate {
+                DatePicker(
+                    "",
+                    selection: birthDateBinding,
+                    in: Self.birthDateRange,
+                    displayedComponents: .date
+                )
+                .labelsHidden()
+                .datePickerStyle(.compact)
+                .tint(.redmedAccent)
+
+                Button {
+                    birthDate = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 18))
+                        .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48).opacity(0.45))
+                        .frame(width: 36, height: 36)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Clear birth date")
+            } else {
+                Button {
+                    focus = nil
+                    birthDate = Self.birthDateFormatter.string(from: Self.defaultBirthDate)
+                } label: {
+                    Text("Select date")
+                        .font(.system(size: 15))
+                        .foregroundColor(.redmedAccent)
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 16).padding(.vertical, 10)
+        .padding(.horizontal, 16)
+        .padding(.vertical, hasBirthDate ? 10 : 0)
     }
+
+    private var bloodTypeRow: some View {
+        HStack(spacing: 0) {
+            Text("Blood type")
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
+                .frame(width: 90, alignment: .leading)
+                .padding(.trailing, 12)
+
+            Menu {
+                Button("Clear") { bloodType = "" }
+                ForEach(Self.bloodTypeChoices, id: \.self) { type in
+                    Button(type) { bloodType = type }
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Text(bloodType.isEmpty ? "Select" : bloodType)
+                        .font(.system(size: 15))
+                        .foregroundColor(bloodType.isEmpty ? .redmedAccent : .redmedDark)
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48).opacity(0.55))
+                }
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 16)
+    }
+
+    // MARK: - Contacts
+
+    @ViewBuilder
+    private var contactsEditor: some View {
+        ForEach($contacts) { $contact in
+            HStack(alignment: .center, spacing: 8) {
+                VStack(alignment: .leading, spacing: 4) {
+                    TextField("Name", text: $contact.name)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.redmedDark)
+                        .focused($focus, equals: .contactName(contact.id))
+                    TextField("Relationship · phone", text: $contact.detail)
+                        .font(.system(size: 13))
+                        .foregroundColor(.redmedMuted)
+                        .focused($focus, equals: .contactDetail(contact.id))
+                }
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
+
+                Button {
+                    let id = contact.id
+                    switch focus {
+                    case .contactName(id), .contactDetail(id):
+                        focus = nil
+                    default:
+                        break
+                    }
+                    contacts.removeAll { $0.id == id }
+                } label: {
+                    Text("✕")
+                        .font(.system(size: 18))
+                        .foregroundColor(.redmedAccent)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.leading, 16)
+            .padding(.trailing, 4)
+            Divider().padding(.leading, 16)
+        }
+
+        Button {
+            focus = nil
+            contacts.append(EmergencyContact(name: "", detail: ""))
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "plus.circle.fill").font(.system(size: 18))
+                Text("Add contact").font(.system(size: 15))
+            }
+            .foregroundColor(.redmedAccent)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 13)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Shared chrome
+
+    @ViewBuilder
+    private func editSectionLabel(_ text: String) -> some View {
+        Text(text.uppercased())
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
+            .kerning(0.5)
+            .padding(.horizontal, 4)
+            .padding(.bottom, 6)
+            .padding(.top, text == "You" ? 0 : 22)
+    }
+
+    @ViewBuilder
+    private func editCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        VStack(spacing: 0) { content() }
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    // MARK: - Persistence
 
     private static func parseBirthDate(_ raw: String) -> Date? {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -393,72 +338,13 @@ struct EditProfileView: View {
         for formatter in birthDateParsers {
             if let date = formatter.date(from: trimmed) { return date }
         }
-        // Last resort: locale medium/long styles from older typed entries.
-        let styles: [DateFormatter.Style] = [.medium, .long, .short]
-        for style in styles {
+        for style: DateFormatter.Style in [.medium, .long, .short] {
             let f = DateFormatter()
             f.dateStyle = style
             f.timeStyle = .none
             if let date = f.date(from: trimmed) { return date }
         }
         return nil
-    }
-
-    @ViewBuilder
-    func addButton(_ label: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 18))
-                Text(label)
-                    .font(.system(size: 15))
-            }
-            .foregroundColor(.redmedAccent)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 16).padding(.vertical, 13)
-            // Plain buttons only hit opaque glyphs unless the full row is shaped.
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    /// ✕ removes the row from the draft list. Large hit target so TextField
-    /// focus doesn't steal the tap (same plain + contentShape pattern as Add).
-    @ViewBuilder
-    func removeLineButton(action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text("✕")
-                .font(.system(size: 18))
-                .foregroundColor(.redmedAccent)
-                .frame(width: 44, height: 44)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    /// Autocomplete for a draft row: skip blanks, exact fills, and values
-    /// already used on other rows so adding another line doesn't re-list
-    /// populated entries under the field.
-    private func suggestions(from catalog: [String], for line: DraftLine, in rows: [DraftLine]) -> [String] {
-        let query = line.text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return [] }
-        let queryLower = query.lowercased()
-        let taken = Set(
-            rows
-                .filter { $0.id != line.id }
-                .map { $0.text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
-                .filter { !$0.isEmpty }
-        )
-        return Array(
-            catalog
-                .filter { suggestion in
-                    let value = suggestion.lowercased()
-                    if value == queryLower { return false }
-                    if taken.contains(value) { return false }
-                    return suggestion.localizedCaseInsensitiveContains(query)
-                }
-                .prefix(5)
-        )
     }
 
     private func loadDraft() {
@@ -476,8 +362,6 @@ struct EditProfileView: View {
             dismiss()
             return
         }
-        // First-time fill opens Edit without Face ID — confirm identity before Keychain write.
-        // Returning edits already unlocked via RedMed Edit, so Save skips a second prompt.
         if requireAuthOnSave {
             BiometricAuth.authenticate(
                 reason: "Confirm with Face ID, Touch ID, or passcode to save your RedMed profile."
@@ -495,13 +379,12 @@ struct EditProfileView: View {
 
     private func commitSave() {
         profile.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        // Normalize any legacy free-typed value to the DatePicker format on save.
         if let date = Self.parseBirthDate(birthDate) {
             profile.birthDate = Self.birthDateFormatter.string(from: date)
         } else {
             profile.birthDate = birthDate.trimmingCharacters(in: .whitespacesAndNewlines)
         }
-        profile.bloodType = bloodType
+        profile.bloodType = bloodType.trimmingCharacters(in: .whitespacesAndNewlines)
         profile.allergies = allergies.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         profile.medications = medications.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         profile.conditions = conditions.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
@@ -511,7 +394,17 @@ struct EditProfileView: View {
     }
 }
 
-/// Stable identity for editable string rows (avoids ForEach index-as-id crashes on delete).
+// MARK: - Focus
+
+private enum EditFocus: Hashable {
+    case name
+    case line(UUID)
+    case contactName(UUID)
+    case contactDetail(UUID)
+}
+
+// MARK: - Draft lines
+
 struct DraftLine: Identifiable, Equatable {
     let id: UUID
     var text: String
@@ -519,5 +412,146 @@ struct DraftLine: Identifiable, Equatable {
     init(text: String = "", id: UUID = UUID()) {
         self.id = id
         self.text = text
+    }
+}
+
+/// Allergy / med / condition editor. Shares the sheet-wide focus so jumping
+/// between sections stays reactive. Suggestions are cached in the row and only
+/// refresh on text/focus changes — not on every parent body pass.
+private struct DraftLinesEditor: View {
+    @Binding var lines: [DraftLine]
+    var focus: FocusState<EditFocus?>.Binding
+    let placeholder: String
+    let catalog: [String]
+    let addLabel: String
+
+    var body: some View {
+        ForEach($lines) { $line in
+            DraftLineRow(
+                line: $line,
+                lines: $lines,
+                placeholder: placeholder,
+                catalog: catalog,
+                focus: focus,
+                onRemove: { remove(line.id) }
+            )
+        }
+
+        Button {
+            focus.wrappedValue = nil
+            lines.append(DraftLine())
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "plus.circle.fill").font(.system(size: 18))
+                Text(addLabel).font(.system(size: 15))
+            }
+            .foregroundColor(.redmedAccent)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 13)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func remove(_ id: UUID) {
+        if focus.wrappedValue == .line(id) { focus.wrappedValue = nil }
+        lines.removeAll { $0.id == id }
+    }
+}
+
+private struct DraftLineRow: View {
+    @Binding var line: DraftLine
+    @Binding var lines: [DraftLine]
+    let placeholder: String
+    let catalog: [String]
+    var focus: FocusState<EditFocus?>.Binding
+    let onRemove: () -> Void
+
+    @State private var matches: [String] = []
+
+    private var isFocused: Bool { focus.wrappedValue == .line(line.id) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 8) {
+                TextField(placeholder, text: $line.text)
+                    .font(.system(size: 15))
+                    .foregroundColor(.redmedDark)
+                    .focused(focus, equals: .line(line.id))
+                    .onChange(of: line.text) { _, newValue in
+                        guard isFocused else { return }
+                        refreshMatches(newValue)
+                    }
+                Spacer(minLength: 0)
+                Button(action: onRemove) {
+                    Text("✕")
+                        .font(.system(size: 18))
+                        .foregroundColor(.redmedAccent)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.leading, 16)
+            .padding(.trailing, 4)
+
+            if isFocused, !matches.isEmpty {
+                VStack(spacing: 0) {
+                    ForEach(matches, id: \.self) { suggestion in
+                        Button {
+                            line.text = suggestion
+                            matches = []
+                            focus.wrappedValue = nil
+                        } label: {
+                            Text(suggestion)
+                                .font(.system(size: 14))
+                                .foregroundColor(.redmedDark)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 9)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .background(Color.redmedAccent.opacity(0.06))
+                .padding(.bottom, 8)
+            }
+        }
+        .onChange(of: focus.wrappedValue) { _, newFocus in
+            if newFocus == .line(line.id) {
+                refreshMatches(line.text)
+            } else if !matches.isEmpty {
+                matches = []
+            }
+        }
+        Divider().padding(.leading, 16)
+    }
+
+    private func refreshMatches(_ raw: String) {
+        let query = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else {
+            if !matches.isEmpty { matches = [] }
+            return
+        }
+        let queryLower = query.lowercased()
+        let rowID = line.id
+        let taken = Set(
+            lines.lazy
+                .filter { $0.id != rowID }
+                .map { $0.text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+                .filter { !$0.isEmpty }
+        )
+        var next: [String] = []
+        next.reserveCapacity(5)
+        for suggestion in catalog {
+            let value = suggestion.lowercased()
+            if value == queryLower { continue }
+            if taken.contains(value) { continue }
+            guard value.contains(queryLower) else { continue }
+            next.append(suggestion)
+            if next.count == 5 { break }
+        }
+        if next != matches { matches = next }
     }
 }
