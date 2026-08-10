@@ -190,7 +190,9 @@ struct MyIDView: View {
     // MARK: - Edit gate
 
     private func requestEdit() {
-        guard profile.hasData else {
+        // Gate on any saved medical fields — not just name — so clearing the
+        // name cannot bypass Face ID while allergies/meds/etc. remain.
+        guard profile.hasSensitiveProfileData else {
             showEdit = true
             return
         }
