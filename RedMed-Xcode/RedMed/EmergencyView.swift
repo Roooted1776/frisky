@@ -5,8 +5,6 @@ struct EmergencyView: View {
     @EnvironmentObject var profile: ProfileData
     @StateObject private var locationManager = LocationManager()
     @State private var showSatellite = false
-    /// Mount SOS after first GPS paint so opening 911 stays snappy.
-    @State private var mountSOS = false
 
     func callFirstContact() {
         guard let c = profile.contacts.first else { return }
@@ -30,10 +28,7 @@ struct EmergencyView: View {
                     GPSCard(location: locationManager.location)
                         .padding(.vertical, 4)
 
-                    // Emergency SOS — under Live GPS; deferred one frame for fast first paint
-                    if mountSOS {
-                        Find911SOSBlock(locationManager: locationManager)
-                    }
+                    SeizureTimerStrip()
 
                     // COPY COORDINATES
                     Button {
@@ -99,17 +94,95 @@ struct EmergencyView: View {
                     Text("Find 911").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedDark)
                 }
             }
-            // GPS after first layout; SOS one yield later so the GPS card paints first.
             .task {
                 locationManager.start()
-                await Task.yield()
-                mountSOS = true
             }
             .onDisappear {
                 locationManager.stop()
-                mountSOS = false
             }
         }
+    }
+}
+
+/// Compact seizure stopwatch on Find 911 — no aid copy. Auto-dials 911 at 5:00.
+struct SeizureTimerStrip: View {
+    @State private var running = false
+    @State private var elapsed: TimeInterval = 0
+    @State private var task: Task<Void, Never>?
+
+    private static let callAt: TimeInterval = 5 * 60
+
+    private var pastThreshold: Bool { elapsed >= Self.callAt }
+
+    var body: some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 1) {
+                Text("SEIZURE")
+                    .font(.system(size: 9, weight: .bold))
+                    .kerning(0.8)
+                    .foregroundColor(.redmedMuted)
+                Text(format(elapsed))
+                    .font(.system(size: 20, weight: .bold, design: .monospaced))
+                    .foregroundColor(pastThreshold ? .redmedAccent : .redmedDark)
+                    .contentTransition(.numericText())
+            }
+            .frame(minWidth: 64, alignment: .leading)
+
+            Text(pastThreshold ? "5:00 — call" : "→ 911 at 5:00")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(pastThreshold ? .redmedAccent : .redmedMuted)
+                .lineLimit(1)
+
+            Spacer(minLength: 4)
+
+            Button(running ? "Stop" : "Start") {
+                if running { stop(reset: false) } else { start() }
+            }
+            .font(.system(size: 12, weight: .bold))
+            .foregroundColor(running ? .redmedDark : .white)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(running ? Color.white.opacity(0.9) : Color.redmedAccent)
+            .clipShape(Capsule())
+            .overlay(Capsule().stroke(Color.redmedDivider, lineWidth: running ? 1 : 0))
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(Color.redmedSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.redmedDivider, lineWidth: 1))
+        .onDisappear { stop(reset: false) }
+    }
+
+    private func start() {
+        stop(reset: true)
+        running = true
+        let started = Date()
+        task = Task { @MainActor in
+            while !Task.isCancelled {
+                elapsed = Date().timeIntervalSince(started)
+                if elapsed >= Self.callAt {
+                    stop(reset: false)
+                    if let url = URL(string: "tel://911") {
+                        UIApplication.shared.open(url)
+                    }
+                    return
+                }
+                try? await Task.sleep(nanoseconds: 200_000_000)
+            }
+        }
+    }
+
+    private func stop(reset: Bool) {
+        task?.cancel()
+        task = nil
+        running = false
+        if reset { elapsed = 0 }
+    }
+
+    private func format(_ t: TimeInterval) -> String {
+        let total = max(0, Int(t))
+        return String(format: "%d:%02d", total / 60, total % 60)
     }
 }
 
@@ -198,7 +271,6 @@ struct CommonTraumaGrid: View {
         ("Spinal", "Don't move. Keep head still. Move only if fire or traffic."),
         ("Burns", "Running water 10+ min. No ice. Cover loosely."),
         ("Shock", "Lay flat, elevate legs. Keep warm. No food or water."),
-        ("Seizure", "Time it. Don't restrain. Nothing in the mouth."),
         ("Hypothermia", "Remove wet clothes. Warm core slowly. No rubbing."),
         ("Heat", "Call 911 for stroke. Cool neck/armpits/groin fast."),
     ]
