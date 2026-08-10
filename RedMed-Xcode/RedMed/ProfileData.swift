@@ -18,6 +18,18 @@ class ProfileData: ObservableObject {
     ]
 
     var hasData: Bool { !name.isEmpty }
+
+    /// Any medical profile content that should require Face ID / passcode to edit.
+    var hasSensitiveProfileData: Bool {
+        !name.isEmpty
+            || !birthDate.isEmpty
+            || !bloodType.isEmpty
+            || !allergies.isEmpty
+            || !medications.isEmpty
+            || !conditions.isEmpty
+            || contacts.contains { !$0.name.isEmpty || !$0.detail.isEmpty }
+    }
+
     /// Whether an NFC band has been written/paired (Main header status).
     @Published var braceletLinked: Bool = false
     @Published var isOrganDonor: Bool = true
