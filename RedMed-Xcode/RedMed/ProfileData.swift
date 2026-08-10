@@ -74,13 +74,13 @@ let aidTopics: [String: AidTopic] = [
     ),
     "choking": AidTopic(
         id: "choking", title: "Choking",
-        symptoms: ["Cannot speak, cry, or make a strong cough", "Hands at throat (universal choking sign)", "Face turning red then blue"],
-        care: ["Ask 'Are you choking?' — if they can cough, encourage coughing", "If they cannot cough or speak: stand behind them, lean them forward", "Give 5 firm back blows between shoulder blades with heel of hand", "If no result: 5 abdominal thrusts (Heimlich) — fist above navel, pull sharply inward and upward", "Alternate back blows and abdominal thrusts until object clears or they lose consciousness", "If unconscious: lower to ground, call 911, begin CPR"]
+        symptoms: ["Cannot speak, cry, or cough forcefully", "High-pitched noise or no sound when breathing", "Clutching throat — universal choking sign"],
+        care: ["Ask 'Are you choking?' — if they can cough hard, let them", "If they cannot: stand behind them, lean them forward", "5 firm back blows between shoulder blades with heel of hand", "5 abdominal thrusts (Heimlich): fist above navel, sharp inward-and-upward thrust", "Alternate 5 back blows + 5 thrusts until object is expelled or they go unconscious", "If they become unconscious: lower them to the floor and start CPR — each time you open the airway, look for the object before giving breaths"]
     ),
     "shock": AidTopic(
         id: "shock", title: "Shock",
-        symptoms: ["Pale, cold, clammy skin", "Rapid weak pulse", "Confusion, anxiety, or loss of consciousness"],
-        care: ["Call 911 immediately", "Lay them flat — do NOT let them sit up or walk", "Elevate legs 12 inches unless head, neck, or spine injury is suspected", "Keep them warm — cover with a blanket or jacket", "Do NOT give food, water, or medication", "Loosen tight clothing at neck and chest", "Stay with them and monitor breathing until EMS arrives"]
+        symptoms: ["Pale, cold, clammy skin", "Rapid weak pulse; rapid shallow breathing", "Confusion, anxiety, or sudden extreme fatigue"],
+        care: ["Call 911 — shock is life-threatening", "Lay them flat on their back; elevate legs 12 inches if no spinal or leg injury", "Control any visible bleeding immediately", "Keep them warm — cover with a blanket or clothing", "Do NOT give food or water — aspiration risk", "Do NOT let them walk or sit up", "Talk to them calmly; keep monitoring breathing until EMS arrives"]
     ),
     "cold-hypothermia": AidTopic(
         id: "cold-hypothermia", title: "Cold (Hypothermia)",
