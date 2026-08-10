@@ -2,12 +2,13 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var profile: ProfileData
+    @Environment(\.isScannerSession) private var isScannerSession
     @State private var tab: AppTab = .myid
 
     var body: some View {
         ZStack(alignment: .bottom) {
             Group {
-                switch tab {
+                switch effectiveTab {
                 case .myid:      MyIDView(tab: $tab)
                 case .emergency: EmergencyView()
                 case .aid:       AidView()
@@ -17,14 +18,31 @@ struct ContentView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(.bottom, 64)
 
-            CustomTabBar(tab: $tab)
+            CustomTabBar(tab: $tab, showsNFC: !isScannerSession)
         }
         .ignoresSafeArea(edges: .bottom)
+        .onChange(of: isScannerSession) { isScanner in
+            if isScanner && tab == .nfc {
+                tab = .myid
+            }
+        }
+        .onAppear {
+            if isScannerSession && tab == .nfc {
+                tab = .myid
+            }
+        }
+    }
+
+    /// Scanners stay on RedMed / 911 / Aid — never the write/pair NFC tab.
+    private var effectiveTab: AppTab {
+        if isScannerSession && tab == .nfc { return .myid }
+        return tab
     }
 }
 
 struct CustomTabBar: View {
     @Binding var tab: AppTab
+    var showsNFC: Bool = true
 
     var body: some View {
         VStack(spacing: 0) {
@@ -33,7 +51,9 @@ struct CustomTabBar: View {
                 TabBarItem(icon: "person.fill",  label: "RedMed", isOn: tab == .myid)      { tab = .myid }
                 TabBarItem(icon: "phone.fill",   label: "911",    isOn: tab == .emergency)  { tab = .emergency }
                 TabBarItem(icon: "cross.case.fill", label: "Aid", isOn: tab == .aid)        { tab = .aid }
-                TabBarItem(icon: "wave.3.right", label: "NFC",    isOn: tab == .nfc)        { tab = .nfc }
+                if showsNFC {
+                    TabBarItem(icon: "wave.3.right", label: "NFC",    isOn: tab == .nfc)        { tab = .nfc }
+                }
             }
             .padding(.top, 2)
 
