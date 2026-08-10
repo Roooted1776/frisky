@@ -30,7 +30,8 @@ class ProfileData: ObservableObject {
             || contacts.contains { !$0.name.isEmpty || !$0.detail.isEmpty }
     }
 
-<<<<<<< HEAD
+    /// Whether an NFC band has been written/paired (Main header status).
+    @Published var braceletLinked: Bool = false
 =======
     /// Whether an NFC band has been written/paired (Main header status).
     @Published var braceletLinked: Bool = false

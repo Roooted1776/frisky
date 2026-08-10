@@ -23,7 +23,6 @@
 		AABB00000000000000000012 /* PublicCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000012 /* PublicCardView.swift */; };
 		AABB00000000000000000013 /* LocationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000013 /* LocationHelper.swift */; };
 		AABB00000000000000000014 /* BiometricAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000014 /* BiometricAuth.swift */; };
-<<<<<<< HEAD
 		AABB00000000000000000015 /* Find911SOSBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000015 /* Find911SOSBlock.swift */; };
 =======
 >>>>>>> origin/main-tab-design-0ac1
@@ -49,7 +48,6 @@
 		AAAA00000000000000000012 /* PublicCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicCardView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000013 /* LocationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationHelper.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000014 /* BiometricAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuth.swift; sourceTree = "<group>"; };
-<<<<<<< HEAD
 		AAAA00000000000000000015 /* Find911SOSBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Find911SOSBlock.swift; sourceTree = "<group>"; };
 =======
 >>>>>>> origin/main-tab-design-0ac1
@@ -91,9 +89,7 @@
 				AAAA00000000000000000012 /* PublicCardView.swift */,
 				AAAA00000000000000000013 /* LocationHelper.swift */,
 				AAAA00000000000000000014 /* BiometricAuth.swift */,
-<<<<<<< HEAD
 				AAAA00000000000000000015 /* Find911SOSBlock.swift */,
-=======
 				AAAA0000000000000000000A /* NFCView.swift */,
 >>>>>>> origin/main-tab-design-0ac1
 				AAAA0000000000000000000E /* HelpMenuView.swift */,
@@ -195,9 +191,7 @@
 				AABB00000000000000000012 /* PublicCardView.swift in Sources */,
 				AABB00000000000000000013 /* LocationHelper.swift in Sources */,
 				AABB00000000000000000014 /* BiometricAuth.swift in Sources */,
-<<<<<<< HEAD
 				AABB00000000000000000015 /* Find911SOSBlock.swift in Sources */,
-=======
 				AABB0000000000000000000A /* NFCView.swift in Sources */,
 >>>>>>> origin/main-tab-design-0ac1
 				AABB0000000000000000000B /* HelpMenuView.swift in Sources */,

@@ -6,7 +6,6 @@ struct MyIDView: View {
     @Environment(\.scannerDismiss) private var scannerDismiss
     @State private var showEdit = false
     @State private var showHelp = false
-<<<<<<< HEAD
     @State private var showScannerPreview = false
     @State private var showAuthFailedAlert = false
 
@@ -16,7 +15,7 @@ struct MyIDView: View {
         }
         if profile.name.isEmpty { return "Your iPhone" }
         return "\(profile.name)'s iPhone"
-=======
+    }
     @State private var showAuthFailedAlert = false
 
     private var deviceName: String {
@@ -26,13 +25,14 @@ struct MyIDView: View {
 
     private var braceletStatusLabel: String {
         profile.braceletLinked ? "Linked bracelet ›" : "Not linked — tap to pair ›"
+<<<<<<< HEAD
+>>>>>>> origin/main-tab-design-0ac1
+=======
 >>>>>>> origin/main-tab-design-0ac1
     }
 
     var body: some View {
         ScrollView {
-<<<<<<< HEAD
-            LazyVStack(alignment: .leading, spacing: 0) {
 =======
             VStack(alignment: .leading, spacing: 0) {
 >>>>>>> origin/main-tab-design-0ac1
@@ -74,50 +74,7 @@ struct MyIDView: View {
                             if i < profile.contacts.count - 1 { thinDivider }
                         }
                     }
-<<<<<<< HEAD
-                }
-
-                if !isScannerSession {
-                    // QUICK ACTIONS (owner only)
-                    HStack(spacing: 10) {
-                        Button { showHelp = true } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "questionmark.circle")
-                                    .font(.system(size: 16, weight: .regular))
-                                    .foregroundColor(.redmedMuted)
-                                Text("How it works")
-                                    .font(.system(size: 11, weight: .semibold))
-                                    .foregroundColor(.redmedMuted)
-                                    .kerning(-0.1)
-                            }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                        }
-                        .buttonStyle(.plain)
-
-                        Button { showScannerPreview = true } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "eye")
-                                    .font(.system(size: 16, weight: .regular))
-                                    .foregroundColor(.redmedMuted)
-                                Text("Preview scanner")
-                                    .font(.system(size: 11, weight: .semibold))
-                                    .foregroundColor(.redmedMuted)
-                                    .kerning(-0.1)
-                            }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 42)
-                    .padding(.bottom, 4)
-                }
-
-=======
-                }
-
+            LazyVStack(alignment: .leading, spacing: 0) {
                 // QUICK ACTIONS
                 HStack(spacing: 10) {
                     Button { tab = .nfc } label: {
@@ -158,6 +115,9 @@ struct MyIDView: View {
                 .padding(.top, 42)
                 .padding(.bottom, 4)
 
+<<<<<<< HEAD
+>>>>>>> origin/main-tab-design-0ac1
+=======
 >>>>>>> origin/main-tab-design-0ac1
                 Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
                     .font(.system(size: 11, weight: .medium))
@@ -166,8 +126,6 @@ struct MyIDView: View {
                     .lineSpacing(4)
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal, 20)
-<<<<<<< HEAD
-                    .padding(.top, isScannerSession ? 42 : 33)
 =======
                     .padding(.top, 33)
 >>>>>>> origin/main-tab-design-0ac1
@@ -176,7 +134,45 @@ struct MyIDView: View {
             .padding(.bottom, 12)
         }
         .background(Color.redmedBg)
+        .fullScreenCover(isPresented: $showEdit) {
+            EditProfileView().environmentObject(profile)
+        }
+        .sheet(isPresented: $showHelp) {
+            HelpMenuView()
+        }
+        .alert("Authentication Failed", isPresented: $showAuthFailedAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Face ID or passcode is required to edit your medical profile.")
 <<<<<<< HEAD
+>>>>>>> origin/main-tab-design-0ac1
+=======
+>>>>>>> origin/main-tab-design-0ac1
+        }
+    }
+
+    // MARK: - Header
+
+    @ViewBuilder
+    private var header: some View {
+        ZStack(alignment: .topTrailing) {
+            VStack(alignment: .leading, spacing: 0) {
+                    .padding(.top, isScannerSession ? 42 : 33)
+                if !profile.hasData {
+                    (
+                        Text("Tap ").font(.system(size: 11, weight: .medium)).foregroundColor(.redmedMuted)
+                        + Text("Edit").font(.system(size: 11, weight: .bold)).foregroundColor(.redmedAccent)
+                        + Text(" to add your name and set up your bracelet.")
+<<<<<<< HEAD
+>>>>>>> origin/main-tab-design-0ac1
+=======
+>>>>>>> origin/main-tab-design-0ac1
+                            .font(.system(size: 11, weight: .medium)).foregroundColor(.redmedMuted)
+                    )
+                    .lineSpacing(2)
+                    .padding(.bottom, 4)
+                }
+
         .fullScreenCover(isPresented: Binding(
             get: { showEdit && !isScannerSession },
             set: { showEdit = $0 && !isScannerSession }
@@ -199,69 +195,7 @@ struct MyIDView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text("Face ID or passcode is required to edit your RedMed profile.")
-=======
-        .fullScreenCover(isPresented: $showEdit) {
-            EditProfileView().environmentObject(profile)
         }
-        .sheet(isPresented: $showHelp) {
-            HelpMenuView()
-        }
-        .alert("Authentication Failed", isPresented: $showAuthFailedAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Face ID or passcode is required to edit your medical profile.")
->>>>>>> origin/main-tab-design-0ac1
-        }
-    }
-
-    // MARK: - Header
-
-    @ViewBuilder
-    private var header: some View {
-        ZStack(alignment: .topTrailing) {
-            VStack(alignment: .leading, spacing: 0) {
-<<<<<<< HEAD
-                if isScannerSession {
-                    Text("Read only — editing needs the owner’s RedMed app + Face ID / passcode.")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .lineSpacing(2)
-                        .padding(.bottom, 4)
-                } else if !profile.hasData {
-                    (
-                        Text("Tap ").font(.system(size: 11, weight: .medium)).foregroundColor(.redmedMuted)
-                        + Text("Edit").font(.system(size: 11, weight: .bold)).foregroundColor(.redmedAccent)
-                        + Text(" to add your name and medical details.")
-=======
-                if !profile.hasData {
-                    (
-                        Text("Tap ").font(.system(size: 11, weight: .medium)).foregroundColor(.redmedMuted)
-                        + Text("Edit").font(.system(size: 11, weight: .bold)).foregroundColor(.redmedAccent)
-                        + Text(" to add your name and set up your bracelet.")
->>>>>>> origin/main-tab-design-0ac1
-                            .font(.system(size: 11, weight: .medium)).foregroundColor(.redmedMuted)
-                    )
-                    .lineSpacing(2)
-                    .padding(.bottom, 4)
-                }
-
-<<<<<<< HEAD
-                HStack(spacing: 8) {
-                    Image("BrandLogo")
-                        .resizable()
-                        .frame(width: 48, height: 48)
-                        .clipShape(RoundedRectangle(cornerRadius: 13))
-                        .shadow(color: Color.redmedAccent.opacity(0.15), radius: 5, y: 3)
-                        .opacity(profile.hasData ? 1 : 0.5)
-
-                    Text(deviceName)
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundColor(.redmedDark)
-                        .kerning(-0.4)
-                        .lineLimit(1)
-                }
-                .padding(.vertical, 4)
-=======
                 Button { tab = .nfc } label: {
                     HStack(spacing: 8) {
                         Image("BrandLogo")
@@ -292,33 +226,22 @@ struct MyIDView: View {
                     .padding(.vertical, 4)
                 }
                 .buttonStyle(.plain)
+<<<<<<< HEAD
+>>>>>>> origin/main-tab-design-0ac1
+=======
 >>>>>>> origin/main-tab-design-0ac1
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.trailing, 56)
 
-<<<<<<< HEAD
-            if isScannerSession {
-                if let scannerDismiss {
-                    Button("Close") { scannerDismiss() }
-                        .font(.system(size: 17, weight: .regular))
-                        .foregroundColor(.redmedMuted)
-                        .kerning(-0.2)
-                        .padding(.top, 4)
-                }
-            } else {
-                Button("Edit") { requestEdit() }
-                    .font(.system(size: 17, weight: .regular))
-                    .foregroundColor(.redmedAccent)
-                    .kerning(-0.2)
-                    .padding(.top, 4)
-            }
-=======
             Button("Edit") { requestEdit() }
                 .font(.system(size: 17, weight: .regular))
                 .foregroundColor(.redmedAccent)
                 .kerning(-0.2)
                 .padding(.top, 4)
+<<<<<<< HEAD
+>>>>>>> origin/main-tab-design-0ac1
+=======
 >>>>>>> origin/main-tab-design-0ac1
         }
         .padding(.horizontal, 20)
@@ -329,11 +252,21 @@ struct MyIDView: View {
     // MARK: - Edit gate
 
     private func requestEdit() {
-<<<<<<< HEAD
-        // Scanners never edit — UI gate alone is not enough.
-        guard !isScannerSession else { return }
-        // Always require Apple biometrics/passcode once any medical fields
-        // exist — scanners have no edit path at all.
+                if isScannerSession {
+                    Text("Read only — editing needs the owner’s RedMed app + Face ID / passcode.")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.redmedMuted)
+                        .lineSpacing(2)
+                        .padding(.bottom, 4)
+                } else if !profile.hasData {
+                    (
+                        Text("Tap ").font(.system(size: 11, weight: .medium)).foregroundColor(.redmedMuted)
+                        + Text("Edit").font(.system(size: 11, weight: .bold)).foregroundColor(.redmedAccent)
+                        + Text(" to add your name and medical details.").font(.system(size: 11, weight: .medium)).foregroundColor(.redmedMuted)
+                    )
+                    .lineSpacing(2)
+                    .padding(.bottom, 4)
+                }
 =======
         // Gate on any saved medical fields — not just name — so clearing the
         // name cannot bypass Face ID while allergies/meds/etc. remain.
@@ -342,10 +275,6 @@ struct MyIDView: View {
             showEdit = true
             return
         }
-<<<<<<< HEAD
-        BiometricAuth.authenticate(
-            reason: "Unlock with Face ID, Touch ID, or passcode to edit your RedMed profile."
-        ) { success in
 =======
         BiometricAuth.authenticate(reason: "Authenticate to edit your medical profile.") { success in
 >>>>>>> origin/main-tab-design-0ac1
