@@ -110,7 +110,7 @@ struct GetView: View {
                 .lineSpacing(3)
                 .padding(.top, 16)
 
-            Text("Passive 13.56 MHz HF NFC only — no battery, no Bluetooth pair. 16″ standoff: won't fire at hand distance; phone powers the band only on Write/Scan or a deliberate ~cm tap. RedMed is not a medical device. In an emergency, call \(EmergencyNumber.current).")
+            Text("Passive 13.56 MHz HF NFC only — no battery, no Bluetooth pair. 16″ standoff: won't set off your phone, other phones, or POS at hand distance. Deliberate ~cm phone tap still opens the card. RedMed is not a medical device. In an emergency, call \(EmergencyNumber.current).")
                 .font(.system(size: 12))
                 .foregroundColor(dim)
                 .multilineTextAlignment(.center)

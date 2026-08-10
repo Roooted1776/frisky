@@ -12,15 +12,17 @@ shows an error and does **not** fake a successful link.
   link flag. The phone does **not** keep an active RF session or background-scan
   the band (different from Bluetooth pairing on ~2.4 GHz).
 - **16″ passive standoff (`AppConfig.BraceletRF.passiveNoTriggerInches`):**
-  `NFCWriter` / `NFCReader` only `begin()` after Write or Scan. A hand at 16″
-  (or the band merely nearby) does not start a session. Intentional coupling
-  is still ~cm to the phone antenna — that is HF NFC physics, not a tunable
-  16″ read range.
+  `NFCWriter` / `NFCReader` only `begin()` after Write or Scan. At 16″ the band
+  must not set off the owner phone, other phones, or pay/POS readers (walk-by /
+  hand nearby). Intentional coupling is still ~cm to a phone antenna — HF NFC
+  physics, not a tunable 16″ read range. A deliberate stranger tap must still
+  open the emergency card.
 - Do **not** source LF (~125 kHz) or UHF chips — CoreNFC cannot program them.
-- Payment POS may share 13.56 MHz but speaks EMV, not RedMed NDEF URLs.
+- Payment POS may share 13.56 MHz but speaks EMV, not RedMed NDEF URLs
+  (`ignoredByPaymentPOS`).
 - Note: unlocked iPhones can still run Apple’s own Background Tag Reading if the
   antenna is pressed against an NDEF tag (~cm). RedMed cannot disable that OS
-  path; it is unrelated to “hand close” and is not started by this app.
+  path; it is unrelated to “hand close” / walk-by and is not started by this app.
 
 ## Portal / signing checklist
 
