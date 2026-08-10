@@ -20,6 +20,46 @@ struct EditProfileView: View {
     @State private var contacts: [EmergencyContact] = []
     @State private var showAuthFailedAlert = false
 
+    /// Display / persist as "Month DD, YYYY" (matches the old text placeholder).
+    private static let birthDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "MMMM d, yyyy"
+        return f
+    }()
+
+    /// Accept existing free-typed values when opening Edit.
+    private static let birthDateParsers: [DateFormatter] = {
+        let formats = ["MMMM d, yyyy", "MMM d, yyyy", "M/d/yyyy", "MM/dd/yyyy", "yyyy-MM-dd"]
+        return formats.map { format in
+            let f = DateFormatter()
+            f.locale = Locale(identifier: "en_US_POSIX")
+            f.dateFormat = format
+            return f
+        }
+    }()
+
+    private static var birthDateRange: ClosedRange<Date> {
+        let calendar = Calendar.current
+        let start = calendar.date(byAdding: .year, value: -120, to: Date()) ?? Date.distantPast
+        return start...Date()
+    }
+
+    private static var defaultBirthDate: Date {
+        Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
+    }
+
+    private var birthDateBinding: Binding<Date> {
+        Binding(
+            get: {
+                Self.parseBirthDate(birthDate) ?? Self.defaultBirthDate
+            },
+            set: {
+                birthDate = Self.birthDateFormatter.string(from: $0)
+            }
+        )
+    }
+
     var body: some View {
         // Ped/EMS scanners never edit — dismiss if this view is ever presented.
         if isScannerSession {
@@ -60,7 +100,7 @@ struct EditProfileView: View {
                     editCard {
                         editRow(label: "Name",       text: $name,       placeholder: "Full name")
                         Divider().padding(.leading, 106)
-                        editRow(label: "Birth date", text: $birthDate,  placeholder: "Month DD, YYYY")
+                        birthDateRow
                         Divider().padding(.leading, 106)
                         editRow(label: "Blood type", text: $bloodType,  placeholder: "A+, B−, O+…")
                     }
@@ -297,6 +337,46 @@ struct EditProfileView: View {
         .padding(.horizontal, 16).padding(.vertical, 13)
     }
 
+    /// Compact DatePicker — tappable iOS control that opens the system date dropdown
+    /// (not a free-text field).
+    private var birthDateRow: some View {
+        HStack(spacing: 0) {
+            Text("Birth date")
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
+                .frame(width: 90, alignment: .leading)
+                .padding(.trailing, 12)
+            DatePicker(
+                "",
+                selection: birthDateBinding,
+                in: Self.birthDateRange,
+                displayedComponents: .date
+            )
+            .labelsHidden()
+            .datePickerStyle(.compact)
+            .tint(.redmedAccent)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 16).padding(.vertical, 10)
+    }
+
+    private static func parseBirthDate(_ raw: String) -> Date? {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        for formatter in birthDateParsers {
+            if let date = formatter.date(from: trimmed) { return date }
+        }
+        // Last resort: locale medium/long styles from older typed entries.
+        let styles: [DateFormatter.Style] = [.medium, .long, .short]
+        for style in styles {
+            let f = DateFormatter()
+            f.dateStyle = style
+            f.timeStyle = .none
+            if let date = f.date(from: trimmed) { return date }
+        }
+        return nil
+    }
+
     @ViewBuilder
     func addButton(_ label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
@@ -347,7 +427,12 @@ struct EditProfileView: View {
 
     private func commitSave() {
         profile.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        profile.birthDate = birthDate
+        // Normalize any legacy free-typed value to the DatePicker format on save.
+        if let date = Self.parseBirthDate(birthDate) {
+            profile.birthDate = Self.birthDateFormatter.string(from: date)
+        } else {
+            profile.birthDate = birthDate.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
         profile.bloodType = bloodType
         profile.allergies = allergies.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         profile.medications = medications.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
