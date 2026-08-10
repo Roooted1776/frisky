@@ -10,13 +10,17 @@ struct AidPane: Identifiable {
 }
 
 let aidPanes: [AidPane] = [
-    AidPane(id: "crash", emoji: "🚗", title: "Crash & Head", subtitle: "Impact · neck · spinal", iconFilled: false,
-            topics: [("Car Crash", "car-crash"), ("Head & Pupils", "head-pupils"), ("Spinal", "spinal")]),
+    AidPane(id: "crash", emoji: "🚗", title: "Crash & Head", subtitle: "Impact · neck · pupils", iconFilled: false,
+            topics: [("Car Crash", "car-crash"), ("Head & Pupils", "head-pupils")]),
+    AidPane(id: "spinal", emoji: "🦴", title: "Spinal", subtitle: "Don't move · keep still", iconFilled: false,
+            topics: [("Spinal", "spinal")]),
     AidPane(id: "bleed", emoji: "🩸", title: "Bleeding", subtitle: "Pressure · tourniquet", iconFilled: true,
             topics: [("Find Bleeding", "find-bleeding"), ("Bad Bleeding", "bad-bleeding"),
                      ("Belt Tourniquet", "belt-tourniquet"), ("Gunshot / Stab", "gunshot-stab")]),
-    AidPane(id: "heart", emoji: "❤️", title: "Heart & Airway", subtitle: "CPR · choking", iconFilled: true,
-            topics: [("Not Breathing / CPR", "cpr"), ("Choking", "choking")]),
+    AidPane(id: "breathing", emoji: "🫁", title: "Not Breathing", subtitle: "CPR · airway", iconFilled: true,
+            topics: [("CPR", "cpr")]),
+    AidPane(id: "heart", emoji: "❤️", title: "Choking", subtitle: "Back blows · Heimlich", iconFilled: true,
+            topics: [("Choking", "choking")]),
     AidPane(id: "shock", emoji: "⚡", title: "Shock", subtitle: "Pale · cold · clammy", iconFilled: false,
             topics: [("Shock", "shock")]),
     AidPane(id: "burns", emoji: "🔥", title: "Burns", subtitle: "Cool it · cover it", iconFilled: false,
