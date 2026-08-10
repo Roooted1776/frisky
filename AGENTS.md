@@ -18,11 +18,11 @@ set up a working runtime here:
 The app has no backend, database, or web service.
 
 **Cold launch:** Do **not** start Core Location *updates* / MapKit / trauma JSON at
-`@main`. Asking When-In-Use authorization once after first frame (install prompt)
-is OK — continuous GPS and hospital lookup still start only when Find 911 / that
-UI is visible (privacy + time-to-first-frame). Newer sources under `uploads/` use
-lazy tab mounting (switch + CustomTabBar), default My ID, and async trauma catalog
-warm-up for the same reason.
+`@main`. Ask When-In-Use authorization on a launch gate **before** the main tabs
+open (install prompt) — continuous GPS and hospital lookup still start only when
+Find 911 / that UI is visible (privacy + time-to-first-frame). Newer sources under
+`uploads/` use lazy tab mounting (switch + CustomTabBar), default My ID, and async
+trauma catalog warm-up for the same reason.
 
 **Consequence for cloud agents:** the update script is intentionally a no-op. Code review and static
 edits to the `.swift` files are possible, but do not attempt to build/run/test here. Any actual

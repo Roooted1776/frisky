@@ -51,11 +51,8 @@ struct ContentView: View {
             }
             .ignoresSafeArea(edges: .bottom)
         }
-        // Keep suggesting Location until granted. Do not start GPS here.
-        .task {
-            guard !isScannerSession else { return }
-            LocationAccessSuggester.shared.suggestIfNeeded()
-        }
+        // Location was already asked at the launch gate. Re-check on
+        // foreground for denied → Settings; still do not start GPS here.
         .onChange(of: scenePhase) { _, phase in
             guard !isScannerSession, phase == .active else { return }
             LocationAccessSuggester.shared.suggestIfNeeded()
