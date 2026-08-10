@@ -80,26 +80,30 @@ window.addEventListener('resize', window._scalePhone);
         </sc-if>
       </div>
 
-      <!-- HELP DROPDOWN -->
+      <!-- HELP DROPDOWN — Claude Design project 17f2f05c-b5ae-469a-b2da-8e6a19b01b45 -->
       <sc-if value="{{ showHelp }}" hint-placeholder-val="{{ false }}">
         <div style="position:absolute; bottom:74px; left:16px; right:16px; background:white; border-radius:14px; box-shadow:0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08); z-index:20; overflow:hidden;">
           <div style="padding:8px 14px 5px; font-size:11px; font-weight:800; color:#44403c; letter-spacing:0.6px; text-transform:uppercase;">Policies</div>
-          <a href="security.html" style="display:flex; align-items:center; justify-content:space-between; padding:9px 14px; font-size:11px; font-weight:400; color:#1c1917; border-top:0.5px solid rgba(28,25,23,0.07); text-decoration:none;">
-            Security
+          <a href="PrivacyPolicy.html" style="display:flex; align-items:center; justify-content:space-between; padding:9px 14px; font-size:11px; font-weight:400; color:#1c1917; border-top:0.5px solid rgba(28,25,23,0.07); text-decoration:none;">
+            Privacy Policy
             <svg width="5" height="8" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="#78716c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
           </a>
           <a href="TOS.html" style="display:flex; align-items:center; justify-content:space-between; padding:9px 14px; font-size:11px; font-weight:400; color:#1c1917; border-top:0.5px solid rgba(28,25,23,0.07); text-decoration:none;">
             Terms of Service
             <svg width="5" height="8" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="#78716c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
           </a>
-          <a href="PrivacyPolicy.html" style="display:flex; align-items:center; justify-content:space-between; padding:9px 14px; font-size:11px; font-weight:400; color:#1c1917; border-top:0.5px solid rgba(28,25,23,0.07); text-decoration:none;">
-            Privacy Policy
+          <a href="https://claude.ai/design/p/17f2f05c-b5ae-469a-b2da-8e6a19b01b45?file=HowItWorks.html&amp;via=share" target="_blank" style="display:flex; align-items:center; justify-content:space-between; padding:9px 14px; font-size:11px; font-weight:400; color:#1c1917; border-top:0.5px solid rgba(28,25,23,0.07); text-decoration:none;">
+            How It Works
             <svg width="5" height="8" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="#78716c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
           </a>
           <a href="security.html" style="display:flex; align-items:center; justify-content:space-between; padding:9px 14px; font-size:11px; font-weight:400; color:#1c1917; border-top:0.5px solid rgba(28,25,23,0.07); text-decoration:none;">
             Security
             <svg width="5" height="8" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="#78716c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
           </a>
+          <button onClick="{{ tapScanBracelet }}" style="width:100%; display:flex; align-items:center; justify-content:space-between; padding:9px 14px; font-size:11px; font-weight:600; color:#e11d48; border:none; border-top:0.5px solid rgba(28,25,23,0.07); background:none; cursor:pointer; font-family:inherit; text-align:left;">
+            NFC tap card (preview)
+            <svg width="5" height="8" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="#e11d48" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </button>
           <div style="padding:8px 14px 5px; font-size:11px; font-weight:800; color:#44403c; letter-spacing:0.6px; text-transform:uppercase; border-top:0.5px solid rgba(28,25,23,0.07);">Design</div>
           <button onClick="{{ previewAppLock }}" style="width:100%; display:flex; align-items:center; justify-content:space-between; padding:9px 14px; font-size:11px; font-weight:400; color:#1c1917; border:none; border-top:0.5px solid rgba(28,25,23,0.07); background:white; cursor:pointer; font-family:inherit; text-align:left;">
             AppLock / Face ID gate (preview)
@@ -620,66 +624,196 @@ window.addEventListener('resize', window._scalePhone);
         </div>
       </sc-if>
 
-      <!-- PUBLIC CARD OVERLAY (what a stranger sees when they tap the bracelet) -->
+      <!-- TAP CARD OVERLAY — ped/EMS bracelet tap (card.html): RedMed + Help + Aid, read-only, no NFC/Edit -->
       <sc-if value="{{ showPublicCard }}" hint-placeholder-val="{{ false }}">
-        <div style="position:absolute; inset:0; background:#f2f2f7; z-index:15; display:flex; flex-direction:column;">
-          <div style="flex-shrink:0; height:59px; position:relative;">
-            <span style="position:absolute; top:18px; left:22px; font-size:15px; font-weight:600; color:#1c1917; letter-spacing:-0.4px;">9:41</span>
-          </div>
-          <div style="flex-shrink:0; height:44px; background:rgba(242,242,247,0.95); backdrop-filter:blur(20px); border-bottom:0.5px solid rgba(0,0,0,0.1); display:flex; align-items:center; justify-content:space-between; padding:0 14px;">
-            <button onClick="{{ closePublicCard }}" style="background:none; border:none; padding:0; cursor:pointer; display:flex; align-items:center; gap:5px;">
-              <svg width="10" height="17" viewBox="0 0 10 17" fill="none"><path d="M8.5 1.5L1.5 8.5l7 7" stroke="#78716c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-              <span style="font-size:11px; color:#78716c;">Close</span>
-            </button>
-            <span style="font-size:11px; font-weight:700; color:#78716c; letter-spacing:0.8px; text-transform:uppercase;">redmed.app/card</span>
-            <div style="width:44px;"></div>
-          </div>
-          <div style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:16px 16px 32px;">
-            <div style="background:rgba(225,29,72,0.1); border-radius:14px; padding:10px 14px; display:flex; align-items:center; gap:8px; margin-bottom:14px;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="#e11d48"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path></svg>
-              <span style="font-size:12px; font-weight:600; color:#e11d48; line-height:1.4;">Emergency medical card — read only</span>
-            </div>
-            <a href="tel:911" style="display:flex; align-items:center; justify-content:center; gap:8px; text-align:center; width:100%; background:linear-gradient(135deg,#ff4d67,#dc0d3e); color:white; border-radius:999px; padding:15px; font-size:16px; font-weight:700; letter-spacing:-0.2px; box-shadow:0 6px 18px rgba(225,29,72,0.32), inset 0 1px 0 rgba(255,255,255,0.22); transition:transform 0.12s; margin-bottom:18px;" style-active="transform:scale(0.97);"><svg width="17" height="17" viewBox="0 0 24 24" fill="white"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1L6.6 10.8z"></path></svg>Call 911</a>
-
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
-              <img src="assets/BrandLogo.png" style="width:44px; height:44px; border-radius:12px; flex-shrink:0;" alt="RedMed">
-              <div>
-                <div style="font-size:20px; font-weight:700; color:#1c1917; letter-spacing:-0.4px; line-height:1.15;">{{ cardName }}</div>
-                <div style="font-size:12px; font-weight:500; color:#78716c; margin-top:2px;">{{ cardDOB }} · Blood type {{ cardBlood }}</div>
+        <div style="position:absolute; inset:0; background:#fff7f7; z-index:15; display:flex; flex-direction:column;">
+          <div style="flex-shrink:0; height:59px; position:relative; background:transparent;">
+            <span style="position:absolute; top:18px; left:34px; font-size:15px; font-weight:600; color:#1c1917; letter-spacing:-0.4px; z-index:1;">9:41</span>
+            <div style="position:absolute; top:20px; right:20px; display:flex; align-items:center; gap:5px; z-index:1;">
+              <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="3.5" width="2.5" height="7.5" rx="0.7" fill="#1c1917"></rect><rect x="4" y="2" width="2.5" height="9" rx="0.7" fill="#1c1917"></rect><rect x="8" y="0.5" width="2.5" height="10.5" rx="0.7" fill="#1c1917"></rect><rect x="12" y="0" width="2.5" height="11" rx="0.7" fill="#1c1917"></rect></svg>
+              <svg width="15" height="12" viewBox="0 0 15 12" fill="none"><path d="M7.5 9.5h.01" stroke="#1c1917" stroke-width="2" stroke-linecap="round"></path><path d="M4.8 7.2c.7-.7 1.7-1.2 2.7-1.2s2 .5 2.7 1.2" stroke="#1c1917" stroke-width="1.3" stroke-linecap="round"></path><path d="M2 4.5C3.6 2.9 5.4 2 7.5 2s3.9.9 5.5 2.5" stroke="#1c1917" stroke-width="1.3" stroke-linecap="round"></path></svg>
+              <div style="position:relative; width:25px; height:12px; border:1.5px solid rgba(28,25,23,0.4); border-radius:2.5px;">
+                <div style="position:absolute; right:-3.5px; top:50%; transform:translateY(-50%); width:2.5px; height:5px; background:rgba(28,25,23,0.4); border-radius:0 1.5px 1.5px 0;"></div>
+                <div style="position:absolute; inset:1px 3px 1px 1px; background:#1c1917; border-radius:1px;"></div>
               </div>
             </div>
+          </div>
+          <div style="flex-shrink:0; height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 14px;">
+            <button onClick="{{ closePublicCard }}" style="background:none; border:none; padding:0; cursor:pointer; font-size:17px; font-weight:400; color:#78716c; font-family:inherit; letter-spacing:-0.2px;">Close</button>
+            <span style="font-size:11px; font-weight:700; color:#78716c; letter-spacing:0.8px; text-transform:uppercase;">NFC tap card</span>
+            <div style="width:48px;"></div>
+          </div>
 
-            <div style="font-size:12px; font-weight:600; color:#78716c; text-transform:uppercase; letter-spacing:0.6px; padding:0 2px 5px;">Allergies</div>
-            <div style="background:white; border-radius:12px; overflow:hidden; margin-bottom:14px;">
-              <sc-for list="{{ cardAllergies }}" as="item" hint-placeholder-count="2">
-                <div style="padding:11px 16px; border-bottom:0.5px solid rgba(28,25,23,0.07);"><span style="font-size:11px; color:#1c1917;">{{ item }}</span></div>
-              </sc-for>
-            </div>
+          <div style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; padding-bottom:72px;">
+            <!-- RedMed (medical ID) -->
+            <sc-if value="{{ cardIsMedical }}" hint-placeholder-val="{{ true }}">
+              <div style="padding:2px 0 20px;">
+                <div style="padding:0 20px 8px;">
+                  <div style="font-size:11px; font-weight:500; color:#78716c; line-height:1.35; margin:0 0 8px;">Read only — editing needs the owner’s RedMed app + Face&nbsp;ID / passcode.</div>
+                  <div style="display:flex; align-items:center; gap:8px; padding:4px 0;">
+                    <img src="assets/BrandLogo.png" style="width:48px; height:48px; border-radius:13px; box-shadow:0 3px 5px rgba(225,29,72,0.15); flex-shrink:0;" alt="RedMed">
+                    <div>
+                      <div style="font-size:22px; font-weight:700; color:#1c1917; letter-spacing:-0.4px; line-height:1.15;">{{ cardName }}</div>
+                      <div style="font-size:10px; font-weight:600; color:rgba(120,113,108,0.8); margin:4px 0 0;">Bracelet tap · no app required</div>
+                    </div>
+                  </div>
+                </div>
+                <div style="margin:2px 16px 0; background:rgba(255,255,255,0.92); border:1px solid rgba(28,25,23,0.08); border-radius:12px; overflow:hidden;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; padding:11px 16px; border-bottom:0.5px solid rgba(28,25,23,0.07);">
+                    <span style="font-size:11px; font-weight:500; color:#78716c;">Name</span>
+                    <span style="font-size:11px; font-weight:600; color:#1c1917;">{{ cardName }}</span>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; padding:11px 16px; border-bottom:0.5px solid rgba(28,25,23,0.07);">
+                    <span style="font-size:11px; font-weight:500; color:#78716c;">Birth date</span>
+                    <span style="font-size:11px; font-weight:600; color:#1c1917;">{{ cardDOB }}</span>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; padding:11px 16px;">
+                    <span style="font-size:11px; font-weight:500; color:#78716c;">Blood type</span>
+                    <span style="font-size:11px; font-weight:600; color:#1c1917;">{{ cardBlood }}</span>
+                  </div>
+                </div>
+                <div style="font-size:12px; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; color:#78716c; padding:12px 20px 5px;">Allergies</div>
+                <div style="margin:0 16px; background:rgba(255,255,255,0.92); border:1px solid rgba(28,25,23,0.08); border-radius:12px; overflow:hidden;">
+                  <sc-if value="{{ cardHasAllergies }}" hint-placeholder-val="{{ false }}">
+                    <sc-for list="{{ cardAllergies }}" as="item" hint-placeholder-count="2">
+                      <div style="padding:11px 16px; border-bottom:0.5px solid rgba(28,25,23,0.07);"><span style="font-size:11px; color:#1c1917;">{{ item }}</span></div>
+                    </sc-for>
+                  </sc-if>
+                  <sc-if value="{{ cardNoAllergies }}" hint-placeholder-val="{{ true }}">
+                    <div style="padding:11px 16px;"><span style="font-size:11px; color:#78716c; opacity:0.4;">—</span></div>
+                  </sc-if>
+                </div>
+                <div style="font-size:12px; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; color:#78716c; padding:12px 20px 5px;">Medications</div>
+                <div style="margin:0 16px; background:rgba(255,255,255,0.92); border:1px solid rgba(28,25,23,0.08); border-radius:12px; overflow:hidden;">
+                  <sc-if value="{{ cardHasMeds }}" hint-placeholder-val="{{ false }}">
+                    <sc-for list="{{ cardMeds }}" as="item" hint-placeholder-count="2">
+                      <div style="padding:11px 16px; border-bottom:0.5px solid rgba(28,25,23,0.07);"><span style="font-size:11px; color:#1c1917;">{{ item }}</span></div>
+                    </sc-for>
+                  </sc-if>
+                  <sc-if value="{{ cardNoMeds }}" hint-placeholder-val="{{ true }}">
+                    <div style="padding:11px 16px;"><span style="font-size:11px; color:#78716c; opacity:0.4;">—</span></div>
+                  </sc-if>
+                </div>
+                <div style="font-size:12px; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; color:#78716c; padding:12px 20px 5px;">Conditions</div>
+                <div style="margin:0 16px; background:rgba(255,255,255,0.92); border:1px solid rgba(28,25,23,0.08); border-radius:12px; overflow:hidden;">
+                  <sc-if value="{{ cardHasConditions }}" hint-placeholder-val="{{ false }}">
+                    <sc-for list="{{ cardConditions }}" as="item" hint-placeholder-count="2">
+                      <div style="padding:11px 16px; border-bottom:0.5px solid rgba(28,25,23,0.07);"><span style="font-size:11px; color:#1c1917;">{{ item }}</span></div>
+                    </sc-for>
+                  </sc-if>
+                  <sc-if value="{{ cardNoConditions }}" hint-placeholder-val="{{ true }}">
+                    <div style="padding:11px 16px;"><span style="font-size:11px; color:#78716c; opacity:0.4;">—</span></div>
+                  </sc-if>
+                </div>
+                <div style="font-size:12px; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; color:#78716c; padding:12px 20px 5px;">Contacts</div>
+                <div style="margin:0 16px; background:rgba(255,255,255,0.92); border:1px solid rgba(28,25,23,0.08); border-radius:12px; overflow:hidden;">
+                  <sc-if value="{{ cardHasContacts }}" hint-placeholder-val="{{ false }}">
+                    <sc-for list="{{ cardContacts }}" as="c" hint-placeholder-count="2">
+                      <a href="{{ c.tel }}" style="display:block; padding:11px 16px; border-bottom:0.5px solid rgba(28,25,23,0.07); text-decoration:none;">
+                        <div style="font-size:11px; font-weight:600; color:#1c1917;">{{ c.name }}</div>
+                        <div style="font-size:12px; font-weight:500; color:#e11d48; margin-top:2px;">{{ c.detail }} · Tap to call</div>
+                      </a>
+                    </sc-for>
+                  </sc-if>
+                  <sc-if value="{{ cardNoContacts }}" hint-placeholder-val="{{ true }}">
+                    <div style="padding:11px 16px;"><span style="font-size:11px; color:#78716c; opacity:0.4;">—</span></div>
+                  </sc-if>
+                </div>
+                <div style="font-size:11px; font-weight:500; color:#1c1917; text-align:center; line-height:1.7; padding:28px 20px 0;">"Control your fear. Control the moment.<br>You have what it takes to save a life."</div>
+              </div>
+            </sc-if>
 
-            <div style="font-size:12px; font-weight:600; color:#78716c; text-transform:uppercase; letter-spacing:0.6px; padding:0 2px 5px;">Medications</div>
-            <div style="background:white; border-radius:12px; overflow:hidden; margin-bottom:14px;">
-              <sc-for list="{{ cardMeds }}" as="item" hint-placeholder-count="2">
-                <div style="padding:11px 16px; border-bottom:0.5px solid rgba(28,25,23,0.07);"><span style="font-size:11px; color:#1c1917;">{{ item }}</span></div>
-              </sc-for>
-            </div>
+            <!-- Help (Find Help) -->
+            <sc-if value="{{ cardIsHelp }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:6px 16px 28px;">
+                <div style="font-size:22px; font-weight:700; color:#1c1917; letter-spacing:-0.4px; line-height:1.1; margin-bottom:10px;">Find Help</div>
+                <button onClick="{{ cardCallContact }}" style="width:100%; background:rgba(255,255,255,0.82); color:#1c1917; border:1px solid rgba(28,25,23,0.08); border-radius:999px; padding:13px; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit; margin-bottom:6px;">Call first emergency contact</button>
+                <div style="font-size:11px; font-weight:500; color:#78716c; text-align:center; margin-bottom:12px;">Calls the first saved contact — confirm before dialing.</div>
+                <div style="background:rgba(255,255,255,0.92); border:1px solid rgba(28,25,23,0.07); border-radius:18px; padding:14px; text-align:center; margin-bottom:8px;">
+                  <div style="display:inline-block; font-size:9px; font-weight:700; letter-spacing:1.1px; color:#e11d48; background:rgba(225,29,72,0.1); border-radius:999px; padding:4px 9px; margin-bottom:6px;">LIVE GPS</div>
+                  <div style="font-family:'JetBrains Mono',ui-monospace,monospace; font-size:17px; font-weight:700; color:#1c1917;">37.334900, -122.009020</div>
+                  <div style="font-size:11px; font-weight:600; color:#78716c; margin-top:4px;">Accuracy ±12 m</div>
+                </div>
+                <button onClick="{{ copyCoordinates }}" style="width:100%; background:#1c1917; color:white; border:none; border-radius:999px; padding:12px; font-size:11px; font-weight:700; cursor:pointer; margin-bottom:8px;">{{ copyLabel }}</button>
+                <button onClick="{{ cardTextLocation }}" style="width:100%; background:rgba(255,255,255,0.82); color:#1c1917; border:1px solid rgba(28,25,23,0.08); border-radius:999px; padding:12px; font-size:11px; font-weight:600; cursor:pointer; font-family:inherit; margin-bottom:12px;">Text location to emergency contact</button>
+                <div style="background:rgba(255,255,255,0.92); border:1px solid rgba(28,25,23,0.07); border-radius:18px; padding:14px 16px; margin-bottom:10px;">
+                  <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                    <div style="width:28px; height:28px; border-radius:8px; background:rgba(225,29,72,0.1); color:#e11d48; font-size:14px; display:flex; align-items:center; justify-content:center;">✚</div>
+                    <div style="font-size:15px; font-weight:700; color:#1c1917;">Roadside First Response</div>
+                  </div>
+                  <ol style="margin:0; padding-left:18px; font-size:13px; font-weight:500; line-height:1.45; color:#1c1917;">
+                    <li>Turn on hazards. Don’t move injured — unless fire or traffic danger.</li>
+                    <li>Check breathing. Tilt head, lift chin. If no pulse — start CPR.</li>
+                    <li>Press hard on bleeding. Don’t lift to check. Add cloth on top.</li>
+                    <li>Keep them warm and still. Talk to them. Note time of injury.</li>
+                  </ol>
+                </div>
+                <div style="background:rgba(255,255,255,0.92); border:1px solid rgba(28,25,23,0.07); border-radius:18px; padding:14px 16px; margin-bottom:10px;">
+                  <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                    <div style="width:28px; height:28px; border-radius:8px; background:rgba(225,29,72,0.1); color:#e11d48; font-size:14px; display:flex; align-items:center; justify-content:center;">ℹ</div>
+                    <div style="font-size:15px; font-weight:700; color:#1c1917;">What to Tell {{ cardEmergencyNum }}</div>
+                  </div>
+                  <ul style="margin:0; padding-left:18px; font-size:13px; font-weight:500; line-height:1.45; color:#1c1917;">
+                    <li>Your exact location — read the GPS coordinates above.</li>
+                    <li>Number of people injured and visible injuries.</li>
+                    <li>If anyone is unconscious or not breathing.</li>
+                    <li>Stay on the line — let the dispatcher guide you.</li>
+                  </ul>
+                </div>
+                <div style="background:rgba(255,255,255,0.92); border:1px solid rgba(28,25,23,0.07); border-radius:18px; padding:14px 16px; margin-bottom:10px;">
+                  <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                    <div style="width:28px; height:28px; border-radius:8px; background:rgba(225,29,72,0.1); color:#e11d48; font-size:14px; display:flex; align-items:center; justify-content:center;">📡</div>
+                    <div style="font-size:15px; font-weight:700; color:#1c1917;">No cell signal</div>
+                  </div>
+                  <p style="margin:0; font-size:13px; font-weight:500; line-height:1.45; color:#1c1917;">iPhone 14+ (iOS 16.1+): hold Side + Volume until Emergency SOS appears. RedMed cannot start Satellite SOS itself.</p>
+                </div>
+                <div style="font-size:10px; font-weight:500; color:#78716c; text-align:center; margin:12px 0 8px;">Coordinates show on this screen only. RedMed has no servers.</div>
+              </div>
+            </sc-if>
 
-            <div style="font-size:12px; font-weight:600; color:#78716c; text-transform:uppercase; letter-spacing:0.6px; padding:0 2px 5px;">Conditions</div>
-            <div style="background:white; border-radius:12px; overflow:hidden; margin-bottom:14px;">
-              <sc-for list="{{ cardConditions }}" as="item" hint-placeholder-count="2">
-                <div style="padding:11px 16px; border-bottom:0.5px solid rgba(28,25,23,0.07);"><span style="font-size:11px; color:#1c1917;">{{ item }}</span></div>
-              </sc-for>
-            </div>
+            <!-- Aid -->
+            <sc-if value="{{ cardIsAid }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:6px 16px 28px;">
+                <div style="font-size:22px; font-weight:700; color:#1c1917; letter-spacing:-0.4px; line-height:1.1; margin-bottom:4px;">Roadside Aid</div>
+                <div style="font-size:12px; font-weight:500; color:#78716c; margin-bottom:10px;">Tap a pane — expand only what you need.</div>
+                <a href="{{ cardEmergencyTel }}" style="display:flex; align-items:center; justify-content:center; gap:8px; width:100%; background:linear-gradient(135deg,#ff4d67,#dc0d3e); color:white; border-radius:999px; padding:14px; font-size:15px; font-weight:700; letter-spacing:-0.2px; box-shadow:0 6px 16px rgba(225,29,72,0.32); margin-bottom:14px; text-decoration:none;">Call {{ cardEmergencyNum }}</a>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                  <details style="background:rgba(255,255,255,0.92); border:1px solid rgba(28,25,23,0.07); border-radius:14px; padding:0 12px;"><summary style="cursor:pointer; list-style:none; display:flex; gap:8px; align-items:flex-start; padding:12px 0;"><span style="width:38px; height:38px; border-radius:11px; background:rgba(225,29,72,0.1); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;">🚗</span><span><span style="font-size:13px; font-weight:700; color:#1c1917; display:block;">Crash &amp; Head</span><span style="font-size:11px; font-weight:600; color:#78716c;">Impact · neck · pupils</span></span></summary><ol style="margin:0 0 12px; padding-left:18px; font-size:13px; font-weight:500; line-height:1.45;"><li>Call {{ cardEmergencyNum }} — give exact location and number of people</li><li>Hazards on. Do not move them unless fire or traffic danger</li><li>Keep head/neck still. Control bleeding with firm pressure</li></ol></details>
+                  <details style="background:rgba(255,255,255,0.92); border:1px solid rgba(28,25,23,0.07); border-radius:14px; padding:0 12px;"><summary style="cursor:pointer; list-style:none; display:flex; gap:8px; align-items:flex-start; padding:12px 0;"><span style="width:38px; height:38px; border-radius:11px; background:rgba(225,29,72,0.1); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;">🩸</span><span><span style="font-size:13px; font-weight:700; color:#1c1917; display:block;">Bleeding</span><span style="font-size:11px; font-weight:600; color:#78716c;">Pressure · tourniquet</span></span></summary><ol style="margin:0 0 12px; padding-left:18px; font-size:13px; font-weight:500; line-height:1.45;"><li>Press hard with both hands — do not lift to check</li><li>Add cloth on top if soaked. Limb: tourniquet 2–3 in above</li><li>Note the time. Stay on the line with {{ cardEmergencyNum }}</li></ol></details>
+                  <details style="background:rgba(255,255,255,0.92); border:1px solid rgba(28,25,23,0.07); border-radius:14px; padding:0 12px;"><summary style="cursor:pointer; list-style:none; display:flex; gap:8px; align-items:flex-start; padding:12px 0;"><span style="width:38px; height:38px; border-radius:11px; background:rgba(225,29,72,0.1); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;">❤️</span><span><span style="font-size:13px; font-weight:700; color:#1c1917; display:block;">Heart &amp; Airway</span><span style="font-size:11px; font-weight:600; color:#78716c;">CPR · choking</span></span></summary><ol style="margin:0 0 12px; padding-left:18px; font-size:13px; font-weight:500; line-height:1.45;"><li>No breathing/pulse: hard compressions 100–120/min, 2 inches deep</li><li>Choking, cannot cough: 5 back blows, then 5 abdominal thrusts</li><li>Alternate until clear or unresponsive — then CPR</li></ol></details>
+                  <details style="background:rgba(255,255,255,0.92); border:1px solid rgba(28,25,23,0.07); border-radius:14px; padding:0 12px;"><summary style="cursor:pointer; list-style:none; display:flex; gap:8px; align-items:flex-start; padding:12px 0;"><span style="width:38px; height:38px; border-radius:11px; background:rgba(225,29,72,0.1); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;">⚡</span><span><span style="font-size:13px; font-weight:700; color:#1c1917; display:block;">Shock</span><span style="font-size:11px; font-weight:600; color:#78716c;">Pale · cold · clammy</span></span></summary><ol style="margin:0 0 12px; padding-left:18px; font-size:13px; font-weight:500; line-height:1.45;"><li>Call {{ cardEmergencyNum }}. Lay flat — do not let them walk</li><li>Elevate legs 12 inches unless head/neck/spine injury</li><li>Keep warm. No food, water, or medication</li></ol></details>
+                  <details style="background:rgba(255,255,255,0.92); border:1px solid rgba(28,25,23,0.07); border-radius:14px; padding:0 12px;"><summary style="cursor:pointer; list-style:none; display:flex; gap:8px; align-items:flex-start; padding:12px 0;"><span style="width:38px; height:38px; border-radius:11px; background:rgba(225,29,72,0.1); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;">🥶</span><span><span style="font-size:13px; font-weight:700; color:#1c1917; display:block;">Hypothermia</span><span style="font-size:11px; font-weight:600; color:#78716c;">Warm core · no rubbing</span></span></summary><ol style="margin:0 0 12px; padding-left:18px; font-size:13px; font-weight:500; line-height:1.45;"><li>Move to shelter. Remove wet clothes gently</li><li>Warm chest/neck/armpits/groin — not the limbs</li><li>No rubbing or massage. Warm drinks only if fully conscious</li></ol></details>
+                  <details style="background:rgba(255,255,255,0.92); border:1px solid rgba(28,25,23,0.07); border-radius:14px; padding:0 12px;"><summary style="cursor:pointer; list-style:none; display:flex; gap:8px; align-items:flex-start; padding:12px 0;"><span style="width:38px; height:38px; border-radius:11px; background:rgba(225,29,72,0.1); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;">🥵</span><span><span style="font-size:13px; font-weight:700; color:#1c1917; display:block;">Heat</span><span style="font-size:11px; font-weight:600; color:#78716c;">Cool fast · call {{ cardEmergencyNum }}</span></span></summary><ol style="margin:0 0 12px; padding-left:18px; font-size:13px; font-weight:500; line-height:1.45;"><li>Heat stroke: call {{ cardEmergencyNum }} — cool neck/armpits/groin fast</li><li>Move to shade. Remove extra clothing. Fan while cooling</li><li>Sip cool water only if fully conscious</li></ol></details>
+                </div>
+              </div>
+            </sc-if>
+          </div>
 
-            <div style="font-size:12px; font-weight:600; color:#78716c; text-transform:uppercase; letter-spacing:0.6px; padding:0 2px 5px;">Emergency contacts</div>
-            <div style="background:white; border-radius:12px; overflow:hidden; margin-bottom:14px;">
-              <sc-for list="{{ cardContacts }}" as="c" hint-placeholder-count="2">
-                <a href="{{ c.tel }}" style="display:block; padding:11px 16px; border-bottom:0.5px solid rgba(28,25,23,0.07); text-decoration:none;">
-                  <div style="font-size:11px; font-weight:600; color:#1c1917;">{{ c.name }}</div>
-                  <div style="font-size:12px; font-weight:500; color:#e11d48; margin-top:2px;">{{ c.detail }} · Tap to call</div>
-                </a>
-              </sc-for>
+          <!-- Tap-card tab bar: RedMed · Help · Aid (no NFC) -->
+          <div style="position:absolute; bottom:0; left:0; right:0; background:#fff; border-top:1px solid #e5e5e5; z-index:16;">
+            <div style="display:flex; padding:4px 0 0;">
+              <button onClick="{{ cardTabMedical }}" class="tab-btn">
+                <div style="{{ cardMedicalPill }}">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="{{ cardMedicalColor }}"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"></path></svg>
+                </div>
+                <span style="{{ cardMedicalLabel }}">RedMed</span>
+              </button>
+              <button onClick="{{ cardTabHelp }}" class="tab-btn">
+                <div style="{{ cardHelpPill }}">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="{{ cardHelpColor }}"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.27-.27.67-.36 1.02-.24C17.52 15.37 18.73 15.57 20 15.57c.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.61 21 3 13.39 3 4c0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.27.2 2.48.57 3.62.11.35.03.74-.24 1.01L6.6 10.8z"></path></svg>
+                </div>
+                <span style="{{ cardHelpLabel }}">Help</span>
+              </button>
+              <button onClick="{{ cardTabAid }}" class="tab-btn">
+                <div style="{{ cardAidPill }}">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="{{ cardAidColor }}"><path d="M20 6H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2zm-9 1.5V6a1 1 0 011-1h2a1 1 0 011 1v1.5h-4zM14 15h-2v-2h-2v-2h2v-2h2v2h2v2h-2v2z"></path></svg>
+                </div>
+                <span style="{{ cardAidLabel }}">Aid</span>
+              </button>
             </div>
-            <div style="font-size:10px; color:#78716c; font-weight:500; text-align:center; padding-top:4px;">Generated by RedMed. No account or login needed to view this card.</div>
+            <div style="display:flex; justify-content:center; padding:4px 0 8px;">
+              <div style="width:134px; height:5px; background:rgba(28,25,23,0.18); border-radius:3px;"></div>
+            </div>
           </div>
         </div>
       </sc-if>
@@ -987,12 +1121,16 @@ class Component extends DCLogic {
     tab: 'myid', openPane: null, showSatellite: false, hasData: true, showHelp: false, braceletPaired: false,
     activeTopic: null, showEdit: false, nfcWriting: false,
     showAppLock: false, appLockPending: null, appLockAuthenticating: false, appLockFailed: false,
+    showPublicCard: false, cardTab: 'medical',
     hospitalsStatus: 'idle', hospitalsErrorMsg: '', hospitals: [],
-    profileName: 'Placeholder', birthDate: '', bloodType: '', tagImported: false,
-    allergies: [],
-    meds: [],
-    conditions: [],
-    contacts: []
+    profileName: 'Alex Rivera', birthDate: '03/14/1992', bloodType: 'O+', tagImported: false,
+    allergies: ['Penicillin', 'Bee stings'],
+    meds: ['Albuterol inhaler', 'Lisinopril'],
+    conditions: ['Asthma'],
+    contacts: [
+      { name: 'Sam Rivera', detail: 'Spouse · (555) 014-2291' },
+      { name: 'Dr. Patel', detail: 'Primary · (555) 018-4402' }
+    ]
   };
   topics = {};
 
@@ -1253,16 +1391,52 @@ class Component extends DCLogic {
       tapWriteNFC: () => this.setState({ showAppLock: true, appLockPending: 'nfc', appLockAuthenticating: false, appLockFailed: false }),
       closeNFC: () => this.setState({ nfcWriting: false, braceletPaired: true }),
 
-      showPublicCard: this.state.showPublicCard,
-      tapScanBracelet: () => this.setState({ showPublicCard: true }),
-      closePublicCard: () => this.setState({ showPublicCard: false }),
-      cardName: this.state.profileName,
-      cardDOB: this.state.birthDate || '—',
-      cardBlood: this.state.bloodType || '—',
+      showPublicCard: !!this.state.showPublicCard,
+      tapScanBracelet: () => this.setState({ showPublicCard: true, cardTab: 'medical', showHelp: false }),
+      closePublicCard: () => this.setState({ showPublicCard: false, cardTab: 'medical' }),
+      cardIsMedical: (this.state.cardTab || 'medical') === 'medical',
+      cardIsHelp: this.state.cardTab === '911',
+      cardIsAid: this.state.cardTab === 'aid',
+      cardTabMedical: () => this.setState({ cardTab: 'medical' }),
+      cardTabHelp: () => this.setState({ cardTab: '911' }),
+      cardTabAid: () => this.setState({ cardTab: 'aid' }),
+      cardMedicalColor: (this.state.cardTab || 'medical') === 'medical' ? accent : normal,
+      cardHelpColor: this.state.cardTab === '911' ? accent : normal,
+      cardAidColor: this.state.cardTab === 'aid' ? accent : normal,
+      cardMedicalLabel: { fontSize: 10, fontWeight: (this.state.cardTab || 'medical') === 'medical' ? '600' : '500', color: (this.state.cardTab || 'medical') === 'medical' ? accent : normal, letterSpacing: '-0.1px' },
+      cardHelpLabel: { fontSize: 10, fontWeight: this.state.cardTab === '911' ? '600' : '500', color: this.state.cardTab === '911' ? accent : normal, letterSpacing: '-0.1px' },
+      cardAidLabel: { fontSize: 10, fontWeight: this.state.cardTab === 'aid' ? '600' : '500', color: this.state.cardTab === 'aid' ? accent : normal, letterSpacing: '-0.1px' },
+      cardMedicalPill: { display:'flex', alignItems:'center', justifyContent:'center', padding:'5px 16px', borderRadius:14, background: (this.state.cardTab || 'medical') === 'medical' ? 'rgba(225,29,72,0.05)' : 'transparent' },
+      cardHelpPill: { display:'flex', alignItems:'center', justifyContent:'center', padding:'5px 16px', borderRadius:14, background: this.state.cardTab === '911' ? 'rgba(225,29,72,0.05)' : 'transparent' },
+      cardAidPill: { display:'flex', alignItems:'center', justifyContent:'center', padding:'5px 16px', borderRadius:14, background: this.state.cardTab === 'aid' ? 'rgba(225,29,72,0.05)' : 'transparent' },
+      cardName: this.state.hasData ? (this.state.profileName || 'RedMed') : 'RedMed',
+      cardDOB: this.state.hasData && this.state.birthDate ? this.state.birthDate : '—',
+      cardBlood: this.state.hasData && this.state.bloodType ? this.state.bloodType : '—',
       cardAllergies: this.state.hasData ? this.state.allergies : [],
       cardMeds: this.state.hasData ? this.state.meds : [],
       cardConditions: this.state.hasData ? this.state.conditions : [],
-      cardContacts: this.state.hasData ? this.state.contacts.map(c => ({ ...c, tel: 'tel:' + (c.detail.match(/\(\d{3}\)\s*\d{3}-\d{4}/) || [''])[0].replace(/\D/g, '') })) : [],
+      cardContacts: this.state.hasData ? this.state.contacts.map(c => ({ ...c, tel: 'tel:' + ((c.detail.match(/\(\d{3}\)\s*\d{3}-\d{4}/) || [''])[0].replace(/\D/g, '') || '911') })) : [],
+      cardHasAllergies: this.state.hasData && this.state.allergies.length > 0,
+      cardNoAllergies: !(this.state.hasData && this.state.allergies.length > 0),
+      cardHasMeds: this.state.hasData && this.state.meds.length > 0,
+      cardNoMeds: !(this.state.hasData && this.state.meds.length > 0),
+      cardHasConditions: this.state.hasData && this.state.conditions.length > 0,
+      cardNoConditions: !(this.state.hasData && this.state.conditions.length > 0),
+      cardHasContacts: this.state.hasData && this.state.contacts.length > 0,
+      cardNoContacts: !(this.state.hasData && this.state.contacts.length > 0),
+      cardEmergencyNum: '911',
+      cardEmergencyTel: 'tel:911',
+      cardCallContact: () => {
+        const c = (this.state.contacts || [])[0];
+        const tel = c ? ((c.detail.match(/\(\d{3}\)\s*\d{3}-\d{4}/) || [''])[0].replace(/\D/g, '')) : '';
+        window.location.href = tel ? ('tel:' + tel) : 'tel:911';
+      },
+      cardTextLocation: () => {
+        const c = (this.state.contacts || [])[0];
+        const tel = c ? ((c.detail.match(/\(\d{3}\)\s*\d{3}-\d{4}/) || [''])[0].replace(/\D/g, '')) : '';
+        const body = encodeURIComponent('Emergency location (RedMed): 37.334900, -122.009020\nhttps://maps.apple.com/?ll=37.334900,-122.009020');
+        window.location.href = tel ? ('sms:' + tel + '&body=' + body) : ('sms:&body=' + body);
+      },
 
       crashOpen: isP('crash'), crashClosed: !isP('crash'), toggleCrash: tog('crash'),
       bleedOpen: isP('bleed'), bleedClosed: !isP('bleed'), toggleBleed: tog('bleed'),
