@@ -2,7 +2,7 @@ import SwiftUI
 import Combine
 
 enum AppTab {
-    case myid, emergency, aid, nfc
+    case myid, emergency, aid
 }
 
 class ProfileData: ObservableObject {
@@ -18,10 +18,35 @@ class ProfileData: ObservableObject {
     ]
 
     var hasData: Bool { !name.isEmpty }
-    /// Whether an NFC band has been written/paired (Main header status).
-    @Published var braceletLinked: Bool = false
+
+    /// Any medical profile content that should require Face ID / passcode to edit.
+    var hasSensitiveProfileData: Bool {
+        !name.isEmpty
+            || !birthDate.isEmpty
+            || !bloodType.isEmpty
+            || !allergies.isEmpty
+            || !medications.isEmpty
+            || !conditions.isEmpty
+            || contacts.contains { !$0.name.isEmpty || !$0.detail.isEmpty }
+    }
+
     @Published var isOrganDonor: Bool = true
     @Published var lastUpdated: String = "Jul 28, 2026"
+
+    /// Detached copy for scanner / preview — mutations never touch the owner profile.
+    func snapshot() -> ProfileData {
+        let copy = ProfileData()
+        copy.name = name
+        copy.birthDate = birthDate
+        copy.bloodType = bloodType
+        copy.allergies = allergies
+        copy.medications = medications
+        copy.conditions = conditions
+        copy.contacts = contacts.map { EmergencyContact(name: $0.name, detail: $0.detail) }
+        copy.isOrganDonor = isOrganDonor
+        copy.lastUpdated = lastUpdated
+        return copy
+    }
 }
 
 struct EmergencyContact: Identifiable {
@@ -38,12 +63,20 @@ struct AidTopic {
     let care: [String]
 }
 
-let aidTopics: [String: AidTopic] = [
+let aidTopics: [String: AidTopic] = AidTopicCatalog.topics
+
+/// Lazy bag so Aid strings are not built until Roadside Aid is opened.
+enum AidTopicCatalog {
+    static let topics: [String: AidTopic] = _makeTopics()
+
+    private static func _makeTopics() -> [String: AidTopic] {
+        [
     "car-crash": AidTopic(
         id: "car-crash", title: "Car Crash",
         symptoms: ["Impact injury — any speed", "Unresponsive or confused occupant", "Visible bleeding or deformity"],
         care: ["Call 911 — give exact location and number of people", "Turn on hazards. Stay at the scene", "Do NOT move them unless there is fire, rising water, or oncoming traffic", "If you must move: slide them as one unit — never twist the neck", "Control bleeding: press hard with cloth, do not lift to check", "Keep them warm and still until EMS arrives"]
     ),
+
     "head-pupils": AidTopic(
         id: "head-pupils", title: "Head & Pupils",
         symptoms: ["Blow to the head", "Unequal, very large ('blown'), or non-reactive pupils", "Confusion, vomiting, or worsening over minutes"],
@@ -104,4 +137,6 @@ let aidTopics: [String: AidTopic] = [
         symptoms: ["Major trauma: crash, gunshot/stab, severe bleeding, head injury", "Patient unstable or deteriorating", "Unsure whether the nearest ER can handle it"],
         care: ["Call 911 — dispatch will route to the right trauma level automatically", "Do NOT self-transport a major trauma patient if EMS is available — ambulances can stabilize en route", "Level I centers offer the highest capability for the most severe trauma; Level II/III are also fully equipped for most emergencies", "If you must drive: tell the ER ahead by phone so the trauma team is ready", "Note time of injury and mechanism (e.g. speed, fall height, weapon) to report on arrival"]
     ),
-]
+        ]
+    }
+}

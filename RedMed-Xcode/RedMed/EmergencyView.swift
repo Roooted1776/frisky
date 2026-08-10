@@ -5,13 +5,11 @@ struct EmergencyView: View {
     @EnvironmentObject var profile: ProfileData
     @StateObject private var locationManager = LocationManager()
     @State private var showSatellite = false
-    @State private var showPublicCard = false
+    /// Mount SOS after first GPS paint so opening 911 stays snappy.
+    @State private var mountSOS = false
 
     func callFirstContact() {
-        guard let c = profile.contacts.first else {
-            if let url = URL(string: "tel://911") { UIApplication.shared.open(url) }
-            return
-        }
+        guard let c = profile.contacts.first else { return }
         let digits = c.detail.filter(\.isNumber)
         if let url = URL(string: "tel://\(digits)") { UIApplication.shared.open(url) }
     }
@@ -19,28 +17,14 @@ struct EmergencyView: View {
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack(alignment: .leading, spacing: 8) {
+                LazyVStack(alignment: .leading, spacing: 8) {
                     Text("Find 911")
                         .font(.system(size: 22, weight: .bold))
                         .foregroundColor(.redmedDark)
-                    Text("Call first. Share GPS second.")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.redmedMuted)
                         .padding(.bottom, 2)
 
-                    PrimaryButton(title: "Call 911") {
-                        if let url = URL(string: "tel://911") { UIApplication.shared.open(url) }
-                    }
-
-                    SecondaryButton("Scan emergency bracelet") { showPublicCard = true }
-                    Text("Tap the band — their browser opens the emergency card.")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-
-                    SecondaryButton("Call emergency contacts") { callFirstContact() }
-                    Text("Pick a saved contact — iPhone asks before placing the call.")
+                    SecondaryButton("Call first emergency contact") { callFirstContact() }
+                    Text("Calls your first saved contact — iPhone confirms before dialing.")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
@@ -50,6 +34,11 @@ struct EmergencyView: View {
                     // GPS CARD
                     GPSCard(location: locationManager.location)
                         .padding(.vertical, 4)
+
+                    // Emergency SOS — under Live GPS; deferred one frame for fast first paint
+                    if mountSOS {
+                        Find911SOSBlock(locationManager: locationManager)
+                    }
 
                     // COPY COORDINATES
                     Button {
@@ -117,10 +106,16 @@ struct EmergencyView: View {
                     Text("Find 911").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedDark)
                 }
             }
-            // Start after first layout so switching to 911 doesn't hitch the tab chrome.
-            .task { locationManager.start() }
-            .onDisappear { locationManager.stop() }
-            .sheet(isPresented: $showPublicCard) { PublicCardView(profile: profile) }
+            // GPS after first layout; SOS one yield later so the GPS card paints first.
+            .task {
+                locationManager.start()
+                await Task.yield()
+                mountSOS = true
+            }
+            .onDisappear {
+                locationManager.stop()
+                mountSOS = false
+            }
         }
     }
 }

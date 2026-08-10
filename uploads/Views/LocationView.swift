@@ -7,99 +7,121 @@ struct LocationView: View {
     @EnvironmentObject var store: ProfileStore
     @StateObject private var locationManager = LocationManager()
     @StateObject private var networkMonitor = NetworkPathMonitor()
+    @StateObject private var sosController = EmergencySOSController()
+    @StateObject private var motionAssist = MotionAssistMonitor()
+    @StateObject private var outbound = EmergencyOutboundCoordinator()
     @State private var copiedCoords = false
     @State private var showSatelliteHelp = false
     @State private var showCallContactPicker = false
+    /// Paint Call 911 + Live GPS first; mount SOS on the next turn.
+    @State private var mountSOS = false
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: layout.spaceLG) {
-                    header
+            ZStack {
+                ScrollView {
+                    LazyVStack(spacing: layout.spaceLG) {
+                        header
 
-                    if networkMonitor.isOffline {
-                        SoftStatusChip(
-                            text: "You're offline. GPS below still works. For satellite emergency, use iPhone Emergency SOS via satellite.",
-                            warning: true
-                        )
-                    }
-
-                    Call911Button()
-
-                    ScanEmergencyCardControl(
-                        title: "Scan emergency bracelet",
-                        prominent: false
-                    )
-
-                    Text("Tap the band — their browser opens the emergency card. RedMed owners can scan here for the native view.")
-                        .font(layout.captionFont(weight: .medium))
-                        .foregroundStyle(AppTheme.muted)
-                        .multilineTextAlignment(.center)
-
-                    Button {
-                        showCallContactPicker = true
-                    } label: {
-                        Text("Call emergency contacts")
-                    }
-                    .buttonStyle(SecondaryButtonStyle())
-                    .disabled(callableContacts.isEmpty)
-
-                    Text("Pick a saved contact to call — iPhone asks before placing the call.")
-                        .font(layout.captionFont(weight: .medium))
-                        .foregroundStyle(AppTheme.muted)
-                        .multilineTextAlignment(.center)
-
-                    Text("Tap when you have cell service. Satellite SOS is built into iOS — RedMed cannot start it.")
-                        .font(layout.captionFont(weight: .medium))
-                        .foregroundStyle(AppTheme.muted)
-                        .multilineTextAlignment(.center)
-
-                    coordinateCard
-
-                    if let error = locationManager.errorMessage {
-                        Text(error)
-                            .font(layout.footnoteFont(weight: .semibold))
-                            .foregroundStyle(AppTheme.accent)
-                            .multilineTextAlignment(.center)
-                    }
-
-                    if locationManager.coordinate != nil {
-                        Button {
-                            guard let c = locationManager.coordinate else { return }
-                            UIPasteboard.general.string = LocationFormatting.coordsCopyText(
-                                latitude: c.latitude,
-                                longitude: c.longitude
+                        if networkMonitor.isOffline {
+                            SoftStatusChip(
+                                text: "You're offline. GPS below still works. For satellite emergency, use iPhone Emergency SOS via satellite — RedMed cannot start it.",
+                                warning: true
                             )
-                            copiedCoords = true
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { copiedCoords = false }
-                        } label: {
-                            Text(copiedCoords ? "Copied!" : "Copy coordinates")
                         }
-                        .buttonStyle(InkButtonStyle())
 
-                        Text("Read decimal coordinates to the dispatcher first, then accuracy.")
-                            .font(layout.captionFont())
+                        Call911Button()
+
+                        ScanEmergencyCardControl(
+                            title: "Scan emergency bracelet",
+                            prominent: false
+                        )
+
+                        Text("Tap the band — their browser opens the emergency card. RedMed owners can scan here for the native view.")
+                            .font(layout.captionFont(weight: .medium))
                             .foregroundStyle(AppTheme.muted)
                             .multilineTextAlignment(.center)
+
+                        Button {
+                            showCallContactPicker = true
+                        } label: {
+                            Text("Call emergency contacts")
+                        }
+                        .buttonStyle(SecondaryButtonStyle())
+                        .disabled(callableContacts.isEmpty)
+
+                        Text("Pick a saved contact to call — iPhone asks before placing the call.")
+                            .font(layout.captionFont(weight: .medium))
+                            .foregroundStyle(AppTheme.muted)
+                            .multilineTextAlignment(.center)
+
+                        Text("Tap Call 911 when you have cell service. Emergency SOS below dials 911, texts contacts via Messages (carrier), and can POST to a third-party alert API when configured — RedMed has no relay server.")
+                            .font(layout.captionFont(weight: .medium))
+                            .foregroundStyle(AppTheme.muted)
+                            .multilineTextAlignment(.center)
+
+                        coordinateCard
+
+                        if mountSOS {
+                            Find911SOSSection(
+                                sos: sosController,
+                                motion: motionAssist,
+                                isOffline: networkMonitor.isOffline
+                            )
+                        }
+
+                        if let error = locationManager.errorMessage {
+                            Text(error)
+                                .font(layout.footnoteFont(weight: .semibold))
+                                .foregroundStyle(AppTheme.accent)
+                                .multilineTextAlignment(.center)
+                        }
+
+                        if locationManager.coordinate != nil {
+                            Button {
+                                guard let c = locationManager.coordinate else { return }
+                                UIPasteboard.general.string = LocationFormatting.coordsCopyText(
+                                    latitude: c.latitude,
+                                    longitude: c.longitude
+                                )
+                                copiedCoords = true
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { copiedCoords = false }
+                            } label: {
+                                Text(copiedCoords ? "Copied!" : "Copy coordinates")
+                            }
+                            .buttonStyle(InkButtonStyle())
+
+                            Text("Read decimal coordinates to the dispatcher first, then accuracy.")
+                                .font(layout.captionFont())
+                                .foregroundStyle(AppTheme.muted)
+                                .multilineTextAlignment(.center)
+                        }
+
+                        TraumaHospitalsSection(gpsCoordinate: locationManager.coordinate)
+
+                        satelliteDisclosure
+
+                        Text("Coordinates, motion assist, and SOS run on this screen only. Alerts go device → carrier / optional third-party API. RedMed has no servers.")
+                            .font(layout.caption2Font(weight: .medium))
+                            .foregroundStyle(AppTheme.muted)
+                            .multilineTextAlignment(.center)
+                            .padding(.top, layout.spaceXS)
+                            .padding(.bottom, layout.screenBottomLarge)
                     }
-
-                    TraumaHospitalsSection(gpsCoordinate: locationManager.coordinate)
-
-                    satelliteDisclosure
-
-                    Text("Coordinates show on this screen only. RedMed has no servers.")
-                        .font(layout.caption2Font(weight: .medium))
-                        .foregroundStyle(AppTheme.muted)
-                        .multilineTextAlignment(.center)
-                        .padding(.top, layout.spaceXS)
-                        .padding(.bottom, layout.screenBottomLarge)
+                    .padding(.horizontal, layout.screenPad)
+                    .reactiveScrollTrack()
                 }
-                .padding(.horizontal, layout.screenPad)
-                .reactiveScrollTrack()
+                .reactiveScrollChrome()
+                .scrollIndicators(.visible, axes: .vertical)
+                .screenAtmosphere()
+
+                if sosController.isCountingDown {
+                    EmergencySOSCountdownOverlay(
+                        sos: sosController,
+                        isOffline: networkMonitor.isOffline
+                    )
+                }
             }
-            .reactiveScrollChrome()
-            .scrollIndicators(.visible, axes: .vertical)
-            .screenAtmosphere()
             .navigationTitle("Find 911")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
@@ -108,14 +130,69 @@ struct LocationView: View {
                 }
             }
             // After first layout — don't compete with cold-start paint for the main thread.
+            // GPS first; path monitor + SOS after first paint.
             .task {
                 locationManager.requestLocation()
+                await Task.yield()
+                networkMonitor.start()
+                outbound.locationManager = locationManager
+                outbound.profileProvider = { [weak store] in store?.profile ?? MedicalProfile() }
+                outbound.contactPhonesProvider = { [weak store] in
+                    (store?.profile.contacts ?? []).compactMap { contact in
+                        let phone = EmergencySummaryBuilder.normalizedPhone(contact.phone)
+                        return phone.isEmpty ? nil : phone
+                    }
+                }
+                sosController.isOfflineCheck = { [weak networkMonitor] in
+                    networkMonitor?.isOffline ?? false
+                }
+                sosController.onOnlineFire = { [weak outbound] in
+                    outbound?.fireOnline()
+                }
+                mountSOS = true
+                if motionAssist.isEnabled {
+                    motionAssist.start()
+                }
             }
-            .onDisappear { locationManager.stopUpdating() }
+            .onDisappear {
+                locationManager.stopUpdating()
+                networkMonitor.stop()
+                motionAssist.stop()
+                mountSOS = false
+                if sosController.isCountingDown {
+                    sosController.cancel()
+                }
+            }
+            .onChange(of: motionAssist.isEnabled) { enabled in
+                if enabled {
+                    motionAssist.start()
+                } else {
+                    motionAssist.stop()
+                }
+            }
             .sheet(isPresented: $showCallContactPicker) {
                 EmergencyContactCallSheet(contacts: callableContacts) {
                     showCallContactPicker = false
                 }
+            }
+            .sheet(isPresented: $outbound.showSMSComposer) {
+                EmergencySMSComposer(
+                    recipients: outbound.smsRecipients,
+                    body: outbound.smsBody,
+                    onFinish: { outbound.showSMSComposer = false }
+                )
+                .ignoresSafeArea()
+            }
+            .fullScreenCover(isPresented: Binding(
+                get: { sosController.showsSatelliteCoach },
+                set: { if !$0 { sosController.dismissSatelliteCoach() } }
+            )) {
+                SatelliteSOSCoachView(
+                    coordinate: locationManager.coordinate,
+                    accuracy: locationManager.accuracy,
+                    locationTimestamp: locationManager.locationTimestamp,
+                    onDismiss: { sosController.dismissSatelliteCoach() }
+                )
             }
         }
     }
@@ -219,7 +296,7 @@ struct LocationView: View {
 
             if showSatelliteHelp {
                 VStack(alignment: .leading, spacing: layout.s(10)) {
-                    Text("RedMed shows GPS only. Satellite emergency calling is built into your phone — RedMed cannot open or control it.")
+                    Text("RedMed shows GPS and can coach Satellite SOS steps. Satellite emergency calling is built into your phone — RedMed cannot open or control it. This is not Apple Crash Detection.")
                         .font(layout.captionFont())
                         .foregroundStyle(AppTheme.muted)
 

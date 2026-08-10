@@ -16,7 +16,7 @@ struct UseConsentView: View {
                 VStack(alignment: .leading, spacing: layout.spaceLG) {
                     SectionEyebrow(text: "Before you continue")
 
-                    Text("RedMed stores your medical profile on this device only. Find 911 uses location while that screen is open. Nothing is sent to our servers.")
+                    Text("RedMed stores your medical profile on this device only. Find 911 uses location (and optional motion assist) only while that screen is open. SOS dials 911 and can SMS contacts via your carrier or POST to a configured third-party API — RedMed has no relay server.")
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(AppTheme.muted)
                         .fixedSize(horizontal: false, vertical: true)

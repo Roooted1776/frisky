@@ -1,133 +1,43 @@
 import SwiftUI
-import CoreLocation
-import MessageUI
 
-/// Read-only emergency card — what a stranger sees after tapping the NFC bracelet.
-struct PublicCardView: View {
-    @ObservedObject var profile: ProfileData
-    @Environment(\.dismiss) var dismiss
-    @StateObject private var locationHelper = LocationHelper()
+private struct ScannerSessionKey: EnvironmentKey {
+    static let defaultValue = false
+}
 
-    var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "info.circle.fill")
-                            .foregroundColor(.redmedAccent)
-                        Text("Emergency medical card — read only")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(.redmedAccent)
-                    }
-                    .padding(.horizontal, 14).padding(.vertical, 10)
-                    .background(Color.redmedAccent.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
+private struct ScannerDismissKey: EnvironmentKey {
+    static let defaultValue: (() -> Void)? = nil
+}
 
-                    PrimaryButton(title: "Call 911") {
-                        if let url = URL(string: "tel://911") { UIApplication.shared.open(url) }
-                    }
-
-                    PrimaryButton(title: "Text My Location to Emergency Contact") {
-                        locationHelper.requestAndSend(to: profile.contacts.first?.detail)
-                    }
-
-                    Text("Profile last updated \(profile.lastUpdated)")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(.redmedMuted)
-                        .frame(maxWidth: .infinity, alignment: .center)
-
-                    HStack(spacing: 10) {
-                        Image("BrandLogo")
-                            .resizable().frame(width: 44, height: 44)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(profile.hasData ? profile.name : "No profile saved yet")
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundColor(.redmedDark)
-                            Text(profile.hasData ? "\(profile.birthDate) · Blood type \(profile.bloodType)" : "—")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(.redmedMuted)
-                        }
-                    }
-
-                    cardSection(title: "Allergies", items: profile.hasData ? profile.allergies : [])
-                    cardSection(title: "Medications", items: profile.hasData ? profile.medications : [])
-                    cardSection(title: "Conditions", items: profile.hasData ? profile.conditions : [])
-
-                    SectionLabel(text: "Organ donor status")
-                    HStack {
-                        Text("Registered donor").font(.system(size: 14, weight: .medium)).foregroundColor(.redmedMuted)
-                        Spacer()
-                        Text(profile.hasData ? (profile.isOrganDonor ? "Yes" : "No") : "—")
-                            .font(.system(size: 14, weight: .bold)).foregroundColor(.redmedDark)
-                    }
-                    .padding(.horizontal, 16).padding(.vertical, 11)
-                    .background(Color.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-
-                    SectionLabel(text: "Emergency contacts")
-                    VStack(spacing: 0) {
-                        if !profile.hasData || profile.contacts.isEmpty {
-                            Text("—").font(.system(size: 14)).foregroundColor(.redmedMuted.opacity(0.4))
-                                .padding(.horizontal, 16).padding(.vertical, 11)
-                        } else {
-                            ForEach(profile.contacts) { c in
-                                Button {
-                                    let digits = c.detail.filter(\.isNumber)
-                                    if let url = URL(string: "tel://\(digits)") { UIApplication.shared.open(url) }
-                                } label: {
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(c.name).font(.system(size: 14, weight: .semibold)).foregroundColor(.redmedDark)
-                                        Text("\(c.detail) · Tap to call").font(.system(size: 12, weight: .medium)).foregroundColor(.redmedAccent)
-                                    }
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.horizontal, 16).padding(.vertical, 11)
-                                }
-                                .buttonStyle(.plain)
-                                if c.id != profile.contacts.last?.id { Divider().padding(.leading, 16) }
-                            }
-                        }
-                    }
-                    .background(Color.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-
-                    Text("Generated by RedMed. No account or login needed to view this card.")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 4)
-                }
-                .padding(16)
-            }
-            .background(Color(red: 0.949, green: 0.949, blue: 0.969))
-            .navigationTitle("redmed.app/card")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Close") { dismiss() }.foregroundColor(.redmedMuted)
-                }
-            }
-        }
+extension EnvironmentValues {
+    /// True when this tree is the first-responder / scan shell (no owner edit).
+    var isScannerSession: Bool {
+        get { self[ScannerSessionKey.self] }
+        set { self[ScannerSessionKey.self] = newValue }
     }
 
-    @ViewBuilder
-    func cardSection(title: String, items: [String]) -> some View {
-        SectionLabel(text: title)
-        VStack(spacing: 0) {
-            if items.isEmpty {
-                Text("—").font(.system(size: 14)).foregroundColor(.redmedMuted.opacity(0.4))
-                    .padding(.horizontal, 16).padding(.vertical, 11)
-            } else {
-                ForEach(Array(items.enumerated()), id: \.offset) { i, item in
-                    Text(item).font(.system(size: 14)).foregroundColor(.redmedDark)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 16).padding(.vertical, 11)
-                    if i < items.count - 1 { Divider().padding(.leading, 16) }
-                }
-            }
-        }
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+    /// Optional Close action when the scanner shell is presented over the owner app.
+    var scannerDismiss: (() -> Void)? {
+        get { self[ScannerDismissKey.self] }
+        set { self[ScannerDismissKey.self] = newValue }
+    }
+}
+
+/// Same app shell as `ContentView` — RedMed / 911 / Aid — for people who scan.
+/// Holds a **snapshot** of the profile so scanner UI cannot mutate owner data.
+/// Pedestrian/EMS NFC taps use `card.html` (no app required); this is the in-app
+/// preview / native scanner shell.
+struct PublicCardView: View {
+    @StateObject private var snapshot: ProfileData
+    @Environment(\.dismiss) private var dismiss
+
+    init(profile: ProfileData) {
+        _snapshot = StateObject(wrappedValue: profile.snapshot())
+    }
+
+    var body: some View {
+        ContentView()
+            .environmentObject(snapshot)
+            .environment(\.isScannerSession, true)
+            .environment(\.scannerDismiss, { dismiss() })
     }
 }
