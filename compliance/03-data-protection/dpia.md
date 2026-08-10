@@ -15,7 +15,7 @@ or inaccurate data used in an emergency → DPIA appropriate before UK scale-up.
 
 | Item | Detail |
 |------|--------|
-| Data | Name, blood type, allergies, meds, conditions, emergency contacts, optional photo; location while Find 911 is open; seizure timer state |
+| Data | Name, blood type, allergies, meds, conditions, emergency contacts, optional photo; location while Find Help is open; seizure timer state |
 | Subjects | Profile owners; minors via guardian; bystanders who view NFC/web card |
 | Purpose | Emergency ID storage/display; SOS assist (location display, dial assist) |
 | Controllers | Typically the individual for their own device data; RedMed as app publisher for any residual operator processing (today: none for profile storage) |
@@ -30,7 +30,7 @@ CSO (clinical risk), legal counsel, and if selling to NHS: customer IG lead.
 ## 4. Necessity / proportionality
 
 Processing is what the user enters for emergency identification. Location is
-limited to Find 911 visibility. No advertising use. Proportional **if** claims
+limited to Find Help visibility. No advertising use. Proportional **if** claims
 stay inside intended purpose and users are warned the chip is world-readable.
 
 ## 5. Risks and measures
@@ -39,7 +39,7 @@ stay inside intended purpose and users are warned the chip is world-readable.
 |------|--------|---------|
 | Lost bracelet discloses health data | High | Clear Privacy notice; no false “encrypted chip” claim |
 | Inaccurate self-report | High | Disclaimers; user duty to update |
-| Location over-collection | Medium | When-in-use; stop updates off Find 911 |
+| Location over-collection | Medium | When-in-use; stop updates off Find Help |
 | Future cloud sync without notice | High | Block until notice + DPIA update |
 | NHS org deployment without DSPT | High | DSPT before trust contracts |
 

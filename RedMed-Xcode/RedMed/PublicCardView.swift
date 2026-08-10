@@ -23,7 +23,7 @@ extension EnvironmentValues {
 }
 
 /// Same app shell as `ContentView` for people who scan (ped / EMS):
-/// **RedMed + 911 + Aid** — all three viewable, **no Edit**, **no NFC write tab**.
+/// **RedMed + Help + Aid** — all three viewable, **no Edit**, **no NFC write tab**.
 /// This mirrors the bracelet NFC tap (`card.html#d=…`) that strangers open
 /// in a browser — keep them in sync.
 /// Holds a **snapshot** of the profile so scanner UI cannot mutate owner data.

@@ -15,7 +15,7 @@ recommendation (safe to deploy / with conditions / not safe).
 
 - On-device emergency medical ID storage and display
 - Optional passive NFC bracelet programming
-- Find 911: location display for user relay to emergency services
+- Find Help: location display for user relay to emergency services
 - Seizure timer assist (no detection)
 - Roadside Aid: general first-aid reference
 - Architecture: no RedMed backend; no remote clinical data store

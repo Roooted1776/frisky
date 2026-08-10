@@ -100,17 +100,17 @@ app code.
 Notice must not imply clinical diagnosis, monitoring, or NHS care delivery. Aligned
 with [`../01-intended-purpose-mhra.md`](../01-intended-purpose-mhra.md).
 
-## Product blocker surfaced by this rewrite
+## Product blocker surfaced by this rewrite — now closed
 
-The Terms and Policy now tell UK users to call **999**. The app does not.
-`tel://911` is hard-coded in four places in the shipping tree — `AidView.swift:50`,
-`TopicDetailView.swift:158`, `EmergencyView.swift:166` and `:349` — plus
-`EmergencyView.swift:12` for contact dialling, and the feature is named "Find 911"
-throughout the UI. On a UK handset `tel://911` does not reach the emergency
-services.
+The Terms and Policy tell UK users to call **999**, and for a while the app did
+not: `tel://911` was hard-coded in four places and the feature was called
+"Find 911" throughout the UI. On a UK handset that number reaches nobody.
 
-Legal copy cannot fix this. It needs a product change: locale-aware emergency
-number, or a UK build. Until then the documents are accurate about the law and
-optimistic about the software. **Do not publish to UK users, and do not put these
-documents in front of an NHS buyer, until the dialler is locale-aware** — an IG
-reviewer who taps through the app will find it.
+Closed by the locale-aware dialling change. `EmergencyNumber.current` resolves
+the number from `Locale.current.region`, every dial site and every user-facing
+mention of the number now reads from it, and the feature is renamed **Find Help**
+so the label stays correct whichever number the device dials. Unlisted regions
+fall back to **112**, the GSM standard.
+
+Document and product now agree. Publication is still gated on the entity and ICO
+placeholders above and on a solicitor pass — not on the dialler.

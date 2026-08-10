@@ -10,7 +10,7 @@
 ## 1. Scope
 
 Clinical risk management for manufacture of RedMed health IT: iOS app, on-device
-profile storage, NFC write/read of emergency ID, Find 911 location display,
+profile storage, NFC write/read of emergency ID, Find Help location display,
 seizure timer assist, roadside first-aid reference content.
 
 Out of scope until purpose changes: diagnosis, treatment algorithms, NHS EPR

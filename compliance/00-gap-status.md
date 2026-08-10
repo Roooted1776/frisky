@@ -37,20 +37,32 @@ This pack is written against the **shipping** tree and is accurate for it. If
 all change. **Decide before signing anything** — see 08-execution-plan.md,
 Gate 0.
 
-## Gate 0b — the app dials 911, the UK dials 999
+## Gate 0b — emergency dialling — CLOSED
 
 The UK legal rewrite (Aug 2026) landed `PrivacyPolicy.html` and `TOS.html` v2.0
-under UK GDPR / DPA 2018 / Consumer Rights Act 2015. Both now tell users to call
-**999**. The app still hard-codes `tel://911` — `AidView.swift:50`,
-`TopicDetailView.swift:158`, `EmergencyView.swift:166` and `:349` — and the
-feature is called "Find 911" throughout the UI.
+under UK GDPR / DPA 2018 / Consumer Rights Act 2015, telling users to call **999**
+— while the app still hard-coded `tel://911`, which reaches nobody on a UK
+handset.
 
-On a UK handset that number does not reach the emergency services. This is a
-**product change, not a copy change**: locale-aware emergency dialling, or a
-separate UK build. Until it ships, the legal documents describe software that
-does not exist, and no UK user or NHS buyer should be shown either.
+Closed by `EmergencyNumber`, which resolves the number from
+`Locale.current.region` (999 in the UK, 911 in the US and Canada, 000 in
+Australia, 112 fallback elsewhere). All four dial sites and every user-facing
+mention now read from it, and "Find 911" is renamed **Find Help** so the label is
+correct whichever number the device dials.
+
+**Not yet built or run on a device.** The change was made in a Linux session with
+no Xcode. Before this counts as evidence for a buyer, build it and confirm on a
+UK-region handset that the dialler pre-fills 999.
 
 See [03-data-protection/uk-privacy-notice-notes.md](03-data-protection/uk-privacy-notice-notes.md).
+
+## Erasure gap — open
+
+`KeychainStore.delete(account:)` exists and is never called; there is no Clear All
+Data control. Erasing special category data currently means blanking every field
+or deleting the app. The Policy describes exactly that and no more, but it is a
+weak answer to an Art. 17 request and an IG reviewer will press on it. Wiring the
+existing delete to a button is small work.
 
 ## What already helps
 
