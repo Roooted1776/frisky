@@ -16,10 +16,6 @@ struct EmergencyView: View {
         NavigationView {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 8) {
-                    PrimaryButton(title: "Call 911") {
-                        if let url = URL(string: "tel://911") { UIApplication.shared.open(url) }
-                    }
-
                     SecondaryButton("Call first emergency contact") { callFirstContact() }
                     Text("Calls your first saved contact — iPhone confirms before dialing.")
                         .font(.system(size: 10, weight: .medium))
