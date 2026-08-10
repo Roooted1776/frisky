@@ -28,6 +28,8 @@
 		AABB00000000000000000017 /* TOS.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000017 /* TOS.html */; };
 		AABB00000000000000000018 /* security.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000018 /* security.html */; };
 		AABB00000000000000000019 /* HowItWorks.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000019 /* HowItWorks.html */; };
+		AABB00000000000000000021 /* card.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000021 /* card.html */; };
+		AABB00000000000000000022 /* BrandLogo.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000022 /* BrandLogo.png */; };
 		AABB0000000000000000001A /* legal-doc.css in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001A /* legal-doc.css */; };
 		AABB0000000000000000001B /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001B /* KeychainStore.swift */; };
 		AABB00000000000000000020 /* EmergencyNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000020 /* EmergencyNumber.swift */; };
@@ -62,6 +64,8 @@
 		AAAA00000000000000000017 /* TOS.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = TOS.html; sourceTree = "<group>"; };
 		AAAA00000000000000000018 /* security.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = security.html; sourceTree = "<group>"; };
 		AAAA00000000000000000019 /* HowItWorks.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = HowItWorks.html; sourceTree = "<group>"; };
+		AAAA00000000000000000021 /* card.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = card.html; sourceTree = "<group>"; };
+		AAAA00000000000000000022 /* BrandLogo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BrandLogo.png; sourceTree = "<group>"; };
 		AAAA0000000000000000001A /* legal-doc.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = "legal-doc.css"; sourceTree = "<group>"; };
 		AAAA0000000000000000001B /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000020 /* EmergencyNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyNumber.swift; sourceTree = "<group>"; };
@@ -119,6 +123,8 @@
 				AAAA00000000000000000017 /* TOS.html */,
 				AAAA00000000000000000018 /* security.html */,
 				AAAA00000000000000000019 /* HowItWorks.html */,
+				AAAA00000000000000000021 /* card.html */,
+				AAAA00000000000000000022 /* BrandLogo.png */,
 				AAAA0000000000000000001A /* legal-doc.css */,
 				AAAA0000000000000000000C /* Assets.xcassets */,
 				AAAA0000000000000000000B /* Info.plist */,
@@ -198,6 +204,8 @@
 				AABB00000000000000000017 /* TOS.html in Resources */,
 				AABB00000000000000000018 /* security.html in Resources */,
 				AABB00000000000000000019 /* HowItWorks.html in Resources */,
+				AABB00000000000000000021 /* card.html in Resources */,
+				AABB00000000000000000022 /* BrandLogo.png in Resources */,
 				AABB0000000000000000001A /* legal-doc.css in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

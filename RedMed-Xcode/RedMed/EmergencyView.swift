@@ -83,6 +83,8 @@ struct EmergencyView: View {
                 }
             }
             .task {
+                // First paint of Find Help before Core Location work.
+                await Task.yield()
                 locationManager.start()
             }
             .onDisappear {
@@ -160,7 +162,8 @@ struct SeizureTimerStrip: View {
                     }
                     return
                 }
-                try? await Task.sleep(nanoseconds: 200_000_000)
+                // Display is mm:ss — 1s ticks are enough (was 200ms).
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
             }
         }
     }
@@ -318,8 +321,11 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         let latest = locations.last
-        DispatchQueue.main.async {
-            self.location = latest
+        // Delegate runs on the thread that created the manager (main here).
+        if Thread.isMainThread {
+            location = latest
+        } else {
+            DispatchQueue.main.async { self.location = latest }
         }
         // Tighten once we have a fix so the card stays accurate while the tab is open.
         if manager.desiredAccuracy != kCLLocationAccuracyBest {

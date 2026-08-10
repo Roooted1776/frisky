@@ -9,26 +9,29 @@ struct AidPane: Identifiable {
     let topics: [(label: String, key: String)]
 }
 
-let aidPanes: [AidPane] = [
-    AidPane(id: "crash", emoji: "🚗", title: "Crash & Head", subtitle: "Impact · neck · spinal", iconFilled: false,
-            topics: [("Car Crash", "car-crash"), ("Head & Pupils", "head-pupils"), ("Spinal", "spinal")]),
-    AidPane(id: "bleed", emoji: "🩸", title: "Bleeding", subtitle: "Pressure · tourniquet", iconFilled: true,
-            topics: [("Find Bleeding", "find-bleeding"), ("Bad Bleeding", "bad-bleeding"),
-                     ("Belt Tourniquet", "belt-tourniquet"), ("Gunshot / Stab", "gunshot-stab")]),
-    AidPane(id: "breathing", emoji: "🫁", title: "Not Breathing", subtitle: "CPR · airway", iconFilled: true,
-            topics: [("CPR", "cpr")]),
-    AidPane(id: "heart", emoji: "❤️", title: "Choking", subtitle: "Back blows · Heimlich", iconFilled: true,
-            topics: [("Choking", "choking")]),
-    AidPane(id: "shock", emoji: "⚡", title: "Shock", subtitle: "Pale · cold · clammy", iconFilled: false,
-            topics: [("Shock", "shock")]),
-    AidPane(id: "temp", emoji: "🌡️", title: "Burns · Cold · Heat", subtitle: "Cool · warm · cover", iconFilled: false,
-            topics: [("Burn Care", "burn-care"), ("Electrical & Chemical", "electrical-chemical-burns"),
-                     ("Cold (Hypothermia)", "cold-hypothermia"), ("Heat (Exhaustion & Stroke)", "heat-stroke")]),
-    AidPane(id: "seizure", emoji: "🧠", title: "Seizure", subtitle: "Don't restrain · time it", iconFilled: false,
-            topics: [("Seizure", "seizure")]),
-    AidPane(id: "hospitals", emoji: "🏥", title: "Nearby Hospitals", subtitle: "MapKit emergency POIs", iconFilled: false,
-            topics: [("Find Nearby Hospitals", "trauma-hospitals")]),
-]
+/// Pane chrome only — topic bodies stay in AidTopicCatalog until a topic opens.
+enum AidPaneCatalog {
+    static let panes: [AidPane] = [
+        AidPane(id: "crash", emoji: "🚗", title: "Crash & Head", subtitle: "Impact · neck · spinal", iconFilled: false,
+                topics: [("Car Crash", "car-crash"), ("Head & Pupils", "head-pupils"), ("Spinal", "spinal")]),
+        AidPane(id: "bleed", emoji: "🩸", title: "Bleeding", subtitle: "Pressure · tourniquet", iconFilled: true,
+                topics: [("Find Bleeding", "find-bleeding"), ("Bad Bleeding", "bad-bleeding"),
+                         ("Belt Tourniquet", "belt-tourniquet"), ("Gunshot / Stab", "gunshot-stab")]),
+        AidPane(id: "breathing", emoji: "🫁", title: "Not Breathing", subtitle: "CPR · airway", iconFilled: true,
+                topics: [("CPR", "cpr")]),
+        AidPane(id: "heart", emoji: "❤️", title: "Choking", subtitle: "Back blows · Heimlich", iconFilled: true,
+                topics: [("Choking", "choking")]),
+        AidPane(id: "shock", emoji: "⚡", title: "Shock", subtitle: "Pale · cold · clammy", iconFilled: false,
+                topics: [("Shock", "shock")]),
+        AidPane(id: "temp", emoji: "🌡️", title: "Burns · Cold · Heat", subtitle: "Cool · warm · cover", iconFilled: false,
+                topics: [("Burn Care", "burn-care"), ("Electrical & Chemical", "electrical-chemical-burns"),
+                         ("Cold (Hypothermia)", "cold-hypothermia"), ("Heat (Exhaustion & Stroke)", "heat-stroke")]),
+        AidPane(id: "seizure", emoji: "🧠", title: "Seizure", subtitle: "Don't restrain · time it", iconFilled: false,
+                topics: [("Seizure", "seizure")]),
+        AidPane(id: "hospitals", emoji: "🏥", title: "Nearby Hospitals", subtitle: "MapKit emergency POIs", iconFilled: false,
+                topics: [("Find Nearby Hospitals", "trauma-hospitals")]),
+    ]
+}
 
 struct AidView: View {
     @Environment(\.isScannerSession) private var isScannerSession
@@ -40,7 +43,7 @@ struct AidView: View {
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
+                LazyVStack(alignment: .leading, spacing: 12) {
                     Text("Roadside Aid")
                         .font(.system(size: 22, weight: .bold))
                         .foregroundColor(.redmedDark)
@@ -55,14 +58,14 @@ struct AidView: View {
 
                     // PANE GRID
                     LazyVGrid(columns: columns, spacing: 14) {
-                        ForEach(aidPanes) { pane in
+                        ForEach(AidPaneCatalog.panes) { pane in
                             let isOpen = openPane == pane.id
                             PaneCard(pane: pane, isOpen: isOpen) { key in
                                 if key == nil {
                                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                                         openPane = isOpen ? nil : pane.id
                                     }
-                                } else if let k = key, let topic = aidTopics[k] {
+                                } else if let k = key, let topic = AidTopicCatalog.topics[k] {
                                     activeTopic = topic
                                 }
                             }
@@ -90,6 +93,10 @@ struct AidView: View {
             }
             .sheet(item: $activeTopic) { topic in
                 TopicDetailView(topic: topic)
+            }
+            .task {
+                await Task.yield()
+                AidTopicCatalog.warmUp()
             }
         }
     }

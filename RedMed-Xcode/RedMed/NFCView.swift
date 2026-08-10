@@ -96,15 +96,22 @@ struct NFCView: View {
 
                     sectionLabel("Verify")
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Scan your band to see the same emergency card a stranger gets — no app required for them.")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.redmedMuted)
-                            .lineSpacing(3)
-                        SecondaryButton("Scan your bracelet", icon: "qrcode.viewfinder") { beginScanVerify() }
-                        if reader.isReading {
-                            Text(reader.statusMessage.isEmpty ? "Hold near tag…" : reader.statusMessage)
+                        if profile.braceletLinked {
+                            Text("Scan your band to see the same emergency card a stranger gets — no app required for them.")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(.redmedMuted)
+                                .lineSpacing(3)
+                            SecondaryButton("Scan your bracelet", icon: "qrcode.viewfinder") { beginScanVerify() }
+                            if reader.isReading {
+                                Text(reader.statusMessage.isEmpty ? "Hold near tag…" : reader.statusMessage)
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(.redmedMuted)
+                            }
+                        } else {
+                            Text("Write the band once above — then you can scan to verify the tap card.")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.redmedMuted)
+                                .lineSpacing(3)
                         }
                     }
                     .padding(14)

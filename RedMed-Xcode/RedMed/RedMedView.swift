@@ -103,20 +103,22 @@ struct RedMedView: View {
                         }
                         .buttonStyle(.plain)
 
-                        Button { showScannerPreview = true } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "eye")
-                                    .font(.system(size: 16, weight: .regular))
-                                    .foregroundColor(.redmedMuted)
-                                Text("Preview scanner")
-                                    .font(.system(size: 11, weight: .semibold))
-                                    .foregroundColor(.redmedMuted)
-                                    .kerning(-0.1)
+                        if profile.braceletLinked {
+                            Button { showScannerPreview = true } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "eye")
+                                        .font(.system(size: 16, weight: .regular))
+                                        .foregroundColor(.redmedMuted)
+                                    Text("Preview scanner")
+                                        .font(.system(size: 11, weight: .semibold))
+                                        .foregroundColor(.redmedMuted)
+                                        .kerning(-0.1)
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
                             }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.top, 42)
@@ -148,9 +150,10 @@ struct RedMedView: View {
             set: { showHelp = $0 && !isScannerSession }
         )) {
             HelpMenuView()
+                .environmentObject(profile)
         }
         .fullScreenCover(isPresented: Binding(
-            get: { showScannerPreview && !isScannerSession },
+            get: { showScannerPreview && !isScannerSession && profile.braceletLinked },
             set: { showScannerPreview = $0 && !isScannerSession }
         )) {
             PublicCardView(profile: profile)

@@ -109,7 +109,7 @@ struct EditProfileView: View {
                             placeholder: "Allergy",
                             addLabel: "Add allergy",
                             onTextChange: { id, text in
-                                refreshSuggestions(lineID: id, text: text, lines: allergies, catalog: commonAllergies)
+                                refreshSuggestions(lineID: id, text: text, lines: allergies, catalog: SuggestionCatalog.allergies)
                             }
                         )
                     }
@@ -122,7 +122,7 @@ struct EditProfileView: View {
                             placeholder: "Medication",
                             addLabel: "Add medication",
                             onTextChange: { id, text in
-                                refreshSuggestions(lineID: id, text: text, lines: medications, catalog: commonMedications)
+                                refreshSuggestions(lineID: id, text: text, lines: medications, catalog: SuggestionCatalog.medications)
                             }
                         )
                     }
@@ -135,7 +135,7 @@ struct EditProfileView: View {
                             placeholder: "Condition",
                             addLabel: "Add condition",
                             onTextChange: { id, text in
-                                refreshSuggestions(lineID: id, text: text, lines: conditions, catalog: commonConditions)
+                                refreshSuggestions(lineID: id, text: text, lines: conditions, catalog: SuggestionCatalog.conditions)
                             }
                         )
                     }
@@ -206,20 +206,20 @@ struct EditProfileView: View {
         }
     }
 
-    private func focusedLine(id: UUID) -> (text: String, lines: [DraftLine], catalog: [String])? {
+    private func focusedLine(id: UUID) -> (text: String, lines: [DraftLine], catalog: [(display: String, lower: String)])? {
         if let line = allergies.first(where: { $0.id == id }) {
-            return (line.text, allergies, commonAllergies)
+            return (line.text, allergies, SuggestionCatalog.allergies)
         }
         if let line = medications.first(where: { $0.id == id }) {
-            return (line.text, medications, commonMedications)
+            return (line.text, medications, SuggestionCatalog.medications)
         }
         if let line = conditions.first(where: { $0.id == id }) {
-            return (line.text, conditions, commonConditions)
+            return (line.text, conditions, SuggestionCatalog.conditions)
         }
         return nil
     }
 
-    private func refreshSuggestions(lineID: UUID, text: String, lines: [DraftLine], catalog: [String]) {
+    private func refreshSuggestions(lineID: UUID, text: String, lines: [DraftLine], catalog: [(display: String, lower: String)]) {
         guard case .line(lineID) = focus else {
             if !suggestionMatches.isEmpty { suggestionMatches = [] }
             return
@@ -238,12 +238,11 @@ struct EditProfileView: View {
         )
         var next: [String] = []
         next.reserveCapacity(5)
-        for suggestion in catalog {
-            let value = suggestion.lowercased()
-            if value == queryLower { continue }
-            if taken.contains(value) { continue }
-            guard value.contains(queryLower) else { continue }
-            next.append(suggestion)
+        for entry in catalog {
+            if entry.lower == queryLower { continue }
+            if taken.contains(entry.lower) { continue }
+            guard entry.lower.contains(queryLower) else { continue }
+            next.append(entry.display)
             if next.count == 5 { break }
         }
         if next != suggestionMatches { suggestionMatches = next }

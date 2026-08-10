@@ -6,11 +6,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#fff7f7">
-<link rel="apple-touch-icon" href="assets/BrandLogo.png">
-<link rel="icon" href="assets/BrandLogo.png">
+<link rel="apple-touch-icon" href="BrandLogo.png">
+<link rel="icon" href="BrandLogo.png">
 <title>RedMed</title>
-<!-- Local no-server NFC tap page. Profile data lives only in #d= — no backend.
-     Mirrored in RedMed-Xcode/RedMed/card.html (bundled; unused in UI until NFC paired).
+<!-- Local no-server NFC tap page (also at repo-root card.html for Pages deploy).
+     Profile data lives only in the URL #d= fragment — nothing is fetched from a backend.
+     Bundled for visibility; in-app UI only surfaces it after NFC pair (braceletLinked).
      Ped/EMS: RedMed + Help + Aid viewable. No Edit. No NFC write UI.
      Keep in sync with PublicCardView scanner shell. -->
 <style>
@@ -388,7 +389,7 @@
       <div class="rm-header">
         <p class="rm-lock">Read only — editing needs the owner’s RedMed app + Face&nbsp;ID / passcode.</p>
         <div class="rm-title-row">
-          <img class="rm-logo" src="assets/BrandLogo.png" width="48" height="48" alt="RedMed">
+          <img class="rm-logo" src="BrandLogo.png" width="48" height="48" alt="RedMed">
           <div>
             <h1 class="rm-name" id="name">RedMed</h1>
             <p class="rm-updated" id="updatedLine"></p>

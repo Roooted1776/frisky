@@ -43,8 +43,8 @@ enum EmergencyNumber {
     /// The number to dial and to show in copy, for this device's region.
     ///
     /// Resolved once per process, deliberately. Some callers are SwiftUI view
-    /// bodies that re-evaluate on every render; others are the `let` catalogues
-    /// in `AidTopicCatalog` and `aidPanes`, which Swift initialises lazily and
+    /// bodies that re-evaluate on every render; others are the static catalogues
+    /// in `AidTopicCatalog` and `AidPaneCatalog`, which Swift initialises lazily and
     /// exactly once. If this recomputed, changing the device region mid-session
     /// would update the first group and not the second, and a care step reading
     /// "Call 911" could sit directly above a button reading "Call 999".

@@ -25,9 +25,14 @@ class NearbyHospitalFinder: NSObject, ObservableObject, CLLocationManagerDelegat
     }
 
     func search() {
-        DispatchQueue.main.async {
+        let begin = {
             self.isLoading = true
             self.errorMessage = nil
+        }
+        if Thread.isMainThread {
+            begin()
+        } else {
+            DispatchQueue.main.async(execute: begin)
         }
         manager.requestWhenInUseAuthorization()
         manager.requestLocation()
@@ -43,7 +48,7 @@ class NearbyHospitalFinder: NSObject, ObservableObject, CLLocationManagerDelegat
 
         MKLocalSearch(request: request).start { [weak self] response, error in
             guard let self else { return }
-            DispatchQueue.main.async {
+            let apply = {
                 self.isLoading = false
                 if let error {
                     self.errorMessage = error.localizedDescription
@@ -65,13 +70,23 @@ class NearbyHospitalFinder: NSObject, ObservableObject, CLLocationManagerDelegat
                 .prefix(8)
                 .map { $0 }
             }
+            if Thread.isMainThread {
+                apply()
+            } else {
+                DispatchQueue.main.async(execute: apply)
+            }
         }
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        DispatchQueue.main.async {
+        let fail = {
             self.isLoading = false
             self.errorMessage = "Couldn't get your location. Check Location permission in Settings."
+        }
+        if Thread.isMainThread {
+            fail()
+        } else {
+            DispatchQueue.main.async(execute: fail)
         }
     }
 }
