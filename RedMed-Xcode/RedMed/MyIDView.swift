@@ -4,79 +4,64 @@ struct MyIDView: View {
     @EnvironmentObject var profile: ProfileData
     @Binding var tab: AppTab
     @State private var showEdit = false
-    @State private var showAuthFailedAlert = false
+    @State private var showHelp = false
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header — icon, name/bracelet link, Edit
-            HStack(alignment: .top, spacing: 10) {
-                Image("BrandLogo")
-                    .resizable().frame(width: 44, height: 44)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .shadow(color: Color.redmedAccent.opacity(0.15), radius: 5, y: 3)
-
-                if profile.hasData {
-                    Button { tab = .nfc } label: {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text("\(profile.name)'s iPhone")
-                                .font(.system(size: 20, weight: .bold)).foregroundColor(.redmedDark)
-                            Text(profile.braceletLinked ? "LINKED BRACELET ›" : "PAIR BLANK BRACELET ›")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundColor(Color.redmedAccent.opacity(0.85))
-                                .kerning(0.7)
-                        }
+            // Nav bar
+            ZStack {
+                HStack {
+                    Spacer()
+                    if profile.hasData == false {
+                        // No edit button shown on empty state — just logo
                     }
-                    .buttonStyle(.plain)
-                } else {
-                    Text("Set up your ID")
-                        .font(.system(size: 20, weight: .bold)).foregroundColor(.redmedDark)
                 }
-
-                Spacer()
-
-                Button("Edit") { requestEdit() }
-                    .font(.system(size: 17))
-                    .foregroundColor(.redmedAccent)
+                HStack {
+                    Image("wordmark")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 32)
+                    Spacer()
+                    Button("Edit") { showEdit = true }
+                        .font(.system(size: 17))
+                        .foregroundColor(.redmedAccent)
+                }
+                .padding(.horizontal, 14)
             }
-            .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 12)
+            .frame(height: 54)
+            .background(Color.white.opacity(0.9))
+            .overlay(alignment: .bottom) { Divider().overlay(Color.redmedDark.opacity(0.08)) }
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
+                    // Header
                     if !profile.hasData {
                         HStack(spacing: 0) {
                             Text("Tap ").font(.system(size: 14, weight: .medium)).foregroundColor(.redmedMuted)
                             Text("Edit").font(.system(size: 14, weight: .bold)).foregroundColor(.redmedAccent)
-                            Text(" to add your name, then pair a blank bracelet.")
+                            Text(" to add your name and set up your bracelet.")
                                 .font(.system(size: 14, weight: .medium)).foregroundColor(.redmedMuted)
                         }
-                        .padding(.horizontal, 20).padding(.bottom, 8)
-                    } else if !profile.braceletLinked {
+                        .padding(.horizontal, 20).padding(.top, 10).padding(.bottom, 8)
+                    } else {
                         Button { tab = .nfc } label: {
                             HStack(spacing: 10) {
-                                Image(systemName: "wave.3.right")
-                                    .font(.system(size: 16, weight: .bold))
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Pair your blank bracelet")
-                                        .font(.system(size: 14, weight: .bold))
-                                    Text("RedMed → NFC → Write to NFC tag")
-                                        .font(.system(size: 12, weight: .medium))
-                                        .opacity(0.85)
+                                Image("BrandLogo")
+                                    .resizable().frame(width: 48, height: 48)
+                                    .clipShape(RoundedRectangle(cornerRadius: 13))
+                                    .shadow(color: Color.redmedAccent.opacity(0.15), radius: 5, y: 3)
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text("\(profile.name)'s iPhone")
+                                        .font(.system(size: 22, weight: .bold)).foregroundColor(.redmedDark)
+                                    Text("LINKED BRACELET ›")
+                                        .font(.system(size: 10, weight: .bold))
+                                        .foregroundColor(Color.redmedAccent.opacity(0.85))
+                                        .kerning(0.7)
                                 }
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 13, weight: .semibold))
                             }
-                            .foregroundColor(.white)
-                            .padding(14)
-                            .background(
-                                LinearGradient(colors: [Color(red:1, green:0.447, blue:0.537), .redmedAccent],
-                                               startPoint: .top, endPoint: .bottom)
-                            )
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                            .padding(.horizontal, 20).padding(.vertical, 10)
                         }
                         .buttonStyle(.plain)
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 12)
                     }
 
                     // YOU
@@ -115,31 +100,37 @@ struct MyIDView: View {
                         }
                     }
 
-                    Spacer(minLength: 24)
+                    // QUICK ACTIONS
+                    HStack(spacing: 0) {
+                        Button { tab = .nfc } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "wave.3.right.circle").font(.system(size: 18)).foregroundColor(.redmedAccent)
+                                Text("Bracelet").font(.system(size: 12, weight: .semibold)).foregroundColor(.redmedAccent)
+                            }.padding(.horizontal, 10).padding(.vertical, 6)
+                        }
+                        .buttonStyle(.plain)
+                        Divider().frame(height: 28)
+                        Button { showHelp = true } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "questionmark.circle").font(.system(size: 18)).foregroundColor(.redmedMuted)
+                                Text("How it works").font(.system(size: 12, weight: .semibold)).foregroundColor(.redmedMuted)
+                            }.padding(.horizontal, 10).padding(.vertical, 6)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 14).padding(.bottom, 4)
+
+                    Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
+                        .font(.system(size: 13)).italic().foregroundColor(.redmedDark)
+                        .multilineTextAlignment(.center).lineSpacing(4)
+                        .padding(.horizontal, 20).padding(.top, 33).padding(.bottom, 16)
                 }
             }
             .background(Color.redmedBg)
         }
         .fullScreenCover(isPresented: $showEdit) { EditProfileView().environmentObject(profile) }
-        .alert("Authentication Failed", isPresented: $showAuthFailedAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Face ID or passcode is required to edit your medical profile.")
-        }
-    }
-
-    private func requestEdit() {
-        guard profile.hasData else {
-            showEdit = true
-            return
-        }
-        BiometricAuth.authenticate(reason: "Authenticate to edit your medical profile.") { success in
-            if success {
-                showEdit = true
-            } else {
-                showAuthFailedAlert = true
-            }
-        }
+        .sheet(isPresented: $showHelp) { HelpMenuView() }
     }
 
     @ViewBuilder

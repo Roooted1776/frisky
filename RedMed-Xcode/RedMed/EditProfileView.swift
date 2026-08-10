@@ -14,7 +14,6 @@ struct EditProfileView: View {
     @State private var conditions: [String] = []
     @State private var conditionFocusIndex: Int? = nil
     @State private var contacts: [EmergencyContact] = []
-    @State private var showWritePrompt = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -54,13 +53,13 @@ struct EditProfileView: View {
                     // ALLERGIES
                     editSectionLabel("Allergies")
                     editCard {
-                        ForEach(allergies.indices, id: \.self) { i in
+                        ForEach($allergies.indices, id: \.self) { i in
                             VStack(alignment: .leading, spacing: 0) {
                                 HStack {
                                     TextField("Allergy", text: $allergies[i])
                                         .font(.system(size: 15))
                                         .foregroundColor(.redmedDark)
-                                        .onChange(of: allergies[i]) { _, _ in allergyFocusIndex = i }
+                                        .onChange(of: allergies[i]) { allergyFocusIndex = i }
                                     Spacer()
                                     Button { withAnimation { _ = allergies.remove(at: i) } } label: {
                                         Text("✕").font(.system(size: 18)).foregroundColor(.redmedAccent)
@@ -99,13 +98,13 @@ struct EditProfileView: View {
                     // MEDICATIONS
                     editSectionLabel("Medications")
                     editCard {
-                        ForEach(medications.indices, id: \.self) { i in
+                        ForEach($medications.indices, id: \.self) { i in
                             VStack(alignment: .leading, spacing: 0) {
                                 HStack {
                                     TextField("Medication", text: $medications[i])
                                         .font(.system(size: 15))
                                         .foregroundColor(.redmedDark)
-                                        .onChange(of: medications[i]) { _, _ in medFocusIndex = i }
+                                        .onChange(of: medications[i]) { medFocusIndex = i }
                                     Spacer()
                                     Button { withAnimation { _ = medications.remove(at: i) } } label: {
                                         Text("✕").font(.system(size: 18)).foregroundColor(.redmedAccent)
@@ -144,13 +143,13 @@ struct EditProfileView: View {
                     // CONDITIONS
                     editSectionLabel("Conditions")
                     editCard {
-                        ForEach(conditions.indices, id: \.self) { i in
+                        ForEach($conditions.indices, id: \.self) { i in
                             VStack(alignment: .leading, spacing: 0) {
                                 HStack {
                                     TextField("Condition", text: $conditions[i])
                                         .font(.system(size: 15))
                                         .foregroundColor(.redmedDark)
-                                        .onChange(of: conditions[i]) { _, _ in conditionFocusIndex = i }
+                                        .onChange(of: conditions[i]) { conditionFocusIndex = i }
                                     Spacer()
                                     Button { withAnimation { _ = conditions.remove(at: i) } } label: {
                                         Text("✕").font(.system(size: 18)).foregroundColor(.redmedAccent)
@@ -221,17 +220,6 @@ struct EditProfileView: View {
             .background(Color(red: 0.949, green: 0.949, blue: 0.969))
         }
         .onAppear { loadDraft() }
-        .alert("Write to bracelet?", isPresented: $showWritePrompt) {
-            Button("Write now") {
-                profile.requestBraceletWrite()
-                dismiss()
-            }
-            Button("Later", role: .cancel) { dismiss() }
-        } message: {
-            Text(profile.braceletLinked
-                  ? "Your RedMed profile changed. Rewrite the band so strangers see the update."
-                  : "Your band ships blank. Hold your iPhone to the bracelet to pair it with this profile.")
-        }
     }
 
     // MARK: - Helpers
@@ -295,19 +283,13 @@ struct EditProfileView: View {
     }
 
     private func save() {
-        profile.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        profile.name = name
         profile.birthDate = birthDate
         profile.bloodType = bloodType
         profile.allergies = allergies.filter { !$0.isEmpty }
         profile.medications = medications.filter { !$0.isEmpty }
         profile.conditions = conditions.filter { !$0.isEmpty }
         profile.contacts = contacts.filter { !$0.name.isEmpty }
-        profile.touchUpdated()
-        profile.persist()
-        if profile.hasData {
-            showWritePrompt = true
-        } else {
-            dismiss()
-        }
+        dismiss()
     }
 }

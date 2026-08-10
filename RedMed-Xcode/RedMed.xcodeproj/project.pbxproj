@@ -20,21 +20,12 @@
 		AABB0000000000000000000B /* HelpMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000000E /* HelpMenuView.swift */; };
 		AABB0000000000000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000000C /* Assets.xcassets */; };
 		AABB00000000000000000010 /* NearbyHospitals.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000010 /* NearbyHospitals.swift */; };
-		AABB00000000000000000011 /* LocationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000011 /* LocationHelper.swift */; };
-		AABB00000000000000000012 /* MedicationData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000012 /* MedicationData.swift */; };
-		AABB00000000000000000013 /* PublicCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000013 /* PublicCardView.swift */; };
-		AABB00000000000000000014 /* BiometricAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000014 /* BiometricAuth.swift */; };
-		AABB00000000000000000015 /* CardPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000015 /* CardPayload.swift */; };
-		AABB00000000000000000016 /* NFCManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000016 /* NFCManager.swift */; };
-		AABB00000000000000000017 /* PrivacyPolicy.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000017 /* PrivacyPolicy.html */; };
-		AABB00000000000000000018 /* TOS.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000018 /* TOS.html */; };
-		AABB00000000000000000019 /* security.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000019 /* security.html */; };
-		AABB0000000000000000001A /* HowItWorks.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001A /* HowItWorks.html */; };
-		AABB0000000000000000001B /* legal-doc.css in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001B /* legal-doc.css */; };
+		AABB00000000000000000011 /* MedicationData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000011 /* MedicationData.swift */; };
+		AABB00000000000000000012 /* PublicCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000012 /* PublicCardView.swift */; };
+		AABB00000000000000000013 /* LocationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000013 /* LocationHelper.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		AAAA0000000000000000000D /* RedMed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RedMed.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AAAA00000000000000000001 /* RedMedApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedMedApp.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000003 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
@@ -47,20 +38,13 @@
 		AAAA0000000000000000000A /* NFCView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFCView.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000000B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AAAA0000000000000000000C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AAAA0000000000000000000D /* RedMed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RedMed.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AAAA0000000000000000000E /* HelpMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpMenuView.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000000F /* RedMed.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RedMed.entitlements; sourceTree = "<group>"; };
 		AAAA00000000000000000010 /* NearbyHospitals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyHospitals.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000011 /* LocationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationHelper.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000012 /* MedicationData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationData.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000013 /* PublicCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicCardView.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000014 /* BiometricAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuth.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000015 /* CardPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardPayload.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000016 /* NFCManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFCManager.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000017 /* PrivacyPolicy.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = PrivacyPolicy.html; sourceTree = "<group>"; };
-		AAAA00000000000000000018 /* TOS.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = TOS.html; sourceTree = "<group>"; };
-		AAAA00000000000000000019 /* security.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = security.html; sourceTree = "<group>"; };
-		AAAA0000000000000000001A /* HowItWorks.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = HowItWorks.html; sourceTree = "<group>"; };
-		AAAA0000000000000000001B /* legal-doc.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = "legal-doc.css"; sourceTree = "<group>"; };
+		AAAA00000000000000000011 /* MedicationData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationData.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000012 /* PublicCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicCardView.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000013 /* LocationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationHelper.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -74,6 +58,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		AAAA000000000000000000AA = {
+			isa = PBXGroup;
+			children = (
+				AAAA000000000000000000BB /* RedMed */,
+				AAAA000000000000000000CC /* Products */,
+			);
+			sourceTree = "<group>";
+		};
 		AAAA000000000000000000BB /* RedMed */ = {
 			isa = PBXGroup;
 			children = (
@@ -86,33 +78,17 @@
 				AAAA00000000000000000007 /* EmergencyView.swift */,
 				AAAA00000000000000000008 /* AidView.swift */,
 				AAAA00000000000000000009 /* TopicDetailView.swift */,
+				AAAA00000000000000000010 /* NearbyHospitals.swift */,
+				AAAA00000000000000000011 /* MedicationData.swift */,
+				AAAA00000000000000000012 /* PublicCardView.swift */,
+				AAAA00000000000000000013 /* LocationHelper.swift */,
 				AAAA0000000000000000000A /* NFCView.swift */,
 				AAAA0000000000000000000E /* HelpMenuView.swift */,
-				AAAA00000000000000000010 /* NearbyHospitals.swift */,
-				AAAA00000000000000000011 /* LocationHelper.swift */,
-				AAAA00000000000000000012 /* MedicationData.swift */,
-				AAAA00000000000000000013 /* PublicCardView.swift */,
-				AAAA00000000000000000014 /* BiometricAuth.swift */,
-				AAAA00000000000000000015 /* CardPayload.swift */,
-				AAAA00000000000000000016 /* NFCManager.swift */,
-				AAAA00000000000000000017 /* PrivacyPolicy.html */,
-				AAAA00000000000000000018 /* TOS.html */,
-				AAAA00000000000000000019 /* security.html */,
-				AAAA0000000000000000001A /* HowItWorks.html */,
-				AAAA0000000000000000001B /* legal-doc.css */,
 				AAAA0000000000000000000C /* Assets.xcassets */,
 				AAAA0000000000000000000B /* Info.plist */,
 				AAAA0000000000000000000F /* RedMed.entitlements */,
 			);
 			path = RedMed;
-			sourceTree = "<group>";
-		};
-		AAAA000000000000000000AA /* RedMed */ = {
-			isa = PBXGroup;
-			children = (
-				AAAA000000000000000000BB /* RedMed */,
-				AAAA000000000000000000CC /* Products */,
-			);
 			sourceTree = "<group>";
 		};
 		AAAA000000000000000000CC /* Products */ = {
@@ -182,11 +158,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				AABB0000000000000000000C /* Assets.xcassets in Resources */,
-				AABB00000000000000000017 /* PrivacyPolicy.html in Resources */,
-				AABB00000000000000000018 /* TOS.html in Resources */,
-				AABB00000000000000000019 /* security.html in Resources */,
-				AABB0000000000000000001A /* HowItWorks.html in Resources */,
-				AABB0000000000000000001B /* legal-doc.css in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -206,15 +177,12 @@
 				AABB00000000000000000007 /* EmergencyView.swift in Sources */,
 				AABB00000000000000000008 /* AidView.swift in Sources */,
 				AABB00000000000000000009 /* TopicDetailView.swift in Sources */,
+				AABB00000000000000000010 /* NearbyHospitals.swift in Sources */,
+				AABB00000000000000000011 /* MedicationData.swift in Sources */,
+				AABB00000000000000000012 /* PublicCardView.swift in Sources */,
+				AABB00000000000000000013 /* LocationHelper.swift in Sources */,
 				AABB0000000000000000000A /* NFCView.swift in Sources */,
 				AABB0000000000000000000B /* HelpMenuView.swift in Sources */,
-				AABB00000000000000000010 /* NearbyHospitals.swift in Sources */,
-				AABB00000000000000000011 /* LocationHelper.swift in Sources */,
-				AABB00000000000000000012 /* MedicationData.swift in Sources */,
-				AABB00000000000000000013 /* PublicCardView.swift in Sources */,
-				AABB00000000000000000014 /* BiometricAuth.swift in Sources */,
-				AABB00000000000000000015 /* CardPayload.swift in Sources */,
-				AABB00000000000000000016 /* NFCManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -317,6 +285,7 @@
 				CODE_SIGN_ENTITLEMENTS = RedMed/RedMed.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 33F9FQ4VBU;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = RedMed/Info.plist;
@@ -342,6 +311,7 @@
 				CODE_SIGN_ENTITLEMENTS = RedMed/RedMed.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 33F9FQ4VBU;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = RedMed/Info.plist;

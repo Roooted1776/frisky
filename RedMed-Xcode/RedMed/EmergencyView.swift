@@ -1,11 +1,9 @@
 import SwiftUI
 import CoreLocation
-import MapKit
 
 struct EmergencyView: View {
     @EnvironmentObject var profile: ProfileData
-    @EnvironmentObject var emergencyLocation: EmergencyLocationService
-    @StateObject private var hospitalFinder = NearbyHospitalFinder()
+    @StateObject private var locationManager = LocationManager()
     @State private var showSatellite = false
     @State private var showPublicCard = false
 
@@ -50,12 +48,12 @@ struct EmergencyView: View {
                         .padding(.bottom, 4)
 
                     // GPS CARD
-                    GPSCard(location: emergencyLocation.location)
+                    GPSCard(location: locationManager.location)
                         .padding(.vertical, 4)
 
                     // COPY COORDINATES
                     Button {
-                        if let loc = emergencyLocation.location {
+                        if let loc = locationManager.location {
                             UIPasteboard.general.string = "\(loc.coordinate.latitude), \(loc.coordinate.longitude)"
                         }
                     } label: {
@@ -96,9 +94,6 @@ struct EmergencyView: View {
                     // COMMON TRAUMA GRID
                     CommonTraumaGrid()
 
-                    // NEARBY TRAUMA HOSPITALS
-                    NearbyHospitalsCard(finder: hospitalFinder, location: emergencyLocation.location)
-
                     // NO CELL SIGNAL
                     NoCellSignalCard(showSatellite: $showSatellite)
 
@@ -122,12 +117,7 @@ struct EmergencyView: View {
                     Text("Find 911").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedDark)
                 }
             }
-            .onAppear { hospitalFinder.search(near: emergencyLocation.location) }
-            .onChange(of: emergencyLocation.location) { _, loc in
-                if loc != nil, hospitalFinder.hospitals.isEmpty, !hospitalFinder.isLoading {
-                    hospitalFinder.search(near: loc)
-                }
-            }
+            .onAppear { locationManager.start() }
             .sheet(isPresented: $showPublicCard) { PublicCardView(profile: profile) }
         }
     }
@@ -262,81 +252,6 @@ struct CommonTraumaGrid: View {
     }
 }
 
-// MARK: - Nearby Trauma Hospitals
-struct NearbyHospitalsCard: View {
-    @ObservedObject var finder: NearbyHospitalFinder
-    let location: CLLocation?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
-                Image(systemName: "cross.case.fill")
-                    .font(.system(size: 15))
-                    .foregroundColor(.white)
-                    .frame(width: 28, height: 28)
-                    .background(Color.redmedAccent)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                Text("Nearby Trauma Hospitals")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.redmedDark)
-            }
-
-            if finder.isLoading {
-                HStack(spacing: 8) {
-                    ProgressView()
-                    Text("Finding hospitals near you…")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
-            } else if let err = finder.errorMessage {
-                Text(err)
-                    .font(.system(size: 11))
-                    .foregroundColor(.redmedMuted)
-                SecondaryButton("Try again") { finder.search(near: location) }
-            } else if finder.hospitals.isEmpty {
-                PrimaryButton(title: "Find hospitals near me") { finder.search(near: location) }
-            } else {
-                VStack(spacing: 0) {
-                    ForEach(Array(finder.hospitals.enumerated()), id: \.offset) { i, hosp in
-                        Button {
-                            hosp.mapItem.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
-                        } label: {
-                            HStack(alignment: .top, spacing: 10) {
-                                Text("\(i + 1)")
-                                    .font(.system(size: 12, weight: .bold))
-                                    .foregroundColor(.redmedAccent)
-                                    .frame(width: 16, alignment: .leading)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(hosp.name)
-                                        .font(.system(size: 12, weight: .semibold))
-                                        .foregroundColor(.redmedDark)
-                                    Text(hosp.address.isEmpty ? String(format: "%.1f mi away", hosp.distanceMiles) : "\(hosp.address) · \(String(format: "%.1f", hosp.distanceMiles)) mi")
-                                        .font(.system(size: 10, weight: .medium))
-                                        .foregroundColor(.redmedMuted)
-                                }
-                                Spacer()
-                                Image(systemName: "arrow.triangle.turn.up.right.circle.fill")
-                                    .font(.system(size: 15))
-                                    .foregroundColor(.redmedAccent)
-                            }
-                            .padding(.vertical, 8)
-                        }
-                        .buttonStyle(.plain)
-                        if i < finder.hospitals.count - 1 { Divider() }
-                    }
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(Color.redmedSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
-    }
-}
-
 // MARK: - No Cell Signal
 struct NoCellSignalCard: View {
     @Binding var showSatellite: Bool
@@ -379,3 +294,23 @@ struct NoCellSignalCard: View {
     }
 }
 
+// MARK: - Location Manager
+class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
+    private let manager = CLLocationManager()
+    @Published var location: CLLocation?
+
+    override init() {
+        super.init()
+        manager.delegate = self
+        manager.desiredAccuracy = kCLLocationAccuracyBest
+    }
+
+    func start() {
+        manager.requestWhenInUseAuthorization()
+        manager.startUpdatingLocation()
+    }
+
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        location = locations.last
+    }
+}
