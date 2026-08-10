@@ -8,9 +8,10 @@ struct ContentView: View {
         ZStack(alignment: .bottom) {
             Group {
                 switch tab {
-                case .myid:      MyIDView()
+                case .myid:      MyIDView(tab: $tab)
                 case .emergency: EmergencyView()
                 case .aid:       AidView()
+                case .nfc:       NFCView()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -32,6 +33,7 @@ struct CustomTabBar: View {
                 TabBarItem(icon: "person.fill",  label: "RedMed", isOn: tab == .myid)      { tab = .myid }
                 TabBarItem(icon: "phone.fill",   label: "911",    isOn: tab == .emergency)  { tab = .emergency }
                 TabBarItem(icon: "cross.case.fill", label: "Aid", isOn: tab == .aid)        { tab = .aid }
+                TabBarItem(icon: "wave.3.right", label: "NFC",    isOn: tab == .nfc)        { tab = .nfc }
             }
             .padding(.top, 2)
 
