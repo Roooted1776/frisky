@@ -190,13 +190,15 @@ struct MyIDView: View {
     // MARK: - Edit gate
 
     private func requestEdit() {
-        // Gate on any saved medical fields — not just name — so clearing the
-        // name cannot bypass Face ID while allergies/meds/etc. remain.
-        guard profile.hasSensitiveProfileData else {
+        // Always require Apple biometrics/passcode once any medical fields or a
+        // linked bracelet exist — scanners have no edit path at all.
+        guard profile.hasSensitiveProfileData || profile.braceletLinked else {
             showEdit = true
             return
         }
-        BiometricAuth.authenticate(reason: "Authenticate to edit your medical profile.") { success in
+        BiometricAuth.authenticate(
+            reason: "Unlock with Face ID, Touch ID, or passcode to edit your medical ID in RedMed."
+        ) { success in
             if success {
                 showEdit = true
             } else {

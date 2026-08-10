@@ -18,6 +18,8 @@ struct PublicCardView: View {
                 LazyVStack(alignment: .leading, spacing: 12) {
                     banner
 
+                    readOnlyLock
+
                     // --- 911 first (instant) ---
                     PrimaryButton(title: "Call 911") {
                         if let url = URL(string: "telprompt:911") { UIApplication.shared.open(url) }
@@ -75,7 +77,7 @@ struct PublicCardView: View {
                         }
                     }
 
-                    Text("Scanner view — medical ID, 911, and roadside aid only. NFC setup is hidden.")
+                    Text("Scanner view — medical ID, 911, and roadside aid only. NFC setup is hidden. This card cannot be edited here.")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
@@ -114,6 +116,32 @@ struct PublicCardView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.redmedAccent.opacity(0.1))
         .clipShape(RoundedRectangle(cornerRadius: 14))
+    }
+
+    /// Scanners cannot alter the band or profile from this surface.
+    private var readOnlyLock: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "lock.fill")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.redmedDark)
+                .padding(.top, 2)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Read only")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(.redmedDark)
+                Text("You can’t edit this medical ID from a scan. Changes require the owner’s RedMed app unlocked with Face ID, Touch ID, or device passcode.")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.redmedMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.redmedDivider, lineWidth: 1))
+        .accessibilityElement(children: .combine)
+        .allowsHitTesting(false)
     }
 
     private var identityBlock: some View {

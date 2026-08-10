@@ -45,6 +45,8 @@ struct ScannedCardView: View {
                     header
 
                     VStack(alignment: .leading, spacing: layout.s(18)) {
+                        readOnlyLock
+
                         Call911Button()
 
                         if !profile.allergies.isEmpty {
@@ -106,7 +108,7 @@ struct ScannedCardView: View {
                                 .foregroundStyle(AppTheme.ink)
                         }
 
-                        Text("Scanner view: medical ID, 911, and roadside aid. NFC setup is not shown. Nothing saved to this phone.")
+                        Text("Scanner view: medical ID, 911, and roadside aid. NFC setup is not shown. Read only — nothing saved or editable on this phone.")
                             .font(.caption.weight(.medium))
                             .foregroundStyle(AppTheme.muted)
                             .fixedSize(horizontal: false, vertical: true)
@@ -191,6 +193,29 @@ struct ScannedCardView: View {
                 endPoint: .bottomTrailing
             )
         )
+    }
+
+    private var readOnlyLock: some View {
+        HStack(alignment: .top, spacing: layout.spaceMD) {
+            Image(systemName: "lock.fill")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(AppTheme.ink)
+                .padding(.top, 2)
+            VStack(alignment: .leading, spacing: layout.spaceXS) {
+                Text("Read only")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(AppTheme.ink)
+                Text("You can’t edit this medical ID from a scan. Changes require the owner’s RedMed app unlocked with Face ID, Touch ID, or device passcode.")
+                    .font(layout.captionFont(weight: .medium))
+                    .foregroundStyle(AppTheme.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(layout.s(14))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .appCard(elevated: false)
+        .allowsHitTesting(false)
+        .accessibilityElement(children: .combine)
     }
 
     private var gpsBlock: some View {
