@@ -17,13 +17,6 @@ struct EditProfileView: View {
     @State private var contacts: [EmergencyContact] = []
     @State private var showAuthFailedAlert = false
 
-    /// Matches for the focused allergy/med/condition row. Shown in a bottom
-    /// strip (HTML datalist-style) so rows never grow/shrink while typing.
-    @State private var suggestionMatches: [String] = []
-
-    /// One focus domain for the whole sheet.
-    @FocusState private var focus: EditFocus?
-
     private static let bloodTypeChoices = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
 
     private static let birthDateFormatter: DateFormatter = {
@@ -94,7 +87,11 @@ struct EditProfileView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     editSectionLabel("You")
                     editCard {
-                        nameRow
+                        youRow(label: "Name") {
+                            TextField("Full name", text: $name)
+                                .font(.system(size: 15))
+                                .foregroundColor(.redmedDark)
+                        }
                         Divider().padding(.leading, 106)
                         birthDateRow
                         Divider().padding(.leading, 106)
@@ -103,41 +100,17 @@ struct EditProfileView: View {
 
                     editSectionLabel("Allergies")
                     editCard {
-                        DraftLinesEditor(
-                            lines: $allergies,
-                            focus: $focus,
-                            placeholder: "Allergy",
-                            addLabel: "Add allergy",
-                            onTextChange: { id, text in
-                                refreshSuggestions(lineID: id, text: text, lines: allergies, catalog: SuggestionCatalog.allergies)
-                            }
-                        )
+                        DraftLinesEditor(lines: $allergies, placeholder: "Allergy", addLabel: "Add allergy")
                     }
 
                     editSectionLabel("Medications")
                     editCard {
-                        DraftLinesEditor(
-                            lines: $medications,
-                            focus: $focus,
-                            placeholder: "Medication",
-                            addLabel: "Add medication",
-                            onTextChange: { id, text in
-                                refreshSuggestions(lineID: id, text: text, lines: medications, catalog: SuggestionCatalog.medications)
-                            }
-                        )
+                        DraftLinesEditor(lines: $medications, placeholder: "Medication", addLabel: "Add medication")
                     }
 
                     editSectionLabel("Conditions")
                     editCard {
-                        DraftLinesEditor(
-                            lines: $conditions,
-                            focus: $focus,
-                            placeholder: "Condition",
-                            addLabel: "Add condition",
-                            onTextChange: { id, text in
-                                refreshSuggestions(lineID: id, text: text, lines: conditions, catalog: SuggestionCatalog.conditions)
-                            }
-                        )
+                        DraftLinesEditor(lines: $conditions, placeholder: "Condition", addLabel: "Add condition")
                     }
 
                     editSectionLabel("Emergency Contacts")
@@ -151,22 +124,8 @@ struct EditProfileView: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .background(Color(red: 0.949, green: 0.949, blue: 0.969))
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                suggestionStrip
-            }
         }
         .onAppear { loadDraft() }
-        .onChange(of: focus) { _, newFocus in
-            guard case .line(let id) = newFocus else {
-                if !suggestionMatches.isEmpty { suggestionMatches = [] }
-                return
-            }
-            if let hit = focusedLine(id: id) {
-                refreshSuggestions(lineID: id, text: hit.text, lines: hit.lines, catalog: hit.catalog)
-            } else if !suggestionMatches.isEmpty {
-                suggestionMatches = []
-            }
-        }
         .alert("Authentication Failed", isPresented: $showAuthFailedAlert) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -174,105 +133,16 @@ struct EditProfileView: View {
         }
     }
 
-    // MARK: - Suggestion strip (HTML datalist equivalent)
-
-    @ViewBuilder
-    private var suggestionStrip: some View {
-        if !suggestionMatches.isEmpty {
-            VStack(spacing: 0) {
-                Divider().overlay(Color.black.opacity(0.12))
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(suggestionMatches, id: \.self) { suggestion in
-                            Button {
-                                applySuggestion(suggestion)
-                            } label: {
-                                Text(suggestion)
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.redmedDark)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
-                                    .background(Color.redmedAccent.opacity(0.10))
-                                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                }
-                .background(Color(red: 0.949, green: 0.949, blue: 0.969))
-            }
-        }
-    }
-
-    private func focusedLine(id: UUID) -> (text: String, lines: [DraftLine], catalog: [(display: String, lower: String)])? {
-        if let line = allergies.first(where: { $0.id == id }) {
-            return (line.text, allergies, SuggestionCatalog.allergies)
-        }
-        if let line = medications.first(where: { $0.id == id }) {
-            return (line.text, medications, SuggestionCatalog.medications)
-        }
-        if let line = conditions.first(where: { $0.id == id }) {
-            return (line.text, conditions, SuggestionCatalog.conditions)
-        }
-        return nil
-    }
-
-    private func refreshSuggestions(lineID: UUID, text: String, lines: [DraftLine], catalog: [(display: String, lower: String)]) {
-        guard case .line(lineID) = focus else {
-            if !suggestionMatches.isEmpty { suggestionMatches = [] }
-            return
-        }
-        let query = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else {
-            if !suggestionMatches.isEmpty { suggestionMatches = [] }
-            return
-        }
-        let queryLower = query.lowercased()
-        let taken = Set(
-            lines.lazy
-                .filter { $0.id != lineID }
-                .map { $0.text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
-                .filter { !$0.isEmpty }
-        )
-        var next: [String] = []
-        next.reserveCapacity(5)
-        for entry in catalog {
-            if entry.lower == queryLower { continue }
-            if taken.contains(entry.lower) { continue }
-            guard entry.lower.contains(queryLower) else { continue }
-            next.append(entry.display)
-            if next.count == 5 { break }
-        }
-        if next != suggestionMatches { suggestionMatches = next }
-    }
-
-    private func applySuggestion(_ suggestion: String) {
-        guard case .line(let id) = focus else { return }
-        if let i = allergies.firstIndex(where: { $0.id == id }) {
-            allergies[i].text = suggestion
-        } else if let i = medications.firstIndex(where: { $0.id == id }) {
-            medications[i].text = suggestion
-        } else if let i = conditions.firstIndex(where: { $0.id == id }) {
-            conditions[i].text = suggestion
-        }
-        suggestionMatches = []
-    }
-
     // MARK: - You
 
-    private var nameRow: some View {
+    private func youRow<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {
         HStack(spacing: 0) {
-            Text("Name")
+            Text(label)
                 .font(.system(size: 15, weight: .medium))
                 .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
                 .frame(width: 90, alignment: .leading)
                 .padding(.trailing, 12)
-            TextField("Full name", text: $name)
-                .font(.system(size: 15))
-                .foregroundColor(.redmedDark)
-                .focused($focus, equals: .name)
+            content()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 13)
@@ -310,7 +180,6 @@ struct EditProfileView: View {
                 .accessibilityLabel("Clear birth date")
             } else {
                 Button {
-                    focus = nil
                     birthDate = Self.birthDateFormatter.string(from: Self.defaultBirthDate)
                 } label: {
                     Text("Select date")
@@ -360,7 +229,7 @@ struct EditProfileView: View {
         .padding(.vertical, 13)
     }
 
-    // MARK: - Contacts (Main.dc.html padding 13/16)
+    // MARK: - Contacts
 
     @ViewBuilder
     private var contactsEditor: some View {
@@ -370,22 +239,14 @@ struct EditProfileView: View {
                     TextField("Name", text: $contact.name)
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(.redmedDark)
-                        .focused($focus, equals: .contactName(contact.id))
                     TextField("Relationship · phone", text: $contact.detail)
                         .font(.system(size: 13))
                         .foregroundColor(.redmedMuted)
-                        .focused($focus, equals: .contactDetail(contact.id))
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 Button {
                     let id = contact.id
-                    switch focus {
-                    case .contactName(id), .contactDetail(id):
-                        focus = nil
-                    default:
-                        break
-                    }
                     contacts.removeAll { $0.id == id }
                 } label: {
                     Text("✕")
@@ -402,7 +263,6 @@ struct EditProfileView: View {
         }
 
         Button {
-            focus = nil
             contacts.append(EmergencyContact(name: "", detail: ""))
         } label: {
             HStack(spacing: 8) {
@@ -502,15 +362,6 @@ struct EditProfileView: View {
     }
 }
 
-// MARK: - Focus
-
-private enum EditFocus: Hashable {
-    case name
-    case line(UUID)
-    case contactName(UUID)
-    case contactDetail(UUID)
-}
-
 // MARK: - Draft lines
 
 struct DraftLine: Identifiable, Equatable {
@@ -523,14 +374,12 @@ struct DraftLine: Identifiable, Equatable {
     }
 }
 
-/// Main.dc.html row: padding 13/16, input + ✕. No inline suggestion panel —
-/// autocomplete lives in the sheet bottom strip so the ScrollView stays stable.
+/// Main.dc.html rows: padding 13/16, TextField + ✕. No FocusState, no autocomplete
+/// UI — those were hanging the sheet when moving between sections / typing.
 private struct DraftLinesEditor: View {
     @Binding var lines: [DraftLine]
-    var focus: FocusState<EditFocus?>.Binding
     let placeholder: String
     let addLabel: String
-    let onTextChange: (_ id: UUID, _ text: String) -> Void
 
     var body: some View {
         ForEach($lines) { $line in
@@ -538,13 +387,8 @@ private struct DraftLinesEditor: View {
                 TextField(placeholder, text: $line.text)
                     .font(.system(size: 15))
                     .foregroundColor(.redmedDark)
-                    .focused(focus, equals: .line(line.id))
-                    .onChange(of: line.text) { _, newValue in
-                        onTextChange(line.id, newValue)
-                    }
                 Button {
                     let id = line.id
-                    if focus.wrappedValue == .line(id) { focus.wrappedValue = nil }
                     lines.removeAll { $0.id == id }
                 } label: {
                     Text("✕")
@@ -561,7 +405,6 @@ private struct DraftLinesEditor: View {
         }
 
         Button {
-            focus.wrappedValue = nil
             lines.append(DraftLine())
         } label: {
             HStack(spacing: 8) {
