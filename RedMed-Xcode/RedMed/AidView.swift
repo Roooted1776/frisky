@@ -31,6 +31,7 @@ let aidPanes: [AidPane] = [
 ]
 
 struct AidView: View {
+    @Environment(\.isScannerSession) private var isScannerSession
     @State private var openPane: String? = nil
     @State private var activeTopic: AidTopic? = nil
 
@@ -80,6 +81,11 @@ struct AidView: View {
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Roadside Aid").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedDark)
+                }
+                if isScannerSession {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        ScannerCloseButton()
+                    }
                 }
             }
             .sheet(item: $activeTopic) { topic in

@@ -2,6 +2,7 @@ import SwiftUI
 import CoreLocation
 
 struct EmergencyView: View {
+    @Environment(\.isScannerSession) private var isScannerSession
     @StateObject private var locationManager = LocationManager()
     @State private var showSatellite = false
 
@@ -74,6 +75,11 @@ struct EmergencyView: View {
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Find Help").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedDark)
+                }
+                if isScannerSession {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        ScannerCloseButton()
+                    }
                 }
             }
             .task {

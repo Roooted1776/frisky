@@ -3,7 +3,6 @@ import SwiftUI
 struct RedMedView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
-    @Environment(\.scannerDismiss) private var scannerDismiss
     @Binding var tab: AppTab
     @State private var showEdit = false
     /// When true, Edit opened without Face ID (empty RedMed profile) — Save must authenticate.
@@ -239,13 +238,8 @@ struct RedMedView: View {
             .padding(.trailing, 56)
 
             if isScannerSession {
-                if let scannerDismiss {
-                    Button("Close") { scannerDismiss() }
-                        .font(.system(size: 17, weight: .regular))
-                        .foregroundColor(.redmedMuted)
-                        .kerning(-0.2)
-                        .padding(.top, 4)
-                }
+                ScannerCloseButton()
+                    .padding(.top, 4)
             } else {
                 Button("Edit") { requestEdit() }
                     .font(.system(size: 17, weight: .regular))
