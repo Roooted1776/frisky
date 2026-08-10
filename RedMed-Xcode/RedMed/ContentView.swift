@@ -21,11 +21,11 @@ struct ContentView: View {
             CustomTabBar(tab: $tab)
         }
         .ignoresSafeArea(edges: .bottom)
-        .onChange(of: profile.pendingBraceletWrite) { pending in
+        .onChange(of: profile.pendingBraceletWrite) { _, pending in
             if pending { tab = .nfc }
         }
         // Persist pairing even if the user left the NFC tab before write finished.
-        .onChange(of: nfc.lastWriteSucceeded) { ok in
+        .onChange(of: nfc.lastWriteSucceeded) { _, ok in
             guard ok else { return }
             profile.braceletLinked = true
             profile.persist()

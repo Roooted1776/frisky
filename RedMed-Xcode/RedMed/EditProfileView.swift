@@ -62,7 +62,7 @@ struct EditProfileView: View {
                                         .foregroundColor(.redmedDark)
                                         .onChange(of: allergies[i]) { allergyFocusIndex = i }
                                     Spacer()
-                                    Button { withAnimation { allergies.remove(at: i) } } label: {
+                                    Button { withAnimation { _ = allergies.remove(at: i) } } label: {
                                         Text("✕").font(.system(size: 18)).foregroundColor(.redmedAccent)
                                     }
                                 }
@@ -107,7 +107,7 @@ struct EditProfileView: View {
                                         .foregroundColor(.redmedDark)
                                         .onChange(of: medications[i]) { medFocusIndex = i }
                                     Spacer()
-                                    Button { withAnimation { medications.remove(at: i) } } label: {
+                                    Button { withAnimation { _ = medications.remove(at: i) } } label: {
                                         Text("✕").font(.system(size: 18)).foregroundColor(.redmedAccent)
                                     }
                                 }
@@ -152,7 +152,7 @@ struct EditProfileView: View {
                                         .foregroundColor(.redmedDark)
                                         .onChange(of: conditions[i]) { conditionFocusIndex = i }
                                     Spacer()
-                                    Button { withAnimation { conditions.remove(at: i) } } label: {
+                                    Button { withAnimation { _ = conditions.remove(at: i) } } label: {
                                         Text("✕").font(.system(size: 18)).foregroundColor(.redmedAccent)
                                     }
                                 }

@@ -158,11 +158,11 @@ struct NFCView: View {
             } message: {
                 Text("Open the RedMed tab, tap Edit, and save your name before pairing a blank bracelet.")
             }
-            .onChange(of: nfc.lastWriteSucceeded) { ok in
+            .onChange(of: nfc.lastWriteSucceeded) { _, ok in
                 guard ok else { return }
                 updateCapacityNote()
             }
-            .onChange(of: nfc.lastReadPayload) { payload in
+            .onChange(of: nfc.lastReadPayload) { _, payload in
                 guard let payload else { return }
                 let intent = nfc.readIntent
                 switch intent {
@@ -180,8 +180,8 @@ struct NFCView: View {
                     break
                 }
             }
-            .onChange(of: nfc.tagCapacityBytes) { _ in updateCapacityNote() }
-            .onChange(of: nfc.lastPayloadBytes) { _ in updateCapacityNote() }
+            .onChange(of: nfc.tagCapacityBytes) { updateCapacityNote() }
+            .onChange(of: nfc.lastPayloadBytes) { updateCapacityNote() }
             .onAppear {
                 if profile.pendingBraceletWrite {
                     profile.pendingBraceletWrite = false
@@ -189,7 +189,7 @@ struct NFCView: View {
                 }
                 updateCapacityNote()
             }
-            .onChange(of: profile.pendingBraceletWrite) { pending in
+            .onChange(of: profile.pendingBraceletWrite) { _, pending in
                 if pending {
                     profile.pendingBraceletWrite = false
                     beginWrite()
