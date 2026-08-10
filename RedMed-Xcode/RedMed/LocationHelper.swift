@@ -1,6 +1,5 @@
 import Foundation
 import CoreLocation
-import MessageUI
 import UIKit
 
 /// Grabs a one-shot GPS fix, then opens Messages pre-filled with a maps link

@@ -64,13 +64,13 @@ struct EditProfileView: View {
                     // ALLERGIES
                     editSectionLabel("Allergies")
                     editCard {
-                        ForEach($allergies.indices, id: \.self) { i in
+                        ForEach(allergies.indices, id: \.self) { i in
                             VStack(alignment: .leading, spacing: 0) {
                                 HStack {
                                     TextField("Allergy", text: $allergies[i])
                                         .font(.system(size: 15))
                                         .foregroundColor(.redmedDark)
-                                        .onChange(of: allergies[i]) { allergyFocusIndex = i }
+                                        .onChange(of: allergies[i]) { _, _ in allergyFocusIndex = i }
                                     Spacer()
                                     Button { withAnimation { _ = allergies.remove(at: i) } } label: {
                                         Text("✕").font(.system(size: 18)).foregroundColor(.redmedAccent)
@@ -109,13 +109,13 @@ struct EditProfileView: View {
                     // MEDICATIONS
                     editSectionLabel("Medications")
                     editCard {
-                        ForEach($medications.indices, id: \.self) { i in
+                        ForEach(medications.indices, id: \.self) { i in
                             VStack(alignment: .leading, spacing: 0) {
                                 HStack {
                                     TextField("Medication", text: $medications[i])
                                         .font(.system(size: 15))
                                         .foregroundColor(.redmedDark)
-                                        .onChange(of: medications[i]) { medFocusIndex = i }
+                                        .onChange(of: medications[i]) { _, _ in medFocusIndex = i }
                                     Spacer()
                                     Button { withAnimation { _ = medications.remove(at: i) } } label: {
                                         Text("✕").font(.system(size: 18)).foregroundColor(.redmedAccent)
@@ -154,13 +154,13 @@ struct EditProfileView: View {
                     // CONDITIONS
                     editSectionLabel("Conditions")
                     editCard {
-                        ForEach($conditions.indices, id: \.self) { i in
+                        ForEach(conditions.indices, id: \.self) { i in
                             VStack(alignment: .leading, spacing: 0) {
                                 HStack {
                                     TextField("Condition", text: $conditions[i])
                                         .font(.system(size: 15))
                                         .foregroundColor(.redmedDark)
-                                        .onChange(of: conditions[i]) { conditionFocusIndex = i }
+                                        .onChange(of: conditions[i]) { _, _ in conditionFocusIndex = i }
                                     Spacer()
                                     Button { withAnimation { _ = conditions.remove(at: i) } } label: {
                                         Text("✕").font(.system(size: 18)).foregroundColor(.redmedAccent)
