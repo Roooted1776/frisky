@@ -23,3 +23,8 @@ build/
 !*.xcodeproj/xcshareddata/
 !*.xcodeproj/xcshareddata/xcschemes/
 !*.xcodeproj/xcshareddata/xcschemes/*.xcscheme
+
+# Upload staging artifacts (Cursor/desktop dumps). Keep intentional Swift under uploads/.
+uploads/Screenshot*.png
+uploads/draw-*.png
+uploads/*-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f].*
