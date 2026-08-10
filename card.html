@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RedMed — Emergency Card</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; font-family:'Plus Jakarta Sans',sans-serif; }
+  body { margin:0; background:#0a0a0a; color:#ffffff; min-height:100vh; padding:32px 20px 60px; }
+  a { color:#ff3b4e; }
+  .wrap { max-width:480px; margin:0 auto; }
+  .badge { display:inline-block; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#ff3b4e; border:1px solid rgba(255,59,78,0.4); border-radius:999px; padding:5px 12px; margin-bottom:18px; }
+  h1 { font-size:28px; font-weight:800; margin:0 0 2px; letter-spacing:-0.5px; }
+  .sub { font-size:14px; font-weight:500; color:rgba(255,59,78,0.6); margin-bottom:28px; }
+  .section-label { font-size:12px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; color:rgba(255,59,78,0.55); margin:26px 0 8px; }
+  .card { border:1px solid rgba(255,59,78,0.25); border-radius:14px; overflow:hidden; }
+  .row { display:flex; justify-content:space-between; align-items:center; padding:13px 16px; border-bottom:1px solid rgba(255,59,78,0.15); }
+  .row:last-child { border-bottom:none; }
+  .row .k { font-size:14px; font-weight:500; color:rgba(255,255,255,0.6); }
+  .row .v { font-size:15px; font-weight:700; color:#ffffff; text-align:right; }
+  .list-item { padding:13px 16px; border-bottom:1px solid rgba(255,59,78,0.15); font-size:15px; font-weight:600; color:#ffffff; }
+  .list-item:last-child { border-bottom:none; }
+  .contact-name { font-size:15px; font-weight:700; color:#ffffff; }
+  .contact-detail { font-size:13px; font-weight:500; color:rgba(255,59,78,0.6); margin-top:2px; }
+  .footer { margin-top:40px; font-size:12px; font-weight:500; color:rgba(255,59,78,0.4); text-align:center; }
+  .call-btn { display:block; width:100%; text-align:center; background:#ff3b4e; color:#0a0a0a; font-size:16px; font-weight:800; text-decoration:none; border-radius:999px; padding:15px; margin:22px 0 8px; }
+  .gps-btn { display:block; width:100%; text-align:center; background:none; border:1px solid rgba(255,59,78,0.35); color:#ff3b4e; font-size:14px; font-weight:700; text-decoration:none; border-radius:999px; padding:12px; }
+  .updated { font-size:11px; font-weight:600; color:rgba(255,59,78,0.4); text-align:center; margin-top:10px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="badge">Emergency Medical ID</span>
+    <h1>Alex Rivera</h1>
+    <div class="sub">Born April 12, 1988</div>
+
+    <a class="call-btn" href="tel:911">Call 911</a>
+    <a class="gps-btn" href="#" onclick="shareGPS(event)">Text My Location to Emergency Contact</a>
+    <div class="updated" id="updatedLine">Profile last updated Jul 28, 2026</div>
+
+    <div class="section-label">Blood Type</div>
+    <div class="card">
+      <div class="row"><span class="k">Blood type</span><span class="v">O+</span></div>
+    </div>
+
+    <div class="section-label">Allergies</div>
+    <div class="card">
+      <div class="list-item">Penicillin</div>
+      <div class="list-item">Shellfish</div>
+    </div>
+
+    <div class="section-label">Medications</div>
+    <div class="card">
+      <div class="list-item">Warfarin (Coumadin) — 5 mg daily</div>
+      <div class="list-item">Albuterol inhaler — as needed</div>
+    </div>
+
+    <div class="section-label">Conditions</div>
+    <div class="card">
+      <div class="list-item">AFib</div>
+      <div class="list-item">Asthma</div>
+    </div>
+
+    <div class="section-label">Organ Donor Status</div>
+    <div class="card">
+      <div class="row"><span class="k">Registered donor</span><span class="v">Yes</span></div>
+    </div>
+
+    <div class="section-label">Emergency Contacts</div>
+    <div class="card">
+      <div class="row" style="display:block;">
+        <div class="contact-name">Sarah Rivera</div>
+        <div class="contact-detail">Spouse · (555) 012-3456</div>
+      </div>
+      <div class="row" style="display:block;">
+        <div class="contact-name">Dr. J. Kim</div>
+        <div class="contact-detail">Physician · (555) 789-0123</div>
+      </div>
+    </div>
+
+    <div class="footer">Scanned via RedMed NFC bracelet · redmed.app</div>
+  </div>
+  <script>
+    function shareGPS(e) {
+      e.preventDefault();
+      if (!navigator.geolocation) { alert('Location not available on this device.'); return; }
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        const url = 'https://maps.google.com/?q=' + pos.coords.latitude + ',' + pos.coords.longitude;
+        const phone = '5550123456';
+        const body = encodeURIComponent('This is my current location: ' + url);
+        window.location.href = 'sms:' + phone + '?&body=' + body;
+      }, function() { alert('Could not get location.'); });
+    }
+  </script>
+</body>
+</html>
