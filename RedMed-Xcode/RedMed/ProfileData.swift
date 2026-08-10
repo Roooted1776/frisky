@@ -38,7 +38,23 @@ class ProfileData: ObservableObject {
 
     init(persisting: Bool = true) {
         self.persists = persisting
-        if persisting { loadFromKeychain() }
+        if persisting {
+            loadFromKeychain()
+            // Simulator demos: seed list rows only when Keychain is empty,
+            // or strip the old full Alex Rivera identity sample if present.
+            #if targetEnvironment(simulator)
+            if !hasSensitiveProfileData || name == "Alex Rivera" {
+                name = ""
+                birthDate = ""
+                bloodType = ""
+                contacts = []
+                isOrganDonor = false
+                lastUpdated = ""
+                applySampleListData()
+                persist()
+            }
+            #endif
+        }
     }
 
     /// Detached copy for scanner / preview — mutations never touch the owner profile or Keychain.
@@ -55,6 +71,13 @@ class ProfileData: ObservableObject {
         copy.isOrganDonor = isOrganDonor
         copy.lastUpdated = lastUpdated
         return copy
+    }
+
+    /// Simulator-only list samples — no fake identity (name / DOB / blood / contacts).
+    func applySampleListData() {
+        allergies = ["Penicillin", "Peanuts"]
+        medications = ["Lisinopril 10mg — daily", "Albuterol inhaler — as needed"]
+        conditions = ["Type 1 Diabetes", "Asthma"]
     }
 
     func persist() {
