@@ -6,10 +6,10 @@
 	<string>RedMed</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>RedMed</string>
 	<key>CFBundlePackageType</key>
@@ -21,7 +21,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NFCReaderUsageDescription</key>
-	<string>RedMed writes and reads your emergency card on an NFC bracelet.</string>
+	<string>RedMed uses NFC to write your emergency medical ID link to your bracelet or tag, and to read it back to confirm the write succeeded.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>RedMed uses Face ID, Touch ID, or your device passcode to unlock editing of your RedMed profile and to authorize writing to your bracelet. Scanned cards are read-only and cannot be changed without your app and authentication.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

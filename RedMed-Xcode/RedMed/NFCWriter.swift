@@ -51,7 +51,7 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
         }
 
         let urlString = urlToWrite
-        session.connect(to: tag) { error in
+        session.connect(to: tag) { [weak self] error in
             if let error {
                 session.invalidate(errorMessage: "Connection failed: \(error.localizedDescription)")
                 return
@@ -75,7 +75,7 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                         return
                     }
                     let message = NFCNDEFMessage(records: [payload])
-                    tag.writeNDEF(message) { [weak self] error in
+                    tag.writeNDEF(message) { error Z
                         if let error {
                             let capHint = capacity > 0 ? " Tag capacity: \(capacity) bytes." : ""
                             session.invalidate(errorMessage: "Write failed: \(error.localizedDescription).\(capHint)")
