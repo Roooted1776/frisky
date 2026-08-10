@@ -1,1 +1,17 @@
 .derivedData/
+
+# macOS
+.DS_Store
+
+# Xcode — per-user state. Committing these makes every project open replay a
+# stale window/editor layout and makes every merge conflict on a binary blob.
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad/
+DerivedData/
+build/
+
+# Keep shared schemes tracked so Xcode doesn't regenerate them on open:
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/xcshareddata/xcschemes/
+!*.xcodeproj/xcshareddata/xcschemes/*.xcscheme
