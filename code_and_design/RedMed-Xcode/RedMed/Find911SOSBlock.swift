@@ -114,9 +114,12 @@ struct Find911SOSBlock: View {
         .onAppear {
             network.start()
             outbound.locationManager = locationManager
-            outbound.profileProvider = { [weak profile] in profile }
-            sos.isOfflineCheck = { [weak network] in network?.isOffline ?? false }
-            sos.onOnlineFire = { [weak outbound] in outbound?.fireOnline() }
+            let profileRef = profile
+            outbound.profileProvider = { [weak profileRef] in profileRef }
+            let networkRef = network
+            sos.isOfflineCheck = { [weak networkRef] in networkRef?.isOffline ?? false }
+            let outboundRef = outbound
+            sos.onOnlineFire = { [weak outboundRef] in outboundRef?.fireOnline() }
             if motion.isEnabled { motion.start() }
         }
         .onDisappear {
@@ -125,10 +128,10 @@ struct Find911SOSBlock: View {
             stopSeizure(reset: false)
             if sos.isCountingDown { sos.cancel() }
         }
-        .onChange(of: motion.isEnabled) { enabled in
+        .onChange(of: motion.isEnabled) { _, enabled in
             if enabled { motion.start() } else { motion.stop() }
         }
-        .onChange(of: motion.didTrigger) { triggered in
+        .onChange(of: motion.didTrigger) { _, triggered in
             guard triggered else { return }
             motion.consumeTrigger()
             guard !sos.isCountingDown, !sos.showsSatelliteCoach else { return }
