@@ -11,6 +11,7 @@ Native iOS medical ID + emergency aid app. Shipable source of truth is
 | `uploads/` | Staged / experimental Swift tree — **not** in the Xcode project |
 | `Main.dc.html` / `code_and_design/Main.dc.html` | Claude design canvas (keep in sync) |
 | `RedMed.html` / `RedMed-standalone.html` | Bundled HTML previews of that canvas |
+| Legal HTML (`PrivacyPolicy`, `TOS`, `security`, `HowItWorks`) | **Body text** lives in `RedMed-Xcode/RedMed/`; root copies must match except CSS href (`assets/legal-doc.css` for web) |
 | `compliance/` | MHRA / DTAC / cyber pack drafts |
 
 Do not open a PR with `base: main` and `compare: main` — pick a feature
