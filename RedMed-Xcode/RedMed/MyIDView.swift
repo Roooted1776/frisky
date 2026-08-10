@@ -6,7 +6,7 @@ struct MyIDView: View {
     @Environment(\.scannerDismiss) private var scannerDismiss
     @Binding var tab: AppTab
     @State private var showEdit = false
-    /// When true, Edit opened without Face ID (empty profile) — Save must authenticate.
+    /// When true, Edit opened without Face ID (empty RedMed profile) — Save must authenticate.
     @State private var requireAuthOnSave = false
     @State private var showHelp = false
     @State private var showScannerPreview = false

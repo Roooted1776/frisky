@@ -329,7 +329,7 @@ struct EditProfileView: View {
             return
         }
         // First-time fill opens Edit without Face ID — confirm identity before Keychain write.
-        // Returning edits already unlocked via My ID Edit, so Save skips a second prompt.
+        // Returning edits already unlocked via RedMed Edit, so Save skips a second prompt.
         if requireAuthOnSave {
             BiometricAuth.authenticate(
                 reason: "Confirm with Face ID, Touch ID, or passcode to save your RedMed profile."
