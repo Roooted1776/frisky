@@ -9,7 +9,7 @@ struct EmergencyView: View {
         NavigationView {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 8) {
-                    // NO CELL SIGNAL — top of Find 911 (replaces call-first-contact)
+                    // NO CELL SIGNAL — top of Find Help (replaces call-first-contact)
                     NoCellSignalCard(showSatellite: $showSatellite)
 
                     // GPS CARD
@@ -48,7 +48,7 @@ struct EmergencyView: View {
 
                     InfoCard(
                         icon: "info.circle.fill",
-                        title: "What to Tell 911",
+                        title: "What to Tell \(EmergencyNumber.current)",
                         numbered: false,
                         items: [
                             "Your exact location — read the GPS coordinates above.",
@@ -73,7 +73,7 @@ struct EmergencyView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("Find 911").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedDark)
+                    Text("Find Help").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedDark)
                 }
             }
             .task {
@@ -86,7 +86,8 @@ struct EmergencyView: View {
     }
 }
 
-/// Compact seizure stopwatch on Find 911 — no aid copy. Auto-dials 911 at 5:00.
+/// Compact seizure stopwatch on Find Help — no aid copy. Auto-dials the local
+/// emergency number at 5:00.
 struct SeizureTimerStrip: View {
     @State private var running = false
     @State private var elapsed: TimeInterval = 0
@@ -110,7 +111,7 @@ struct SeizureTimerStrip: View {
             }
             .frame(minWidth: 64, alignment: .leading)
 
-            Text(pastThreshold ? "5:00 — call" : "→ 911 at 5:00")
+            Text(pastThreshold ? "5:00 — call" : "→ \(EmergencyNumber.current) at 5:00")
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundColor(pastThreshold ? .redmedAccent : .redmedMuted)
                 .lineLimit(1)
@@ -145,7 +146,7 @@ struct SeizureTimerStrip: View {
                 elapsed = Date().timeIntervalSince(started)
                 if elapsed >= Self.callAt {
                     stop(reset: false)
-                    if let url = URL(string: "tel://911") {
+                    if let url = EmergencyNumber.dialURL {
                         // Call the completion-handler overload explicitly: bare
                         // `open(_:)` resolves to the async one in here and would
                         // need `await`.
@@ -270,20 +271,13 @@ struct NoCellSignalCard: View {
             .padding(14)
 
             if showSatellite {
-                VStack(spacing: 8) {
-                    Text("iPhone 14+ (iOS 16.1+): hold Side + Volume until Emergency SOS appears, or Settings → Emergency SOS.")
-                        .font(.system(size: 11))
-                        .foregroundColor(.redmedMuted)
-                        .lineSpacing(3)
-                    SecondaryButton("Open Phone · dial 911") {
-                        if let url = URL(string: "tel://911") {
-                            UIApplication.shared.open(url, options: [:], completionHandler: nil)
-                        }
-                    }
-                }
-                .padding(.horizontal, 14)
-                .padding(.bottom, 14)
-                .transition(.opacity.combined(with: .move(edge: .top)))
+                Text("iPhone 14+ (iOS 16.1+): hold Side + Volume until Emergency SOS appears, or Settings → Emergency SOS.")
+                    .font(.system(size: 11))
+                    .foregroundColor(.redmedMuted)
+                    .lineSpacing(3)
+                    .padding(.horizontal, 14)
+                    .padding(.bottom, 14)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .background(Color.redmedSurface)

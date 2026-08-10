@@ -20,7 +20,7 @@ Ordered programme (do not skip):
 | 8 | [08-execution-plan.md](08-execution-plan.md) | **Driver for the five moves that leave this repo** — sequence, costs, outbound briefs |
 
 **Product snapshot used for these docs (Aug 2026):** native iOS RedMed under
-`RedMed-Xcode/` — on-device medical ID + passive NFC band, Find 911 GPS assist,
+`RedMed-Xcode/` — on-device medical ID + passive NFC band, Find Help GPS assist,
 compact seizure timer, roadside first-aid reference. No RedMed servers. No
 in-app Emergency SOS countdown product. Not claiming diagnosis or treatment.
 

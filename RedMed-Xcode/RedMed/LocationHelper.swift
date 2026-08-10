@@ -6,7 +6,7 @@ import Combine
 
 /// Gates the owner app until Location has been asked, then keeps suggesting
 /// until When-In-Use (or Always) is granted.
-/// Does **not** start GPS updates — Find 911 still starts updates only when visible.
+/// Does **not** start GPS updates — Find Help still starts updates only when visible.
 final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManagerDelegate {
     static let shared = LocationAccessSuggester()
 
@@ -97,7 +97,7 @@ struct LocationLaunchGateView: View {
             Text("RedMed")
                 .font(.system(size: 28, weight: .bold))
                 .foregroundColor(.redmedDark)
-            Text("Allow Location so Find 911 can show exact GPS for dispatch.")
+            Text("Allow Location so Find Help can show exact GPS for dispatch.")
                 .font(.system(size: 15, weight: .medium))
                 .foregroundColor(.redmedMuted)
                 .multilineTextAlignment(.center)
@@ -137,7 +137,7 @@ struct LocationSuggestionBanner: View {
                     Text("Location suggested")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundColor(.redmedDark)
-                    Text("Allow Location so Find 911 can show exact GPS for dispatch.")
+                    Text("Allow Location so Find Help can show exact GPS for dispatch.")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .fixedSize(horizontal: false, vertical: true)

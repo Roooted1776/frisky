@@ -59,37 +59,58 @@ reworked:
 - [ ] Confirm Google Maps transfer route actually in use (IDTA vs UK–US data
       bridge) if a Maps key is ever configured
 
-## Claim hygiene vs product — recheck at Gate 0
+## Claim hygiene vs product — reconciled twice
 
-The v1.1 notice asserted safeguards that **do not exist in the shipping tree**
-(`RedMed-Xcode/`): Keychain storage, a salted PBKDF2 PIN digest, "Clear All Data",
-and browser `localStorage` on the web build. Verified absent — the shipping
-`ProfileData` is an in-memory `@Published` object with hard-coded demo values, and
-`grep` finds no `UserDefaults`, Keychain, `FileManager`, or `localStorage` in either
-the iOS tree or `RedMed.html`.
+**v2.0 (at commit `c741c3e`).** The v1.1 notice asserted safeguards that did not
+exist in the shipping tree: Keychain storage, a salted PBKDF2 PIN digest, "Clear
+All Data", and browser `localStorage`. All verified absent at the time — the
+shipping `ProfileData` was an in-memory object with hard-coded demo values. Those
+claims were removed rather than restated.
 
-Those specific claims were **removed** rather than restated. The v2.0 text asserts
-only what is true in both source trees: data goes to your device and your band, and
-never to a RedMed server. Once the `uploads/` decision in
-[`../08-execution-plan.md`](../08-execution-plan.md) is made, revisit §5, §10 and §15
-of the Policy — if `uploads/` ships, the Keychain and PIN specifics can go back in
-and **§9 must be rewritten**, because `ThirdPartyEmergencyClient` posts special
-category data off-device.
+**v2.1 (after `d9ee1a4`, "Fix profile persistence, NFC stubs, and related bugs").**
+That commit landed *after* the notice merged and changed the facts underneath it:
+
+| Change | Effect on the notice |
+|--------|----------------------|
+| `KeychainStore` + `ProfileData.persist()` now in the shipping tree | §5 was **understating** a good control. Now states Keychain, `WhenUnlockedThisDeviceOnly`, and exclusion from iCloud/backups. |
+| Demo values replaced with empty fields on first launch | "only what you choose to enter" is now literally true. Added to §15. |
+| Profile now survives app restart | §10 and §11 rewritten — erasure is a real operation now, where before there was nothing to erase. |
+
+Once the `uploads/` decision in [`../08-execution-plan.md`](../08-execution-plan.md)
+is made, revisit §5, §10 and §15 again — if `uploads/` ships, **§9 must be
+rewritten**, because `ThirdPartyEmergencyClient` posts special category data
+off-device.
+
+## Erasure gap — Art. 17 asserted, not implemented
+
+`KeychainStore.delete(account:)` exists and is **never called from anywhere**.
+There is no "Clear All Data" control in the shipping UI.
+
+Today a user can only erase by blanking every field and saving (which overwrites
+the stored blob) or by deleting the App (which drops its Keychain entry on iOS
+10.3+). The notice now describes exactly that, and no more. But "delete the whole
+app" is a poor answer to a right-to-erasure request, and an IG reviewer will say
+so.
+
+**Product fix:** wire a Clear All Data control to the existing
+`KeychainStore.delete` and clear the `@Published` fields. Small, and it closes an
+Art. 17 gap on special category data. Not done here — this pack does not change
+app code.
 
 Notice must not imply clinical diagnosis, monitoring, or NHS care delivery. Aligned
 with [`../01-intended-purpose-mhra.md`](../01-intended-purpose-mhra.md).
 
-## Product blocker surfaced by this rewrite
+## Product blocker surfaced by this rewrite — now closed
 
-The Terms and Policy now tell UK users to call **999**. The app does not.
-`tel://911` is hard-coded in four places in the shipping tree — `AidView.swift:50`,
-`TopicDetailView.swift:158`, `EmergencyView.swift:166` and `:349` — plus
-`EmergencyView.swift:12` for contact dialling, and the feature is named "Find 911"
-throughout the UI. On a UK handset `tel://911` does not reach the emergency
-services.
+The Terms and Policy tell UK users to call **999**, and for a while the app did
+not: `tel://911` was hard-coded in four places and the feature was called
+"Find 911" throughout the UI. On a UK handset that number reaches nobody.
 
-Legal copy cannot fix this. It needs a product change: locale-aware emergency
-number, or a UK build. Until then the documents are accurate about the law and
-optimistic about the software. **Do not publish to UK users, and do not put these
-documents in front of an NHS buyer, until the dialler is locale-aware** — an IG
-reviewer who taps through the app will find it.
+Closed by the locale-aware dialling change. `EmergencyNumber.current` resolves
+the number from `Locale.current.region`, every dial site and every user-facing
+mention of the number now reads from it, and the feature is renamed **Find Help**
+so the label stays correct whichever number the device dials. Unlisted regions
+fall back to **112**, the GSM standard.
+
+Document and product now agree. Publication is still gated on the entity and ICO
+placeholders above and on a solicitor pass — not on the dialler.

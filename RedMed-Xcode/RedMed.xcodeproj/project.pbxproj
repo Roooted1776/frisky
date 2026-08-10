@@ -30,6 +30,7 @@
 		AABB00000000000000000019 /* HowItWorks.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000019 /* HowItWorks.html */; };
 		AABB0000000000000000001A /* legal-doc.css in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001A /* legal-doc.css */; };
 		AABB0000000000000000001B /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001B /* KeychainStore.swift */; };
+		AABB00000000000000000020 /* EmergencyNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000020 /* EmergencyNumber.swift */; };
 		AABB0000000000000000001C /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001C /* AppConfig.swift */; };
 		AABB0000000000000000001D /* ProfileNFCCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001D /* ProfileNFCCodec.swift */; };
 		AABB0000000000000000001E /* NFCWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001E /* NFCWriter.swift */; };
@@ -63,6 +64,7 @@
 		AAAA00000000000000000019 /* HowItWorks.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = HowItWorks.html; sourceTree = "<group>"; };
 		AAAA0000000000000000001A /* legal-doc.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = "legal-doc.css"; sourceTree = "<group>"; };
 		AAAA0000000000000000001B /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000020 /* EmergencyNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyNumber.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000001C /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000001D /* ProfileNFCCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileNFCCodec.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000001E /* NFCWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFCWriter.swift; sourceTree = "<group>"; };
@@ -106,6 +108,7 @@
 				AAAA00000000000000000013 /* LocationHelper.swift */,
 				AAAA00000000000000000014 /* BiometricAuth.swift */,
 				AAAA0000000000000000001B /* KeychainStore.swift */,
+				AAAA00000000000000000020 /* EmergencyNumber.swift */,
 				AAAA0000000000000000001C /* AppConfig.swift */,
 				AAAA0000000000000000001D /* ProfileNFCCodec.swift */,
 				AAAA0000000000000000001E /* NFCWriter.swift */,
@@ -221,6 +224,7 @@
 				AABB00000000000000000013 /* LocationHelper.swift in Sources */,
 				AABB00000000000000000014 /* BiometricAuth.swift in Sources */,
 				AABB0000000000000000001B /* KeychainStore.swift in Sources */,
+				AABB00000000000000000020 /* EmergencyNumber.swift in Sources */,
 				AABB0000000000000000001C /* AppConfig.swift in Sources */,
 				AABB0000000000000000001D /* ProfileNFCCodec.swift in Sources */,
 				AABB0000000000000000001E /* NFCWriter.swift in Sources */,
