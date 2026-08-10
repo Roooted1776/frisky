@@ -253,6 +253,7 @@ struct EditProfileView: View {
 
     // MARK: - Contacts
 
+    @ViewBuilder
     private var contactsEditor: some View {
         ForEach($contacts) { $contact in
             HStack(alignment: .center, spacing: 8) {
