@@ -45,7 +45,6 @@
 		AAAA00000000000000000012 /* PublicCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicCardView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000013 /* LocationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationHelper.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000014 /* BiometricAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuth.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000015 /* Find911SOSBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Find911SOSBlock.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,7 +83,6 @@
 				AAAA00000000000000000012 /* PublicCardView.swift */,
 				AAAA00000000000000000013 /* LocationHelper.swift */,
 				AAAA00000000000000000014 /* BiometricAuth.swift */,
-				AAAA00000000000000000015 /* Find911SOSBlock.swift */,
 				AAAA0000000000000000000E /* HelpMenuView.swift */,
 				AAAA0000000000000000000C /* Assets.xcassets */,
 				AAAA0000000000000000000B /* Info.plist */,
@@ -184,7 +182,6 @@
 				AABB00000000000000000012 /* PublicCardView.swift in Sources */,
 				AABB00000000000000000013 /* LocationHelper.swift in Sources */,
 				AABB00000000000000000014 /* BiometricAuth.swift in Sources */,
-				AABB00000000000000000015 /* Find911SOSBlock.swift in Sources */,
 				AABB0000000000000000000B /* HelpMenuView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
