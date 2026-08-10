@@ -15,19 +15,6 @@
     padding: 0 0 88px;
   }
   a { color: #e11d48; text-decoration: none; }
-  .chrome {
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-    background: #fff;
-    border-bottom: 1px solid rgba(28,25,23,0.08);
-    padding: 12px 16px;
-    font-size: 12px;
-    font-weight: 500;
-    color: #78716c;
-    line-height: 1.4;
-  }
-  .chrome strong { color: #1c1917; font-weight: 800; display: block; margin-bottom: 2px; }
   .wrap { max-width: 480px; margin: 0 auto; padding: 16px; }
   .panel { display: none; }
   .panel.active { display: block; }
@@ -168,16 +155,10 @@
 </style>
 </head>
 <body>
-  <div class="chrome">
-    <div>
-      <strong>Read only</strong>
-      Medical ID, 911, and Aid — same tools as RedMed. Editing needs the owner’s app + Face&nbsp;ID / passcode.
-    </div>
-  </div>
-
   <div class="wrap">
-    <!-- Medical ID -->
+    <!-- RedMed (Medical ID) — same first tab as the app -->
     <div class="panel active" id="panel-medical" data-panel="medical">
+      <p class="hint" style="text-align:left;margin-bottom:10px;">Read only — editing needs the owner’s RedMed app + Face&nbsp;ID / passcode.</p>
       <h1 id="name">Medical ID</h1>
       <div class="sub" id="subLine">Blood · DOB</div>
       <div class="updated" id="updatedLine"></div>
@@ -306,12 +287,12 @@
       </details>
     </div>
 
-    <div class="footer">Read-only scanner view · Medical ID · 911 · Aid · owner edits need app + Face ID / Touch ID</div>
+    <div class="footer">Same RedMed app tabs · read only · owner edits need app + Face ID / Touch ID</div>
   </div>
 
-  <nav class="tabbar" aria-label="Scanner tabs">
-    <button class="tab" type="button" data-tab="medical"><span class="icon">👤</span>Medical ID</button>
-    <button class="tab active" type="button" data-tab="911"><span class="icon">📞</span>911</button>
+  <nav class="tabbar" aria-label="RedMed tabs">
+    <button class="tab active" type="button" data-tab="medical"><span class="icon">👤</span>RedMed</button>
+    <button class="tab" type="button" data-tab="911"><span class="icon">📞</span>911</button>
     <button class="tab" type="button" data-tab="aid"><span class="icon">✚</span>Aid</button>
   </nav>
 
@@ -343,7 +324,7 @@
   document.querySelectorAll('.tab').forEach(function (t) {
     t.addEventListener('click', function () { showTab(t.getAttribute('data-tab')); });
   });
-  showTab('911');
+  showTab('medical');
 
   function decodeProfile() {
     try {

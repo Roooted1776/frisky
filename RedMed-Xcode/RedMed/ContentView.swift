@@ -1,5 +1,27 @@
 import SwiftUI
 
+private struct ScannerSessionKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+private struct ScannerDismissKey: EnvironmentKey {
+    static let defaultValue: (() -> Void)? = nil
+}
+
+extension EnvironmentValues {
+    /// True when this tree is the first-responder / scan shell (no owner edit).
+    var isScannerSession: Bool {
+        get { self[ScannerSessionKey.self] }
+        set { self[ScannerSessionKey.self] = newValue }
+    }
+
+    /// Optional Close action when the scanner shell is presented over the owner app.
+    var scannerDismiss: (() -> Void)? {
+        get { self[ScannerDismissKey.self] }
+        set { self[ScannerDismissKey.self] = newValue }
+    }
+}
+
 struct ContentView: View {
     @EnvironmentObject var profile: ProfileData
     @State private var tab: AppTab = .myid
@@ -19,6 +41,19 @@ struct ContentView: View {
             CustomTabBar(tab: $tab)
         }
         .ignoresSafeArea(edges: .bottom)
+    }
+}
+
+/// Same app shell as `ContentView` — RedMed / 911 / Aid — for people who scan.
+struct PublicCardView: View {
+    @ObservedObject var profile: ProfileData
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ContentView()
+            .environmentObject(profile)
+            .environment(\.isScannerSession, true)
+            .environment(\.scannerDismiss, { dismiss() })
     }
 }
 

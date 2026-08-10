@@ -2,6 +2,8 @@ import SwiftUI
 
 struct MyIDView: View {
     @EnvironmentObject var profile: ProfileData
+    @Environment(\.isScannerSession) private var isScannerSession
+    @Environment(\.scannerDismiss) private var scannerDismiss
     @State private var showEdit = false
     @State private var showHelp = false
     @State private var showScannerPreview = false
@@ -55,41 +57,43 @@ struct MyIDView: View {
                     }
                 }
 
-                // QUICK ACTIONS
-                HStack(spacing: 10) {
-                    Button { showHelp = true } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "questionmark.circle")
-                                .font(.system(size: 16, weight: .regular))
-                                .foregroundColor(.redmedMuted)
-                            Text("How it works")
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundColor(.redmedMuted)
-                                .kerning(-0.1)
+                if !isScannerSession {
+                    // QUICK ACTIONS (owner only)
+                    HStack(spacing: 10) {
+                        Button { showHelp = true } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "questionmark.circle")
+                                    .font(.system(size: 16, weight: .regular))
+                                    .foregroundColor(.redmedMuted)
+                                Text("How it works")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundColor(.redmedMuted)
+                                    .kerning(-0.1)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
                         }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                    }
-                    .buttonStyle(.plain)
+                        .buttonStyle(.plain)
 
-                    Button { showScannerPreview = true } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "eye")
-                                .font(.system(size: 16, weight: .regular))
-                                .foregroundColor(.redmedMuted)
-                            Text("Preview scanner")
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundColor(.redmedMuted)
-                                .kerning(-0.1)
+                        Button { showScannerPreview = true } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "eye")
+                                    .font(.system(size: 16, weight: .regular))
+                                    .foregroundColor(.redmedMuted)
+                                Text("Preview scanner")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundColor(.redmedMuted)
+                                    .kerning(-0.1)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
                         }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 42)
+                    .padding(.bottom, 4)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.top, 42)
-                .padding(.bottom, 4)
 
                 Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
                     .font(.system(size: 11, weight: .medium))
@@ -98,7 +102,7 @@ struct MyIDView: View {
                     .lineSpacing(4)
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal, 20)
-                    .padding(.top, 33)
+                    .padding(.top, isScannerSession ? 42 : 33)
                     .padding(.bottom, 16)
             }
             .padding(.bottom, 12)
@@ -126,7 +130,13 @@ struct MyIDView: View {
     private var header: some View {
         ZStack(alignment: .topTrailing) {
             VStack(alignment: .leading, spacing: 0) {
-                if !profile.hasData {
+                if isScannerSession {
+                    Text("Read only — editing needs the owner’s RedMed app + Face ID / passcode.")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.redmedMuted)
+                        .lineSpacing(2)
+                        .padding(.bottom, 4)
+                } else if !profile.hasData {
                     (
                         Text("Tap ").font(.system(size: 11, weight: .medium)).foregroundColor(.redmedMuted)
                         + Text("Edit").font(.system(size: 11, weight: .bold)).foregroundColor(.redmedAccent)
@@ -156,11 +166,21 @@ struct MyIDView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.trailing, 56)
 
-            Button("Edit") { requestEdit() }
-                .font(.system(size: 17, weight: .regular))
-                .foregroundColor(.redmedAccent)
-                .kerning(-0.2)
-                .padding(.top, 4)
+            if isScannerSession {
+                if let scannerDismiss {
+                    Button("Close") { scannerDismiss() }
+                        .font(.system(size: 17, weight: .regular))
+                        .foregroundColor(.redmedMuted)
+                        .kerning(-0.2)
+                        .padding(.top, 4)
+                }
+            } else {
+                Button("Edit") { requestEdit() }
+                    .font(.system(size: 17, weight: .regular))
+                    .foregroundColor(.redmedAccent)
+                    .kerning(-0.2)
+                    .padding(.top, 4)
+            }
         }
         .padding(.horizontal, 20)
         .padding(.top, 10)
