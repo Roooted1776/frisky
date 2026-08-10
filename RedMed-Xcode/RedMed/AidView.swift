@@ -10,15 +10,17 @@ struct AidPane: Identifiable {
 }
 
 let aidPanes: [AidPane] = [
-    AidPane(id: "crash", emoji: "🚗", title: "Crash & Head", subtitle: "Impact · neck · pupils", iconFilled: false,
-            topics: [("Car Crash", "car-crash"), ("Head & Pupils", "head-pupils")]),
+    AidPane(id: "crash", emoji: "🚗", title: "Crash & Head", subtitle: "Impact · neck · spinal", iconFilled: false,
+            topics: [("Car Crash", "car-crash"), ("Head & Pupils", "head-pupils"), ("Spinal", "spinal")]),
     AidPane(id: "bleed", emoji: "🩸", title: "Bleeding", subtitle: "Pressure · tourniquet", iconFilled: true,
             topics: [("Find Bleeding", "find-bleeding"), ("Bad Bleeding", "bad-bleeding"),
                      ("Belt Tourniquet", "belt-tourniquet"), ("Gunshot / Stab", "gunshot-stab")]),
     AidPane(id: "heart", emoji: "❤️", title: "Heart & Airway", subtitle: "CPR · choking", iconFilled: true,
-            topics: [("CPR", "cpr"), ("Choking", "choking")]),
+            topics: [("Not Breathing / CPR", "cpr"), ("Choking", "choking")]),
     AidPane(id: "shock", emoji: "⚡", title: "Shock", subtitle: "Pale · cold · clammy", iconFilled: false,
             topics: [("Shock", "shock")]),
+    AidPane(id: "burns", emoji: "🔥", title: "Burns", subtitle: "Cool it · cover it", iconFilled: false,
+            topics: [("Burn Care", "burn-care"), ("Electrical & Chemical", "electrical-chemical-burns")]),
     AidPane(id: "seizure", emoji: "🧠", title: "Seizure", subtitle: "Don't restrain · time it", iconFilled: false,
             topics: [("Seizure", "seizure")]),
     AidPane(id: "hypothermia", emoji: "🥶", title: "Hypothermia", subtitle: "Warm core · no rubbing", iconFilled: false,

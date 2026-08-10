@@ -58,9 +58,6 @@ struct EmergencyView: View {
                         ]
                     )
 
-                    // COMMON TRAUMA GRID
-                    CommonTraumaGrid()
-
                     Text("Coordinates show on this screen only. RedMed has no servers.")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(.redmedMuted)
@@ -240,59 +237,6 @@ struct InfoCard: View {
                             .foregroundColor(.redmedDark)
                             .lineSpacing(3)
                     }
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(Color.redmedSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
-    }
-}
-
-// MARK: - Common Trauma Grid
-struct CommonTraumaGrid: View {
-    let cells: [(String, String)] = [
-        ("Bleeding", "Press hard. Belt tourniquet on limb 2–3 in above. Note time."),
-        ("Not Breathing", "Tilt head, lift chin. No pulse? 100–120/min hard compressions."),
-        ("Spinal", "Don't move. Keep head still. Move only if fire or traffic."),
-        ("Burns", "Running water 10+ min. No ice. Cover loosely."),
-        ("Shock", "Lay flat, elevate legs. Keep warm. No food or water."),
-        ("Hypothermia", "Remove wet clothes. Warm core slowly. No rubbing."),
-        ("Heat", "Call 911 for stroke. Cool neck/armpits/groin fast."),
-    ]
-
-    let columns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
-                Image(systemName: "person.fill")
-                    .font(.system(size: 15))
-                    .foregroundColor(.white)
-                    .frame(width: 28, height: 28)
-                    .background(Color.redmedAccent)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                Text("Common Trauma Situations")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.redmedDark)
-            }
-            LazyVGrid(columns: columns, spacing: 6) {
-                ForEach(cells, id: \.0) { cell in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(cell.0)
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(.redmedAccent)
-                        Text(cell.1)
-                            .font(.system(size: 9))
-                            .foregroundColor(.redmedDark)
-                            .lineSpacing(2)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(8)
-                    .background(Color.redmedBg)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
             }
         }

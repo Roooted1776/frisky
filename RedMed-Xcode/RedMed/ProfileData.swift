@@ -144,6 +144,11 @@ enum AidTopicCatalog {
         symptoms: ["Blow to the head", "Unequal, very large ('blown'), or non-reactive pupils", "Confusion, vomiting, or worsening over minutes"],
         care: ["Call 911 immediately", "Shine a light — pupils should shrink equally; blown or unequal = serious", "Keep head, neck, and spine completely still — do not bend or twist", "Do NOT remove a motorcycle helmet unless the airway is blocked and you are trained", "Watch for deterioration: worsening confusion, repeated vomiting, one pupil larger", "If unconscious but breathing, recovery position only if no spinal injury suspected"]
     ),
+    "spinal": AidTopic(
+        id: "spinal", title: "Spinal",
+        symptoms: ["Fall, crash, or diving injury", "Neck or back pain after impact", "Numbness, tingling, or can't move arms/legs"],
+        care: ["Call 911", "Do NOT move them — keep head and neck still", "Hold the head in the position you found it — do not bend or twist", "Move only if fire, rising water, or oncoming traffic — then slide as one unit", "Keep them warm and still until EMS arrives", "Watch breathing — be ready for CPR without turning the neck"]
+    ),
     "find-bleeding": AidTopic(
         id: "find-bleeding", title: "Find Bleeding",
         symptoms: ["Trauma with clothing on — bleeding may be hidden", "Belly pain, rigidity, or bruising after impact", "Rapidly dropping consciousness"],
@@ -188,6 +193,16 @@ enum AidTopicCatalog {
         id: "heat-stroke", title: "Heat Exhaustion & Stroke",
         symptoms: ["Heavy sweating, weakness, cold/pale/clammy skin (exhaustion)", "Hot, red, dry or damp skin, rapid pulse, confusion (stroke)", "Nausea, fainting, body temp above 103°F"],
         care: ["Heat stroke: call 911 immediately — it is life-threatening", "Move to cool or shaded area", "Cool rapidly: remove extra clothing, apply ice packs to neck/armpits/groin", "If conscious: sip cool water slowly", "Do NOT give fluids to an unconscious person", "Fan them while applying cool water to skin", "Lay them down and elevate legs if no spinal injury"]
+    ),
+    "burn-care": AidTopic(
+        id: "burn-care", title: "Burn Care",
+        symptoms: ["Redness and pain (1st degree)", "Blistering with intense pain (2nd degree)", "White, leathery, or charred skin with little pain (3rd degree — nerve damage)"],
+        care: ["Call 911 for burns larger than the palm, on the face, hands, feet, or genitals, or any 3rd-degree burn", "Cool the burn under cool running water for 10–20 minutes — never use ice", "Remove rings, watches, and tight clothing near the burn before swelling starts", "Cover loosely with a clean, non-stick dressing or cloth", "Do NOT pop blisters or apply butter, oil, or ointment", "Watch for shock: pale, cold, rapid breathing"]
+    ),
+    "electrical-chemical-burns": AidTopic(
+        id: "electrical-chemical-burns", title: "Electrical & Chemical Burns",
+        symptoms: ["Visible entry and exit wound (electrical) — damage often worse than it looks", "Chemical contact with skin, eyes, or clothing", "Irregular heartbeat, confusion, or muscle pain after shock"],
+        care: ["Do NOT touch them until you're sure the power source is off", "Call 911 — electrical burns cause internal damage far beyond the skin", "For chemicals: brush off dry powder first, then flush skin with running water for 20 minutes", "Remove any clothing or jewelry contaminated with the chemical", "Be ready for CPR — electrical shock can stop the heart", "Cover the burn loosely once flushed or the power is confirmed off"]
     ),
     "seizure": AidTopic(
         id: "seizure", title: "Seizure",
