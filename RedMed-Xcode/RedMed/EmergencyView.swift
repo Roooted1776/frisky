@@ -2,30 +2,15 @@ import SwiftUI
 import CoreLocation
 
 struct EmergencyView: View {
-    @EnvironmentObject var profile: ProfileData
     @StateObject private var locationManager = LocationManager()
     @State private var showSatellite = false
-
-    func callFirstContact() {
-        guard let c = profile.contacts.first else { return }
-        let digits = c.detail.filter(\.isNumber)
-        guard !digits.isEmpty else { return }
-        if let url = URL(string: "tel://\(digits)") {
-            UIApplication.shared.open(url, options: [:], completionHandler: nil)
-        }
-    }
 
     var body: some View {
         NavigationView {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 8) {
-                    SecondaryButton("Call first emergency contact") { callFirstContact() }
-                    Text("Calls your first saved contact — iPhone confirms before dialing.")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .padding(.bottom, 4)
+                    // NO CELL SIGNAL — top of Find 911 (replaces call-first-contact)
+                    NoCellSignalCard(showSatellite: $showSatellite)
 
                     // GPS CARD
                     GPSCard(location: locationManager.location)
@@ -75,9 +60,6 @@ struct EmergencyView: View {
 
                     // COMMON TRAUMA GRID
                     CommonTraumaGrid()
-
-                    // NO CELL SIGNAL
-                    NoCellSignalCard(showSatellite: $showSatellite)
 
                     Text("Coordinates show on this screen only. RedMed has no servers.")
                         .font(.system(size: 10, weight: .medium))
