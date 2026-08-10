@@ -3,12 +3,22 @@ import CoreNFC
 
 struct NFCView: View {
     @EnvironmentObject var profile: ProfileData
+    @Environment(\.isScannerSession) private var isScannerSession
     @State private var showWriteOverlay = false
     @State private var writeSuccess = false
     @State private var writeError: String? = nil
     @State private var showPublicCard = false
 
     var body: some View {
+        // Ped/EMS scanner shells must never write or pair bands.
+        if isScannerSession {
+            Color.redmedBg.ignoresSafeArea()
+        } else {
+            ownerBody
+        }
+    }
+
+    private var ownerBody: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 12) {
@@ -124,6 +134,7 @@ struct NFCView: View {
     }
 
     func beginWrite() {
+        guard !isScannerSession else { return }
         guard profile.hasData else { return }
         // In production: LAContext biometric auth, then NFCNDEFWriterSession
         // Do not mark braceletLinked until write succeeds (or demo completes).

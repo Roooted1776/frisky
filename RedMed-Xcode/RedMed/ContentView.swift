@@ -5,38 +5,54 @@ struct ContentView: View {
     @Environment(\.isScannerSession) private var isScannerSession
     @State private var tab: AppTab = .myid
 
+    /// Ped/EMS scanners: RedMed + 911 + Aid only. Owner also gets NFC.
+    private var showsNFC: Bool { !isScannerSession }
+
+    private var scannerSafeTab: Binding<AppTab> {
+        Binding(
+            get: {
+                if !showsNFC && tab == .nfc { return .myid }
+                return tab
+            },
+            set: { newValue in
+                if !showsNFC && newValue == .nfc {
+                    tab = .myid
+                } else {
+                    tab = newValue
+                }
+            }
+        )
+    }
+
     var body: some View {
         ZStack(alignment: .bottom) {
             Group {
-                switch effectiveTab {
-                case .myid:      MyIDView(tab: $tab)
-                case .emergency: EmergencyView()
-                case .aid:       AidView()
-                case .nfc:       NFCView()
+                switch scannerSafeTab.wrappedValue {
+                case .myid:
+                    MyIDView(tab: scannerSafeTab)
+                case .emergency:
+                    EmergencyView()
+                case .aid:
+                    AidView()
+                case .nfc:
+                    // Unreachable in scanner sessions — binding + tab bar both block it.
+                    NFCView()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(.bottom, 64)
 
-            CustomTabBar(tab: $tab, showsNFC: !isScannerSession)
+            CustomTabBar(tab: scannerSafeTab, showsNFC: showsNFC)
         }
         .ignoresSafeArea(edges: .bottom)
-        .onChange(of: isScannerSession) { isScanner in
-            if isScanner && tab == .nfc {
-                tab = .myid
-            }
-        }
-        .onAppear {
-            if isScannerSession && tab == .nfc {
-                tab = .myid
-            }
-        }
+        .onAppear { clampScannerTab() }
+        .onChange(of: isScannerSession) { _ in clampScannerTab() }
     }
 
-    /// Scanners stay on RedMed / 911 / Aid — never the write/pair NFC tab.
-    private var effectiveTab: AppTab {
-        if isScannerSession && tab == .nfc { return .myid }
-        return tab
+    private func clampScannerTab() {
+        if !showsNFC && tab == .nfc {
+            tab = .myid
+        }
     }
 }
 
@@ -52,7 +68,7 @@ struct CustomTabBar: View {
                 TabBarItem(icon: "phone.fill",   label: "911",    isOn: tab == .emergency)  { tab = .emergency }
                 TabBarItem(icon: "cross.case.fill", label: "Aid", isOn: tab == .aid)        { tab = .aid }
                 if showsNFC {
-                    TabBarItem(icon: "wave.3.right", label: "NFC",    isOn: tab == .nfc)        { tab = .nfc }
+                    TabBarItem(icon: "wave.3.right", label: "NFC", isOn: tab == .nfc)        { tab = .nfc }
                 }
             }
             .padding(.top, 2)

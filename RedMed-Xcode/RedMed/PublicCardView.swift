@@ -22,7 +22,8 @@ extension EnvironmentValues {
     }
 }
 
-/// Same app shell as `ContentView` — RedMed / 911 / Aid — for people who scan.
+/// Same app shell as `ContentView` for people who scan (ped / EMS):
+/// RedMed + 911 + Aid — **no NFC tab, no Edit**.
 /// Holds a **snapshot** of the profile so scanner UI cannot mutate owner data.
 /// Pedestrian/EMS NFC taps use `card.html` (no app required); this is the in-app
 /// preview / native scanner shell.

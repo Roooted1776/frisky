@@ -3,6 +3,7 @@ import SwiftUI
 struct EditProfileView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.dismiss) var dismiss
+    @Environment(\.isScannerSession) private var isScannerSession
 
     @State private var name = ""
     @State private var birthDate = ""
@@ -16,6 +17,16 @@ struct EditProfileView: View {
     @State private var contacts: [EmergencyContact] = []
 
     var body: some View {
+        // Ped/EMS scanners never edit — dismiss if this view is ever presented.
+        if isScannerSession {
+            Color.clear
+                .onAppear { dismiss() }
+        } else {
+            editorBody
+        }
+    }
+
+    private var editorBody: some View {
         VStack(spacing: 0) {
             // Sheet nav bar
             HStack {
@@ -283,6 +294,10 @@ struct EditProfileView: View {
     }
 
     private func save() {
+        guard !isScannerSession else {
+            dismiss()
+            return
+        }
         profile.name = name
         profile.birthDate = birthDate
         profile.bloodType = bloodType
