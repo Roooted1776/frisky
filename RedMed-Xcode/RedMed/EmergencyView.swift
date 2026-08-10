@@ -5,8 +5,6 @@ struct EmergencyView: View {
     @EnvironmentObject var profile: ProfileData
     @StateObject private var locationManager = LocationManager()
     @State private var showSatellite = false
-    /// Mount SOS after first GPS paint so opening 911 stays snappy.
-    @State private var mountSOS = false
 
     func callFirstContact() {
         guard let c = profile.contacts.first else { return }
@@ -29,11 +27,6 @@ struct EmergencyView: View {
                     // GPS CARD
                     GPSCard(location: locationManager.location)
                         .padding(.vertical, 4)
-
-                    // Emergency SOS — under Live GPS; deferred one frame for fast first paint
-                    if mountSOS {
-                        Find911SOSBlock(locationManager: locationManager)
-                    }
 
                     // COPY COORDINATES
                     Button {
@@ -99,15 +92,11 @@ struct EmergencyView: View {
                     Text("Find 911").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedDark)
                 }
             }
-            // GPS after first layout; SOS one yield later so the GPS card paints first.
             .task {
                 locationManager.start()
-                await Task.yield()
-                mountSOS = true
             }
             .onDisappear {
                 locationManager.stop()
-                mountSOS = false
             }
         }
     }
