@@ -42,6 +42,13 @@ are unchanged, and skips reinstall when the built app is unchanged. Defaults to 
 override with `SIM="iPhone 17 Pro" SIM_OS=27.0 ./scripts/run.sh`. Location is pre-granted on
 the simulator (Apple Park coords); override with `LOCATION="40.7128,-74.0060" ./scripts/run.sh`.
 
+**Compile checking without a Mac:** `.github/workflows/ios-build.yml` builds the app on a
+GitHub `macos-latest` runner for every push to `main` and every PR that touches
+`RedMed-Xcode/**`, so Swift compile errors surface in CI even when the change was authored
+somewhere that cannot build. It only compiles — it does not run the app, the Simulator UI, NFC,
+or Face ID, and it is not a substitute for testing behaviour on a device. Note the path filter:
+macOS runner minutes bill at 10x on private repos, so doc/HTML-only changes deliberately skip it.
+
 On a **physical iPhone**, iOS requires a one-time Allow tap — that cannot be bypassed from code.
 
 NFC write and Face ID flows only work on a physical iPhone, not the Simulator.
