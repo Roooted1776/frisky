@@ -1,7 +1,17 @@
 import Foundation
 
-// Common prescription + OTC medications for autocomplete suggestions.
-let commonMedications: [String] = [
+/// Edit autocomplete catalogues. Built once on first Edit keystroke — not at launch.
+enum SuggestionCatalog {
+    static let medications: [(display: String, lower: String)] = indexed(_medications)
+    static let allergies: [(display: String, lower: String)] = indexed(_allergies)
+    static let conditions: [(display: String, lower: String)] = indexed(_conditions)
+
+    private static func indexed(_ values: [String]) -> [(display: String, lower: String)] {
+        values.map { (display: $0, lower: $0.lowercased()) }
+    }
+
+    // Common prescription + OTC medications for autocomplete suggestions.
+    private static let _medications: [String] = [
     // OTC pain/fever
     "Tylenol (acetaminophen)", "Advil (ibuprofen)", "Motrin (ibuprofen)", "Aleve (naproxen)", "Aspirin",
     "Excedrin", "Bayer Aspirin", "Goody's Powder",
@@ -68,8 +78,8 @@ let commonMedications: [String] = [
     "Calcium supplement", "Magnesium supplement", "Folic acid", "Biotin",
 ]
 
-// Common allergies and adverse reactions for autocomplete suggestions.
-let commonAllergies: [String] = [
+    // Common allergies and adverse reactions for autocomplete suggestions.
+    private static let _allergies: [String] = [
     // Medications
     "Penicillin", "Amoxicillin", "Sulfa drugs (sulfonamides)", "Aspirin", "Ibuprofen (NSAIDs)",
     "Naproxen", "Codeine", "Morphine", "Cephalosporins", "Erythromycin", "Tetracycline",
@@ -88,8 +98,8 @@ let commonAllergies: [String] = [
     "Hair dye (PPD)", "Fragrance / perfume",
 ]
 
-// Common medical conditions for autocomplete suggestions.
-let commonConditions: [String] = [
+    // Common medical conditions for autocomplete suggestions.
+    private static let _conditions: [String] = [
     // Cardiovascular
     "Hypertension (high blood pressure)", "Coronary artery disease", "Atrial fibrillation (AFib)",
     "Congestive heart failure", "Prior heart attack (MI)", "Pacemaker", "Implanted defibrillator (ICD)",
@@ -115,3 +125,4 @@ let commonConditions: [String] = [
     "Cancer (active treatment)", "Pregnancy", "Organ transplant recipient", "Glaucoma",
     "Chronic pain condition", "Fibromyalgia", "Gout",
 ]
+}

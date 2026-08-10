@@ -158,11 +158,16 @@ struct AidTopic {
     let care: [String]
 }
 
-let aidTopics: [String: AidTopic] = AidTopicCatalog.topics
-
 /// Lazy bag so Aid strings are not built until Roadside Aid is opened.
 enum AidTopicCatalog {
     static let topics: [String: AidTopic] = _makeTopics()
+
+    /// Prefetch off the main thread after Aid's first paint.
+    static func warmUp() {
+        DispatchQueue.global(qos: .userInitiated).async {
+            _ = topics
+        }
+    }
 
     private static func _makeTopics() -> [String: AidTopic] {
         [

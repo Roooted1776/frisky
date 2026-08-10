@@ -131,7 +131,7 @@ struct EditProfileView: View {
                                 .padding(.vertical, 4)
 
                                 if allergyFocusID == line.id {
-                                    let matches = suggestions(from: commonAllergies, for: line, in: allergies)
+                                    let matches = suggestions(from: SuggestionCatalog.allergies, for: line, in: allergies)
                                     if !matches.isEmpty {
                                         FlowLayout(spacing: 6) {
                                             ForEach(matches, id: \.self) { suggestion in
@@ -191,7 +191,7 @@ struct EditProfileView: View {
                                 .padding(.vertical, 4)
 
                                 if medFocusID == line.id {
-                                    let matches = suggestions(from: commonMedications, for: line, in: medications)
+                                    let matches = suggestions(from: SuggestionCatalog.medications, for: line, in: medications)
                                     if !matches.isEmpty {
                                         FlowLayout(spacing: 6) {
                                             ForEach(matches, id: \.self) { suggestion in
@@ -251,7 +251,7 @@ struct EditProfileView: View {
                                 .padding(.vertical, 4)
 
                                 if conditionFocusID == line.id {
-                                    let matches = suggestions(from: commonConditions, for: line, in: conditions)
+                                    let matches = suggestions(from: SuggestionCatalog.conditions, for: line, in: conditions)
                                     if !matches.isEmpty {
                                         FlowLayout(spacing: 6) {
                                             ForEach(matches, id: \.self) { suggestion in
@@ -439,7 +439,7 @@ struct EditProfileView: View {
     /// Autocomplete for a draft row: skip blanks, exact fills, and values
     /// already used on other rows so adding another line doesn't re-list
     /// populated entries under the field.
-    private func suggestions(from catalog: [String], for line: DraftLine, in rows: [DraftLine]) -> [String] {
+    private func suggestions(from catalog: [(display: String, lower: String)], for line: DraftLine, in rows: [DraftLine]) -> [String] {
         let query = line.text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else { return [] }
         let queryLower = query.lowercased()
@@ -449,16 +449,18 @@ struct EditProfileView: View {
                 .map { $0.text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
                 .filter { !$0.isEmpty }
         )
-        return Array(
-            catalog
-                .filter { suggestion in
-                    let value = suggestion.lowercased()
-                    if value == queryLower { return false }
-                    if taken.contains(value) { return false }
-                    return suggestion.localizedCaseInsensitiveContains(query)
-                }
-                .prefix(5)
-        )
+        // Stop at 5 — don't scan the rest of the catalog.
+        var matches: [String] = []
+        matches.reserveCapacity(5)
+        for entry in catalog {
+            if entry.lower == queryLower { continue }
+            if taken.contains(entry.lower) { continue }
+            if entry.lower.contains(queryLower) {
+                matches.append(entry.display)
+                if matches.count == 5 { break }
+            }
+        }
+        return matches
     }
 
     private func loadDraft() {

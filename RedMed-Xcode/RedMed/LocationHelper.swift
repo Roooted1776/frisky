@@ -78,8 +78,10 @@ final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManag
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        DispatchQueue.main.async { [weak self] in
-            self?.refresh()
+        if Thread.isMainThread {
+            refresh()
+        } else {
+            DispatchQueue.main.async { [weak self] in self?.refresh() }
         }
     }
 }

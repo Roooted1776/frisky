@@ -115,25 +115,41 @@ struct SecondaryButton: View {
 struct FlowLayout: Layout {
     var spacing: CGFloat = 8
 
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        arrange(proposal: proposal, subviews: subviews).size
+    struct Cache {
+        var width: CGFloat = .nan
+        var origins: [CGPoint] = []
+        var sizes: [CGSize] = []
+        var size: CGSize = .zero
     }
 
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let result = arrange(proposal: proposal, subviews: subviews)
+    func makeCache(subviews: Subviews) -> Cache { Cache() }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout Cache) -> CGSize {
+        // Always recompute here — placeSubviews reuses this pass's result.
+        cache = arrange(proposal: proposal, subviews: subviews)
+        return cache.size
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout Cache) {
+        let maxWidth = proposal.width ?? .infinity
+        if cache.width != maxWidth || cache.origins.count != subviews.count {
+            cache = arrange(proposal: proposal, subviews: subviews)
+        }
         for index in subviews.indices {
-            let size = result.sizes[index]
+            let size = cache.sizes[index]
             subviews[index].place(
-                at: CGPoint(x: bounds.minX + result.origins[index].x, y: bounds.minY + result.origins[index].y),
+                at: CGPoint(x: bounds.minX + cache.origins[index].x, y: bounds.minY + cache.origins[index].y),
                 proposal: ProposedViewSize(width: size.width, height: size.height)
             )
         }
     }
 
-    private func arrange(proposal: ProposedViewSize, subviews: Subviews) -> (origins: [CGPoint], sizes: [CGSize], size: CGSize) {
+    private func arrange(proposal: ProposedViewSize, subviews: Subviews) -> Cache {
         let maxWidth = proposal.width ?? .infinity
         var origins: [CGPoint] = []
+        origins.reserveCapacity(subviews.count)
         var sizes: [CGSize] = []
+        sizes.reserveCapacity(subviews.count)
         var x: CGFloat = 0
         var y: CGFloat = 0
         var rowHeight: CGFloat = 0
@@ -167,6 +183,11 @@ struct FlowLayout: Layout {
             widthUsed = max(widthUsed, x - spacing)
         }
 
-        return (origins, sizes, CGSize(width: widthUsed, height: y + rowHeight))
+        return Cache(
+            width: maxWidth,
+            origins: origins,
+            sizes: sizes,
+            size: CGSize(width: widthUsed, height: y + rowHeight)
+        )
     }
 }
