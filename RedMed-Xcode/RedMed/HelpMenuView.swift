@@ -26,7 +26,7 @@ struct HelpMenuView: View {
                 NavigationLink("Set up your band") {
                     GetView(onSetUpBand: {
                         dismiss()
-                        onSetUpBand?()
+                        DispatchQueue.main.async { onSetUpBand?() }
                     })
                 }
                 NavigationLink("Privacy Policy") {
