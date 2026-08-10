@@ -17,26 +17,17 @@ struct LocalWebView: UIViewRepresentable {
 struct HelpMenuView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.dismiss) var dismiss
-    @ObservedObject private var nfcGate = NFCAccessGate.shared
-    /// After Accept on Get (or immediately if already accepted), open the NFC tab.
-    var onOpenNFC: (() -> Void)? = nil
+    /// Dismiss help and open the NFC tab (from `get.html` “Set up your band”).
+    var onSetUpBand: (() -> Void)? = nil
 
     var body: some View {
         NavigationView {
             List {
-                if nfcGate.isAccepted {
-                    Button("Write your band") {
+                NavigationLink("Set up your band") {
+                    GetView(onSetUpBand: {
                         dismiss()
-                        DispatchQueue.main.async { onOpenNFC?() }
-                    }
-                    .foregroundColor(.redmedDark)
-                } else {
-                    NavigationLink("Set up your band") {
-                        GetView(onAccept: {
-                            dismiss()
-                            DispatchQueue.main.async { onOpenNFC?() }
-                        })
-                    }
+                        DispatchQueue.main.async { onSetUpBand?() }
+                    })
                 }
                 NavigationLink("Privacy Policy") {
                     LocalWebView(filename: "PrivacyPolicy")

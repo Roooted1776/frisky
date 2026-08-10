@@ -4,11 +4,10 @@ struct ContentView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
     @Environment(\.scenePhase) private var scenePhase
-    @ObservedObject private var nfcGate = NFCAccessGate.shared
     @State private var tab: AppTab = .redmed
 
-    /// Ped/EMS scanners: never NFC. Owners: NFC tab only after Accept on GetView.
-    private var showsNFC: Bool { !isScannerSession && nfcGate.isAccepted }
+    /// Ped/EMS scanners: RedMed + Help + Aid only. Owner also gets NFC.
+    private var showsNFC: Bool { !isScannerSession }
 
     private var scannerSafeTab: Binding<AppTab> {
         Binding(
@@ -41,7 +40,7 @@ struct ContentView: View {
                     case .aid:
                         AidView()
                     case .nfc:
-                        // Unreachable until GetView Accept (and never for scanners).
+                        // Unreachable in scanner sessions — binding + tab bar both block it.
                         NFCView()
                     }
                 }
@@ -58,12 +57,11 @@ struct ContentView: View {
             guard !isScannerSession, phase == .active else { return }
             LocationAccessSuggester.shared.suggestIfNeeded()
         }
-        .onAppear { clampNFCTab() }
-        .onChange(of: isScannerSession) { _, _ in clampNFCTab() }
-        .onChange(of: nfcGate.isAccepted) { _, _ in clampNFCTab() }
+        .onAppear { clampScannerTab() }
+        .onChange(of: isScannerSession) { _, _ in clampScannerTab() }
     }
 
-    private func clampNFCTab() {
+    private func clampScannerTab() {
         if !showsNFC && tab == .nfc {
             tab = .redmed
         }
