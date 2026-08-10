@@ -364,8 +364,10 @@ struct EditProfileView: View {
             TextField(placeholder, text: text)
                 .font(.system(size: 15))
                 .foregroundColor(.redmedDark)
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
         }
-        .padding(.horizontal, 16).padding(.vertical, 13)
+        .padding(.horizontal, 16)
     }
 
     private static let bloodTypeChoices = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
