@@ -38,9 +38,9 @@ struct NFCView: View {
                     let capacity = ProfileNFCCodec.capacityNote(for: profile)
                     VStack(spacing: 0) {
                         statusRow("Passive band · 13.56 MHz HF NFC (NTAG) — not Bluetooth 2.4 GHz.", showDivider: true)
-                        statusRow("Passive standoff 16″ — won't set off your phone, other phones, or POS at hand distance.", showDivider: true)
+                        statusRow("Walk-by won't fire (~6–8″). Only a deliberate ~1–2″ antenna tap opens the card.", showDivider: true)
                         statusRow("Phone only powers the chip on write/scan. No background pair radio.", showDivider: true)
-                        statusRow("Pay terminals ignore this NDEF chip. Deliberate ~cm phone tap still opens the card.", showDivider: true)
+                        statusRow("POS ignore this chip (EMV ≠ NDEF) — not a distance setting.", showDivider: true)
                         statusRow("Tap the band · phone opens your card · no app for readers", showDivider: true)
                         statusRow(
                             profile.braceletLinked

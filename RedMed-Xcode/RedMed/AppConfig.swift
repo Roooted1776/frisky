@@ -14,14 +14,10 @@ enum AppConfig {
     ///   carrier from phone Bluetooth (~2.4 GHz). Do not source LF (~125 kHz)
     ///   or UHF (~860–960 MHz) chips; iPhone CoreNFC cannot program those.
     /// - Contactless payment POS also uses 13.56 MHz but speaks EMV, not NDEF
-    ///   medical URLs — protocol separation, not a second MHz.
-    /// - No proximity / “hand close” trigger in RedMed: CoreNFC sessions start
-    ///   only from Write/Scan buttons. Product standoff: a hand or another
-    ///   device at `passiveNoTriggerInches` does not set the band off. POS /
-    ///   pay terminals ignore NDEF medical URLs (EMV). Intentional ISO 14443
-    ///   coupling is still only ~cm to a phone antenna — HF NFC cannot be
-    ///   programmed to a 16″ read range, and a deliberate stranger tap must
-    ///   still open the emergency card.
+    ///   medical URLs — protocol separation, not a distance knob.
+    /// - Distances below describe HF NFC physics, not a tunable app setting.
+    ///   Walk-by / hand nearby (~6–8″) does not fire. Deliberate antenna tap
+    ///   is ~1–2″. Beyond ~4″ you are already outside reliable ISO 14443 coupling.
     enum BraceletRF {
         static let carrierMHz: Double = 13.56
         static let family = "ISO 14443 / NFC Forum Type 2 (NTAG213+)"
@@ -29,11 +25,15 @@ enum AppConfig {
         static let usesBluetooth = false
         /// RedMed never starts NFC because a hand or band is merely nearby.
         static let requiresExplicitUserSession = true
-        /// Casual standoff — band must not “set off” owner phone, other phones,
-        /// or pay/POS readers at this distance (walk-by / hand nearby).
-        static let passiveNoTriggerInches = 16
-        /// Typical ISO 14443 coupling for an intentional tap (physics, not a setting).
-        static let typicalCouplingCentimeters = 4
+        /// Walk-by / casual standoff (inches). Physics already drops off past ~4″;
+        /// 6–8″ is enough product margin. Not a tunable read range.
+        static let walkByStandoffInchesMin = 6
+        static let walkByStandoffInchesMax = 8
+        /// Intentional phone-antenna tap range (inches) — real HF NFC coupling.
+        static let intentionalTapInchesMin = 1
+        static let intentionalTapInchesMax = 2
+        /// Beyond this, ISO 14443 coupling on a phone is unreliable.
+        static let reliableCouplingInchesMax = 4
         /// Payment terminals speak EMV; they do not open RedMed NDEF URLs.
         static let ignoredByPaymentPOS = true
     }
