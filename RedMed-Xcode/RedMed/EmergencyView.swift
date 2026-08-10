@@ -2,36 +2,19 @@ import SwiftUI
 import CoreLocation
 
 struct EmergencyView: View {
-    @EnvironmentObject var profile: ProfileData
     @StateObject private var locationManager = LocationManager()
     @State private var showSatellite = false
-
-    func callFirstContact() {
-        guard let c = profile.contacts.first else { return }
-        let digits = c.detail.filter(\.isNumber)
-        guard !digits.isEmpty else { return }
-        if let url = URL(string: "tel://\(digits)") {
-            UIApplication.shared.open(url, options: [:], completionHandler: nil)
-        }
-    }
 
     var body: some View {
         NavigationView {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 8) {
-                    SecondaryButton("Call first emergency contact") { callFirstContact() }
-                    Text("Calls your first saved contact — iPhone confirms before dialing.")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .padding(.bottom, 4)
+                    // NO CELL SIGNAL — top of Find 911 (replaces call-first-contact)
+                    NoCellSignalCard(showSatellite: $showSatellite)
 
                     // GPS CARD
                     GPSCard(location: locationManager.location)
                         .padding(.vertical, 4)
-
-                    SeizureTimerStrip()
 
                     // COPY COORDINATES
                     Button {
@@ -47,6 +30,8 @@ struct EmergencyView: View {
                             .background(Color.redmedDark)
                             .clipShape(Capsule())
                     }
+
+                    SeizureTimerStrip()
 
                     // ROADSIDE FIRST RESPONSE
                     InfoCard(
@@ -72,12 +57,6 @@ struct EmergencyView: View {
                             "Stay on the line — let the dispatcher guide you."
                         ]
                     )
-
-                    // COMMON TRAUMA GRID
-                    CommonTraumaGrid()
-
-                    // NO CELL SIGNAL
-                    NoCellSignalCard(showSatellite: $showSatellite)
 
                     Text("Coordinates show on this screen only. RedMed has no servers.")
                         .font(.system(size: 10, weight: .medium))
@@ -258,59 +237,6 @@ struct InfoCard: View {
                             .foregroundColor(.redmedDark)
                             .lineSpacing(3)
                     }
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(Color.redmedSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
-    }
-}
-
-// MARK: - Common Trauma Grid
-struct CommonTraumaGrid: View {
-    let cells: [(String, String)] = [
-        ("Bleeding", "Press hard. Belt tourniquet on limb 2–3 in above. Note time."),
-        ("Not Breathing", "Tilt head, lift chin. No pulse? 100–120/min hard compressions."),
-        ("Spinal", "Don't move. Keep head still. Move only if fire or traffic."),
-        ("Burns", "Running water 10+ min. No ice. Cover loosely."),
-        ("Shock", "Lay flat, elevate legs. Keep warm. No food or water."),
-        ("Hypothermia", "Remove wet clothes. Warm core slowly. No rubbing."),
-        ("Heat", "Call 911 for stroke. Cool neck/armpits/groin fast."),
-    ]
-
-    let columns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
-                Image(systemName: "person.fill")
-                    .font(.system(size: 15))
-                    .foregroundColor(.white)
-                    .frame(width: 28, height: 28)
-                    .background(Color.redmedAccent)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                Text("Common Trauma Situations")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.redmedDark)
-            }
-            LazyVGrid(columns: columns, spacing: 6) {
-                ForEach(cells, id: \.0) { cell in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(cell.0)
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(.redmedAccent)
-                        Text(cell.1)
-                            .font(.system(size: 9))
-                            .foregroundColor(.redmedDark)
-                            .lineSpacing(2)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(8)
-                    .background(Color.redmedBg)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
             }
         }
