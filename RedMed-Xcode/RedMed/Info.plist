@@ -17,7 +17,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSFaceIDUsageDescription</key>
-	<string>RedMed uses Face ID to protect your medical data before writing to your bracelet.</string>
+	<string>RedMed uses Face ID or passcode to protect your medical profile before editing or writing to your bracelet.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>RedMed uses your location to give 911 your exact GPS coordinates in an emergency.</string>
 	<key>UILaunchScreen</key>
