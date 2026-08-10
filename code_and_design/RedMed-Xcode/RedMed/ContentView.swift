@@ -8,10 +8,9 @@ struct ContentView: View {
         ZStack(alignment: .bottom) {
             Group {
                 switch tab {
-                case .myid:      MyIDView(tab: $tab)
+                case .myid:      MyIDView()
                 case .emergency: EmergencyView()
                 case .aid:       AidView()
-                case .nfc:       NFCView()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -33,15 +32,14 @@ struct CustomTabBar: View {
                 TabBarItem(icon: "person.fill",  label: "RedMed", isOn: tab == .myid)      { tab = .myid }
                 TabBarItem(icon: "phone.fill",   label: "911",    isOn: tab == .emergency)  { tab = .emergency }
                 TabBarItem(icon: "cross.case.fill", label: "Aid", isOn: tab == .aid)        { tab = .aid }
-                TabBarItem(icon: "wave.3.right", label: "NFC",    isOn: tab == .nfc)        { tab = .nfc }
             }
-            .padding(.top, 4)
+            .padding(.top, 2)
 
             Capsule()
                 .fill(Color(red: 0.11, green: 0.098, blue: 0.086).opacity(0.18))
                 .frame(width: 134, height: 5)
-                .padding(.top, 4)
-                .padding(.bottom, 8)
+                .padding(.top, 2)
+                .padding(.bottom, 4)
         }
         .background(Color.white)
     }
@@ -60,7 +58,7 @@ struct TabBarItem: View {
                     .font(.system(size: 22))
                     .foregroundColor(isOn ? .redmedAccent : Color(red: 0.372, green: 0.388, blue: 0.408))
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 5)
+                    .padding(.vertical, 4)
                     .background(
                         RoundedRectangle(cornerRadius: 14)
                             .fill(isOn ? Color.redmedAccent.opacity(0.10) : Color.clear)
@@ -71,7 +69,7 @@ struct TabBarItem: View {
                     .kerning(-0.1)
             }
             .frame(maxWidth: .infinity)
-            .padding(.bottom, 6)
+            .padding(.bottom, 3)
         }
         .buttonStyle(.plain)
     }
