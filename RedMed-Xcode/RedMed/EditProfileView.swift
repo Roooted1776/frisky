@@ -127,11 +127,11 @@ struct EditProfileView: View {
                                 .padding(.trailing, 4)
                                 .padding(.vertical, 4)
 
-                                if allergyFocusID == line.id && !line.text.isEmpty {
-                                    let matches = commonAllergies.filter { $0.localizedCaseInsensitiveContains(line.text) }.prefix(5)
+                                if allergyFocusID == line.id {
+                                    let matches = suggestions(from: commonAllergies, for: line, in: allergies)
                                     if !matches.isEmpty {
                                         VStack(spacing: 0) {
-                                            ForEach(Array(matches), id: \.self) { suggestion in
+                                            ForEach(matches, id: \.self) { suggestion in
                                                 Button {
                                                     if let idx = allergies.firstIndex(where: { $0.id == line.id }) {
                                                         allergies[idx].text = suggestion
@@ -152,9 +152,13 @@ struct EditProfileView: View {
                                     }
                                 }
                             }
+                            .id(line.id)
                             Divider().padding(.leading, 16)
                         }
-                        addButton("Add allergy") { allergies.append(DraftLine()) }
+                        addButton("Add allergy") {
+                            allergyFocusID = nil
+                            allergies.append(DraftLine())
+                        }
                     }
 
                     // MEDICATIONS
@@ -179,11 +183,11 @@ struct EditProfileView: View {
                                 .padding(.trailing, 4)
                                 .padding(.vertical, 4)
 
-                                if medFocusID == line.id && !line.text.isEmpty {
-                                    let matches = commonMedications.filter { $0.localizedCaseInsensitiveContains(line.text) }.prefix(5)
+                                if medFocusID == line.id {
+                                    let matches = suggestions(from: commonMedications, for: line, in: medications)
                                     if !matches.isEmpty {
                                         VStack(spacing: 0) {
-                                            ForEach(Array(matches), id: \.self) { suggestion in
+                                            ForEach(matches, id: \.self) { suggestion in
                                                 Button {
                                                     if let idx = medications.firstIndex(where: { $0.id == line.id }) {
                                                         medications[idx].text = suggestion
@@ -204,9 +208,13 @@ struct EditProfileView: View {
                                     }
                                 }
                             }
+                            .id(line.id)
                             Divider().padding(.leading, 16)
                         }
-                        addButton("Add medication") { medications.append(DraftLine()) }
+                        addButton("Add medication") {
+                            medFocusID = nil
+                            medications.append(DraftLine())
+                        }
                     }
 
                     // CONDITIONS
@@ -231,11 +239,11 @@ struct EditProfileView: View {
                                 .padding(.trailing, 4)
                                 .padding(.vertical, 4)
 
-                                if conditionFocusID == line.id && !line.text.isEmpty {
-                                    let matches = commonConditions.filter { $0.localizedCaseInsensitiveContains(line.text) }.prefix(5)
+                                if conditionFocusID == line.id {
+                                    let matches = suggestions(from: commonConditions, for: line, in: conditions)
                                     if !matches.isEmpty {
                                         VStack(spacing: 0) {
-                                            ForEach(Array(matches), id: \.self) { suggestion in
+                                            ForEach(matches, id: \.self) { suggestion in
                                                 Button {
                                                     if let idx = conditions.firstIndex(where: { $0.id == line.id }) {
                                                         conditions[idx].text = suggestion
@@ -256,9 +264,13 @@ struct EditProfileView: View {
                                     }
                                 }
                             }
+                            .id(line.id)
                             Divider().padding(.leading, 16)
                         }
-                        addButton("Add condition") { conditions.append(DraftLine()) }
+                        addButton("Add condition") {
+                            conditionFocusID = nil
+                            conditions.append(DraftLine())
+                        }
                     }
 
                     // CONTACTS
@@ -407,6 +419,31 @@ struct EditProfileView: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+
+    /// Autocomplete for a draft row: skip blanks, exact fills, and values
+    /// already used on other rows so adding another line doesn't re-list
+    /// populated entries under the field.
+    private func suggestions(from catalog: [String], for line: DraftLine, in rows: [DraftLine]) -> [String] {
+        let query = line.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return [] }
+        let queryLower = query.lowercased()
+        let taken = Set(
+            rows
+                .filter { $0.id != line.id }
+                .map { $0.text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+                .filter { !$0.isEmpty }
+        )
+        return Array(
+            catalog
+                .filter { suggestion in
+                    let value = suggestion.lowercased()
+                    if value == queryLower { return false }
+                    if taken.contains(value) { return false }
+                    return suggestion.localizedCaseInsensitiveContains(query)
+                }
+                .prefix(5)
+        )
     }
 
     private func loadDraft() {
