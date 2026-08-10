@@ -3,6 +3,7 @@ import Network
 
 /// On-device connectivity only — no network requests. Used on Find 911 to
 /// show factual satellite-SOS guidance when the phone has no usable path.
+/// Constructed with LocationView (lazy tab), so it does not run at cold launch.
 final class NetworkPathMonitor: ObservableObject {
     @Published private(set) var isOffline = false
 

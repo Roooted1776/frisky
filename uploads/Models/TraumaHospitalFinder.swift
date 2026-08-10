@@ -37,12 +37,17 @@ struct TraumaHospital: Identifiable, Codable, Equatable {
 enum TraumaHospitalFinder {
     static let countyThreshold = 30
 
+    private static let lock = NSLock()
     private static var cachedIndex: [String: [String: [TraumaHospital]]]?
+    private static var cachedStates: [String]?
 
     private static var regionIndex: [String: [String: [TraumaHospital]]] {
+        lock.lock()
+        defer { lock.unlock() }
         if let cachedIndex { return cachedIndex }
         let loaded = Self.loadRegionIndex()
         cachedIndex = loaded
+        cachedStates = loaded.keys.sorted()
         return loaded
     }
 
@@ -64,26 +69,56 @@ enum TraumaHospitalFinder {
         return index
     }
 
+    /// Prefetch off the main thread so Find 911's first paint isn't blocked on JSON decode.
+    static func warmUp() {
+        DispatchQueue.global(qos: .userInitiated).async {
+            _ = regionIndex
+        }
+    }
+
+    /// States list without forcing a main-thread decode when the cache is cold.
+    static func loadStatesAsync() async -> [String] {
+        await Task.detached(priority: .userInitiated) {
+            lock.lock()
+            if let cachedStates {
+                lock.unlock()
+                return cachedStates
+            }
+            lock.unlock()
+            let index = regionIndex
+            return index.keys.sorted()
+        }.value
+    }
+
     static var states: [String] {
-        regionIndex.keys.sorted()
+        lock.lock()
+        if let cachedStates {
+            lock.unlock()
+            return cachedStates
+        }
+        lock.unlock()
+        return regionIndex.keys.sorted()
     }
 
     static func counties(in state: String) -> [String] {
-        guard let counties = regionIndex[state] else { return [] }
+        guard !state.isEmpty, let counties = regionIndex[state] else { return [] }
         return counties.keys.sorted()
     }
 
     static func hospitals(in state: String) -> [TraumaHospital] {
-        guard let counties = regionIndex[state] else { return [] }
+        guard !state.isEmpty, let counties = regionIndex[state] else { return [] }
         return counties.values.flatMap { $0 }.sorted { $0.name < $1.name }
     }
 
     static func needsCountyPicker(for state: String) -> Bool {
-        hospitals(in: state).count >= countyThreshold
+        // Empty selection must not touch the JSON index (cold-launch path).
+        guard !state.isEmpty else { return false }
+        return hospitals(in: state).count >= countyThreshold
     }
 
     static func hospitals(state: String, county: String) -> [TraumaHospital] {
-        regionIndex[state]?[county] ?? []
+        guard !state.isEmpty else { return [] }
+        return regionIndex[state]?[county] ?? []
     }
 
     static func resolvedHospitals(state: String, county: String) -> [TraumaHospital] {
@@ -96,6 +131,7 @@ enum TraumaHospitalFinder {
     }
 
     static func matchCounty(state: String, name: String) -> String? {
+        guard !state.isEmpty else { return nil }
         let target = name.lowercased()
             .replacingOccurrences(of: " county", with: "")
             .replacingOccurrences(of: " city", with: "")

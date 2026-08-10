@@ -4,14 +4,12 @@ import UIKit
 struct ContentView: View {
     @StateObject private var store = ProfileStore()
     @StateObject private var braceletLink = BraceletLinkStore()
-    @State private var selectedTab: AppTab = .find911
+    /// My ID first — lighter than Find 911 (no GPS / trauma JSON / path monitor on cold start).
+    @State private var selectedTab: OwnerTab = .myID
     @Environment(\.scenePhase) private var scenePhase
 
-    private enum AppTab: Hashable {
-        case myID, find911, aid, nfc
-    }
-
-    init() {
+    /// Tab bar chrome once per process — not on every view rebuild.
+    private static let configureTabBar: Void = {
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = UIColor(red: 1, green: 1, blue: 1, alpha: 1)
@@ -39,27 +37,34 @@ struct ContentView: View {
         if #available(iOS 26.0, *) {
             UITabBar.appearance().isHidden = false
         }
+    }()
+
+    init() {
+        _ = Self.configureTabBar
     }
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            MyIDView()
-                .tabItem { Label("RedMed", systemImage: "person.crop.circle.fill") }
-                .tag(AppTab.myID)
+        // Switch (not TabView): only the selected tab's StateObjects exist —
+        // LocationManager / NWPathMonitor / trauma JSON stay off the cold path.
+        ZStack(alignment: .bottom) {
+            Group {
+                switch selectedTab {
+                case .myID:
+                    MyIDView()
+                case .find911:
+                    LocationView()
+                case .aid:
+                    BasicAidView()
+                case .nfc:
+                    WriteTagView()
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.bottom, 64)
 
-            LocationView()
-                .tabItem { Label("911", systemImage: "phone.fill") }
-                .tag(AppTab.find911)
-
-            BasicAidView()
-                .tabItem { Label("Aid", systemImage: "cross.case.fill") }
-                .tag(AppTab.aid)
-
-            WriteTagView()
-                .tabItem { Label("NFC", systemImage: "wave.3.right.circle.fill") }
-                .tag(AppTab.nfc)
+            CustomTabBar(tab: $selectedTab)
         }
-        .modifier(TabBarBehaviorModifier())
+        .ignoresSafeArea(edges: .bottom)
         .environmentObject(store)
         .environmentObject(braceletLink)
         .tint(AppTheme.accent)
@@ -75,9 +80,6 @@ struct ContentView: View {
         }
         .withLayoutMetrics()
         .onAppear {
-            // Cold launch after pairing+backgrounding (e.g. kill & relaunch):
-            // there's no scenePhase *change* to observe for the app's own
-            // first activation, so check once on appear too.
             braceletLink.promotePostPairingGraceIfEligible()
         }
         .onChange(of: scenePhase) { phase in
@@ -92,17 +94,4 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-}
-
-/// iOS 26+ floating/minimized tab bars change height while scrolling — keep a stable bar.
-private struct TabBarBehaviorModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        if #available(iOS 26.0, *) {
-            content
-                .tabBarMinimizeBehavior(.never)
-                .toolbarBackground(.visible, for: .tabBar)
-        } else {
-            content
-        }
-    }
 }

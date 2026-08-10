@@ -6,7 +6,6 @@ extension AidTopic: Identifiable {}
 struct TopicDetailView: View {
     let topic: AidTopic
     @Environment(\.dismiss) var dismiss
-    @StateObject private var hospitalFinder = NearbyHospitalFinder()
     @State private var cprRunning = false
     @State private var cprCount = 0
     @State private var cprPhase = "compress" // or "breathe"
@@ -160,75 +159,8 @@ struct TopicDetailView: View {
                     }
 
                     if isTraumaHospitals {
-                        Text("Nearest Hospitals — Live")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
-                            .kerning(0.5)
-                            .textCase(.uppercase)
-                            .padding(.horizontal, 4)
-                            .padding(.bottom, 6)
-                            .padding(.top, 24)
-
-                        if hospitalFinder.isLoading {
-                            HStack {
-                                ProgressView()
-                                Text("Finding hospitals near you…")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.redmedMuted)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 24)
-                        } else if let err = hospitalFinder.errorMessage {
-                            Text(err)
-                                .font(.system(size: 13))
-                                .foregroundColor(.redmedMuted)
-                                .padding(.vertical, 12)
-                            Button("Try again") { hospitalFinder.search() }
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.redmedAccent)
-                        } else if hospitalFinder.hospitals.isEmpty {
-                            Button("Find hospitals near me") { hospitalFinder.search() }
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(Color.redmedDark)
-                                .clipShape(Capsule())
-                        } else {
-                            VStack(spacing: 0) {
-                                ForEach(Array(hospitalFinder.hospitals.enumerated()), id: \.offset) { i, hosp in
-                                    Button {
-                                        hosp.mapItem.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
-                                    } label: {
-                                        HStack(alignment: .top, spacing: 12) {
-                                            Text("\(i + 1)")
-                                                .font(.system(size: 13, weight: .bold))
-                                                .foregroundColor(.redmedAccent)
-                                                .frame(width: 20, alignment: .leading)
-                                            VStack(alignment: .leading, spacing: 2) {
-                                                Text(hosp.name)
-                                                    .font(.system(size: 14, weight: .semibold))
-                                                    .foregroundColor(.redmedDark)
-                                                Text(hosp.address.isEmpty ? String(format: "%.1f mi away", hosp.distanceMiles) : "\(hosp.address) · \(String(format: "%.1f", hosp.distanceMiles)) mi")
-                                                    .font(.system(size: 12, weight: .medium))
-                                                    .foregroundColor(.redmedMuted)
-                                            }
-                                            Spacer()
-                                            Image(systemName: "arrow.triangle.turn.up.right.circle.fill")
-                                                .font(.system(size: 18))
-                                                .foregroundColor(.redmedAccent)
-                                        }
-                                        .padding(.horizontal, 16).padding(.vertical, 11)
-                                    }
-                                    .buttonStyle(.plain)
-                                    if i < hospitalFinder.hospitals.count - 1 {
-                                        Divider().overlay(Color.black.opacity(0.06))
-                                    }
-                                }
-                            }
-                            .background(Color.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                        }
+                        // Child owns CLLocationManager — other aid topics never create it.
+                        LiveNearbyHospitalsSection()
                     }
                 }
                 .padding(.horizontal, 16)
@@ -236,7 +168,6 @@ struct TopicDetailView: View {
             }
             .background(Color(red: 0.949, green: 0.949, blue: 0.969))
             .onDisappear { stopCPR() }
-            .onAppear { if isTraumaHospitals { hospitalFinder.search() } }
             .navigationTitle(topic.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -255,5 +186,85 @@ struct TopicDetailView: View {
                 }
             }
         }
+    }
+}
+
+/// Owns MapKit + CLLocationManager only when the trauma-hospitals topic is open.
+private struct LiveNearbyHospitalsSection: View {
+    @StateObject private var hospitalFinder = NearbyHospitalFinder()
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Nearest Hospitals — Live")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
+                .kerning(0.5)
+                .textCase(.uppercase)
+                .padding(.horizontal, 4)
+                .padding(.bottom, 6)
+                .padding(.top, 24)
+
+            if hospitalFinder.isLoading {
+                HStack {
+                    ProgressView()
+                    Text("Finding hospitals near you…")
+                        .font(.system(size: 14))
+                        .foregroundColor(.redmedMuted)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 24)
+            } else if let err = hospitalFinder.errorMessage {
+                Text(err)
+                    .font(.system(size: 13))
+                    .foregroundColor(.redmedMuted)
+                    .padding(.vertical, 12)
+                Button("Try again") { hospitalFinder.search() }
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.redmedAccent)
+            } else if hospitalFinder.hospitals.isEmpty {
+                Button("Find hospitals near me") { hospitalFinder.search() }
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Color.redmedDark)
+                    .clipShape(Capsule())
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(Array(hospitalFinder.hospitals.enumerated()), id: \.offset) { i, hosp in
+                        Button {
+                            hosp.mapItem.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
+                        } label: {
+                            HStack(alignment: .top, spacing: 12) {
+                                Text("\(i + 1)")
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundColor(.redmedAccent)
+                                    .frame(width: 20, alignment: .leading)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(hosp.name)
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(.redmedDark)
+                                    Text(hosp.address.isEmpty ? String(format: "%.1f mi away", hosp.distanceMiles) : "\(hosp.address) · \(String(format: "%.1f", hosp.distanceMiles)) mi")
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundColor(.redmedMuted)
+                                }
+                                Spacer()
+                                Image(systemName: "arrow.triangle.turn.up.right.circle.fill")
+                                    .font(.system(size: 18))
+                                    .foregroundColor(.redmedAccent)
+                            }
+                            .padding(.horizontal, 16).padding(.vertical, 11)
+                        }
+                        .buttonStyle(.plain)
+                        if i < hospitalFinder.hospitals.count - 1 {
+                            Divider().overlay(Color.black.opacity(0.06))
+                        }
+                    }
+                }
+                .background(Color.white)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+        }
+        .task { hospitalFinder.search() }
     }
 }

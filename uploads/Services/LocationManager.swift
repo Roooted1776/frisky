@@ -20,7 +20,9 @@ final class LocationManager: NSObject, ObservableObject {
     override init() {
         super.init()
         manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyBest
+        // HundredMeters first — Best accuracy delays the initial publish.
+        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        manager.distanceFilter = 25
     }
 
     func requestLocation() {
@@ -28,6 +30,7 @@ final class LocationManager: NSObject, ObservableObject {
         case .notDetermined:
             manager.requestWhenInUseAuthorization()
         case .authorizedWhenInUse, .authorizedAlways:
+            manager.requestLocation()
             manager.startUpdatingLocation()
             if CLLocationManager.headingAvailable() {
                 manager.startUpdatingHeading()
@@ -54,6 +57,7 @@ extension LocationManager: CLLocationManagerDelegate {
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         switch manager.authorizationStatus {
         case .authorizedWhenInUse, .authorizedAlways:
+            manager.requestLocation()
             manager.startUpdatingLocation()
             if CLLocationManager.headingAvailable() {
                 manager.startUpdatingHeading()
@@ -75,6 +79,10 @@ extension LocationManager: CLLocationManagerDelegate {
             self.altitude = loc.verticalAccuracy >= 0 ? loc.altitude : nil
             self.locationTimestamp = loc.timestamp
             self.errorMessage = nil
+            if manager.desiredAccuracy != kCLLocationAccuracyBest {
+                manager.desiredAccuracy = kCLLocationAccuracyBest
+                manager.distanceFilter = 5
+            }
         }
     }
 
