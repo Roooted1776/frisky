@@ -4,9 +4,10 @@ struct ContentView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
     @Environment(\.scenePhase) private var scenePhase
+    @ObservedObject private var nfcGate = NFCAccessGate.shared
     @State private var tab: AppTab = .redmed
 
-    /// Ped/EMS scanners: RedMed + Help + Aid only. Owner also gets NFC.
+    /// Ped/EMS scanners: never NFC. Owners always see the NFC tab; Get/Accept gates the write page.
     private var showsNFC: Bool { !isScannerSession }
 
     private var scannerSafeTab: Binding<AppTab> {
@@ -40,8 +41,15 @@ struct ContentView: View {
                     case .aid:
                         AidView()
                     case .nfc:
-                        // Unreachable in scanner sessions — binding + tab bar both block it.
-                        NFCView()
+                        // Scanners never reach here. Owners see Get until Accept, then NFC write.
+                        if nfcGate.isAccepted {
+                            NFCView()
+                        } else {
+                            NavigationView {
+                                GetView()
+                            }
+                            .navigationViewStyle(.stack)
+                        }
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

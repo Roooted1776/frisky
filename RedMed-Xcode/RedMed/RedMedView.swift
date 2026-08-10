@@ -149,7 +149,7 @@ struct RedMedView: View {
             get: { showHelp && !isScannerSession },
             set: { showHelp = $0 && !isScannerSession }
         )) {
-            HelpMenuView(onSetUpBand: { tab = .nfc })
+            HelpMenuView(onOpenNFC: { tab = .nfc })
                 .environmentObject(profile)
         }
         .fullScreenCover(isPresented: Binding(
