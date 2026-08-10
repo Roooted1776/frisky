@@ -43,19 +43,12 @@ struct AidView: View {
                     Text("Roadside Aid")
                         .font(.system(size: 22, weight: .bold))
                         .foregroundColor(.redmedDark)
-                    Text("Call \(EmergencyNumber.current) first. Tap a pane — expand only what you need.")
+                    Text("Tap a pane — expand only what you need.")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.redmedMuted)
 
-                    PrimaryButton(title: "Call \(EmergencyNumber.current)") {
-                        if let url = EmergencyNumber.dialURL {
-                            UIApplication.shared.open(url, options: [:], completionHandler: nil)
-                        }
-                    }
-
                     HStack(spacing: 8) {
                         PillTag(text: "tap to expand", accent: true)
-                        PillTag(text: "\(EmergencyNumber.current) first", accent: false)
                     }
                     .padding(.bottom, 2)
 

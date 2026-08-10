@@ -154,12 +154,6 @@ struct TopicDetailView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .padding(.bottom, 24)
 
-                    PrimaryButton(title: "Call \(EmergencyNumber.current)") {
-                        if let url = EmergencyNumber.dialURL {
-                            UIApplication.shared.open(url, options: [:], completionHandler: nil)
-                        }
-                    }
-
                     if isTraumaHospitals {
                         // Child owns CLLocationManager — other aid topics never create it.
                         LiveNearbyHospitalsSection()

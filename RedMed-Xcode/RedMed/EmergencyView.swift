@@ -271,20 +271,13 @@ struct NoCellSignalCard: View {
             .padding(14)
 
             if showSatellite {
-                VStack(spacing: 8) {
-                    Text("iPhone 14+ (iOS 16.1+): hold Side + Volume until Emergency SOS appears, or Settings → Emergency SOS.")
-                        .font(.system(size: 11))
-                        .foregroundColor(.redmedMuted)
-                        .lineSpacing(3)
-                    SecondaryButton("Open Phone · dial \(EmergencyNumber.current)") {
-                        if let url = EmergencyNumber.dialURL {
-                            UIApplication.shared.open(url, options: [:], completionHandler: nil)
-                        }
-                    }
-                }
-                .padding(.horizontal, 14)
-                .padding(.bottom, 14)
-                .transition(.opacity.combined(with: .move(edge: .top)))
+                Text("iPhone 14+ (iOS 16.1+): hold Side + Volume until Emergency SOS appears, or Settings → Emergency SOS.")
+                    .font(.system(size: 11))
+                    .foregroundColor(.redmedMuted)
+                    .lineSpacing(3)
+                    .padding(.horizontal, 14)
+                    .padding(.bottom, 14)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .background(Color.redmedSurface)
