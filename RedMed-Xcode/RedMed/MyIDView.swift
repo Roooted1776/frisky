@@ -20,7 +20,7 @@ struct MyIDView: View {
                         VStack(alignment: .leading, spacing: 3) {
                             Text("\(profile.name)'s iPhone")
                                 .font(.system(size: 20, weight: .bold)).foregroundColor(.redmedDark)
-                            Text("LINKED BRACELET ›")
+                            Text(profile.braceletLinked ? "LINKED BRACELET ›" : "PAIR BLANK BRACELET ›")
                                 .font(.system(size: 10, weight: .bold))
                                 .foregroundColor(Color.redmedAccent.opacity(0.85))
                                 .kerning(0.7)
@@ -46,10 +46,37 @@ struct MyIDView: View {
                         HStack(spacing: 0) {
                             Text("Tap ").font(.system(size: 14, weight: .medium)).foregroundColor(.redmedMuted)
                             Text("Edit").font(.system(size: 14, weight: .bold)).foregroundColor(.redmedAccent)
-                            Text(" to add your name and set up your bracelet.")
+                            Text(" to add your name, then pair a blank bracelet.")
                                 .font(.system(size: 14, weight: .medium)).foregroundColor(.redmedMuted)
                         }
                         .padding(.horizontal, 20).padding(.bottom, 8)
+                    } else if !profile.braceletLinked {
+                        Button { tab = .nfc } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: "wave.3.right")
+                                    .font(.system(size: 16, weight: .bold))
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Pair your blank bracelet")
+                                        .font(.system(size: 14, weight: .bold))
+                                    Text("My ID → NFC → Write to NFC tag")
+                                        .font(.system(size: 12, weight: .medium))
+                                        .opacity(0.85)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 13, weight: .semibold))
+                            }
+                            .foregroundColor(.white)
+                            .padding(14)
+                            .background(
+                                LinearGradient(colors: [Color(red:1, green:0.447, blue:0.537), .redmedAccent],
+                                               startPoint: .top, endPoint: .bottom)
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 12)
                     }
 
                     // YOU
