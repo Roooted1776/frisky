@@ -40,11 +40,17 @@ class ProfileData: ObservableObject {
         self.persists = persisting
         if persisting {
             loadFromKeychain()
-            // Simulator demos: fill an empty Keychain with sample medical data
-            // so Edit / RedMed aren't blank. Never seeds on a real device.
+            // Simulator demos: seed list rows only when Keychain is empty,
+            // or strip the old full Alex Rivera identity sample if present.
             #if targetEnvironment(simulator)
-            if !hasSensitiveProfileData {
-                applySampleProfile()
+            if !hasSensitiveProfileData || name == "Alex Rivera" {
+                name = ""
+                birthDate = ""
+                bloodType = ""
+                contacts = []
+                isOrganDonor = false
+                lastUpdated = ""
+                applySampleListData()
                 persist()
             }
             #endif
@@ -67,20 +73,11 @@ class ProfileData: ObservableObject {
         return copy
     }
 
-    /// Design / Simulator sample — matches `code_and_design` Alex Rivera profile.
-    func applySampleProfile() {
-        name = "Alex Rivera"
-        birthDate = "March 14, 1994"
-        bloodType = "O+"
+    /// Simulator-only list samples — no fake identity (name / DOB / blood / contacts).
+    func applySampleListData() {
         allergies = ["Penicillin", "Peanuts"]
         medications = ["Lisinopril 10mg — daily", "Albuterol inhaler — as needed"]
         conditions = ["Type 1 Diabetes", "Asthma"]
-        contacts = [
-            EmergencyContact(name: "Jamie Rivera", detail: "Spouse · (555) 201-4488"),
-            EmergencyContact(name: "Dr. Sarah Chen", detail: "Primary Care · (555) 340-9921")
-        ]
-        isOrganDonor = true
-        lastUpdated = DateFormatter.localizedString(from: Date(), dateStyle: .medium, timeStyle: .none)
     }
 
     func persist() {
