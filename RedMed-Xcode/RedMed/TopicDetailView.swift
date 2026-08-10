@@ -1,4 +1,5 @@
 import SwiftUI
+import MapKit
 
 extension AidTopic: Identifiable {}
 
