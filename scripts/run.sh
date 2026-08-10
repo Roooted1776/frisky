@@ -75,7 +75,13 @@ pick_simulator() {
 needs_build() {
   [[ ! -d "$APP" ]] && return 0
   local newest_src
-  newest_src="$(find "$SRC_DIR" "$PROJ" -type f \( -name '*.swift' -o -name '*.plist' -o -name '*.html' -o -name '*.css' -o -name 'project.pbxproj' \) -print0 \
+  # Include assets/entitlements/JSON — skipping them left Simulator on a stale binary
+  # after logo / capability-only edits.
+  newest_src="$(find "$SRC_DIR" "$PROJ" -type f \( \
+      -name '*.swift' -o -name '*.plist' -o -name '*.html' -o -name '*.css' \
+      -o -name '*.png' -o -name '*.svg' -o -name '*.json' -o -name '*.entitlements' \
+      -o -name 'project.pbxproj' \
+    \) -print0 \
     | xargs -0 stat -f '%m' 2>/dev/null | sort -n | tail -1)"
   local app_mtime
   app_mtime="$(stat -f '%m' "$APP" 2>/dev/null || echo 0)"
