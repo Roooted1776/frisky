@@ -23,8 +23,8 @@ struct EmergencyView: View {
                         .foregroundColor(.redmedDark)
                         .padding(.bottom, 2)
 
-                    SecondaryButton("Call emergency contacts") { callFirstContact() }
-                    Text("Pick a saved contact — iPhone asks before placing the call.")
+                    SecondaryButton("Call first emergency contact") { callFirstContact() }
+                    Text("Calls your first saved contact — iPhone confirms before dialing.")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)

@@ -1,126 +1,102 @@
 import SwiftUI
 import CoreLocation
 
-/// Instant read-only surface for first responders.
-/// Shows: medical ID, Live GPS + contacts, Roadside Aid.
-/// Does **not** expose owner settings or any edit path.
+/// Scanner / first-responder shell.
+/// Full RedMed **911** and **Aid** tabs (same as the owner app), plus a read-only Medical ID.
+/// No owner Edit / settings — scanners cannot change the profile.
 struct PublicCardView: View {
     @ObservedObject var profile: ProfileData
     @Environment(\.dismiss) var dismiss
-    @StateObject private var locationManager = LocationManager()
-    @StateObject private var locationHelper = LocationHelper()
-    @State private var openAidPane: String?
-    @State private var activeTopic: AidTopic?
+    @State private var tab: ScannerTab = .emergency
 
-    var body: some View {
-        NavigationView {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 12) {
-                    readOnlyLock
-
-                    SecondaryButton("Text location to emergency contact") {
-                        locationHelper.requestAndSend(to: profile.contacts.first?.detail)
-                    }
-
-                    // --- User medical ID ---
-                    identityBlock
-                    cardSection(title: "Allergies", items: profile.hasData ? profile.allergies : [], critical: true)
-                    cardSection(title: "Medications", items: profile.hasData ? profile.medications : [], critical: false)
-                    cardSection(title: "Conditions", items: profile.hasData ? profile.conditions : [], critical: false)
-                    donorBlock
-                    contactsBlock
-
-                    // --- Find 911 (GPS) ---
-                    SectionLabel(text: "Live GPS")
-                    GPSCard(location: locationManager.location)
-                    Button {
-                        if let loc = locationManager.location {
-                            UIPasteboard.general.string =
-                                "\(loc.coordinate.latitude), \(loc.coordinate.longitude)"
-                        }
-                    } label: {
-                        Text("Copy coordinates")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(Color.redmedDark)
-                            .clipShape(Capsule())
-                    }
-
-                    // --- Roadside Aid ---
-                    SectionLabel(text: "Roadside Aid")
-                    Text("Tap a pane — expand only what you need.")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                        ForEach(aidPanes.filter { $0.id != "hospitals" }) { pane in
-                            let isOpen = openAidPane == pane.id
-                            PaneCard(pane: pane, isOpen: isOpen) { key in
-                                if key == nil {
-                                    withAnimation(.easeOut(duration: 0.2)) {
-                                        openAidPane = isOpen ? nil : pane.id
-                                    }
-                                } else if let k = key, let topic = aidTopics[k] {
-                                    activeTopic = topic
-                                }
-                            }
-                            .gridCellColumns(isOpen ? 2 : 1)
-                        }
-                    }
-
-                    Text("Read-only medical ID and roadside aid. Owner settings are hidden. This card cannot be edited here.")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 4)
-                        .padding(.bottom, 8)
-                }
-                .padding(16)
-            }
-            .background(Color(red: 0.949, green: 0.949, blue: 0.969))
-            .navigationTitle("Emergency Card")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Close") { dismiss() }.foregroundColor(.redmedMuted)
-                }
-            }
-            .task { locationManager.start() }
-            .onDisappear { locationManager.stop() }
-            .sheet(item: $activeTopic) { topic in
-                TopicDetailView(topic: topic)
-            }
-        }
-        .navigationViewStyle(.stack)
+    private enum ScannerTab {
+        case medical, emergency, aid
     }
 
-    /// Scanners cannot alter the card or profile from this surface.
-    private var readOnlyLock: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "lock.fill")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(.redmedDark)
-                .padding(.top, 2)
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Read only")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundColor(.redmedDark)
-                Text("You can’t edit this medical ID from a scan. Changes require the owner’s RedMed app unlocked with Face ID, Touch ID, or device passcode.")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.redmedMuted)
-                    .fixedSize(horizontal: false, vertical: true)
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            VStack(spacing: 0) {
+                scannerChrome
+
+                Group {
+                    switch tab {
+                    case .medical:
+                        ScannerMedicalIDView(profile: profile)
+                    case .emergency:
+                        EmergencyView()
+                    case .aid:
+                        AidView()
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.bottom, 64)
             }
+
+            scannerTabBar
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .environmentObject(profile)
+        .ignoresSafeArea(edges: .bottom)
+    }
+
+    private var scannerChrome: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "lock.fill")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundColor(.redmedDark)
+            Text("Read only — Medical ID, 911, and Aid. Editing needs the owner’s app + Face ID / passcode.")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(.redmedMuted)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 8)
+            Button("Close") { dismiss() }
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.redmedMuted)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
         .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.redmedDivider, lineWidth: 1))
-        .accessibilityElement(children: .combine)
-        .allowsHitTesting(false)
+        .overlay(Divider(), alignment: .bottom)
+    }
+
+    private var scannerTabBar: some View {
+        VStack(spacing: 0) {
+            Divider().overlay(Color(red: 0.9, green: 0.9, blue: 0.9))
+            HStack(spacing: 0) {
+                TabBarItem(icon: "person.fill", label: "Medical ID", isOn: tab == .medical) { tab = .medical }
+                TabBarItem(icon: "phone.fill", label: "911", isOn: tab == .emergency) { tab = .emergency }
+                TabBarItem(icon: "cross.case.fill", label: "Aid", isOn: tab == .aid) { tab = .aid }
+            }
+            .padding(.top, 2)
+
+            Capsule()
+                .fill(Color(red: 0.11, green: 0.098, blue: 0.086).opacity(0.18))
+                .frame(width: 134, height: 5)
+                .padding(.top, 2)
+                .padding(.bottom, 4)
+        }
+        .background(Color.white)
+    }
+}
+
+// MARK: - Read-only Medical ID (scanner)
+
+private struct ScannerMedicalIDView: View {
+    @ObservedObject var profile: ProfileData
+
+    var body: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 12) {
+                identityBlock
+                cardSection(title: "Allergies", items: profile.hasData ? profile.allergies : [], critical: true)
+                cardSection(title: "Medications", items: profile.hasData ? profile.medications : [], critical: false)
+                cardSection(title: "Conditions", items: profile.hasData ? profile.conditions : [], critical: false)
+                donorBlock
+                contactsBlock
+            }
+            .padding(16)
+            .padding(.bottom, 24)
+        }
+        .background(Color.redmedBg)
     }
 
     private var identityBlock: some View {

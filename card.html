@@ -9,34 +9,37 @@
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
-    background: #fff7f7;
+    background: #f2f2f7;
     color: #1c1917;
     min-height: 100vh;
-    padding: 20px 16px 48px;
+    padding: 0 0 88px;
   }
   a { color: #e11d48; text-decoration: none; }
-  .wrap { max-width: 480px; margin: 0 auto; }
-  .badge {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.6px;
-    text-transform: uppercase;
-    color: #e11d48;
-    background: rgba(225,29,72,0.1);
-    border-radius: 999px;
-    padding: 6px 12px;
-    margin-bottom: 14px;
+  .chrome {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    background: #fff;
+    border-bottom: 1px solid rgba(28,25,23,0.08);
+    padding: 12px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #78716c;
+    line-height: 1.4;
   }
-  h1 { font-size: 26px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.4px; }
-  .sub { font-size: 13px; font-weight: 500; color: #78716c; margin-bottom: 16px; }
+  .chrome strong { color: #1c1917; font-weight: 800; display: block; margin-bottom: 2px; }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 16px; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  h1 { font-size: 22px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.3px; }
+  .sub { font-size: 13px; font-weight: 500; color: #78716c; margin-bottom: 14px; }
   .section-label {
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.7px;
     text-transform: uppercase;
     color: #78716c;
-    margin: 22px 0 8px;
+    margin: 18px 0 8px;
   }
   .card {
     background: #fff;
@@ -44,32 +47,40 @@
     border-radius: 14px;
     overflow: hidden;
   }
-  .row, .list-item {
+  .list-item {
     padding: 13px 16px;
     border-bottom: 1px solid rgba(28,25,23,0.07);
     font-size: 15px;
     font-weight: 600;
   }
-  .row:last-child, .list-item:last-child { border-bottom: none; }
-  .row { display: flex; justify-content: space-between; align-items: center; }
-  .row .k { font-weight: 500; color: #78716c; }
+  .list-item:last-child { border-bottom: none; }
   .critical .list-item { color: #e11d48; background: rgba(225,29,72,0.04); }
-  .call-btn, .gps-btn {
+  .btn {
     display: block;
     width: 100%;
     text-align: center;
     font-weight: 800;
     border-radius: 999px;
-    padding: 15px;
-    margin: 10px 0;
+    padding: 14px;
+    margin: 8px 0;
+    border: none;
+    font-size: 15px;
+    cursor: pointer;
   }
-  .call-btn { background: #e11d48; color: #fff; }
-  .gps-btn {
+  .btn-primary { background: #e11d48; color: #fff; }
+  .btn-secondary {
     background: #fff;
-    border: 1px solid rgba(28,25,23,0.1);
+    border: 1px solid rgba(28,25,23,0.12);
     color: #1c1917;
     font-size: 14px;
     font-weight: 700;
+  }
+  .hint {
+    font-size: 11px;
+    font-weight: 500;
+    color: #78716c;
+    text-align: center;
+    margin: 0 0 12px;
   }
   .coords {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -77,6 +88,25 @@
     font-weight: 700;
     text-align: center;
     padding: 14px;
+  }
+  .info {
+    background: #fff;
+    border: 1px solid rgba(28,25,23,0.07);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin: 10px 0;
+  }
+  .info h2 {
+    margin: 0 0 8px;
+    font-size: 15px;
+    font-weight: 800;
+  }
+  .info ol, .info ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.45;
   }
   details.aid {
     background: #fff;
@@ -93,98 +123,198 @@
     list-style: none;
   }
   details.aid summary::-webkit-details-marker { display: none; }
+  details.aid .meta {
+    font-size: 12px;
+    font-weight: 500;
+    color: #78716c;
+    margin: -6px 0 8px;
+  }
   details.aid ol {
     margin: 0 0 14px;
     padding-left: 18px;
-    color: #1c1917;
     font-size: 13px;
     font-weight: 500;
     line-height: 1.45;
   }
   .footer {
-    margin-top: 28px;
+    margin-top: 20px;
     font-size: 11px;
     font-weight: 500;
     color: #78716c;
     text-align: center;
   }
-  .updated { font-size: 11px; font-weight: 600; color: #78716c; text-align: center; margin-top: 8px; }
-  .lock {
+  .updated { font-size: 11px; font-weight: 600; color: #78716c; margin-top: 6px; }
+  .tabbar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
     background: #fff;
-    border: 1px solid rgba(28,25,23,0.07);
-    border-radius: 14px;
-    padding: 12px 14px;
-    margin: 0 0 14px;
-    font-size: 12px;
-    font-weight: 500;
-    color: #78716c;
-    line-height: 1.45;
+    border-top: 1px solid rgba(28,25,23,0.08);
+    display: flex;
+    padding: 6px 8px calc(8px + env(safe-area-inset-bottom));
+    z-index: 20;
   }
-  .lock strong { color: #1c1917; font-weight: 800; display: block; margin-bottom: 4px; }
+  .tab {
+    flex: 1;
+    border: 0;
+    background: transparent;
+    padding: 6px 4px;
+    color: #5f6369;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .tab.active { color: #e11d48; }
+  .tab .icon { display: block; font-size: 18px; margin-bottom: 2px; }
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1 id="name">Medical ID</h1>
-    <div class="sub" id="subLine">Blood · DOB</div>
+  <div class="chrome">
+    <div>
+      <strong>Read only</strong>
+      Medical ID, 911, and Aid — same tools as RedMed. Editing needs the owner’s app + Face&nbsp;ID / passcode.
+    </div>
+  </div>
 
-    <div class="lock" id="lockBanner">
-      <strong>Read only.</strong>
-      You can’t edit this medical ID from a scan. Changes require the owner’s RedMed app unlocked with Face&nbsp;ID, Touch&nbsp;ID, or device passcode.
+  <div class="wrap">
+    <!-- Medical ID -->
+    <div class="panel active" id="panel-medical" data-panel="medical">
+      <h1 id="name">Medical ID</h1>
+      <div class="sub" id="subLine">Blood · DOB</div>
+      <div class="updated" id="updatedLine"></div>
+
+      <div class="section-label">Allergies</div>
+      <div class="card critical" id="allergies"><div class="list-item">—</div></div>
+
+      <div class="section-label">Medications</div>
+      <div class="card" id="meds"><div class="list-item">—</div></div>
+
+      <div class="section-label">Conditions</div>
+      <div class="card" id="conditions"><div class="list-item">—</div></div>
+
+      <div class="section-label">Organ donor</div>
+      <div class="card"><div class="list-item" id="donor">—</div></div>
+
+      <div class="section-label">Emergency contacts</div>
+      <div class="card" id="contacts"><div class="list-item">—</div></div>
     </div>
 
-    <a class="gps-btn" href="#" id="gpsBtn">Share GPS with emergency contact</a>
-    <div class="updated" id="updatedLine"></div>
+    <!-- 911 -->
+    <div class="panel" id="panel-911" data-panel="911">
+      <h1>Find 911</h1>
+      <p class="hint">Live GPS, contacts, and what to tell dispatch.</p>
 
-    <div class="section-label">Live GPS</div>
-    <div class="card"><div class="coords" id="coords">Getting GPS…</div></div>
+      <button class="btn btn-secondary" type="button" id="callContactBtn">Call first emergency contact</button>
+      <p class="hint">Calls the first saved contact when a number is on the card.</p>
 
-    <div class="section-label">Allergies</div>
-    <div class="card critical" id="allergies"><div class="list-item">—</div></div>
+      <div class="section-label">Live GPS</div>
+      <div class="card"><div class="coords" id="coords">Getting GPS…</div></div>
+      <button class="btn btn-secondary" type="button" id="copyCoordsBtn">Copy coordinates</button>
+      <button class="btn btn-secondary" type="button" id="gpsBtn">Text location to emergency contact</button>
 
-    <div class="section-label">Medications</div>
-    <div class="card" id="meds"><div class="list-item">—</div></div>
+      <div class="info">
+        <h2>Roadside First Response</h2>
+        <ol>
+          <li>Turn on hazards. Don’t move injured — unless fire or traffic danger.</li>
+          <li>Check breathing. Tilt head, lift chin. If no pulse — start CPR.</li>
+          <li>Press hard on bleeding. Don’t lift to check. Add cloth on top.</li>
+          <li>Keep them warm and still. Talk to them. Note time of injury.</li>
+        </ol>
+      </div>
 
-    <div class="section-label">Conditions</div>
-    <div class="card" id="conditions"><div class="list-item">—</div></div>
+      <div class="info">
+        <h2>What to Tell 911</h2>
+        <ul>
+          <li>Your exact location — read the GPS coordinates above.</li>
+          <li>Number of people injured and visible injuries.</li>
+          <li>If anyone is unconscious or not breathing.</li>
+          <li>Stay on the line — let the dispatcher guide you.</li>
+        </ul>
+      </div>
 
-    <div class="section-label">Emergency contacts</div>
-    <div class="card" id="contacts"><div class="list-item">—</div></div>
+      <div class="info">
+        <h2>No cell signal</h2>
+        <p style="margin:0;font-size:13px;font-weight:500;line-height:1.45;">
+          iPhone 14+ (iOS 16.1+): hold Side + Volume until Emergency SOS appears, or use Settings → Emergency SOS. RedMed cannot start Satellite SOS itself.
+        </p>
+      </div>
+    </div>
 
-    <div class="section-label">Roadside Aid</div>
-    <p style="font-size:12px;color:#78716c;margin:0 0 8px;font-weight:500;">Open only what you need.</p>
+    <!-- Aid -->
+    <div class="panel" id="panel-aid" data-panel="aid">
+      <h1>Roadside Aid</h1>
+      <p class="hint">Tap a topic — expand only what you need.</p>
 
-    <details class="aid"><summary>Crash &amp; Head</summary>
-      <ol>
-        <li>Call 911 — give exact location and number of people</li>
-        <li>Hazards on. Do not move them unless fire or traffic danger</li>
-        <li>Keep head/neck still. Control bleeding with firm pressure</li>
-      </ol>
-    </details>
-    <details class="aid"><summary>Bleeding</summary>
-      <ol>
-        <li>Press hard with both hands — do not lift to check</li>
-        <li>Add cloth on top if soaked. Limb: tourniquet 2–3 in above</li>
-        <li>Note the time. Stay on the line with 911</li>
-      </ol>
-    </details>
-    <details class="aid"><summary>CPR / Choking</summary>
-      <ol>
-        <li>No breathing/pulse: hard compressions 100–120/min</li>
-        <li>Choking, cannot cough: 5 back blows, then 5 abdominal thrusts</li>
-        <li>Alternate until clear or they become unresponsive — then CPR</li>
-      </ol>
-    </details>
-    <details class="aid"><summary>Seizure</summary>
-      <ol>
-        <li>Time it. Clear sharp objects. Do not restrain</li>
-        <li>Nothing in the mouth. Cushion the head</li>
-        <li>Call 911 if first seizure, over 5 minutes, injury, or in water</li>
-      </ol>
-    </details>
+      <a class="btn btn-primary" href="tel:911">Call 911</a>
 
-    <div class="footer">Read-only medical ID and roadside aid · editing requires the owner’s app + Face ID / Touch ID</div>
+      <details class="aid"><summary>🚗 Crash &amp; Head</summary>
+        <div class="meta">Impact · neck · pupils</div>
+        <ol>
+          <li>Call 911 — give exact location and number of people</li>
+          <li>Hazards on. Do not move them unless fire or traffic danger</li>
+          <li>Keep head/neck still. Control bleeding with firm pressure</li>
+          <li>Unequal or blown pupils = serious — keep spine still</li>
+        </ol>
+      </details>
+      <details class="aid"><summary>🩸 Bleeding</summary>
+        <div class="meta">Pressure · tourniquet</div>
+        <ol>
+          <li>Press hard with both hands — do not lift to check</li>
+          <li>Add cloth on top if soaked. Limb: tourniquet 2–3 in above</li>
+          <li>Note the time. Stay on the line with 911</li>
+          <li>Expose the body — hidden bleeding under clothing kills</li>
+        </ol>
+      </details>
+      <details class="aid"><summary>❤️ Heart &amp; Airway</summary>
+        <div class="meta">CPR · choking</div>
+        <ol>
+          <li>No breathing/pulse: hard compressions 100–120/min, 2 inches deep</li>
+          <li>Choking, cannot cough: 5 back blows, then 5 abdominal thrusts</li>
+          <li>Alternate until clear or they become unresponsive — then CPR</li>
+        </ol>
+      </details>
+      <details class="aid"><summary>⚡ Shock</summary>
+        <div class="meta">Pale · cold · clammy</div>
+        <ol>
+          <li>Call 911. Lay flat — do not let them walk</li>
+          <li>Elevate legs 12 inches unless head/neck/spine injury</li>
+          <li>Keep warm. No food, water, or medication</li>
+        </ol>
+      </details>
+      <details class="aid"><summary>🌡️ Cold &amp; Heat</summary>
+        <div class="meta">Warm core · cool down</div>
+        <ol>
+          <li>Hypothermia: warm chest/neck/armpits/groin — not limbs</li>
+          <li>Heat stroke: call 911 — cool neck/armpits/groin fast</li>
+          <li>Fluids only if fully conscious</li>
+        </ol>
+      </details>
+      <details class="aid"><summary>🧠 Seizure</summary>
+        <div class="meta">Don’t restrain · time it</div>
+        <ol>
+          <li>Time it. Clear sharp objects. Do not restrain</li>
+          <li>Nothing in the mouth. Cushion the head</li>
+          <li>Call 911 if first seizure, over 5 minutes, injury, or in water</li>
+        </ol>
+      </details>
+      <details class="aid"><summary>🏥 Trauma Hospitals</summary>
+        <div class="meta">Nearest Level I/II center</div>
+        <ol>
+          <li>Call 911 — dispatch routes to the right trauma level</li>
+          <li>Do not self-transport major trauma if EMS is available</li>
+          <li>Note time of injury and mechanism for the team</li>
+        </ol>
+      </details>
+    </div>
+
+    <div class="footer">Read-only scanner view · Medical ID · 911 · Aid · owner edits need app + Face ID / Touch ID</div>
   </div>
+
+  <nav class="tabbar" aria-label="Scanner tabs">
+    <button class="tab" type="button" data-tab="medical"><span class="icon">👤</span>Medical ID</button>
+    <button class="tab active" type="button" data-tab="911"><span class="icon">📞</span>911</button>
+    <button class="tab" type="button" data-tab="aid"><span class="icon">✚</span>Aid</button>
+  </nav>
+
   <script>
 (function () {
   function list(el, items) {
@@ -200,6 +330,20 @@
       el.appendChild(d);
     });
   }
+
+  function showTab(id) {
+    document.querySelectorAll('.panel').forEach(function (p) {
+      p.classList.toggle('active', p.getAttribute('data-panel') === id);
+    });
+    document.querySelectorAll('.tab').forEach(function (t) {
+      t.classList.toggle('active', t.getAttribute('data-tab') === id);
+    });
+  }
+
+  document.querySelectorAll('.tab').forEach(function (t) {
+    t.addEventListener('click', function () { showTab(t.getAttribute('data-tab')); });
+  });
+  showTab('911');
 
   function decodeProfile() {
     try {
@@ -224,17 +368,21 @@
   list(document.getElementById('allergies'), p.allergies);
   list(document.getElementById('meds'), p.meds);
   list(document.getElementById('conditions'), p.conditions);
+  document.getElementById('donor').textContent =
+    typeof p.donor === 'boolean' ? (p.donor ? 'Yes' : 'No') : '—';
 
   var contactsEl = document.getElementById('contacts');
   contactsEl.innerHTML = '';
   var contacts = p.contacts || [];
+  var firstPhone = '';
   if (!contacts.length) {
     contactsEl.innerHTML = '<div class="list-item">—</div>';
   } else {
-    contacts.forEach(function (c) {
+    contacts.forEach(function (c, i) {
       var row = document.createElement('div');
       row.className = 'list-item';
       var phone = (c.phone || '').replace(/[^\d+]/g, '');
+      if (i === 0 && phone) firstPhone = phone;
       var label = (c.name || 'Contact') + (c.rel ? ' · ' + c.rel : '');
       if (phone) {
         var a = document.createElement('a');
@@ -250,27 +398,38 @@
     });
   }
 
-  var firstPhone = '';
-  if (contacts.length) {
-    firstPhone = (contacts[0].phone || '').replace(/[^\d+]/g, '');
-  }
-
   function setCoords(lat, lon, acc) {
     var t = lat.toFixed(6) + ', ' + lon.toFixed(6);
     if (acc > 0) t += ' (±' + Math.round(acc) + ' m)';
     document.getElementById('coords').textContent = t;
+    window.__redmedLoc = { latitude: lat, longitude: lon, accuracy: acc };
   }
 
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(function (pos) {
       setCoords(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
-      window.__redmedLoc = pos.coords;
     }, function () {
       document.getElementById('coords').textContent = 'GPS unavailable — tell dispatcher landmarks';
     }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 });
   } else {
     document.getElementById('coords').textContent = 'GPS unavailable on this device';
   }
+
+  document.getElementById('callContactBtn').addEventListener('click', function () {
+    if (!firstPhone) { alert('No emergency contact number on this card.'); return; }
+    location.href = 'tel:' + firstPhone;
+  });
+
+  document.getElementById('copyCoordsBtn').addEventListener('click', function () {
+    var loc = window.__redmedLoc;
+    if (!loc) { alert('Location not available yet.'); return; }
+    var text = loc.latitude.toFixed(6) + ', ' + loc.longitude.toFixed(6);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    } else {
+      prompt('Copy coordinates', text);
+    }
+  });
 
   document.getElementById('gpsBtn').addEventListener('click', function (e) {
     e.preventDefault();

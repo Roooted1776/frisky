@@ -4,6 +4,7 @@ struct MyIDView: View {
     @EnvironmentObject var profile: ProfileData
     @State private var showEdit = false
     @State private var showHelp = false
+    @State private var showScannerPreview = false
     @State private var showAuthFailedAlert = false
 
     private var deviceName: String {
@@ -70,6 +71,21 @@ struct MyIDView: View {
                         .padding(.vertical, 6)
                     }
                     .buttonStyle(.plain)
+
+                    Button { showScannerPreview = true } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "eye")
+                                .font(.system(size: 16, weight: .regular))
+                                .foregroundColor(.redmedMuted)
+                            Text("Preview scanner")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(.redmedMuted)
+                                .kerning(-0.1)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                    }
+                    .buttonStyle(.plain)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.top, 42)
@@ -93,6 +109,9 @@ struct MyIDView: View {
         }
         .sheet(isPresented: $showHelp) {
             HelpMenuView()
+        }
+        .fullScreenCover(isPresented: $showScannerPreview) {
+            PublicCardView(profile: profile)
         }
         .alert("Authentication Failed", isPresented: $showAuthFailedAlert) {
             Button("OK", role: .cancel) {}
