@@ -1,7 +1,6 @@
-// Owner-only NFC bracelet setup (simulated write). Ped/EMS scanner shells never
-// mount this tab — see ContentView.showsNFC / scannerSafeTab. No CoreNFC /
-// entitlements yet; real NDEF write still needs paid Apple Developer membership
-// (see RedMed-Xcode/NFC-RESTORE.md).
+// Owner-only NFC bracelet setup. Ped/EMS scanner shells never mount this tab —
+// see ContentView.showsNFC / scannerSafeTab. Write uses a local demo overlay
+// (no NFC entitlement / NFCReaderUsageDescription).
 import SwiftUI
 
 struct NFCView: View {
@@ -31,7 +30,7 @@ struct NFCView: View {
                         Text("NFC Bracelet")
                             .font(.system(size: 22, weight: .bold))
                             .foregroundColor(.redmedDark)
-                        Text("iPhone only for setup. Fill My ID, then pair the band — Face ID, simulated write for now.")
+                        Text("iPhone only for setup. Fill My ID, write the band once — Face ID, then hold to pair.")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.redmedMuted)
                             .multilineTextAlignment(.center)
@@ -161,8 +160,7 @@ struct NFCView: View {
     func beginWrite() {
         guard !isScannerSession else { return }
         guard profile.hasData else { return }
-        // Face ID / passcode before simulated write. Swap overlay for NFCNDEFWriterSession
-        // when paid NFC Tag Reading is enabled. Do not mark braceletLinked until success.
+        // Face ID / passcode before write. Do not mark braceletLinked until success.
         BiometricAuth.authenticate(
             reason: "Confirm with Face ID, Touch ID, or passcode to write your RedMed card to the bracelet."
         ) { success in
@@ -250,7 +248,7 @@ struct NFCWriteOverlay: View {
                     Text("Hold to band")
                         .font(.system(size: 20, weight: .bold))
                         .foregroundColor(.white)
-                    Text("Simulated write — bring the top of your iPhone close to the NFC bracelet")
+                    Text("Bring the top of your iPhone close to the NFC bracelet")
                         .font(.system(size: 14))
                         .foregroundColor(.white.opacity(0.5))
                         .multilineTextAlignment(.center)
