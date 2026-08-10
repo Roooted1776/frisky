@@ -84,22 +84,27 @@ window.addEventListener('resize', window._scalePhone);
       <sc-if value="{{ showHelp }}" hint-placeholder-val="{{ false }}">
         <div style="position:absolute; bottom:74px; left:16px; right:16px; background:white; border-radius:14px; box-shadow:0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08); z-index:20; overflow:hidden;">
           <div style="padding:8px 14px 5px; font-size:11px; font-weight:800; color:#44403c; letter-spacing:0.6px; text-transform:uppercase;">Policies</div>
-          <a href="PrivacyPolicy.html" style="display:flex; align-items:center; justify-content:space-between; padding:9px 14px; font-size:11px; font-weight:400; color:#1c1917; border-top:0.5px solid rgba(28,25,23,0.07); text-decoration:none;">
-            Privacy Policy
+          <a href="security.html" style="display:flex; align-items:center; justify-content:space-between; padding:9px 14px; font-size:11px; font-weight:400; color:#1c1917; border-top:0.5px solid rgba(28,25,23,0.07); text-decoration:none;">
+            Security
             <svg width="5" height="8" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="#78716c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
           </a>
           <a href="TOS.html" style="display:flex; align-items:center; justify-content:space-between; padding:9px 14px; font-size:11px; font-weight:400; color:#1c1917; border-top:0.5px solid rgba(28,25,23,0.07); text-decoration:none;">
             Terms of Service
             <svg width="5" height="8" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="#78716c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
           </a>
-          <a href="HowItWorks.html" style="display:flex; align-items:center; justify-content:space-between; padding:9px 14px; font-size:11px; font-weight:400; color:#1c1917; border-top:0.5px solid rgba(28,25,23,0.07); text-decoration:none;">
-            How It Works
+          <a href="PrivacyPolicy.html" style="display:flex; align-items:center; justify-content:space-between; padding:9px 14px; font-size:11px; font-weight:400; color:#1c1917; border-top:0.5px solid rgba(28,25,23,0.07); text-decoration:none;">
+            Privacy Policy
             <svg width="5" height="8" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="#78716c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
           </a>
           <a href="security.html" style="display:flex; align-items:center; justify-content:space-between; padding:9px 14px; font-size:11px; font-weight:400; color:#1c1917; border-top:0.5px solid rgba(28,25,23,0.07); text-decoration:none;">
             Security
             <svg width="5" height="8" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="#78716c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
           </a>
+          <div style="padding:8px 14px 5px; font-size:11px; font-weight:800; color:#44403c; letter-spacing:0.6px; text-transform:uppercase; border-top:0.5px solid rgba(28,25,23,0.07);">Design</div>
+          <button onClick="{{ previewAppLock }}" style="width:100%; display:flex; align-items:center; justify-content:space-between; padding:9px 14px; font-size:11px; font-weight:400; color:#1c1917; border:none; border-top:0.5px solid rgba(28,25,23,0.07); background:white; cursor:pointer; font-family:inherit; text-align:left;">
+            AppLock / Face ID gate (preview)
+            <svg width="5" height="8" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="#78716c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </button>
         </div>
         <!-- dismiss backdrop -->
         <div onClick="{{ tapHelp }}" style="position:absolute; inset:0; z-index:19;"></div>
@@ -121,8 +126,8 @@ window.addEventListener('resize', window._scalePhone);
                 <button onClick="{{ tapBracelet }}" style="display:flex; align-items:center; gap:8px; padding:4px 0; background:none; border:none; cursor:pointer; text-align:left;">
                   <img src="assets/BrandLogo.png" style="width:48px; height:48px; border-radius:13px; box-shadow:0 3px 10px rgba(225,29,72,0.15); flex-shrink:0;" alt="RedMed">
                   <div>
-                    <div style="font-size:22px; font-weight:700; color:#1c1917; letter-spacing:-0.4px; line-height:1.15;">Alex Rivera's iPhone</div>
-                    <div style="font-size:10px; font-weight:700; color:rgba(225,29,72,0.85); letter-spacing:0.7px; text-transform:uppercase; margin-top:3px;">Linked bracelet ›</div>
+                    <div style="font-size:22px; font-weight:700; color:#1c1917; letter-spacing:-0.4px; line-height:1.15;">{{ deviceName }}</div>
+                    <div style="{{ braceletStatusStyle }}">{{ braceletStatusLabel }}</div>
                   </div>
                 </button>
               </sc-if>
@@ -130,7 +135,7 @@ window.addEventListener('resize', window._scalePhone);
                 <button onClick="{{ tapBracelet }}" style="display:flex; align-items:center; gap:8px; padding:4px 0; background:none; border:none; cursor:pointer; text-align:left;">
                   <img src="assets/BrandLogo.png" style="width:48px; height:48px; border-radius:13px; box-shadow:0 3px 10px rgba(225,29,72,0.15); flex-shrink:0; opacity:0.5;" alt="RedMed">
                   <div>
-                    <div style="font-size:22px; font-weight:700; color:#1c1917; letter-spacing:-0.4px; line-height:1.15;">Alex Rivera's iPhone</div>
+                    <div style="font-size:22px; font-weight:700; color:#1c1917; letter-spacing:-0.4px; line-height:1.15;">{{ deviceName }}</div>
                     <div style="font-size:10px; font-weight:700; color:#78716c; letter-spacing:0.7px; text-transform:uppercase; margin-top:3px;">Not linked to bracelet ›</div>
                   </div>
                 </button>
@@ -142,18 +147,18 @@ window.addEventListener('resize', window._scalePhone);
               <div style="background:rgba(255,255,255,0.92); border-radius:12px; border:1px solid rgba(28,25,23,0.08); overflow:hidden;">
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:11px 16px; border-bottom:0.5px solid rgba(28,25,23,0.07);">
                   <span style="font-size:11px; font-weight:500; color:#78716c;">Name</span>
-                  <sc-if value="{{ hasData }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px; font-weight:600; color:#1c1917;">Alex Rivera</span></sc-if>
-                  <sc-if value="{{ noData }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px; color:#78716c; opacity:0.4;">—</span></sc-if>
+                  <sc-if value="{{ hasData }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px; font-weight:600; color:#1c1917;">{{ profileName }}</span></sc-if>
+                  <sc-if value="{{ noData }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px; font-weight:600; color:#1c1917;">{{ profileName }}</span></sc-if>
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:11px 16px; border-bottom:0.5px solid rgba(28,25,23,0.07);">
                   <span style="font-size:11px; font-weight:500; color:#78716c;">Birth date</span>
-                  <sc-if value="{{ hasData }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px; font-weight:600; color:#1c1917;">April 12, 1988</span></sc-if>
-                  <sc-if value="{{ noData }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px; color:#78716c; opacity:0.4;">—</span></sc-if>
+                  <sc-if value="{{ hasBirthDate }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px; font-weight:600; color:#1c1917;">{{ birthDate }}</span></sc-if>
+                  <sc-if value="{{ noBirthDate }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px; color:#78716c; opacity:0.4;">—</span></sc-if>
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:11px 16px;">
                   <span style="font-size:11px; font-weight:500; color:#78716c;">Blood type</span>
-                  <sc-if value="{{ hasData }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px; font-weight:600; color:#1c1917;">O+</span></sc-if>
-                  <sc-if value="{{ noData }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px; color:#78716c; opacity:0.4;">—</span></sc-if>
+                  <sc-if value="{{ hasBloodType }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px; font-weight:600; color:#1c1917;">{{ bloodType }}</span></sc-if>
+                  <sc-if value="{{ noBloodType }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px; color:#78716c; opacity:0.4;">—</span></sc-if>
                 </div>
               </div>
             </div>
@@ -162,12 +167,12 @@ window.addEventListener('resize', window._scalePhone);
             <div style="padding:12px 16px 0;">
               <div style="font-size:12px; font-weight:600; color:#78716c; text-transform:uppercase; letter-spacing:0.6px; padding:0 4px 5px;">Allergies</div>
               <div style="background:rgba(255,255,255,0.92); border-radius:12px; border:1px solid rgba(28,25,23,0.08); overflow:hidden;">
-                <sc-if value="{{ hasData }}" hint-placeholder-val="{{ false }}">
+                <sc-if value="{{ hasAllergies }}" hint-placeholder-val="{{ false }}">
                   <sc-for list="{{ allergies }}" as="item" hint-placeholder-count="2">
                     <div style="padding:11px 16px; border-bottom:0.5px solid rgba(28,25,23,0.07);"><span style="font-size:11px; color:#1c1917;">{{ item }}</span></div>
                   </sc-for>
                 </sc-if>
-                <sc-if value="{{ noData }}" hint-placeholder-val="{{ true }}">
+                <sc-if value="{{ noAllergies }}" hint-placeholder-val="{{ true }}">
                   <div style="padding:11px 16px;"><span style="font-size:11px; color:#78716c; opacity:0.4;">—</span></div>
                 </sc-if>
               </div>
@@ -177,12 +182,12 @@ window.addEventListener('resize', window._scalePhone);
             <div style="padding:12px 16px 0;">
               <div style="font-size:12px; font-weight:600; color:#78716c; text-transform:uppercase; letter-spacing:0.6px; padding:0 4px 5px;">Medications</div>
               <div style="background:rgba(255,255,255,0.92); border-radius:12px; border:1px solid rgba(28,25,23,0.08); overflow:hidden;">
-                <sc-if value="{{ hasData }}" hint-placeholder-val="{{ false }}">
+                <sc-if value="{{ hasMeds }}" hint-placeholder-val="{{ false }}">
                   <sc-for list="{{ meds }}" as="item" hint-placeholder-count="2">
                     <div style="padding:11px 16px; border-bottom:0.5px solid rgba(28,25,23,0.07);"><span style="font-size:11px; color:#1c1917;">{{ item }}</span></div>
                   </sc-for>
                 </sc-if>
-                <sc-if value="{{ noData }}" hint-placeholder-val="{{ true }}">
+                <sc-if value="{{ noMeds }}" hint-placeholder-val="{{ true }}">
                   <div style="padding:11px 16px;"><span style="font-size:11px; color:#78716c; opacity:0.4;">—</span></div>
                 </sc-if>
               </div>
@@ -192,12 +197,12 @@ window.addEventListener('resize', window._scalePhone);
             <div style="padding:12px 16px 0;">
               <div style="font-size:12px; font-weight:600; color:#78716c; text-transform:uppercase; letter-spacing:0.6px; padding:0 4px 5px;">Conditions</div>
               <div style="background:rgba(255,255,255,0.92); border-radius:12px; border:1px solid rgba(28,25,23,0.08); overflow:hidden;">
-                <sc-if value="{{ hasData }}" hint-placeholder-val="{{ false }}">
+                <sc-if value="{{ hasConditions }}" hint-placeholder-val="{{ false }}">
                   <sc-for list="{{ conditions }}" as="item" hint-placeholder-count="2">
                     <div style="padding:11px 16px; border-bottom:0.5px solid rgba(28,25,23,0.07);"><span style="font-size:11px; color:#1c1917;">{{ item }}</span></div>
                   </sc-for>
                 </sc-if>
-                <sc-if value="{{ noData }}" hint-placeholder-val="{{ true }}">
+                <sc-if value="{{ noConditions }}" hint-placeholder-val="{{ true }}">
                   <div style="padding:11px 16px;"><span style="font-size:11px; color:#78716c; opacity:0.4;">—</span></div>
                 </sc-if>
               </div>
@@ -207,17 +212,15 @@ window.addEventListener('resize', window._scalePhone);
             <div style="padding:12px 16px 0;">
               <div style="font-size:12px; font-weight:600; color:#78716c; text-transform:uppercase; letter-spacing:0.6px; padding:0 4px 5px;">Contacts</div>
               <div style="background:rgba(255,255,255,0.92); border-radius:12px; border:1px solid rgba(28,25,23,0.08); overflow:hidden;">
-                <sc-if value="{{ hasData }}" hint-placeholder-val="{{ false }}">
-                  <div style="padding:11px 16px; border-bottom:0.5px solid rgba(28,25,23,0.07);">
-                    <div style="font-size:11px; font-weight:600; color:#1c1917;">Sarah Rivera</div>
-                    <div style="font-size:12px; font-weight:500; color:#78716c; margin-top:2px;">Spouse · (555) 012-3456</div>
-                  </div>
-                  <div style="padding:11px 16px;">
-                    <div style="font-size:11px; font-weight:600; color:#1c1917;">Dr. J. Kim</div>
-                    <div style="font-size:12px; font-weight:500; color:#78716c; margin-top:2px;">Physician · (555) 789-0123</div>
-                  </div>
+                <sc-if value="{{ hasContacts }}" hint-placeholder-val="{{ false }}">
+                  <sc-for list="{{ contacts }}" as="c" hint-placeholder-count="2">
+                    <div style="padding:11px 16px; border-bottom:0.5px solid rgba(28,25,23,0.07);">
+                      <div style="font-size:11px; font-weight:600; color:#1c1917;">{{ c.name }}</div>
+                      <div style="font-size:12px; font-weight:500; color:#78716c; margin-top:2px;">{{ c.detail }}</div>
+                    </div>
+                  </sc-for>
                 </sc-if>
-                <sc-if value="{{ noData }}" hint-placeholder-val="{{ true }}">
+                <sc-if value="{{ noContacts }}" hint-placeholder-val="{{ true }}">
                   <div style="padding:11px 16px;"><span style="font-size:11px; color:#78716c; opacity:0.4;">—</span></div>
                 </sc-if>
               </div>
@@ -244,7 +247,7 @@ window.addEventListener('resize', window._scalePhone);
           <div style="background:{{ pageBg }}; min-height:100%; padding:2px 16px 32px;">
             <div style="font-size:22px; font-weight:700; color:#1c1917; letter-spacing:-0.4px; line-height:1.1; margin-bottom:2px;">Find 911</div>
             <div style="font-size:12px; font-weight:500; color:#78716c; margin-bottom:10px;">Call first. Share GPS second.</div>
-            <button style="width:100%; background:linear-gradient(135deg,#ff4d67,#dc0d3e); color:white; border:none; border-radius:999px; padding:14px; font-size:15px; font-weight:700; letter-spacing:-0.2px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 6px 16px rgba(225,29,72,0.32), inset 0 1px 0 rgba(255,255,255,0.22); transition:transform 0.12s; margin-bottom:8px;" style-active="transform:scale(0.97);"><svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1L6.6 10.8z"></path></svg>Call 911</button>
+            <button onClick="{{ call911 }}" style="width:100%; background:linear-gradient(135deg,#ff4d67,#dc0d3e); color:white; border:none; border-radius:999px; padding:14px; font-size:15px; font-weight:700; letter-spacing:-0.2px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 6px 16px rgba(225,29,72,0.32), inset 0 1px 0 rgba(255,255,255,0.22); transition:transform 0.12s; margin-bottom:8px;" style-active="transform:scale(0.97);"><svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1L6.6 10.8z"></path></svg>Call 911</button>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:4px;">
               <button onClick="{{ tapScanBracelet }}" style="background:rgba(255,255,255,0.82); color:#1c1917; border:1px solid rgba(28,25,23,0.08); border-radius:16px; padding:12px 8px; font-size:12px; font-weight:600; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.04); display:flex; flex-direction:column; align-items:center; gap:6px;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 12a3 3 0 013-3" stroke="#1c1917" stroke-width="1.8" stroke-linecap="round"></path><path d="M6 12a6 6 0 016-6" stroke="#1c1917" stroke-width="1.8" stroke-linecap="round"></path><path d="M3 12a9 9 0 019-9" stroke="#1c1917" stroke-width="1.8" stroke-linecap="round"></path><circle cx="15" cy="12" r="2.5" fill="#1c1917"></circle></svg>
@@ -532,41 +535,41 @@ window.addEventListener('resize', window._scalePhone);
               <div style="font-size:22px; font-weight:700; color:#1c1917; letter-spacing:-0.4px; line-height:1.1; margin-bottom:2px;">NFC Bracelet</div>
               <div style="font-size:11px; font-weight:500; color:#78716c; text-align:center; line-height:1.5; max-width:275px;">iPhone only for setup. Fill My ID, write the band once — CoreNFC, Face ID, done.</div>
             </div>
-            <div style="background:rgba(255,255,255,0.7); border-radius:14px; border:1px solid rgba(28,25,23,0.08); padding:10px 14px; text-align:center; font-size:11px; font-weight:600; color:#78716c; margin-bottom:8px;">Tap the band · phone opens your card · no app for readers</div>
-            <div style="background:rgba(255,255,255,0.7); border-radius:14px; border:1px solid rgba(28,25,23,0.08); padding:10px 14px; text-align:center; font-size:11px; font-weight:600; color:#78716c; margin-bottom:16px;">Tag capacity: 24% used — plenty of room</div>
-            <button onClick="{{ tapWriteNFC }}" style="width:100%; background:linear-gradient(to bottom,#ff7289,#e11d48); color:white; border:none; border-radius:999px; padding:17px; font-size:16px; font-weight:700; cursor:pointer; font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', sans-serif; letter-spacing:-0.4px; box-shadow:0 4px 14px rgba(225,29,72,0.28); display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:10px;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 12a3 3 0 013-3" stroke="white" stroke-width="2" stroke-linecap="round"></path><path d="M6 12a6 6 0 016-6" stroke="white" stroke-width="2" stroke-linecap="round"></path><path d="M3 12a9 9 0 019-9" stroke="white" stroke-width="2" stroke-linecap="round"></path><circle cx="15" cy="12" r="2.5" fill="white"></circle></svg>
-              Write to NFC tag
-            </button>
-            <button onClick="{{ tapScanBracelet }}" style="width:100%; background:rgba(255,255,255,0.82); color:#1c1917; border:1px solid rgba(28,25,23,0.08); border-radius:999px; padding:14px; font-size:11px; font-weight:600; cursor:pointer; font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', sans-serif; letter-spacing:-0.3px; box-shadow:0 2px 8px rgba(0,0,0,0.04); display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:14px;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1c1917" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a14 14 0 010 18M3 12h18"></path></svg>
-              Preview hosted card in Safari
-            </button>
-            <div style="background:rgba(255,255,255,0.92); border-radius:22px; border:1px solid rgba(28,25,23,0.08); padding:16px; margin-bottom:10px;">
-              <div style="display:inline-flex; background:rgba(120,113,108,0.1); border-radius:999px; padding:5px 10px; margin-bottom:8px;"><span style="font-size:10px; font-weight:700; color:#78716c; letter-spacing:1.1px; text-transform:uppercase;">Verify</span></div>
-              <div style="font-size:11px; font-weight:500; color:#78716c; margin-bottom:12px; line-height:1.55;">After writing, scan your band here to see the same emergency card a stranger gets.</div>
-              <button onClick="{{ tapScanBracelet }}" style="width:100%; background:rgba(255,255,255,0.82); color:#1c1917; border:1px solid rgba(28,25,23,0.08); border-radius:999px; padding:13px; font-size:11px; font-weight:600; cursor:pointer; font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', sans-serif; letter-spacing:-0.3px;">Scan your bracelet</button>
+            <div style="background:rgba(255,255,255,0.7); border-radius:14px; border:1px solid rgba(28,25,23,0.08); padding:10px 14px; margin-bottom:16px;">
+              <div style="display:flex; align-items:center; gap:8px; font-size:11px; font-weight:600; color:#78716c; padding:5px 0; border-bottom:0.5px solid rgba(28,25,23,0.08);">{{ nfcStatusLine1 }}</div>
+              <div style="display:flex; align-items:center; gap:8px; font-size:11px; font-weight:600; color:#78716c; padding:5px 0;">{{ nfcStatusLine2 }}</div>
             </div>
-            <div style="background:rgba(255,255,255,0.7); border-radius:14px; border:1px solid rgba(28,25,23,0.08); padding:14px; margin-bottom:14px;">
-              <div style="font-size:11px; font-weight:700; color:#1c1917; margin-bottom:8px;">Keep your band in sync</div>
+
+            <div style="font-size:11px; font-weight:600; color:#6b6e7a; text-transform:uppercase; letter-spacing:0.5px; padding:0 4px 6px;">Set up</div>
+            <div style="background:rgba(255,255,255,0.92); border-radius:18px; border:1px solid rgba(28,25,23,0.08); padding:14px; margin-bottom:16px;">
+              <button onClick="{{ tapWriteNFC }}" style="width:100%; background:linear-gradient(to bottom,#ff7289,#e11d48); color:white; border:none; border-radius:999px; padding:17px; font-size:16px; font-weight:700; cursor:pointer; font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', sans-serif; letter-spacing:-0.4px; box-shadow:0 4px 14px rgba(225,29,72,0.28); display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:12px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 12a3 3 0 013-3" stroke="white" stroke-width="2" stroke-linecap="round"></path><path d="M6 12a6 6 0 016-6" stroke="white" stroke-width="2" stroke-linecap="round"></path><path d="M3 12a9 9 0 019-9" stroke="white" stroke-width="2" stroke-linecap="round"></path><circle cx="15" cy="12" r="2.5" fill="white"></circle></svg>
+                Write to NFC tag
+              </button>
               <div style="display:flex; flex-direction:column; gap:6px;">
                 <div style="display:flex; gap:8px; align-items:flex-start;"><span style="color:#e11d48; font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px;">•</span><span style="font-size:11px; font-weight:500; color:#78716c; line-height:1.5;">Link your bracelet once (My ID → bracelet icon → write/read).</span></div>
                 <div style="display:flex; gap:8px; align-items:flex-start;"><span style="color:#e11d48; font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px;">•</span><span style="font-size:11px; font-weight:500; color:#78716c; line-height:1.5;">Save after every edit and hold your phone to the band when prompted.</span></div>
                 <div style="display:flex; gap:8px; align-items:flex-start;"><span style="color:#e11d48; font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px;">•</span><span style="font-size:11px; font-weight:500; color:#78716c; line-height:1.5;">If you cancel the NFC prompt, the band stays stale until you save again.</span></div>
               </div>
             </div>
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;"><div style="flex:1; height:0.5px; background:rgba(28,25,23,0.1);"></div><span style="font-size:10px; font-weight:700; color:#78716c; letter-spacing:1px; flex-shrink:0;">SCAN CARD</span><div style="flex:1; height:0.5px; background:rgba(28,25,23,0.1);"></div></div>
-            <div style="font-size:11px; font-weight:500; color:#78716c; text-align:center; margin-bottom:10px; line-height:1.4;">Optional: scan in RedMed for the native card view. Passersby only need to tap the band — no app.</div>
-            <button onClick="{{ tapScanBracelet }}" style="width:100%; background:rgba(255,255,255,0.82); color:#1c1917; border:1px solid rgba(28,25,23,0.08); border-radius:999px; padding:14px; font-size:11px; font-weight:600; cursor:pointer; font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', sans-serif; letter-spacing:-0.3px; display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:14px;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1c1917" stroke-width="1.7" stroke-linecap="round"><path d="M3 9V5h4M21 9V5h-4M3 15v4h4M21 15v4h-4"></path><circle cx="12" cy="12" r="3"></circle></svg>
-              Scan emergency bracelet
-            </button>
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;"><div style="flex:1; height:0.5px; background:rgba(28,25,23,0.1);"></div><span style="font-size:10px; font-weight:700; color:#78716c; letter-spacing:1px; flex-shrink:0;">OR IMPORT</span><div style="flex:1; height:0.5px; background:rgba(28,25,23,0.1);"></div></div>
-            <div style="font-size:11px; font-weight:500; color:#78716c; text-align:center; margin-bottom:10px; line-height:1.4;">Already own a written tag? Pull it onto this phone's My ID.</div>
-            <button onClick="{{ importTag }}" style="width:100%; background:rgba(255,255,255,0.82); color:#1c1917; border:1px solid rgba(28,25,23,0.08); border-radius:999px; padding:14px; font-size:11px; font-weight:600; cursor:pointer; font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', sans-serif; letter-spacing:-0.3px; display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:24px;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1c1917" stroke-width="1.7" stroke-linecap="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4"></path><path d="M3 17v1a3 3 0 003 3h12a3 3 0 003-3v-1"></path></svg>
-              {{ importLabel }}
-            </button>
+
+            <div style="font-size:11px; font-weight:600; color:#6b6e7a; text-transform:uppercase; letter-spacing:0.5px; padding:0 4px 6px;">Verify</div>
+            <div style="background:rgba(255,255,255,0.92); border-radius:18px; border:1px solid rgba(28,25,23,0.08); padding:14px; margin-bottom:16px;">
+              <div style="font-size:11px; font-weight:500; color:#78716c; margin-bottom:12px; line-height:1.55;">Scan your band to see the same emergency card a stranger gets — no app required for them.</div>
+              <button onClick="{{ tapScanBracelet }}" style="width:100%; background:rgba(255,255,255,0.82); color:#1c1917; border:1px solid rgba(28,25,23,0.08); border-radius:999px; padding:13px; font-size:11px; font-weight:600; cursor:pointer; font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', sans-serif; letter-spacing:-0.3px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1c1917" stroke-width="1.7" stroke-linecap="round"><path d="M3 9V5h4M21 9V5h-4M3 15v4h4M21 15v4h-4"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                Scan your bracelet
+              </button>
+            </div>
+
+            <div style="font-size:11px; font-weight:600; color:#6b6e7a; text-transform:uppercase; letter-spacing:0.5px; padding:0 4px 6px;">Import</div>
+            <div style="background:rgba(255,255,255,0.92); border-radius:18px; border:1px solid rgba(28,25,23,0.08); padding:14px; margin-bottom:24px;">
+              <div style="font-size:11px; font-weight:500; color:#78716c; margin-bottom:12px; line-height:1.55;">Already own a written tag? Pull it onto this phone's My ID.</div>
+              <button onClick="{{ importTag }}" style="width:100%; background:rgba(255,255,255,0.82); color:#1c1917; border:1px solid rgba(28,25,23,0.08); border-radius:999px; padding:13px; font-size:11px; font-weight:600; cursor:pointer; font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', sans-serif; letter-spacing:-0.3px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1c1917" stroke-width="1.7" stroke-linecap="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4"></path><path d="M3 17v1a3 3 0 003 3h12a3 3 0 003-3v-1"></path></svg>
+                {{ importLabel }}
+              </button>
+            </div>
           </div>
         </sc-if>
 
@@ -621,7 +624,6 @@ window.addEventListener('resize', window._scalePhone);
       <sc-if value="{{ showPublicCard }}" hint-placeholder-val="{{ false }}">
         <div style="position:absolute; inset:0; background:#f2f2f7; z-index:15; display:flex; flex-direction:column;">
           <div style="flex-shrink:0; height:59px; position:relative;">
-            <div style="position:absolute; top:13px; left:50%; transform:translateX(-50%); width:126px; height:36px; background:#000; border-radius:20px; z-index:10;"></div>
             <span style="position:absolute; top:18px; left:22px; font-size:15px; font-weight:600; color:#1c1917; letter-spacing:-0.4px;">9:41</span>
           </div>
           <div style="flex-shrink:0; height:44px; background:rgba(242,242,247,0.95); backdrop-filter:blur(20px); border-bottom:0.5px solid rgba(0,0,0,0.1); display:flex; align-items:center; justify-content:space-between; padding:0 14px;">
@@ -704,9 +706,9 @@ window.addEventListener('resize', window._scalePhone);
           <div style="flex:1; overflow-y:auto; padding:20px 16px 48px;">
             <div style="font-size:11px; font-weight:600; color:#6b6e7a; text-transform:uppercase; letter-spacing:0.5px; padding:0 4px 6px;">You</div>
             <div style="background:white; border-radius:12px; overflow:hidden; margin-bottom:22px;">
-              <div style="display:flex; align-items:center; padding:0 16px; border-bottom:0.5px solid rgba(0,0,0,0.06);"><span style="font-size:15px; font-weight:500; color:#6b6e7a; min-width:90px; flex-shrink:0; padding:13px 12px 13px 0;">Name</span><input type="text" defaultValue="Alex Rivera" style="flex:1; border:none; outline:none; font-size:15px; color:#1c1917; padding:13px 0; background:transparent; font-family:inherit;"></div>
-              <div style="display:flex; align-items:center; padding:0 16px; border-bottom:0.5px solid rgba(0,0,0,0.06);"><span style="font-size:15px; font-weight:500; color:#6b6e7a; min-width:90px; flex-shrink:0; padding:13px 12px 13px 0;">Birth date</span><input type="text" defaultValue="April 12, 1988" style="flex:1; border:none; outline:none; font-size:15px; color:#1c1917; padding:13px 0; background:transparent; font-family:inherit;"></div>
-              <div style="display:flex; align-items:center; padding:0 16px;"><span style="font-size:15px; font-weight:500; color:#6b6e7a; min-width:90px; flex-shrink:0; padding:13px 12px 13px 0;">Blood type</span><input type="text" defaultValue="O+" style="flex:1; border:none; outline:none; font-size:15px; color:#1c1917; padding:13px 0; background:transparent; font-family:inherit;"></div>
+              <div style="display:flex; align-items:center; padding:0 16px; border-bottom:0.5px solid rgba(0,0,0,0.06);"><span style="font-size:15px; font-weight:500; color:#6b6e7a; min-width:90px; flex-shrink:0; padding:13px 12px 13px 0;">Name</span><input type="text" ref="{{ nameInputRef }}" defaultValue="{{ profileName }}" placeholder="Full name" style="flex:1; border:none; outline:none; font-size:15px; color:#1c1917; padding:13px 0; background:transparent; font-family:inherit;"></div>
+              <div style="display:flex; align-items:center; padding:0 16px; border-bottom:0.5px solid rgba(0,0,0,0.06);"><span style="font-size:15px; font-weight:500; color:#6b6e7a; min-width:90px; flex-shrink:0; padding:13px 12px 13px 0;">Birth date</span><input type="text" ref="{{ dobInputRef }}" defaultValue="{{ birthDate }}" placeholder="MM/DD/YYYY" style="flex:1; border:none; outline:none; font-size:15px; color:#1c1917; padding:13px 0; background:transparent; font-family:inherit;"></div>
+              <div style="display:flex; align-items:center; padding:0 16px;"><span style="font-size:15px; font-weight:500; color:#6b6e7a; min-width:90px; flex-shrink:0; padding:13px 12px 13px 0;">Blood type</span><input type="text" ref="{{ bloodInputRef }}" defaultValue="{{ bloodType }}" placeholder="e.g. O+" style="flex:1; border:none; outline:none; font-size:15px; color:#1c1917; padding:13px 0; background:transparent; font-family:inherit;"></div>
             </div>
             <datalist id="allergy-options"><option value="Penicillin"></option><option value="Amoxicillin"></option><option value="Sulfa drugs (sulfonamides)"></option><option value="Aspirin"></option><option value="Ibuprofen (NSAIDs)"></option><option value="Naproxen"></option><option value="Codeine"></option><option value="Morphine"></option><option value="Cephalosporins"></option><option value="Erythromycin"></option><option value="Tetracycline"></option><option value="Contrast dye (IV)"></option><option value="Latex"></option><option value="Local anesthetics (lidocaine/novocaine)"></option><option value="ACE inhibitors"></option><option value="Statins"></option><option value="Insulin"></option><option value="Peanuts"></option><option value="Tree nuts (almonds, cashews, walnuts)"></option><option value="Shellfish (shrimp, crab, lobster)"></option><option value="Fish"></option><option value="Milk / dairy"></option><option value="Eggs"></option><option value="Soy"></option><option value="Wheat / gluten"></option><option value="Sesame"></option><option value="Corn"></option><option value="Strawberries"></option><option value="Kiwi"></option><option value="Avocado"></option><option value="Mustard"></option><option value="Sulfites"></option><option value="Bee stings"></option><option value="Wasp stings"></option><option value="Fire ant bites"></option><option value="Mosquito bites"></option><option value="Pollen"></option><option value="Grass"></option><option value="Ragweed"></option><option value="Dust mites"></option><option value="Mold"></option><option value="Pet dander (cats)"></option><option value="Pet dander (dogs)"></option><option value="Latex gloves"></option><option value="Adhesive tape / bandages"></option><option value="Nickel"></option><option value="Iodine"></option><option value="Chlorhexidine"></option><option value="Hair dye (PPD)"></option><option value="Fragrance / perfume"></option><option value="Other"></option></datalist>
 <datalist id="med-options"><option value="Tylenol (acetaminophen)"></option><option value="Advil (ibuprofen)"></option><option value="Motrin (ibuprofen)"></option><option value="Aleve (naproxen)"></option><option value="Aspirin"></option><option value="Excedrin"></option><option value="Bayer Aspirin"></option><option value="Goody's Powder"></option><option value="Benadryl (diphenhydramine)"></option><option value="Claritin (loratadine)"></option><option value="Zyrtec (cetirizine)"></option><option value="Allegra (fexofenadine)"></option><option value="Xyzal (levocetirizine)"></option><option value="Sudafed (pseudoephedrine)"></option><option value="Mucinex (guaifenesin)"></option><option value="NyQuil"></option><option value="DayQuil"></option><option value="Robitussin"></option><option value="Afrin nasal spray"></option><option value="Flonase (fluticasone)"></option><option value="Nasacort (triamcinolone)"></option><option value="Zicam"></option><option value="Theraflu"></option><option value="Coricidin"></option><option value="Tums (calcium carbonate)"></option><option value="Pepcid (famotidine)"></option><option value="Prilosec (omeprazole)"></option><option value="Nexium (esomeprazole)"></option><option value="Zantac (ranitidine)"></option><option value="Pepto-Bismol"></option><option value="Imodium (loperamide)"></option><option value="Gas-X (simethicone)"></option><option value="Miralax"></option><option value="Dulcolax"></option><option value="Metamucil"></option><option value="Colace (docusate)"></option><option value="Tagamet (cimetidine)"></option><option value="Hydrocortisone cream"></option><option value="Neosporin"></option><option value="Bacitracin"></option><option value="Calamine lotion"></option><option value="Cortizone-10"></option><option value="Benzoyl peroxide"></option><option value="Salicylic acid"></option><option value="Aquaphor"></option><option value="Unisom (doxylamine)"></option><option value="Melatonin"></option><option value="Dramamine (dimenhydrinate)"></option><option value="Emergen-C"></option><option value="Airborne"></option><option value="Lisinopril"></option><option value="Losartan"></option><option value="Amlodipine"></option><option value="Metoprolol"></option><option value="Atenolol"></option><option value="Carvedilol"></option><option value="Bisoprolol"></option><option value="Hydrochlorothiazide"></option><option value="Furosemide (Lasix)"></option><option value="Spironolactone"></option><option value="Atorvastatin (Lipitor)"></option><option value="Rosuvastatin (Crestor)"></option><option value="Simvastatin"></option><option value="Pravastatin"></option><option value="Clopidogrel (Plavix)"></option><option value="Warfarin (Coumadin)"></option><option value="Apixaban (Eliquis)"></option><option value="Rivaroxaban (Xarelto)"></option><option value="Digoxin"></option><option value="Nitroglycerin"></option><option value="Isosorbide mononitrate"></option><option value="Diltiazem"></option><option value="Verapamil"></option><option value="Valsartan"></option><option value="Irbesartan"></option><option value="Ramipril"></option><option value="Enalapril"></option><option value="Propranolol"></option><option value="Metformin"></option><option value="Glipizide"></option><option value="Glyburide"></option><option value="Insulin glargine (Lantus)"></option><option value="Insulin lispro (Humalog)"></option><option value="Insulin aspart (Novolog)"></option><option value="Sitagliptin (Januvia)"></option><option value="Empagliflozin (Jardiance)"></option><option value="Semaglutide (Ozempic)"></option><option value="Liraglutide (Victoza)"></option><option value="Dulaglutide (Trulicity)"></option><option value="Pioglitazone"></option><option value="Albuterol inhaler"></option><option value="Fluticasone/salmeterol (Advair)"></option><option value="Budesonide/formoterol (Symbicort)"></option><option value="Montelukast (Singulair)"></option><option value="Tiotropium (Spiriva)"></option><option value="Prednisone"></option><option value="Ipratropium (Atrovent)"></option><option value="Sertraline (Zoloft)"></option><option value="Escitalopram (Lexapro)"></option><option value="Fluoxetine (Prozac)"></option><option value="Citalopram (Celexa)"></option><option value="Paroxetine (Paxil)"></option><option value="Bupropion (Wellbutrin)"></option><option value="Venlafaxine (Effexor)"></option><option value="Duloxetine (Cymbalta)"></option><option value="Trazodone"></option><option value="Mirtazapine (Remeron)"></option><option value="Alprazolam (Xanax)"></option><option value="Lorazepam (Ativan)"></option><option value="Clonazepam (Klonopin)"></option><option value="Diazepam (Valium)"></option><option value="Buspirone"></option><option value="Quetiapine (Seroquel)"></option><option value="Aripiprazole (Abilify)"></option><option value="Risperidone"></option><option value="Olanzapine (Zyprexa)"></option><option value="Lithium"></option><option value="Lamotrigine (Lamictal)"></option><option value="Valproic acid (Depakote)"></option><option value="Gabapentin (Neurontin)"></option><option value="Pregabalin (Lyrica)"></option><option value="Tramadol"></option><option value="Hydrocodone/acetaminophen (Vicodin)"></option><option value="Oxycodone"></option><option value="Oxycodone/acetaminophen (Percocet)"></option><option value="Morphine sulfate"></option><option value="Fentanyl patch"></option><option value="Cyclobenzaprine (Flexeril)"></option><option value="Meloxicam (Mobic)"></option><option value="Celecoxib (Celebrex)"></option><option value="Diclofenac"></option><option value="Sumatriptan (Imitrex)"></option><option value="Topiramate (Topamax)"></option><option value="Levetiracetam (Keppra)"></option><option value="Baclofen"></option><option value="Levothyroxine (Synthroid)"></option><option value="Methimazole"></option><option value="Liothyronine"></option><option value="Amoxicillin"></option><option value="Azithromycin (Z-Pak)"></option><option value="Ciprofloxacin"></option><option value="Doxycycline"></option><option value="Cephalexin (Keflex)"></option><option value="Clindamycin"></option><option value="Metronidazole (Flagyl)"></option><option value="Trimethoprim/sulfamethoxazole (Bactrim)"></option><option value="Levofloxacin"></option><option value="Nitrofurantoin (Macrobid)"></option><option value="Penicillin V"></option><option value="Omeprazole"></option><option value="Esomeprazole"></option><option value="Pantoprazole (Protonix)"></option><option value="Ranitidine"></option><option value="Ondansetron (Zofran)"></option><option value="Sucralfate"></option><option value="Dicyclomine (Bentyl)"></option><option value="Mesalamine"></option><option value="Hydroxyzine (Atarax)"></option><option value="Cetirizine"></option><option value="EpiPen (epinephrine auto-injector)"></option><option value="Prednisolone"></option><option value="Montelukast"></option><option value="Heparin"></option><option value="Enoxaparin (Lovenox)"></option><option value="Norethindrone/ethinyl estradiol (birth control)"></option><option value="Medroxyprogesterone"></option><option value="Estradiol"></option><option value="Progesterone"></option><option value="Allopurinol"></option><option value="Colchicine"></option><option value="Finasteride"></option><option value="Tamsulosin (Flomax)"></option><option value="Sildenafil (Viagra)"></option><option value="Tadalafil (Cialis)"></option><option value="Latanoprost eye drops"></option><option value="Timolol eye drops"></option><option value="Methotrexate"></option><option value="Hydroxychloroquine"></option><option value="Adalimumab (Humira)"></option><option value="Etanercept (Enbrel)"></option><option value="Vitamin D3"></option><option value="Vitamin B12"></option><option value="Multivitamin"></option><option value="Fish oil"></option><option value="Iron supplement (ferrous sulfate)"></option><option value="Calcium supplement"></option><option value="Magnesium supplement"></option><option value="Folic acid"></option><option value="Biotin"></option><option value="Other"></option></datalist>
@@ -739,6 +741,44 @@ window.addEventListener('resize', window._scalePhone);
               </sc-for>
               <button onClick="{{ addContact }}" style="width:100%; background:none; border:none; padding:13px 16px; cursor:pointer; text-align:left; font-size:15px; color:#e11d48; display:flex; align-items:center; gap:8px; font-family:inherit;"><svg width="18" height="18" viewBox="0 0 18 18" fill="#e11d48"><circle cx="9" cy="9" r="9"></circle><path d="M9 5v8M5 9h8" stroke="white" stroke-width="1.8" stroke-linecap="round"></path></svg>Add contact</button>
             </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- APP LOCK / BIOMETRIC GATE (AppLockView — Face ID before Edit / NFC write) -->
+      <sc-if value="{{ showAppLock }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; background:#fff7f7; z-index:22; display:flex; flex-direction:column;">
+          <div style="flex-shrink:0; height:59px; position:relative;">
+            <span style="position:absolute; top:18px; left:34px; font-size:15px; font-weight:600; color:#1c1917; letter-spacing:-0.4px;">9:41</span>
+            <div style="position:absolute; top:20px; right:20px; display:flex; align-items:center; gap:5px;">
+              <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="3.5" width="2.5" height="7.5" rx="0.7" fill="#1c1917"></rect><rect x="4" y="2" width="2.5" height="9" rx="0.7" fill="#1c1917"></rect><rect x="8" y="0.5" width="2.5" height="10.5" rx="0.7" fill="#1c1917"></rect><rect x="12" y="0" width="2.5" height="11" rx="0.7" fill="#1c1917"></rect></svg>
+              <svg width="15" height="12" viewBox="0 0 15 12" fill="none"><path d="M7.5 9.5h.01" stroke="#1c1917" stroke-width="2" stroke-linecap="round"></path><path d="M4.8 7.2c.7-.7 1.7-1.2 2.7-1.2s2 .5 2.7 1.2" stroke="#1c1917" stroke-width="1.3" stroke-linecap="round"></path><path d="M2 4.5C3.6 2.9 5.4 2 7.5 2s3.9.9 5.5 2.5" stroke="#1c1917" stroke-width="1.3" stroke-linecap="round"></path></svg>
+              <div style="position:relative; width:25px; height:12px; border:1.5px solid rgba(28,25,23,0.4); border-radius:2.5px;">
+                <div style="position:absolute; right:-3.5px; top:50%; transform:translateY(-50%); width:2.5px; height:5px; background:rgba(28,25,23,0.4); border-radius:0 1.5px 1.5px 0;"></div>
+                <div style="position:absolute; inset:1px 3px 1px 1px; background:#1c1917; border-radius:1px;"></div>
+              </div>
+            </div>
+          </div>
+          <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; align-items:center; padding:48px 32px 24px; text-align:center;">
+            <img src="assets/BrandLogo.png" alt="RedMed" style="width:72px; height:72px; border-radius:18px; box-shadow:0 4px 14px rgba(225,29,72,0.18); margin-bottom:28px;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="margin-bottom:12px;">
+              <path d="M9.5 9.5a2.5 2.5 0 015 0" stroke="#e11d48" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M7.2 8.2a5 5 0 019.6 0" stroke="#e11d48" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M4.8 6.5a7.8 7.8 0 0114.4 0" stroke="#e11d48" stroke-width="1.8" stroke-linecap="round"/>
+              <rect x="8.2" y="11.2" width="7.6" height="8.2" rx="2.4" stroke="#e11d48" stroke-width="1.8"/>
+              <circle cx="12" cy="14.4" r="1.15" fill="#e11d48"/>
+              <path d="M12 15.5v1.6" stroke="#e11d48" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            <div style="font-size:22px; font-weight:700; color:#1c1917; letter-spacing:-0.4px; margin-bottom:8px;">RedMed is locked</div>
+            <div style="font-size:15px; font-weight:500; color:#78716c; line-height:1.45; max-width:280px; margin-bottom:12px;">{{ appLockSubtitle }}</div>
+            <sc-if value="{{ appLockFailed }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:13px; font-weight:600; color:#e11d48; margin-bottom:8px;">Couldn't verify it's you. Try again.</div>
+            </sc-if>
+          </div>
+          <div style="flex-shrink:0; padding:12px 20px 28px; background:#fff7f7;">
+            <button onClick="{{ unlockAppLock }}" style="width:100%; background:linear-gradient(to bottom,#ff7289,#e11d48); color:white; border:none; border-radius:999px; padding:17px; font-size:16px; font-weight:700; cursor:pointer; font-family:inherit; letter-spacing:-0.4px; box-shadow:0 4px 14px rgba(225,29,72,0.28); margin-bottom:12px; {{ appLockUnlockBtnStyle }}">{{ appLockUnlockLabel }}</button>
+            <button onClick="{{ closeAppLock }}" style="width:100%; background:none; border:none; padding:8px; cursor:pointer; font-size:15px; font-weight:600; color:#78716c; font-family:inherit; margin-bottom:10px;">Cancel</button>
+            <div style="font-size:11px; font-weight:500; color:#78716c; text-align:center; line-height:1.45; padding:0 8px;">Your medical profile stays on this device only. Anyone scanning your NFC card or emergency link still sees it — locking the app does not affect that.</div>
           </div>
         </div>
       </sc-if>
@@ -812,7 +852,7 @@ window.addEventListener('resize', window._scalePhone);
           <div style="display:flex; flex-direction:column; gap:10px;">
             <div style="background:#1e1e1e; border-radius:10px; padding:12px; border-left:3px solid #e11d48;">
               <div style="font-size:11px; font-weight:700; color:#e11d48; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Header</div>
-              <div style="font-size:12px; color:rgba(255,255,255,0.7); line-height:1.5;">Logo + device name. Edit button top-right triggers Face ID before saving.</div>
+              <div style="font-size:12px; color:rgba(255,255,255,0.7); line-height:1.5;">Logo + device name. Edit (when profile has data) opens AppLockView Face ID gate before the edit sheet.</div>
             </div>
             <div style="background:#1e1e1e; border-radius:10px; padding:12px; border-left:3px solid #78716c;">
               <div style="font-size:11px; font-weight:700; color:rgba(255,255,255,0.5); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Profile rows</div>
@@ -864,7 +904,7 @@ window.addEventListener('resize', window._scalePhone);
           <div style="display:flex; flex-direction:column; gap:10px;">
             <div style="background:#1e1e1e; border-radius:10px; padding:12px; border-left:3px solid #e11d48;">
               <div style="font-size:11px; font-weight:700; color:#e11d48; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Write to band</div>
-              <div style="font-size:12px; color:rgba(255,255,255,0.7); line-height:1.5;">CoreNFC NDEFWriterSession. Shows "Hold to band" overlay. Face ID gates write.</div>
+              <div style="font-size:12px; color:rgba(255,255,255,0.7); line-height:1.5;">CoreNFC NDEFWriterSession. AppLockView Face ID gate, then "Hold to band" overlay.</div>
             </div>
             <div style="background:#1e1e1e; border-radius:10px; padding:12px; border-left:3px solid #78716c;">
               <div style="font-size:11px; font-weight:700; color:rgba(255,255,255,0.5); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Tag capacity</div>
@@ -944,13 +984,15 @@ class Component extends DCLogic {
     }
   }
   state = {
-    tab: 'myid', openPane: null, showSatellite: false, hasData: true, showHelp: false,
+    tab: 'myid', openPane: null, showSatellite: false, hasData: true, showHelp: false, braceletPaired: false,
     activeTopic: null, showEdit: false, nfcWriting: false,
+    showAppLock: false, appLockPending: null, appLockAuthenticating: false, appLockFailed: false,
     hospitalsStatus: 'idle', hospitalsErrorMsg: '', hospitals: [],
-    allergies: ['Penicillin', 'Shellfish', 'Tree nuts (almonds, cashews, walnuts)'],
-    meds: ['Warfarin (Coumadin) — 5 mg daily', 'Albuterol inhaler — as needed', 'Metoprolol — 25 mg twice daily'],
-    conditions: ['Atrial fibrillation (AFib)', 'Asthma', 'Type 2 diabetes'],
-    contacts: [{ name: 'Sarah Rivera', detail: 'Spouse · (555) 012-3456' }, { name: 'Dr. J. Kim', detail: 'Physician · (555) 789-0123' }]
+    profileName: 'Placeholder', birthDate: '', bloodType: '', tagImported: false,
+    allergies: [],
+    meds: [],
+    conditions: [],
+    contacts: []
   };
   topics = {};
 
@@ -1029,7 +1071,7 @@ class Component extends DCLogic {
     return {
       accent, pageBg, cardBg, textPrimary, textMuted,
       isMyID: tab === 'myid', is911: tab === '911', isAid: tab === 'aid', isNFC: tab === 'nfc',
-      navBarStyle: { flexShrink: 0, height: (tab === 'aid' && this.state.activeTopic) ? 54 : 0, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 14px', position: 'relative', zIndex: 8, overflow: 'hidden' },
+      navBarStyle: { flexShrink: 0, position: 'relative', height: (tab === 'aid' && this.state.activeTopic) ? 54 : 0, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 14px', position: 'relative', zIndex: 8, overflow: 'hidden' },
 
       myIDColor: tc('myid'), t911Color: tc('911'), aidColor: tc('aid'), nfcColor: tc('nfc'),
       myIDLabelStyle: label('myid'), t911LabelStyle: label('911'), aidLabelStyle: label('aid'), nfcLabelStyle: label('nfc'),
@@ -1043,9 +1085,48 @@ class Component extends DCLogic {
       tapBracelet: () => { this.stopCPR(); this.setState({ tab: 'nfc', activeTopic: null }); },
       tapHelp: () => this.setState(s => ({ showHelp: !s.showHelp })),
       showHelp: this.state.showHelp,
-      tapEdit: () => this.setState({ showEdit: true }),
+      tapEdit: () => {
+        // Match EditProfileView.requiresEditAuth — first fill skips Face ID; later edits gate.
+        if (this.state.hasData) {
+          this.setState({ showAppLock: true, appLockPending: 'edit', appLockAuthenticating: false, appLockFailed: false });
+        } else {
+          this.setState({ showEdit: true });
+        }
+      },
+      showAppLock: this.state.showAppLock,
+      appLockFailed: !!this.state.appLockFailed,
+      appLockSubtitle: this.state.appLockPending === 'nfc'
+        ? 'Use Face ID to authorize writing your medical ID to the bracelet.'
+        : 'Use Face ID to open your medical profile.',
+      appLockUnlockLabel: this.state.appLockAuthenticating ? 'Unlocking…' : 'Unlock with Face ID',
+      appLockUnlockBtnStyle: this.state.appLockAuthenticating ? 'opacity:0.7; pointer-events:none;' : '',
+      closeAppLock: () => this.setState({ showAppLock: false, appLockPending: null, appLockAuthenticating: false, appLockFailed: false }),
+      unlockAppLock: () => {
+        if (this.state.appLockAuthenticating) return;
+        this.setState({ appLockAuthenticating: true, appLockFailed: false });
+        clearTimeout(this._appLockTimer);
+        this._appLockTimer = setTimeout(() => {
+          const pending = this.state.appLockPending;
+          if (pending === 'edit') {
+            this.setState({ showAppLock: false, appLockPending: null, appLockAuthenticating: false, showEdit: true });
+          } else if (pending === 'nfc') {
+            this.setState({ showAppLock: false, appLockPending: null, appLockAuthenticating: false, nfcWriting: true });
+          } else {
+            this.setState({ showAppLock: false, appLockPending: null, appLockAuthenticating: false });
+          }
+        }, 550);
+      },
+      previewAppLock: () => this.setState({ showHelp: false, showAppLock: true, appLockPending: 'edit', appLockAuthenticating: false, appLockFailed: false }),
       hasData: this.state.hasData,
       noData: !this.state.hasData,
+      hasContacts: this.state.contacts.length > 0,
+      noContacts: this.state.contacts.length === 0,
+      hasAllergies: this.state.allergies.length > 0,
+      noAllergies: this.state.allergies.length === 0,
+      hasMeds: this.state.meds.length > 0,
+      noMeds: this.state.meds.length === 0,
+      hasConditions: this.state.conditions.length > 0,
+      noConditions: this.state.conditions.length === 0,
       allergies: this.state.allergies,
       meds: this.state.meds,
       conditions: this.state.conditions,
@@ -1073,8 +1154,13 @@ class Component extends DCLogic {
         clearTimeout(this._copyTimer);
         this._copyTimer = setTimeout(() => this.setState({ coordsCopied: false }), 1500);
       },
-      importLabel: this.state.hasData ? 'Imported ✓' : 'Import tag onto this phone',
-      importTag: () => this.setState({ hasData: true, tab: 'myid' }),
+      importLabel: this.state.tagImported ? 'Imported ✓' : 'Import tag onto this phone',
+      importTag: () => this.setState({ hasData: true, tab: 'myid', braceletPaired: true, tagImported: true }),
+      nfcStatusLine1: this.state.braceletPaired ? 'Band linked · phone opens your card · no app for readers' : 'Not linked yet · write a tag below to link your band',
+      nfcStatusLine2: this.state.braceletPaired ? 'Tag capacity: 24% used — plenty of room' : 'Tag capacity: 0% used — nothing written yet',
+      braceletStatusLabel: this.state.braceletPaired ? 'Linked bracelet ›' : 'Not linked — tap to pair ›',
+      braceletStatusStyle: { fontSize: 10, fontWeight: 700, color: this.state.braceletPaired ? 'rgba(225,29,72,0.85)' : '#78716c', letterSpacing: '0.7px', textTransform: 'uppercase', marginTop: 3 },
+      deviceName: (this.state.profileName || 'Your') + "'s iPhone",
       showSatellite,
       satelliteChevronStyle: { transform: showSatellite ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease', width: 12, height: 12 },
       toggleSatellite: () => this.setState(s => ({ showSatellite: !s.showSatellite })),
@@ -1128,7 +1214,23 @@ class Component extends DCLogic {
       aidDetail: tab === 'aid' && !!this.state.activeTopic,
       showEdit: this.state.showEdit,
       closeEdit: () => this.setState({ showEdit: false }),
-      saveEdit: () => this.setState({ showEdit: false, hasData: true }),
+      saveEdit: () => this.setState({
+        showEdit: false, hasData: true,
+        profileName: (this.nameInputRef && this.nameInputRef.value.trim()) || this.state.profileName,
+        birthDate: this.dobInputRef ? this.dobInputRef.value.trim() : this.state.birthDate,
+        bloodType: this.bloodInputRef ? this.bloodInputRef.value.trim() : this.state.bloodType,
+      }),
+      nameInputRef: (el) => { this.nameInputRef = el; },
+      dobInputRef: (el) => { this.dobInputRef = el; },
+      bloodInputRef: (el) => { this.bloodInputRef = el; },
+      profileName: this.state.profileName,
+      birthDate2: this.state.birthDate,
+      hasBirthDate: !!this.state.birthDate,
+      noBirthDate: !this.state.birthDate,
+      hasBloodType: !!this.state.bloodType,
+      noBloodType: !this.state.bloodType,
+      birthDate: this.state.birthDate,
+      bloodType: this.state.bloodType,
 
       allergyRows: this.state.allergies.map((text, i) => ({
         text, onRemove: () => this.setState(s => ({ allergies: s.allergies.filter((_, j) => j !== i) }))
@@ -1148,15 +1250,15 @@ class Component extends DCLogic {
       addCondition: () => this.setState(s => ({ conditions: [...s.conditions, ''] })),
       addContact: () => this.setState(s => ({ contacts: [...s.contacts, { name: '', detail: '' }] })),
       nfcWriting: this.state.nfcWriting,
-      tapWriteNFC: () => this.setState({ nfcWriting: true }),
-      closeNFC: () => this.setState({ nfcWriting: false }),
+      tapWriteNFC: () => this.setState({ showAppLock: true, appLockPending: 'nfc', appLockAuthenticating: false, appLockFailed: false }),
+      closeNFC: () => this.setState({ nfcWriting: false, braceletPaired: true }),
 
       showPublicCard: this.state.showPublicCard,
       tapScanBracelet: () => this.setState({ showPublicCard: true }),
       closePublicCard: () => this.setState({ showPublicCard: false }),
-      cardName: this.state.hasData ? 'Alex Rivera' : 'No profile saved yet',
-      cardDOB: this.state.hasData ? 'April 12, 1988' : '—',
-      cardBlood: this.state.hasData ? 'O+' : '—',
+      cardName: this.state.profileName,
+      cardDOB: this.state.birthDate || '—',
+      cardBlood: this.state.bloodType || '—',
       cardAllergies: this.state.hasData ? this.state.allergies : [],
       cardMeds: this.state.hasData ? this.state.meds : [],
       cardConditions: this.state.hasData ? this.state.conditions : [],
