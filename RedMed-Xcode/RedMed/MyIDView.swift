@@ -10,8 +10,11 @@ struct MyIDView: View {
     @State private var showAuthFailedAlert = false
 
     private var deviceName: String {
-        let base = profile.name.isEmpty ? "Your" : profile.name
-        return "\(base)'s iPhone"
+        if isScannerSession {
+            return profile.name.isEmpty ? "RedMed" : profile.name
+        }
+        if profile.name.isEmpty { return "Your iPhone" }
+        return "\(profile.name)'s iPhone"
     }
 
     var body: some View {
@@ -108,13 +111,22 @@ struct MyIDView: View {
             .padding(.bottom, 12)
         }
         .background(Color.redmedBg)
-        .fullScreenCover(isPresented: $showEdit) {
+        .fullScreenCover(isPresented: Binding(
+            get: { showEdit && !isScannerSession },
+            set: { showEdit = $0 && !isScannerSession }
+        )) {
             EditProfileView().environmentObject(profile)
         }
-        .sheet(isPresented: $showHelp) {
+        .sheet(isPresented: Binding(
+            get: { showHelp && !isScannerSession },
+            set: { showHelp = $0 && !isScannerSession }
+        )) {
             HelpMenuView()
         }
-        .fullScreenCover(isPresented: $showScannerPreview) {
+        .fullScreenCover(isPresented: Binding(
+            get: { showScannerPreview && !isScannerSession },
+            set: { showScannerPreview = $0 && !isScannerSession }
+        )) {
             PublicCardView(profile: profile)
         }
         .alert("Authentication Failed", isPresented: $showAuthFailedAlert) {
@@ -190,6 +202,8 @@ struct MyIDView: View {
     // MARK: - Edit gate
 
     private func requestEdit() {
+        // Scanners never edit — UI gate alone is not enough.
+        guard !isScannerSession else { return }
         // Always require Apple biometrics/passcode once any medical fields
         // exist — scanners have no edit path at all.
         guard profile.hasSensitiveProfileData else {

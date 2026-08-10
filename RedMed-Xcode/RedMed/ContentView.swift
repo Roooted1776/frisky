@@ -45,13 +45,18 @@ struct ContentView: View {
 }
 
 /// Same app shell as `ContentView` — RedMed / 911 / Aid — for people who scan.
+/// Holds a **snapshot** of the profile so scanner UI cannot mutate owner data.
 struct PublicCardView: View {
-    @ObservedObject var profile: ProfileData
+    @StateObject private var snapshot: ProfileData
     @Environment(\.dismiss) private var dismiss
+
+    init(profile: ProfileData) {
+        _snapshot = StateObject(wrappedValue: profile.snapshot())
+    }
 
     var body: some View {
         ContentView()
-            .environmentObject(profile)
+            .environmentObject(snapshot)
             .environment(\.isScannerSession, true)
             .environment(\.scannerDismiss, { dismiss() })
     }

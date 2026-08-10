@@ -298,10 +298,57 @@
 
   <script>
 (function () {
+  var MAX_PAYLOAD = 50000;
+  var MAX_LIST = 40;
+  var MAX_STR = 200;
+
+  function asString(v, fallback) {
+    if (typeof v !== 'string') return fallback || '';
+    return v.slice(0, MAX_STR);
+  }
+
+  function asStringArray(v) {
+    if (!Array.isArray(v)) return [];
+    return v
+      .filter(function (x) { return typeof x === 'string'; })
+      .slice(0, MAX_LIST)
+      .map(function (s) { return s.slice(0, MAX_STR); });
+  }
+
+  function sanitizePhone(v) {
+    return String(v || '').replace(/[^\d+]/g, '').slice(0, 20);
+  }
+
+  function sanitizeProfile(raw) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+    var contacts = Array.isArray(raw.contacts) ? raw.contacts.slice(0, MAX_LIST).map(function (c) {
+      if (!c || typeof c !== 'object') return null;
+      return {
+        name: asString(c.name, 'Contact'),
+        rel: asString(c.rel),
+        phone: sanitizePhone(c.phone)
+      };
+    }).filter(Boolean) : [];
+    return {
+      name: asString(raw.name),
+      dob: asString(raw.dob),
+      blood: asString(raw.blood),
+      updated: asString(raw.updated),
+      donor: typeof raw.donor === 'boolean' ? raw.donor : null,
+      allergies: asStringArray(raw.allergies),
+      meds: asStringArray(raw.meds),
+      conditions: asStringArray(raw.conditions),
+      contacts: contacts
+    };
+  }
+
   function list(el, items) {
-    el.innerHTML = '';
+    el.textContent = '';
     if (!items || !items.length) {
-      el.innerHTML = '<div class="list-item">—</div>';
+      var empty = document.createElement('div');
+      empty.className = 'list-item';
+      empty.textContent = '—';
+      el.appendChild(empty);
       return;
     }
     items.forEach(function (t) {
@@ -331,11 +378,14 @@
       var hash = location.hash || '';
       var idx = hash.indexOf('d=');
       if (idx < 0) return null;
-      var raw = hash.slice(idx + 2).split('&')[0];
+      var raw = decodeURIComponent(hash.slice(idx + 2).split('&')[0] || '');
       var b64 = raw.replace(/-/g, '+').replace(/_/g, '/');
       while (b64.length % 4) b64 += '=';
-      var json = decodeURIComponent(escape(atob(b64)));
-      return JSON.parse(json);
+      var bin = atob(b64);
+      if (bin.length > MAX_PAYLOAD) return null;
+      var bytes = Uint8Array.from(bin, function (c) { return c.charCodeAt(0); });
+      var json = new TextDecoder('utf-8').decode(bytes);
+      return sanitizeProfile(JSON.parse(json));
     } catch (e) { return null; }
   }
 
@@ -353,16 +403,19 @@
     typeof p.donor === 'boolean' ? (p.donor ? 'Yes' : 'No') : '—';
 
   var contactsEl = document.getElementById('contacts');
-  contactsEl.innerHTML = '';
+  contactsEl.textContent = '';
   var contacts = p.contacts || [];
   var firstPhone = '';
   if (!contacts.length) {
-    contactsEl.innerHTML = '<div class="list-item">—</div>';
+    var emptyC = document.createElement('div');
+    emptyC.className = 'list-item';
+    emptyC.textContent = '—';
+    contactsEl.appendChild(emptyC);
   } else {
     contacts.forEach(function (c, i) {
       var row = document.createElement('div');
       row.className = 'list-item';
-      var phone = (c.phone || '').replace(/[^\d+]/g, '');
+      var phone = sanitizePhone(c.phone);
       if (i === 0 && phone) firstPhone = phone;
       var label = (c.name || 'Contact') + (c.rel ? ' · ' + c.rel : '');
       if (phone) {
@@ -380,6 +433,7 @@
   }
 
   function setCoords(lat, lon, acc) {
+    if (!isFinite(lat) || !isFinite(lon)) return;
     var t = lat.toFixed(6) + ', ' + lon.toFixed(6);
     if (acc > 0) t += ' (±' + Math.round(acc) + ' m)';
     document.getElementById('coords').textContent = t;

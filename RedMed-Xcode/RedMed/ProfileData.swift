@@ -32,6 +32,21 @@ class ProfileData: ObservableObject {
 
     @Published var isOrganDonor: Bool = true
     @Published var lastUpdated: String = "Jul 28, 2026"
+
+    /// Detached copy for scanner / preview — mutations never touch the owner profile.
+    func snapshot() -> ProfileData {
+        let copy = ProfileData()
+        copy.name = name
+        copy.birthDate = birthDate
+        copy.bloodType = bloodType
+        copy.allergies = allergies
+        copy.medications = medications
+        copy.conditions = conditions
+        copy.contacts = contacts.map { EmergencyContact(name: $0.name, detail: $0.detail) }
+        copy.isOrganDonor = isOrganDonor
+        copy.lastUpdated = lastUpdated
+        return copy
+    }
 }
 
 struct EmergencyContact: Identifiable {
