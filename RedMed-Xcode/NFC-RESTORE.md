@@ -1,8 +1,11 @@
-# Restoring the NFC bracelet feature
+# Restoring real CoreNFC (vs simulated owner tab)
 
-NFC Tag Reading needs a **paid Apple Developer Program membership**.
-It is parked until that is active. Do not re-enable entitlements or the
-NFC tab on a free personal team.
+Owner app currently ships a **simulated** NFC Bracelet tab:
+Face ID → demo “Hold to band” overlay → `braceletLinked`. No
+`NFCNDEFWriterSession`, no NFC entitlement, no `NFCReaderUsageDescription`.
+
+Ped / EMS tap and in-app Preview scanner stay **RedMed + 911 + Aid only** —
+no NFC write UI (`ContentView.showsNFC` / `scannerSafeTab`).
 
 ## Ped / EMS NFC tap (required product behavior)
 
@@ -26,22 +29,15 @@ Hard rules for that tap surface:
 `PublicCardView` is the in-app preview of that same shell (snapshot profile,
 `isScannerSession = true`).
 
-## What is parked on this branch
+## Already restored (simulated)
 
-- `RedMed/NFCView.swift` — on disk, **not** in the Xcode target (header notes why)
-- Empty `RedMed.entitlements` (no NFC entitlement)
-- No `AppTab.nfc`, no bracelet UI on My ID
-- Owner app tabs: RedMed / 911 / Aid only
+- `RedMed/NFCView.swift` in the Xcode target
+- `AppTab.nfc`, owner tab bar item, My ID bracelet entry points
+- `ProfileData.braceletLinked`
+- Owner-only: Face ID before simulated write; `braceletLinked` only after success
+- Scanners / `#d=` taps: RedMed + 911 + Aid only (no NFC tab, no Edit)
 
-Historical references (older snapshots):
-
-- Branch `nfc` — frozen at `80185c6`
-- Commit `7fcc66a` — earlier self-contained removal (pre–merge-conflict fixes)
-
-Prefer restoring against **current** `main` using the checklist below rather
-than a blind `git revert` of `7fcc66a` (the tree has moved on).
-
-## Restore checklist
+## Real CoreNFC checklist (paid team)
 
 ### 1. Paid team + capability
 
@@ -66,14 +62,11 @@ than a blind `git revert` of `7fcc66a` (the tree has moved on).
 <string>RedMed writes your emergency card to your NFC bracelet.</string>
 ```
 
-### 3. App wiring
+### 3. Wire real write
 
-- Add `NFCView.swift` back to the RedMed target
-- Restore `AppTab.nfc`, tab bar item, My ID bracelet entry points,
-  `ProfileData.braceletLinked`
-- Owner-only: Face ID before write; mark `braceletLinked` only after a
-  successful write
-- Scanners / `#d=` taps: still RedMed + 911 + Aid only (no NFC tab, no Edit)
+Replace `NFCWriteOverlay`’s `Task.sleep` demo with `NFCNDEFWriterSession`
+(and optional read-back). Simulator still cannot do NFC — keep the demo path
+under `#if targetEnvironment(simulator)` if useful.
 
 ### 4. What the band must contain
 
@@ -85,8 +78,5 @@ After unarchive, confirm on a physical iPhone:
 2. Tap with a second phone (Safari) → RedMed, 911, and Aid all switchable
 3. No edit controls; profile matches last write
 
-### 5. Real CoreNFC
-
-The parked `NFCView.swift` is still a **demo** overlay (`Task.sleep`). Wire a
-real `NFCNDEFWriterSession` (and optional read-back) on device — Simulator
-cannot do NFC.
+Historical references: branch `nfc` (frozen at `80185c6`); earlier park commit
+`7a0fbc6`.

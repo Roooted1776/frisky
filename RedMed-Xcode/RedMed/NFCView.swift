@@ -1,7 +1,8 @@
-// Parked: not in the Xcode target. NFC Tag Reading needs a paid Apple Developer
-// Program membership. Restore via RedMed-Xcode/NFC-RESTORE.md when ready.
+// Owner-only NFC bracelet setup (simulated write). Ped/EMS scanner shells never
+// mount this tab — see ContentView.showsNFC / scannerSafeTab. No CoreNFC /
+// entitlements yet; real NDEF write still needs paid Apple Developer membership
+// (see RedMed-Xcode/NFC-RESTORE.md).
 import SwiftUI
-import CoreNFC
 
 struct NFCView: View {
     @EnvironmentObject var profile: ProfileData
@@ -10,6 +11,7 @@ struct NFCView: View {
     @State private var writeSuccess = false
     @State private var writeError: String? = nil
     @State private var showPublicCard = false
+    @State private var showAuthFailedAlert = false
 
     var body: some View {
         // Ped/EMS scanner shells must never write or pair bands.
@@ -29,7 +31,7 @@ struct NFCView: View {
                         Text("NFC Bracelet")
                             .font(.system(size: 22, weight: .bold))
                             .foregroundColor(.redmedDark)
-                        Text("iPhone only for setup. Fill My ID, write the band once — CoreNFC, Face ID, done.")
+                        Text("iPhone only for setup. Fill My ID, then pair the band — Face ID, simulated write for now.")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.redmedMuted)
                             .multilineTextAlignment(.center)
@@ -43,6 +45,12 @@ struct NFCView: View {
                     // STATUS
                     VStack(spacing: 0) {
                         statusRow("Tap the band · phone opens your card · no app for readers", showDivider: true)
+                        statusRow(
+                            profile.braceletLinked
+                                ? "Bracelet linked — re-write after you edit My ID"
+                                : "Bracelet not linked yet — write once to pair",
+                            showDivider: true
+                        )
                         statusRow("Tag capacity: 24% used — plenty of room", showDivider: false)
                     }
                     .padding(.horizontal, 14)
@@ -68,6 +76,14 @@ struct NFCView: View {
                             )
                             .clipShape(Capsule())
                             .shadow(color: Color.redmedAccent.opacity(0.28), radius: 7, y: 4)
+                        }
+                        .disabled(!profile.hasData)
+                        .opacity(profile.hasData ? 1 : 0.55)
+                        if !profile.hasData {
+                            Text("Add your name on My ID before writing a tag.")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.redmedAccent)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         VStack(alignment: .leading, spacing: 6) {
                             syncBullet("Link your bracelet once (My ID → bracelet icon → write/read).")
@@ -101,7 +117,9 @@ struct NFCView: View {
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.redmedMuted)
                             .lineSpacing(3)
-                        SecondaryButton("Import tag onto this phone", icon: "arrow.down.circle") { profile.name = profile.name.isEmpty ? "Alex Rivera" : profile.name }
+                        SecondaryButton("Import tag onto this phone", icon: "arrow.down.circle") {
+                            if profile.name.isEmpty { profile.name = "Alex Rivera" }
+                        }
                     }
                     .padding(14)
                     .background(Color.redmedSurface)
@@ -132,15 +150,28 @@ struct NFCView: View {
                 }
             }
             .sheet(isPresented: $showPublicCard) { PublicCardView(profile: profile) }
+            .alert("Authentication Failed", isPresented: $showAuthFailedAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Face ID or passcode is required to write your emergency card to the bracelet.")
+            }
         }
     }
 
     func beginWrite() {
         guard !isScannerSession else { return }
         guard profile.hasData else { return }
-        // In production: LAContext biometric auth, then NFCNDEFWriterSession
-        // Do not mark braceletLinked until write succeeds (or demo completes).
-        showWriteOverlay = true
+        // Face ID / passcode before simulated write. Swap overlay for NFCNDEFWriterSession
+        // when paid NFC Tag Reading is enabled. Do not mark braceletLinked until success.
+        BiometricAuth.authenticate(
+            reason: "Confirm with Face ID, Touch ID, or passcode to write your RedMed card to the bracelet."
+        ) { success in
+            if success {
+                showWriteOverlay = true
+            } else {
+                showAuthFailedAlert = true
+            }
+        }
     }
 
     @ViewBuilder
@@ -219,7 +250,7 @@ struct NFCWriteOverlay: View {
                     Text("Hold to band")
                         .font(.system(size: 20, weight: .bold))
                         .foregroundColor(.white)
-                    Text("Bring the top of your iPhone close to the NFC bracelet")
+                    Text("Simulated write — bring the top of your iPhone close to the NFC bracelet")
                         .font(.system(size: 14))
                         .foregroundColor(.white.opacity(0.5))
                         .multilineTextAlignment(.center)

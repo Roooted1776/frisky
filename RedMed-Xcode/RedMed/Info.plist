@@ -21,7 +21,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSFaceIDUsageDescription</key>
-	<string>RedMed uses Face ID, Touch ID, or your device passcode to unlock editing of your RedMed profile. Scanned cards are read-only and cannot be changed without your app and authentication.</string>
+	<string>RedMed uses Face ID, Touch ID, or your device passcode to unlock editing of your RedMed profile and to authorize writing to your bracelet. Scanned cards are read-only and cannot be changed without your app and authentication.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>RedMed uses your location to give 911 your exact GPS coordinates in an emergency.</string>
 	<key>NSMotionUsageDescription</key>
