@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct MyIDView: View {
+struct RedMedView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
     @Environment(\.scannerDismiss) private var scannerDismiss

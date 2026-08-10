@@ -1,7 +1,7 @@
 import Foundation
 import Security
 
-/// Hardware-encrypted on-device storage for the medical profile blob.
+/// Hardware-encrypted on-device storage for the RedMed profile blob.
 /// `.whenUnlockedThisDeviceOnly` keeps it out of iCloud/iTunes backups.
 enum KeychainStore {
     private static let service = "com.redmed.app.profile"

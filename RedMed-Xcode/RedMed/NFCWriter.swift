@@ -27,7 +27,7 @@ final class NFCWriter: NSObject, ObservableObject {
         statusMessage = "Hold your iPhone near the NFC tag."
 
         let session = NFCNDEFReaderSession(delegate: self, queue: nil, invalidateAfterFirstRead: false)
-        session.alertMessage = "Hold your iPhone near the NFC tag to write your medical ID."
+        session.alertMessage = "Hold your iPhone near the NFC tag to write your RedMed card."
         self.session = session
         session.begin()
     }

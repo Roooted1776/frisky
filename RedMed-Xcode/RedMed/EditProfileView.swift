@@ -38,7 +38,7 @@ struct EditProfileView: View {
                     .font(.system(size: 17))
                     .foregroundColor(.redmedAccent)
                 Spacer()
-                Text("Edit Profile")
+                Text("Edit RedMed")
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundColor(.redmedDark)
                 Spacer()

@@ -4,7 +4,7 @@ struct ContentView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
     @Environment(\.scenePhase) private var scenePhase
-    @State private var tab: AppTab = .myid
+    @State private var tab: AppTab = .redmed
 
     /// Ped/EMS scanners: RedMed + Help + Aid only. Owner also gets NFC.
     private var showsNFC: Bool { !isScannerSession }
@@ -12,12 +12,12 @@ struct ContentView: View {
     private var scannerSafeTab: Binding<AppTab> {
         Binding(
             get: {
-                if !showsNFC && tab == .nfc { return .myid }
+                if !showsNFC && tab == .nfc { return .redmed }
                 return tab
             },
             set: { newValue in
                 if !showsNFC && newValue == .nfc {
-                    tab = .myid
+                    tab = .redmed
                 } else {
                     tab = newValue
                 }
@@ -33,8 +33,8 @@ struct ContentView: View {
             ZStack(alignment: .bottom) {
                 Group {
                     switch scannerSafeTab.wrappedValue {
-                    case .myid:
-                        MyIDView(tab: scannerSafeTab)
+                    case .redmed:
+                        RedMedView(tab: scannerSafeTab)
                     case .emergency:
                         EmergencyView()
                     case .aid:
@@ -63,7 +63,7 @@ struct ContentView: View {
 
     private func clampScannerTab() {
         if !showsNFC && tab == .nfc {
-            tab = .myid
+            tab = .redmed
         }
     }
 }
@@ -76,7 +76,7 @@ struct CustomTabBar: View {
         VStack(spacing: 0) {
             Divider().overlay(Color(red: 0.9, green: 0.9, blue: 0.9))
             HStack(spacing: -3) {
-                TabBarItem(icon: "person.fill",  label: "RedMed", isOn: tab == .myid)      { tab = .myid }
+                TabBarItem(icon: "person.fill",  label: "RedMed", isOn: tab == .redmed)      { tab = .redmed }
                 TabBarItem(icon: "phone.fill",   label: "Help",   isOn: tab == .emergency)  { tab = .emergency }
                 TabBarItem(icon: "cross.case.fill", label: "Aid", isOn: tab == .aid)        { tab = .aid }
                 if showsNFC {
