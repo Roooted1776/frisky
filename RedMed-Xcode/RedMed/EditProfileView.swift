@@ -20,6 +20,10 @@ struct EditProfileView: View {
     @State private var contacts: [EmergencyContact] = []
     @State private var showAuthFailedAlert = false
 
+    /// Opaque suggestion wash — not a translucent tint (those show the
+    /// card / page background straight through and look like ghost rows).
+    private static let suggestionFill = Color(red: 0.988, green: 0.941, blue: 0.953)
+
     /// Display / persist as "Month DD, YYYY" (matches the old text placeholder).
     private static let birthDateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -147,7 +151,7 @@ struct EditProfileView: View {
                                                 .buttonStyle(.plain)
                                             }
                                         }
-                                        .background(Color.redmedAccent.opacity(0.06))
+                                        .background(Self.suggestionFill)
                                         .padding(.bottom, 8)
                                     }
                                 }
@@ -203,7 +207,7 @@ struct EditProfileView: View {
                                                 .buttonStyle(.plain)
                                             }
                                         }
-                                        .background(Color.redmedAccent.opacity(0.06))
+                                        .background(Self.suggestionFill)
                                         .padding(.bottom, 8)
                                     }
                                 }
@@ -259,7 +263,7 @@ struct EditProfileView: View {
                                                 .buttonStyle(.plain)
                                             }
                                         }
-                                        .background(Color.redmedAccent.opacity(0.06))
+                                        .background(Self.suggestionFill)
                                         .padding(.bottom, 8)
                                     }
                                 }
