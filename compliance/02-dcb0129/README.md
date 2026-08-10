@@ -8,7 +8,8 @@ named competent person.
 
 | Artefact | File | Status |
 |----------|------|--------|
-| CSO appointment brief | [cso-appointment.md](cso-appointment.md) | Fill name + contract |
+| Outbound brief for candidates | [cso-engagement-brief.md](cso-engagement-brief.md) | **Send this** to consultancies / clinicians |
+| CSO appointment record | [cso-appointment.md](cso-appointment.md) | Fill name + contract on signature |
 | Clinical risk management plan | [clinical-risk-management-plan.md](clinical-risk-management-plan.md) | Draft |
 | Hazard log | [hazard-log.md](hazard-log.md) | Seed hazards; CSO scores |
 | Clinical safety case report | [clinical-safety-case-report.md](clinical-safety-case-report.md) | Skeleton |

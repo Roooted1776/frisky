@@ -13,6 +13,7 @@ the way a SaaS VPC is — CE is organisational.
 
 ## Actions
 
+- [ ] Fill [asset-inventory.md](asset-inventory.md) **first** — not knowing your own scope is what stalls first-time applicants
 - [ ] Confirm legal entity for certification
 - [ ] IASME / accredited body questionnaire
 - [ ] Patch, firewall, malware, access control, secure config evidence

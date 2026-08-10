@@ -14,17 +14,29 @@ Owner app: My ID, Find 911, Aid, NFC; scanner/public card shell; system sheets.
 
 ## Likely passes / strengths
 
-- Uses system fonts / SwiftUI controls in many places (inherits Dynamic Type
-  better than fixed web pixels — still verify custom `.system(size:)` usages).
+- Uses SwiftUI controls in many places (inherits system behaviour better than
+  fixed web pixels — but see the measured facts below, custom `.system(size:)`
+  is pervasive).
 - Semantic `NavigationView` / buttons for primary actions.
-- Some `accessibilityLabel` / `accessibilityHint` already used (e.g. lock /
-  scanner flows in related sources).
+
+## Measured facts (shipping tree, 2026-08-10)
+
+Corrects an earlier note in this file which said `accessibilityLabel` /
+`accessibilityHint` were "already used". That is true of the staged `uploads/`
+sources only — nine files there carry them — and **not** of what ships.
+
+- **Zero** `accessibility*` modifiers across all of `RedMed-Xcode/RedMed/*.swift`.
+  No labels, hints, traits, or element grouping anywhere in the shipping target.
+- Hard-coded `.system(size:)` in **nine** files, ranging down to **9 pt**.
+
+Assume an external audit starts from nothing. Brief for commissioning one:
+[audit-brief.md](audit-brief.md).
 
 ## Gaps to verify / fix (code audit findings)
 
 | ID | Issue | WCAG-ish | Where to look |
 |----|-------|----------|---------------|
-| A01 | Many hard-coded font sizes (10–13pt) | 1.4.4 Resize text | Aid / Emergency / cards |
+| A01 | Many hard-coded font sizes (9–13pt) | 1.4.4 Resize text | Aid / Emergency / cards |
 | A02 | Colour meaning (accent red) without text/icon redundancy | 1.4.1 | Status / tabs |
 | A03 | Contrast of muted grey on cream/pink backgrounds | 1.4.3 | `.redmedMuted` on `.redmedBg` |
 | A04 | Emoji-only pane cues | 1.1.1 / 4.1.2 | Aid pane cards |
