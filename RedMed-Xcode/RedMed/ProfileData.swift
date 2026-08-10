@@ -39,17 +39,24 @@ class ProfileData: ObservableObject {
     init(persisting: Bool = true) {
         self.persists = persisting
         if persisting {
-            loadFromKeychain()
-            // Simulator demos: seed list rows only when Keychain is empty,
-            // or strip the old full Alex Rivera identity sample if present.
+            let loaded = loadFromKeychain()
+            // Simulator demos: seed list rows only on a truly empty Keychain
+            // (first launch). Do not re-seed after the user deletes every row —
+            // `!hasSensitiveProfileData` is wrong for that (cleared lists still
+            // persist as empty arrays). Also strip the old Alex Rivera identity.
             #if targetEnvironment(simulator)
-            if !hasSensitiveProfileData || name == "Alex Rivera" {
+            if name == "Alex Rivera" {
                 name = ""
                 birthDate = ""
                 bloodType = ""
                 contacts = []
                 isOrganDonor = false
                 lastUpdated = ""
+                if allergies.isEmpty && medications.isEmpty && conditions.isEmpty {
+                    applySampleListData()
+                }
+                persist()
+            } else if !loaded {
                 applySampleListData()
                 persist()
             }
@@ -100,9 +107,11 @@ class ProfileData: ObservableObject {
         KeychainStore.save(data, account: Self.keychainAccount)
     }
 
-    private func loadFromKeychain() {
+    /// - Returns: `true` when a profile blob was loaded from Keychain.
+    @discardableResult
+    private func loadFromKeychain() -> Bool {
         guard let data = KeychainStore.load(account: Self.keychainAccount),
-              let blob = try? JSONDecoder().decode(PersistedProfile.self, from: data) else { return }
+              let blob = try? JSONDecoder().decode(PersistedProfile.self, from: data) else { return false }
         name = blob.name
         birthDate = blob.birthDate
         bloodType = blob.bloodType
@@ -113,6 +122,7 @@ class ProfileData: ObservableObject {
         braceletLinked = blob.braceletLinked
         isOrganDonor = blob.isOrganDonor
         lastUpdated = blob.lastUpdated
+        return true
     }
 }
 

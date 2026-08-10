@@ -110,22 +110,22 @@ struct EditProfileView: View {
                     editCard {
                         ForEach($allergies) { $line in
                             VStack(alignment: .leading, spacing: 0) {
-                                HStack {
+                                HStack(spacing: 8) {
                                     TextField("Allergy", text: $line.text)
                                         .font(.system(size: 15))
                                         .foregroundColor(.redmedDark)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                         .onChange(of: line.text) { _, _ in allergyFocusID = line.id }
-                                    Spacer()
-                                    Button {
+                                    removeLineButton {
                                         withAnimation {
                                             allergies.removeAll { $0.id == line.id }
                                             if allergyFocusID == line.id { allergyFocusID = nil }
                                         }
-                                    } label: {
-                                        Text("✕").font(.system(size: 18)).foregroundColor(.redmedAccent)
                                     }
                                 }
-                                .padding(.horizontal, 16).padding(.vertical, 13)
+                                .padding(.leading, 16)
+                                .padding(.trailing, 4)
+                                .padding(.vertical, 4)
 
                                 if allergyFocusID == line.id && !line.text.isEmpty {
                                     let matches = commonAllergies.filter { $0.localizedCaseInsensitiveContains(line.text) }.prefix(5)
@@ -162,22 +162,22 @@ struct EditProfileView: View {
                     editCard {
                         ForEach($medications) { $line in
                             VStack(alignment: .leading, spacing: 0) {
-                                HStack {
+                                HStack(spacing: 8) {
                                     TextField("Medication", text: $line.text)
                                         .font(.system(size: 15))
                                         .foregroundColor(.redmedDark)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                         .onChange(of: line.text) { _, _ in medFocusID = line.id }
-                                    Spacer()
-                                    Button {
+                                    removeLineButton {
                                         withAnimation {
                                             medications.removeAll { $0.id == line.id }
                                             if medFocusID == line.id { medFocusID = nil }
                                         }
-                                    } label: {
-                                        Text("✕").font(.system(size: 18)).foregroundColor(.redmedAccent)
                                     }
                                 }
-                                .padding(.horizontal, 16).padding(.vertical, 13)
+                                .padding(.leading, 16)
+                                .padding(.trailing, 4)
+                                .padding(.vertical, 4)
 
                                 if medFocusID == line.id && !line.text.isEmpty {
                                     let matches = commonMedications.filter { $0.localizedCaseInsensitiveContains(line.text) }.prefix(5)
@@ -214,22 +214,22 @@ struct EditProfileView: View {
                     editCard {
                         ForEach($conditions) { $line in
                             VStack(alignment: .leading, spacing: 0) {
-                                HStack {
+                                HStack(spacing: 8) {
                                     TextField("Condition", text: $line.text)
                                         .font(.system(size: 15))
                                         .foregroundColor(.redmedDark)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                         .onChange(of: line.text) { _, _ in conditionFocusID = line.id }
-                                    Spacer()
-                                    Button {
+                                    removeLineButton {
                                         withAnimation {
                                             conditions.removeAll { $0.id == line.id }
                                             if conditionFocusID == line.id { conditionFocusID = nil }
                                         }
-                                    } label: {
-                                        Text("✕").font(.system(size: 18)).foregroundColor(.redmedAccent)
                                     }
                                 }
-                                .padding(.horizontal, 16).padding(.vertical, 13)
+                                .padding(.leading, 16)
+                                .padding(.trailing, 4)
+                                .padding(.vertical, 4)
 
                                 if conditionFocusID == line.id && !line.text.isEmpty {
                                     let matches = commonConditions.filter { $0.localizedCaseInsensitiveContains(line.text) }.prefix(5)
@@ -274,15 +274,15 @@ struct EditProfileView: View {
                                         .font(.system(size: 13))
                                         .foregroundColor(.redmedMuted)
                                 }
-                                Spacer()
-                                Button {
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                removeLineButton {
                                     withAnimation { contacts.removeAll { $0.id == contact.id } }
-                                } label: {
-                                    Text("✕").font(.system(size: 18)).foregroundColor(.redmedAccent)
                                 }
-                                .padding(.top, 4)
+                                .padding(.top, 2)
                             }
-                            .padding(.horizontal, 16).padding(.vertical, 13)
+                            .padding(.leading, 16)
+                            .padding(.trailing, 4)
+                            .padding(.vertical, 4)
                             Divider().padding(.leading, 16)
                         }
                         addButton("Add contact") { contacts.append(EmergencyContact(name: "", detail: "")) }
@@ -391,6 +391,20 @@ struct EditProfileView: View {
             .padding(.horizontal, 16).padding(.vertical, 13)
             // Plain buttons only hit opaque glyphs unless the full row is shaped.
             .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// ✕ removes the row from the draft list. Large hit target so TextField
+    /// focus doesn't steal the tap (same plain + contentShape pattern as Add).
+    @ViewBuilder
+    func removeLineButton(action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text("✕")
+                .font(.system(size: 18))
+                .foregroundColor(.redmedAccent)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
