@@ -1,0 +1,50 @@
+# Gap status — is RedMed “NHS compliant”?
+
+**Short answer: No.** Not yet. There is no NHS stamp for a consumer App Store
+build. NHS buyers expect a completed **DTAC pack** with live evidence. This repo
+now has the **templates and programme**; humans still own appointments, audits,
+and procurement.
+
+**As of:** 2026-08-10  
+**Product basis:** `RedMed-Xcode/` — on-device medical ID, NFC band, Find 911 GPS,
+seizure stopwatch (auto-opens `tel://911` at 5:00), roadside Aid. No RedMed
+servers. No motion-assist SOS product.
+
+| # | Requirement | Status | Blocker |
+|---|-------------|--------|---------|
+| 1 | MHRA intended purpose signed (`01-…`) | Draft ready | Founder / product sign-off |
+| 2 | DCB0129 CSO + scored hazard log + safety case | Templates only | Appoint Clinical Safety Officer |
+| 3 | UK GDPR notice + DPIA + lawful basis | Drafts; notice still needs counsel UK pass | Legal review; publish UK notice |
+| 4 | DSPT | Not started | Only if selling into NHS orgs / processing org data |
+| 5 | Cyber Essentials (+), pen test, NCSC mapping | Checklists only | Buy CE; commission pen test |
+| 6 | WCAG 2.2 AA external audit | Static notes only | External auditor + remediation PR |
+| 7 | Refreshed DTAC form submitted to a buyer | Worksheet only | Complete after 1–6; use post-Apr-2026 form |
+| 8 | Buying route / pilot trust | Guidance only | Commercial outreach |
+
+## What already helps
+
+- Local-only architecture (no profile backend) shrinks IG / cyber surface.
+- Explicit non-device / not-medical-advice language in ToS and UI.
+- Find 911 GPS starts only while that screen is visible.
+- Scanner session separates owner edit/NFC write from public card view.
+- Assurance folder under `compliance/` maps 1→7 in order.
+
+## What does **not** count as NHS compliance
+
+- Having privacy HTML in the app bundle
+- Saying “not a medical device” without a signed intended-purpose control
+- Filling markdown worksheets without a named CSO and buyer-facing DTAC form
+- US HIPAA framing alone (UK buyers want UK GDPR / DPA 2018 + ICO rights)
+
+## Finish line (definition of done for “NHS-ready”)
+
+1. `01-intended-purpose-mhra.md` signed  
+2. Named CSO; hazard log scored; clinical safety case for **this** build  
+3. Counsel-approved UK privacy notice live; DPIA signed  
+4. Cyber Essentials (Plus if asked) + pen test report on file  
+5. WCAG 2.2 AA audit + critical fixes shipped  
+6. Refreshed DTAC filled for a real buyer with version/hash  
+7. Pilot agreement that matches intended purpose (ID + SOS assist, not CDS)
+
+Until then, market as a **consumer emergency ID tool**, not an NHS-assured
+product.

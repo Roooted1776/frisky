@@ -22,13 +22,15 @@ change.
 Notice must not imply clinical diagnosis, monitoring, or NHS care delivery.
 Align wording with `../01-intended-purpose-mhra.md`.
 
-## Doc vs product mismatches to fix in a *legal* PR later (not this pack)
+## Doc vs product — reconciled 2026-08-10 (copy PR)
 
-- Privacy/ToS still describe some SOS/motion behaviours that may not match the
-  current Find 911 UI. Reconcile copy with shipping app before NHS or UK launch.
-- Location gate / permission UX should match what the notice promises.
+Shipping Find 911 (`EmergencyView`): GPS while screen open; seizure stopwatch
+that may open `tel://911` at 5:00; **no** motion-assist SOS countdown.
+`LocationLaunchGateView` asks When-In-Use before main tabs (system dialog via
+`requestWhenInUseAuthorization`). Bundled Privacy/ToS under
+`RedMed-Xcode/RedMed/` updated to match; counsel still owes a full UK notice pass.
 
 ## Action
 
-Counsel produces UK notice version; product owner publishes without changing
-Swift until a dedicated copy PR.
+Counsel produces final UK notice version on top of the reconciled base; product
+owner publishes. No Swift changes required for that publish step.

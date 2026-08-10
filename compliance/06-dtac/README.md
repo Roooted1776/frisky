@@ -26,7 +26,7 @@ certified” badge.
 - [ ] Intended purpose signed
 - [ ] Named CSO + safety case for **this** app version
 - [ ] DPIA reviewed
-- [ ] Privacy notice matches shipping behaviour
+- [ ] Privacy notice matches shipping behaviour (reconciled Aug 2026; counsel UK pass still open)
 - [ ] CE certificate (Plus if buyer asks)
 - [ ] Pen test report (or scheduled with date)
 - [ ] WCAG 2.2 AA audit (or scheduled with honest interim)

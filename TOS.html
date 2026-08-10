@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RedMed — Terms Of Service</title>
-<link rel="stylesheet" href="assets/legal-doc.css">
+<link rel="stylesheet" href="legal-doc.css">
 </head>
 <body class="legal-doc">
 <div class="legal-sheet">
@@ -26,8 +26,8 @@
 
   <h1 class="legal-doc-title">Terms Of Service</h1>
   <p class="legal-meta">
-    <strong>Effective Date</strong> July 2026<br>
-    <strong>Document Version</strong> 1.0
+    <strong>Effective Date</strong> August 2026<br>
+    <strong>Document Version</strong> 1.1
   </p>
   <p class="legal-parties">Applicable to all users of the RedMed application and associated passive NFC medical bracelet</p>
 
@@ -47,10 +47,11 @@
     <p>You agree that your medical profile remains on your device and, if you choose, on your bracelet chip. RedMed does not collect, host, or synchronize that profile data. You are solely responsible for the accuracy, completeness, and timeliness of information you enter and for updating or reprogramming your bracelet when your information changes.</p>
 
     <h2><span class="sec-num">3.</span> Location Services (Find 911)</h2>
-    <p>By using the Find 911 feature, you consent to emergency location processing on that screen only. <strong>RedMed does not display its own in-app location-permission dialog.</strong> The App may access device location and compass heading <strong>only while the Find 911 screen is visible</strong>, solely to display coordinates you may relay to emergency services.</p>
-    <p>Location is supplied by your browser or operating system using GPS/GNSS (satellite positioning), Wi‑Fi, and cellular signals as available. Your platform may present a one-time system location prompt; this is not a separate RedMed permission screen. Location use is not advertising tracking, not background monitoring, and not used for any purpose other than emergency display on that screen.</p>
-    <p>Find 911 may also offer an on-device <strong>Emergency SOS</strong> countdown, an optional <strong>motion assist</strong> (accelerometer while the screen is open), and a <strong>seizure timer</strong>. These features run locally on your device only while Find 911 is visible. Motion assist is opt-in, assistive only, and does not diagnose medical conditions. When SOS fires with a usable network path, the App may (1) dial 911 via the system Phone UI, (2) open Apple Messages so you can SMS emergency contacts with location text via your carrier, and (3) if a partner endpoint is configured at build time, POST an alert JSON <strong>directly from your device to that third-party HTTPS API</strong>. <strong>RedMed does not operate a relay server</strong> and cannot start, open, or control Apple Emergency SOS via satellite, Apple Crash Detection, Android Satellite SOS, or any carrier satellite messaging service.</p>
-    <p><strong>RedMed has no servers.</strong> Location and motion data are processed on your device only. We do not receive, log, or retain your coordinates or motion samples. Location and motion collection cease when you leave Find 911 or close the App. Carrier SMS and any configured third-party alert API are outside RedMed’s systems.</p>
+    <p>By using the Find 911 feature, you consent to emergency location processing on that screen only. On iOS, RedMed may show an in-app Location gate and suggestion banner until When-In-Use access is granted; Allow triggers the system location permission dialog. The App may access device location and compass heading <strong>only while the Find 911 screen is visible</strong>, solely to display coordinates you may relay to emergency services.</p>
+    <p>Location is supplied by your browser or operating system using GPS/GNSS (satellite positioning), Wi‑Fi, and cellular signals as available. Location use is not advertising tracking, not background monitoring, and not used for any purpose other than emergency display on that screen.</p>
+    <p>Find 911 may include an optional <strong>seizure stopwatch</strong> that you start manually. At five minutes it may open the Phone app to dial 911. That timer does not detect seizures and must not delay an earlier call when needed.</p>
+    <p><strong>RedMed does not operate a relay server</strong> and cannot start, open, or control Apple Emergency SOS via satellite, Apple Crash Detection, Android Satellite SOS, or any carrier satellite messaging service. Find 911 may show device steps for those system features when there is no cell path; RedMed does not run them.</p>
+    <p><strong>RedMed has no servers.</strong> Location is processed on your device only. We do not receive, log, or retain your coordinates. Location collection ceases when you leave Find 911 or close the App.</p>
 
     <h2><span class="sec-num">4.</span> No Medical Advice</h2>
     <p>All first-aid, CPR, and emergency-response content in the App is general public information, similar in nature to materials published by recognized public-health organizations. Such content is provided for informational and educational purposes only. It is not personalized medical advice, has not been reviewed by a physician for your specific circumstances, and does not create a physician-patient or other professional relationship.</p>
@@ -84,7 +85,7 @@
     <ul>
       <li>Medical information is stored on a <strong>passive NFC chip</strong> (no battery, no broadcast) and may be read by any smartphone that taps the bracelet — by design, for emergency access.</li>
       <li>Data on the chip is <strong>not encrypted</strong> by the App unless you employ separate measures outside the App.</li>
-      <li>The bracelet and App are <strong>not medical devices</strong> under FDA or comparable regulatory frameworks and do not verify profile accuracy.</li>
+      <li>The bracelet and App are <strong>not medical devices</strong> under UK MDR / MHRA, FDA, or comparable frameworks for the current intended purpose (emergency ID storage/display and SOS assist) and do not verify profile accuracy.</li>
       <li>You are responsible for keeping chip contents current.</li>
       <li>Shipping, returns, and replacement terms for hardware are as stated at the point of purchase.</li>
     </ul>
