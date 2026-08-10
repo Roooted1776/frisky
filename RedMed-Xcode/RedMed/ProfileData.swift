@@ -38,7 +38,17 @@ class ProfileData: ObservableObject {
 
     init(persisting: Bool = true) {
         self.persists = persisting
-        if persisting { loadFromKeychain() }
+        if persisting {
+            loadFromKeychain()
+            // Simulator demos: fill an empty Keychain with sample medical data
+            // so Edit / RedMed aren't blank. Never seeds on a real device.
+            #if targetEnvironment(simulator)
+            if !hasSensitiveProfileData {
+                applySampleProfile()
+                persist()
+            }
+            #endif
+        }
     }
 
     /// Detached copy for scanner / preview — mutations never touch the owner profile or Keychain.
@@ -55,6 +65,22 @@ class ProfileData: ObservableObject {
         copy.isOrganDonor = isOrganDonor
         copy.lastUpdated = lastUpdated
         return copy
+    }
+
+    /// Design / Simulator sample — matches `code_and_design` Alex Rivera profile.
+    func applySampleProfile() {
+        name = "Alex Rivera"
+        birthDate = "March 14, 1994"
+        bloodType = "O+"
+        allergies = ["Penicillin", "Peanuts"]
+        medications = ["Lisinopril 10mg — daily", "Albuterol inhaler — as needed"]
+        conditions = ["Type 1 Diabetes", "Asthma"]
+        contacts = [
+            EmergencyContact(name: "Jamie Rivera", detail: "Spouse · (555) 201-4488"),
+            EmergencyContact(name: "Dr. Sarah Chen", detail: "Primary Care · (555) 340-9921")
+        ]
+        isOrganDonor = true
+        lastUpdated = DateFormatter.localizedString(from: Date(), dateStyle: .medium, timeStyle: .none)
     }
 
     func persist() {
