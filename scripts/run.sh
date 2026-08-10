@@ -11,10 +11,33 @@ APP="$DD/Build/Products/Debug-iphonesimulator/RedMed.app"
 STAMP="$DD/.last-install.stamp"
 SRC_DIR="$ROOT/RedMed-Xcode/RedMed"
 
+# Default to iOS 27.0; override with SIM_OS=26.5 etc.
+SIM_OS="${SIM_OS:-27.0}"
+
 pick_simulator() {
   if [[ -n "${SIM:-}" ]]; then
     echo "$SIM"
     return
+  fi
+  local runtime_devices=""
+  if [[ -n "$SIM_OS" ]]; then
+    # Prefer devices under the requested runtime (e.g. -- iOS 27.0 --).
+    runtime_devices="$(
+      xcrun simctl list devices available 2>/dev/null \
+        | awk -v os="$SIM_OS" '
+            /^-- / { want = ($0 ~ ("iOS " os)) }
+            want && /^[[:space:]]*iPhone/ {
+              sub(/^[[:space:]]+/, "")
+              sub(/ \(.*/, "")
+              print
+              exit
+            }
+          '
+    )"
+    if [[ -n "$runtime_devices" ]]; then
+      echo "$runtime_devices"
+      return
+    fi
   fi
   for candidate in "iPhone 17 Pro" "iPhone 17" "iPhone 16 Pro" "iPhone 16" "iPhone 15 Pro" "iPhone 15"; do
     if xcrun simctl list devices available 2>/dev/null | grep -Fq "$candidate ("; then
@@ -52,17 +75,35 @@ if [[ -z "$SIMULATOR" ]]; then
   exit 1
 fi
 
-echo "Simulator: $SIMULATOR"
+DESTINATION="platform=iOS Simulator,name=$SIMULATOR,OS=$SIM_OS"
+echo "Simulator: $SIMULATOR (iOS $SIM_OS)"
 
 # Boot + show UI immediately so the wait feels shorter.
 open -a Simulator >/dev/null 2>&1 || true
-xcrun simctl boot "$SIMULATOR" 2>/dev/null || true
+# Prefer UDID for the requested OS when multiple runtimes share a device name.
+SIM_UDID="$(
+  xcrun simctl list devices available 2>/dev/null \
+    | awk -v os="$SIM_OS" -v name="$SIMULATOR" '
+        /^-- / { want = ($0 ~ ("-- iOS " os " --")) }
+        want && $0 ~ ("^[[:space:]]*" name " \\(") {
+          if (match($0, /\(([0-9A-Fa-f-]{36})\)/)) {
+            print substr($0, RSTART + 1, RLENGTH - 2)
+            exit
+          }
+        }
+      '
+)"
+if [[ -n "$SIM_UDID" ]]; then
+  xcrun simctl boot "$SIM_UDID" 2>/dev/null || true
+else
+  xcrun simctl boot "$SIMULATOR" 2>/dev/null || true
+fi
 xcrun simctl bootstatus booted -b >/dev/null 2>&1 || true
 
 if needs_build; then
   echo "Building..."
   xcodebuild -project "$PROJ" -scheme "$SCHEME" \
-    -destination "platform=iOS Simulator,name=$SIMULATOR" \
+    -destination "$DESTINATION" \
     -derivedDataPath "$DD" \
     -parallelizeTargets \
     -quiet \

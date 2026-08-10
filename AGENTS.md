@@ -3,7 +3,8 @@
 ## Cursor Cloud specific instructions
 
 This repository is a **native iOS/SwiftUI app** (RedMed), located under `RedMed-Xcode/`. It
-builds and runs **only on macOS with Xcode 15+** and an iOS 17+ Simulator or physical iPhone.
+builds and runs **only on macOS with Xcode 15+** (prefer Xcode 27 / iOS 27.0 Simulator) and an
+iOS 17+ Simulator or physical iPhone. Deployment target remains 17.0.
 
 **It cannot be built, run, linted, or tested in the Cursor Cloud Linux VM.** There is no way to
 set up a working runtime here:
@@ -29,17 +30,17 @@ edits to the `.swift` files are possible, but do not attempt to build/run/test h
 build, run, or manual testing must happen on macOS + Xcode:
 
 ```
-./scripts/run.sh                       # fastest: boot sim, incremental build, launch
-open RedMed-Xcode/RedMed.xcodeproj   # then Run (Cmd+R) against an iOS 17+ Simulator
+./scripts/run.sh                       # fastest: boot iOS 27.0 sim, incremental build, launch
+open RedMed-Xcode/RedMed.xcodeproj   # then Run (Cmd+R) against an iOS 27.0 Simulator
 # or, headless:
 xcodebuild -project RedMed-Xcode/RedMed.xcodeproj -scheme RedMed \
-  -destination 'platform=iOS Simulator,name=iPhone 15' build
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=27.0' build
 ```
 
 `scripts/run.sh` keeps derived data in `.derivedData/`, skips rebuild when Swift/resources
-are unchanged, and skips reinstall when the built app is unchanged. Override simulator with
-`SIM="iPhone 17 Pro" ./scripts/run.sh`. Location is pre-granted on the simulator (Apple Park
-coords); override with `LOCATION="40.7128,-74.0060" ./scripts/run.sh`.
+are unchanged, and skips reinstall when the built app is unchanged. Defaults to iOS 27.0;
+override with `SIM="iPhone 17 Pro" SIM_OS=27.0 ./scripts/run.sh`. Location is pre-granted on
+the simulator (Apple Park coords); override with `LOCATION="40.7128,-74.0060" ./scripts/run.sh`.
 
 On a **physical iPhone**, iOS requires a one-time Allow tap — that cannot be bypassed from code.
 
