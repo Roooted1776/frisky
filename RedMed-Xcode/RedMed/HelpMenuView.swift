@@ -17,10 +17,18 @@ struct LocalWebView: UIViewRepresentable {
 struct HelpMenuView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.dismiss) var dismiss
+    /// Dismiss help and open the NFC tab (from `get.html` “Set up your band”).
+    var onSetUpBand: (() -> Void)? = nil
 
     var body: some View {
         NavigationView {
             List {
+                NavigationLink("Set up your band") {
+                    GetView(onSetUpBand: {
+                        dismiss()
+                        onSetUpBand?()
+                    })
+                }
                 NavigationLink("Privacy Policy") {
                     LocalWebView(filename: "PrivacyPolicy")
                         .navigationTitle("Privacy Policy")
