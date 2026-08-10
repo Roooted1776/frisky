@@ -11,7 +11,7 @@
 		AABB00000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000002 /* ContentView.swift */; };
 		AABB00000000000000000003 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000003 /* Theme.swift */; };
 		AABB00000000000000000004 /* ProfileData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000004 /* ProfileData.swift */; };
-		AABB00000000000000000005 /* MyIDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000005 /* MyIDView.swift */; };
+		AABB00000000000000000005 /* RedMedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000005 /* RedMedView.swift */; };
 		AABB00000000000000000006 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000006 /* EditProfileView.swift */; };
 		AABB00000000000000000007 /* EmergencyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000007 /* EmergencyView.swift */; };
 		AABB00000000000000000008 /* AidView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000008 /* AidView.swift */; };
@@ -42,7 +42,7 @@
 		AAAA00000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000003 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000004 /* ProfileData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileData.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000005 /* MyIDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyIDView.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000005 /* RedMedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedMedView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000006 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000007 /* EmergencyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000008 /* AidView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AidView.swift; sourceTree = "<group>"; };
@@ -97,7 +97,7 @@
 				AAAA00000000000000000002 /* ContentView.swift */,
 				AAAA00000000000000000003 /* Theme.swift */,
 				AAAA00000000000000000004 /* ProfileData.swift */,
-				AAAA00000000000000000005 /* MyIDView.swift */,
+				AAAA00000000000000000005 /* RedMedView.swift */,
 				AAAA00000000000000000006 /* EditProfileView.swift */,
 				AAAA00000000000000000007 /* EmergencyView.swift */,
 				AAAA00000000000000000008 /* AidView.swift */,
@@ -213,7 +213,7 @@
 				AABB00000000000000000002 /* ContentView.swift in Sources */,
 				AABB00000000000000000003 /* Theme.swift in Sources */,
 				AABB00000000000000000004 /* ProfileData.swift in Sources */,
-				AABB00000000000000000005 /* MyIDView.swift in Sources */,
+				AABB00000000000000000005 /* RedMedView.swift in Sources */,
 				AABB00000000000000000006 /* EditProfileView.swift in Sources */,
 				AABB00000000000000000007 /* EmergencyView.swift in Sources */,
 				AABB00000000000000000008 /* AidView.swift in Sources */,

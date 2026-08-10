@@ -1,11 +1,13 @@
 import SwiftUI
 
-struct MyIDView: View {
+struct RedMedView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
     @Environment(\.scannerDismiss) private var scannerDismiss
     @Binding var tab: AppTab
     @State private var showEdit = false
+    /// When true, Edit opened without Face ID (empty RedMed profile) — Save must authenticate.
+    @State private var requireAuthOnSave = false
     @State private var showHelp = false
     @State private var showScannerPreview = false
     @State private var showAuthFailedAlert = false
@@ -139,7 +141,8 @@ struct MyIDView: View {
             get: { showEdit && !isScannerSession },
             set: { showEdit = $0 && !isScannerSession }
         )) {
-            EditProfileView().environmentObject(profile)
+            EditProfileView(requireAuthOnSave: requireAuthOnSave)
+                .environmentObject(profile)
         }
         .sheet(isPresented: Binding(
             get: { showHelp && !isScannerSession },
@@ -262,6 +265,8 @@ struct MyIDView: View {
         // Scanners never edit — UI gate alone is not enough.
         guard !isScannerSession else { return }
         guard profile.hasSensitiveProfileData else {
+            // First fill: open freely, Face ID on Save (see EditProfileView.requireAuthOnSave).
+            requireAuthOnSave = true
             showEdit = true
             return
         }
@@ -269,6 +274,7 @@ struct MyIDView: View {
             reason: "Unlock with Face ID, Touch ID, or passcode to edit your RedMed profile."
         ) { success in
             if success {
+                requireAuthOnSave = false
                 showEdit = true
             } else {
                 showAuthFailedAlert = true

@@ -25,7 +25,7 @@ struct NFCView: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 12) {
-                    Text("iPhone only for setup. Fill My ID, write the band once — Face ID, then hold to pair.")
+                    Text("iPhone only for setup. Fill RedMed, write the band once — Face ID, then hold to pair.")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
@@ -40,7 +40,7 @@ struct NFCView: View {
                         statusRow("Tap the band · phone opens your card · no app for readers", showDivider: true)
                         statusRow(
                             profile.braceletLinked
-                                ? "Bracelet linked — re-write after you edit My ID"
+                                ? "Bracelet linked — re-write after you edit RedMed"
                                 : "Bracelet not linked yet — write once to pair",
                             showDivider: true
                         )
@@ -72,7 +72,7 @@ struct NFCView: View {
                         .disabled(!profile.hasData || writer.isWriting)
                         .opacity(profile.hasData ? 1 : 0.55)
                         if !profile.hasData {
-                            Text("Add your name on My ID before writing a tag.")
+                            Text("Add your name on RedMed before writing a tag.")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(.redmedAccent)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -84,7 +84,7 @@ struct NFCView: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         VStack(alignment: .leading, spacing: 6) {
-                            syncBullet("Link your bracelet once (write after My ID is filled).")
+                            syncBullet("Link your bracelet once (write after RedMed is filled).")
                             syncBullet("Save after every edit and hold your phone to the band when prompted.")
                             syncBullet("If you cancel the NFC prompt, the band stays stale until you write again.")
                         }
@@ -106,23 +106,6 @@ struct NFCView: View {
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(.redmedMuted)
                         }
-                    }
-                    .padding(14)
-                    .background(Color.redmedSurface)
-                    .clipShape(RoundedRectangle(cornerRadius: 18))
-                    .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
-
-                    Text("IMPORT")
-                        .font(.system(size: 11, weight: .bold))
-                        .kerning(0.5)
-                        .foregroundColor(.redmedDark)
-                        .padding(.horizontal, 4)
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Already own a written tag? Pull it onto this phone's My ID.")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.redmedMuted)
-                            .lineSpacing(3)
-                        SecondaryButton("Import tag onto this phone", icon: "arrow.down.circle") { beginImport() }
                     }
                     .padding(14)
                     .background(Color.redmedSurface)
@@ -181,7 +164,7 @@ struct NFCView: View {
         guard !isScannerSession else { return }
         guard profile.hasData else { return }
         guard let url = ProfileNFCCodec.buildURL(profile: profile) else {
-            statusAlert = "Couldn't build tag payload from My ID."
+            statusAlert = "Couldn't build tag payload from RedMed."
             return
         }
         BiometricAuth.authenticate(
@@ -201,23 +184,6 @@ struct NFCView: View {
             ProfileNFCCodec.apply(chip, to: card)
             scannedCard = card
             showPublicCard = true
-        }
-    }
-
-    func beginImport() {
-        BiometricAuth.authenticate(
-            reason: "Confirm to import a bracelet onto this phone's My ID."
-        ) { success in
-            guard success else {
-                showAuthFailedAlert = true
-                return
-            }
-            reader.readTag(alertMessage: "Hold your iPhone near the tag to import My ID.") { chip, _ in
-                ProfileNFCCodec.apply(chip, to: profile)
-                profile.braceletLinked = true
-                profile.persist()
-                statusAlert = "Imported onto My ID."
-            }
         }
     }
 

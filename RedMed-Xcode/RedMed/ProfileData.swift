@@ -2,10 +2,10 @@ import SwiftUI
 import Combine
 
 enum AppTab {
-    case myid, emergency, aid, nfc
+    case redmed, emergency, aid, nfc
 }
 
-/// On-device medical ID. Empty on first launch; Keychain-backed when `persists` is true.
+/// On-device RedMed profile. Empty on first launch; Keychain-backed when `persists` is true.
 class ProfileData: ObservableObject {
     private static let keychainAccount = "medicalProfile.v1"
     private let persists: Bool
@@ -25,7 +25,7 @@ class ProfileData: ObservableObject {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    /// Any medical profile content that should require Face ID / passcode to edit.
+    /// Any RedMed profile content that should require Face ID / passcode to edit.
     var hasSensitiveProfileData: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             || !birthDate.isEmpty

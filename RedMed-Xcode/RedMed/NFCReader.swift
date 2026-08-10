@@ -11,7 +11,7 @@ final class NFCReader: NSObject, ObservableObject {
     private var didDeliver = false
 
     func readTag(
-        alertMessage: String = "Hold your iPhone near the tag to read the medical ID.",
+        alertMessage: String = "Hold your iPhone near the tag to read the RedMed card.",
         onProfile: @escaping (NFCChipProfile, String) -> Void
     ) {
         guard NFCNDEFReaderSession.readingAvailable else {

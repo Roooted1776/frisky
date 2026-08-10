@@ -22,7 +22,7 @@ The app has no backend, database, or web service.
 `@main`. Ask When-In-Use authorization on a launch gate **before** the main tabs
 open (install prompt) — continuous GPS and hospital lookup still start only when
 Find 911 / that UI is visible (privacy + time-to-first-frame). Newer sources under
-`uploads/` use lazy tab mounting (switch + CustomTabBar), default My ID, and async
+`uploads/` use lazy tab mounting (switch + CustomTabBar), default RedMed, and async
 trauma catalog warm-up for the same reason.
 
 **Consequence for cloud agents:** the update script is intentionally a no-op. Code review and static

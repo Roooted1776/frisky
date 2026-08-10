@@ -1,7 +1,7 @@
 import Foundation
 
 /// On-chip `#d=` JSON shape — must stay compatible with the hosted card page
-/// and the uploads MedicalProfile encoder.
+/// and the uploads RedMed profile encoder.
 struct NFCChipProfile: Codable, Equatable {
     var name: String = ""
     var dob: String = ""
