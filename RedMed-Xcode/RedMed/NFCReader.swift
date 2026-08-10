@@ -58,7 +58,7 @@ extension NFCReader: NFCNDEFReaderSessionDelegate {
     func readerSession(_ session: NFCNDEFReaderSession, didDetectNDEFs messages: [NFCNDEFMessage]) {
         let payloads = messages.flatMap(\.records)
         guard let payload = payloads.first,
-              let urlString = payload.wellKnownTypeURIPayload()?.absoluteString else {
+              let urlString = NFCURICodec.string(from: payload) else {
             session.invalidate(errorMessage: "Couldn't read a RedMed card from this tag.")
             DispatchQueue.main.async { [weak self] in
                 self?.isReading = false
@@ -70,6 +70,14 @@ extension NFCReader: NFCNDEFReaderSessionDelegate {
     }
 
     func readerSession(_ session: NFCNDEFReaderSession, didDetect tags: [NFCNDEFTag]) {
+        if tags.count > 1 {
+            session.alertMessage = "More than one tag found. Hold only the bracelet."
+            DispatchQueue.global().asyncAfter(deadline: .now() + .milliseconds(500)) {
+                session.restartPolling()
+            }
+            return
+        }
+
         guard let tag = tags.first else {
             session.invalidate(errorMessage: "No tag found. Try again.")
             return
@@ -91,7 +99,7 @@ extension NFCReader: NFCNDEFReaderSessionDelegate {
                     return
                 }
 
-                guard let urlString = message?.records.first?.wellKnownTypeURIPayload()?.absoluteString else {
+                guard let urlString = message?.records.first.flatMap({ NFCURICodec.string(from: $0) }) else {
                     session.invalidate(errorMessage: "Couldn't read a RedMed card from this tag.")
                     DispatchQueue.main.async {
                         self?.isReading = false

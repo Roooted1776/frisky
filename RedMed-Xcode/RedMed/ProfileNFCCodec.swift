@@ -61,11 +61,20 @@ enum ProfileNFCCodec {
         }
     }
 
-    static func buildURL(profile: ProfileData, baseURL: String = AppConfig.medicalCardBaseURL) -> URL? {
+    /// Full NDEF URI string including `#d=` — prefer this over `URL` when writing tags
+    /// so the fragment is never dropped by URL parsing.
+    static func buildURLString(profile: ProfileData, baseURL: String = AppConfig.medicalCardBaseURL) -> String? {
         var chip = chipProfile(from: profile)
         chip.updated = ISO8601DateFormatter().string(from: Date())
         guard let jsonData = try? JSONEncoder().encode(chip) else { return nil }
-        return URL(string: baseURL + "#d=" + base64url(jsonData))
+        let encoded = base64url(jsonData)
+        guard !encoded.isEmpty else { return nil }
+        return baseURL + "#d=" + encoded
+    }
+
+    static func buildURL(profile: ProfileData, baseURL: String = AppConfig.medicalCardBaseURL) -> URL? {
+        guard let s = buildURLString(profile: profile, baseURL: baseURL) else { return nil }
+        return URL(string: s)
     }
 
     static func decodeProfile(fromURLString urlString: String) -> NFCChipProfile? {

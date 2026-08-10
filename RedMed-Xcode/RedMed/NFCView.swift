@@ -90,6 +90,7 @@ struct NFCView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             syncBullet("Link your bracelet once (write after RedMed is filled).")
                             syncBullet("Save after every edit and hold your phone to the band when prompted.")
+                            syncBullet("After write, Scan your bracelet below — only mark linked when read-back matches.")
                             syncBullet("If you cancel the NFC prompt, the band stays stale until you write again.")
                         }
                     }
@@ -154,7 +155,13 @@ struct NFCView: View {
                 Text(statusAlert ?? "")
             }
             .onChange(of: writer.success) { _, ok in
-                guard ok else { return }
+                // Only “linked” when read-back proves phones can parse the NDEF URI.
+                guard ok, writer.verified else { return }
+                profile.braceletLinked = true
+                profile.persist()
+            }
+            .onChange(of: writer.verified) { _, verified in
+                guard verified, writer.success else { return }
                 profile.braceletLinked = true
                 profile.persist()
             }
@@ -174,7 +181,8 @@ struct NFCView: View {
     func beginWrite() {
         guard !isScannerSession else { return }
         guard profile.hasData else { return }
-        guard let url = ProfileNFCCodec.buildURL(profile: profile) else {
+        // Keep `#d=` as a raw string — `URL.absoluteString` can mangle fragments.
+        guard let urlString = ProfileNFCCodec.buildURLString(profile: profile) else {
             statusAlert = "Couldn't build tag payload from RedMed."
             return
         }
@@ -182,7 +190,7 @@ struct NFCView: View {
             reason: "Confirm with Face ID, Touch ID, or passcode to write your RedMed card to the bracelet."
         ) { success in
             if success {
-                writer.writeURL(url.absoluteString)
+                writer.writeURL(urlString)
             } else {
                 showAuthFailedAlert = true
             }

@@ -40,12 +40,63 @@ final class NFCWriter: NSObject, ObservableObject {
             self.isWriting = false
         }
     }
+
+}
+
+/// NDEF URI helpers — keep `#d=` fragments intact for phone background taps.
+enum NFCURICodec {
+    static func payload(for urlString: String) -> NFCNDEFPayload? {
+        if let payload = NFCNDEFPayload.wellKnownTypeURIPayload(string: urlString) {
+            return payload
+        }
+        guard let url = URL(string: urlString) else { return nil }
+        return NFCNDEFPayload.wellKnownTypeURIPayload(url: url)
+    }
+
+    static func string(from payload: NFCNDEFPayload) -> String? {
+        if let url = payload.wellKnownTypeURIPayload() {
+            return url.absoluteString
+        }
+        guard payload.typeNameFormat == .nfcWellKnown,
+              let type = String(data: payload.type, encoding: .utf8), type == "U",
+              !payload.payload.isEmpty else {
+            return nil
+        }
+        let code = payload.payload[payload.payload.startIndex]
+        let rest = payload.payload.dropFirst()
+        guard let body = String(data: Data(rest), encoding: .utf8) else { return nil }
+        let prefixes: [UInt8: String] = [
+            0x00: "",
+            0x01: "http://www.",
+            0x02: "https://www.",
+            0x03: "http://",
+            0x04: "https://"
+        ]
+        return (prefixes[code] ?? "") + body
+    }
+
+    static func match(_ a: String, _ b: String) -> Bool {
+        if a == b { return true }
+        guard let ua = URL(string: a), let ub = URL(string: b) else { return false }
+        return ua.scheme?.lowercased() == ub.scheme?.lowercased()
+            && ua.host?.lowercased() == ub.host?.lowercased()
+            && ua.path == ub.path
+            && ua.fragment == ub.fragment
+    }
 }
 
 extension NFCWriter: NFCNDEFReaderSessionDelegate {
     func readerSession(_ session: NFCNDEFReaderSession, didDetectNDEFs messages: [NFCNDEFMessage]) {}
 
     func readerSession(_ session: NFCNDEFReaderSession, didDetect tags: [NFCNDEFTag]) {
+        if tags.count > 1 {
+            session.alertMessage = "More than one tag found. Hold only the bracelet."
+            DispatchQueue.global().asyncAfter(deadline: .now() + .milliseconds(500)) {
+                session.restartPolling()
+            }
+            return
+        }
+
         guard let tag = tags.first else {
             session.invalidate(errorMessage: "No tag found. Try again.")
             return
@@ -70,12 +121,17 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                 case .readOnly:
                     session.invalidate(errorMessage: "This tag is locked/read-only and can't be written.")
                 case .readWrite:
-                    guard let url = URL(string: urlString),
-                          let payload = NFCNDEFPayload.wellKnownTypeURIPayload(url: url) else {
+                    guard let payload = NFCURICodec.payload(for: urlString) else {
                         session.invalidate(errorMessage: "Couldn't build the tag data.")
                         return
                     }
                     let message = NFCNDEFMessage(records: [payload])
+                    if capacity > 0, message.length > capacity {
+                        session.invalidate(
+                            errorMessage: "Profile is \(message.length) bytes; this tag only holds \(capacity). Shorten RedMed or use NTAG216."
+                        )
+                        return
+                    }
                     tag.writeNDEF(message) { error in
                         if let error {
                             let capHint = capacity > 0 ? " Tag capacity: \(capacity) bytes." : ""
@@ -85,7 +141,7 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
 
                         tag.readNDEF { readMessage, readError in
                             if let readError {
-                                session.alertMessage = "Written — couldn't verify read-back."
+                                session.alertMessage = "Written — couldn't verify read-back. Test with another phone."
                                 session.invalidate()
                                 DispatchQueue.main.async {
                                     self?.success = true
@@ -96,8 +152,8 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                                 return
                             }
 
-                            let written = readMessage?.records.first?.wellKnownTypeURIPayload()?.absoluteString
-                            let ok = written == urlString
+                            let written = readMessage?.records.first.flatMap { NFCURICodec.string(from: $0) }
+                            let ok = written.map { NFCURICodec.match($0, urlString) } ?? false
                             session.alertMessage = ok
                                 ? "Success! Bracelet programmed and verified."
                                 : "Written, but read-back didn't match. Test with another phone."
@@ -106,7 +162,7 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                                 self?.success = true
                                 self?.verified = ok
                                 self?.statusMessage = ok
-                                    ? "Bracelet programmed and verified."
+                                    ? "Bracelet programmed and verified. Other phones can tap it; payment terminals cannot."
                                     : "Written, but verification failed — try writing again."
                                 self?.isWriting = false
                             }
