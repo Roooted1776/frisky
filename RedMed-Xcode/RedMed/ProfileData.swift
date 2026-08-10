@@ -97,6 +97,11 @@ let aidTopics: [String: AidTopic] = [
         symptoms: ["Sudden collapse or falling", "Jerking or stiffening of body, limbs, or face", "Loss of awareness, staring, or confusion before or after"],
         care: ["Call 911 if: first seizure, lasts more than 5 minutes, no recovery, injury, or in water", "Time the seizure from the start", "Clear the area — move objects that could cause injury", "Do NOT restrain them — guide gently away from danger", "Do NOT put anything in their mouth", "Cushion the head with something soft", "After it stops: roll them on their side (recovery position) to protect the airway", "Stay calm and reassure them — confusion after a seizure is normal"]
     ),
+    "burns": AidTopic(
+        id: "burns", title: "Burns",
+        symptoms: ["Skin red, blistered, or charred", "Pain — may be reduced if nerve damage is deep", "Clothing stuck to the burned skin"],
+        care: ["Stop the burning — remove from the heat source", "Cool with running water 10+ minutes. No ice", "Remove jewelry or tight items before swelling starts", "Cover loosely with a clean, dry cloth — no ointments", "Do NOT peel off clothing stuck to the burn", "Call 911 for large, deep, or facial/airway burns"]
+    ),
     "trauma-hospitals": AidTopic(
         id: "trauma-hospitals", title: "Find Trauma Center",
         symptoms: ["Major trauma: crash, gunshot/stab, severe bleeding, head injury", "Patient unstable or deteriorating", "Unsure whether the nearest ER can handle it"],

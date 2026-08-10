@@ -5,25 +5,36 @@ struct AidPane: Identifiable {
     let emoji: String
     let title: String
     let subtitle: String
+    let tip: String?
     let iconFilled: Bool
     let topics: [(label: String, key: String)]
 }
 
 let aidPanes: [AidPane] = [
-    AidPane(id: "crash", emoji: "🚗", title: "Crash & Head", subtitle: "Impact · neck · pupils", iconFilled: false,
+    AidPane(id: "crash", emoji: "🚗", title: "Crash & Head", subtitle: "Impact · neck · pupils",
+            tip: "Watch for confusion or slurred speech.", iconFilled: false,
             topics: [("Car Crash", "car-crash"), ("Head & Pupils", "head-pupils")]),
-    AidPane(id: "bleed", emoji: "🩸", title: "Bleeding", subtitle: "Pressure · tourniquet", iconFilled: true,
+    AidPane(id: "bleed", emoji: "🩸", title: "Bleeding", subtitle: "Pressure · tourniquet",
+            tip: "Direct pressure stops most bleeding.", iconFilled: true,
             topics: [("Find Bleeding", "find-bleeding"), ("Bad Bleeding", "bad-bleeding"),
                      ("Belt Tourniquet", "belt-tourniquet"), ("Gunshot / Stab", "gunshot-stab")]),
-    AidPane(id: "heart", emoji: "❤️", title: "Heart & Airway", subtitle: "CPR · choking", iconFilled: true,
+    AidPane(id: "heart", emoji: "❤️", title: "Heart & Airway", subtitle: "CPR · choking",
+            tip: "Push hard, push fast — center of chest.", iconFilled: true,
             topics: [("CPR", "cpr"), ("Choking", "choking")]),
-    AidPane(id: "shock", emoji: "⚡", title: "Shock", subtitle: "Pale · cold · clammy", iconFilled: false,
+    AidPane(id: "shock", emoji: "⚡", title: "Shock", subtitle: "Pale · cold · clammy",
+            tip: "A common killer after trauma.", iconFilled: false,
             topics: [("Shock", "shock")]),
-    AidPane(id: "temp", emoji: "🌡️", title: "Cold & Heat", subtitle: "Notice · warm · cool down", iconFilled: false,
+    AidPane(id: "temp", emoji: "🌡️", title: "Cold & Heat", subtitle: "Notice · warm · cool down",
+            tip: "Shivering that stops can mean it's worsening.", iconFilled: false,
             topics: [("Cold (Hypothermia)", "cold-hypothermia"), ("Heat (Exhaustion & Stroke)", "heat-stroke")]),
-    AidPane(id: "seizure", emoji: "🧠", title: "Seizure", subtitle: "Don't restrain · time it", iconFilled: false,
+    AidPane(id: "burns", emoji: "🔥", title: "Burns", subtitle: "Cool it · cover it",
+            tip: "Never peel off stuck clothing.", iconFilled: false,
+            topics: [("Burns", "burns")]),
+    AidPane(id: "seizure", emoji: "🧠", title: "Seizure", subtitle: "Don't restrain · time it",
+            tip: "Cushion the head — never restrain them.", iconFilled: false,
             topics: [("Seizure", "seizure")]),
-    AidPane(id: "hospitals", emoji: "🏥", title: "Trauma Hospitals", subtitle: "Nearest Level I/II center", iconFilled: false,
+    AidPane(id: "hospitals", emoji: "🏥", title: "Trauma Hospitals", subtitle: "Nearest Level I/II center",
+            tip: "Ambulances can stabilize en route.", iconFilled: false,
             topics: [("Find Trauma Center", "trauma-hospitals")]),
 ]
 
@@ -117,6 +128,13 @@ struct PaneCard: View {
                                 .font(.system(size: 11, weight: .semibold))
                                 .foregroundColor(.redmedMuted)
                                 .lineLimit(1)
+                            if let tip = pane.tip {
+                                Text(tip)
+                                    .font(.system(size: 10))
+                                    .italic()
+                                    .foregroundColor(.redmedMuted)
+                                    .lineLimit(2)
+                            }
                         }
                     }
                     Spacer()
