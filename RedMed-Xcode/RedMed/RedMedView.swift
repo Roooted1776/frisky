@@ -321,29 +321,20 @@ struct RedMedView: View {
     @ViewBuilder
     func listSection(title: String, items: [String]) -> some View {
         SectionLabel(text: title).padding(.horizontal, 16).padding(.top, 12)
-        if items.isEmpty {
-            cardGroup { emptyRow() }
-        } else {
-            // Text-hugging chips — shorter labels get smaller boxes (Percocet < Dextroamphetamine).
-            FlowLayout(spacing: 8) {
-                ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+        cardGroup {
+            if items.isEmpty {
+                emptyRow()
+            } else {
+                ForEach(Array(items.enumerated()), id: \.offset) { i, item in
                     Text(item)
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 11))
                         .foregroundColor(.redmedDark)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color.white.opacity(0.88))
-                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .stroke(Color.redmedDark.opacity(0.08), lineWidth: 1)
-                        )
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 11)
+                    if i < items.count - 1 { thinDivider }
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 16)
         }
     }
 }
