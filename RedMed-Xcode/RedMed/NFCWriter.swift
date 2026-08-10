@@ -120,7 +120,7 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                 case .readOnly:
                     session.invalidate(errorMessage: "This tag is locked/read-only and can't be written.")
                 case .readWrite:
-                    guard let payload = Self.uriPayload(for: urlString) else {
+                    guard let payload = NFCURICodec.payload(for: urlString) else {
                         session.invalidate(errorMessage: "Couldn't build the tag data.")
                         return
                     }
@@ -151,8 +151,8 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                                 return
                             }
 
-                            let written = readMessage?.records.first.flatMap { Self.uriString(from: $0) }
-                            let ok = written.map { Self.urisMatch($0, urlString) } ?? false
+                            let written = readMessage?.records.first.flatMap { NFCURICodec.string(from: $0) }
+                            let ok = written.map { NFCURICodec.match($0, urlString) } ?? false
                             session.alertMessage = ok
                                 ? "Success! Bracelet programmed and verified."
                                 : "Written, but read-back didn't match. Test with another phone."
