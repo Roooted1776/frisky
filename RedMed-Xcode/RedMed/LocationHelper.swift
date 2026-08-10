@@ -2,6 +2,32 @@ import Foundation
 import CoreLocation
 import UIKit
 
+/// Asks for When-In-Use on first launch after install.
+/// Does **not** start GPS updates — Find 911 / hospitals still start location only when visible.
+final class LocationInstallPrompt: NSObject, CLLocationManagerDelegate {
+    static let shared = LocationInstallPrompt()
+
+    private let manager = CLLocationManager()
+    private var didAskThisProcess = false
+
+    private override init() {
+        super.init()
+        manager.delegate = self
+    }
+
+    /// System dialog once while status is `.notDetermined`. Safe to call repeatedly.
+    func askIfNeeded() {
+        guard !didAskThisProcess else { return }
+        guard manager.authorizationStatus == .notDetermined else { return }
+        didAskThisProcess = true
+        manager.requestWhenInUseAuthorization()
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        // Intentional no-op: install prompt only requests auth; no updates here.
+    }
+}
+
 /// Grabs a one-shot GPS fix, then opens Messages pre-filled with a maps link
 /// to the emergency contact's phone number (parsed from their detail string).
 class LocationHelper: NSObject, ObservableObject, CLLocationManagerDelegate {

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var profile: ProfileData
+    @Environment(\.isScannerSession) private var isScannerSession
     @State private var tab: AppTab = .myid
 
     var body: some View {
@@ -19,6 +20,11 @@ struct ContentView: View {
             CustomTabBar(tab: $tab)
         }
         .ignoresSafeArea(edges: .bottom)
+        // After first frame: ask location once on install. Do not start GPS here.
+        .task {
+            guard !isScannerSession else { return }
+            LocationInstallPrompt.shared.askIfNeeded()
+        }
     }
 }
 
