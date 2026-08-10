@@ -1,9 +1,9 @@
 import SwiftUI
 import CoreLocation
 
-/// Instant read-only surface for bracelet scanners / first responders.
+/// Instant read-only surface for first responders.
 /// Shows: medical ID, Find 911 actions (dial + GPS + contacts), Roadside Aid.
-/// Does **not** show NFC setup — that tab is owner-only.
+/// Does **not** expose owner settings or any edit path.
 struct PublicCardView: View {
     @ObservedObject var profile: ProfileData
     @Environment(\.dismiss) var dismiss
@@ -55,7 +55,7 @@ struct PublicCardView: View {
                             .clipShape(Capsule())
                     }
 
-                    // --- Roadside Aid (no NFC) ---
+                    // --- Roadside Aid ---
                     SectionLabel(text: "Roadside Aid")
                     Text("Call 911 first. Tap a pane — expand only what you need.")
                         .font(.system(size: 11, weight: .medium))
@@ -77,7 +77,7 @@ struct PublicCardView: View {
                         }
                     }
 
-                    Text("Scanner view — medical ID, 911, and roadside aid only. NFC setup is hidden. This card cannot be edited here.")
+                    Text("Scanner view — medical ID, 911, and roadside aid only. Owner settings are hidden. This card cannot be edited here.")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
@@ -118,7 +118,7 @@ struct PublicCardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 
-    /// Scanners cannot alter the band or profile from this surface.
+    /// Scanners cannot alter the card or profile from this surface.
     private var readOnlyLock: some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: "lock.fill")
@@ -150,7 +150,7 @@ struct PublicCardView: View {
                 .resizable().frame(width: 44, height: 44)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             VStack(alignment: .leading, spacing: 2) {
-                Text(profile.hasData ? profile.name : "No profile on this band")
+                Text(profile.hasData ? profile.name : "No profile on this card")
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.redmedDark)
                 Text(profile.hasData ? "\(profile.birthDate) · Blood \(profile.bloodType)" : "—")
