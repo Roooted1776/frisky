@@ -34,8 +34,8 @@ struct EmergencyView: View {
                         if let url = URL(string: "tel://911") { UIApplication.shared.open(url) }
                     }
 
-                    SecondaryButton("Scan emergency bracelet") { showPublicCard = true }
-                    Text("Tap the band — instant card: medical ID, 911, roadside aid. NFC setup stays hidden.")
+                    SecondaryButton("Show emergency card") { showPublicCard = true }
+                    Text("Instant card: medical ID, 911, roadside aid. Read-only — owner settings stay hidden.")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
