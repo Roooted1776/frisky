@@ -171,7 +171,10 @@ struct SeizureTimerStrip: View {
                 if elapsed >= Self.callAt {
                     stop(reset: false)
                     if let url = URL(string: "tel://911") {
-                        UIApplication.shared.open(url)
+                        // Call the completion-handler overload explicitly: bare
+                        // `open(_:)` resolves to the async one in here and would
+                        // need `await`.
+                        UIApplication.shared.open(url, options: [:], completionHandler: nil)
                     }
                     return
                 }
