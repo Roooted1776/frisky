@@ -18,11 +18,6 @@ struct EmergencyView: View {
         NavigationView {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 8) {
-                    Text("Find 911")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundColor(.redmedDark)
-                        .padding(.bottom, 2)
-
                     SecondaryButton("Call first emergency contact") { callFirstContact() }
                     Text("Calls your first saved contact — iPhone confirms before dialing.")
                         .font(.system(size: 10, weight: .medium))
@@ -91,12 +86,10 @@ struct EmergencyView: View {
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
-                        .padding(.top, 2)
-                        .padding(.bottom, 8)
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 6)
-                .padding(.bottom, 24)
+                .padding(.bottom, 8)
             }
             .background(Color.redmedBg)
             .navigationTitle("")
