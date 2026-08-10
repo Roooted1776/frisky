@@ -9,7 +9,7 @@ struct NFCView: View {
     @State private var showAuthFailedAlert = false
     @State private var showNeedProfileAlert = false
     @State private var importFlash = false
-    @State private var capacityNote: String = "Blank tag — write your My ID to pair"
+    @State private var capacityNote: String = "Blank tag — write your RedMed profile to pair"
 
     var body: some View {
         NavigationView {
@@ -19,7 +19,7 @@ struct NFCView: View {
                         Text("NFC Bracelet")
                             .font(.system(size: 22, weight: .bold))
                             .foregroundColor(.redmedDark)
-                        Text("Blank tags ship empty. Fill My ID, then write once — Face ID, hold to band, done. Readers need no app.")
+                        Text("Blank tags ship empty. Fill RedMed, then write once — Face ID, hold to band, done. Readers need no app.")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.redmedMuted)
                             .multilineTextAlignment(.center)
@@ -34,7 +34,7 @@ struct NFCView: View {
                         statusRow(
                             profile.braceletLinked
                                 ? "Bracelet paired · strangers tap to open your card"
-                                : "Not paired yet · write your My ID to a blank band",
+                                : "Not paired yet · write your RedMed profile to a blank band",
                             showDivider: true
                         )
                         statusRow(capacityNote, showDivider: false)
@@ -66,7 +66,7 @@ struct NFCView: View {
                         .opacity(profile.hasData && !nfc.isScanning ? 1 : 0.45)
 
                         VStack(alignment: .leading, spacing: 6) {
-                            syncBullet("Open RedMed → Edit My ID → Save → Write to NFC tag.")
+                            syncBullet("Open RedMed → Edit → Save → Write to NFC tag.")
                             syncBullet("Bands ship blank. Your individual info is written at pair time.")
                             syncBullet("After every edit, write again or the band stays stale.")
                         }
@@ -95,7 +95,7 @@ struct NFCView: View {
 
                     sectionLabel("Import")
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Already own a written tag? Pull it onto this phone's My ID.")
+                        Text("Already own a written tag? Pull it onto this phone's RedMed profile.")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.redmedMuted)
                             .lineSpacing(3)
@@ -148,7 +148,7 @@ struct NFCView: View {
             } message: {
                 Text("Face ID or passcode is required before writing your medical profile to a bracelet.")
             }
-            .alert("Add your My ID first", isPresented: $showNeedProfileAlert) {
+            .alert("Add your RedMed profile first", isPresented: $showNeedProfileAlert) {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text("Open the RedMed tab, tap Edit, and save your name before pairing a blank bracelet.")
@@ -225,11 +225,11 @@ struct NFCView: View {
             let pct = min(100, (used * 100) / cap)
             capacityNote = "Tag capacity: \(pct)% used (\(used) / \(cap) B)"
         } else if profile.braceletLinked {
-            capacityNote = "Paired · rewrite after any My ID edit"
+            capacityNote = "Paired · rewrite after any RedMed edit"
         } else if profile.hasData, let approx = try? CardPayload.from(profile: profile).estimatedNDEFByteCount() {
             capacityNote = "Est. write size ~\(approx) B · NTAG215/216 recommended"
         } else {
-            capacityNote = "Blank tag — write your My ID to pair"
+            capacityNote = "Blank tag — write your RedMed profile to pair"
         }
     }
 

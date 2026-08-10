@@ -58,7 +58,7 @@ struct MyIDView: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Pair your blank bracelet")
                                         .font(.system(size: 14, weight: .bold))
-                                    Text("My ID → NFC → Write to NFC tag")
+                                    Text("RedMed → NFC → Write to NFC tag")
                                         .font(.system(size: 12, weight: .medium))
                                         .opacity(0.85)
                                 }

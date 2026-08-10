@@ -229,8 +229,8 @@ struct EditProfileView: View {
             Button("Later", role: .cancel) { dismiss() }
         } message: {
             Text(profile.braceletLinked
-                  ? "Your My ID changed. Rewrite the band so strangers see the update."
-                  : "Your band ships blank. Hold your iPhone to the bracelet to pair it with this My ID.")
+                  ? "Your RedMed profile changed. Rewrite the band so strangers see the update."
+                  : "Your band ships blank. Hold your iPhone to the bracelet to pair it with this profile.")
         }
     }
 

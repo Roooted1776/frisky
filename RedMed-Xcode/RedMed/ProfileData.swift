@@ -38,7 +38,7 @@ class ProfileData: ObservableObject {
             lastUpdated = stored.lastUpdated
             braceletLinked = stored.braceletLinked
         } else {
-            // Empty first launch — user enters real My ID, then pairs a blank tag.
+            // Empty first launch — user enters their RedMed profile, then pairs a blank tag.
             name = ""
             birthDate = ""
             bloodType = ""
