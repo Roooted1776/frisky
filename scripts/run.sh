@@ -25,7 +25,7 @@ pick_simulator() {
     runtime_devices="$(
       xcrun simctl list devices available 2>/dev/null \
         | awk -v os="$SIM_OS" '
-            /^-- / { want = ($0 ~ ("iOS " os)) }
+            /^-- / { want = ($0 ~ ("-- iOS " os " --")) }
             want && /^[[:space:]]*iPhone/ {
               sub(/^[[:space:]]+/, "")
               sub(/ \(.*/, "")
