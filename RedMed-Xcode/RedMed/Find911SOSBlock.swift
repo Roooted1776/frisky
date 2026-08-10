@@ -52,7 +52,7 @@ struct Find911SOSBlock: View {
                     Text("Motion assist")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.redmedDark)
-                    Text("Hard sustained jolt starts the same countdown while this screen is open. Off by default.")
+                    Text("On automatically while this screen is open. Hard sustained jolt starts the same countdown. Assistive only — not a medical device.")
                         .font(.system(size: 10))
                         .foregroundColor(.redmedMuted)
                 }
@@ -239,7 +239,8 @@ final class Find911SOSController: ObservableObject {
 
 @MainActor
 final class Find911MotionAssist: ObservableObject {
-    @Published var isEnabled = false
+    /// On automatically whenever Find 911 is visible; user can still turn it off.
+    @Published var isEnabled = true
     @Published private(set) var didTrigger = false
 
     private let manager = CMMotionManager()
