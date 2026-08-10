@@ -11,6 +11,7 @@ final class NFCWriter: NSObject, ObservableObject {
     private var session: NFCNDEFReaderSession?
     private var urlToWrite: String = ""
 
+    /// Starts a CoreNFC session only from an explicit Write tap — never on proximity.
     func writeURL(_ urlString: String) {
         guard NFCNDEFReaderSession.readingAvailable else {
             DispatchQueue.main.async {
