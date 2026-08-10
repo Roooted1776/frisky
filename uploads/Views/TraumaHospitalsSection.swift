@@ -11,6 +11,8 @@ struct TraumaHospitalsSection: View {
     @AppStorage("redMedTraumaState") private var traumaState = ""
     @AppStorage("redMedTraumaCounty") private var traumaCounty = ""
     @State private var googleRegionNote: String?
+    /// Filled async so first paint of Find 911 doesn't decode trauma-hospitals.json on the main thread.
+    @State private var stateOptions: [String] = []
 
     var body: some View {
         let needsCounty = TraumaHospitalFinder.needsCountyPicker(for: traumaState)
@@ -32,14 +34,19 @@ struct TraumaHospitalsSection: View {
             }
 
             Picker("State", selection: $traumaState) {
-                Text("Select state").tag("")
-                ForEach(TraumaHospitalFinder.states, id: \.self) { state in
+                Text(stateOptions.isEmpty ? "Loading states…" : "Select state").tag("")
+                ForEach(stateOptions, id: \.self) { state in
                     Text(state).tag(state)
                 }
             }
             .pickerStyle(.menu)
+            .disabled(stateOptions.isEmpty)
             .onChange(of: traumaState) { _ in
                 traumaCounty = ""
+            }
+            .task {
+                TraumaHospitalFinder.warmUp()
+                stateOptions = await TraumaHospitalFinder.loadStatesAsync()
             }
 
             if needsCounty {

@@ -1,17 +1,21 @@
 import SwiftUI
+import CoreLocation
 import UIKit
 
-/// First-responder emergency card — shown when a bracelet is scanned in-app
-/// (NFC session or legacy `redmed://` / HTTPS `#d=` deep link). Displays THAT
-/// tag's decoded profile, never the device owner's `ProfileStore`. Read-only:
-/// a responder must not be able to overwrite the owner's My ID from here.
+/// First-responder emergency card — bracelet scan / deep link.
+/// Instant: Call 911 + medical ID first, then GPS, then roadside aid.
+/// Never shows NFC setup. Never writes to the device owner's ProfileStore.
 struct ScannedCardView: View {
     @Environment(\.layoutMetrics) private var layout
 
     let profile: MedicalProfile
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var locationManager = LocationManager()
     @State private var copiedSummary = false
+    @State private var copiedCoords = false
     @State private var traumaExpanded = false
+    @State private var openPaneId: String?
+    @State private var aidPath = NavigationPath()
 
     private var ageLine: String {
         var parts: [String] = []
@@ -27,13 +31,22 @@ struct ScannedCardView: View {
         return parts.joined(separator: " · ")
     }
 
+    private var columns: [GridItem] {
+        [
+            GridItem(.flexible(), spacing: layout.spaceMD),
+            GridItem(.flexible(), spacing: layout.spaceMD)
+        ]
+    }
+
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $aidPath) {
             ScrollView {
-                VStack(spacing: 0) {
+                LazyVStack(spacing: 0) {
                     header
 
                     VStack(alignment: .leading, spacing: layout.s(18)) {
+                        readOnlyLock
+
                         Call911Button()
 
                         if !profile.allergies.isEmpty {
@@ -52,25 +65,50 @@ struct ScannedCardView: View {
                         }
 
                         Button {
-                            UIPasteboard.general.string = EmergencySummaryBuilder.build(profile: profile)
+                            UIPasteboard.general.string = EmergencySummaryBuilder.build(
+                                profile: profile,
+                                coordinate: locationManager.coordinate,
+                                accuracy: locationManager.accuracy,
+                                heading: locationManager.heading,
+                                altitude: locationManager.altitude,
+                                locationTimestamp: locationManager.locationTimestamp
+                            )
                             copiedSummary = true
                             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                                 copiedSummary = false
                             }
                         } label: {
-                            Text(copiedSummary ? "Copied!" : "Copy medical summary")
+                            Text(copiedSummary ? "Copied!" : "Copy medical + GPS summary")
                         }
                         .buttonStyle(InkButtonStyle())
 
+                        // --- Find 911 GPS ---
+                        gpsBlock
+
+                        // --- Roadside Aid (no NFC) ---
+                        VStack(alignment: .leading, spacing: layout.spaceSM) {
+                            SectionEyebrow(text: "Roadside Aid", tint: AppTheme.accent)
+                            Text("Call 911 first. Tap a pane — expand only what you need.")
+                                .font(layout.captionFont(weight: .medium))
+                                .foregroundStyle(AppTheme.muted)
+
+                            LazyVGrid(columns: columns, spacing: layout.spaceMD) {
+                                ForEach(AidPaneLibrary.panes) { pane in
+                                    scannerAidPane(pane)
+                                        .gridCellColumns(openPaneId == pane.id ? 2 : 1)
+                                }
+                            }
+                        }
+
                         DisclosureGroup(isExpanded: $traumaExpanded) {
-                            TraumaHospitalsSection()
+                            TraumaHospitalsSection(gpsCoordinate: locationManager.coordinate)
                         } label: {
                             Text("Trauma center transport")
                                 .font(.subheadline.weight(.bold))
                                 .foregroundStyle(AppTheme.ink)
                         }
 
-                        Text("Tap the band → this card. Nothing saved to this phone.")
+                        Text("Scanner view: medical ID, 911, and roadside aid. NFC setup is not shown. Read only — nothing saved or editable on this phone.")
                             .font(.caption.weight(.medium))
                             .foregroundStyle(AppTheme.muted)
                             .fixedSize(horizontal: false, vertical: true)
@@ -106,6 +144,11 @@ struct ScannedCardView: View {
                         .fontWeight(.semibold)
                 }
             }
+            .navigationDestination(for: FirstAidTopic.self) { topic in
+                FirstAidDetailView(topic: topic)
+            }
+            .task { locationManager.requestLocation() }
+            .onDisappear { locationManager.stopUpdating() }
         }
     }
 
@@ -149,6 +192,120 @@ struct ScannedCardView: View {
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
+        )
+    }
+
+    private var readOnlyLock: some View {
+        HStack(alignment: .top, spacing: layout.spaceMD) {
+            Image(systemName: "lock.fill")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(AppTheme.ink)
+                .padding(.top, 2)
+            VStack(alignment: .leading, spacing: layout.spaceXS) {
+                Text("Read only")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(AppTheme.ink)
+                Text("You can’t edit this medical ID from a scan. Changes require the owner’s RedMed app unlocked with Face ID, Touch ID, or device passcode.")
+                    .font(layout.captionFont(weight: .medium))
+                    .foregroundStyle(AppTheme.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(layout.s(14))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .appCard(elevated: false)
+        .allowsHitTesting(false)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var gpsBlock: some View {
+        VStack(alignment: .leading, spacing: layout.spaceSM) {
+            SectionEyebrow(text: "Live GPS", tint: AppTheme.medical)
+            if let c = locationManager.coordinate {
+                Text(String(format: "%.6f, %.6f", c.latitude, c.longitude))
+                    .font(.system(size: layout.s(18), design: .monospaced).weight(.bold))
+                    .foregroundStyle(AppTheme.ink)
+                if let acc = locationManager.accuracy, acc > 0 {
+                    Text(String(format: "Accuracy ±%.0f m", acc))
+                        .font(layout.captionFont(weight: .semibold))
+                        .foregroundStyle(AppTheme.muted)
+                }
+                Button {
+                    UIPasteboard.general.string = LocationFormatting.coordsCopyText(
+                        latitude: c.latitude,
+                        longitude: c.longitude
+                    )
+                    copiedCoords = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { copiedCoords = false }
+                } label: {
+                    Text(copiedCoords ? "Copied!" : "Copy coordinates")
+                }
+                .buttonStyle(InkButtonStyle())
+            } else {
+                ProgressView("Getting GPS…")
+                    .tint(AppTheme.medical)
+            }
+        }
+        .padding(layout.spaceLG)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .appCard()
+    }
+
+    @ViewBuilder
+    private func scannerAidPane(_ pane: AidPane) -> some View {
+        let isOpen = openPaneId == pane.id
+        VStack(alignment: .leading, spacing: 0) {
+            Button {
+                withAnimation(.easeOut(duration: 0.2)) {
+                    openPaneId = isOpen ? nil : pane.id
+                }
+            } label: {
+                HStack(spacing: layout.spaceMD) {
+                    Text(pane.title)
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(AppTheme.ink)
+                    Spacer()
+                    Image(systemName: isOpen ? "chevron.down" : "chevron.right")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(AppTheme.accent)
+                }
+                .padding(layout.s(14))
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if isOpen {
+                VStack(spacing: layout.spaceSM) {
+                    ForEach(pane.topics) { topic in
+                        Button {
+                            aidPath.append(topic)
+                        } label: {
+                            HStack {
+                                Text(topic.title)
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(AppTheme.ink)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .foregroundStyle(AppTheme.muted)
+                            }
+                            .padding(.horizontal, layout.s(12))
+                            .padding(.vertical, layout.s(10))
+                            .background(Color.white.opacity(0.85))
+                            .clipShape(RoundedRectangle(cornerRadius: layout.innerRadius, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, layout.s(10))
+                .padding(.bottom, layout.s(12))
+            }
+        }
+        .background(AppTheme.cardBg)
+        .clipShape(RoundedRectangle(cornerRadius: layout.cardRadius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: layout.cardRadius, style: .continuous)
+                .stroke(isOpen ? AppTheme.accent.opacity(0.28) : AppTheme.line, lineWidth: 1)
         )
     }
 

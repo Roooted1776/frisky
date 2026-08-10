@@ -4,94 +4,294 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RedMed — Emergency Card</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; font-family:'Plus Jakarta Sans',sans-serif; }
-  body { margin:0; background:#0a0a0a; color:#ffffff; min-height:100vh; padding:32px 20px 60px; }
-  a { color:#ff3b4e; }
-  .wrap { max-width:480px; margin:0 auto; }
-  .badge { display:inline-block; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#ff3b4e; border:1px solid rgba(255,59,78,0.4); border-radius:999px; padding:5px 12px; margin-bottom:18px; }
-  h1 { font-size:28px; font-weight:800; margin:0 0 2px; letter-spacing:-0.5px; }
-  .sub { font-size:14px; font-weight:500; color:rgba(255,59,78,0.6); margin-bottom:28px; }
-  .section-label { font-size:12px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; color:rgba(255,59,78,0.55); margin:26px 0 8px; }
-  .card { border:1px solid rgba(255,59,78,0.25); border-radius:14px; overflow:hidden; }
-  .row { display:flex; justify-content:space-between; align-items:center; padding:13px 16px; border-bottom:1px solid rgba(255,59,78,0.15); }
-  .row:last-child { border-bottom:none; }
-  .row .k { font-size:14px; font-weight:500; color:rgba(255,255,255,0.6); }
-  .row .v { font-size:15px; font-weight:700; color:#ffffff; text-align:right; }
-  .list-item { padding:13px 16px; border-bottom:1px solid rgba(255,59,78,0.15); font-size:15px; font-weight:600; color:#ffffff; }
-  .list-item:last-child { border-bottom:none; }
-  .contact-name { font-size:15px; font-weight:700; color:#ffffff; }
-  .contact-detail { font-size:13px; font-weight:500; color:rgba(255,59,78,0.6); margin-top:2px; }
-  .footer { margin-top:40px; font-size:12px; font-weight:500; color:rgba(255,59,78,0.4); text-align:center; }
-  .call-btn { display:block; width:100%; text-align:center; background:#ff3b4e; color:#0a0a0a; font-size:16px; font-weight:800; text-decoration:none; border-radius:999px; padding:15px; margin:22px 0 8px; }
-  .gps-btn { display:block; width:100%; text-align:center; background:none; border:1px solid rgba(255,59,78,0.35); color:#ff3b4e; font-size:14px; font-weight:700; text-decoration:none; border-radius:999px; padding:12px; }
-  .updated { font-size:11px; font-weight:600; color:rgba(255,59,78,0.4); text-align:center; margin-top:10px; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    background: #fff7f7;
+    color: #1c1917;
+    min-height: 100vh;
+    padding: 20px 16px 48px;
+  }
+  a { color: #e11d48; text-decoration: none; }
+  .wrap { max-width: 480px; margin: 0 auto; }
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: #e11d48;
+    background: rgba(225,29,72,0.1);
+    border-radius: 999px;
+    padding: 6px 12px;
+    margin-bottom: 14px;
+  }
+  h1 { font-size: 26px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.4px; }
+  .sub { font-size: 13px; font-weight: 500; color: #78716c; margin-bottom: 16px; }
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: #78716c;
+    margin: 22px 0 8px;
+  }
+  .card {
+    background: #fff;
+    border: 1px solid rgba(28,25,23,0.07);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .row, .list-item {
+    padding: 13px 16px;
+    border-bottom: 1px solid rgba(28,25,23,0.07);
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .row:last-child, .list-item:last-child { border-bottom: none; }
+  .row { display: flex; justify-content: space-between; align-items: center; }
+  .row .k { font-weight: 500; color: #78716c; }
+  .critical .list-item { color: #e11d48; background: rgba(225,29,72,0.04); }
+  .call-btn, .gps-btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    font-weight: 800;
+    border-radius: 999px;
+    padding: 15px;
+    margin: 10px 0;
+  }
+  .call-btn { background: #e11d48; color: #fff; }
+  .gps-btn {
+    background: #fff;
+    border: 1px solid rgba(28,25,23,0.1);
+    color: #1c1917;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .coords {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: center;
+    padding: 14px;
+  }
+  details.aid {
+    background: #fff;
+    border: 1px solid rgba(28,25,23,0.07);
+    border-radius: 14px;
+    margin: 8px 0;
+    padding: 0 14px;
+  }
+  details.aid summary {
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 14px 0;
+    list-style: none;
+  }
+  details.aid summary::-webkit-details-marker { display: none; }
+  details.aid ol {
+    margin: 0 0 14px;
+    padding-left: 18px;
+    color: #1c1917;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.45;
+  }
+  .footer {
+    margin-top: 28px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #78716c;
+    text-align: center;
+  }
+  .updated { font-size: 11px; font-weight: 600; color: #78716c; text-align: center; margin-top: 8px; }
+  .lock {
+    background: #fff;
+    border: 1px solid rgba(28,25,23,0.07);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin: 0 0 14px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #78716c;
+    line-height: 1.45;
+  }
+  .lock strong { color: #1c1917; font-weight: 800; display: block; margin-bottom: 4px; }
 </style>
 </head>
 <body>
   <div class="wrap">
-    <span class="badge">Emergency Medical ID</span>
-    <h1>Alex Rivera</h1>
-    <div class="sub">Born April 12, 1988</div>
+    <span class="badge">Emergency · ID · 911 · Aid · Read only</span>
+    <h1 id="name">Medical ID</h1>
+    <div class="sub" id="subLine">Blood · DOB</div>
+
+    <div class="lock" id="lockBanner">
+      <strong>Read only.</strong>
+      You can’t edit this medical ID from a scan. Changes require the owner’s RedMed app unlocked with Face&nbsp;ID, Touch&nbsp;ID, or device passcode.
+    </div>
 
     <a class="call-btn" href="tel:911">Call 911</a>
-    <a class="gps-btn" href="#" onclick="shareGPS(event)">Text My Location to Emergency Contact</a>
-    <div class="updated" id="updatedLine">Profile last updated Jul 28, 2026</div>
+    <a class="gps-btn" href="#" id="gpsBtn">Share GPS with emergency contact</a>
+    <div class="updated" id="updatedLine"></div>
 
-    <div class="section-label">Blood Type</div>
-    <div class="card">
-      <div class="row"><span class="k">Blood type</span><span class="v">O+</span></div>
-    </div>
+    <div class="section-label">Live GPS</div>
+    <div class="card"><div class="coords" id="coords">Getting GPS…</div></div>
 
     <div class="section-label">Allergies</div>
-    <div class="card">
-      <div class="list-item">Penicillin</div>
-      <div class="list-item">Shellfish</div>
-    </div>
+    <div class="card critical" id="allergies"><div class="list-item">—</div></div>
 
     <div class="section-label">Medications</div>
-    <div class="card">
-      <div class="list-item">Warfarin (Coumadin) — 5 mg daily</div>
-      <div class="list-item">Albuterol inhaler — as needed</div>
-    </div>
+    <div class="card" id="meds"><div class="list-item">—</div></div>
 
     <div class="section-label">Conditions</div>
-    <div class="card">
-      <div class="list-item">AFib</div>
-      <div class="list-item">Asthma</div>
-    </div>
+    <div class="card" id="conditions"><div class="list-item">—</div></div>
 
-    <div class="section-label">Organ Donor Status</div>
-    <div class="card">
-      <div class="row"><span class="k">Registered donor</span><span class="v">Yes</span></div>
-    </div>
+    <div class="section-label">Emergency contacts</div>
+    <div class="card" id="contacts"><div class="list-item">—</div></div>
 
-    <div class="section-label">Emergency Contacts</div>
-    <div class="card">
-      <div class="row" style="display:block;">
-        <div class="contact-name">Sarah Rivera</div>
-        <div class="contact-detail">Spouse · (555) 012-3456</div>
-      </div>
-      <div class="row" style="display:block;">
-        <div class="contact-name">Dr. J. Kim</div>
-        <div class="contact-detail">Physician · (555) 789-0123</div>
-      </div>
-    </div>
+    <div class="section-label">Roadside Aid</div>
+    <p style="font-size:12px;color:#78716c;margin:0 0 8px;font-weight:500;">Call 911 first. Open only what you need. NFC setup is not on this card.</p>
 
-    <div class="footer">Scanned via RedMed NFC bracelet · redmed.app</div>
+    <details class="aid"><summary>Crash &amp; Head</summary>
+      <ol>
+        <li>Call 911 — give exact location and number of people</li>
+        <li>Hazards on. Do not move them unless fire or traffic danger</li>
+        <li>Keep head/neck still. Control bleeding with firm pressure</li>
+      </ol>
+    </details>
+    <details class="aid"><summary>Bleeding</summary>
+      <ol>
+        <li>Press hard with both hands — do not lift to check</li>
+        <li>Add cloth on top if soaked. Limb: tourniquet 2–3 in above</li>
+        <li>Note the time. Stay on the line with 911</li>
+      </ol>
+    </details>
+    <details class="aid"><summary>CPR / Choking</summary>
+      <ol>
+        <li>No breathing/pulse: hard compressions 100–120/min</li>
+        <li>Choking, cannot cough: 5 back blows, then 5 abdominal thrusts</li>
+        <li>Alternate until clear or they become unresponsive — then CPR</li>
+      </ol>
+    </details>
+    <details class="aid"><summary>Seizure</summary>
+      <ol>
+        <li>Time it. Clear sharp objects. Do not restrain</li>
+        <li>Nothing in the mouth. Cushion the head</li>
+        <li>Call 911 if first seizure, over 5 minutes, injury, or in water</li>
+      </ol>
+    </details>
+
+    <div class="footer">Scanned via RedMed bracelet · read-only medical ID, 911, and roadside aid · editing requires the owner’s app + Face ID / Touch ID</div>
   </div>
   <script>
-    function shareGPS(e) {
-      e.preventDefault();
-      if (!navigator.geolocation) { alert('Location not available on this device.'); return; }
-      navigator.geolocation.getCurrentPosition(function(pos) {
-        const url = 'https://maps.google.com/?q=' + pos.coords.latitude + ',' + pos.coords.longitude;
-        const phone = '5550123456';
-        const body = encodeURIComponent('This is my current location: ' + url);
-        window.location.href = 'sms:' + phone + '?&body=' + body;
-      }, function() { alert('Could not get location.'); });
+(function () {
+  function list(el, items) {
+    el.innerHTML = '';
+    if (!items || !items.length) {
+      el.innerHTML = '<div class="list-item">—</div>';
+      return;
     }
+    items.forEach(function (t) {
+      var d = document.createElement('div');
+      d.className = 'list-item';
+      d.textContent = t;
+      el.appendChild(d);
+    });
+  }
+
+  function decodeProfile() {
+    try {
+      var hash = location.hash || '';
+      var idx = hash.indexOf('d=');
+      if (idx < 0) return null;
+      var raw = hash.slice(idx + 2).split('&')[0];
+      var b64 = raw.replace(/-/g, '+').replace(/_/g, '/');
+      while (b64.length % 4) b64 += '=';
+      var json = decodeURIComponent(escape(atob(b64)));
+      return JSON.parse(json);
+    } catch (e) { return null; }
+  }
+
+  var p = decodeProfile() || {};
+  document.getElementById('name').textContent = p.name || 'Medical ID';
+  var sub = [];
+  if (p.dob) sub.push(p.dob);
+  if (p.blood) sub.push('Blood ' + p.blood);
+  document.getElementById('subLine').textContent = sub.join(' · ') || 'Emergency medical ID';
+  if (p.updated) document.getElementById('updatedLine').textContent = 'Updated ' + p.updated;
+  list(document.getElementById('allergies'), p.allergies);
+  list(document.getElementById('meds'), p.meds);
+  list(document.getElementById('conditions'), p.conditions);
+
+  var contactsEl = document.getElementById('contacts');
+  contactsEl.innerHTML = '';
+  var contacts = p.contacts || [];
+  if (!contacts.length) {
+    contactsEl.innerHTML = '<div class="list-item">—</div>';
+  } else {
+    contacts.forEach(function (c) {
+      var row = document.createElement('div');
+      row.className = 'list-item';
+      var phone = (c.phone || '').replace(/[^\d+]/g, '');
+      var label = (c.name || 'Contact') + (c.rel ? ' · ' + c.rel : '');
+      if (phone) {
+        var a = document.createElement('a');
+        a.href = 'tel:' + phone;
+        a.textContent = label + ' · Tap to call';
+        a.style.color = '#e11d48';
+        a.style.fontWeight = '700';
+        row.appendChild(a);
+      } else {
+        row.textContent = label;
+      }
+      contactsEl.appendChild(row);
+    });
+  }
+
+  var firstPhone = '';
+  if (contacts.length) {
+    firstPhone = (contacts[0].phone || '').replace(/[^\d+]/g, '');
+  }
+
+  function setCoords(lat, lon, acc) {
+    var t = lat.toFixed(6) + ', ' + lon.toFixed(6);
+    if (acc > 0) t += ' (±' + Math.round(acc) + ' m)';
+    document.getElementById('coords').textContent = t;
+  }
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      setCoords(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+      window.__redmedLoc = pos.coords;
+    }, function () {
+      document.getElementById('coords').textContent = 'GPS unavailable — tell dispatcher landmarks';
+    }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 });
+  } else {
+    document.getElementById('coords').textContent = 'GPS unavailable on this device';
+  }
+
+  document.getElementById('gpsBtn').addEventListener('click', function (e) {
+    e.preventDefault();
+    function send(lat, lon) {
+      var maps = 'https://maps.apple.com/?ll=' + lat + ',' + lon;
+      var body = encodeURIComponent('Emergency location (RedMed): ' + lat + ', ' + lon + '\n' + maps);
+      var sms = firstPhone ? ('sms:' + firstPhone + '&body=' + body) : ('sms:&body=' + body);
+      location.href = sms;
+    }
+    if (window.__redmedLoc) {
+      send(window.__redmedLoc.latitude, window.__redmedLoc.longitude);
+      return;
+    }
+    if (!navigator.geolocation) { alert('Location not available.'); return; }
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      send(pos.coords.latitude, pos.coords.longitude);
+    }, function () { alert('Could not get location.'); });
+  });
+})();
   </script>
 </body>
 </html>

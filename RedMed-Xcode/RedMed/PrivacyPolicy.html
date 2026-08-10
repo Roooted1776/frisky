@@ -71,7 +71,7 @@
     <ul>
       <li><strong>My ID / Bracelet:</strong> profile is edited and saved on-device; you choose when to write to the band.</li>
       <li><strong>Roadside Aid:</strong> first-aid reference and CPR timer run offline on your device; no profile fields are shown or transmitted.</li>
-      <li><strong>Find 911:</strong> location and compass heading may be used <strong>only while that screen is visible</strong>; processing stops when you leave the screen or close the App.</li>
+      <li><strong>Find 911:</strong> location, compass heading, and (if you opt in) motion assist may be used <strong>only while that screen is visible</strong>; processing stops when you leave the screen or close the App. Emergency SOS countdown and seizure timer run on-device only. SOS may open Phone (911) and Messages (carrier SMS to your contacts). If a third-party alert URL is configured at build time, the device may POST location/medical fields directly to that partner — not to RedMed.</li>
       <li><strong>Call emergency contacts:</strong> opens your device’s phone dialer with a contact number; you must confirm the call. RedMed does not place calls or operate a telephony server.</li>
     </ul>
     <p>We do not log, analyze, or transmit this information to the operator as part of normal use.</p>
@@ -79,7 +79,8 @@
     <h2><span class="sec-num">7.</span> Location Information (Find 911)</h2>
     <p>Find 911 displays coordinates only while that screen is open. It is not used for advertising, profiling, or background monitoring.</p>
     <p><strong>RedMed does not display its own in-app location-permission dialog.</strong> By opening Find 911 you consent to device location processing for that screen. Your browser or operating system supplies location using GPS/GNSS (satellite positioning), Wi‑Fi, and cellular signals as available. You may receive a one-time platform prompt from your phone or browser; this is not a separate RedMed permission screen.</p>
-    <p><strong>RedMed has no servers.</strong> Location appears on screen and, only if you choose, in text you copy. We do not receive, log, or store coordinates. RedMed is <strong>not</strong> Apple Emergency SOS via satellite, Android Satellite SOS, or any carrier satellite messaging service.</p>
+    <p>Optional motion assist uses the device accelerometer <strong>only while Find 911 is visible and only when enabled</strong> to help start a cancelable Emergency SOS countdown after a hard jolt. Motion samples stay on your device. This is not a medical device, not seizure diagnosis, and <strong>not</strong> Apple Crash Detection.</p>
+    <p><strong>RedMed has no servers.</strong> Location appears on screen and, only if you choose, in text you copy or SMS via Apple Messages / your carrier. An optional build-time third-party emergency alert endpoint may receive a device-direct HTTPS POST; RedMed does not relay or store that traffic. RedMed is <strong>not</strong> Apple Emergency SOS via satellite, Apple Crash Detection, Android Satellite SOS, or any carrier satellite messaging service, and cannot start those system features.</p>
     <p>If a Google Maps API key is configured for the hosted web App, Find 911 may send GPS coordinates to <strong>Google Maps Platform</strong> solely to suggest state or county for offline trauma-center lookup and to verify hospital names — not to RedMed. This is optional and limited to the Find 911 screen.</p>
 
     <h2><span class="sec-num">8.</span> Passive NFC Bracelet</h2>

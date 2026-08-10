@@ -18,7 +18,7 @@ struct MyIDView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
+            LazyVStack(alignment: .leading, spacing: 0) {
                 // Header — matches Main.dc.html (no wordmark nav bar)
                 header
 
@@ -190,11 +190,15 @@ struct MyIDView: View {
     // MARK: - Edit gate
 
     private func requestEdit() {
-        guard profile.hasData else {
+        // Always require Apple biometrics/passcode once any medical fields or a
+        // linked bracelet exist — scanners have no edit path at all.
+        guard profile.hasSensitiveProfileData || profile.braceletLinked else {
             showEdit = true
             return
         }
-        BiometricAuth.authenticate(reason: "Authenticate to edit your medical profile.") { success in
+        BiometricAuth.authenticate(
+            reason: "Unlock with Face ID, Touch ID, or passcode to edit your medical ID in RedMed."
+        ) { success in
             if success {
                 showEdit = true
             } else {
