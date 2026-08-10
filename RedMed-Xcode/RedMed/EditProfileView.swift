@@ -12,16 +12,10 @@ struct EditProfileView: View {
     @State private var birthDate = ""
     @State private var bloodType = ""
     @State private var allergies: [DraftLine] = []
-    @State private var allergyFocusID: UUID? = nil
     @State private var medications: [DraftLine] = []
-    @State private var medFocusID: UUID? = nil
     @State private var conditions: [DraftLine] = []
-    @State private var conditionFocusID: UUID? = nil
     @State private var contacts: [EmergencyContact] = []
     @State private var showAuthFailedAlert = false
-
-    /// Slight rose wash — translucent enough to show the card behind, not ghostly.
-    private static let suggestionFill = Color.redmedAccent.opacity(0.14)
 
     /// Display / persist as "Month DD, YYYY" (matches the old text placeholder).
     private static let birthDateFormatter: DateFormatter = {
@@ -113,184 +107,35 @@ struct EditProfileView: View {
                         bloodTypeRow
                     }
 
-                    // ALLERGIES
+                    // ALLERGIES / MEDICATIONS / CONDITIONS — normal list rows
                     editSectionLabel("Allergies")
                     editCard {
-                        ForEach($allergies) { $line in
-                            VStack(alignment: .leading, spacing: 0) {
-                                HStack(spacing: 8) {
-                                    TextField("Allergy", text: $line.text)
-                                        .font(.system(size: 15))
-                                        .foregroundColor(.redmedDark)
-                                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                                        .contentShape(Rectangle())
-                                        .onChange(of: line.text) { _, _ in allergyFocusID = line.id }
-                                    removeLineButton {
-                                        withAnimation {
-                                            allergies.removeAll { $0.id == line.id }
-                                            if allergyFocusID == line.id { allergyFocusID = nil }
-                                        }
-                                    }
-                                }
-                                .padding(.leading, 16)
-                                .padding(.trailing, 4)
-
-                                if allergyFocusID == line.id {
-                                    let matches = suggestions(from: commonAllergies, for: line, in: allergies)
-                                    if !matches.isEmpty {
-                                        FlowLayout(spacing: 6) {
-                                            ForEach(matches, id: \.self) { suggestion in
-                                                Button {
-                                                    if let idx = allergies.firstIndex(where: { $0.id == line.id }) {
-                                                        allergies[idx].text = suggestion
-                                                    }
-                                                    allergyFocusID = nil
-                                                } label: {
-                                                    Text(suggestion)
-                                                        .font(.system(size: 13))
-                                                        .foregroundColor(.redmedDark)
-                                                        .multilineTextAlignment(.leading)
-                                                        .fixedSize(horizontal: false, vertical: true)
-                                                        .padding(.horizontal, 10)
-                                                        .padding(.vertical, 7)
-                                                        .background(Self.suggestionFill)
-                                                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                                                }
-                                                .buttonStyle(.plain)
-                                            }
-                                        }
-                                        .padding(.horizontal, 12)
-                                        .padding(.bottom, 10)
-                                    }
-                                }
-                            }
-                            .id(line.id)
-                            Divider().padding(.leading, 16)
-                        }
-                        addButton("Add allergy") {
-                            allergyFocusID = nil
-                            allergies.append(DraftLine())
-                        }
+                        DraftLinesEditor(
+                            lines: $allergies,
+                            placeholder: "Allergy",
+                            catalog: commonAllergies,
+                            addLabel: "Add allergy"
+                        )
                     }
 
-                    // MEDICATIONS
                     editSectionLabel("Medications")
                     editCard {
-                        ForEach($medications) { $line in
-                            VStack(alignment: .leading, spacing: 0) {
-                                HStack(spacing: 8) {
-                                    TextField("Medication", text: $line.text)
-                                        .font(.system(size: 15))
-                                        .foregroundColor(.redmedDark)
-                                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                                        .contentShape(Rectangle())
-                                        .onChange(of: line.text) { _, _ in medFocusID = line.id }
-                                    removeLineButton {
-                                        withAnimation {
-                                            medications.removeAll { $0.id == line.id }
-                                            if medFocusID == line.id { medFocusID = nil }
-                                        }
-                                    }
-                                }
-                                .padding(.leading, 16)
-                                .padding(.trailing, 4)
-
-                                if medFocusID == line.id {
-                                    let matches = suggestions(from: commonMedications, for: line, in: medications)
-                                    if !matches.isEmpty {
-                                        FlowLayout(spacing: 6) {
-                                            ForEach(matches, id: \.self) { suggestion in
-                                                Button {
-                                                    if let idx = medications.firstIndex(where: { $0.id == line.id }) {
-                                                        medications[idx].text = suggestion
-                                                    }
-                                                    medFocusID = nil
-                                                } label: {
-                                                    Text(suggestion)
-                                                        .font(.system(size: 13))
-                                                        .foregroundColor(.redmedDark)
-                                                        .multilineTextAlignment(.leading)
-                                                        .fixedSize(horizontal: false, vertical: true)
-                                                        .padding(.horizontal, 10)
-                                                        .padding(.vertical, 7)
-                                                        .background(Self.suggestionFill)
-                                                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                                                }
-                                                .buttonStyle(.plain)
-                                            }
-                                        }
-                                        .padding(.horizontal, 12)
-                                        .padding(.bottom, 10)
-                                    }
-                                }
-                            }
-                            .id(line.id)
-                            Divider().padding(.leading, 16)
-                        }
-                        addButton("Add medication") {
-                            medFocusID = nil
-                            medications.append(DraftLine())
-                        }
+                        DraftLinesEditor(
+                            lines: $medications,
+                            placeholder: "Medication",
+                            catalog: commonMedications,
+                            addLabel: "Add medication"
+                        )
                     }
 
-                    // CONDITIONS
                     editSectionLabel("Conditions")
                     editCard {
-                        ForEach($conditions) { $line in
-                            VStack(alignment: .leading, spacing: 0) {
-                                HStack(spacing: 8) {
-                                    TextField("Condition", text: $line.text)
-                                        .font(.system(size: 15))
-                                        .foregroundColor(.redmedDark)
-                                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                                        .contentShape(Rectangle())
-                                        .onChange(of: line.text) { _, _ in conditionFocusID = line.id }
-                                    removeLineButton {
-                                        withAnimation {
-                                            conditions.removeAll { $0.id == line.id }
-                                            if conditionFocusID == line.id { conditionFocusID = nil }
-                                        }
-                                    }
-                                }
-                                .padding(.leading, 16)
-                                .padding(.trailing, 4)
-
-                                if conditionFocusID == line.id {
-                                    let matches = suggestions(from: commonConditions, for: line, in: conditions)
-                                    if !matches.isEmpty {
-                                        FlowLayout(spacing: 6) {
-                                            ForEach(matches, id: \.self) { suggestion in
-                                                Button {
-                                                    if let idx = conditions.firstIndex(where: { $0.id == line.id }) {
-                                                        conditions[idx].text = suggestion
-                                                    }
-                                                    conditionFocusID = nil
-                                                } label: {
-                                                    Text(suggestion)
-                                                        .font(.system(size: 13))
-                                                        .foregroundColor(.redmedDark)
-                                                        .multilineTextAlignment(.leading)
-                                                        .fixedSize(horizontal: false, vertical: true)
-                                                        .padding(.horizontal, 10)
-                                                        .padding(.vertical, 7)
-                                                        .background(Self.suggestionFill)
-                                                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                                                }
-                                                .buttonStyle(.plain)
-                                            }
-                                        }
-                                        .padding(.horizontal, 12)
-                                        .padding(.bottom, 10)
-                                    }
-                                }
-                            }
-                            .id(line.id)
-                            Divider().padding(.leading, 16)
-                        }
-                        addButton("Add condition") {
-                            conditionFocusID = nil
-                            conditions.append(DraftLine())
-                        }
+                        DraftLinesEditor(
+                            lines: $conditions,
+                            placeholder: "Condition",
+                            catalog: commonConditions,
+                            addLabel: "Add condition"
+                        )
                     }
 
                     // CONTACTS
@@ -504,31 +349,6 @@ struct EditProfileView: View {
         .buttonStyle(.plain)
     }
 
-    /// Autocomplete for a draft row: skip blanks, exact fills, and values
-    /// already used on other rows so adding another line doesn't re-list
-    /// populated entries under the field.
-    private func suggestions(from catalog: [String], for line: DraftLine, in rows: [DraftLine]) -> [String] {
-        let query = line.text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return [] }
-        let queryLower = query.lowercased()
-        let taken = Set(
-            rows
-                .filter { $0.id != line.id }
-                .map { $0.text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
-                .filter { !$0.isEmpty }
-        )
-        return Array(
-            catalog
-                .filter { suggestion in
-                    let value = suggestion.lowercased()
-                    if value == queryLower { return false }
-                    if taken.contains(value) { return false }
-                    return suggestion.localizedCaseInsensitiveContains(query)
-                }
-                .prefix(5)
-        )
-    }
-
     private func loadDraft() {
         name = profile.name
         birthDate = profile.birthDate
@@ -587,5 +407,127 @@ struct DraftLine: Identifiable, Equatable {
     init(text: String = "", id: UUID = UUID()) {
         self.id = id
         self.text = text
+    }
+}
+
+/// Normal Edit list: one TextField + ✕ per row, suggestions under the focused row only.
+/// Uses value-ForEach + id-keyed bindings so delete works on the first row and
+/// autocomplete works on every row (not just the first).
+private struct DraftLinesEditor: View {
+    @Binding var lines: [DraftLine]
+    let placeholder: String
+    let catalog: [String]
+    let addLabel: String
+
+    @FocusState private var focusedID: UUID?
+
+    var body: some View {
+        ForEach(lines) { line in
+            let rowID = line.id
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: 8) {
+                    TextField(placeholder, text: textBinding(for: rowID))
+                        .font(.system(size: 15))
+                        .foregroundColor(.redmedDark)
+                        .focused($focusedID, equals: rowID)
+                    Spacer(minLength: 0)
+                    Button {
+                        focusedID = nil
+                        lines.removeAll { $0.id == rowID }
+                    } label: {
+                        Text("✕")
+                            .font(.system(size: 18))
+                            .foregroundColor(.redmedAccent)
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.leading, 16)
+                .padding(.trailing, 4)
+
+                if focusedID == rowID {
+                    let matches = suggestions(for: rowID)
+                    if !matches.isEmpty {
+                        VStack(spacing: 0) {
+                            ForEach(matches, id: \.self) { suggestion in
+                                Button {
+                                    if let idx = lines.firstIndex(where: { $0.id == rowID }) {
+                                        lines[idx].text = suggestion
+                                    }
+                                    focusedID = nil
+                                } label: {
+                                    Text(suggestion)
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.redmedDark)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 9)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .background(Color.redmedAccent.opacity(0.06))
+                        .padding(.bottom, 8)
+                    }
+                }
+            }
+            Divider().padding(.leading, 16)
+        }
+
+        Button {
+            focusedID = nil
+            let next = DraftLine()
+            lines.append(next)
+            DispatchQueue.main.async {
+                focusedID = next.id
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 18))
+                Text(addLabel)
+                    .font(.system(size: 15))
+            }
+            .foregroundColor(.redmedAccent)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 13)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func textBinding(for id: UUID) -> Binding<String> {
+        Binding(
+            get: { lines.first(where: { $0.id == id })?.text ?? "" },
+            set: { newValue in
+                guard let idx = lines.firstIndex(where: { $0.id == id }) else { return }
+                lines[idx].text = newValue
+            }
+        )
+    }
+
+    private func suggestions(for id: UUID) -> [String] {
+        guard let line = lines.first(where: { $0.id == id }) else { return [] }
+        let query = line.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return [] }
+        let queryLower = query.lowercased()
+        let taken = Set(
+            lines
+                .filter { $0.id != id }
+                .map { $0.text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+                .filter { !$0.isEmpty }
+        )
+        return Array(
+            catalog
+                .filter { suggestion in
+                    let value = suggestion.lowercased()
+                    if value == queryLower { return false }
+                    if taken.contains(value) { return false }
+                    return suggestion.localizedCaseInsensitiveContains(query)
+                }
+                .prefix(5)
+        )
     }
 }
