@@ -1,3 +1,5 @@
+// Parked: not in the Xcode target. NFC Tag Reading needs a paid Apple Developer
+// Program membership. Restore via RedMed-Xcode/NFC-RESTORE.md when ready.
 import SwiftUI
 import CoreNFC
 

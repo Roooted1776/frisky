@@ -2,7 +2,7 @@ import SwiftUI
 import Combine
 
 enum AppTab {
-    case myid, emergency, aid, nfc
+    case myid, emergency, aid
 }
 
 class ProfileData: ObservableObject {
@@ -30,8 +30,6 @@ class ProfileData: ObservableObject {
             || contacts.contains { !$0.name.isEmpty || !$0.detail.isEmpty }
     }
 
-    /// Whether an NFC band has been written/paired (Main header status).
-    @Published var braceletLinked: Bool = false
     @Published var isOrganDonor: Bool = true
     @Published var lastUpdated: String = "Jul 28, 2026"
 
@@ -45,7 +43,6 @@ class ProfileData: ObservableObject {
         copy.medications = medications
         copy.conditions = conditions
         copy.contacts = contacts.map { EmergencyContact(name: $0.name, detail: $0.detail) }
-        copy.braceletLinked = braceletLinked
         copy.isOrganDonor = isOrganDonor
         copy.lastUpdated = lastUpdated
         return copy
