@@ -3,6 +3,9 @@ import CoreNFC
 
 /// Real CoreNFC session for writing / reading blank NDEF bracelets.
 /// Owned at the app root so tab switches cannot discard an in-flight session.
+///
+/// On Simulator (and any host where CoreNFC is unavailable), write/read run in a
+/// device-like demo path so the NFC tab can be walked through without hardware.
 final class NFCManager: NSObject, ObservableObject, NFCNDEFReaderSessionDelegate {
     enum Mode {
         case write(NFCNDEFMessage)
@@ -15,6 +18,9 @@ final class NFCManager: NSObject, ObservableObject, NFCNDEFReaderSessionDelegate
         case importToPhone
     }
 
+    /// Typical user-memory size for NTAG216 — used for demo capacity reporting.
+    private static let demoTagCapacityBytes = 888
+
     @Published var isScanning = false
     @Published var lastError: String?
     @Published var lastWriteSucceeded = false
@@ -24,39 +30,49 @@ final class NFCManager: NSObject, ObservableObject, NFCNDEFReaderSessionDelegate
     @Published var lastPayloadBytes: Int?
     /// Intent captured when the read session starts — not mutable from the UI mid-scan.
     @Published private(set) var readIntent: ReadIntent = .none
+    /// True while the Simulator/demo hold-to-band overlay should be shown.
+    @Published private(set) var isDemoSession = false
 
     private var session: NFCNDEFReaderSession?
     private var mode: Mode?
+    private var demoWorkItem: DispatchWorkItem?
+    /// Last URL written in demo mode — reused for scan/import when no hardware tag exists.
+    private var demoStoredURL: String?
 
-    var isAvailable: Bool { NFCNDEFReaderSession.readingAvailable }
+    /// Hardware CoreNFC present (false on Simulator).
+    var isHardwareAvailable: Bool { NFCNDEFReaderSession.readingAvailable }
+
+    /// UI treats NFC as available even on Simulator so the pairing flow is walkable.
+    var isAvailable: Bool { true }
 
     func beginWrite(url: URL) {
         guard let record = NFCNDEFPayload.wellKnownTypeURIPayload(url: url) else {
             lastError = "Could not build NFC URI record."
             return
         }
-        beginWrite(message: NFCNDEFMessage(records: [record]))
+        beginWrite(message: NFCNDEFMessage(records: [record]), demoURLString: url.absoluteString)
     }
 
-    func beginWrite(message: NFCNDEFMessage) {
-        guard isAvailable else {
-            DispatchQueue.main.async {
-                self.lastError = "NFC is not available on this device. Pairing requires a physical iPhone with NFC."
-            }
-            return
-        }
+    func beginWrite(message: NFCNDEFMessage, demoURLString: String? = nil) {
         guard !isScanning else {
             DispatchQueue.main.async {
                 self.lastError = "NFC session already in progress. Finish or cancel it first."
             }
             return
         }
+
+        if !isHardwareAvailable {
+            beginDemoWrite(message: message, urlString: demoURLString)
+            return
+        }
+
         invalidateSession()
         mode = .write(message)
         readIntent = .none
         lastError = nil
         lastWriteSucceeded = false
         lastPayloadBytes = message.length
+        isDemoSession = false
         let s = NFCNDEFReaderSession(delegate: self, queue: nil, invalidateAfterFirstRead: false)
         s.alertMessage = "Hold the top of your iPhone near your blank RedMed bracelet."
         session = s
@@ -68,24 +84,24 @@ final class NFCManager: NSObject, ObservableObject, NFCNDEFReaderSessionDelegate
     @discardableResult
     func beginRead(for intent: ReadIntent) -> Bool {
         guard intent == .scanPreview || intent == .importToPhone else { return false }
-        guard isAvailable else {
-            DispatchQueue.main.async {
-                self.lastError = "NFC is not available on this device."
-            }
-            return false
-        }
         guard !isScanning else {
             DispatchQueue.main.async {
                 self.lastError = "NFC session already in progress. Finish or cancel it first."
             }
             return false
         }
+
+        if !isHardwareAvailable {
+            return beginDemoRead(for: intent)
+        }
+
         invalidateSession()
         mode = .read
         readIntent = intent
         lastError = nil
         lastReadURL = nil
         lastReadPayload = nil
+        isDemoSession = false
         let s = NFCNDEFReaderSession(delegate: self, queue: nil, invalidateAfterFirstRead: true)
         s.alertMessage = "Hold the top of your iPhone near your RedMed bracelet."
         session = s
@@ -95,8 +111,14 @@ final class NFCManager: NSObject, ObservableObject, NFCNDEFReaderSessionDelegate
     }
 
     func cancel() {
+        demoWorkItem?.cancel()
+        demoWorkItem = nil
         session?.invalidate()
         invalidateSession()
+        DispatchQueue.main.async {
+            self.isDemoSession = false
+            self.readIntent = .none
+        }
     }
 
     /// Call after the UI has consumed `lastReadPayload` for the active intent.
@@ -107,11 +129,88 @@ final class NFCManager: NSObject, ObservableObject, NFCNDEFReaderSessionDelegate
     }
 
     private func invalidateSession() {
+        demoWorkItem?.cancel()
+        demoWorkItem = nil
         session = nil
         mode = nil
         DispatchQueue.main.async {
             self.isScanning = false
+            self.isDemoSession = false
         }
+    }
+
+    // MARK: - Simulator / no-hardware demo
+
+    private func beginDemoWrite(message: NFCNDEFMessage, urlString: String?) {
+        invalidateSession()
+        mode = .write(message)
+        readIntent = .none
+        lastError = nil
+        lastWriteSucceeded = false
+        lastPayloadBytes = message.length
+        let payloadBytes = message.length
+        let storedURL = urlString
+
+        DispatchQueue.main.async {
+            self.isDemoSession = true
+            self.isScanning = true
+        }
+
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.demoStoredURL = storedURL
+            DispatchQueue.main.async {
+                self.lastWriteSucceeded = true
+                self.tagCapacityBytes = Self.demoTagCapacityBytes
+                self.lastPayloadBytes = payloadBytes
+                self.isScanning = false
+                self.isDemoSession = false
+                self.mode = nil
+            }
+        }
+        demoWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.6, execute: work)
+    }
+
+    @discardableResult
+    private func beginDemoRead(for intent: ReadIntent) -> Bool {
+        invalidateSession()
+        mode = .read
+        readIntent = intent
+        lastError = nil
+        lastReadURL = nil
+        lastReadPayload = nil
+
+        DispatchQueue.main.async {
+            self.isDemoSession = true
+            self.isScanning = true
+        }
+
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            guard let urlString = self.demoStoredURL,
+                  let payload = CardPayload.decode(fromURLString: urlString) else {
+                DispatchQueue.main.async {
+                    self.lastError = "No NDEF message on this tag. Write your profile first."
+                    self.readIntent = .none
+                    self.isScanning = false
+                    self.isDemoSession = false
+                    self.mode = nil
+                }
+                return
+            }
+            DispatchQueue.main.async {
+                self.lastReadURL = urlString
+                self.lastReadPayload = payload
+                self.tagCapacityBytes = Self.demoTagCapacityBytes
+                self.isScanning = false
+                self.isDemoSession = false
+                self.mode = nil
+            }
+        }
+        demoWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4, execute: work)
+        return true
     }
 
     // MARK: - NFCNDEFReaderSessionDelegate

@@ -44,16 +44,6 @@ struct NFCView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 14))
                     .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.redmedDivider, lineWidth: 1))
 
-                    if !nfc.isAvailable {
-                        Text("NFC pairing requires a physical iPhone. Simulator cannot write or read tags.")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(.redmedAccent)
-                            .padding(14)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color.redmedAccent.opacity(0.08))
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
-                    }
-
                     sectionLabel("Set up")
                     VStack(spacing: 12) {
                         Button { beginWrite() } label: {
@@ -139,6 +129,11 @@ struct NFCView: View {
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("NFC Bracelet").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedDark)
+                }
+            }
+            .overlay {
+                if nfc.isDemoSession {
+                    NFCWriteOverlay { nfc.cancel() }
                 }
             }
             .sheet(isPresented: $showPublicCard) {
@@ -290,5 +285,52 @@ extension ProfileData {
         p.lastUpdated = ""
         p.braceletLinked = false
         return p
+    }
+}
+
+// MARK: - Hold-to-band overlay (Simulator / no-hardware demo)
+
+struct NFCWriteOverlay: View {
+    let onCancel: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.9).ignoresSafeArea()
+            VStack(spacing: 20) {
+                ZStack {
+                    Circle()
+                        .stroke(Color.redmedAccent.opacity(0.35), lineWidth: 1.5)
+                        .frame(width: 104, height: 104)
+                    Circle()
+                        .fill(Color.redmedAccent.opacity(0.12))
+                        .frame(width: 80, height: 80)
+                    Image(systemName: "wave.3.right")
+                        .font(.system(size: 32))
+                        .foregroundColor(.redmedAccent)
+                }
+
+                VStack(spacing: 8) {
+                    Text("Hold to band")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(.white)
+                    Text("Bring the top of your iPhone close to the NFC bracelet")
+                        .font(.system(size: 14))
+                        .foregroundColor(.white.opacity(0.5))
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: 260)
+                        .lineSpacing(3)
+                }
+
+                Button(action: onCancel) {
+                    Text("Cancel")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 32).padding(.vertical, 13)
+                        .background(Color.white.opacity(0.1))
+                        .clipShape(Capsule())
+                }
+                .padding(.top, 8)
+            }
+        }
     }
 }
