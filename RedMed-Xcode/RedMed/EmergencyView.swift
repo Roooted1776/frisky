@@ -10,7 +10,9 @@ struct EmergencyView: View {
         guard let c = profile.contacts.first else { return }
         let digits = c.detail.filter(\.isNumber)
         guard !digits.isEmpty else { return }
-        if let url = URL(string: "tel://\(digits)") { UIApplication.shared.open(url) }
+        if let url = URL(string: "tel://\(digits)") {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        }
     }
 
     var body: some View {
@@ -347,7 +349,9 @@ struct NoCellSignalCard: View {
                         .foregroundColor(.redmedMuted)
                         .lineSpacing(3)
                     SecondaryButton("Open Phone · dial 911") {
-                        if let url = URL(string: "tel://911") { UIApplication.shared.open(url) }
+                        if let url = URL(string: "tel://911") {
+                            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                        }
                     }
                 }
                 .padding(.horizontal, 14)

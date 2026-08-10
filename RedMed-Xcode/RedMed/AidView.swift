@@ -47,7 +47,9 @@ struct AidView: View {
                         .foregroundColor(.redmedMuted)
 
                     PrimaryButton(title: "Call 911") {
-                        if let url = URL(string: "tel://911") { UIApplication.shared.open(url) }
+                        if let url = URL(string: "tel://911") {
+                            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                        }
                     }
 
                     HStack(spacing: 8) {

@@ -155,7 +155,9 @@ struct TopicDetailView: View {
                     .padding(.bottom, 24)
 
                     PrimaryButton(title: "Call 911") {
-                        if let url = URL(string: "tel://911") { UIApplication.shared.open(url) }
+                        if let url = URL(string: "tel://911") {
+                            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                        }
                     }
 
                     if isTraumaHospitals {
