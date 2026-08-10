@@ -42,3 +42,17 @@ struct PublicCardView: View {
             .environment(\.scannerDismiss, { dismiss() })
     }
 }
+
+/// Dismisses the Preview scanner / ped shell. Shown on RedMed, Help, and Aid.
+struct ScannerCloseButton: View {
+    @Environment(\.scannerDismiss) private var scannerDismiss
+
+    var body: some View {
+        if let scannerDismiss {
+            Button("Close") { scannerDismiss() }
+                .font(.system(size: 17, weight: .regular))
+                .foregroundColor(.redmedMuted)
+                .kerning(-0.2)
+        }
+    }
+}
