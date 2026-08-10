@@ -88,10 +88,11 @@ struct Find911SOSBlock: View {
         .background(Color.redmedSurface)
         .clipShape(RoundedRectangle(cornerRadius: 18))
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
-        .overlay {
-            if sos.isCountingDown {
-                Find911SOSCountdownOverlay(sos: sos, isOffline: network.isOffline)
-            }
+        .fullScreenCover(isPresented: Binding(
+            get: { sos.isCountingDown },
+            set: { if !$0 { sos.cancel() } }
+        )) {
+            Find911SOSCountdownOverlay(sos: sos, isOffline: network.isOffline)
         }
         .fullScreenCover(isPresented: Binding(
             get: { sos.showsSatelliteCoach },
