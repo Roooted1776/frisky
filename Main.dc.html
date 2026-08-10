@@ -1142,10 +1142,15 @@ class Component extends DCLogic {
 
   componentWillUnmount() {
     this._cprClear();
+    this._appLockClear();
   }
 
   _cprClear() {
     if (this._cprTimer) { clearTimeout(this._cprTimer); this._cprTimer = null; }
+  }
+
+  _appLockClear() {
+    if (this._appLockTimer) { clearTimeout(this._appLockTimer); this._appLockTimer = null; }
   }
 
   _cprTick() {
@@ -1238,12 +1243,19 @@ class Component extends DCLogic {
         : 'Use Face ID to open your medical profile.',
       appLockUnlockLabel: this.state.appLockAuthenticating ? 'Unlocking…' : 'Unlock with Face ID',
       appLockUnlockBtnStyle: this.state.appLockAuthenticating ? 'opacity:0.7; pointer-events:none;' : '',
-      closeAppLock: () => this.setState({ showAppLock: false, appLockPending: null, appLockAuthenticating: false, appLockFailed: false }),
+      closeAppLock: () => {
+        this._appLockClear();
+        this._appLockGen = (this._appLockGen || 0) + 1;
+        this.setState({ showAppLock: false, appLockPending: null, appLockAuthenticating: false, appLockFailed: false });
+      },
       unlockAppLock: () => {
         if (this.state.appLockAuthenticating) return;
         this.setState({ appLockAuthenticating: true, appLockFailed: false });
-        clearTimeout(this._appLockTimer);
+        this._appLockClear();
+        const gen = (this._appLockGen = (this._appLockGen || 0) + 1);
         this._appLockTimer = setTimeout(() => {
+          if (gen !== this._appLockGen) return;
+          this._appLockTimer = null;
           const pending = this.state.appLockPending;
           if (pending === 'edit') {
             this.setState({ showAppLock: false, appLockPending: null, appLockAuthenticating: false, showEdit: true });

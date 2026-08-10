@@ -66,10 +66,9 @@ Known from the repo and the build process — confirm and extend.
   enters the picture. That is a supplier relationship and a data flow, and it
   will need to appear here. See [`../08-execution-plan.md`](../08-execution-plan.md),
   Gate 0.
-- `uploads/google-api-key` is a **tracked, empty** placeholder file, and
-  `GoogleGeocoder` is a stub that makes no network call and holds no key. Worth
-  knowing before an assessor or a pen tester asks about a file with that name —
-  and worth deleting so nobody has to ask twice.
+- `uploads/google-api-key` was a tracked empty placeholder; it is removed and
+  gitignored. `GoogleGeocoder` remains a stub that makes no network call and
+  holds no key.
 
 ## Certificate
 
