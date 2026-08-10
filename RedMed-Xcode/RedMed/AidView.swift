@@ -10,10 +10,8 @@ struct AidPane: Identifiable {
 }
 
 let aidPanes: [AidPane] = [
-    AidPane(id: "crash", emoji: "🚗", title: "Crash & Head", subtitle: "Impact · neck · pupils", iconFilled: false,
-            topics: [("Car Crash", "car-crash"), ("Head & Pupils", "head-pupils")]),
-    AidPane(id: "spinal", emoji: "🦴", title: "Spinal", subtitle: "Don't move · keep still", iconFilled: false,
-            topics: [("Spinal", "spinal")]),
+    AidPane(id: "crash", emoji: "🚗", title: "Crash & Head", subtitle: "Impact · neck · spinal", iconFilled: false,
+            topics: [("Car Crash", "car-crash"), ("Head & Pupils", "head-pupils"), ("Spinal", "spinal")]),
     AidPane(id: "bleed", emoji: "🩸", title: "Bleeding", subtitle: "Pressure · tourniquet", iconFilled: true,
             topics: [("Find Bleeding", "find-bleeding"), ("Bad Bleeding", "bad-bleeding"),
                      ("Belt Tourniquet", "belt-tourniquet"), ("Gunshot / Stab", "gunshot-stab")]),
@@ -23,14 +21,11 @@ let aidPanes: [AidPane] = [
             topics: [("Choking", "choking")]),
     AidPane(id: "shock", emoji: "⚡", title: "Shock", subtitle: "Pale · cold · clammy", iconFilled: false,
             topics: [("Shock", "shock")]),
-    AidPane(id: "burns", emoji: "🔥", title: "Burns", subtitle: "Cool it · cover it", iconFilled: false,
-            topics: [("Burn Care", "burn-care"), ("Electrical & Chemical", "electrical-chemical-burns")]),
+    AidPane(id: "temp", emoji: "🌡️", title: "Burns · Cold · Heat", subtitle: "Cool · warm · cover", iconFilled: false,
+            topics: [("Burn Care", "burn-care"), ("Electrical & Chemical", "electrical-chemical-burns"),
+                     ("Cold (Hypothermia)", "cold-hypothermia"), ("Heat (Exhaustion & Stroke)", "heat-stroke")]),
     AidPane(id: "seizure", emoji: "🧠", title: "Seizure", subtitle: "Don't restrain · time it", iconFilled: false,
             topics: [("Seizure", "seizure")]),
-    AidPane(id: "hypothermia", emoji: "🥶", title: "Hypothermia", subtitle: "Warm core · no rubbing", iconFilled: false,
-            topics: [("Cold (Hypothermia)", "cold-hypothermia")]),
-    AidPane(id: "heat", emoji: "🥵", title: "Heat", subtitle: "Cool fast · call 911", iconFilled: false,
-            topics: [("Heat (Exhaustion & Stroke)", "heat-stroke")]),
     AidPane(id: "hospitals", emoji: "🏥", title: "Nearby Hospitals", subtitle: "MapKit emergency POIs", iconFilled: false,
             topics: [("Find Nearby Hospitals", "trauma-hospitals")]),
 ]
