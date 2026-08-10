@@ -74,7 +74,7 @@ final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManag
 
     func openSettings() {
         guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
-        UIApplication.shared.open(url)
+        UIApplication.shared.open(url, options: [:], completionHandler: nil)
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
@@ -183,7 +183,7 @@ class LocationHelper: NSObject, ObservableObject, CLLocationManagerDelegate {
         let smsURLString = digits.isEmpty ? "sms:&body=\(encodedBody)" : "sms:\(digits)&body=\(encodedBody)"
         guard let smsURL = URL(string: smsURLString) else { return }
         DispatchQueue.main.async {
-            UIApplication.shared.open(smsURL)
+            UIApplication.shared.open(smsURL, options: [:], completionHandler: nil)
         }
     }
 
