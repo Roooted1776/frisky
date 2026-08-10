@@ -1,57 +1,77 @@
 import SwiftUI
 
-/// Testing stub — no CoreNFC. Full implementation is parked in `NFCView.inactive.swift`.
-/// Restore by copying that file over this one (see header in the inactive file).
+/// Testing build — CoreNFC write/read is parked in `NFCView.inactive.swift`.
+/// UI matches the live NFC screen; write does not run hardware / demo sessions.
+/// Restore by copying `NFCView.inactive.swift` over this file.
 struct NFCView: View {
     @EnvironmentObject var profile: ProfileData
     @State private var showPublicCard = false
-    @State private var showDisabledAlert = false
 
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 12) {
+                    // Header
                     VStack(spacing: 4) {
                         Text("NFC Bracelet")
                             .font(.system(size: 22, weight: .bold))
                             .foregroundColor(.redmedDark)
-                        Text("NFC is disabled for testing. The full implementation is saved as NFCView.inactive.swift.")
+                        Text("iPhone only for setup. Fill My ID, write the band once — CoreNFC, Face ID, done.")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.redmedMuted)
                             .multilineTextAlignment(.center)
                             .lineSpacing(3)
-                            .frame(maxWidth: 300)
+                            .frame(maxWidth: 275)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.top, 8)
                     .padding(.bottom, 6)
 
+                    // STATUS
                     VStack(spacing: 0) {
-                        statusRow("NFC write / read parked — not linked to CoreNFC", showDivider: true)
-                        statusRow(profile.braceletLinked ? "Bracelet marked linked from a prior session" : "Bracelet not linked", showDivider: false)
+                        statusRow(
+                            profile.braceletLinked
+                                ? "Band linked · phone opens your card · no app for readers"
+                                : "Not linked yet · write a tag below to link your band",
+                            showDivider: true
+                        )
+                        statusRow(
+                            profile.braceletLinked
+                                ? "Tag capacity: 24% used — plenty of room"
+                                : "Tag capacity: 0% used — nothing written yet",
+                            showDivider: false
+                        )
                     }
                     .padding(.horizontal, 14)
                     .background(Color.white.opacity(0.7))
                     .clipShape(RoundedRectangle(cornerRadius: 14))
                     .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.redmedDivider, lineWidth: 1))
 
+                    // SET UP
                     sectionLabel("Set up")
                     VStack(spacing: 12) {
-                        Button { showDisabledAlert = true } label: {
+                        Button { beginWrite() } label: {
                             HStack(spacing: 8) {
                                 Image(systemName: "wave.3.right")
                                 Text("Write to NFC tag")
                             }
                             .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.white.opacity(0.85))
+                            .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 17)
-                            .background(Color.redmedMuted.opacity(0.45))
+                            .background(
+                                LinearGradient(colors: [Color(red:1, green:0.447, blue:0.537), .redmedAccent],
+                                               startPoint: .top, endPoint: .bottom)
+                            )
                             .clipShape(Capsule())
+                            .shadow(color: Color.redmedAccent.opacity(0.28), radius: 7, y: 4)
                         }
+                        .disabled(true)
+                        .opacity(0.45)
                         VStack(alignment: .leading, spacing: 6) {
-                            syncBullet("NFC hardware flow is inactive while testing.")
-                            syncBullet("Re-enable by restoring NFCView.inactive.swift over NFCView.swift.")
+                            syncBullet("Link your bracelet once (My ID → bracelet icon → write/read).")
+                            syncBullet("Save after every edit and hold your phone to the band when prompted.")
+                            syncBullet("If you cancel the NFC prompt, the band stays stale until you save again.")
                         }
                     }
                     .padding(14)
@@ -59,13 +79,32 @@ struct NFCView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 18))
                     .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
 
+                    // VERIFY
                     sectionLabel("Verify")
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Preview the emergency card UI without scanning a tag.")
+                        Text("Scan your band to see the same emergency card a stranger gets — no app required for them.")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.redmedMuted)
                             .lineSpacing(3)
-                        SecondaryButton("Preview emergency card", icon: "doc.text") { showPublicCard = true }
+                        SecondaryButton("Scan your bracelet", icon: "qrcode.viewfinder") { showPublicCard = true }
+                    }
+                    .padding(14)
+                    .background(Color.redmedSurface)
+                    .clipShape(RoundedRectangle(cornerRadius: 18))
+                    .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
+
+                    // IMPORT
+                    sectionLabel("Import")
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Already own a written tag? Pull it onto this phone's My ID.")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.redmedMuted)
+                            .lineSpacing(3)
+                        SecondaryButton("Import tag onto this phone", icon: "arrow.down.circle") {
+                            // Parked with CoreNFC — no import while inactive file is the live implementation.
+                        }
+                        .disabled(true)
+                        .opacity(0.45)
                     }
                     .padding(14)
                     .background(Color.redmedSurface)
@@ -85,12 +124,11 @@ struct NFCView: View {
                 }
             }
             .sheet(isPresented: $showPublicCard) { PublicCardView(profile: profile) }
-            .alert("NFC disabled", isPresented: $showDisabledAlert) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text("CoreNFC is parked in NFCView.inactive.swift for testing. Restore that file to activate write/read.")
-            }
         }
+    }
+
+    func beginWrite() {
+        // CoreNFC write flow lives in NFCView.inactive.swift — no-op while parked.
     }
 
     @ViewBuilder
@@ -118,7 +156,7 @@ struct NFCView: View {
 
     @ViewBuilder
     func syncBullet(_ text: String) -> some View {
-        HStack(alignment: .top, spacing: 6) {
+        HStack(alignment: .top, spacing: 8) {
             Text("•")
                 .font(.system(size: 13, weight: .bold))
                 .foregroundColor(.redmedAccent)
