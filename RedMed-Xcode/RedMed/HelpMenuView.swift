@@ -15,6 +15,7 @@ struct LocalWebView: UIViewRepresentable {
 
 // MARK: - Help menu
 struct HelpMenuView: View {
+    @EnvironmentObject var profile: ProfileData
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
@@ -40,10 +41,13 @@ struct HelpMenuView: View {
                         .navigationTitle("How It Works")
                         .navigationBarTitleDisplayMode(.inline)
                 }
-                NavigationLink("NFC tap card (local)") {
-                    LocalWebView(filename: "card")
-                        .navigationTitle("NFC tap card")
-                        .navigationBarTitleDisplayMode(.inline)
+                // Local tap-page source stays in the bundle; only surface it after a band is paired.
+                if profile.braceletLinked {
+                    NavigationLink("NFC tap card (local)") {
+                        LocalWebView(filename: "card")
+                            .navigationTitle("NFC tap card")
+                            .navigationBarTitleDisplayMode(.inline)
+                    }
                 }
             }
             .navigationTitle("Policies")
