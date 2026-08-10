@@ -207,21 +207,20 @@ struct NFCView: View {
             nfc.lastError = "NFC session already in progress. Finish or cancel it first."
             return
         }
-        // Generation token: if this view is recreated, a stale Face ID callback must not start NFC.
-        writeGeneration += 1
-        let generation = writeGeneration
+        // Snapshot + app-scoped manager: Face ID may finish after leaving this tab.
         let snapshot = CardPayload.from(profile: profile)
-        BiometricAuth.authenticate(reason: "Authenticate to write your medical ID to the bracelet.") { [nfc] success in
-            guard generation == writeGeneration else { return }
+        let manager = nfc
+        BiometricAuth.authenticate(reason: "Authenticate to write your medical ID to the bracelet.") { success in
             guard success else {
                 showAuthFailedAlert = true
+                manager.lastError = "Face ID or passcode is required before writing your medical profile to a bracelet."
                 return
             }
             do {
                 let url = try snapshot.cardURL()
-                nfc.beginWrite(url: url)
+                manager.beginWrite(url: url)
             } catch {
-                nfc.lastError = "Could not build card URL: \(error.localizedDescription)"
+                manager.lastError = "Could not build card URL: \(error.localizedDescription)"
             }
         }
     }
