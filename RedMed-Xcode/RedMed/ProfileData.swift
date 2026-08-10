@@ -6,23 +6,104 @@ enum AppTab {
 }
 
 class ProfileData: ObservableObject {
-    @Published var name: String = "Alex Rivera"
-    @Published var birthDate: String = "March 14, 1994"
-    @Published var bloodType: String = "O+"
-    @Published var allergies: [String] = ["Penicillin", "Peanuts"]
-    @Published var medications: [String] = ["Lisinopril 10mg — daily", "Albuterol inhaler — as needed"]
-    @Published var conditions: [String] = ["Type 1 Diabetes", "Asthma"]
-    @Published var contacts: [EmergencyContact] = [
-        EmergencyContact(name: "Jamie Rivera", detail: "Spouse · (555) 201-4488"),
-        EmergencyContact(name: "Dr. Sarah Chen", detail: "Primary Care · (555) 340-9921")
-    ]
+    @Published var name: String
+    @Published var birthDate: String
+    @Published var bloodType: String
+    @Published var allergies: [String]
+    @Published var medications: [String]
+    @Published var conditions: [String]
+    @Published var contacts: [EmergencyContact]
+    @Published var isOrganDonor: Bool
+    @Published var lastUpdated: String
+    /// True after a successful NFC write to a blank bracelet.
+    @Published var braceletLinked: Bool
+    /// Set after Save so NFC tab can auto-start a write session.
+    @Published var pendingBraceletWrite: Bool = false
 
-    var hasData: Bool { !name.isEmpty }
-    @Published var isOrganDonor: Bool = true
-    @Published var lastUpdated: String = "Jul 28, 2026"
+    var hasData: Bool { !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+
+    private static let storageKey = "redmed.profile.v1"
+
+    init() {
+        if let data = UserDefaults.standard.data(forKey: Self.storageKey),
+           let stored = try? JSONDecoder().decode(StoredProfile.self, from: data) {
+            name = stored.name
+            birthDate = stored.birthDate
+            bloodType = stored.bloodType
+            allergies = stored.allergies
+            medications = stored.medications
+            conditions = stored.conditions
+            contacts = stored.contacts.map { EmergencyContact(name: $0.name, detail: $0.detail) }
+            isOrganDonor = stored.isOrganDonor
+            lastUpdated = stored.lastUpdated
+            braceletLinked = stored.braceletLinked
+        } else {
+            // Empty first launch — user enters real My ID, then pairs a blank tag.
+            name = ""
+            birthDate = ""
+            bloodType = ""
+            allergies = []
+            medications = []
+            conditions = []
+            contacts = []
+            isOrganDonor = false
+            lastUpdated = ""
+            braceletLinked = false
+        }
+    }
+
+    func touchUpdated() {
+        lastUpdated = Self.todayString()
+    }
+
+    func persist() {
+        let stored = StoredProfile(
+            name: name,
+            birthDate: birthDate,
+            bloodType: bloodType,
+            allergies: allergies,
+            medications: medications,
+            conditions: conditions,
+            contacts: contacts.map { StoredContact(name: $0.name, detail: $0.detail) },
+            isOrganDonor: isOrganDonor,
+            lastUpdated: lastUpdated,
+            braceletLinked: braceletLinked
+        )
+        if let data = try? JSONEncoder().encode(stored) {
+            UserDefaults.standard.set(data, forKey: Self.storageKey)
+        }
+    }
+
+    func requestBraceletWrite() {
+        pendingBraceletWrite = true
+    }
+
+    private static func todayString() -> String {
+        let f = DateFormatter()
+        f.dateFormat = "MMM d, yyyy"
+        return f.string(from: Date())
+    }
+
+    private struct StoredProfile: Codable {
+        var name: String
+        var birthDate: String
+        var bloodType: String
+        var allergies: [String]
+        var medications: [String]
+        var conditions: [String]
+        var contacts: [StoredContact]
+        var isOrganDonor: Bool
+        var lastUpdated: String
+        var braceletLinked: Bool
+    }
+
+    private struct StoredContact: Codable {
+        var name: String
+        var detail: String
+    }
 }
 
-struct EmergencyContact: Identifiable {
+struct EmergencyContact: Identifiable, Equatable {
     var id = UUID()
     var name: String
     var detail: String
@@ -35,6 +116,35 @@ struct AidTopic {
     let symptoms: [String]
     let care: [String]
 }
+
+/// Compact roadside topics also mirrored on the static public card page.
+let roadsideAidTopics: [AidTopic] = [
+    AidTopic(
+        id: "bad-bleeding", title: "Severe Bleeding",
+        symptoms: ["Blood spurting or soaking cloth in under a minute", "Large pool of blood forming"],
+        care: ["Call 911", "Press hard with both hands — full body weight if needed", "Do NOT lift to check — add more cloth on top", "Limb: tourniquet 2–3 inches above wound, note the time", "Keep pressure until EMS takes over"]
+    ),
+    AidTopic(
+        id: "cpr", title: "CPR",
+        symptoms: ["Unresponsive", "No normal breathing", "No pulse"],
+        care: ["Call 911", "Heel of hand center of chest, other hand on top", "Push hard and fast: 2 inches, 100–120/min", "Allow full chest recoil", "Use AED as soon as available", "Continue until EMS arrives"]
+    ),
+    AidTopic(
+        id: "choking", title: "Choking",
+        symptoms: ["Cannot speak, cry, or cough forcefully", "Clutching throat"],
+        care: ["If they can cough hard, let them", "5 firm back blows between shoulder blades", "5 abdominal thrusts (Heimlich)", "Alternate until object is out or they go unconscious", "If unconscious: start CPR"]
+    ),
+    AidTopic(
+        id: "shock", title: "Shock",
+        symptoms: ["Pale, cold, clammy skin", "Rapid weak pulse", "Confusion or extreme fatigue"],
+        care: ["Call 911", "Lay flat; elevate legs 12 inches if no spinal/leg injury", "Control visible bleeding", "Keep warm", "Do NOT give food or water", "Do NOT let them walk"]
+    ),
+    AidTopic(
+        id: "car-crash", title: "Car Crash",
+        symptoms: ["Impact injury", "Unresponsive or confused occupant", "Visible bleeding or deformity"],
+        care: ["Call 911 — give exact location and number of people", "Hazards on. Stay at the scene", "Do NOT move them unless fire, water, or traffic", "If you must move: slide as one unit — never twist the neck", "Control bleeding: press hard with cloth", "Keep warm and still until EMS"]
+    ),
+]
 
 let aidTopics: [String: AidTopic] = [
     "car-crash": AidTopic(
