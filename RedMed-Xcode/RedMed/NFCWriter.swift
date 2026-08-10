@@ -11,6 +11,7 @@ final class NFCWriter: NSObject, ObservableObject {
     private var session: NFCNDEFReaderSession?
     private var urlToWrite: String = ""
 
+    /// Starts a CoreNFC session only from an explicit Write tap — never on proximity.
     func writeURL(_ urlString: String) {
         guard NFCNDEFReaderSession.readingAvailable else {
             DispatchQueue.main.async {
@@ -65,7 +66,7 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
 
                 switch status {
                 case .notSupported:
-                    session.invalidate(errorMessage: "This tag isn't NDEF-compatible. Use an NTAG213 or newer.")
+                    session.invalidate(errorMessage: "Not a passive 13.56 MHz NDEF tag. Use an NTAG213+ HF bracelet chip.")
                 case .readOnly:
                     session.invalidate(errorMessage: "This tag is locked/read-only and can't be written.")
                 case .readWrite:
