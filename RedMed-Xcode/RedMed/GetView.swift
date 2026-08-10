@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Persists owner acceptance of the Get / band-setup gate. NFC tab stays hidden until true.
+/// Persists owner acceptance of the Get / band-setup gate. NFC write UI stays locked until true.
 final class NFCAccessGate: ObservableObject {
     static let shared = NFCAccessGate()
     private static let defaultsKey = "redmed.nfcSetupAccepted"
@@ -19,9 +19,9 @@ final class NFCAccessGate: ObservableObject {
 }
 
 /// SwiftUI port of repo-root `get.html` — “Set up your RedMed band”.
-/// Must Accept here before the NFC tab / page becomes visible.
+/// Shown before the NFC write page; Accept unlocks NFC.
 struct GetView: View {
-    /// Called after Accept (e.g. dismiss sheet and open NFC).
+    /// Called after Accept (e.g. dismiss Help and open NFC tab).
     var onAccept: (() -> Void)? = nil
 
     private let cardBg = Color.white.opacity(0.05)
@@ -103,7 +103,7 @@ struct GetView: View {
             stepsList
                 .padding(.top, 20)
 
-            Text("Accept to unlock the NFC page and program your band on this iPhone.")
+            Text("Accept to open the NFC page and program your band on this iPhone.")
                 .font(.system(size: 12))
                 .foregroundColor(dim)
                 .multilineTextAlignment(.center)
