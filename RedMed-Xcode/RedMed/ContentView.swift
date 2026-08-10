@@ -3,27 +3,37 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
+    @Environment(\.scenePhase) private var scenePhase
     @State private var tab: AppTab = .myid
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            Group {
-                switch tab {
-                case .myid:      MyIDView()
-                case .emergency: EmergencyView()
-                case .aid:       AidView()
-                }
+        VStack(spacing: 0) {
+            if !isScannerSession {
+                LocationSuggestionBanner()
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(.bottom, 64)
+            ZStack(alignment: .bottom) {
+                Group {
+                    switch tab {
+                    case .myid:      MyIDView()
+                    case .emergency: EmergencyView()
+                    case .aid:       AidView()
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.bottom, 64)
 
-            CustomTabBar(tab: $tab)
+                CustomTabBar(tab: $tab)
+            }
+            .ignoresSafeArea(edges: .bottom)
         }
-        .ignoresSafeArea(edges: .bottom)
-        // After first frame: ask location once on install. Do not start GPS here.
+        // Keep suggesting Location until granted. Do not start GPS here.
         .task {
             guard !isScannerSession else { return }
-            LocationInstallPrompt.shared.askIfNeeded()
+            LocationAccessSuggester.shared.suggestIfNeeded()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            guard !isScannerSession, phase == .active else { return }
+            LocationAccessSuggester.shared.suggestIfNeeded()
         }
     }
 }
