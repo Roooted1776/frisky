@@ -31,8 +31,6 @@ struct EmergencyView: View {
                     GPSCard(location: locationManager.location)
                         .padding(.vertical, 4)
 
-                    SeizureTimerStrip()
-
                     // COPY COORDINATES
                     Button {
                         if let loc = locationManager.location {
@@ -47,6 +45,8 @@ struct EmergencyView: View {
                             .background(Color.redmedDark)
                             .clipShape(Capsule())
                     }
+
+                    SeizureTimerStrip()
 
                     // ROADSIDE FIRST RESPONSE
                     InfoCard(
