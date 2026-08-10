@@ -5,6 +5,9 @@ struct EditProfileView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.isScannerSession) private var isScannerSession
 
+    /// True when Edit opened without Face ID (first fill). Save then requires biometrics.
+    var requireAuthOnSave: Bool = false
+
     @State private var name = ""
     @State private var birthDate = ""
     @State private var bloodType = ""
@@ -15,6 +18,7 @@ struct EditProfileView: View {
     @State private var conditions: [DraftLine] = []
     @State private var conditionFocusID: UUID? = nil
     @State private var contacts: [EmergencyContact] = []
+    @State private var showAuthFailedAlert = false
 
     var body: some View {
         // Ped/EMS scanners never edit — dismiss if this view is ever presented.
@@ -252,6 +256,11 @@ struct EditProfileView: View {
             .background(Color(red: 0.949, green: 0.949, blue: 0.969))
         }
         .onAppear { loadDraft() }
+        .alert("Authentication Failed", isPresented: $showAuthFailedAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Face ID or passcode is required to save your RedMed profile.")
+        }
     }
 
     // MARK: - Helpers
@@ -319,6 +328,24 @@ struct EditProfileView: View {
             dismiss()
             return
         }
+        // First-time fill opens Edit without Face ID — confirm identity before Keychain write.
+        // Returning edits already unlocked via My ID Edit, so Save skips a second prompt.
+        if requireAuthOnSave {
+            BiometricAuth.authenticate(
+                reason: "Confirm with Face ID, Touch ID, or passcode to save your RedMed profile."
+            ) { success in
+                if success {
+                    commitSave()
+                } else {
+                    showAuthFailedAlert = true
+                }
+            }
+            return
+        }
+        commitSave()
+    }
+
+    private func commitSave() {
         profile.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         profile.birthDate = birthDate
         profile.bloodType = bloodType

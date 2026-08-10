@@ -111,23 +111,6 @@ struct NFCView: View {
                     .background(Color.redmedSurface)
                     .clipShape(RoundedRectangle(cornerRadius: 18))
                     .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
-
-                    Text("IMPORT")
-                        .font(.system(size: 11, weight: .bold))
-                        .kerning(0.5)
-                        .foregroundColor(.redmedDark)
-                        .padding(.horizontal, 4)
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Already own a written tag? Pull it onto this phone's My ID.")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.redmedMuted)
-                            .lineSpacing(3)
-                        SecondaryButton("Import tag onto this phone", icon: "arrow.down.circle") { beginImport() }
-                    }
-                    .padding(14)
-                    .background(Color.redmedSurface)
-                    .clipShape(RoundedRectangle(cornerRadius: 18))
-                    .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
                     .padding(.bottom, 16)
                 }
                 .padding(.horizontal, 16)
@@ -201,23 +184,6 @@ struct NFCView: View {
             ProfileNFCCodec.apply(chip, to: card)
             scannedCard = card
             showPublicCard = true
-        }
-    }
-
-    func beginImport() {
-        BiometricAuth.authenticate(
-            reason: "Confirm to import a bracelet onto this phone's My ID."
-        ) { success in
-            guard success else {
-                showAuthFailedAlert = true
-                return
-            }
-            reader.readTag(alertMessage: "Hold your iPhone near the tag to import My ID.") { chip, _ in
-                ProfileNFCCodec.apply(chip, to: profile)
-                profile.braceletLinked = true
-                profile.persist()
-                statusAlert = "Imported onto My ID."
-            }
         }
     }
 
