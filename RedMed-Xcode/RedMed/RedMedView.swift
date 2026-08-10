@@ -318,20 +318,27 @@ struct RedMedView: View {
     @ViewBuilder
     func listSection(title: String, items: [String]) -> some View {
         SectionLabel(text: title).padding(.horizontal, 16).padding(.top, 12)
-        cardGroup {
-            if items.isEmpty {
-                emptyRow()
-            } else {
-                ForEach(Array(items.enumerated()), id: \.offset) { i, item in
+        if items.isEmpty {
+            cardGroup { emptyRow() }
+        } else {
+            // Text-hugging chips — shorter labels get smaller boxes (Percocet < Dextroamphetamine).
+            FlowLayout(spacing: 8) {
+                ForEach(Array(items.enumerated()), id: \.offset) { _, item in
                     Text(item)
-                        .font(.system(size: 11))
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.redmedDark)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 11)
-                    if i < items.count - 1 { thinDivider }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.white.opacity(0.88))
+                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .stroke(Color.redmedDark.opacity(0.08), lineWidth: 1)
+                        )
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 16)
         }
     }
 }

@@ -20,9 +20,8 @@ struct EditProfileView: View {
     @State private var contacts: [EmergencyContact] = []
     @State private var showAuthFailedAlert = false
 
-    /// Opaque suggestion wash — not a translucent tint (those show the
-    /// card / page background straight through and look like ghost rows).
-    private static let suggestionFill = Color(red: 0.988, green: 0.941, blue: 0.953)
+    /// Slight rose wash — translucent enough to show the card behind, not ghostly.
+    private static let suggestionFill = Color.redmedAccent.opacity(0.14)
 
     /// Display / persist as "Month DD, YYYY" (matches the old text placeholder).
     private static let birthDateFormatter: DateFormatter = {
@@ -134,7 +133,7 @@ struct EditProfileView: View {
                                 if allergyFocusID == line.id {
                                     let matches = suggestions(from: commonAllergies, for: line, in: allergies)
                                     if !matches.isEmpty {
-                                        VStack(spacing: 0) {
+                                        FlowLayout(spacing: 6) {
                                             ForEach(matches, id: \.self) { suggestion in
                                                 Button {
                                                     if let idx = allergies.firstIndex(where: { $0.id == line.id }) {
@@ -143,16 +142,18 @@ struct EditProfileView: View {
                                                     allergyFocusID = nil
                                                 } label: {
                                                     Text(suggestion)
-                                                        .font(.system(size: 14))
+                                                        .font(.system(size: 13))
                                                         .foregroundColor(.redmedDark)
-                                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                                        .padding(.horizontal, 16).padding(.vertical, 9)
+                                                        .padding(.horizontal, 10)
+                                                        .padding(.vertical, 7)
+                                                        .background(Self.suggestionFill)
+                                                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                                                 }
                                                 .buttonStyle(.plain)
                                             }
                                         }
-                                        .background(Self.suggestionFill)
-                                        .padding(.bottom, 8)
+                                        .padding(.horizontal, 12)
+                                        .padding(.bottom, 10)
                                     }
                                 }
                             }
@@ -190,7 +191,7 @@ struct EditProfileView: View {
                                 if medFocusID == line.id {
                                     let matches = suggestions(from: commonMedications, for: line, in: medications)
                                     if !matches.isEmpty {
-                                        VStack(spacing: 0) {
+                                        FlowLayout(spacing: 6) {
                                             ForEach(matches, id: \.self) { suggestion in
                                                 Button {
                                                     if let idx = medications.firstIndex(where: { $0.id == line.id }) {
@@ -199,16 +200,18 @@ struct EditProfileView: View {
                                                     medFocusID = nil
                                                 } label: {
                                                     Text(suggestion)
-                                                        .font(.system(size: 14))
+                                                        .font(.system(size: 13))
                                                         .foregroundColor(.redmedDark)
-                                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                                        .padding(.horizontal, 16).padding(.vertical, 9)
+                                                        .padding(.horizontal, 10)
+                                                        .padding(.vertical, 7)
+                                                        .background(Self.suggestionFill)
+                                                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                                                 }
                                                 .buttonStyle(.plain)
                                             }
                                         }
-                                        .background(Self.suggestionFill)
-                                        .padding(.bottom, 8)
+                                        .padding(.horizontal, 12)
+                                        .padding(.bottom, 10)
                                     }
                                 }
                             }
@@ -246,7 +249,7 @@ struct EditProfileView: View {
                                 if conditionFocusID == line.id {
                                     let matches = suggestions(from: commonConditions, for: line, in: conditions)
                                     if !matches.isEmpty {
-                                        VStack(spacing: 0) {
+                                        FlowLayout(spacing: 6) {
                                             ForEach(matches, id: \.self) { suggestion in
                                                 Button {
                                                     if let idx = conditions.firstIndex(where: { $0.id == line.id }) {
@@ -255,16 +258,18 @@ struct EditProfileView: View {
                                                     conditionFocusID = nil
                                                 } label: {
                                                     Text(suggestion)
-                                                        .font(.system(size: 14))
+                                                        .font(.system(size: 13))
                                                         .foregroundColor(.redmedDark)
-                                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                                        .padding(.horizontal, 16).padding(.vertical, 9)
+                                                        .padding(.horizontal, 10)
+                                                        .padding(.vertical, 7)
+                                                        .background(Self.suggestionFill)
+                                                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                                                 }
                                                 .buttonStyle(.plain)
                                             }
                                         }
-                                        .background(Self.suggestionFill)
-                                        .padding(.bottom, 8)
+                                        .padding(.horizontal, 12)
+                                        .padding(.bottom, 10)
                                     }
                                 }
                             }
