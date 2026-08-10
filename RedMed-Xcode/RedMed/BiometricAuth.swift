@@ -27,7 +27,11 @@ enum BiometricAuth {
     #if targetEnvironment(simulator)
     private static func presentSimulatorPrompt(reason: String, completion: @escaping (Bool) -> Void) {
         guard let top = topViewController() else {
+<<<<<<< HEAD
             completion(false)
+=======
+            completion(true)
+>>>>>>> origin/main-tab-design-0ac1
             return
         }
         let alert = UIAlertController(

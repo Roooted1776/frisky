@@ -30,6 +30,11 @@ class ProfileData: ObservableObject {
             || contacts.contains { !$0.name.isEmpty || !$0.detail.isEmpty }
     }
 
+<<<<<<< HEAD
+=======
+    /// Whether an NFC band has been written/paired (Main header status).
+    @Published var braceletLinked: Bool = false
+>>>>>>> origin/main-tab-design-0ac1
     @Published var isOrganDonor: Bool = true
     @Published var lastUpdated: String = "Jul 28, 2026"
 
