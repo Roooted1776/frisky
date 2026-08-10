@@ -1,5 +1,6 @@
-// Parked: not in the Xcode target. NFC Tag Reading needs a paid Apple Developer
-// Program membership. Restore via RedMed-Xcode/NFC-RESTORE.md when ready.
+// Owner-only NFC bracelet setup. Ped/EMS scanner shells never mount this tab —
+// see ContentView.showsNFC / scannerSafeTab. Real CoreNFC write still needs a
+// paid Apple Developer Program membership + NFC Tag Reading capability.
 import SwiftUI
 import CoreNFC
 
@@ -10,6 +11,7 @@ struct NFCView: View {
     @State private var writeSuccess = false
     @State private var writeError: String? = nil
     @State private var showPublicCard = false
+    @State private var showAuthFailedAlert = false
 
     var body: some View {
         // Ped/EMS scanner shells must never write or pair bands.
@@ -43,6 +45,12 @@ struct NFCView: View {
                     // STATUS
                     VStack(spacing: 0) {
                         statusRow("Tap the band · phone opens your card · no app for readers", showDivider: true)
+                        statusRow(
+                            profile.braceletLinked
+                                ? "Bracelet linked — re-write after you edit My ID"
+                                : "Bracelet not linked yet — write once to pair",
+                            showDivider: true
+                        )
                         statusRow("Tag capacity: 24% used — plenty of room", showDivider: false)
                     }
                     .padding(.horizontal, 14)
@@ -68,6 +76,14 @@ struct NFCView: View {
                             )
                             .clipShape(Capsule())
                             .shadow(color: Color.redmedAccent.opacity(0.28), radius: 7, y: 4)
+                        }
+                        .disabled(!profile.hasData)
+                        .opacity(profile.hasData ? 1 : 0.55)
+                        if !profile.hasData {
+                            Text("Add your name on My ID before writing a tag.")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.redmedAccent)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         VStack(alignment: .leading, spacing: 6) {
                             syncBullet("Link your bracelet once (My ID → bracelet icon → write/read).")
@@ -101,7 +117,9 @@ struct NFCView: View {
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.redmedMuted)
                             .lineSpacing(3)
-                        SecondaryButton("Import tag onto this phone", icon: "arrow.down.circle") { profile.name = profile.name.isEmpty ? "Alex Rivera" : profile.name }
+                        SecondaryButton("Import tag onto this phone", icon: "arrow.down.circle") {
+                            if profile.name.isEmpty { profile.name = "Alex Rivera" }
+                        }
                     }
                     .padding(14)
                     .background(Color.redmedSurface)
@@ -132,15 +150,28 @@ struct NFCView: View {
                 }
             }
             .sheet(isPresented: $showPublicCard) { PublicCardView(profile: profile) }
+            .alert("Authentication Failed", isPresented: $showAuthFailedAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Face ID or passcode is required to write your emergency card to the bracelet.")
+            }
         }
     }
 
     func beginWrite() {
         guard !isScannerSession else { return }
         guard profile.hasData else { return }
-        // In production: LAContext biometric auth, then NFCNDEFWriterSession
+        // Face ID / passcode before write. Demo overlay until real NFCNDEFWriterSession.
         // Do not mark braceletLinked until write succeeds (or demo completes).
-        showWriteOverlay = true
+        BiometricAuth.authenticate(
+            reason: "Confirm with Face ID, Touch ID, or passcode to write your RedMed card to the bracelet."
+        ) { success in
+            if success {
+                showWriteOverlay = true
+            } else {
+                showAuthFailedAlert = true
+            }
+        }
     }
 
     @ViewBuilder

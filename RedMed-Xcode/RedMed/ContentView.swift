@@ -6,6 +6,25 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var tab: AppTab = .myid
 
+    /// Ped/EMS scanners: RedMed + 911 + Aid only. Owner also gets NFC.
+    private var showsNFC: Bool { !isScannerSession }
+
+    private var scannerSafeTab: Binding<AppTab> {
+        Binding(
+            get: {
+                if !showsNFC && tab == .nfc { return .myid }
+                return tab
+            },
+            set: { newValue in
+                if !showsNFC && newValue == .nfc {
+                    tab = .myid
+                } else {
+                    tab = newValue
+                }
+            }
+        )
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             if !isScannerSession {
@@ -13,16 +32,22 @@ struct ContentView: View {
             }
             ZStack(alignment: .bottom) {
                 Group {
-                    switch tab {
-                    case .myid:      MyIDView()
-                    case .emergency: EmergencyView()
-                    case .aid:       AidView()
+                    switch scannerSafeTab.wrappedValue {
+                    case .myid:
+                        MyIDView(tab: scannerSafeTab)
+                    case .emergency:
+                        EmergencyView()
+                    case .aid:
+                        AidView()
+                    case .nfc:
+                        // Unreachable in scanner sessions — binding + tab bar both block it.
+                        NFCView()
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.bottom, 64)
 
-                CustomTabBar(tab: $tab)
+                CustomTabBar(tab: scannerSafeTab, showsNFC: showsNFC)
             }
             .ignoresSafeArea(edges: .bottom)
         }
@@ -35,11 +60,20 @@ struct ContentView: View {
             guard !isScannerSession, phase == .active else { return }
             LocationAccessSuggester.shared.suggestIfNeeded()
         }
+        .onAppear { clampScannerTab() }
+        .onChange(of: isScannerSession) { _, _ in clampScannerTab() }
+    }
+
+    private func clampScannerTab() {
+        if !showsNFC && tab == .nfc {
+            tab = .myid
+        }
     }
 }
 
 struct CustomTabBar: View {
     @Binding var tab: AppTab
+    var showsNFC: Bool = true
 
     var body: some View {
         VStack(spacing: 0) {
@@ -48,6 +82,9 @@ struct CustomTabBar: View {
                 TabBarItem(icon: "person.fill",  label: "RedMed", isOn: tab == .myid)      { tab = .myid }
                 TabBarItem(icon: "phone.fill",   label: "911",    isOn: tab == .emergency)  { tab = .emergency }
                 TabBarItem(icon: "cross.case.fill", label: "Aid", isOn: tab == .aid)        { tab = .aid }
+                if showsNFC {
+                    TabBarItem(icon: "wave.3.right", label: "NFC", isOn: tab == .nfc)        { tab = .nfc }
+                }
             }
             .padding(.top, 2)
 

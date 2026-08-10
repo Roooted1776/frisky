@@ -20,8 +20,10 @@
 	<string>1</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NFCReaderUsageDescription</key>
+	<string>RedMed writes your emergency card to your NFC bracelet.</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>RedMed uses Face ID, Touch ID, or your device passcode to unlock editing of your RedMed profile. Scanned cards are read-only and cannot be changed without your app and authentication.</string>
+	<string>RedMed uses Face ID, Touch ID, or your device passcode to protect and unlock editing of your medical profile and to authorize writing to your bracelet. Scanned cards are read-only and cannot be changed without your app and authentication.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>RedMed uses your location to give 911 your exact GPS coordinates in an emergency.</string>
 	<key>NSMotionUsageDescription</key>
