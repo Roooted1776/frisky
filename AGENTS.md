@@ -1,0 +1,32 @@
+# AGENTS.md
+
+## Cursor Cloud specific instructions
+
+This repository is a **native iOS/SwiftUI app** (RedMed), located under `RedMed-Xcode/`. It
+builds and runs **only on macOS with Xcode 15+** and an iOS 17+ Simulator or physical iPhone.
+
+**It cannot be built, run, linted, or tested in the Cursor Cloud Linux VM.** There is no way to
+set up a working runtime here:
+
+- Xcode is macOS-only and cannot be installed on Linux.
+- Every source file in `RedMed-Xcode/RedMed/` imports iOS-only frameworks (`SwiftUI`, `UIKit`,
+  `CoreNFC`, `MapKit`, `LocalAuthentication`, `MessageUI`, `WebKit`, `CoreLocation`). Swift-for-Linux
+  does not ship these frameworks, so even installing a Linux Swift toolchain does not enable a build.
+- The iOS Simulator is macOS-only.
+
+**There are no dependencies to install:** no Swift Package Manager, CocoaPods, Carthage, or npm.
+The app has no backend, database, or web service. State is in-memory (`ProfileData.swift`), and NFC
+write/read in `NFCView.swift` are UI stubs.
+
+**Consequence for cloud agents:** the update script is intentionally a no-op. Code review and static
+edits to the `.swift` files are possible, but do not attempt to build/run/test here. Any actual
+build, run, or manual testing must happen on macOS + Xcode:
+
+```
+open RedMed-Xcode/RedMed.xcodeproj   # then Run (Cmd+R) against an iOS 17+ Simulator
+# or, headless:
+xcodebuild -project RedMed-Xcode/RedMed.xcodeproj -scheme RedMed \
+  -destination 'platform=iOS Simulator,name=iPhone 15' build
+```
+
+NFC write and Face ID flows only work on a physical iPhone, not the Simulator.
