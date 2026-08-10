@@ -31,6 +31,21 @@ enum AidPaneCatalog {
         AidPane(id: "hospitals", emoji: "🏥", title: "Nearby Hospitals", subtitle: "MapKit emergency POIs", iconFilled: false,
                 topics: [("Find Nearby Hospitals", "trauma-hospitals")]),
     ]
+
+    #if DEBUG
+    /// Pane keys and topic bodies live in separate catalogs — keep them in lockstep.
+    /// Missing catalog entry → topic tap silently no-ops in AidView.
+    static func assertTopicCoverage() {
+        for pane in panes {
+            for topic in pane.topics {
+                assert(
+                    AidTopicCatalog.topics[topic.key] != nil,
+                    "Aid pane '\(pane.id)' lists '\(topic.key)' with no AidTopicCatalog entry"
+                )
+            }
+        }
+    }
+    #endif
 }
 
 struct AidView: View {
@@ -97,6 +112,9 @@ struct AidView: View {
             .task {
                 await Task.yield()
                 AidTopicCatalog.warmUp()
+                #if DEBUG
+                AidPaneCatalog.assertTopicCoverage()
+                #endif
             }
         }
     }
