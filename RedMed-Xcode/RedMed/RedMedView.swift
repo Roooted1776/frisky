@@ -8,8 +8,10 @@ struct RedMedView: View {
     /// When true, Edit opened without Face ID (empty RedMed profile) — Save must authenticate.
     @State private var requireAuthOnSave = false
     @State private var showHelp = false
+    @State private var showGet = false
     @State private var showScannerPreview = false
     @State private var showAuthFailedAlert = false
+    @ObservedObject private var nfcGate = NFCAccessGate.shared
 
     private var deviceName: String {
         if isScannerSession {
@@ -69,7 +71,7 @@ struct RedMedView: View {
                 if !isScannerSession {
                     // QUICK ACTIONS (owner only)
                     HStack(spacing: 10) {
-                        Button { tab = .nfc } label: {
+                        Button { openNFCOrGet() } label: {
                             HStack(spacing: 6) {
                                 Image(systemName: "plus.circle")
                                     .font(.system(size: 16, weight: .semibold))
@@ -149,8 +151,25 @@ struct RedMedView: View {
             get: { showHelp && !isScannerSession },
             set: { showHelp = $0 && !isScannerSession }
         )) {
-            HelpMenuView(onSetUpBand: { tab = .nfc })
+            HelpMenuView(onOpenNFC: { tab = .nfc })
                 .environmentObject(profile)
+        }
+        .fullScreenCover(isPresented: Binding(
+            get: { showGet && !isScannerSession },
+            set: { showGet = $0 && !isScannerSession }
+        )) {
+            NavigationView {
+                GetView(onAccept: {
+                    showGet = false
+                    DispatchQueue.main.async { tab = .nfc }
+                })
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button("Close") { showGet = false }
+                            .foregroundColor(.redmedAccent)
+                    }
+                }
+            }
         }
         .fullScreenCover(isPresented: Binding(
             get: { showScannerPreview && !isScannerSession && profile.braceletLinked },
@@ -205,7 +224,7 @@ struct RedMedView: View {
                     }
                     .padding(.vertical, 4)
                 } else {
-                    Button { tab = .nfc } label: {
+                    Button { openNFCOrGet() } label: {
                         HStack(spacing: 8) {
                             Image("BrandLogo")
                                 .resizable()
@@ -254,6 +273,17 @@ struct RedMedView: View {
         .padding(.horizontal, 20)
         .padding(.top, 10)
         .padding(.bottom, 8)
+    }
+
+    // MARK: - NFC gate
+
+    /// Get (Accept) first; NFC tab only after accept.
+    private func openNFCOrGet() {
+        if nfcGate.isAccepted {
+            tab = .nfc
+        } else {
+            showGet = true
+        }
     }
 
     // MARK: - Edit gate
