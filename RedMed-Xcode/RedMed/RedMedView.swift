@@ -327,6 +327,8 @@ struct RedMedView: View {
                     Text(item)
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.redmedDark)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
                         .background(Color.white.opacity(0.88))

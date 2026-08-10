@@ -110,6 +110,8 @@ struct SecondaryButton: View {
 
 /// Wraps subviews onto new lines; each child keeps its intrinsic width
 /// so short labels (Percocet) stay smaller than long ones (Dextroamphetamine).
+/// Chips wider than the row are capped and remeasured so text wraps
+/// instead of clipping off-screen.
 struct FlowLayout: Layout {
     var spacing: CGFloat = 8
 
@@ -119,35 +121,52 @@ struct FlowLayout: Layout {
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         let result = arrange(proposal: proposal, subviews: subviews)
-        for (index, origin) in result.origins.enumerated() {
+        for index in subviews.indices {
+            let size = result.sizes[index]
             subviews[index].place(
-                at: CGPoint(x: bounds.minX + origin.x, y: bounds.minY + origin.y),
-                proposal: .unspecified
+                at: CGPoint(x: bounds.minX + result.origins[index].x, y: bounds.minY + result.origins[index].y),
+                proposal: ProposedViewSize(width: size.width, height: size.height)
             )
         }
     }
 
-    private func arrange(proposal: ProposedViewSize, subviews: Subviews) -> (origins: [CGPoint], size: CGSize) {
+    private func arrange(proposal: ProposedViewSize, subviews: Subviews) -> (origins: [CGPoint], sizes: [CGSize], size: CGSize) {
         let maxWidth = proposal.width ?? .infinity
         var origins: [CGPoint] = []
+        var sizes: [CGSize] = []
         var x: CGFloat = 0
         var y: CGFloat = 0
         var rowHeight: CGFloat = 0
         var widthUsed: CGFloat = 0
 
         for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
+            let ideal = subview.sizeThatFits(.unspecified)
+            let cappedWidth: CGFloat = {
+                guard maxWidth.isFinite else { return ideal.width }
+                return min(ideal.width, maxWidth)
+            }()
+
+            // Remeasure when capped so multiline text gets the right height.
+            let size: CGSize = {
+                if cappedWidth < ideal.width - 0.5 {
+                    return subview.sizeThatFits(ProposedViewSize(width: cappedWidth, height: nil))
+                }
+                return CGSize(width: cappedWidth, height: ideal.height)
+            }()
+
             if x > 0, x + size.width > maxWidth {
                 x = 0
                 y += rowHeight + spacing
                 rowHeight = 0
             }
+
             origins.append(CGPoint(x: x, y: y))
+            sizes.append(size)
             rowHeight = max(rowHeight, size.height)
             x += size.width + spacing
             widthUsed = max(widthUsed, x - spacing)
         }
 
-        return (origins, CGSize(width: widthUsed, height: y + rowHeight))
+        return (origins, sizes, CGSize(width: widthUsed, height: y + rowHeight))
     }
 }
