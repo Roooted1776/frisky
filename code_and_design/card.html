@@ -6,6 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#fff7f7">
+<link rel="apple-touch-icon" href="assets/BrandLogo.png">
+<link rel="icon" href="assets/BrandLogo.png">
 <title>RedMed</title>
 <style>
   :root {
@@ -54,17 +56,14 @@
     padding: 4px 0;
   }
   .rm-logo {
-    width: 48px; height: 48px;
+    width: 48px;
+    height: 48px;
     border-radius: 13px;
-    background: linear-gradient(180deg, #ff7289, var(--accent));
-    color: #fff;
-    font-size: 18px;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     box-shadow: 0 3px 5px rgba(225,29,72,0.15);
     flex-shrink: 0;
+    display: block;
+    object-fit: cover;
+    background: transparent;
   }
   .rm-name {
     font-size: 22px;
@@ -385,7 +384,7 @@
       <div class="rm-header">
         <p class="rm-lock">Read only — editing needs the owner’s RedMed app + Face&nbsp;ID / passcode.</p>
         <div class="rm-title-row">
-          <div class="rm-logo" aria-hidden="true">R</div>
+          <img class="rm-logo" src="assets/BrandLogo.png" width="48" height="48" alt="RedMed">
           <div>
             <h1 class="rm-name" id="name">RedMed</h1>
             <p class="rm-updated" id="updatedLine"></p>
