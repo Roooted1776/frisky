@@ -18,6 +18,8 @@ class ProfileData: ObservableObject {
     ]
 
     var hasData: Bool { !name.isEmpty }
+    /// Whether an NFC band has been written/paired (Main header status).
+    @Published var braceletLinked: Bool = false
     @Published var isOrganDonor: Bool = true
     @Published var lastUpdated: String = "Jul 28, 2026"
 }

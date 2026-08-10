@@ -119,6 +119,8 @@ struct NFCView: View {
         guard profile.hasData else { return }
         // In production: LAContext biometric auth, then NFCNDEFWriterSession
         showWriteOverlay = true
+        // Demo stub: writing marks the band linked for Main header status
+        profile.braceletLinked = true
     }
 
     @ViewBuilder
