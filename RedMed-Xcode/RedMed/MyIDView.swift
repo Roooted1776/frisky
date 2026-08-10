@@ -120,7 +120,7 @@ struct MyIDView: View {
         .alert("Authentication Failed", isPresented: $showAuthFailedAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Face ID or passcode is required to edit your medical profile.")
+            Text("Face ID or passcode is required to edit your RedMed profile.")
         }
     }
 
@@ -197,7 +197,7 @@ struct MyIDView: View {
             return
         }
         BiometricAuth.authenticate(
-            reason: "Unlock with Face ID, Touch ID, or passcode to edit your medical ID in RedMed."
+            reason: "Unlock with Face ID, Touch ID, or passcode to edit your RedMed profile."
         ) { success in
             if success {
                 showEdit = true

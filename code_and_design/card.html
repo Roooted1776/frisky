@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RedMed — Emergency Card</title>
+<title>RedMed</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
@@ -156,10 +156,10 @@
 </head>
 <body>
   <div class="wrap">
-    <!-- RedMed (Medical ID) — same first tab as the app -->
+    <!-- RedMed — same first tab as the app -->
     <div class="panel active" id="panel-medical" data-panel="medical">
       <p class="hint" style="text-align:left;margin-bottom:10px;">Read only — editing needs the owner’s RedMed app + Face&nbsp;ID / passcode.</p>
-      <h1 id="name">Medical ID</h1>
+      <h1 id="name">RedMed</h1>
       <div class="sub" id="subLine">Blood · DOB</div>
       <div class="updated" id="updatedLine"></div>
 
@@ -340,11 +340,11 @@
   }
 
   var p = decodeProfile() || {};
-  document.getElementById('name').textContent = p.name || 'Medical ID';
+  document.getElementById('name').textContent = p.name || 'RedMed';
   var sub = [];
   if (p.dob) sub.push(p.dob);
   if (p.blood) sub.push('Blood ' + p.blood);
-  document.getElementById('subLine').textContent = sub.join(' · ') || 'Emergency medical ID';
+  document.getElementById('subLine').textContent = sub.join(' · ') || 'Emergency profile';
   if (p.updated) document.getElementById('updatedLine').textContent = 'Updated ' + p.updated;
   list(document.getElementById('allergies'), p.allergies);
   list(document.getElementById('meds'), p.meds);
