@@ -39,6 +39,7 @@
 		AABB0000000000000000001D /* ProfileNFCCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001D /* ProfileNFCCodec.swift */; };
 		AABB0000000000000000001E /* NFCWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001E /* NFCWriter.swift */; };
 		AABB0000000000000000001F /* NFCReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001F /* NFCReader.swift */; };
+		AABB00000000000000000031 /* NFCBandManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000031 /* NFCBandManager.swift */; };
 		AABB00000000000000000020 /* EmergencyNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000020 /* EmergencyNumber.swift */; };
 		AABB00000000000000000021 /* card.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000021 /* card.html */; };
 		AABB00000000000000000024 /* get.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000024 /* get.html */; };
@@ -90,6 +91,7 @@
 		AAAA0000000000000000001D /* ProfileNFCCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileNFCCodec.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000001E /* NFCWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFCWriter.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000001F /* NFCReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFCReader.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000031 /* NFCBandManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFCBandManager.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000020 /* EmergencyNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyNumber.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000021 /* card.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = card.html; sourceTree = "<group>"; };
 		AAAA00000000000000000024 /* get.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = get.html; sourceTree = "<group>"; };
@@ -160,6 +162,7 @@
 				AAAA0000000000000000001D /* ProfileNFCCodec.swift */,
 				AAAA0000000000000000001E /* NFCWriter.swift */,
 				AAAA0000000000000000001F /* NFCReader.swift */,
+				AAAA00000000000000000031 /* NFCBandManager.swift */,
 				AAAA0000000000000000000A /* NFCView.swift */,
 				AAAA0000000000000000000E /* HelpMenuView.swift */,
 				AAAA00000000000000000016 /* PrivacyPolicy.html */,
@@ -297,6 +300,7 @@
 				AABB0000000000000000001D /* ProfileNFCCodec.swift in Sources */,
 				AABB0000000000000000001E /* NFCWriter.swift in Sources */,
 				AABB0000000000000000001F /* NFCReader.swift in Sources */,
+				AABB00000000000000000031 /* NFCBandManager.swift in Sources */,
 				AABB0000000000000000000A /* NFCView.swift in Sources */,
 				AABB0000000000000000000B /* HelpMenuView.swift in Sources */,
 			);

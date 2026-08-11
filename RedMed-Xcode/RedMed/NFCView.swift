@@ -2,20 +2,14 @@
 // see ContentView.showsNFC / scannerSafeTab.
 // When `AppConfig.nfcHardwareEnabled` is false, Write/Scan simulate packing the
 // compact get.html#d= URL so the UX works without an Apple NFC entitlement.
+// Pipeline (hardware): silicone band tap → CoreNFC → strip NDEF → CryptoKit → local card
+// via `NFCBandManager`.
 import SwiftUI
 
 struct NFCView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
-    @StateObject private var writer = NFCWriter()
-    @StateObject private var reader = NFCReader()
-    @State private var showPublicCard = false
-    @State private var scannedCard: ProfileData?
-    @State private var showAuthFailedAlert = false
-    @State private var statusAlert: String?
-    @State private var simulateBusy = false
-    @State private var simulateMessage = ""
-    @State private var lastSimulatedURL: String?
+    @StateObject private var band = NFCBandManager()
 
     var body: some View {
         if isScannerSession {
@@ -69,7 +63,9 @@ struct NFCView: View {
 
                     sectionLabel("Set up")
                     VStack(spacing: 12) {
-                        Button { beginWrite() } label: {
+                        Button {
+                            band.writeBand(from: profile, isScannerSession: isScannerSession)
+                        } label: {
                             HStack(spacing: 8) {
                                 Image(systemName: "wave.3.right")
                                 Text(writeButtonTitle)
@@ -85,7 +81,7 @@ struct NFCView: View {
                             .clipShape(Capsule())
                             .shadow(color: Color.redmedAccent.opacity(0.28), radius: 7, y: 4)
                         }
-                        .disabled(!profile.hasData || writer.isWriting || simulateBusy)
+                        .disabled(!profile.hasData || band.isBusy)
                         .opacity(profile.hasData ? 1 : 0.55)
                         if !profile.hasData {
                             Text("Add your name on RedMed before writing a tag.")
@@ -93,8 +89,8 @@ struct NFCView: View {
                                 .foregroundColor(.redmedAccent)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        if !statusLine.isEmpty {
-                            Text(statusLine)
+                        if !band.statusMessage.isEmpty {
+                            Text(band.statusMessage)
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(statusIsError ? .redmedAccent : .redmedMuted)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -123,13 +119,13 @@ struct NFCView: View {
                             SecondaryButton(
                                 AppConfig.nfcHardwareEnabled ? "Scan your bracelet" : "Simulate scan (passerby view)",
                                 icon: "qrcode.viewfinder"
-                            ) { beginScanVerify() }
-                            if reader.isReading {
-                                Text(reader.statusMessage.isEmpty ? "Hold near tag…" : reader.statusMessage)
+                            ) { band.verifyBand(from: profile) }
+                            if band.isReading {
+                                Text(band.statusMessage.isEmpty ? "Hold near tag…" : band.statusMessage)
                                     .font(.system(size: 13, weight: .medium))
                                     .foregroundColor(.redmedMuted)
                             }
-                            if let url = lastSimulatedURL, let link = URL(string: url) {
+                            if let url = band.lastPackedURL, let link = URL(string: url) {
                                 Link("Open packed get.html URL", destination: link)
                                     .font(.system(size: 13, weight: .semibold))
                                     .foregroundColor(.redmedAccent)
@@ -160,61 +156,44 @@ struct NFCView: View {
                     Text("NFC Bracelet").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedAccent)
                 }
             }
-            .sheet(isPresented: $showPublicCard) {
-                if let card = scannedCard {
+            .sheet(isPresented: $band.showScannedCard) {
+                if let card = band.scannedCard {
                     PublicCardView(profile: card)
                 }
             }
-            .alert("Authentication Failed", isPresented: $showAuthFailedAlert) {
+            .alert("Authentication Failed", isPresented: $band.authFailed) {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text("Face ID or passcode is required to write your emergency card to the bracelet.")
             }
             .alert("NFC", isPresented: Binding(
-                get: { statusAlert != nil },
-                set: { if !$0 { statusAlert = nil } }
+                get: { band.alertMessage != nil },
+                set: { if !$0 { band.alertMessage = nil } }
             )) {
-                Button("OK", role: .cancel) { statusAlert = nil }
+                Button("OK", role: .cancel) { band.alertMessage = nil }
             } message: {
-                Text(statusAlert ?? "")
+                Text(band.alertMessage ?? "")
             }
-            .onChange(of: writer.success) { _, ok in
-                guard ok, writer.verified else { return }
-                linkBraceletAfterWrite(detail: "NFC write verified")
-            }
-            .onChange(of: writer.verified) { _, verified in
-                guard verified, writer.success else { return }
-                linkBraceletAfterWrite(detail: "NFC write verified")
-            }
-            .onChange(of: writer.statusMessage) { _, msg in
-                if !writer.isWriting, !writer.success, !msg.isEmpty, msg != "Cancelled." {
-                    statusAlert = msg
-                }
-            }
-            .onChange(of: reader.statusMessage) { _, msg in
-                if !reader.isReading, !msg.isEmpty, msg != "Cancelled." {
-                    statusAlert = msg
-                }
+            .onChange(of: band.writeVerified) { _, verified in
+                guard verified, band.writeSucceeded, AppConfig.nfcHardwareEnabled else { return }
+                band.linkBracelet(on: profile, detail: "NFC write verified")
             }
         }
     }
 
     private var writeButtonTitle: String {
-        if writer.isWriting || simulateBusy {
+        if band.isWriting {
             return AppConfig.nfcHardwareEnabled ? "Hold near tag…" : "Packing URL…"
         }
         return AppConfig.nfcHardwareEnabled ? "Write to NFC tag" : "Simulate write (pack get.html URL)"
     }
 
-    private var statusLine: String {
-        if !simulateMessage.isEmpty { return simulateMessage }
-        return writer.statusMessage
-    }
-
     private var statusIsError: Bool {
-        if !simulateMessage.isEmpty {
-            return simulateMessage.contains("Couldn't") || simulateMessage.contains("failed")
+        let msg = band.statusMessage
+        if msg.contains("Couldn't") || msg.contains("failed") || msg.contains("Failed") {
+            return true
         }
+<<<<<<< HEAD
         return !writer.success && !writer.statusMessage.isEmpty
     }
 
@@ -290,6 +269,10 @@ struct NFCView: View {
         // Keychain write best-effort; bracelet flag is owner-local metadata only.
         _ = profile.persist()
         VaultHistoryStore.shared.record(.braceletWritten, detail: detail)
+=======
+        return !band.writeSucceeded && !msg.isEmpty && !band.isWriting
+            && msg != "Hold your iPhone near the NFC tag."
+>>>>>>> origin/main
     }
 
     @ViewBuilder

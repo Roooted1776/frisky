@@ -1,11 +1,12 @@
 # NFC Tag Reading
 
-CoreNFC write/read is wired in production (`NFCWriter` / `NFCReader`) — real
-`NFCNDEFReaderSession` sessions with write + read-back verify. When hardware is
-off, `NFCView` still simulates Write/Scan by packing the compact `get.html#d=`
-URL (flat array → AES-GCM → Base64url; legacy zlib still decodes). Real CoreNFC has **no** Simulator
-fake-success: if hardware is enabled and NFC is unavailable, write fails and
-the band is not marked linked.
+CoreNFC write/read is wired in production via `NFCBandManager` (owns
+`NFCWriter` / `NFCReader`) — real `NFCNDEFReaderSession` sessions with write +
+read-back verify, NDEF URI strip, and CryptoKit AES-GCM via `ProfileNFCCodec`.
+When hardware is off, `NFCBandManager` still simulates Write/Scan by packing the
+compact `get.html#d=` URL (flat array → AES-GCM → Base64url; legacy zlib still
+decodes). Real CoreNFC has **no** Simulator fake-success: if hardware is enabled
+and NFC is unavailable, write fails and the band is not marked linked.
 
 ## Currently disabled (hardware sessions only)
 
@@ -28,7 +29,7 @@ physical iPhone to test.
   - Intentional tap: ~1–2″ to the phone antenna
   - Walk-by / no-fire margin: ~6–8″ (already dead past ~4″ of reliable ISO 14443)
   - Do not market these as a tunable read range
-  - `NFCWriter` / `NFCReader` only `begin()` after Write or Scan
+  - `NFCBandManager` / `NFCWriter` / `NFCReader` only `begin()` after Write or Scan
   - Deliberate stranger tap must still open the emergency card
 - Do **not** source LF (~125 kHz) or UHF chips — CoreNFC cannot program them.
 - Payment POS may share 13.56 MHz but speaks EMV, not RedMed NDEF URLs

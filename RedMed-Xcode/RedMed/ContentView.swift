@@ -7,7 +7,7 @@ import SwiftUI
 /// - Scanner (`isScannerSession == true`): RedMed · 911 · Aid only (no Edit, no NFC)
 ///
 /// Never gate the NFC tab on `AppConfig.nfcHardwareEnabled` — that flag only
-/// disables CoreNFC sessions inside `NFCWriter` / `NFCReader`.
+/// disables CoreNFC sessions inside `NFCBandManager` (`NFCWriter` / `NFCReader`).
 struct ContentView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession

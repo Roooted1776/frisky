@@ -2,6 +2,8 @@ import CoreNFC
 import Foundation
 
 /// Reads a RedMed `#d=` NDEF URI from a bracelet. No network — chip bytes only.
+/// Session half of `NFCBandManager`: CoreNFC → `NFCURICodec` strip →
+/// `ProfileNFCCodec` CryptoKit decrypt.
 final class NFCReader: NSObject, ObservableObject {
     @Published var statusMessage: String = ""
     @Published var isReading = false
