@@ -11,6 +11,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
+    @ObservedObject private var survivalAlarm = CrashMotionGuard.shared
     @State private var tab: AppTab = .redmed
     /// Only mount a tab's heavy subtree after first visit; keep it alive after.
     @State private var mountedTabs: Set<AppTab> = [.redmed]
@@ -61,6 +62,12 @@ struct ContentView: View {
             mountedTabs.insert(newTab)
         }
         .onChange(of: isScannerSession) { _, _ in clampScannerTab() }
+        .onChange(of: survivalAlarm.isArmed) { _, armed in
+            // Crash / SOS → jump to 911 so Call + Stop SOS sit on the GPS page.
+            guard armed, !isScannerSession else { return }
+            tab = .emergency
+            mountedTabs.insert(.emergency)
+        }
     }
 
     @ViewBuilder

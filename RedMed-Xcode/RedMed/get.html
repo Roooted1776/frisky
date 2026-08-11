@@ -273,6 +273,69 @@
     color: var(--muted);
     margin-top: 4px;
   }
+  .gps-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin: 0 0 8px;
+  }
+  .gps-actions .btn {
+    margin: 0;
+  }
+  .seizure-strip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--divider);
+    border-radius: 14px;
+    padding: 10px 12px;
+    margin: 8px 0;
+  }
+  .seizure-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+  }
+  .seizure-time {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--dark);
+    min-width: 64px;
+  }
+  .seizure-time.hot {
+    color: var(--accent);
+  }
+  .seizure-hint {
+    flex: 1;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .seizure-hint.hot {
+    color: var(--accent);
+  }
+  .seizure-btn {
+    border: none;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    background: var(--accent);
+    color: #fff;
+  }
+  .seizure-btn.on {
+    background: rgba(255,255,255,0.9);
+    color: var(--dark);
+    border: 1px solid var(--divider);
+  }
   .info {
     background: var(--surface);
     border: 1px solid var(--divider);
@@ -465,21 +528,39 @@
       <p class="quote">“Control your fear. Control the moment.<br>You have what it takes to save a life.”</p>
     </div>
 
-    <!-- Help -->
+    <!-- Help — mirrors owner EmergencyView (no SOS / brightness / audio) -->
     <div class="panel" id="panel-911" data-panel="911">
       <div class="page-pad">
         <h1 class="page-title">Find Help</h1>
 
-        <button class="btn btn-secondary" type="button" id="callContactBtn">Call first emergency contact</button>
-        <p class="hint">Calls the first saved contact — confirm before dialing.</p>
+        <div class="info">
+          <div class="info-head">
+            <div class="info-icon">📡</div>
+            <h2>No cell signal?</h2>
+          </div>
+          <p style="margin:0;font-size:10px;font-weight:600;line-height:1.45;color:var(--muted)">
+            Starlink Direct-to-Cell carriers: T-Mobile (US) · Rogers (CA) · KDDI · SoftBank · NTT Docomo (JP) · One NZ · Salt (CH) · Optus · Telstra (AU) · Entel (CL/PE) · Kyivstar (UA) · MasOrange (ES) · VMO2 (UK) · Beeline (KZ) · Airtel Africa — plan/region required; not a coverage promise.
+          </p>
+        </div>
 
         <div class="gps-card">
           <div class="gps-pill">LIVE GPS</div>
           <div class="coords" id="coords">Getting GPS…</div>
           <div class="gps-acc" id="gpsAcc"></div>
         </div>
-        <button class="btn btn-ink" type="button" id="copyCoordsBtn">Copy coordinates</button>
-        <button class="btn btn-secondary" type="button" id="gpsBtn">Text location to emergency contact</button>
+        <div class="gps-actions">
+          <a class="btn btn-ink" id="callEmergency911" href="tel:112">Call <span class="emg">112</span></a>
+          <button class="btn btn-ink" type="button" id="copyCoordsBtn">Copy coordinates</button>
+        </div>
+
+        <div class="seizure-strip" id="seizureStrip">
+          <div>
+            <div class="seizure-label">SEIZURE</div>
+            <div class="seizure-time" id="seizureTime">0:00</div>
+          </div>
+          <div class="seizure-hint" id="seizureHint">→ <span class="emg">112</span> at 5:00</div>
+          <button class="seizure-btn" type="button" id="seizureBtn">Start</button>
+        </div>
 
         <div class="info">
           <div class="info-head">
@@ -507,17 +588,7 @@
           </ul>
         </div>
 
-        <div class="info">
-          <div class="info-head">
-            <div class="info-icon">📡</div>
-            <h2>No cell signal</h2>
-          </div>
-          <p style="margin:0;font-size:13px;font-weight:500;line-height:1.45;color:var(--dark)">
-            iPhone 14+ (iOS 16.1+): hold Side + Volume until Emergency SOS appears. RedMed cannot start Satellite SOS itself.
-          </p>
-        </div>
-
-        <p class="foot-note">Coordinates show on this screen only. Local only — forever. RedMed has no servers.</p>
+        <p class="foot-note">Local only — forever. No Bluetooth · no RedMed servers · passive HF NFC. No PII or PHI leaves this device through RedMed.</p>
       </div>
     </div>
 
@@ -1043,11 +1114,6 @@
     document.getElementById('coords').textContent = 'GPS unavailable';
   }
 
-  document.getElementById('callContactBtn').addEventListener('click', function () {
-    if (!firstPhone) { alert('No emergency contact number on this card.'); return; }
-    location.href = 'tel:' + firstPhone;
-  });
-
   document.getElementById('copyCoordsBtn').addEventListener('click', function () {
     var loc = window.__redmedLoc;
     if (!loc) { alert('Location not available yet.'); return; }
@@ -1059,22 +1125,75 @@
     }
   });
 
-  document.getElementById('gpsBtn').addEventListener('click', function (e) {
-    e.preventDefault();
-    function send(lat, lon) {
-      var maps = 'https://maps.apple.com/?ll=' + lat + ',' + lon;
-      var body = encodeURIComponent('Emergency location (RedMed): ' + lat + ', ' + lon + '\n' + maps);
-      location.href = firstPhone ? ('sms:' + firstPhone + '&body=' + body) : ('sms:&body=' + body);
+  // Seizure stopwatch — mirrors owner Find Help; auto-dials at 5:00.
+  (function () {
+    var CALL_AT = 5 * 60;
+    var running = false;
+    var elapsed = 0;
+    var startedAt = 0;
+    var timerId = null;
+    var timeEl = document.getElementById('seizureTime');
+    var hintEl = document.getElementById('seizureHint');
+    var btn = document.getElementById('seizureBtn');
+    if (!timeEl || !hintEl || !btn) return;
+
+    function format(t) {
+      var total = Math.max(0, Math.floor(t));
+      return Math.floor(total / 60) + ':' + String(total % 60).padStart(2, '0');
     }
-    if (window.__redmedLoc) {
-      send(window.__redmedLoc.latitude, window.__redmedLoc.longitude);
-      return;
+
+    function emergencyTel() {
+      var n = (document.querySelector('.emg') || {}).textContent || '112';
+      return 'tel:' + n;
     }
-    if (!navigator.geolocation) { alert('Location not available.'); return; }
-    navigator.geolocation.getCurrentPosition(function (pos) {
-      send(pos.coords.latitude, pos.coords.longitude);
-    }, function () { alert('Could not get location.'); });
-  });
+
+    function paint() {
+      var past = elapsed >= CALL_AT;
+      timeEl.textContent = format(elapsed);
+      timeEl.classList.toggle('hot', past);
+      hintEl.classList.toggle('hot', past);
+      if (past) {
+        hintEl.textContent = '5:00 — call';
+      } else {
+        hintEl.innerHTML = '→ <span class="emg">' +
+          ((document.querySelector('.emg') || {}).textContent || '112') +
+          '</span> at 5:00';
+      }
+      btn.textContent = running ? 'Stop' : 'Start';
+      btn.classList.toggle('on', running);
+    }
+
+    function stop(reset) {
+      if (timerId) { clearInterval(timerId); timerId = null; }
+      running = false;
+      if (reset) elapsed = 0;
+      paint();
+    }
+
+    function tick() {
+      elapsed = (Date.now() - startedAt) / 1000;
+      if (elapsed >= CALL_AT) {
+        stop(false);
+        location.href = emergencyTel();
+        return;
+      }
+      paint();
+    }
+
+    btn.addEventListener('click', function () {
+      if (running) {
+        stop(false);
+        return;
+      }
+      stop(true);
+      running = true;
+      startedAt = Date.now();
+      paint();
+      timerId = setInterval(tick, 1000);
+    });
+
+    paint();
+  })();
 })();
   </script>
 <script>
@@ -1100,6 +1219,8 @@
   for (var i = 0; i < spans.length; i++) { spans[i].textContent = num; }
   var call = document.getElementById('callEmergency');
   if (call) { call.setAttribute('href', 'tel:' + num); }
+  var call911 = document.getElementById('callEmergency911');
+  if (call911) { call911.setAttribute('href', 'tel:' + num); }
 })();
 </script>
 <script>

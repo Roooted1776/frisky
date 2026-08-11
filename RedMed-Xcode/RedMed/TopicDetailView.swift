@@ -85,7 +85,7 @@ struct TopicDetailView: View {
                             Text(cprPhase == "breathe" ? "Give 2 breaths" : "Push hard, push fast")
                                 .font(.system(size: 16, weight: .bold))
                                 .foregroundColor(.redmedDark)
-                            Text("110 beats/min · 30 compressions, then 2 breaths")
+                            Text("110 beats/min · haptic + click · 30 compressions, then 2 breaths")
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundColor(.redmedMuted)
                                 .multilineTextAlignment(.center)
@@ -179,7 +179,10 @@ struct TopicDetailView: View {
             .onAppear {
                 if isCPR { hapticEngine.prepare() }
             }
-            .onDisappear { stopCPR() }
+            .onDisappear {
+                stopCPR()
+                if isCPR { hapticEngine.shutdown() }
+            }
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.redmedBg, for: .navigationBar)

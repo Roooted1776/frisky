@@ -13,7 +13,7 @@ struct EmergencyView: View {
             NavigationView {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 8) {
-                    Text("Siren + full brightness only on crash / severe impact or SOS. Stop the alarm on Aid.")
+                    Text("Siren + full brightness only on crash / severe impact or SOS. Stop here or on Aid.")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.redmedAccent)
                         .frame(maxWidth: .infinity, alignment: .leading)
