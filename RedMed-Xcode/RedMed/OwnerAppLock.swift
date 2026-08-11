@@ -20,6 +20,8 @@ struct OwnerAppLock<Content: View>: View {
     @State private var isAuthenticating = false
     @State private var failed = false
     @State private var hasEverHadSensitiveData = false
+    /// Bumps on lock so a late Face ID success cannot unlock after background.
+    @State private var authGeneration = 0
 
     var body: some View {
         ZStack {
@@ -34,7 +36,9 @@ struct OwnerAppLock<Content: View>: View {
         }
         .onAppear { resolveInitialGate() }
         .onChange(of: scenePhase) { _, phase in
-            if phase != .active, profile.hasSensitiveProfileData || hasEverHadSensitiveData {
+            // LAContext / system auth sheets put the scene `.inactive`.
+            // Only purge + lock on true background (same rule as VaultHistoryView).
+            if phase == .background, profile.hasSensitiveProfileData || hasEverHadSensitiveData {
                 lock(purge: true)
             }
         }
@@ -106,7 +110,9 @@ struct OwnerAppLock<Content: View>: View {
     }
 
     private func lock(purge: Bool) {
+        authGeneration &+= 1
         gate = .locked
+        isAuthenticating = false
         failed = false
         if purge {
             profile.purgeFromMemory()
@@ -118,9 +124,12 @@ struct OwnerAppLock<Content: View>: View {
         guard !isAuthenticating else { return }
         isAuthenticating = true
         failed = false
+        authGeneration &+= 1
+        let generation = authGeneration
         BiometricAuth.authenticate(
             reason: "Unlock RedMed to show your on-device emergency profile."
         ) { success in
+            guard generation == authGeneration else { return }
             isAuthenticating = false
             if success {
                 _ = profile.reloadFromKeychain()

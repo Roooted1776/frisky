@@ -8,7 +8,7 @@
  * decrypt/layout deploy. Payload stays in #d= only — never cached.
  * No biometrics on view.
  */
-var CACHE = 'redmed-get-v10';
+var CACHE = 'redmed-get-v11';
 var ASSETS = [
   './',
   './get.html',
@@ -20,6 +20,8 @@ var ASSETS = [
   './assets/BrandLogo.png',
   './card.html'
 ];
+/** Primary HTML shell — install must fail closed if neither copy can be cached. */
+var REQUIRED_SHELLS = ['./get/index.html', './get.html'];
 var SHELL_KEYS = [
   './',
   './get.html',
@@ -35,17 +37,36 @@ function networkReload(reqOrUrl) {
   return fetch(reqOrUrl, { cache: 'reload' });
 }
 
-function precache(cache) {
-  return Promise.all(
-    ASSETS.map(function (url) {
-      return networkReload(url)
-        .then(function (res) {
-          if (!res || !res.ok) return;
-          return putShell(cache, url, res);
-        })
-        .catch(function () { /* optional path missing */ });
+function precacheRequiredShell(cache, i) {
+  if (i >= REQUIRED_SHELLS.length) {
+    return Promise.reject(new Error('shell precache failed'));
+  }
+  var url = REQUIRED_SHELLS[i];
+  return networkReload(url)
+    .then(function (res) {
+      if (res && res.ok) return putShell(cache, url, res);
+      return precacheRequiredShell(cache, i + 1);
     })
-  );
+    .catch(function () {
+      return precacheRequiredShell(cache, i + 1);
+    });
+}
+
+function precache(cache) {
+  return precacheRequiredShell(cache, 0).then(function () {
+    return Promise.all(
+      ASSETS.filter(function (url) {
+        return REQUIRED_SHELLS.indexOf(url) === -1;
+      }).map(function (url) {
+        return networkReload(url)
+          .then(function (res) {
+            if (!res || !res.ok) return;
+            return putShell(cache, url, res);
+          })
+          .catch(function () { /* optional path missing */ });
+      })
+    );
+  });
 }
 
 function putShell(cache, reqOrUrl, res) {
