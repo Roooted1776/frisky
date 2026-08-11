@@ -1,15 +1,68 @@
 import SwiftUI
 import WebKit
+import UIKit
 
 // MARK: - WebView wrapper (policies + passerby card only)
 struct LocalWebView: UIViewRepresentable {
     let filename: String // e.g. "PrivacyPolicy"
 
-    func makeUIView(context: Context) -> WKWebView { WKWebView() }
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeUIView(context: Context) -> WKWebView {
+        let config = WKWebViewConfiguration()
+        // Policies are static bundle HTML — no app ↔ page script bridge.
+        config.preferences.javaScriptCanOpenWindowsAutomatically = false
+        let webView = WKWebView(frame: .zero, configuration: config)
+        webView.navigationDelegate = context.coordinator
+        webView.allowsBackForwardNavigationGestures = false
+        webView.allowsLinkPreview = false
+        return webView
+    }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
         guard let url = Bundle.main.url(forResource: filename, withExtension: "html") else { return }
+        // Read access limited to the HTML file's directory (bundle resources).
         webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
+    }
+
+    /// Blocks in-webview navigation to untrusted schemes; opens http(s)/tel/mailto/redmed externally.
+    final class Coordinator: NSObject, WKNavigationDelegate {
+        func webView(
+            _ webView: WKWebView,
+            decidePolicyFor navigationAction: WKNavigationAction,
+            decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+        ) {
+            guard let url = navigationAction.request.url else {
+                decisionHandler(.cancel)
+                return
+            }
+            if url.isFileURL {
+                decisionHandler(.allow)
+                return
+            }
+            let scheme = (url.scheme ?? "").lowercased()
+            switch scheme {
+            case "http", "https", "mailto", "tel", "redmed":
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                decisionHandler(.cancel)
+            default:
+                decisionHandler(.cancel)
+            }
+        }
+
+        func webView(
+            _ webView: WKWebView,
+            createWebViewWith configuration: WKWebViewConfiguration,
+            for navigationAction: WKNavigationAction,
+            windowFeatures: WKWindowFeatures
+        ) -> WKWebView? {
+            // Deny target=_blank / window.open — no popup webviews from policy HTML.
+            if let url = navigationAction.request.url,
+               !url.isFileURL {
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+            }
+            return nil
+        }
     }
 }
 

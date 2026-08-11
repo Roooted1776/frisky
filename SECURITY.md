@@ -1,21 +1,36 @@
 # Security Policy
 
-## Supported Versions
+## Supported versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+| Version | Supported |
+|---------|-----------|
+| `main` (1.1.x) | Yes |
+| Older tags / abandoned feature branches | No |
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+RedMed is a local-only iOS medical ID + emergency assist app. There is no RedMed profile backend. Treat `main` as production: Cloudflare Pages serves the passerby card from it.
 
-## Reporting a Vulnerability
+## Threat model (short)
 
-Use this section to tell people how to report a vulnerability.
+| Asset | Intentional exposure | Defended |
+|-------|----------------------|----------|
+| Owner profile on device | Never leaves phone | Keychain `WhenUnlockedThisDeviceOnly`, Face ID / passcode gates, RAM purge on background, snapshot cover, vault file protection |
+| Passerby `#d=` payload | Any phone that taps the band | Safe DOM render (`textContent`), length caps, phone sanitization, CSP + security headers on Pages |
+| AES-GCM on the band | Packing / obfuscation only | Public client key by design — EMS must decrypt with no account. Not confidentiality against a deliberate tap |
+| GPS | On-device display only | When-In-Use; never uploaded to RedMed |
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+## Reporting a vulnerability
+
+1. Prefer a private [GitHub security advisory](https://github.com/Roooted1776/frisky/security/advisories/new) on `Roooted1776/frisky`.
+2. Or email `help.RedMed@gmail.com` with steps to reproduce. Do **not** attach real medical payloads or live API keys.
+3. You should get an initial reply within a few days. Fixes land on `main` via PR; we do not run a paid bug bounty.
+
+In-scope: XSS or HTML injection via `#d=`, Keychain / vault bypass, Face ID gate bypass, service-worker cache poisoning of the shell, credential or secret leaks in the repo, privilege escalation from scanner shell into owner Keychain.
+
+Out of scope: cloning a passive NFC band (same as photocopying a wallet medical card), social engineering the owner, physical device access after unlock, third-party OS bugs.
+
+## Hardening checklist (repo)
+
+- Passerby HTML: `textContent` for PHI fields; no `eval`; zlib inflate capped; CSP + `nosniff` / `frame-ancestors` / referrer policy via `_headers`.
+- Owner: `OwnerAppLock` + `BiometricAuth` (reuse duration 0); scanner snapshots use `ProfileData(persisting: false)`.
+- Vault: `HIPAAOfflineVault` complete protection + backup exclusion; basename-only file paths.
+- No analytics / crash SDKs that phone home PHI.

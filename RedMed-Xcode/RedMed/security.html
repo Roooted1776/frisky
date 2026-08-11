@@ -38,7 +38,7 @@
   <h1 class="legal-doc-title">Security</h1>
   <p class="legal-meta">
     <strong>Effective Date</strong> August 2026<br>
-    <strong>Document Version</strong> 3.2 (United States)<br>
+    <strong>Document Version</strong> 3.3 (United States)<br>
     <strong>Applicable law</strong> United States — read with Privacy Policy and Terms (local-only / HIPAA-aligned / liability)
   </p>
   <p class="legal-parties">Security practices for the RedMed iPhone app, passerby card page, and passive NFC identification bracelet used in the United States</p>
@@ -71,34 +71,25 @@
       <li>Clearing fields and saving overwrites the stored profile; deleting the App removes the Keychain entry and vault files.</li>
     </ul>
 
-    <h2><span class="sec-num">5.</span> NFC Band (Deliberately Unencrypted)</h2>
-    <p>Passive NFC identification payloads are <strong>plaintext</strong> (<code>#d=</code> base64url JSON) so any smartphone can open the emergency card without an account — that is the assist model for EMS / helpers. Cloning a tag is like photocopying a wallet medical card. Casual walk-by distance will not fire the band; only a deliberate ~1–2″ antenna tap reads it. Payment / POS terminals use a different protocol (EMV) and do not open the RedMed card.</p>
+    <h2><span class="sec-num">5.</span> NFC Band (Readable by Design)</h2>
+    <p>Passive NFC identification payloads use AES-GCM packing with a <strong>public client key</strong> shared by the iPhone app and <code>get.html</code>. That is packing / obfuscation so the fragment is not casual plaintext JSON — any phone that loads the card page can decrypt. A private key would defeat the EMS assist model (no account to view). Cloning a tag is like photocopying a wallet medical card. Casual walk-by distance will not fire the band; only a deliberate ~1–2″ antenna tap reads it. Payment / POS terminals use a different protocol (EMV) and do not open the RedMed card. The hosted page renders <code>#d=</code> via <code>textContent</code> with length caps and phone sanitization; Cloudflare Pages sends CSP + framing / nosniff headers.</p>
 
     <h2><span class="sec-num">6.</span> Location</h2>
     <p>GPS starts only on Find Help (When-In-Use). Coordinates stay on-device for display to you / a dispatcher. We do not receive, log, or retain them. Location assist does not guarantee that 911 will be reached or that coordinates will be accurate. Do not log <code>location.hash</code>, NFC URLs, profile JSON, or PIN material in any tooling you add later.</p>
 
     <h2><span class="sec-num">7.</span> Reporting Vulnerabilities</h2>
-    <p>Open a private GitHub security advisory on <a href="https://github.com/RedmMed/RedMed">RedmMed/RedMed</a> for vulnerabilities in the hosted card page or XSS in <code>#d=</code> rendering. Do not file public issues with live API keys or real medical payloads.</p>
+    <p>Open a private GitHub security advisory on <a href="https://github.com/Roooted1776/frisky">Roooted1776/frisky</a> for vulnerabilities in the hosted card page, XSS in <code>#d=</code> rendering, Keychain / vault bypass, or Face ID gate bypass. Or email <a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a>. Do not file public issues with live API keys or real medical payloads. See root <code>SECURITY.md</code>.</p>
 
     <h2><span class="sec-num">8.</span> Trust Root (Cloudflare Pages)</h2>
-    <p>Every band tap opens the Cloudflare Pages deploy of <code>get/</code>, pushed by GitHub Actions on every merge to <code>main</code>. Treat <code>main</code> as production:</p>
+    <p>Every band tap opens the Cloudflare Pages deploy of <code>get/</code> from <code>main</code>. Treat <code>main</code> as production:</p>
     <ol>
-      <li>Enable <strong>branch protection</strong> on <code>main</code> (required PR reviews, no force-push).</li>
-      <li>Restrict who can edit the deploy workflow and repository secrets — <code>CLOUDFLARE_API_TOKEN</code> grants Pages deploy access.</li>
-      <li>Actions are pinned to <strong>commit SHAs</strong> (not mutable tags) in the deploy workflow.</li>
+      <li>Enable <strong>branch protection</strong> on <code>main</code> (required PR reviews, no force-push) when the team size warrants it.</li>
+      <li>Restrict who can edit deploy configuration and repository secrets (Pages / Cloudflare tokens grant production write).</li>
+      <li>Keep Actions pinned to <strong>commit SHAs</strong> (not mutable tags) in any deploy workflow you add.</li>
     </ol>
 
-    <h2><span class="sec-num">9.</span> Google Maps API Key</h2>
-    <p>When set, the Pages workflow writes it to a <strong>world-readable</strong> <code>config/google-api-key</code> file. Assume the key is public and restrict it accordingly:</p>
-    <div class="card">
-      <table>
-        <tr><th>Restriction</th><th>Value</th></tr>
-        <tr><td>APIs</td><td>Geocoding + Places only</td></tr>
-        <tr><td>Web referrer</td><td><code>https://redmed.pages.dev/*</code></td></tr>
-        <tr><td>iOS</td><td>Bundle ID <code>com.redmed.app</code></td></tr>
-        <tr><td>Quotas</td><td>Hard daily caps + billing alerts</td></tr>
-      </table>
-    </div>
+    <h2><span class="sec-num">9.</span> Third-Party Keys</h2>
+    <p>RedMed does not ship a Google Maps (or other) API key in the app bundle today. If a future Pages workflow writes a world-readable key under the site root, assume it is public and restrict it by API, HTTP referrer (<code>https://redmed.pages.dev/*</code>), iOS bundle ID <code>com.redmed.app</code>, and hard daily quotas. Never commit key material — <code>**/google-api-key</code> stays in <code>.gitignore</code>.</p>
 
     <h2><span class="sec-num">10.</span> Dependencies</h2>
     <p>Almost no runtime deps (no npm, no CocoaPods). Do <strong>not</strong> add analytics or crash SDKs that phone home profile or location without an explicit product decision — that would change both the privacy posture and, if PHI were ever transmitted to a vendor under a covered-entity arrangement, the HIPAA analysis.</p>

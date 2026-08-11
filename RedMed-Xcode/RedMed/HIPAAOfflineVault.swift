@@ -54,7 +54,12 @@ enum HIPAAOfflineVault {
         guard let dir = prepare() else {
             throw VaultError.unavailable
         }
-        let url = dir.appendingPathComponent(fileName, isDirectory: false)
+        let name = try validatedFileName(fileName)
+        let url = dir.appendingPathComponent(name, isDirectory: false)
+        // Refuse escapes even if Foundation normalizes oddly on some OS versions.
+        guard url.standardizedFileURL.path.hasPrefix(dir.standardizedFileURL.path + "/") else {
+            throw VaultError.invalidPath
+        }
         try data.write(to: url, options: [.atomic, .completeFileProtection])
         do {
             try harden(url: url, isDirectory: false)
@@ -67,22 +72,42 @@ enum HIPAAOfflineVault {
 
     /// Reads a vault file, or `nil` if missing.
     static func read(fileName: String) -> Data? {
-        guard let dir = prepare() else { return nil }
-        let url = dir.appendingPathComponent(fileName, isDirectory: false)
-        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+        guard let dir = prepare(),
+              let name = try? validatedFileName(fileName) else { return nil }
+        let url = dir.appendingPathComponent(name, isDirectory: false)
+        guard url.standardizedFileURL.path.hasPrefix(dir.standardizedFileURL.path + "/"),
+              FileManager.default.fileExists(atPath: url.path) else { return nil }
         return try? Data(contentsOf: url)
     }
 
     /// Removes a vault file if present.
     static func remove(fileName: String) {
-        guard let dir = rootDirectory else { return }
-        let url = dir.appendingPathComponent(fileName, isDirectory: false)
+        guard let dir = rootDirectory,
+              let name = try? validatedFileName(fileName) else { return }
+        let url = dir.appendingPathComponent(name, isDirectory: false)
+        guard url.standardizedFileURL.path.hasPrefix(dir.standardizedFileURL.path + "/") else { return }
         try? FileManager.default.removeItem(at: url)
     }
 
     enum VaultError: Error {
         case unavailable
         case hardenFailed
+        case invalidPath
+    }
+
+    /// Basename only — reject `/`, `\`, and `..` so callers cannot escape the vault root.
+    private static func validatedFileName(_ fileName: String) throws -> String {
+        let trimmed = fileName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { throw VaultError.invalidPath }
+        guard !trimmed.contains("/"),
+              !trimmed.contains("\\"),
+              trimmed != "." && trimmed != "..",
+              !trimmed.contains("..") else {
+            throw VaultError.invalidPath
+        }
+        let base = (trimmed as NSString).lastPathComponent
+        guard base == trimmed else { throw VaultError.invalidPath }
+        return base
     }
 
     /// Re-applies complete protection + backup exclusion (idempotent).
