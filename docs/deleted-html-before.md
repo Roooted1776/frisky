@@ -14,10 +14,9 @@ Deleted in `ea676c9` — restoring intent as Swift under `Main.swift` except car
 
 - `get.html` — Passerby / scanner bracelet page (RedMed · Help · Aid)
 - `card.html` — Legacy redirect → `get.html` (preserves `#d=`)
-- `PrivacyPolicy.html` — Policy
-- `TOS.html` — Policy
-- `security.html` — Policy
-- `HowItWorks.html` — Was help HTML — converting instructional content into Main.swift; thin HTML stub can redirect to app
+- Policy HTML + `legal-doc.css` — sole copies under `RedMed-Xcode/RedMed/` (app bundle);
+  repo-root policy duplicates removed
+- `HowItWorks.html` — thin redirect stub under `RedMed-Xcode/RedMed/` → `redmed://main`
 
 ## get.html excerpt (before)
 

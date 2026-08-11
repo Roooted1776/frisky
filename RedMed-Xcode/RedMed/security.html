@@ -38,26 +38,29 @@
   <h1 class="legal-doc-title">Security</h1>
   <p class="legal-meta">
     <strong>Effective Date</strong> August 2026<br>
-    <strong>Document Version</strong> 3.0 (United States)<br>
-    <strong>Applicable law</strong> United States — read with the Privacy Policy (HIPAA / state privacy)
+    <strong>Document Version</strong> 3.2 (United States)<br>
+    <strong>Applicable law</strong> United States — read with Privacy Policy and Terms (local-only / HIPAA-aligned / liability)
   </p>
-  <p class="legal-parties">Security practices for the RedMed iPhone app, passerby card page, and passive NFC medical bracelet used in the United States</p>
+  <p class="legal-parties">Security practices for the RedMed iPhone app, passerby card page, and passive NFC identification bracelet used in the United States</p>
 
   <div class="legal-notice">
     <strong>In Short</strong>
-    RedMed is local-first: no operator backend for your profile, no accounts, no cloud sync of medical fields. On-device storage uses the iOS Keychain. The NFC band is deliberately plaintext so any phone can open the emergency card — same trade-off as a printed medical ID. RedMed is not a HIPAA covered entity or business associate for that profile.
+    Local-only EMS assist: profile stays on-device / on-band (Keychain; no RedMed profile backend). Quicker Aid and a local PII/ID handoff to EMS or hospital via NFC tap — not a RedMed cloud transfer. HIPAA-aligned for RedMed as operator (we never receive the profile); not a CE/BA; not “HIPAA certified.” Not a medical device; no outcome promise.
   </div>
 
   <article class="legal-body">
-    <p>This page describes how RedMed approaches security for the App, the hosted passerby card, and the bracelet. It is informational, not a warranty. Read it with the <a href="PrivacyPolicy.html">Privacy Policy</a> and <a href="TOS.html">Terms Of Service</a>.</p>
+    <p>This page describes how RedMed approaches security for the App, the hosted passerby card, and the bracelet. It is informational, <strong>not a warranty</strong>, and does not change the medical-device, no-outcome, or liability terms in the <a href="TOS.html">Terms Of Service</a>. Read it with the <a href="PrivacyPolicy.html">Privacy Policy</a>.</p>
 
     <h2><span class="sec-num">1.</span> Threat Model</h2>
-    <p>Security work focuses on (1) keeping your profile off RedMed servers, (2) protecting on-device storage, (3) hosted page integrity for the passerby card, and (4) safe rendering of untrusted <code>#d=</code> payloads. We do <strong>not</strong> attempt to make a passive NFC medical ID confidential against a deliberate close tap — that would defeat the product.</p>
+    <p>Security work focuses on (1) keeping patient ID / PII off RedMed servers (local-only), (2) protecting on-device storage, (3) hosted page integrity for the passerby card, and (4) safe rendering of untrusted <code>#d=</code> payloads. The band is meant for a <strong>fast local handoff</strong> to EMS / hospital staff — we do <strong>not</strong> attempt to make a passive NFC ID confidential against a deliberate close tap.</p>
 
-    <h2><span class="sec-num">2.</span> HIPAA Context</h2>
-    <p>HIPAA regulates covered entities and their business associates when they handle protected health information. RedMed does not receive your RedMed profile on our systems and is not a covered entity or business associate for that profile. Device-local Keychain encryption and the absence of a profile backend reduce exposure; they are not a substitute for a covered entity’s HIPAA Security Rule program, and we do not market the band as “HIPAA certified.”</p>
+    <h2><span class="sec-num">2.</span> Not a Medical Device; No Outcome Warranty</h2>
+    <p>RedMed is not FDA-cleared or approved as a medical device. Security controls here protect local handling for an EMS-assist / ID-handoff product. They do <strong>not</strong> make RedMed a diagnostic or treatment system, and they do not guarantee that EMS will be reached, that a hospital will ingest the ID, or that any person will receive appropriate care.</p>
 
-    <h2><span class="sec-num">3.</span> On-Device Profile Storage</h2>
+    <h2><span class="sec-num">3.</span> HIPAA — Local-Only Alignment</h2>
+    <p>HIPAA regulates covered entities and their business associates when they handle PHI. RedMed does not receive your RedMed profile on our systems and is not a covered entity or business associate for that profile. Device-local Keychain storage and no profile backend are the <strong>HIPAA-aligned</strong> controls for RedMed as operator. They are not a substitute for a hospital’s HIPAA Security Rule program, and we do not market the band as “HIPAA certified.” When EMS or a hospital copies displayed ID into its own systems, that covered entity’s HIPAA duties apply to its copy.</p>
+
+    <h2><span class="sec-num">4.</span> On-Device Profile Storage</h2>
     <ul>
       <li>Profile fields persist in the iOS <strong>Keychain</strong> with <code>WhenUnlockedThisDeviceOnly</code>.</li>
       <li>Readable only while the device is unlocked; excluded from iCloud and encrypted device backups.</li>
@@ -65,16 +68,16 @@
       <li>Clearing fields and saving overwrites the stored profile; deleting the App removes the Keychain entry.</li>
     </ul>
 
-    <h2><span class="sec-num">4.</span> NFC Band (Deliberately Unencrypted)</h2>
-    <p>Passive NFC medical payloads are <strong>plaintext</strong> (<code>#d=</code> base64url JSON) so any smartphone can open the emergency card without an account. Cloning a tag is like photocopying a wallet medical card. Casual walk-by distance will not fire the band; only a deliberate ~1–2″ antenna tap reads it. Payment / POS terminals use a different protocol (EMV) and do not open the RedMed card.</p>
+    <h2><span class="sec-num">5.</span> NFC Band (Deliberately Unencrypted)</h2>
+    <p>Passive NFC identification payloads are <strong>plaintext</strong> (<code>#d=</code> base64url JSON) so any smartphone can open the emergency card without an account — that is the assist model for EMS / helpers. Cloning a tag is like photocopying a wallet medical card. Casual walk-by distance will not fire the band; only a deliberate ~1–2″ antenna tap reads it. Payment / POS terminals use a different protocol (EMV) and do not open the RedMed card.</p>
 
-    <h2><span class="sec-num">5.</span> Location</h2>
-    <p>GPS starts only on Find Help (When-In-Use). Coordinates stay on-device for display to you / a dispatcher. We do not receive, log, or retain them. Do not log <code>location.hash</code>, NFC URLs, profile JSON, or PIN material in any tooling you add later.</p>
+    <h2><span class="sec-num">6.</span> Location</h2>
+    <p>GPS starts only on Find Help (When-In-Use). Coordinates stay on-device for display to you / a dispatcher. We do not receive, log, or retain them. Location assist does not guarantee that 911 will be reached or that coordinates will be accurate. Do not log <code>location.hash</code>, NFC URLs, profile JSON, or PIN material in any tooling you add later.</p>
 
-    <h2><span class="sec-num">6.</span> Reporting Vulnerabilities</h2>
+    <h2><span class="sec-num">7.</span> Reporting Vulnerabilities</h2>
     <p>Open a private GitHub security advisory on <a href="https://github.com/RedmMed/RedMed">RedmMed/RedMed</a> for vulnerabilities in the hosted card page or XSS in <code>#d=</code> rendering. Do not file public issues with live API keys or real medical payloads.</p>
 
-    <h2><span class="sec-num">7.</span> Trust Root (Cloudflare Pages)</h2>
+    <h2><span class="sec-num">8.</span> Trust Root (Cloudflare Pages)</h2>
     <p>Every band tap opens the Cloudflare Pages deploy of <code>get/</code>, pushed by GitHub Actions on every merge to <code>main</code>. Treat <code>main</code> as production:</p>
     <ol>
       <li>Enable <strong>branch protection</strong> on <code>main</code> (required PR reviews, no force-push).</li>
@@ -82,7 +85,7 @@
       <li>Actions are pinned to <strong>commit SHAs</strong> (not mutable tags) in the deploy workflow.</li>
     </ol>
 
-    <h2><span class="sec-num">8.</span> Google Maps API Key</h2>
+    <h2><span class="sec-num">9.</span> Google Maps API Key</h2>
     <p>When set, the Pages workflow writes it to a <strong>world-readable</strong> <code>config/google-api-key</code> file. Assume the key is public and restrict it accordingly:</p>
     <div class="card">
       <table>
@@ -94,10 +97,10 @@
       </table>
     </div>
 
-    <h2><span class="sec-num">9.</span> Dependencies</h2>
+    <h2><span class="sec-num">10.</span> Dependencies</h2>
     <p>Almost no runtime deps (no npm, no CocoaPods). Do <strong>not</strong> add analytics or crash SDKs that phone home profile or location without an explicit product decision — that would change both the privacy posture and, if PHI were ever transmitted to a vendor under a covered-entity arrangement, the HIPAA analysis.</p>
 
-    <h2><span class="sec-num">10.</span> Contact</h2>
+    <h2><span class="sec-num">11.</span> Contact</h2>
     <p>Security questions: <a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a>.</p>
   </article>
 
