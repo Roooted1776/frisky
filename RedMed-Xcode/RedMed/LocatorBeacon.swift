@@ -8,6 +8,11 @@ enum LocatorBeacon {
     private static var timer: Timer?
     private static var player: AVAudioPlayer?
     private static let interval: TimeInterval = 5
+    /// Serial queue for blocking AVAudioSession work — never run setCategory/setActive on MainActor.
+    private static let sessionQueue = DispatchQueue(label: "redmed.locator-beacon.session")
+    /// Bumped on prepare / end so late activate callbacks cannot arm after cancel.
+    private static var sessionEpoch = 0
+    private static var sessionReady = false
 
     /// Crash motion arm — siren continues while backgrounded until cancelled.
     static func beginSurvival() {
@@ -21,19 +26,14 @@ enum LocatorBeacon {
     static func endSurvival() {
         guard survivalHold else { return }
         survivalHold = false
+        sessionReady = false
+        sessionEpoch &+= 1
         stopRepeating()
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        deactivateSession()
     }
 
     private static func startRepeating() {
-        configureSession()
-        fire()
-        timer?.invalidate()
-        let t = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
-            Task { @MainActor in fire() }
-        }
-        RunLoop.main.add(t, forMode: .common)
-        timer = t
+        prepareSessionThenArm()
     }
 
     private static func stopRepeating() {
@@ -43,18 +43,53 @@ enum LocatorBeacon {
         player = nil
     }
 
-    private static func configureSession() {
-        let session = AVAudioSession.sharedInstance()
-        do {
-            try session.setCategory(.playback, mode: .default, options: [.duckOthers])
-            try session.setActive(true)
-        } catch {
-            // Session failures stay silent — brightness boost still runs.
+    private static func prepareSessionThenArm() {
+        sessionEpoch &+= 1
+        let epoch = sessionEpoch
+        sessionReady = false
+        timer?.invalidate()
+        timer = nil
+
+        sessionQueue.async {
+            let session = AVAudioSession.sharedInstance()
+            do {
+                try session.setCategory(.playback, mode: .default, options: [.duckOthers])
+            } catch {
+                // Session failures stay silent — brightness boost still runs.
+                return
+            }
+            session.activate(options: []) { success, _ in
+                guard success else { return }
+                Task { @MainActor in
+                    guard Self.survivalHold, epoch == Self.sessionEpoch else {
+                        Self.deactivateSession()
+                        return
+                    }
+                    Self.sessionReady = true
+                    Self.fire()
+                    Self.armTimer()
+                }
+            }
+        }
+    }
+
+    private static func armTimer() {
+        timer?.invalidate()
+        let t = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
+            Task { @MainActor in fire() }
+        }
+        RunLoop.main.add(t, forMode: .common)
+        timer = t
+    }
+
+    private static func deactivateSession() {
+        sessionQueue.async {
+            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         }
     }
 
     private static func fire() {
-        configureSession()
+        guard survivalHold, sessionReady else { return }
         guard let data = alarmWAV() else { return }
         do {
             let p = try AVAudioPlayer(data: data)
