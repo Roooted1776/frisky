@@ -38,27 +38,27 @@
   <h1 class="legal-doc-title">Security</h1>
   <p class="legal-meta">
     <strong>Effective Date</strong> August 2026<br>
-    <strong>Document Version</strong> 3.1 (United States)<br>
-    <strong>Applicable law</strong> United States — read with the Privacy Policy and Terms (HIPAA / device / liability)
+    <strong>Document Version</strong> 3.2 (United States)<br>
+    <strong>Applicable law</strong> United States — read with Privacy Policy and Terms (local-only / HIPAA-aligned / liability)
   </p>
   <p class="legal-parties">Security practices for the RedMed iPhone app, passerby card page, and passive NFC identification bracelet used in the United States</p>
 
   <div class="legal-notice">
     <strong>In Short</strong>
-    RedMed is a local-first <strong>emergency assist</strong>, not a medical device and not a promise of any medical outcome. No operator backend for your profile, no accounts, no cloud sync of medical fields. On-device storage uses the iOS Keychain. The NFC band is deliberately plaintext so any phone can open the emergency card — same trade-off as a printed medical ID. RedMed is not a HIPAA covered entity or business associate for that profile.
+    Local-only EMS assist: profile stays on-device / on-band (Keychain; no RedMed profile backend). Quicker Aid and a local PII/ID handoff to EMS or hospital via NFC tap — not a RedMed cloud transfer. HIPAA-aligned for RedMed as operator (we never receive the profile); not a CE/BA; not “HIPAA certified.” Not a medical device; no outcome promise.
   </div>
 
   <article class="legal-body">
     <p>This page describes how RedMed approaches security for the App, the hosted passerby card, and the bracelet. It is informational, <strong>not a warranty</strong>, and does not change the medical-device, no-outcome, or liability terms in the <a href="TOS.html">Terms Of Service</a>. Read it with the <a href="PrivacyPolicy.html">Privacy Policy</a>.</p>
 
     <h2><span class="sec-num">1.</span> Threat Model</h2>
-    <p>Security work focuses on (1) keeping your profile off RedMed servers, (2) protecting on-device storage, (3) hosted page integrity for the passerby card, and (4) safe rendering of untrusted <code>#d=</code> payloads. We do <strong>not</strong> attempt to make a passive NFC ID confidential against a deliberate close tap — that would defeat the assist purpose (showing ID to EMS / helpers).</p>
+    <p>Security work focuses on (1) keeping patient ID / PII off RedMed servers (local-only), (2) protecting on-device storage, (3) hosted page integrity for the passerby card, and (4) safe rendering of untrusted <code>#d=</code> payloads. The band is meant for a <strong>fast local handoff</strong> to EMS / hospital staff — we do <strong>not</strong> attempt to make a passive NFC ID confidential against a deliberate close tap.</p>
 
     <h2><span class="sec-num">2.</span> Not a Medical Device; No Outcome Warranty</h2>
-    <p>RedMed is not FDA-cleared or approved as a medical device. Security controls here (Keychain, no profile backend, Pages integrity) protect data handling for a consumer ID/assist product. They do <strong>not</strong> make RedMed a diagnostic, monitoring, or treatment system, and they do not guarantee that EMS will be reached or that any person will receive appropriate care.</p>
+    <p>RedMed is not FDA-cleared or approved as a medical device. Security controls here protect local handling for an EMS-assist / ID-handoff product. They do <strong>not</strong> make RedMed a diagnostic or treatment system, and they do not guarantee that EMS will be reached, that a hospital will ingest the ID, or that any person will receive appropriate care.</p>
 
-    <h2><span class="sec-num">3.</span> HIPAA Context</h2>
-    <p>HIPAA regulates covered entities and their business associates when they handle protected health information. RedMed does not receive your RedMed profile on our systems and is not a covered entity or business associate for that profile. Device-local Keychain encryption and the absence of a profile backend reduce exposure; they are not a substitute for a covered entity’s HIPAA Security Rule program, and we do not market the band as “HIPAA certified.”</p>
+    <h2><span class="sec-num">3.</span> HIPAA — Local-Only Alignment</h2>
+    <p>HIPAA regulates covered entities and their business associates when they handle PHI. RedMed does not receive your RedMed profile on our systems and is not a covered entity or business associate for that profile. Device-local Keychain storage and no profile backend are the <strong>HIPAA-aligned</strong> controls for RedMed as operator. They are not a substitute for a hospital’s HIPAA Security Rule program, and we do not market the band as “HIPAA certified.” When EMS or a hospital copies displayed ID into its own systems, that covered entity’s HIPAA duties apply to its copy.</p>
 
     <h2><span class="sec-num">4.</span> On-Device Profile Storage</h2>
     <ul>
