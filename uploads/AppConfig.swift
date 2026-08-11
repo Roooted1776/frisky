@@ -1,7 +1,7 @@
 import Foundation
 
 enum AppConfig {
-    /// Packaging QR landing — same shell as main minus NFC/Edit (`get.html`).
+    /// Packaging QR / band-setup landing (iPhone → App Store). Keep in sync with `get.html`.
     /// Hosted on Cloudflare Pages, not GitHub Pages — don't put a personal
     /// GitHub username back in this URL.
     static let getStartedURL = "https://redmed.pages.dev/get.html"

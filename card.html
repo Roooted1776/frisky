@@ -9,10 +9,11 @@
 <link rel="apple-touch-icon" href="assets/BrandLogo.png">
 <link rel="icon" href="assets/BrandLogo.png">
 <title>RedMed</title>
-<!-- Local no-server NFC tap page. Profile data lives only in #d= — no backend.
-     Mirrored in RedMed-Xcode/RedMed/card.html (bundled; unused in UI until NFC paired).
-     Ped/EMS: RedMed + Help + Aid viewable. No Edit. No NFC write UI.
-     Keep in sync with PublicCardView scanner shell. -->
+<!-- Passerby / rescuer page: phone taps the bracelet → this opens (card/#d=…).
+     Owner edit + Aid authoring is the native Swift app, not this file.
+     Profile data lives only in #d= — no backend. Mirrored in
+     RedMed-Xcode/RedMed/card.html. Ped/EMS: RedMed + Help + Aid, read-only.
+     No Edit. No NFC write UI. Keep in sync with PublicCardView scanner shell. -->
 <style>
   :root {
     --accent: #e11d48;

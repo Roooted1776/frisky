@@ -52,13 +52,18 @@ struct ContentView: View {
             }
             .ignoresSafeArea(edges: .bottom)
         }
-        // Location was already asked at the launch gate. Re-check on
-        // foreground for denied → Settings; still do not start GPS here.
+        // Refresh Location banner on foreground (e.g. back from Settings).
+        // Does not auto-prompt or start GPS — Find Help requests When-In-Use.
         .onChange(of: scenePhase) { _, phase in
             guard !isScannerSession, phase == .active else { return }
             LocationAccessSuggester.shared.suggestIfNeeded()
         }
-        .onAppear { clampScannerTab() }
+        .onAppear {
+            clampScannerTab()
+            if !isScannerSession {
+                LocationAccessSuggester.shared.suggestIfNeeded()
+            }
+        }
         .onChange(of: isScannerSession) { _, _ in clampScannerTab() }
     }
 

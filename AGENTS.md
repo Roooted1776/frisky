@@ -18,12 +18,20 @@ set up a working runtime here:
 **There are no dependencies to install:** no Swift Package Manager, CocoaPods, Carthage, or npm.
 The app has no backend, database, or web service.
 
+**Roles:** The owner uses the native SwiftUI app under `RedMed-Xcode/` (edit
+profile, Aid treatments, NFC write). A passerby who taps the bracelet opens the
+hosted scan page `card.html` (`AppConfig.medicalCardBaseURL`) — read-only RedMed /
+Help / Aid, no Edit, no NFC write. `get.html` is packaging / App Store setup only
+(no health data). Design canvas for the owner UI: `Main.dc.html`.
+
 **Cold launch:** Do **not** start Core Location *updates* / MapKit / trauma JSON at
-`@main`. Ask When-In-Use authorization on a launch gate **before** the main tabs
-open (install prompt) — continuous GPS and hospital lookup still start only when
-Find 911 / that UI is visible (privacy + time-to-first-frame). Newer sources under
-`uploads/` use lazy tab mounting (switch + CustomTabBar), default RedMed, and async
-trauma catalog warm-up for the same reason.
+`@main`, and do **not** block or replace the main tabs with a Location gate.
+First launch opens the owner tabs immediately. Suggest Location via the in-app
+banner; request When-In-Use only when the user taps Allow or opens Find Help —
+continuous GPS and hospital lookup still start only when that UI is visible
+(privacy + time-to-first-frame). Newer sources under `uploads/` use lazy tab
+mounting (switch + CustomTabBar), default RedMed, and async trauma catalog
+warm-up for the same reason.
 
 **Consequence for cloud agents:** the update script is intentionally a no-op. Code review and static
 edits to the `.swift` files are possible, but do not attempt to build/run/test here. Any actual

@@ -4,16 +4,14 @@ import UIKit
 import SwiftUI
 import Combine
 
-/// Gates the owner app until Location has been asked, then keeps suggesting
-/// until When-In-Use (or Always) is granted.
-/// Does **not** start GPS updates — Find Help still starts updates only when visible.
+/// Suggests Location until When-In-Use (or Always) is granted.
+/// Does **not** gate app launch and does **not** start GPS updates —
+/// Find Help still starts updates only when that tab is visible.
 final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManagerDelegate {
     static let shared = LocationAccessSuggester()
 
     private let manager = CLLocationManager()
 
-    /// False while undecided — main tabs stay hidden until the system prompt is answered.
-    @Published private(set) var canOpenApp = false
     /// True when the owner app should keep suggesting Location.
     @Published private(set) var needsSuggestion = false
     /// Denied/restricted — only Settings can fix it.
@@ -28,39 +26,25 @@ final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManag
     func refresh() {
         switch manager.authorizationStatus {
         case .authorizedAlways, .authorizedWhenInUse:
-            canOpenApp = true
             needsSuggestion = false
             mustOpenSettings = false
         case .denied, .restricted:
-            // Asked and answered — open the app; banner nudges Settings.
-            canOpenApp = true
             needsSuggestion = true
             mustOpenSettings = true
         case .notDetermined:
-            canOpenApp = false
             needsSuggestion = true
             mustOpenSettings = false
         @unknown default:
-            canOpenApp = false
             needsSuggestion = true
             mustOpenSettings = false
         }
     }
 
-    /// System dialog while undecided. Safe to call repeatedly; does not start GPS.
-    func askIfNeeded() {
-        refresh()
-        guard manager.authorizationStatus == .notDetermined else { return }
-        manager.requestWhenInUseAuthorization()
-    }
-
-    /// Call on foreground once the app is open. Banner stays until granted.
+    /// Refresh banner state on foreground. Does **not** auto-present the system
+    /// dialog — first launch stays on the main tabs. Authorization is requested
+    /// when the user taps Allow on the banner or opens Find Help.
     func suggestIfNeeded() {
         refresh()
-        guard needsSuggestion else { return }
-        if manager.authorizationStatus == .notDetermined {
-            manager.requestWhenInUseAuthorization()
-        }
     }
 
     func primaryAction() {
@@ -86,90 +70,7 @@ final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManag
     }
 }
 
-/// Shown instead of the main tabs until Location has been asked (Allow / Don't Allow).
-struct LocationLaunchGateView: View {
-    @ObservedObject private var suggester = LocationAccessSuggester.shared
-    @State private var appeared = false
-    @State private var pulse = false
-
-    var body: some View {
-        ZStack {
-            // Soft radial wash behind the mark — keeps the hero readable on #fff7f7.
-            RadialGradient(
-                colors: [
-                    Color.redmedAccent.opacity(0.14),
-                    Color.redmedBg.opacity(0)
-                ],
-                center: .center,
-                startRadius: 20,
-                endRadius: 260
-            )
-            .scaleEffect(pulse ? 1.06 : 0.94)
-            .opacity(appeared ? 1 : 0)
-            .animation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true), value: pulse)
-
-            VStack(spacing: 24) {
-                Spacer()
-
-                Image("BrandWordmark")
-                    .resizable()
-                    .interpolation(.high)
-                    .scaledToFit()
-                    .frame(maxWidth: 280)
-                    .shadow(color: Color.redmedAccent.opacity(0.18), radius: 18, y: 10)
-                    .scaleEffect(appeared ? 1 : 0.92)
-                    .opacity(appeared ? 1 : 0)
-
-                HStack(spacing: 8) {
-                    Image(systemName: "location.fill")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.redmedAccent)
-                    Text("Allow Location so Find Help can show exact GPS for dispatch.")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .multilineTextAlignment(.leading)
-                }
-                .padding(.horizontal, 36)
-                .opacity(appeared ? 1 : 0)
-                .offset(y: appeared ? 0 : 10)
-
-                Button("Allow Location") {
-                    suggester.primaryAction()
-                }
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(
-                    LinearGradient(
-                        colors: [Color(red: 1, green: 0.447, blue: 0.537), .redmedAccent],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .shadow(color: Color.redmedAccent.opacity(0.28), radius: 10, y: 5)
-                .padding(.horizontal, 32)
-                .padding(.top, 4)
-                .opacity(appeared ? 1 : 0)
-                .offset(y: appeared ? 0 : 14)
-
-                Spacer()
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.redmedBg.ignoresSafeArea())
-        .onAppear {
-            suggester.askIfNeeded()
-            withAnimation(.spring(response: 0.65, dampingFraction: 0.82)) {
-                appeared = true
-            }
-            pulse = true
-        }
-    }
-}
-
-/// Always-visible nudge until Location is allowed.
+/// Always-visible nudge until Location is allowed. Never replaces the main tabs.
 struct LocationSuggestionBanner: View {
     @ObservedObject private var suggester = LocationAccessSuggester.shared
 
