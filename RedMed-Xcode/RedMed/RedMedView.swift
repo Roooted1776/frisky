@@ -26,7 +26,7 @@ struct RedMedView: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
-                // Header — matches Main.dc.html (no wordmark nav bar)
+                // Header — brand mark + Edit (no wordmark nav bar)
                 header
 
                 // YOU card (no section label in Main design)

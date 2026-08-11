@@ -1,13 +1,12 @@
 import Foundation
 
 enum AppConfig {
-    /// Packaging QR / band-setup landing (iPhone → App Store). Keep in sync with `get.html`.
-    /// Hosted on Cloudflare Pages, not GitHub Pages — don't put a personal
-    /// GitHub username back in this URL.
-    static let getStartedURL = "https://redmed.pages.dev/get.html"
-
     /// Update when the App Store listing is live (App Store Connect app ID).
+    /// Packaging QR / setup links point here — not at an HTML landing page.
     static let appStoreURL = "https://apps.apple.com/app/redmed/id0000000000"
+
+    /// Alias for setup QR / deep links (same as `appStoreURL`).
+    static let getStartedURL = appStoreURL
 
     /// HTTPS URI written to passive NFC bands (CoreNFC). `#d=…` on chip.
     /// Tap the band → any smartphone opens the hosted emergency card in the browser.

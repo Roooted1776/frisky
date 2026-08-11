@@ -382,8 +382,8 @@ struct DraftLine: Identifiable, Equatable {
     }
 }
 
-/// Main.dc.html rows: padding 13/16, TextField + ✕. No FocusState, no autocomplete
-/// UI — those were hanging the sheet when moving between sections / typing.
+/// Edit rows: padding 13/16, TextField + ✕. No FocusState, no autocomplete UI —
+/// those were hanging the sheet when moving between sections / typing.
 private struct DraftLinesEditor: View {
     @Binding var lines: [DraftLine]
     let placeholder: String

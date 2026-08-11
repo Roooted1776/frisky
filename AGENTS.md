@@ -18,11 +18,10 @@ set up a working runtime here:
 **There are no dependencies to install:** no Swift Package Manager, CocoaPods, Carthage, or npm.
 The app has no backend, database, or web service.
 
-**Roles:** The owner uses the native SwiftUI app under `RedMed-Xcode/` (edit
-profile, Aid treatments, NFC write). A passerby who taps the bracelet opens the
-hosted scan page `card.html` (`AppConfig.medicalCardBaseURL`) — read-only RedMed /
-Help / Aid, no Edit, no NFC write. `get.html` is packaging / App Store setup only
-(no health data). Design canvas for the owner UI: `Main.dc.html`.
+**Roles / HTML:** The owner uses the native SwiftUI app under `RedMed-Xcode/`
+(edit profile, Aid treatments, NFC write). Product HTML is only (1) the passerby
+scan page `card.html` (`AppConfig.medicalCardBaseURL`) and (2) policy/help pages
+(`PrivacyPolicy`, `TOS`, `security`, `HowItWorks`). No other HTML shells.
 
 **Cold launch:** Do **not** start Core Location *updates* / MapKit / trauma JSON at
 `@main`, and do **not** block or replace the main tabs with a Location gate.
