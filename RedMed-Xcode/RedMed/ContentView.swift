@@ -6,8 +6,9 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var tab: AppTab = .redmed
 
-    /// Ped/EMS scanners: never NFC. Owners open the NFC write page directly (no Get gate).
-    private var showsNFC: Bool { !isScannerSession }
+    /// Ped/EMS scanners: never NFC. Owners see the NFC tab only when hardware is enabled
+    /// (`AppConfig.nfcHardwareEnabled`); Get/Accept still gates the write page.
+    private var showsNFC: Bool { !isScannerSession && AppConfig.nfcHardwareEnabled }
 
     private var scannerSafeTab: Binding<AppTab> {
         Binding(

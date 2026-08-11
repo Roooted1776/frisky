@@ -1,8 +1,16 @@
 # NFC Tag Reading
 
-CoreNFC write/read is wired in production (`NFCWriter` / `NFCReader`). Simulator
-cannot do real NFC — on Simulator / when `readingAvailable` is false the UI
-shows an error and does **not** fake a successful link.
+CoreNFC write/read is wired in production (`NFCWriter` / `NFCReader`) — real
+`NFCNDEFReaderSession` sessions with write + read-back verify. There is **no**
+Simulator fake-success path: when NFC is unavailable the UI shows an error and
+does not mark the bracelet linked.
+
+## Currently disabled
+
+Owner NFC UI and sessions are off via `AppConfig.nfcHardwareEnabled = false`.
+`RedMed.entitlements` keeps the NFC key commented so free/unsigned builds still
+sign. Flip both when you have a paid Apple Developer Program license and a
+physical iPhone to test.
 
 ## RF / hardware contract
 
@@ -24,12 +32,14 @@ shows an error and does **not** fake a successful link.
   antenna is pressed against an NDEF tag (~1–2″). RedMed cannot disable that OS
   path; it is unrelated to walk-by and is not started by this app.
 
-## Portal / signing checklist
+## Enable checklist
 
-1. Developer portal → App ID `com.redmed.app` → enable **NFC Tag Reading**
-2. Xcode → Signing & Capabilities → **Near Field Communication Tag Reading**
-3. Confirm `RedMed.entitlements` has `com.apple.developer.nfc.readersession.formats` = `NDEF`
-4. Confirm `Info.plist` has `NFCReaderUsageDescription`
-5. Device test: write band → second phone Safari tap → emergency card
+1. Set `AppConfig.nfcHardwareEnabled = true`
+2. Uncomment `com.apple.developer.nfc.readersession.formats` → `NDEF` in
+   `RedMed.entitlements`
+3. Developer portal → App ID `com.redmed.app` → enable **NFC Tag Reading**
+4. Xcode → Signing & Capabilities → **Near Field Communication Tag Reading**
+5. Confirm `Info.plist` has `NFCReaderUsageDescription`
+6. Device test: write band → second phone Safari tap → emergency card
 
 Free Apple Developer teams cannot ship the NFC entitlement — paid Program required.
