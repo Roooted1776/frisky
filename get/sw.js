@@ -11,7 +11,7 @@
  * cache: 'reload' so neither HTTP disk cache nor Cache Storage keep a stale
  * decrypt page.
  */
-var CACHE = 'redmed-get-v6';
+var CACHE = 'redmed-get-v7';
 var ASSETS = [
   './',
   './index.html',
@@ -36,6 +36,17 @@ function precache(cache) {
         .catch(function () { /* optional path missing */ });
     })
   );
+}
+
+function cachedShell(req) {
+  return caches.match(req).then(function (cached) {
+    return (
+      cached ||
+      caches.match('./index.html').then(function (page) {
+        return page || caches.match('./');
+      })
+    );
+  });
 }
 
 function isShellRequest(req) {
@@ -91,17 +102,15 @@ self.addEventListener('fetch', function (event) {
           caches.open(CACHE).then(function (cache) {
             cache.put(req, copy);
           });
+          return res;
         }
-        return res;
-      }).catch(function () {
-        return caches.match(req).then(function (cached) {
-          return (
-            cached ||
-            caches.match('./index.html').then(function (page) {
-              return page || caches.match('./');
-            })
-          );
+        // HTTP 4xx/5xx still resolve — fall back to Cache Storage so an
+        // origin outage does not blank a previously cached emergency card.
+        return cachedShell(req).then(function (cached) {
+          return cached || res;
         });
+      }).catch(function () {
+        return cachedShell(req);
       })
     );
     return;

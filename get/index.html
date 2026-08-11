@@ -632,6 +632,7 @@
   resolveLogo();
 
   var MAX_PAYLOAD = 50000;
+  var MAX_INFLATED = 65536;
   var MAX_LIST = 40;
   var MAX_STR = 200;
   var BLOOD = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
@@ -846,9 +847,30 @@
     }
     var ds = new DecompressionStream('deflate');
     var stream = new Blob([bytes]).stream().pipeThrough(ds);
-    return new Response(stream).arrayBuffer().then(function (buf) {
-      return new Uint8Array(buf);
-    });
+    var reader = stream.getReader();
+    var chunks = [];
+    var total = 0;
+    function pump() {
+      return reader.read().then(function (result) {
+        if (result.done) {
+          var out = new Uint8Array(total);
+          var offset = 0;
+          for (var i = 0; i < chunks.length; i++) {
+            out.set(chunks[i], offset);
+            offset += chunks[i].byteLength;
+          }
+          return out;
+        }
+        total += result.value.byteLength;
+        if (total > MAX_INFLATED) {
+          reader.cancel();
+          return Promise.reject(new Error('inflated too large'));
+        }
+        chunks.push(result.value);
+        return pump();
+      });
+    }
+    return pump();
   }
 
   function setRow(id, value) {

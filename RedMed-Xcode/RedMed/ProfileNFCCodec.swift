@@ -516,10 +516,14 @@ enum ProfileNFCCodec {
         return try? JSONSerialization.jsonObject(with: data, options: [])
     }
 
+    /// Hard cap on inflated legacy payloads (bracelet / `#d=` JSON is tiny).
+    private static let maxInflatedBytes = 64 * 1024
+
     /// Foundation zlib (iOS 13+) — same wrapper `DecompressionStream('deflate')` expects.
     private static func zlibDecompress(_ data: Data) -> Data? {
         do {
             let out: NSData = try (data as NSData).decompressed(using: .zlib)
+            guard out.length <= maxInflatedBytes else { return nil }
             return out as Data
         } catch {
             return nil

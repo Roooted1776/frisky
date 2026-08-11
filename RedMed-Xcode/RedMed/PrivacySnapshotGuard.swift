@@ -16,13 +16,13 @@ struct PrivacySnapshotGuard<Content: View>: View {
         ZStack {
             content
 
+            // No opacity animation — iOS may capture the switcher snapshot while a
+            // fade is mid-flight, leaking PHI under a translucent cover.
             if scenePhase != .active {
                 privacyCover
-                    .transition(.opacity)
                     .zIndex(999)
             }
         }
-        .animation(.easeInOut(duration: 0.12), value: scenePhase)
     }
 
     private var privacyCover: some View {

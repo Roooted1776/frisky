@@ -43,8 +43,8 @@
 		AABB00000000000000000024 /* get.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000024 /* get.html */; };
 		AABB00000000000000000025 /* sw.js in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000025 /* sw.js */; };
 		AABB00000000000000000022 /* BrandLogo.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000022 /* BrandLogo.png */; };
-		AABB00000000000000000026 /* HIPAAOfflineVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000026 /* HIPAAOfflineVault.swift */; };
-		AABB00000000000000000027 /* VaultHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000027 /* VaultHistoryStore.swift */; };
+		AABB0000000000000000002A /* HIPAAOfflineVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002A /* HIPAAOfflineVault.swift */; };
+		AABB0000000000000000002B /* VaultHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002B /* VaultHistoryStore.swift */; };
 		AABB00000000000000000028 /* VaultHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000028 /* VaultHistoryView.swift */; };
 		AABB00000000000000000029 /* PrivacySnapshotGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000029 /* PrivacySnapshotGuard.swift */; };
 /* End PBXBuildFile section */
@@ -89,8 +89,8 @@
 		AAAA00000000000000000024 /* get.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = get.html; sourceTree = "<group>"; };
 		AAAA00000000000000000025 /* sw.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = sw.js; sourceTree = "<group>"; };
 		AAAA00000000000000000022 /* BrandLogo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BrandLogo.png; sourceTree = "<group>"; };
-		AAAA00000000000000000026 /* HIPAAOfflineVault.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HIPAAOfflineVault.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000027 /* VaultHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultHistoryStore.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000002A /* HIPAAOfflineVault.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HIPAAOfflineVault.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000002B /* VaultHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultHistoryStore.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000028 /* VaultHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultHistoryView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000029 /* PrivacySnapshotGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacySnapshotGuard.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -136,8 +136,8 @@
 				AAAA00000000000000000027 /* BrightnessBoost.swift */,
 				AAAA00000000000000000028 /* LocatorBeacon.swift */,
 				AAAA0000000000000000001B /* KeychainStore.swift */,
-				AAAA00000000000000000026 /* HIPAAOfflineVault.swift */,
-				AAAA00000000000000000027 /* VaultHistoryStore.swift */,
+				AAAA0000000000000000002A /* HIPAAOfflineVault.swift */,
+				AAAA0000000000000000002B /* VaultHistoryStore.swift */,
 				AAAA00000000000000000028 /* VaultHistoryView.swift */,
 				AAAA00000000000000000029 /* PrivacySnapshotGuard.swift */,
 				AAAA00000000000000000020 /* EmergencyNumber.swift */,
@@ -268,8 +268,8 @@
 				AABB00000000000000000027 /* BrightnessBoost.swift in Sources */,
 				AABB00000000000000000028 /* LocatorBeacon.swift in Sources */,
 				AABB0000000000000000001B /* KeychainStore.swift in Sources */,
-				AABB00000000000000000026 /* HIPAAOfflineVault.swift in Sources */,
-				AABB00000000000000000027 /* VaultHistoryStore.swift in Sources */,
+				AABB0000000000000000002A /* HIPAAOfflineVault.swift in Sources */,
+				AABB0000000000000000002B /* VaultHistoryStore.swift in Sources */,
 				AABB00000000000000000028 /* VaultHistoryView.swift in Sources */,
 				AABB00000000000000000029 /* PrivacySnapshotGuard.swift in Sources */,
 				AABB00000000000000000020 /* EmergencyNumber.swift in Sources */,
