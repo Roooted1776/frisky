@@ -93,6 +93,8 @@ struct AidView: View {
                         }
                     }
 
+                    CrashSurvivalCancelCard()
+
                     // Quote moved from RedMed (main) tab — sits below the panes
                     Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
                         .font(.system(size: 12, weight: .medium))
