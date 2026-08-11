@@ -12,7 +12,7 @@ struct EmergencyView: View {
             NavigationView {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 8) {
-                    Text("Locator on — full brightness, beep every 5s. Crash impact arms siren + brightness. Stop the detection on Aid.")
+                    Text("Crash / severe impact arms siren + full brightness. Stop the detection on Aid.")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.redmedAccent)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -133,8 +133,6 @@ struct EmergencyView: View {
             }
             } // NavigationView
         } // VStack
-        .maxBrightnessForVisibility()
-        .locatorBeaconEveryFiveSeconds()
     }
 }
 

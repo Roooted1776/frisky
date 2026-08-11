@@ -41,7 +41,6 @@ struct PublicCardView: View {
             .environmentObject(snapshot)
             .environment(\.isScannerSession, true)
             .environment(\.scannerDismiss, { dismiss() })
-            .maxBrightnessForVisibility()
     }
 }
 
