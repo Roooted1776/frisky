@@ -358,7 +358,11 @@ struct EditProfileView: View {
     private func editCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         VStack(spacing: 0) { content() }
             .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
+                    .stroke(Color.redmedDivider, lineWidth: 1)
+            )
     }
 
     // MARK: - Persistence

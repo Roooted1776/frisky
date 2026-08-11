@@ -76,19 +76,15 @@ struct AidView: View {
                     }
                 }
 
-                Text("expand pane - tap a pane")
+                Text("Tap a pane to expand")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(.redmedMuted)
-
-                HStack(spacing: 8) {
-                    PillTag(text: "expand pane - tap a pane", accent: true)
-                }
-                .padding(.bottom, 2)
+                    .padding(.bottom, 2)
 
                 // Panes + cancel + quote share one stack so LazyVStack spacing
                 // does not pad the 5pt gap under the lowest pane.
                 VStack(alignment: .leading, spacing: 0) {
-                    LazyVGrid(columns: columns, spacing: 14) {
+                    LazyVGrid(columns: columns, spacing: 12) {
                         ForEach(AidPaneCatalog.panes) { pane in
                             let isOpen = openPane == pane.id
                             PaneCard(pane: pane, isOpen: isOpen) { key in
@@ -108,13 +104,16 @@ struct AidView: View {
                     CrashSurvivalCancelCard()
 
                     Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.redmedDark)
                         .multilineTextAlignment(.center)
                         .lineSpacing(4)
+                        .frame(maxWidth: 300)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                        .redmedBox()
                         .frame(maxWidth: .infinity)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 20)
+                        .padding(.top, 16)
                         .padding(.bottom, 8)
                 }
             }
@@ -148,9 +147,9 @@ struct PaneCard: View {
                 HStack(alignment: .top, spacing: 8) {
                     Text(pane.emoji)
                         .font(.system(size: 20))
-                        .frame(width: 38, height: 38)
+                        .frame(width: 36, height: 36)
                         .background(isOpen ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
-                        .clipShape(RoundedRectangle(cornerRadius: 11))
+                        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
 
                     VStack(alignment: .leading, spacing: 3) {
                         Text(pane.title)
@@ -169,14 +168,14 @@ struct PaneCard: View {
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundColor(.redmedAccent)
                 }
-                .padding(13)
+                .padding(12)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .frame(minHeight: 96, alignment: .top)
+            .frame(minHeight: 88, alignment: .top)
 
             if isOpen {
-                VStack(spacing: 7) {
+                VStack(spacing: 6) {
                     ForEach(pane.topics, id: \.key) { topic in
                         Button { onTap(topic.key) } label: {
                             HStack {
@@ -189,26 +188,28 @@ struct PaneCard: View {
                                     .foregroundColor(.redmedMuted)
                             }
                             .padding(.horizontal, 12).padding(.vertical, 10)
-                            .background(Color.white.opacity(0.8))
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.redmedDivider, lineWidth: 1))
+                            .background(Color.white.opacity(0.85))
+                            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
+                                    .stroke(Color.redmedDivider, lineWidth: 1)
+                            )
                         }
                         .buttonStyle(.plain)
                     }
                 }
                 .padding(.horizontal, 10)
-                .padding(.bottom, 14)
+                .padding(.bottom, 12)
             }
         }
         .background(Color.redmedSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
                 .stroke(
-                    isOpen ? Color.redmedAccent.opacity(0.28) : Color.redmedDark.opacity(0.08),
+                    isOpen ? Color.redmedAccent.opacity(0.28) : Color.redmedDivider,
                     lineWidth: 1
                 )
         )
-        .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
     }
 }

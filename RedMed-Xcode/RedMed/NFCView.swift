@@ -11,7 +11,7 @@ struct NFCView: View {
     @Environment(\.isScannerSession) private var isScannerSession
     @StateObject private var band = NFCBandManager()
 
-    private let boxRadius: CGFloat = 8
+    private let boxRadius = RedMedChrome.boxRadius
 
     var body: some View {
         if isScannerSession {
