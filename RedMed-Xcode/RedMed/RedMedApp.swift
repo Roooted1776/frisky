@@ -15,12 +15,12 @@ struct RedMedApp: App {
                 .environmentObject(profile)
             }
             .task {
-                // First paint with zero Location; CoreMotion starts after yield.
+                // First paint with zero Location / vault / Keychain decode.
                 await Task.yield()
                 CrashMotionGuard.shared.startMonitoring()
-            }
-            .onAppear {
-                HIPAAOfflineVault.prepare()
+                Task.detached(priority: .utility) {
+                    _ = HIPAAOfflineVault.prepare()
+                }
             }
             .onOpenURL { url in
                 // Policies / get.html redirect with redmed://main

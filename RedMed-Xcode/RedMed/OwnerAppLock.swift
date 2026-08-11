@@ -11,30 +11,26 @@ struct OwnerAppLock<Content: View>: View {
     @ViewBuilder var content: () -> Content
 
     private enum Gate {
-        case resolving
         case locked
         case unlocked
     }
 
-    @State private var gate: Gate = .resolving
+    @State private var gate: Gate = ProfileData.hasStoredProfile() ? .locked : .unlocked
     @State private var isAuthenticating = false
     @State private var failed = false
-    @State private var hasEverHadSensitiveData = false
+    @State private var hasEverHadSensitiveData = ProfileData.hasStoredProfile()
     /// Bumps on lock so a late Face ID success cannot unlock after background.
     @State private var authGeneration = 0
 
     var body: some View {
         ZStack {
             switch gate {
-            case .resolving:
-                Color.redmedBg.ignoresSafeArea()
             case .unlocked:
                 content()
             case .locked:
                 lockScreen
             }
         }
-        .onAppear { resolveInitialGate() }
         .onChange(of: scenePhase) { _, phase in
             // LAContext / system auth sheets put the scene `.inactive`.
             // Only purge + lock on true background (same rule as VaultHistoryView).
@@ -97,15 +93,6 @@ struct OwnerAppLock<Content: View>: View {
         }
         .onAppear {
             if !isAuthenticating { unlock() }
-        }
-    }
-
-    private func resolveInitialGate() {
-        if profile.hasSensitiveProfileData {
-            hasEverHadSensitiveData = true
-            lock(purge: true)
-        } else {
-            gate = .unlocked
         }
     }
 

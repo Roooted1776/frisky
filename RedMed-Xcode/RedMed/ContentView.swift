@@ -12,9 +12,13 @@ struct ContentView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
     @State private var tab: AppTab = .redmed
+    /// Only mount a tab's heavy subtree after first visit; keep it alive after.
+    @State private var mountedTabs: Set<AppTab> = [.redmed]
 
     /// Owner-only fourth tab. Scanners never see NFC.
     private var showsNFC: Bool { !isScannerSession }
+
+    private var activeTab: AppTab { scannerSafeTab.wrappedValue }
 
     private var scannerSafeTab: Binding<AppTab> {
         Binding(
@@ -35,17 +39,12 @@ struct ContentView: View {
     var body: some View {
         // No Location banner / CLLocationManager here — Find Help owns that.
         ZStack(alignment: .bottom) {
-            Group {
-                switch scannerSafeTab.wrappedValue {
-                case .redmed:
-                    RedMedView(tab: scannerSafeTab)
-                case .emergency:
-                    EmergencyView()
-                case .aid:
-                    AidView()
-                case .nfc:
-                    // Scanners never reach here — showsNFC clamps the binding.
-                    NFCView()
+            ZStack {
+                mountedTab(.redmed) { RedMedView(tab: scannerSafeTab) }
+                mountedTab(.emergency) { EmergencyView() }
+                mountedTab(.aid) { AidView() }
+                if showsNFC {
+                    mountedTab(.nfc) { NFCView() }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -54,8 +53,27 @@ struct ContentView: View {
             CustomTabBar(tab: scannerSafeTab, showsNFC: showsNFC)
         }
         .ignoresSafeArea(edges: .bottom)
-        .onAppear { clampScannerTab() }
+        .onAppear {
+            mountedTabs.insert(activeTab)
+            clampScannerTab()
+        }
+        .onChange(of: tab) { _, newTab in
+            mountedTabs.insert(newTab)
+        }
         .onChange(of: isScannerSession) { _, _ in clampScannerTab() }
+    }
+
+    @ViewBuilder
+    private func mountedTab<Content: View>(
+        _ tab: AppTab,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        if mountedTabs.contains(tab) {
+            content()
+                .opacity(activeTab == tab ? 1 : 0)
+                .allowsHitTesting(activeTab == tab)
+                .accessibilityHidden(activeTab != tab)
+        }
     }
 
     private func clampScannerTab() {
