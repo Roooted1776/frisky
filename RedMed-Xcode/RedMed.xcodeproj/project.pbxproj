@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		AABB00000000000000000001 /* RedMedApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000001 /* RedMedApp.swift */; };
-		AABB00000000000000000023 /* Main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000023 /* Main.swift */; };
 		AABB00000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000002 /* ContentView.swift */; };
 		AABB00000000000000000003 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000003 /* Theme.swift */; };
 		AABB00000000000000000004 /* ProfileData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000004 /* ProfileData.swift */; };
@@ -25,10 +24,6 @@
 		AABB00000000000000000012 /* PublicCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000012 /* PublicCardView.swift */; };
 		AABB00000000000000000013 /* LocationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000013 /* LocationHelper.swift */; };
 		AABB00000000000000000014 /* BiometricAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000014 /* BiometricAuth.swift */; };
-		AABB0000000000000000002A /* HapticEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002A /* HapticEngine.swift */; };
-		AABB0000000000000000002B /* BrightnessBoost.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002B /* BrightnessBoost.swift */; };
-		AABB0000000000000000002C /* LocatorBeacon.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002C /* LocatorBeacon.swift */; };
-		AABB0000000000000000002D /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002D /* AppSettings.swift */; };
 		AABB00000000000000000016 /* PrivacyPolicy.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000016 /* PrivacyPolicy.html */; };
 		AABB00000000000000000017 /* TOS.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000017 /* TOS.html */; };
 		AABB00000000000000000018 /* security.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000018 /* security.html */; };
@@ -39,17 +34,22 @@
 		AABB0000000000000000001D /* ProfileNFCCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001D /* ProfileNFCCodec.swift */; };
 		AABB0000000000000000001E /* NFCWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001E /* NFCWriter.swift */; };
 		AABB0000000000000000001F /* NFCReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001F /* NFCReader.swift */; };
-		AABB00000000000000000031 /* NFCBandManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000031 /* NFCBandManager.swift */; };
 		AABB00000000000000000020 /* EmergencyNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000020 /* EmergencyNumber.swift */; };
 		AABB00000000000000000021 /* card.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000021 /* card.html */; };
+		AABB00000000000000000022 /* BrandLogo.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000022 /* BrandLogo.png */; };
+		AABB00000000000000000023 /* Main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000023 /* Main.swift */; };
 		AABB00000000000000000024 /* get.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000024 /* get.html */; };
 		AABB00000000000000000025 /* sw.js in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000025 /* sw.js */; };
-		AABB00000000000000000022 /* BrandLogo.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000022 /* BrandLogo.png */; };
-		AABB0000000000000000002E /* HIPAAOfflineVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002E /* HIPAAOfflineVault.swift */; };
-		AABB0000000000000000002F /* VaultHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002F /* VaultHistoryStore.swift */; };
 		AABB00000000000000000028 /* VaultHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000028 /* VaultHistoryView.swift */; };
 		AABB00000000000000000029 /* PrivacySnapshotGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000029 /* PrivacySnapshotGuard.swift */; };
+		AABB0000000000000000002A /* HapticEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002A /* HapticEngine.swift */; };
+		AABB0000000000000000002B /* BrightnessBoost.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002B /* BrightnessBoost.swift */; };
+		AABB0000000000000000002C /* LocatorBeacon.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002C /* LocatorBeacon.swift */; };
+		AABB0000000000000000002D /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002D /* AppSettings.swift */; };
+		AABB0000000000000000002E /* HIPAAOfflineVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002E /* HIPAAOfflineVault.swift */; };
+		AABB0000000000000000002F /* VaultHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002F /* VaultHistoryStore.swift */; };
 		AABB00000000000000000030 /* CrashMotionGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000030 /* CrashMotionGuard.swift */; };
+		AABB00000000000000000031 /* NFCBandManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000031 /* NFCBandManager.swift */; };
 		AABB00000000000000000032 /* SatelliteFieldUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000032 /* SatelliteFieldUI.swift */; };
 		AABB00000000000000000033 /* OwnerAppLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000033 /* OwnerAppLock.swift */; };
 		AABB00000000000000000034 /* SecurePasteboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000034 /* SecurePasteboard.swift */; };
@@ -57,7 +57,6 @@
 
 /* Begin PBXFileReference section */
 		AAAA00000000000000000001 /* RedMedApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedMedApp.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000023 /* Main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Main.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000003 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000004 /* ProfileData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileData.swift; sourceTree = "<group>"; };
@@ -77,10 +76,6 @@
 		AAAA00000000000000000012 /* PublicCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicCardView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000013 /* LocationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationHelper.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000014 /* BiometricAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuth.swift; sourceTree = "<group>"; };
-		AAAA0000000000000000002A /* HapticEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticEngine.swift; sourceTree = "<group>"; };
-		AAAA0000000000000000002B /* BrightnessBoost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessBoost.swift; sourceTree = "<group>"; };
-		AAAA0000000000000000002C /* LocatorBeacon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocatorBeacon.swift; sourceTree = "<group>"; };
-		AAAA0000000000000000002D /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000016 /* PrivacyPolicy.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = PrivacyPolicy.html; sourceTree = "<group>"; };
 		AAAA00000000000000000017 /* TOS.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = TOS.html; sourceTree = "<group>"; };
 		AAAA00000000000000000018 /* security.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = security.html; sourceTree = "<group>"; };
@@ -91,17 +86,22 @@
 		AAAA0000000000000000001D /* ProfileNFCCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileNFCCodec.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000001E /* NFCWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFCWriter.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000001F /* NFCReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFCReader.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000031 /* NFCBandManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFCBandManager.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000020 /* EmergencyNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyNumber.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000021 /* card.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = card.html; sourceTree = "<group>"; };
+		AAAA00000000000000000022 /* BrandLogo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BrandLogo.png; sourceTree = "<group>"; };
+		AAAA00000000000000000023 /* Main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Main.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000024 /* get.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = get.html; sourceTree = "<group>"; };
 		AAAA00000000000000000025 /* sw.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = sw.js; sourceTree = "<group>"; };
-		AAAA00000000000000000022 /* BrandLogo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BrandLogo.png; sourceTree = "<group>"; };
-		AAAA0000000000000000002E /* HIPAAOfflineVault.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HIPAAOfflineVault.swift; sourceTree = "<group>"; };
-		AAAA0000000000000000002F /* VaultHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultHistoryStore.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000028 /* VaultHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultHistoryView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000029 /* PrivacySnapshotGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacySnapshotGuard.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000002A /* HapticEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticEngine.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000002B /* BrightnessBoost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessBoost.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000002C /* LocatorBeacon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocatorBeacon.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000002D /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000002E /* HIPAAOfflineVault.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HIPAAOfflineVault.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000002F /* VaultHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultHistoryStore.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000030 /* CrashMotionGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashMotionGuard.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000031 /* NFCBandManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFCBandManager.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000032 /* SatelliteFieldUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatelliteFieldUI.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000033 /* OwnerAppLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwnerAppLock.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000034 /* SecurePasteboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurePasteboard.swift; sourceTree = "<group>"; };
@@ -427,7 +427,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = RedMed/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				INFOPLIST_KEY_CFBundleDisplayName = RedMed;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
+				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -453,7 +455,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = RedMed/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				INFOPLIST_KEY_CFBundleDisplayName = RedMed;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
+				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
