@@ -108,56 +108,35 @@ struct EditProfileView: View {
                     editSectionLabel("Emergency Contacts")
                     editCard {
                         ForEach($contacts) { $contact in
-                            if contact.id != contacts.first?.id {
-                                Divider()
-                            }
-                            HStack(spacing: 0) {
-                                Text("Name")
-                                    .font(.system(size: 15, weight: .medium))
-                                    .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
-                                    .frame(width: 100, alignment: .leading)
-                                    .padding(.trailing, 12)
-                                TextField("Full name", text: $contact.name)
+                            HStack(alignment: .center, spacing: 10) {
+                                TextField("Name", text: $contact.name)
                                     .font(.system(size: 15))
                                     .foregroundColor(.redmedDark)
                                     .textContentType(.name)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                                TextField("Phone", text: $contact.phone)
+                                    .font(.system(size: 15))
+                                    .foregroundColor(.redmedDark)
+                                    .keyboardType(.phonePad)
+                                    .textContentType(.telephoneNumber)
+                                    .multilineTextAlignment(.trailing)
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
+
                                 Button {
                                     withAnimation { contacts.removeAll { $0.id == contact.id } }
                                 } label: {
                                     Text("✕").font(.system(size: 18)).foregroundColor(.redmedAccent)
                                 }
-                                .padding(.leading, 10)
                             }
                             .padding(.horizontal, 16).padding(.vertical, 13)
-                            Divider().padding(.leading, 128)
-                            HStack(spacing: 0) {
-                                Text("Phone")
-                                    .font(.system(size: 15, weight: .medium))
-                                    .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
-                                    .frame(width: 100, alignment: .leading)
-                                    .padding(.trailing, 12)
-                                TextField("Phone number", text: $contact.phone)
-                                    .font(.system(size: 15))
-                                    .foregroundColor(.redmedDark)
-                                    .keyboardType(.phonePad)
-                                    .textContentType(.telephoneNumber)
-                            }
-                            .padding(.horizontal, 16).padding(.vertical, 13)
-                            Divider().padding(.leading, 128)
-                            HStack(spacing: 0) {
-                                Text("Relationship")
-                                    .font(.system(size: 15, weight: .medium))
-                                    .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
-                                    .frame(width: 100, alignment: .leading)
-                                    .padding(.trailing, 12)
-                                TextField("Optional", text: $contact.relationship)
-                                    .font(.system(size: 15))
-                                    .foregroundColor(.redmedDark)
-                            }
-                            .padding(.horizontal, 16).padding(.vertical, 13)
-                        }
-                        if !contacts.isEmpty {
-                            Divider()
+                            Divider().padding(.leading, 16)
+
+                            TextField("Relationship (optional)", text: $contact.relationship)
+                                .font(.system(size: 15))
+                                .foregroundColor(.redmedDark)
+                                .padding(.horizontal, 16).padding(.vertical, 13)
+                            Divider().padding(.leading, 16)
                         }
                         addButton("Add contact") {
                             contacts.append(EmergencyContact(name: "", relationship: "", phone: ""))

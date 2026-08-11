@@ -277,49 +277,44 @@ struct EditProfileView: View {
     @ViewBuilder
     private var contactsEditor: some View {
         ForEach($contacts) { $contact in
-            if contact.id != contacts.first?.id {
-                Divider()
-            }
+            HStack(alignment: .center, spacing: 10) {
+                TextField("Name", text: $contact.name)
+                    .font(.system(size: Metrics.font))
+                    .foregroundColor(.redmedDark)
+                    .textContentType(.name)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-            youRow(label: "Name") {
-                HStack(spacing: 0) {
-                    TextField("Full name", text: $contact.name)
-                        .font(.system(size: Metrics.font))
-                        .foregroundColor(.redmedDark)
-                        .textContentType(.name)
-                    Button {
-                        let id = contact.id
-                        contacts.removeAll { $0.id == id }
-                    } label: {
-                        Text("✕")
-                            .font(.system(size: Metrics.icon))
-                            .foregroundColor(.redmedAccent)
-                            .padding(.leading, 10)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            Divider().padding(.leading, Metrics.labelWidth + 12 + Metrics.rowHPad)
-
-            youRow(label: "Phone") {
-                TextField("Phone number", text: $contact.phone)
+                TextField("Phone", text: $contact.phone)
                     .font(.system(size: Metrics.font))
                     .foregroundColor(.redmedDark)
                     .keyboardType(.phonePad)
                     .textContentType(.telephoneNumber)
-            }
-            Divider().padding(.leading, Metrics.labelWidth + 12 + Metrics.rowHPad)
+                    .multilineTextAlignment(.trailing)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
 
-            youRow(label: "Relationship") {
-                TextField("Optional", text: $contact.relationship)
-                    .font(.system(size: Metrics.font))
-                    .foregroundColor(.redmedDark)
+                Button {
+                    let id = contact.id
+                    contacts.removeAll { $0.id == id }
+                } label: {
+                    Text("✕")
+                        .font(.system(size: Metrics.icon))
+                        .foregroundColor(.redmedAccent)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
             }
-        }
+            .padding(.horizontal, Metrics.rowHPad)
+            .padding(.vertical, Metrics.rowVPad)
 
-        if !contacts.isEmpty {
-            Divider()
+            Divider().padding(.leading, Metrics.rowHPad)
+
+            TextField("Relationship (optional)", text: $contact.relationship)
+                .font(.system(size: Metrics.font))
+                .foregroundColor(.redmedDark)
+                .padding(.horizontal, Metrics.rowHPad)
+                .padding(.vertical, Metrics.rowVPad)
+
+            Divider().padding(.leading, Metrics.rowHPad)
         }
 
         Button {

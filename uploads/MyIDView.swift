@@ -88,15 +88,19 @@ struct MyIDView: View {
                         } else {
                             ForEach(profile.contacts) { c in
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(c.name.isEmpty ? "Emergency contact" : c.name)
-                                        .font(.system(size: 14, weight: .semibold)).foregroundColor(.redmedDark)
+                                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                        Text(c.name.isEmpty ? "Emergency contact" : c.name)
+                                            .font(.system(size: 14, weight: .semibold)).foregroundColor(.redmedDark)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                        if !c.phone.isEmpty {
+                                            Text(c.phone)
+                                                .font(.system(size: 12, weight: .medium)).foregroundColor(.redmedAccent)
+                                                .multilineTextAlignment(.trailing)
+                                        }
+                                    }
                                     if !c.relationship.isEmpty {
                                         Text(c.relationship)
                                             .font(.system(size: 12, weight: .medium)).foregroundColor(.redmedMuted)
-                                    }
-                                    if !c.phone.isEmpty {
-                                        Text(c.phone)
-                                            .font(.system(size: 12, weight: .medium)).foregroundColor(.redmedAccent)
                                     }
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
