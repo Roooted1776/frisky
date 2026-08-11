@@ -2,7 +2,7 @@ import Foundation
 import Security
 
 /// Hardware-encrypted on-device storage for the RedMed profile blob.
-/// `.whenUnlockedThisDeviceOnly` keeps it out of iCloud/iTunes backups.
+/// `.whenUnlockedThisDeviceOnly` + non-synchronizable — never iCloud Keychain.
 enum KeychainStore {
     private static let defaultService = "com.redmed.app.profile"
 
@@ -18,6 +18,7 @@ enum KeychainStore {
         var attributes = query
         attributes[kSecValueData as String] = data
         attributes[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+        attributes[kSecAttrSynchronizable as String] = kCFBooleanFalse as Any
         return SecItemAdd(attributes as CFDictionary, nil) == errSecSuccess
     }
 
@@ -26,6 +27,7 @@ enum KeychainStore {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: kCFBooleanFalse as Any,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
@@ -39,7 +41,8 @@ enum KeychainStore {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: account
+            kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: kCFBooleanFalse as Any
         ]
         SecItemDelete(query as CFDictionary)
     }

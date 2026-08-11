@@ -122,54 +122,21 @@ struct LocationSuggestionBanner: View {
     }
 }
 
-/// Grabs a one-shot GPS fix, then opens Messages pre-filled with a maps link
-/// to the emergency contact's phone number.
+/// Legacy helper retained for Find Help banner wiring only.
+/// Location SMS egress is disabled — Call is dial-only; coords use SecurePasteboard.
 class LocationHelper: NSObject, ObservableObject, CLLocationManagerDelegate {
     private var manager: CLLocationManager?
-    private var pendingPhone: String?
 
     func requestAndSend(toPhone phone: String?) {
-        pendingPhone = phone
-        let m: CLLocationManager
-        if let existing = manager {
-            m = existing
-        } else {
-            let created = CLLocationManager()
-            created.delegate = self
-            manager = created
-            m = created
-        }
-        m.requestWhenInUseAuthorization()
-        if m.authorizationStatus == .authorizedWhenInUse || m.authorizationStatus == .authorizedAlways {
-            m.requestLocation()
-        }
+        // Intentionally no-op: never auto-SMS maps links or profile data.
+        _ = phone
     }
 
-    /// Legacy: parse digits out of a combined `Relationship · phone` detail string.
     func requestAndSend(to contactDetail: String?) {
         requestAndSend(toPhone: contactDetail)
     }
 
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        guard manager.authorizationStatus == .authorizedWhenInUse
-                || manager.authorizationStatus == .authorizedAlways else { return }
-        manager.requestLocation()
-    }
-
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let loc = locations.first else { return }
-        let url = "https://maps.google.com/?q=\(loc.coordinate.latitude),\(loc.coordinate.longitude)"
-        let digits = (pendingPhone ?? "").filter { $0.isNumber || $0 == "+" }
-        let body = "This is my current location: \(url)"
-        guard let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return }
-        let smsURLString = digits.isEmpty ? "sms:&body=\(encodedBody)" : "sms:\(digits)&body=\(encodedBody)"
-        guard let smsURL = URL(string: smsURLString) else { return }
-        DispatchQueue.main.async {
-            UIApplication.shared.open(smsURL, options: [:], completionHandler: nil)
-        }
-    }
-
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        // Silently ignore — user can retry.
-    }
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {}
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {}
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}
 }

@@ -47,7 +47,9 @@ struct EmergencyView: View {
                     // COPY COORDINATES
                     Button {
                         if locationEnabled, let loc = locationManager.location {
-                            UIPasteboard.general.string = "\(loc.coordinate.latitude), \(loc.coordinate.longitude)"
+                            SecurePasteboard.copyEphemeral(
+                                "\(loc.coordinate.latitude), \(loc.coordinate.longitude)"
+                            )
                         }
                     } label: {
                         Text(locationEnabled ? "Copy coordinates" : "Location off — enable in Settings")

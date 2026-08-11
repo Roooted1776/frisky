@@ -16,23 +16,29 @@ enum HIPAAOfflineVault {
     private static let protection: FileProtectionType = .complete
 
     /// Application Support / HIPAAOfflineVault — created on first use.
-    static var rootDirectory: URL {
-        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-            ?? FileManager.default.temporaryDirectory
+    /// No temporaryDirectory fallback (that path is not durable / weaker).
+    static var rootDirectory: URL? {
+        guard let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            return nil
+        }
         return base.appendingPathComponent(folderName, isDirectory: true)
     }
 
     /// Ensures the vault directory exists with complete protection and backup exclusion.
     @discardableResult
-    static func prepare() -> URL {
-        let dir = rootDirectory
+    static func prepare() -> URL? {
+        guard let dir = rootDirectory else { return nil }
         let fm = FileManager.default
         if !fm.fileExists(atPath: dir.path) {
-            try? fm.createDirectory(
-                at: dir,
-                withIntermediateDirectories: true,
-                attributes: [.protectionKey: protection]
-            )
+            do {
+                try fm.createDirectory(
+                    at: dir,
+                    withIntermediateDirectories: true,
+                    attributes: [.protectionKey: protection]
+                )
+            } catch {
+                return nil
+            }
         }
         harden(url: dir, isDirectory: true)
         return dir
@@ -40,7 +46,9 @@ enum HIPAAOfflineVault {
 
     /// Writes `data` under the vault with complete file protection + backup exclusion.
     static func write(_ data: Data, fileName: String) throws {
-        let dir = prepare()
+        guard let dir = prepare() else {
+            throw VaultError.unavailable
+        }
         let url = dir.appendingPathComponent(fileName, isDirectory: false)
         try data.write(to: url, options: [.atomic, .completeFileProtection])
         harden(url: url, isDirectory: false)
@@ -48,15 +56,21 @@ enum HIPAAOfflineVault {
 
     /// Reads a vault file, or `nil` if missing.
     static func read(fileName: String) -> Data? {
-        let url = prepare().appendingPathComponent(fileName, isDirectory: false)
+        guard let dir = prepare() else { return nil }
+        let url = dir.appendingPathComponent(fileName, isDirectory: false)
         guard FileManager.default.fileExists(atPath: url.path) else { return nil }
         return try? Data(contentsOf: url)
     }
 
     /// Removes a vault file if present.
     static func remove(fileName: String) {
-        let url = prepare().appendingPathComponent(fileName, isDirectory: false)
+        guard let dir = rootDirectory else { return }
+        let url = dir.appendingPathComponent(fileName, isDirectory: false)
         try? FileManager.default.removeItem(at: url)
+    }
+
+    enum VaultError: Error {
+        case unavailable
     }
 
     /// Re-applies complete protection + backup exclusion (idempotent).

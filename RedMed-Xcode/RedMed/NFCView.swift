@@ -287,7 +287,8 @@ struct NFCView: View {
 
     private func linkBraceletAfterWrite(detail: String) {
         profile.braceletLinked = true
-        profile.persist()
+        // Keychain write best-effort; bracelet flag is owner-local metadata only.
+        _ = profile.persist()
         VaultHistoryStore.shared.record(.braceletWritten, detail: detail)
     }
 

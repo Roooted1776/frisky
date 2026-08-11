@@ -1,18 +1,38 @@
 import LocalAuthentication
 import UIKit
 
-/// Prompts for Face ID or device passcode.
-/// Simulator: no Face ID hardware — uses LA if enrolled, else an Authenticate
-/// confirm so Edit / NFC write still run under Xcode without a physical phone.
+/// Strict owner authentication — Face ID / Touch ID first; device passcode on fallback / lockout.
+/// Reuse window is zero so every gate re-prompts (Edit, NFC write, vault, app unlock).
 enum BiometricAuth {
     static func authenticate(reason: String, completion: @escaping (Bool) -> Void) {
-        let context = LAContext()
+        let context = makeContext()
         var error: NSError?
 
-        if context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) {
-            context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { success, _ in
-                DispatchQueue.main.async { completion(success) }
+        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
+            context.localizedFallbackTitle = "Passcode"
+            context.evaluatePolicy(
+                .deviceOwnerAuthenticationWithBiometrics,
+                localizedReason: reason
+            ) { success, evalError in
+                DispatchQueue.main.async {
+                    context.invalidate()
+                    if success {
+                        completion(true)
+                        return
+                    }
+                    // Fallback / lockout / failed attempts → require device passcode.
+                    if shouldOfferPasscodeFallback(evalError) {
+                        authenticateWithDevicePasscode(reason: reason, completion: completion)
+                    } else {
+                        completion(false)
+                    }
+                }
             }
+            return
+        }
+
+        if context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) {
+            evaluateDeviceOwner(context: context, reason: reason, completion: completion)
             return
         }
 
@@ -23,6 +43,52 @@ enum BiometricAuth {
         #else
         DispatchQueue.main.async { completion(false) }
         #endif
+    }
+
+    private static func makeContext() -> LAContext {
+        let context = LAContext()
+        // No Face ID / Touch ID reuse across gates — every unlock is fresh.
+        context.touchIDAuthenticationAllowableReuseDuration = 0
+        context.localizedCancelTitle = "Cancel"
+        return context
+    }
+
+    private static func shouldOfferPasscodeFallback(_ error: Error?) -> Bool {
+        guard let la = error as? LAError else { return false }
+        switch la.code {
+        case .userFallback, .biometryLockout, .authenticationFailed, .biometryNotAvailable:
+            return true
+        case .userCancel, .appCancel, .systemCancel, .notInteractive:
+            return false
+        default:
+            return false
+        }
+    }
+
+    private static func authenticateWithDevicePasscode(
+        reason: String,
+        completion: @escaping (Bool) -> Void
+    ) {
+        let context = makeContext()
+        var error: NSError?
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
+            completion(false)
+            return
+        }
+        evaluateDeviceOwner(context: context, reason: reason, completion: completion)
+    }
+
+    private static func evaluateDeviceOwner(
+        context: LAContext,
+        reason: String,
+        completion: @escaping (Bool) -> Void
+    ) {
+        context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { success, _ in
+            DispatchQueue.main.async {
+                context.invalidate()
+                completion(success)
+            }
+        }
     }
 
     #if targetEnvironment(simulator)

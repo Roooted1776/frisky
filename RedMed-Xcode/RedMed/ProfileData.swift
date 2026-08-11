@@ -77,8 +77,10 @@ class ProfileData: ObservableObject {
         return copy
     }
 
-    func persist() {
-        guard persists else { return }
+    /// - Returns: `true` when the Keychain write succeeded.
+    @discardableResult
+    func persist() -> Bool {
+        guard persists else { return false }
         let stamp = DateFormatter.localizedString(from: Date(), dateStyle: .medium, timeStyle: .none)
         if hasSensitiveProfileData { lastUpdated = stamp }
         let blob = PersistedProfile(
@@ -95,8 +97,30 @@ class ProfileData: ObservableObject {
             isOrganDonor: isOrganDonor,
             lastUpdated: lastUpdated
         )
-        guard let data = try? JSONEncoder().encode(blob) else { return }
-        KeychainStore.save(data, account: Self.keychainAccount)
+        guard let data = try? JSONEncoder().encode(blob) else { return false }
+        return KeychainStore.save(data, account: Self.keychainAccount)
+    }
+
+    /// Wipe PHI from RAM without touching Keychain (owner app lock).
+    func purgeFromMemory() {
+        guard persists else { return }
+        name = ""
+        birthDate = ""
+        bloodType = ""
+        allergies = []
+        medications = []
+        conditions = []
+        contacts = []
+        braceletLinked = false
+        isOrganDonor = false
+        lastUpdated = ""
+    }
+
+    /// Reload owner profile from Keychain after Face ID unlock.
+    @discardableResult
+    func reloadFromKeychain() -> Bool {
+        guard persists else { return false }
+        return loadFromKeychain()
     }
 
     /// - Returns: `true` when a profile blob was loaded from Keychain.

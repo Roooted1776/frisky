@@ -1,15 +1,20 @@
 import SwiftUI
 import UIKit
 
-/// Hides PHI from iOS app-switcher snapshots taken when the app resigns active.
+/// Hides PHI from iOS app-switcher snapshots and active screen capture / mirroring.
 /// Apply at the owner window root — scanners still need a readable emergency card
-/// only while active; when backgrounded, blur everything.
+/// only while active; when backgrounded or recorded, cover everything.
 struct PrivacySnapshotGuard<Content: View>: View {
     @Environment(\.scenePhase) private var scenePhase
+    @State private var screenCaptured = UIScreen.main.isCaptured
     private let content: Content
 
     init(@ViewBuilder content: () -> Content) {
         self.content = content()
+    }
+
+    private var mustCover: Bool {
+        scenePhase != .active || screenCaptured
     }
 
     var body: some View {
@@ -18,9 +23,20 @@ struct PrivacySnapshotGuard<Content: View>: View {
 
             // No opacity animation — iOS may capture the switcher snapshot while a
             // fade is mid-flight, leaking PHI under a translucent cover.
-            if scenePhase != .active {
+            if mustCover {
                 privacyCover
                     .zIndex(999)
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active {
+                SecurePasteboard.clear()
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)) { _ in
+            screenCaptured = UIScreen.main.isCaptured
+            if screenCaptured {
+                SecurePasteboard.clear()
             }
         }
     }
