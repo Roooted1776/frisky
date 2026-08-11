@@ -89,12 +89,13 @@
     <h2><span class="sec-num">8.</span> Location (Find Help)</h2>
     <p>Find Help shows your coordinates only while that screen is open, so that you can read them out to a 911 dispatcher. Continuous GPS starts only when the screen is visible and stops when you leave it or close the App. It is never used for advertising, profiling, or background monitoring, and your coordinates are not sent to us.</p>
     <p>On iOS, RedMed shows an in-app location gate and may keep a suggestion banner until When-In-Use access is granted. Tapping Allow triggers the operating system’s own permission dialog. Your device supplies location using GPS/GNSS, Wi‑Fi, and cellular signals as available.</p>
-    <p>RedMed is not Apple Emergency SOS via satellite, Apple Crash Detection, or any carrier satellite messaging service, and cannot start those features.</p>
+    <p>RedMed is not Apple Emergency SOS via satellite, Apple Crash Detection, or any carrier satellite messaging service, and cannot start those features. An optional Find Help path can link to a <strong>local</strong> satellite terminal over Bluetooth and queue short AES-GCM–sealed field notes to that terminal for uplink. Those notes go to the clinician’s terminal, not to RedMed servers, and are separate from the passive NFC bracelet (which is not Bluetooth).</p>
 
     <h2><span class="sec-num">9.</span> Who Else Receives Data</h2>
     <ul>
       <li><strong>EMS, hospital staff, or anyone who taps your bracelet</strong> (or opens a card link you have shared) can read the self-reported patient ID / PII on the chip or card. That local handoff is the product. RedMed does not push the profile into a hospital EHR for you.</li>
       <li><strong>Your device’s operating system</strong>, when you use the Phone app, Maps, Messages, or the share sheet. Apple’s privacy terms apply to that.</li>
+      <li><strong>A paired satellite terminal (optional)</strong>, if you use Find Help’s satellite composer: sealed bytes you queue are delivered over Bluetooth to that hardware for satellite uplink under the terminal vendor’s terms — not to RedMed.</li>
       <li><strong>No advertising networks, no analytics identifiers, no data brokers, and no cross-app tracking.</strong> We do not sell or share personal information for advertising, and there is no account registration.</li>
     </ul>
 

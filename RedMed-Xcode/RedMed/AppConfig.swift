@@ -97,4 +97,37 @@ enum AppConfig {
             "Walk-by distance will not fire the band; only a deliberate \(intentionalTapRangeLabel) antenna tap opens the card."
         }
     }
+
+    /// Optional field-clinician path: phone → local satellite terminal over Bluetooth,
+    /// then the terminal uplinks. This is **not** Apple Emergency SOS via satellite,
+    /// not a RedMed server, and not the passive NFC bracelet (bracelet stays HF NFC).
+    ///
+    /// Kill switch mirrors `nfcHardwareEnabled`: when `false`, Find Help still shows
+    /// the satellite composer UI but uses the simulated transport (queue + delayed
+    /// ack) so clinicians can rehearse payload limits without a terminal SDK.
+    /// Flip to `true` only after a vendor BLE adapter is wired in
+    /// `SatelliteVendorTransport` (see that file — no CocoaPods/SPM in this repo yet).
+    enum Satellite {
+        static let hardwareEnabled = false
+
+        /// Soft warn / hard refuse UTF-8 byte budgets for narrowband SBD-style uplinks.
+        static let softPayloadBytes = 160
+        static let hardPayloadBytes = 240
+
+        /// Simulated uplink latency window when hardware is parked (seconds).
+        static let simulatedTransmitSecondsMin: Double = 30
+        static let simulatedTransmitSecondsMax: Double = 90
+
+        static var payloadBudgetLabel: String {
+            "\(softPayloadBytes)–\(hardPayloadBytes) bytes"
+        }
+
+        static var softWarnCopy: String {
+            "Approaching satellite limit (\(softPayloadBytes) B). Trim the note."
+        }
+
+        static var hardRefuseCopy: String {
+            "Over satellite limit (\(hardPayloadBytes) B). Shorten before queueing."
+        }
+    }
 }

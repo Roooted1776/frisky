@@ -49,6 +49,8 @@
 		AABB00000000000000000028 /* VaultHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000028 /* VaultHistoryView.swift */; };
 		AABB00000000000000000029 /* PrivacySnapshotGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000029 /* PrivacySnapshotGuard.swift */; };
 		AABB00000000000000000030 /* CrashMotionGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000030 /* CrashMotionGuard.swift */; };
+		AABB00000000000000000031 /* SatelliteOutbound.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000031 /* SatelliteOutbound.swift */; };
+		AABB00000000000000000032 /* SatelliteFieldUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000032 /* SatelliteFieldUI.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -97,6 +99,8 @@
 		AAAA00000000000000000028 /* VaultHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultHistoryView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000029 /* PrivacySnapshotGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacySnapshotGuard.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000030 /* CrashMotionGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashMotionGuard.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000031 /* SatelliteOutbound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatelliteOutbound.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000032 /* SatelliteFieldUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatelliteFieldUI.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -146,6 +150,8 @@
 				AAAA00000000000000000028 /* VaultHistoryView.swift */,
 				AAAA00000000000000000029 /* PrivacySnapshotGuard.swift */,
 				AAAA00000000000000000030 /* CrashMotionGuard.swift */,
+				AAAA00000000000000000031 /* SatelliteOutbound.swift */,
+				AAAA00000000000000000032 /* SatelliteFieldUI.swift */,
 				AAAA00000000000000000020 /* EmergencyNumber.swift */,
 				AAAA0000000000000000001C /* AppConfig.swift */,
 				AAAA0000000000000000001D /* ProfileNFCCodec.swift */,
@@ -280,6 +286,8 @@
 				AABB00000000000000000028 /* VaultHistoryView.swift in Sources */,
 				AABB00000000000000000029 /* PrivacySnapshotGuard.swift in Sources */,
 				AABB00000000000000000030 /* CrashMotionGuard.swift in Sources */,
+				AABB00000000000000000031 /* SatelliteOutbound.swift in Sources */,
+				AABB00000000000000000032 /* SatelliteFieldUI.swift in Sources */,
 				AABB00000000000000000020 /* EmergencyNumber.swift in Sources */,
 				AABB0000000000000000001C /* AppConfig.swift in Sources */,
 				AABB0000000000000000001D /* ProfileNFCCodec.swift in Sources */,

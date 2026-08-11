@@ -5,6 +5,7 @@ struct EmergencyView: View {
     @Environment(\.isScannerSession) private var isScannerSession
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @StateObject private var locationManager = LocationManager()
+    @StateObject private var satellitePipeline = SatelliteOutboundPipeline()
     @State private var showSatellite = false
 
     var body: some View {
@@ -22,6 +23,13 @@ struct EmergencyView: View {
 
                     // NO CELL SIGNAL — top of Find Help (replaces call-first-contact)
                     NoCellSignalCard(showSatellite: $showSatellite)
+
+                    // Optional local satellite terminal path (Bluetooth → terminal uplink).
+                    // Encrypts at SatelliteOutboundPipeline before transport — not a RedMed server.
+                    SatelliteFieldCard(
+                        pipeline: satellitePipeline,
+                        location: locationEnabled ? locationManager.location : nil
+                    )
 
                     // GPS CARD
                     GPSCard(location: locationEnabled ? locationManager.location : nil)
@@ -97,8 +105,9 @@ struct EmergencyView: View {
                 }
             }
             .task {
-                // First paint of Find Help before Core Location work.
+                // First paint of Find Help before Core Location / satellite link work.
                 await Task.yield()
+                satellitePipeline.start()
                 if locationEnabled {
                     locationManager.start()
                 }
@@ -112,6 +121,7 @@ struct EmergencyView: View {
             }
             .onDisappear {
                 locationManager.stop()
+                satellitePipeline.stop()
             }
             } // NavigationView
         } // VStack
@@ -306,13 +316,19 @@ struct NoCellSignalCard: View {
             .padding(14)
 
             if showSatellite {
-                Text("iPhone 14+ (iOS 16.1+): hold Side + Volume until Emergency SOS appears, or Settings → Emergency SOS.")
-                    .font(.system(size: 11))
-                    .foregroundColor(.redmedMuted)
-                    .lineSpacing(3)
-                    .padding(.horizontal, 14)
-                    .padding(.bottom, 14)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("iPhone 14+ (iOS 16.1+): hold Side + Volume until Emergency SOS appears, or Settings → Emergency SOS. RedMed cannot start Apple Satellite SOS.")
+                        .font(.system(size: 11))
+                        .foregroundColor(.redmedMuted)
+                        .lineSpacing(3)
+                    Text("Separate path below: optional Bluetooth link to a local satellite terminal for short field notes (\(AppConfig.Satellite.payloadBudgetLabel)). That is not Apple SOS and not a RedMed server.")
+                        .font(.system(size: 11))
+                        .foregroundColor(.redmedMuted)
+                        .lineSpacing(3)
+                }
+                .padding(.horizontal, 14)
+                .padding(.bottom, 14)
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .background(Color.redmedSurface)
