@@ -1,8 +1,7 @@
 import SwiftUI
 import CoreLocation
 
-/// Find Help satellite UX — typography matches `InfoCard` / GPS neighbors:
-/// `.system` only (no monospaced / alternate designs), 12 bold titles, 11 semibold body.
+/// Find Help satellite UX — same Theme.swift palette + InfoCard type scale as the rest of Help.
 struct SatelliteFieldCard: View {
     @ObservedObject var pipeline: SatelliteOutboundPipeline
     var location: CLLocation?
@@ -77,7 +76,7 @@ struct SatelliteFieldCard: View {
             if overSoft && !overHard {
                 Text(AppConfig.Satellite.softWarnCopy)
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(.orange)
+                    .foregroundColor(.redmedAccent)
                     .lineSpacing(3)
             }
             if overHard {
@@ -137,7 +136,7 @@ struct SatelliteConnectionBanner: View {
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
             Circle()
-                .fill(isLinked ? Color.green.opacity(0.85) : Color.redmedMuted.opacity(0.45))
+                .fill(isLinked ? Color.redmedAccent : Color.redmedMuted.opacity(0.45))
                 .frame(width: 10, height: 10)
                 .padding(.top, 3)
 
@@ -168,7 +167,7 @@ struct SatelliteConnectionBanner: View {
             }
         }
         .padding(10)
-        .background(Color.redmedAccent.opacity(isLinked ? 0.06 : 0.03))
+        .background(Color.redmedAccent.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
@@ -179,9 +178,7 @@ struct SatelliteByteCounter: View {
     let overHard: Bool
 
     private var color: Color {
-        if overHard { return .redmedAccent }
-        if overSoft { return .orange }
-        return .redmedMuted
+        (overSoft || overHard) ? .redmedAccent : .redmedMuted
     }
 
     var body: some View {
@@ -202,8 +199,8 @@ struct SatelliteQueueRow: View {
 
     private var statusColor: Color {
         switch item.status {
-        case .pendingTransmission: return .orange
-        case .sent: return Color.green.opacity(0.9)
+        case .pendingTransmission: return .redmedMuted
+        case .sent: return .redmedDark
         case .failed: return .redmedAccent
         }
     }
