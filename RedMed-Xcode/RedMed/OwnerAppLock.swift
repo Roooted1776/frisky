@@ -112,7 +112,7 @@ struct OwnerAppLock<Content: View>: View {
                 }
                 Spacer()
                 Button {
-                    unlock()
+                    acceptThenUnlock()
                 } label: {
                     Group {
                         if isAuthenticating {
@@ -133,7 +133,7 @@ struct OwnerAppLock<Content: View>: View {
                 .padding(.bottom, 28)
             }
         }
-        // Face ID only after Accept — never auto-prompt on appear (cold launch felt stuck).
+        // Biometrics never run until Accept — no onAppear / scenePhase auto-prompt.
     }
 
     private func lock(purge: Bool) {
@@ -147,8 +147,9 @@ struct OwnerAppLock<Content: View>: View {
         SecurePasteboard.clear()
     }
 
-    private func unlock() {
-        guard !isAuthenticating else { return }
+    /// Accept is the only entry into LocalAuthentication for app unlock.
+    private func acceptThenUnlock() {
+        guard gate == .locked, !isAuthenticating else { return }
         isAuthenticating = true
         failed = false
         authGeneration &+= 1
