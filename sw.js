@@ -3,9 +3,11 @@
  * Root copy for get.html / card.html pretty URLs. Preferred live path is
  * /get/ (get/index.html + get/sw.js) matching AppConfig.medicalCardBaseURL.
  *
- * Bump CACHE in lockstep with get/sw.js on every decrypt/layout deploy.
+ * Cache-first shell for instant EMT / helper open; activate clears prior
+ * CACHE buckets. Bump CACHE in lockstep with get/sw.js on every decrypt/layout
+ * deploy. Payload stays in #d= only — never cached. No biometrics on view.
  */
-var CACHE = 'redmed-get-v8';
+var CACHE = 'redmed-get-v9';
 var ASSETS = [
   './',
   './get.html',
@@ -49,6 +51,22 @@ function cachedShell(req) {
       })
     );
   });
+}
+
+function storeShell(cache, req, res) {
+  if (!res || !res.ok || res.type !== 'basic') return;
+  cache.put(req, res.clone());
+}
+
+function refreshShell(cache, req) {
+  return networkReload(req)
+    .then(function (res) {
+      storeShell(cache, req, res);
+      return res && res.ok ? res : null;
+    })
+    .catch(function () {
+      return null;
+    });
 }
 
 function isShellRequest(req) {
@@ -98,21 +116,16 @@ self.addEventListener('fetch', function (event) {
 
   if (isShellRequest(req)) {
     event.respondWith(
-      networkReload(req).then(function (res) {
-        if (res && res.ok && res.type === 'basic') {
-          var copy = res.clone();
-          caches.open(CACHE).then(function (cache) {
-            cache.put(req, copy);
+      caches.open(CACHE).then(function (cache) {
+        return cache.match(req).then(function (cached) {
+          var network = refreshShell(cache, req);
+          if (cached) {
+            return cached;
+          }
+          return network.then(function (res) {
+            return res || cachedShell(req);
           });
-          return res;
-        }
-        // HTTP 4xx/5xx still resolve — fall back to Cache Storage so an
-        // origin outage does not blank a previously cached emergency card.
-        return cachedShell(req).then(function (cached) {
-          return cached || res;
         });
-      }).catch(function () {
-        return cachedShell(req);
       })
     );
     return;

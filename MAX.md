@@ -43,9 +43,9 @@ See also `AGENTS.md`. High-signal recap:
 5. Privacy cover: opaque, no fade.
 6. Cold launch: zero Location / MapKit / trauma JSON at `@main`. CoreMotion crash monitor may start after first-frame yield.
 7. Unique `project.pbxproj` IDs (duplicate IDs drop sources).
-8. Passerby SW: network-first shell; cache fallback on non-ok HTTP; bump `redmed-get-vN` in lockstep.
+8. Passerby SW: cache-first shell for instant EMT open; clear prior CACHE on activate; bump `redmed-get-vN` in lockstep. Tap-to-view = HTML, no Face ID.
 9. `AppConfig.BraceletRF` owns tap-distance copy (no hardcoded inches).
-10. Crash / high-speed **vehicle impact** detection is **local CoreMotion only** — not Apple Crash Detection, no cloud. Must ignore running, sex/intimate motion, eating, and hand/wrist handling. Brightness + siren are gated on crash detection **or** explicit owner SOS — never auto on Find Help / scanner open.
+10. Crash / high-speed **vehicle impact** detection is **local CoreMotion only** — not Apple Crash Detection, no cloud. Must ignore running, sex/intimate motion, eating, and hand/wrist handling. Brightness + siren are gated on crash detection **or** explicit owner SOS — never auto on Find Help / scanner open. Passerby HTML never touches brightness or audio.
 
 ## What he has already done (shipped history)
 
@@ -111,6 +111,7 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 
 - Re-adding Settings toggles for brightness, locator, or crash survival alarm.
 - Auto-arming brightness or locate-me siren just from opening Find Help / scanner (crash + owner SOS only).
+- Requiring Face ID / biometrics for passerby tap-to-view (`get.html` / scanner shell).
 - Relocking vault on `.inactive`.
 - Mutating owner `@AppStorage` from scanner UI.
 - Repo-root policy HTML duplicates.

@@ -2,16 +2,16 @@
  *
  * Served under /get/ (see get/index.html). After a responder opens the card
  * once online, these static assets stay in Cache Storage. A later bracelet
- * tap with no signal still loads the shell; medical fields live only in the
- * URL #d= fragment (never cached here — fragments are not part of the HTTP
- * request).
+ * tap (EMT / helper, no app, no Face ID) paints the shell instantly from
+ * cache — even with no signal. Medical fields live only in the URL #d=
+ * fragment (never cached here — fragments are not part of the HTTP request).
  *
- * Bump CACHE on every deploy that changes get/index.html / decrypt logic so
- * activate drops the previous bucket. Shell + install fetches use
- * cache: 'reload' so neither HTTP disk cache nor Cache Storage keep a stale
- * decrypt page.
+ * Shell strategy: cache-first for instant open when Cache Storage has a copy;
+ * background networkReload refreshes the bucket. Activate deletes prior
+ * CACHE names so deploys clear stale decrypt/layout. Bump CACHE on every
+ * deploy that changes get/index.html / decrypt logic.
  */
-var CACHE = 'redmed-get-v8';
+var CACHE = 'redmed-get-v9';
 var ASSETS = [
   './',
   './index.html',
@@ -49,6 +49,22 @@ function cachedShell(req) {
   });
 }
 
+function storeShell(cache, req, res) {
+  if (!res || !res.ok || res.type !== 'basic') return;
+  cache.put(req, res.clone());
+}
+
+function refreshShell(cache, req) {
+  return networkReload(req)
+    .then(function (res) {
+      storeShell(cache, req, res);
+      return res && res.ok ? res : null;
+    })
+    .catch(function () {
+      return null;
+    });
+}
+
 function isShellRequest(req) {
   try {
     var url = new URL(req.url);
@@ -75,6 +91,7 @@ self.addEventListener('install', function (event) {
 });
 
 self.addEventListener('activate', function (event) {
+  // Clear prior CACHE buckets so EMT taps never see a stale decrypt shell.
   event.waitUntil(
     caches.keys().then(function (keys) {
       return Promise.all(
@@ -92,25 +109,20 @@ self.addEventListener('fetch', function (event) {
   var req = event.request;
   if (req.method !== 'GET') return;
 
-  // Shell / decrypt page: network-first + bypass HTTP cache so AES/layout
-  // deploys win while online. Offline → last good Cache Storage copy.
+  // Shell / decrypt page: cache-first for instant EMT open; refresh in background.
+  // First visit (empty cache) waits on network, then stores.
   if (isShellRequest(req)) {
     event.respondWith(
-      networkReload(req).then(function (res) {
-        if (res && res.ok && res.type === 'basic') {
-          var copy = res.clone();
-          caches.open(CACHE).then(function (cache) {
-            cache.put(req, copy);
+      caches.open(CACHE).then(function (cache) {
+        return cache.match(req).then(function (cached) {
+          var network = refreshShell(cache, req);
+          if (cached) {
+            return cached;
+          }
+          return network.then(function (res) {
+            return res || cachedShell(req);
           });
-          return res;
-        }
-        // HTTP 4xx/5xx still resolve — fall back to Cache Storage so an
-        // origin outage does not blank a previously cached emergency card.
-        return cachedShell(req).then(function (cached) {
-          return cached || res;
         });
-      }).catch(function () {
-        return cachedShell(req);
       })
     );
     return;
