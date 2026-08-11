@@ -2,9 +2,9 @@ import CoreMotion
 import Foundation
 import SwiftUI
 
-/// On-device **vehicle crash / high-speed impact** guard (CoreMotion only).
-/// Arms full brightness + locator siren.
-/// Ignores running, walking, eating, sex/intimate motion, and hand/wrist handling.
+/// Survival alarm arming: crash / severe impact (CoreMotion) or owner SOS.
+/// Arms full brightness + locator siren. Cancel on Aid.
+/// Motion path ignores running, walking, eating, sex/intimate motion, and hand/wrist handling.
 /// Not Apple Crash Detection — no GPS/barometer fusion, no cloud.
 @MainActor
 final class CrashMotionGuard: ObservableObject {
@@ -67,7 +67,7 @@ final class CrashMotionGuard: ObservableObject {
         resetTransientState()
     }
 
-    /// False-positive cancel — restores brightness/siren holds.
+    /// False-positive / SOS cancel — restores brightness/siren holds.
     func disarm() {
         guard isArmed else { return }
         isArmed = false
@@ -75,7 +75,16 @@ final class CrashMotionGuard: ObservableObject {
         LocatorBeacon.endSurvival()
     }
 
+    /// Owner Find Help SOS — same survival hold as crash (siren + full brightness).
+    func armSOS() {
+        armSurvival()
+    }
+
     private func arm() {
+        armSurvival()
+    }
+
+    private func armSurvival() {
         guard !isArmed else { return }
         isArmed = true
         lastArmAt = Date()
@@ -190,7 +199,7 @@ struct CrashSurvivalCancelCard: View {
                 monitor.disarm()
             } label: {
                 HStack {
-                    Text("Stop the detection")
+                    Text("Stop the alarm")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.redmedDark)
                     Spacer()

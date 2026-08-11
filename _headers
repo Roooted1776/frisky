@@ -1,18 +1,29 @@
 /*
-  Cloudflare Pages — always revalidate shell + SW so AES/decrypt deploys
-  replace any prior Cache Storage / edge copy quickly.
+  Cloudflare Pages — almost-instant tap-to-view.
+  Shell + logo may use short TTL + stale-while-revalidate so a prior open
+  paints from browser disk cache without waiting on origin. SW file always
+  revalidates so CACHE bumps take effect. Service Worker Cache Storage is the
+  primary offline path (see get/sw.js redmed-get-vN).
 */
-/get
-  Cache-Control: public, max-age=0, must-revalidate
-/get/
-  Cache-Control: public, max-age=0, must-revalidate
-/get/*
-  Cache-Control: public, max-age=0, must-revalidate
-/get.html
-  Cache-Control: public, max-age=0, must-revalidate
-/card.html
+/get/sw.js
   Cache-Control: public, max-age=0, must-revalidate
 /sw.js
   Cache-Control: public, max-age=0, must-revalidate
-/get/sw.js
-  Cache-Control: public, max-age=0, must-revalidate
+/get/BrandLogo.png
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/assets/BrandLogo.png
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/BrandLogo.png
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/get
+  Cache-Control: public, max-age=300, stale-while-revalidate=86400
+/get/
+  Cache-Control: public, max-age=300, stale-while-revalidate=86400
+/get/index.html
+  Cache-Control: public, max-age=300, stale-while-revalidate=86400
+/get.html
+  Cache-Control: public, max-age=300, stale-while-revalidate=86400
+/card.html
+  Cache-Control: public, max-age=300, stale-while-revalidate=86400
+/get/*
+  Cache-Control: public, max-age=300, stale-while-revalidate=86400

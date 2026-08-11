@@ -1,6 +1,6 @@
 import UIKit
 
-/// Forces screen brightness to 100% for the crash / severe-impact survival alarm only.
+/// Forces screen brightness to 100% for the survival alarm (crash / severe impact or SOS).
 /// Saves the prior level and restores it when the hold is cancelled.
 /// Simulator: property writes are harmless no-ops for hardware backlight.
 @MainActor
@@ -11,7 +11,7 @@ enum BrightnessBoost {
     private static var foregroundObserver: NSObjectProtocol?
     private static var activeObserver: NSObjectProtocol?
 
-    /// Crash / severe-impact arm — keeps max brightness even while backgrounded.
+    /// Survival arm — keeps max brightness even while backgrounded.
     static func beginSurvival() {
         if !survivalHold {
             savedBrightness = UIScreen.main.brightness

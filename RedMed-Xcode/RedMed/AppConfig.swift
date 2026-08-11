@@ -3,11 +3,12 @@ import Foundation
 enum AppConfig {
     /// Passerby / rescuer shell written to passive NFC bands. Any phone that taps
     /// the bracelet opens this page in a browser — read-only medical card + Help +
-    /// Aid. Medical data is only in the `#d=` fragment (flat array → AES-GCM →
-    /// base64url; no server storage). `sw.js` caches the static layout for offline
-    /// taps. Owner edit / treatments live in `Main.swift`, not here. Source page:
-    /// `get.html` / `get/index.html` (identical at `get/`, repo root, and
-    /// `RedMed-Xcode/RedMed/get.html`). Legacy `card/` URLs redirect to `/get/`
+    /// Aid. No Face ID to view. Medical data is only in the `#d=` fragment (flat
+    /// array → AES-GCM → base64url; no server storage). `sw.js` cache-first stores
+    /// the static layout for instant offline / EMT taps (activate clears prior
+    /// CACHE buckets). Owner edit / treatments live in `Main.swift`, not here.
+    /// Source page: `get.html` / `get/index.html` (identical at `get/`, repo root,
+    /// and `RedMed-Xcode/RedMed/get.html`). Legacy `card/` URLs redirect to `/get/`
     /// (preserve `#d=`).
     static let medicalCardBaseURL = "https://redmed.pages.dev/get/"
 

@@ -3,9 +3,12 @@
  * Root copy for get.html / card.html pretty URLs. Preferred live path is
  * /get/ (get/index.html + get/sw.js) matching AppConfig.medicalCardBaseURL.
  *
- * Bump CACHE in lockstep with get/sw.js on every decrypt/layout deploy.
+ * Cache-first multi-key shell for almost-instant EMT / helper open; activate
+ * clears prior CACHE buckets. Bump CACHE in lockstep with get/sw.js on every
+ * decrypt/layout deploy. Payload stays in #d= only — never cached.
+ * No biometrics on view.
  */
-var CACHE = 'redmed-get-v8';
+var CACHE = 'redmed-get-v10';
 var ASSETS = [
   './',
   './get.html',
@@ -16,6 +19,16 @@ var ASSETS = [
   './BrandLogo.png',
   './assets/BrandLogo.png',
   './card.html'
+];
+var SHELL_KEYS = [
+  './',
+  './get.html',
+  './get/',
+  './get/index.html',
+  '/get/',
+  '/get/index.html',
+  '/get',
+  '/get.html'
 ];
 
 function networkReload(reqOrUrl) {
@@ -28,27 +41,45 @@ function precache(cache) {
       return networkReload(url)
         .then(function (res) {
           if (!res || !res.ok) return;
-          return cache.put(url, res);
+          return putShell(cache, url, res);
         })
         .catch(function () { /* optional path missing */ });
     })
   );
 }
 
-function cachedShell(req) {
-  return caches.match(req).then(function (cached) {
-    return (
-      cached ||
-      caches.match('./get/index.html').then(function (page) {
-        return (
-          page ||
-          caches.match('./get.html').then(function (legacy) {
-            return legacy || caches.match('./get/') || caches.match('./');
-          })
-        );
-      })
-    );
+function putShell(cache, reqOrUrl, res) {
+  if (!res || !res.ok || (res.type !== 'basic' && res.type !== 'cors')) return Promise.resolve();
+  var writes = [cache.put(reqOrUrl, res.clone())];
+  SHELL_KEYS.forEach(function (key) {
+    writes.push(cache.put(key, res.clone()));
   });
+  return Promise.all(writes).catch(function () { /* quota / opaque */ });
+}
+
+function matchOne(keys, i) {
+  if (i >= keys.length) return Promise.resolve(null);
+  return caches.match(keys[i], { ignoreSearch: true }).then(function (hit) {
+    return hit || matchOne(keys, i + 1);
+  });
+}
+
+function cachedShell(req) {
+  return matchOne([req].concat(SHELL_KEYS), 0);
+}
+
+function refreshShell(cache, req) {
+  return networkReload(req)
+    .then(function (res) {
+      if (res && res.ok) {
+        putShell(cache, req, res.clone());
+        return res;
+      }
+      return null;
+    })
+    .catch(function () {
+      return null;
+    });
 }
 
 function isShellRequest(req) {
@@ -98,28 +129,24 @@ self.addEventListener('fetch', function (event) {
 
   if (isShellRequest(req)) {
     event.respondWith(
-      networkReload(req).then(function (res) {
-        if (res && res.ok && res.type === 'basic') {
-          var copy = res.clone();
-          caches.open(CACHE).then(function (cache) {
-            cache.put(req, copy);
-          });
-          return res;
-        }
-        // HTTP 4xx/5xx still resolve — fall back to Cache Storage so an
-        // origin outage does not blank a previously cached emergency card.
-        return cachedShell(req).then(function (cached) {
-          return cached || res;
+      cachedShell(req).then(function (cached) {
+        var refresh = caches.open(CACHE).then(function (cache) {
+          return refreshShell(cache, req);
         });
-      }).catch(function () {
-        return cachedShell(req);
+        if (cached) {
+          event.waitUntil(refresh);
+          return cached;
+        }
+        return refresh.then(function (res) {
+          return res || cachedShell(req);
+        });
       })
     );
     return;
   }
 
   event.respondWith(
-    caches.match(req).then(function (cached) {
+    caches.match(req, { ignoreSearch: true }).then(function (cached) {
       if (cached) return cached;
       return fetch(req).then(function (res) {
         try {

@@ -1,6 +1,6 @@
 import AVFoundation
 
-/// Crash / severe-impact survival siren only.
+/// Survival siren for crash / severe-impact or owner SOS.
 /// Plays through the silent switch (`.playback`) and keeps sounding in background until cancelled.
 @MainActor
 enum LocatorBeacon {
@@ -9,7 +9,7 @@ enum LocatorBeacon {
     private static var player: AVAudioPlayer?
     private static let interval: TimeInterval = 5
 
-    /// Crash motion arm — siren continues while backgrounded until cancelled.
+    /// Survival arm — siren continues while backgrounded until cancelled.
     static func beginSurvival() {
         let wasHeld = survivalHold
         survivalHold = true
@@ -22,18 +22,19 @@ enum LocatorBeacon {
         guard survivalHold else { return }
         survivalHold = false
         stopRepeating()
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        Task { @MainActor in
+            try? await AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        }
     }
 
     private static func startRepeating() {
-        configureSession()
-        fire()
         timer?.invalidate()
         let t = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
-            Task { @MainActor in fire() }
+            Task { @MainActor in await fire() }
         }
         RunLoop.main.add(t, forMode: .common)
         timer = t
+        Task { @MainActor in await fire() }
     }
 
     private static func stopRepeating() {
@@ -43,18 +44,19 @@ enum LocatorBeacon {
         player = nil
     }
 
-    private static func configureSession() {
+    private static func activateSession() async {
         let session = AVAudioSession.sharedInstance()
         do {
             try session.setCategory(.playback, mode: .default, options: [.duckOthers])
-            try session.setActive(true)
+            try await session.setActive(true)
         } catch {
             // Session failures stay silent — brightness boost still runs.
         }
     }
 
-    private static func fire() {
-        configureSession()
+    private static func fire() async {
+        await activateSession()
+        guard survivalHold else { return }
         guard let data = alarmWAV() else { return }
         do {
             let p = try AVAudioPlayer(data: data)

@@ -33,6 +33,8 @@ The app has no backend, database, or web service.
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain or
   owner `@AppStorage` / UserDefaults prefs. Hosted at
   `https://redmed.pages.dev/get/` from `get/index.html`.
+  **Tap-to-view never requires Face ID / biometrics** — owner biometrics gate
+  edit, NFC write, vault, and app unlock only. Passerby HTML never asks.
 - Product HTML is only (1) one passerby file `get.html` (identical in `get/index.html`,
   repo root, and the app bundle; legacy `card.html` redirects to `/get/`, preserving `#d=`) and
   (2) policy pages bundled solely under `RedMed-Xcode/RedMed/` (`PrivacyPolicy`,
@@ -45,19 +47,21 @@ The app has no backend, database, or web service.
   source of truth — intentional tap ~1–2″, walk-by ~6–8″ does not fire, reliable
   coupling dies past ~4″, passive 13.56 MHz HF NFC (not Bluetooth). NFC tab /
   How It Works copy must use `BraceletRF` helpers, not hardcoded inches.
+  Tap opens the HTML shell for EMT / helper — passive, no app install.
 
 **Settings vs automatic (permanent):**
 - Help → Settings exposes **only** haptic feedback + Location (`AppSettings` /
   `HapticEngine.enabledKey`). No other toggles there.
-- **Brightness + sound are crash-only (not Settings, not Find Help / scanner):**
-  on-device crash / hard-impact detection (`CrashMotionGuard`) for **vehicle
-  crash / high-speed impact only** (not running or daily activity) arms
-  `BrightnessBoost` + `LocatorBeacon`. Find Help and the scanner shell must
-  not force brightness or play the locate-me siren. Do not add off switches
-  for the survival alarm.
+- **Brightness + sound are survival-alarm only (not Settings, not auto on Find Help / scanner):**
+  arm `BrightnessBoost` + `LocatorBeacon` only when (1) on-device crash /
+  hard-impact detection (`CrashMotionGuard`) fires for **vehicle crash /
+  high-speed impact only** (not running or daily activity), or (2) the owner
+  taps **SOS · Locate me** on Find Help. Opening Find Help or the scanner
+  shell must not force brightness or play the siren by itself. Do not add
+  Settings off switches for the survival alarm.
 - **LocatorBeacon** / **BrightnessBoost** survival hold may keep sounding /
-  max brightness in background until the user taps “Stop the detection” on
-  Aid.
+  max brightness in background until the user taps “Stop the alarm” on Aid
+  (or Stop SOS alarm on Find Help).
 
 **Vault / privacy (permanent):**
 - `VaultHistoryView` Face ID unlock: relock on `.background` only. Do **not**
@@ -81,10 +85,16 @@ async trauma catalog warm-up for the same reason.
 `AAAA`/`AABB` IDs silently drop sources from the target (seen when Haptic /
 Brightness collided with HIPAA vault files).
 
-**Passerby SW:** shell fetch is network-first; on non-ok HTTP **or** network
-failure, fall back to Cache Storage. Bump `CACHE` (`redmed-get-vN`) in lockstep
-across `sw.js`, `get/sw.js`, and the bundled copy on every SW / decrypt deploy.
-Legacy zlib inflate is bounded (64 KiB) in Swift + streaming bound in `get.html`.
+**Passerby SW:** shell fetch is **cache-first** (multi-key: `/get/`,
+`index.html`, etc.) for **almost-instant** EMT / helper open when Cache
+Storage has any shell copy — never wait on network in that case. Background
+`cache: 'reload'` refresh updates the bucket while online. First visit (empty
+cache) waits on network, then stores under every shell key. On activate,
+delete every prior `CACHE` name so deploys clear stale decrypt/layout. Bump
+`CACHE` (`redmed-get-vN`) in lockstep across `sw.js`, `get/sw.js`, and the
+bundled copy on every SW / decrypt deploy. Register the SW ASAP in `get.html`
+(not on `window.load`). Legacy zlib inflate is bounded (64 KiB) in Swift +
+streaming bound in `get.html`. Passerby HTML never touches brightness or audio.
 
 **Repo hygiene:** `main` is the only long-lived branch. After merges, delete
 feature branches on the remote; do not leave parallel “brainchild” branches.
