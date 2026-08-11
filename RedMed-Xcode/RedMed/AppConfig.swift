@@ -98,16 +98,16 @@ enum AppConfig {
         }
     }
 
-    /// Offline / remote coaching only. RedMed itself stays:
+    /// Offline coaching only. RedMed itself stays local-only forever:
     /// **no Bluetooth, no RedMed servers, passive HF NFC bracelet only.**
     ///
     /// Starlink Direct-to-Cell and Apple Emergency SOS via satellite are **phone /
     /// carrier / iOS** paths. RedMed may open `tel:` / `sms:` or coach Side+Volume —
     /// it never pairs BLE, never uplinks PHI, never runs a sat SDK.
     enum Satellite {
-        /// Product rule line — same Theme type scale as other muted captions.
+        /// Permanent product rule — do not soften or time-box.
         static let localOnlyLine =
-            "RedMed: no Bluetooth · no servers · passive HF NFC only. Profile stays on this phone and the band."
+            "Local only — forever. No Bluetooth · no RedMed servers · passive HF NFC. Profile stays on this phone and the band."
 
         static var publicAidTitle: String { "Public Aid · Phone Radio" }
 

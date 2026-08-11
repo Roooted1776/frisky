@@ -71,7 +71,7 @@ struct EmergencyView: View {
                         ]
                     )
 
-                    Text("Coordinates on this screen only. RedMed: no Bluetooth · no servers · passive HF NFC.")
+                    Text(AppConfig.Satellite.localOnlyLine)
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
