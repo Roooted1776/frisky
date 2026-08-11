@@ -24,17 +24,18 @@ struct EmergencyView: View {
                     // NO CELL SIGNAL — top of Find Help (replaces call-first-contact)
                     NoCellSignalCard(showSatellite: $showSatellite)
 
-                    // Optional local satellite terminal path (Bluetooth → terminal uplink).
+                    // GPS CARD
+                    GPSCard(location: locationEnabled ? locationManager.location : nil)
+                        .padding(.vertical, 4)
+                        .opacity(locationEnabled ? 1 : 0.45)
+
+                    // Optional local satellite terminal path — 5px under the coordinates pane.
                     // Encrypts at SatelliteOutboundPipeline before transport — not a RedMed server.
                     SatelliteFieldCard(
                         pipeline: satellitePipeline,
                         location: locationEnabled ? locationManager.location : nil
                     )
-
-                    // GPS CARD
-                    GPSCard(location: locationEnabled ? locationManager.location : nil)
-                        .padding(.vertical, 4)
-                        .opacity(locationEnabled ? 1 : 0.45)
+                    .padding(.top, 5)
 
                     // COPY COORDINATES
                     Button {
