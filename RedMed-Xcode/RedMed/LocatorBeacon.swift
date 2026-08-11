@@ -50,25 +50,26 @@ enum LocatorBeacon {
         timer?.invalidate()
         timer = nil
 
+        // setCategory / setActive must stay off MainActor (Main Thread Checker).
+        // Do not use activate(options:completionHandler:) — that API is iOS 27+ only;
+        // deployment target is 17.0.
         sessionQueue.async {
             let session = AVAudioSession.sharedInstance()
             do {
                 try session.setCategory(.playback, mode: .default, options: [.duckOthers])
+                try session.setActive(true)
             } catch {
                 // Session failures stay silent — brightness boost still runs.
                 return
             }
-            session.activate(options: []) { success, _ in
-                guard success else { return }
-                Task { @MainActor in
-                    guard Self.survivalHold, epoch == Self.sessionEpoch else {
-                        Self.deactivateSession()
-                        return
-                    }
-                    Self.sessionReady = true
-                    Self.fire()
-                    Self.armTimer()
+            Task { @MainActor in
+                guard Self.survivalHold, epoch == Self.sessionEpoch else {
+                    Self.deactivateSession()
+                    return
                 }
+                Self.sessionReady = true
+                Self.fire()
+                Self.armTimer()
             }
         }
     }
