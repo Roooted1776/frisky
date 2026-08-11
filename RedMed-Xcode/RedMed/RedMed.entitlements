@@ -9,7 +9,7 @@
   1. Set AppConfig.nfcHardwareEnabled = true
   2. Uncomment the key/array below
   3. Enable Near Field Communication Tag Reading on App ID com.redmed.app
-  4. Follow RedMed-Xcode/NFC-RESTORE.md
+  4. Follow docs/NFC-RESTORE.md
 -->
 <dict>
 	<!-- UNHIDE WITH APPLE DEV LICENSE + AppConfig.nfcHardwareEnabled = true:
