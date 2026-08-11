@@ -180,13 +180,11 @@ struct NFCView: View {
             }
             .onChange(of: writer.success) { _, ok in
                 guard ok, writer.verified else { return }
-                profile.braceletLinked = true
-                profile.persist()
+                linkBraceletAfterWrite(detail: "NFC write verified")
             }
             .onChange(of: writer.verified) { _, verified in
                 guard verified, writer.success else { return }
-                profile.braceletLinked = true
-                profile.persist()
+                linkBraceletAfterWrite(detail: "NFC write verified")
             }
             .onChange(of: writer.statusMessage) { _, msg in
                 if !writer.isWriting, !writer.success, !msg.isEmpty, msg != "Cancelled." {
@@ -279,13 +277,18 @@ struct NFCView: View {
         lastSimulatedURL = urlString
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
             let note = ProfileNFCCodec.capacityNote(for: profile)
-            profile.braceletLinked = true
-            profile.persist()
+            linkBraceletAfterWrite(detail: "Simulated write")
             simulateBusy = false
             simulateMessage = note.warn
                 ? "Simulated write OK — \(note.text)"
                 : "Simulated write OK — \(note.text). Open URL below or Simulate scan."
         }
+    }
+
+    private func linkBraceletAfterWrite(detail: String) {
+        profile.braceletLinked = true
+        profile.persist()
+        VaultHistoryStore.shared.record(.braceletWritten, detail: detail)
     }
 
     @ViewBuilder

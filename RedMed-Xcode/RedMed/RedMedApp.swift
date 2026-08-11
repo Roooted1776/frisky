@@ -7,12 +7,18 @@ struct RedMedApp: App {
     var body: some Scene {
         WindowGroup {
             // Owner UI lives in Main.swift — not HTML.
-            Main()
-                .environmentObject(profile)
-                .onOpenURL { url in
-                    // Policies / get.html redirect with redmed://main
-                    _ = url
-                }
+            // Privacy cover hides PHI from iOS app-switcher snapshots.
+            PrivacySnapshotGuard {
+                Main()
+                    .environmentObject(profile)
+            }
+            .onAppear {
+                HIPAAOfflineVault.prepare()
+            }
+            .onOpenURL { url in
+                // Policies / get.html redirect with redmed://main
+                _ = url
+            }
         }
     }
 }

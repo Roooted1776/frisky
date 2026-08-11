@@ -98,6 +98,7 @@ struct EditProfileView: View {
                             TextField("Full name", text: $name)
                                 .font(.system(size: Metrics.font))
                                 .foregroundColor(.redmedDark)
+                                .vaultSafeTextInput(capitalization: .words)
                         }
                         Divider().padding(.leading, Metrics.labelWidth + 12 + Metrics.rowHPad)
                         birthDateRow
@@ -281,14 +282,14 @@ struct EditProfileView: View {
                 TextField("Name", text: $contact.name)
                     .font(.system(size: Metrics.font))
                     .foregroundColor(.redmedDark)
-                    .textContentType(.name)
+                    .vaultSafeTextInput(capitalization: .words)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                 TextField("Phone", text: $contact.phone)
                     .font(.system(size: Metrics.font))
                     .foregroundColor(.redmedDark)
                     .keyboardType(.phonePad)
-                    .textContentType(.telephoneNumber)
+                    .vaultSafeTextInput(capitalization: .never)
                     .multilineTextAlignment(.trailing)
                     .frame(maxWidth: .infinity, alignment: .trailing)
 
@@ -311,6 +312,7 @@ struct EditProfileView: View {
             TextField("Relation (optional)", text: $contact.relationship)
                 .font(.system(size: Metrics.font))
                 .foregroundColor(.redmedDark)
+                .vaultSafeTextInput(capitalization: .words)
                 .padding(.horizontal, Metrics.rowHPad)
                 .padding(.vertical, Metrics.rowVPad)
 
@@ -424,6 +426,7 @@ struct EditProfileView: View {
             )
         }
         profile.persist()
+        VaultHistoryStore.shared.record(.profileSaved)
         dismiss()
     }
 }
@@ -460,6 +463,7 @@ private struct DraftLinesEditor: View {
                 TextField(placeholder, text: $line.text)
                     .font(.system(size: Metrics.font))
                     .foregroundColor(.redmedDark)
+                    .vaultSafeTextInput(capitalization: .sentences)
                 Button {
                     let id = line.id
                     lines.removeAll { $0.id == id }
