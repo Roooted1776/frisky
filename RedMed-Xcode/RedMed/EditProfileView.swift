@@ -497,7 +497,7 @@ private struct DraftLinesEditor: View {
                 TextField(placeholder, text: $line.text)
                     .font(.system(size: Metrics.font))
                     .foregroundColor(.redmedDark)
-                    .vaultSafeTextInput(capitalization: .sentences)
+                    .vaultSafeTextInput(capitalization: .words)
                 Button {
                     let id = line.id
                     lines.removeAll { $0.id == id }
