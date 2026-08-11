@@ -1,16 +1,18 @@
 # NFC Tag Reading
 
 CoreNFC write/read is wired in production (`NFCWriter` / `NFCReader`) — real
-`NFCNDEFReaderSession` sessions with write + read-back verify. There is **no**
-Simulator fake-success path: when NFC is unavailable the UI shows an error and
-does not mark the bracelet linked.
+`NFCNDEFReaderSession` sessions with write + read-back verify. When hardware is
+off, `NFCView` still simulates Write/Scan by packing the compact `get.html#d=`
+URL (array indexes → zlib → Base64url). Real CoreNFC has **no** Simulator
+fake-success: if hardware is enabled and NFC is unavailable, write fails and
+the band is not marked linked.
 
 ## Currently disabled (hardware sessions only)
 
 CoreNFC write/read sessions are off via `AppConfig.nfcHardwareEnabled = false`.
 **Do not hide the owner NFC tab** when flipping this — owners always get
 RedMed · Help · Aid · NFC; scanners never get NFC. The flag only blocks
-`NFCWriter` / `NFCReader` sessions.
+`NFCWriter` / `NFCReader` sessions (simulate path stays).
 `RedMed.entitlements` keeps the NFC key commented so free/unsigned builds still
 sign. Flip both when you have a paid Apple Developer Program license and a
 physical iPhone to test.
