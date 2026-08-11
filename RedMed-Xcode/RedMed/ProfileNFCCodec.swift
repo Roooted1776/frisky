@@ -35,15 +35,22 @@ struct NFCChipContact: Codable, Equatable {
 /// embedded in `get.html`. This is packing/obfuscation so the fragment is not
 /// casual plaintext JSON — any phone that loads get.html can decrypt. EMS must
 /// read the band with no account; a private key would defeat the product.
-/// Legacy `#d=` base64url JSON objects still decode.
+///
+/// Legacy still decodes:
+/// - Named JSON objects
+/// - Pre-AES compact arrays `[name, dob, blood, donor, allergies, meds, conditions, contacts, updated?]`
+/// - Optional `0x01` zlib wrapper (and bare zlib) around those payloads
 enum ProfileNFCCodec {
     private static let maxEncodedLength = 8192
+    /// Version byte for legacy zlib-wrapped JSON.
+    private static let zlibVersion: UInt8 = 0x01
     /// Version byte for AES-GCM sealed payloads.
     private static let aesVersion: UInt8 = 0x02
     /// Shared with `get.html` — derive AES-256 key via SHA-256.
     private static let keyLabel = "RedMed-NFC-AES-GCM-v1"
+    private static let bloodTypes = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
 
-    /// Compact array indexes (must match get.html).
+    /// Compact array indexes for AES / current writes (must match get.html).
     private enum Idx {
         static let blood = 0
         static let allergies = 1
@@ -55,6 +62,19 @@ enum ProfileNFCCodec {
         static let contacts = 7
         static let donor = 8
         static let updated = 9
+    }
+
+    /// Pre-AES compact array: `[name, dob, blood, donor, allergies, meds, conditions, contacts, updated?]`
+    private enum LegacyIdx {
+        static let name = 0
+        static let dob = 1
+        static let blood = 2
+        static let donor = 3
+        static let allergies = 4
+        static let meds = 5
+        static let conditions = 6
+        static let contacts = 7
+        static let updated = 8
     }
 
     private static var aesKey: SymmetricKey {
@@ -167,9 +187,21 @@ enum ProfileNFCCodec {
             }
             return profile(fromJSON: json)
         }
-        // Legacy plaintext base64url JSON (object or compact array).
-        guard let json = tryUTF8JSON(data) else { return nil }
-        return profile(fromJSON: json)
+        if let json = tryUTF8JSON(data) {
+            return profile(fromJSON: json)
+        }
+        if data[data.startIndex] == zlibVersion,
+           let inflated = zlibDecompress(data.dropFirst()),
+           let json = tryUTF8JSON(inflated) {
+            return profile(fromJSON: json)
+        }
+        if let inflated = zlibDecompress(data), let json = tryUTF8JSON(inflated) {
+            return profile(fromJSON: json)
+        }
+        if let chip = try? JSONDecoder().decode(NFCChipProfile.self, from: data) {
+            return chip
+        }
+        return nil
     }
 
     private static func compactArray(from chip: NFCChipProfile) -> [Any] {
@@ -204,7 +236,73 @@ enum ProfileNFCCodec {
         return nil
     }
 
+    /// Pre-AES bands used `[name, dob, blood, donor, …]`. AES bands use
+    /// `[blood, allergies, meds, emergencyPhone, …]`. Detect before mapping.
+    private static func isLegacyCompactArray(_ arr: [Any]) -> Bool {
+        // Current schema puts donor (0/1/bool) at index 8 when length ≥ 9.
+        if arr.count >= 9, isDonorFlag(arr[8]) {
+            return false
+        }
+        guard arr.count >= 4 else { return false }
+
+        let donorLike = isDonorFlag(arr[3])
+        let allergiesAreArray = arr.count > LegacyIdx.allergies && arr[LegacyIdx.allergies] is [Any]
+        if donorLike && allergiesAreArray {
+            return true
+        }
+
+        // Blood packed as Int 0…7 at index 2 (legacy compactBlood).
+        if donorLike, isPackedBloodIndex(arr[LegacyIdx.blood]) {
+            return true
+        }
+
+        // Name + compact/ISO dob at 0/1, donor flag at 3, ≤9 slots.
+        if donorLike,
+           arr[LegacyIdx.name] is String,
+           looksLikeDob(arr[LegacyIdx.dob]),
+           arr.count <= 9 {
+            let name = arr[LegacyIdx.name] as? String ?? ""
+            if !bloodTypes.contains(name) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private static func isDonorFlag(_ value: Any) -> Bool {
+        if value is Bool { return true }
+        if let n = value as? NSNumber {
+            return n.intValue == 0 || n.intValue == 1
+        }
+        if let s = value as? String {
+            return s == "0" || s == "1"
+        }
+        return false
+    }
+
+    private static func isPackedBloodIndex(_ value: Any) -> Bool {
+        if let n = value as? NSNumber {
+            return (0...7).contains(n.intValue)
+        }
+        return false
+    }
+
+    private static func looksLikeDob(_ value: Any) -> Bool {
+        guard let s = value as? String else {
+            return value is NSNumber
+        }
+        let digits = s.filter(\.isNumber)
+        return digits.count == 6 || digits.count == 8 || s.contains("-")
+    }
+
     private static func profile(fromArray arr: [Any]) -> NFCChipProfile {
+        if isLegacyCompactArray(arr) {
+            return profile(fromLegacyArray: arr)
+        }
+        return profile(fromCurrentArray: arr)
+    }
+
+    private static func profile(fromCurrentArray arr: [Any]) -> NFCChipProfile {
         func str(_ i: Int) -> String {
             guard i < arr.count else { return "" }
             if let s = arr[i] as? String { return s }
@@ -244,7 +342,7 @@ enum ProfileNFCCodec {
         var chip = NFCChipProfile(
             name: str(Idx.name),
             dob: str(Idx.dob),
-            blood: str(Idx.blood),
+            blood: expandBlood(arr.indices.contains(Idx.blood) ? arr[Idx.blood] : ""),
             donor: donorFlag(Idx.donor),
             allergies: list(Idx.allergies),
             meds: list(Idx.meds),
@@ -252,7 +350,8 @@ enum ProfileNFCCodec {
             contacts: contacts(Idx.contacts),
             updated: str(Idx.updated)
         )
-        let emergency = str(Idx.emergencyPhone)
+        // Reject lone "0"/"1" so a misclassified legacy donor never becomes tel:1.
+        let emergency = usableEmergencyPhone(str(Idx.emergencyPhone))
         if !emergency.isEmpty {
             if chip.contacts.isEmpty {
                 chip.contacts = [NFCChipContact(name: "Emergency", rel: "", phone: emergency)]
@@ -261,6 +360,62 @@ enum ProfileNFCCodec {
             }
         }
         return chip
+    }
+
+    private static func profile(fromLegacyArray arr: [Any]) -> NFCChipProfile {
+        func str(_ i: Int) -> String {
+            guard i < arr.count else { return "" }
+            if let s = arr[i] as? String { return s }
+            if let n = arr[i] as? NSNumber { return n.stringValue }
+            return ""
+        }
+        func strs(_ i: Int) -> [String] {
+            guard i < arr.count else { return [] }
+            if let a = arr[i] as? [Any] {
+                return a.compactMap { $0 as? String }
+            }
+            return splitList(str(i))
+        }
+        let donor: Bool = {
+            guard LegacyIdx.donor < arr.count else { return false }
+            if let b = arr[LegacyIdx.donor] as? Bool { return b }
+            if let n = arr[LegacyIdx.donor] as? NSNumber { return n.intValue != 0 }
+            if let s = arr[LegacyIdx.donor] as? String {
+                return s == "1" || s.lowercased() == "true"
+            }
+            return false
+        }()
+        let contacts: [NFCChipContact] = {
+            guard LegacyIdx.contacts < arr.count, let rows = arr[LegacyIdx.contacts] as? [Any] else {
+                return []
+            }
+            return rows.compactMap { row -> NFCChipContact? in
+                guard let parts = row as? [Any] else { return nil }
+                let name = parts.indices.contains(0) ? (parts[0] as? String ?? "") : ""
+                let rel = parts.indices.contains(1) ? (parts[1] as? String ?? "") : ""
+                let phone = parts.indices.contains(2) ? (parts[2] as? String ?? "") : ""
+                if name.isEmpty && rel.isEmpty && phone.isEmpty { return nil }
+                return NFCChipContact(name: name, rel: rel, phone: phone)
+            }
+        }()
+        return NFCChipProfile(
+            name: str(LegacyIdx.name),
+            dob: expandDob(str(LegacyIdx.dob)),
+            blood: expandBlood(arr.indices.contains(LegacyIdx.blood) ? arr[LegacyIdx.blood] : ""),
+            donor: donor,
+            allergies: strs(LegacyIdx.allergies),
+            meds: strs(LegacyIdx.meds),
+            conditions: strs(LegacyIdx.conditions),
+            contacts: contacts,
+            updated: expandUpdated(str(LegacyIdx.updated))
+        )
+    }
+
+    private static func usableEmergencyPhone(_ raw: String) -> String {
+        let digits = raw.filter { $0.isNumber || $0 == "+" }
+        // Need a real number, not a donor flag residue ("0"/"1").
+        let numCount = digits.filter(\.isNumber).count
+        return numCount >= 3 ? digits : ""
     }
 
     private static func profile(fromObject obj: [String: Any]) -> NFCChipProfile {
@@ -309,6 +464,38 @@ enum ProfileNFCCodec {
         )
     }
 
+    private static func expandBlood(_ value: Any) -> String {
+        if let i = value as? Int, bloodTypes.indices.contains(i) { return bloodTypes[i] }
+        if let n = value as? NSNumber, bloodTypes.indices.contains(n.intValue) {
+            return bloodTypes[n.intValue]
+        }
+        return value as? String ?? ""
+    }
+
+    private static func expandDob(_ dob: String) -> String {
+        let digits = dob.filter(\.isNumber)
+        if digits.count == 6 {
+            let yy = Int(digits.prefix(2)) ?? 0
+            let century = yy >= 70 ? "19" : "20"
+            let s = century + digits
+            return "\(s.prefix(4))-\(s.dropFirst(4).prefix(2))-\(s.suffix(2))"
+        }
+        if digits.count == 8 {
+            return "\(digits.prefix(4))-\(digits.dropFirst(4).prefix(2))-\(digits.suffix(2))"
+        }
+        return dob
+    }
+
+    private static func expandUpdated(_ updated: String) -> String {
+        let digits = updated.filter(\.isNumber)
+        if digits.count == 6 {
+            let yy = Int(digits.prefix(2)) ?? 0
+            let century = yy >= 70 ? "19" : "20"
+            return "\(century)\(digits.prefix(2))-\(digits.dropFirst(2).prefix(2))-\(digits.suffix(2))"
+        }
+        return updated
+    }
+
     private static func joinList(_ items: [String]) -> String {
         items
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -323,8 +510,20 @@ enum ProfileNFCCodec {
     }
 
     private static func tryUTF8JSON(_ data: Data) -> Any? {
-        guard let obj = try? JSONSerialization.jsonObject(with: data, options: []) else { return nil }
-        return obj
+        guard let first = data.first, first == UInt8(ascii: "{") || first == UInt8(ascii: "[") else {
+            return nil
+        }
+        return try? JSONSerialization.jsonObject(with: data, options: [])
+    }
+
+    /// Foundation zlib (iOS 13+) — same wrapper `DecompressionStream('deflate')` expects.
+    private static func zlibDecompress(_ data: Data) -> Data? {
+        do {
+            let out: NSData = try (data as NSData).decompressed(using: .zlib)
+            return out as Data
+        } catch {
+            return nil
+        }
     }
 
     private static func base64url(_ data: Data) -> String {

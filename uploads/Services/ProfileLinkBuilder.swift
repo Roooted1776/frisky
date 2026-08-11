@@ -3,7 +3,8 @@ import Foundation
 
 /// Builds the on-chip NDEF URI: flat array → AES-GCM → base64url after `#d=`.
 /// Matches `ProfileNFCCodec` / `get.html`. New writes use
-/// `AppConfig.medicalCardBaseURL`. Legacy plaintext JSON still decodes.
+/// `AppConfig.medicalCardBaseURL`. Legacy plaintext JSON, pre-AES compact
+/// arrays, and `0x01` zlib wrappers still decode.
 enum ProfileLinkBuilder {
 
     private static let maxEncodedLength = 8192
@@ -16,8 +17,10 @@ enum ProfileLinkBuilder {
     private static let maxContacts = 4
     private static let maxContactField = 160
 
+    private static let zlibVersion: UInt8 = 0x01
     private static let aesVersion: UInt8 = 0x02
     private static let keyLabel = "RedMed-NFC-AES-GCM-v1"
+    private static let bloodTypes = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
 
     private enum Idx {
         static let blood = 0
@@ -30,6 +33,18 @@ enum ProfileLinkBuilder {
         static let contacts = 7
         static let donor = 8
         static let updated = 9
+    }
+
+    private enum LegacyIdx {
+        static let name = 0
+        static let dob = 1
+        static let blood = 2
+        static let donor = 3
+        static let allergies = 4
+        static let meds = 5
+        static let conditions = 6
+        static let contacts = 7
+        static let updated = 8
     }
 
     private static var aesKey: SymmetricKey {
@@ -103,13 +118,23 @@ enum ProfileLinkBuilder {
             guard sealedData.count > 12 + 16,
                   let box = try? AES.GCM.SealedBox(combined: Data(sealedData)),
                   let plain = try? AES.GCM.open(box, using: aesKey),
-                  let json = try? JSONSerialization.jsonObject(with: plain) else {
+                  let json = tryUTF8JSON(plain) else {
                 return nil
             }
             return profile(fromJSON: json)
         }
-        guard let json = try? JSONSerialization.jsonObject(with: data) else { return nil }
-        return profile(fromJSON: json)
+        if let json = tryUTF8JSON(data) {
+            return profile(fromJSON: json)
+        }
+        if data[data.startIndex] == zlibVersion,
+           let inflated = zlibDecompress(data.dropFirst()),
+           let json = tryUTF8JSON(inflated) {
+            return profile(fromJSON: json)
+        }
+        if let inflated = zlibDecompress(data), let json = tryUTF8JSON(inflated) {
+            return profile(fromJSON: json)
+        }
+        return nil
     }
 
     private static func compactArray(from profile: MedicalProfile) -> [Any] {
@@ -140,7 +165,47 @@ enum ProfileLinkBuilder {
         return nil
     }
 
+    private static func isLegacyCompactArray(_ arr: [Any]) -> Bool {
+        if arr.count >= 9, isDonorFlag(arr[8]) { return false }
+        guard arr.count >= 4 else { return false }
+        let donorLike = isDonorFlag(arr[3])
+        if donorLike && arr.count > LegacyIdx.allergies && arr[LegacyIdx.allergies] is [Any] {
+            return true
+        }
+        if donorLike, let n = arr[LegacyIdx.blood] as? NSNumber, (0...7).contains(n.intValue) {
+            return true
+        }
+        if donorLike,
+           let name = arr[LegacyIdx.name] as? String,
+           !bloodTypes.contains(name),
+           looksLikeDob(arr[LegacyIdx.dob]),
+           arr.count <= 9 {
+            return true
+        }
+        return false
+    }
+
+    private static func isDonorFlag(_ value: Any) -> Bool {
+        if value is Bool { return true }
+        if let n = value as? NSNumber { return n.intValue == 0 || n.intValue == 1 }
+        if let s = value as? String { return s == "0" || s == "1" }
+        return false
+    }
+
+    private static func looksLikeDob(_ value: Any) -> Bool {
+        guard let s = value as? String else { return value is NSNumber }
+        let digits = s.filter(\.isNumber)
+        return digits.count == 6 || digits.count == 8 || s.contains("-")
+    }
+
     private static func profile(fromArray arr: [Any]) -> MedicalProfile {
+        if isLegacyCompactArray(arr) {
+            return profile(fromLegacyArray: arr)
+        }
+        return profile(fromCurrentArray: arr)
+    }
+
+    private static func profile(fromCurrentArray arr: [Any]) -> MedicalProfile {
         func str(_ i: Int) -> String {
             guard i < arr.count else { return "" }
             if let s = arr[i] as? String { return s }
@@ -179,7 +244,7 @@ enum ProfileLinkBuilder {
         var p = MedicalProfile(
             name: str(Idx.name),
             dob: str(Idx.dob),
-            blood: str(Idx.blood),
+            blood: expandBlood(arr.indices.contains(Idx.blood) ? arr[Idx.blood] : ""),
             donor: donorFlag(Idx.donor),
             allergies: list(Idx.allergies),
             meds: list(Idx.meds),
@@ -187,7 +252,7 @@ enum ProfileLinkBuilder {
             contacts: contacts(Idx.contacts),
             updated: str(Idx.updated)
         )
-        let emergency = str(Idx.emergencyPhone)
+        let emergency = usableEmergencyPhone(str(Idx.emergencyPhone))
         if !emergency.isEmpty {
             if p.contacts.isEmpty {
                 p.contacts = [EmergencyContact(name: "Emergency", rel: "", phone: emergency)]
@@ -196,6 +261,105 @@ enum ProfileLinkBuilder {
             }
         }
         return p
+    }
+
+    private static func profile(fromLegacyArray arr: [Any]) -> MedicalProfile {
+        func str(_ i: Int) -> String {
+            guard i < arr.count else { return "" }
+            if let s = arr[i] as? String { return s }
+            if let n = arr[i] as? NSNumber { return n.stringValue }
+            return ""
+        }
+        func strs(_ i: Int) -> [String] {
+            guard i < arr.count else { return [] }
+            if let a = arr[i] as? [Any] {
+                return a.compactMap { $0 as? String }
+            }
+            return splitList(str(i))
+        }
+        let donor: Bool = {
+            guard LegacyIdx.donor < arr.count else { return false }
+            if let b = arr[LegacyIdx.donor] as? Bool { return b }
+            if let n = arr[LegacyIdx.donor] as? NSNumber { return n.intValue != 0 }
+            return false
+        }()
+        let contacts: [EmergencyContact] = {
+            guard LegacyIdx.contacts < arr.count, let rows = arr[LegacyIdx.contacts] as? [Any] else {
+                return []
+            }
+            return rows.compactMap { row -> EmergencyContact? in
+                guard let parts = row as? [Any] else { return nil }
+                let name = parts.indices.contains(0) ? (parts[0] as? String ?? "") : ""
+                let rel = parts.indices.contains(1) ? (parts[1] as? String ?? "") : ""
+                let phone = parts.indices.contains(2) ? (parts[2] as? String ?? "") : ""
+                if name.isEmpty && rel.isEmpty && phone.isEmpty { return nil }
+                return EmergencyContact(name: name, rel: rel, phone: phone)
+            }
+        }()
+        return MedicalProfile(
+            name: str(LegacyIdx.name),
+            dob: expandDob(str(LegacyIdx.dob)),
+            blood: expandBlood(arr.indices.contains(LegacyIdx.blood) ? arr[LegacyIdx.blood] : ""),
+            donor: donor,
+            allergies: strs(LegacyIdx.allergies),
+            meds: strs(LegacyIdx.meds),
+            conditions: strs(LegacyIdx.conditions),
+            contacts: contacts,
+            updated: expandUpdated(str(LegacyIdx.updated))
+        )
+    }
+
+    private static func usableEmergencyPhone(_ raw: String) -> String {
+        let digits = raw.filter { $0.isNumber || $0 == "+" }
+        return digits.filter(\.isNumber).count >= 3 ? digits : ""
+    }
+
+    private static func expandBlood(_ value: Any) -> String {
+        if let i = value as? Int, bloodTypes.indices.contains(i) { return bloodTypes[i] }
+        if let n = value as? NSNumber, bloodTypes.indices.contains(n.intValue) {
+            return bloodTypes[n.intValue]
+        }
+        return value as? String ?? ""
+    }
+
+    private static func expandDob(_ dob: String) -> String {
+        let digits = dob.filter(\.isNumber)
+        if digits.count == 6 {
+            let yy = Int(digits.prefix(2)) ?? 0
+            let century = yy >= 70 ? "19" : "20"
+            let s = century + digits
+            return "\(s.prefix(4))-\(s.dropFirst(4).prefix(2))-\(s.suffix(2))"
+        }
+        if digits.count == 8 {
+            return "\(digits.prefix(4))-\(digits.dropFirst(4).prefix(2))-\(digits.suffix(2))"
+        }
+        return dob
+    }
+
+    private static func expandUpdated(_ updated: String) -> String {
+        let digits = updated.filter(\.isNumber)
+        if digits.count == 6 {
+            let yy = Int(digits.prefix(2)) ?? 0
+            let century = yy >= 70 ? "19" : "20"
+            return "\(century)\(digits.prefix(2))-\(digits.dropFirst(2).prefix(2))-\(digits.suffix(2))"
+        }
+        return updated
+    }
+
+    private static func tryUTF8JSON(_ data: Data) -> Any? {
+        guard let first = data.first, first == UInt8(ascii: "{") || first == UInt8(ascii: "[") else {
+            return nil
+        }
+        return try? JSONSerialization.jsonObject(with: data, options: [])
+    }
+
+    private static func zlibDecompress(_ data: Data) -> Data? {
+        do {
+            let out: NSData = try (data as NSData).decompressed(using: .zlib)
+            return out as Data
+        } catch {
+            return nil
+        }
     }
 
     private static func profile(fromObject obj: [String: Any]) -> MedicalProfile? {

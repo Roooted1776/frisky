@@ -9,7 +9,7 @@
  * drops the previous bucket. Shell + install fetches use cache: 'reload' so
  * neither HTTP disk cache nor Cache Storage keep a stale decrypt page.
  */
-var CACHE = 'redmed-get-v4';
+var CACHE = 'redmed-get-v5';
 var ASSETS = [
   './',
   './get.html',
