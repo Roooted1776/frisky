@@ -308,7 +308,7 @@ struct EditProfileView: View {
 
             Divider().padding(.leading, Metrics.rowHPad)
 
-            TextField("Relationship (optional)", text: $contact.relationship)
+            TextField("Relation (optional)", text: $contact.relationship)
                 .font(.system(size: Metrics.font))
                 .foregroundColor(.redmedDark)
                 .padding(.horizontal, Metrics.rowHPad)

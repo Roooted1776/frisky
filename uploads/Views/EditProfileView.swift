@@ -485,7 +485,7 @@ struct EditProfileView: View {
         )
         DisclosureGroup(isExpanded: isExpanded) {
             TextField("Name", text: $draft.contacts[index].name)
-            TextField("Relationship", text: $draft.contacts[index].rel)
+            TextField("Relation", text: $draft.contacts[index].rel)
             TextField("Phone", text: $draft.contacts[index].phone)
                 .keyboardType(.phonePad)
         } label: {
