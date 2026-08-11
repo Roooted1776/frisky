@@ -55,21 +55,6 @@ struct EmergencyView: View {
                             .opacity(locationEnabled ? 1 : 0.45)
 
                         Button {
-                            PublicEmergencyAid.dial()
-                        } label: {
-                            HStack(spacing: 10) {
-                                Image(systemName: "phone.fill")
-                                Text("Call \(EmergencyNumber.current)")
-                            }
-                            .font(.system(size: 17, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Color.redmedDark)
-                            .clipShape(Capsule())
-                        }
-
-                        Button {
                             if locationEnabled, let loc = locationManager.location {
                                 SecurePasteboard.copyEphemeral(
                                     "\(loc.coordinate.latitude), \(loc.coordinate.longitude)"
@@ -85,6 +70,21 @@ struct EmergencyView: View {
                                 .clipShape(Capsule())
                         }
                         .disabled(!locationEnabled || locationManager.location == nil)
+
+                        Button {
+                            PublicEmergencyAid.dial()
+                        } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: "phone.fill")
+                                Text("Call \(EmergencyNumber.current)")
+                            }
+                            .font(.system(size: 17, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(Color.redmedDark)
+                            .clipShape(Capsule())
+                        }
 
                         // Owner SOS — same survival hold as crash. Scanners stay quiet.
                         if !isScannerSession {
