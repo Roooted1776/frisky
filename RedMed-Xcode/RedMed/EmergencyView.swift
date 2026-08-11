@@ -313,13 +313,7 @@ struct NoCellSignalCard: View {
                 Spacer()
             }
 
-            Text(AppConfig.Satellite.localOnlyLine)
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundColor(.redmedMuted)
-                .lineSpacing(2)
-                .fixedSize(horizontal: false, vertical: true)
-
-            // T-Mobile first — carrier radio path for Call below GPS (not a RedMed sat API).
+            // T-Mobile first — carrier list only (Call button lives 5px under GPS).
             Text(AppConfig.Satellite.directToCellCarriersLine)
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundColor(.redmedMuted)
