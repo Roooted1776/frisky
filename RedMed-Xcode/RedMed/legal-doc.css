@@ -1,17 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Tokens match Theme.swift / Main.swift / card.html */
 :root {
-  --bg: #0a0a0a;
-  --surface: rgba(255,255,255,0.05);
-  --border: rgba(255,255,255,0.08);
+  --bg: #fff7f7;
+  --surface: rgba(255, 255, 255, 0.92);
+  --border: rgba(28, 25, 23, 0.08);
+  --divider: rgba(28, 25, 23, 0.07);
   --accent: #e11d48;
-  --accent-soft: rgba(225,29,72,0.12);
-  --text: #fff;
-  --text-muted: rgba(255,255,255,0.45);
-  --text-dim: rgba(255,255,255,0.28);
-  --radius: 14px;
+  --accent-soft: rgba(225, 29, 72, 0.08);
+  --text: #1c1917;
+  --text-muted: #78716c;
+  --text-dim: rgba(28, 25, 23, 0.45);
+  --radius: 12px;
 
   --fs-xs:   11px;
   --fs-sm:   13px;
@@ -28,8 +28,7 @@
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  font-feature-settings: 'cv11', 'ss01';
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   background: var(--bg);
   color: var(--text);
@@ -69,33 +68,42 @@ body {
   letter-spacing: 0.3px;
 }
 
-/* Nav */
+/* Nav — pill tabs, same on every policy page */
 .legal-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 14px;
+  gap: 8px;
   align-items: center;
   font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
   color: var(--text-muted);
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 .legal-nav a {
   color: var(--text-muted);
   text-decoration: none;
-  transition: color 0.15s;
+  padding: 7px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
 }
-.legal-nav a:hover { color: var(--text); }
+.legal-nav a:hover {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border);
+}
 .legal-nav a[aria-current="page"] {
   color: var(--accent);
   font-weight: var(--fw-semi);
+  background: var(--accent-soft);
+  border-color: rgba(225, 29, 72, 0.18);
 }
-.legal-nav span[aria-hidden] { color: var(--border); }
+.legal-nav span[aria-hidden] { display: none; }
 
 /* Rule */
 .legal-rule-thin {
   border: none;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--divider);
   margin: 0 0 28px;
 }
 
@@ -105,6 +113,7 @@ body {
   font-weight: var(--fw-black);
   letter-spacing: -0.6px;
   line-height: 1.1;
+  color: var(--text);
   margin-bottom: 14px;
 }
 .legal-meta {
@@ -121,25 +130,42 @@ body {
   line-height: 1.5;
 }
 
-/* Notice box */
+/* Notice box — matches MainInfoView accent callout (fill, no heavy stroke) */
 .legal-notice {
   background: var(--accent-soft);
-  border: 1px solid rgba(225,29,72,0.25);
+  border: 1px solid rgba(225, 29, 72, 0.14);
   border-radius: var(--radius);
-  padding: 16px 18px;
+  padding: 14px 16px;
   font-size: var(--fs-sm);
-  color: rgba(255,255,255,0.85);
-  line-height: 1.6;
+  color: var(--text-muted);
+  line-height: 1.55;
   margin-bottom: 28px;
+  font-weight: var(--fw-medium);
+}
+.legal-notice.legal-notice-owner {
+  margin-top: 4px;
+  margin-bottom: 20px;
 }
 .legal-notice strong {
+  color: var(--accent);
+  font-weight: var(--fw-bold);
+}
+.legal-notice > strong:first-of-type {
   display: block;
   font-size: var(--fs-xs);
-  font-weight: var(--fw-bold);
-  color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-bottom: 6px;
+}
+.legal-notice a { color: var(--accent); text-decoration: none; font-weight: var(--fw-semi); }
+.legal-notice a:hover { text-decoration: underline; }
+.legal-notice code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  background: rgba(28, 25, 23, 0.06);
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: var(--text);
 }
 
 /* Body */
@@ -158,9 +184,10 @@ body {
 }
 .legal-body p {
   font-size: var(--fs-base);
-  color: rgba(255,255,255,0.8);
+  color: var(--text-muted);
   line-height: 1.7;
   margin-bottom: 12px;
+  font-weight: var(--fw-medium);
 }
 .legal-body ul, .legal-body ol {
   padding-left: 20px;
@@ -168,20 +195,21 @@ body {
 }
 .legal-body li {
   font-size: var(--fs-base);
-  color: rgba(255,255,255,0.75);
+  color: var(--text-muted);
   line-height: 1.65;
   margin-bottom: 6px;
+  font-weight: var(--fw-medium);
 }
 .legal-body strong { color: var(--text); font-weight: var(--fw-semi); }
 .legal-body a { color: var(--accent); text-decoration: none; }
 .legal-body a:hover { text-decoration: underline; }
 .legal-body code {
-  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 13px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(28, 25, 23, 0.06);
   border-radius: 4px;
   padding: 1px 5px;
-  color: rgba(255,255,255,0.85);
+  color: var(--text);
 }
 .legal-caps {
   font-size: var(--fs-sm) !important;
@@ -191,12 +219,12 @@ body {
   line-height: 1.6 !important;
 }
 
-/* Section card */
+/* Section card — same surface + hairline as MainInfoView setup box */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 18px 20px;
+  padding: 16px 18px;
   margin-bottom: 16px;
 }
 .card h2 {
@@ -208,21 +236,28 @@ body {
 }
 .card p {
   font-size: var(--fs-base);
-  color: rgba(255,255,255,0.75);
+  color: var(--text-muted);
   line-height: 1.65;
   margin-bottom: 10px;
+  font-weight: var(--fw-medium);
 }
 .card p:last-child { margin-bottom: 0; }
 .card ol, .card ul { padding-left: 20px; margin-bottom: 10px; }
-.card li { font-size: var(--fs-base); color: rgba(255,255,255,0.75); line-height: 1.65; margin-bottom: 5px; }
+.card li {
+  font-size: var(--fs-base);
+  color: var(--text-muted);
+  line-height: 1.65;
+  margin-bottom: 5px;
+  font-weight: var(--fw-medium);
+}
 .card a { color: var(--accent); text-decoration: none; }
 .card code {
-  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 13px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(28, 25, 23, 0.06);
   border-radius: 4px;
   padding: 1px 5px;
-  color: rgba(255,255,255,0.85);
+  color: var(--text);
 }
 .card table {
   width: 100%;
@@ -238,29 +273,31 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.8px;
   padding: 6px 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--divider);
 }
 .card td {
   padding: 8px 0;
-  color: rgba(255,255,255,0.75);
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--divider);
   vertical-align: top;
+  font-weight: var(--fw-medium);
 }
 .card td:first-child { font-weight: var(--fw-medium); color: var(--text); padding-right: 16px; }
 
 /* Lead paragraph */
 .lead {
   font-size: var(--fs-md);
-  color: rgba(255,255,255,0.75);
+  color: var(--text-muted);
   line-height: 1.65;
   margin-bottom: 24px;
+  font-weight: var(--fw-medium);
 }
 
 /* Footer */
 .legal-footer {
   margin-top: 48px;
   padding-top: 24px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--divider);
   font-size: var(--fs-sm);
   color: var(--text-dim);
   line-height: 1.8;
