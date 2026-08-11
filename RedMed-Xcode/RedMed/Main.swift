@@ -67,7 +67,7 @@ struct MainInfoView: View {
                     setupStep(1, "Open RedMed on iPhone and fill in your allergies, meds, and contacts.")
                     setupStep(2, "Hold your band to the top of your iPhone once — the chip stores your emergency card.")
                     setupStep(3, "Done. Anyone taps the band — their phone opens emergency call and your critical info. No app needed.")
-                    Text("Passive 13.56 MHz HF NFC only — no battery, no Bluetooth pair. RedMed is not a medical device. In an emergency, call your local emergency number.")
+                    Text("Passive 13.56 MHz HF NFC only — no battery, no Bluetooth pair. RedMed is an emergency assist to help reach EMS and show self-reported ID — not a medical device, not medical advice, and it does not promise any medical or rescue outcome. In an emergency, call 911 first.")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .padding(.top, 4)
