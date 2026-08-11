@@ -2,6 +2,10 @@
 
 ## Cursor Cloud specific instructions
 
+**Personal profile / memory:** read [`MAX.md`](./MAX.md) first for who Max is,
+how he works, and what he has already shipped. Product invariants below stay
+authoritative for code; `MAX.md` is the durable personal + history memory.
+
 This repository is a **native iOS/SwiftUI app** (RedMed), located under `RedMed-Xcode/`. It
 builds and runs **only on macOS with Xcode 15+** (prefer Xcode 27 / iOS 27.0 Simulator) and an
 iOS 17+ Simulator or physical iPhone. Deployment target remains 17.0.
