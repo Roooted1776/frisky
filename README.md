@@ -15,6 +15,7 @@ Native iOS medical ID + emergency aid app. Shipable source of truth is
 | `RedMed-Xcode/RedMed/{PrivacyPolicy,TOS,security,HowItWorks}.html` + `legal-doc.css` | Policy pages bundled in the app (sole copy — no repo-root duplicates) |
 | `assets/` + root `BrandLogo.png` | Pages / SW logo paths |
 | `docs/band-engraving-and-nfc-sourcing.md` | Band engraving + NFC hardware notes |
+| `docs/NFC-RESTORE.md` | CoreNFC hardware restore notes (entitlement + flag) |
 
 No other product HTML. Owner UI is native SwiftUI only. Do not reintroduce
 `uploads/`, `screenshots/`, or UK `compliance/` drafts — git history has them.

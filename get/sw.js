@@ -9,10 +9,10 @@
  * Shell strategy: cache-first with multi-key fallback (/get/ ↔ index.html);
  * never wait on network when any shell copy exists. Background networkReload
  * refreshes the bucket. Activate deletes prior CACHE names so deploys clear
- * stale decrypt/layout. Bump CACHE on every deploy that changes get/index.html
- * / decrypt logic.
+ * stale decrypt/layout. Bump CACHE in lockstep with root + bundled sw.js on
+ * every decrypt/layout deploy.
  */
-var CACHE = 'redmed-get-v15';
+var CACHE = 'redmed-get-v16';
 var ASSETS = [
   './',
   './index.html',
@@ -21,34 +21,50 @@ var ASSETS = [
   '../assets/BrandLogo.png',
   '../card.html'
 ];
-/** Primary HTML shell — install must fail closed if this cannot be cached. */
-var REQUIRED_SHELL = './index.html';
-var SHELL_KEYS = ['./', './index.html', '/get/', '/get/index.html', '/get'];
+/** Primary HTML shell — install must fail closed if neither key can be cached. */
+var REQUIRED_SHELLS = ['./index.html', './'];
+var SHELL_KEYS = [
+  './',
+  './index.html',
+  '/get/',
+  '/get/index.html',
+  '/get'
+];
 
 function networkReload(reqOrUrl) {
   return fetch(reqOrUrl, { cache: 'reload' });
 }
 
-function precache(cache) {
-  return networkReload(REQUIRED_SHELL)
+function precacheRequiredShell(cache, i) {
+  if (i >= REQUIRED_SHELLS.length) {
+    return Promise.reject(new Error('shell precache failed'));
+  }
+  var url = REQUIRED_SHELLS[i];
+  return networkReload(url)
     .then(function (res) {
-      if (!res || !res.ok) {
-        return Promise.reject(new Error('shell precache failed'));
-      }
-      return putShell(cache, REQUIRED_SHELL, res);
+      if (res && res.ok) return putShell(cache, url, res);
+      return precacheRequiredShell(cache, i + 1);
     })
-    .then(function () {
-      return Promise.all(
-        ASSETS.filter(function (url) { return url !== REQUIRED_SHELL; }).map(function (url) {
-          return networkReload(url)
-            .then(function (res) {
-              if (!res || !res.ok) return;
-              return putShell(cache, url, res);
-            })
-            .catch(function () { /* optional path missing */ });
-        })
-      );
+    .catch(function () {
+      return precacheRequiredShell(cache, i + 1);
     });
+}
+
+function precache(cache) {
+  return precacheRequiredShell(cache, 0).then(function () {
+    return Promise.all(
+      ASSETS.filter(function (url) {
+        return REQUIRED_SHELLS.indexOf(url) === -1;
+      }).map(function (url) {
+        return networkReload(url)
+          .then(function (res) {
+            if (!res || !res.ok) return;
+            return putShell(cache, url, res);
+          })
+          .catch(function () { /* optional path missing */ });
+      })
+    );
+  });
 }
 
 /** Store under the request URL plus canonical shell keys so /get/ always hits. */
@@ -70,8 +86,7 @@ function matchOne(keys, i) {
 
 /** Instant path: any cached shell wins. Do not wait on network. */
 function cachedShell(req) {
-  var keys = [req].concat(SHELL_KEYS);
-  return matchOne(keys, 0);
+  return matchOne([req].concat(SHELL_KEYS), 0);
 }
 
 function refreshShell(cache, req) {
