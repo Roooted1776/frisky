@@ -55,7 +55,7 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Locked owner vs passerby shells; four owner tabs (RedMed · 911 · Aid · NFC); scanners RedMed/911/Aid.
 - Owner app on first launch; `Main.swift` owner shell; HTML policies redirect `redmed://main`.
 - Deferred all Core Location until Find Help; fixed SIGTERM/launch confusion.
-- Custom tab bar spacing; Aid chrome/wordmark/headings; RedMed fonts; Preview scanner Close on all tabs.
+- Custom tab bar spacing; Aid chrome/wordmark/headings; RedMed fonts; Preview scanner Back on all tabs (accent red, page-bg fill).
 - Version 1.1 driven from build settings; simulator default iOS 27.0; CI iOS compile workflow (later gated when Actions billing blocked macOS).
 
 ### Edit / profile / Face ID

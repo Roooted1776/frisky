@@ -196,7 +196,8 @@ struct TopicDetailView: View {
                             Image(systemName: "chevron.left")
                                 .font(.system(size: 17, weight: .semibold))
                             Text("Aid")
-                                .font(.system(size: 17, weight: .regular))
+                                .font(.system(size: 18, weight: .regular))
+                                .kerning(-0.2)
                         }
                         .foregroundColor(.redmedAccent)
                     }

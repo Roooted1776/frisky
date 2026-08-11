@@ -129,6 +129,7 @@ struct EmergencyView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.redmedBg, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
+            .tint(.redmedAccent)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Find Help").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedAccent)
