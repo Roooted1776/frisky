@@ -155,12 +155,21 @@ enum LocatorBeacon {
 
 private struct LocatorBeaconModifier: ViewModifier {
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.isScannerSession) private var isScannerSession
 
     func body(content: Content) -> some View {
         content
-            .onAppear { LocatorBeacon.begin() }
-            .onDisappear { LocatorBeacon.end() }
+            .onAppear {
+                // Passerby / EMS card shell stays quiet — siren is owner Find Help only.
+                guard !isScannerSession else { return }
+                LocatorBeacon.begin()
+            }
+            .onDisappear {
+                guard !isScannerSession else { return }
+                LocatorBeacon.end()
+            }
             .onChange(of: scenePhase) { _, phase in
+                guard !isScannerSession else { return }
                 switch phase {
                 case .active:
                     LocatorBeacon.resumeIfActive()
@@ -174,7 +183,7 @@ private struct LocatorBeaconModifier: ViewModifier {
 }
 
 extension View {
-    /// Auto loud locate-me beep every 5s (Find Help / roadside SOS).
+    /// Auto loud locate-me beep every 5s on owner Find Help (not scanner shell).
     func locatorBeaconEveryFiveSeconds() -> some View {
         modifier(LocatorBeaconModifier())
     }
