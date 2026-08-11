@@ -141,53 +141,62 @@ final class CrashMotionGuard: ObservableObject {
     }
 }
 
-/// Cancel card shown on Aid / Find Help while crash survival alarm is armed.
-/// Matches pane / InfoCard chrome (surface + divider stroke).
+/// Cancel control on Aid — under panes, above the quote.
+/// Sized like a full-width pane card; CTA matches open-pane topic rows.
 struct CrashSurvivalCancelCard: View {
     @ObservedObject private var monitor = CrashMotionGuard.shared
 
     var body: some View {
         if monitor.isArmed {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .top, spacing: 8) {
                     Image(systemName: "light.beacon.max.fill")
-                        .font(.system(size: 15))
-                        .foregroundColor(.redmedAccent)
-                        .frame(width: 28, height: 28)
-                        .background(Color.redmedAccent.opacity(0.1))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                    VStack(alignment: .leading, spacing: 2) {
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(width: 38, height: 38)
+                        .background(Color.redmedAccent)
+                        .clipShape(RoundedRectangle(cornerRadius: 11))
+
+                    VStack(alignment: .leading, spacing: 3) {
                         Text("Crash / high-speed impact")
                             .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(.redmedDark)
-                        Text("Full brightness + locate-me siren are on. Local sensors only — not running or daily motion.")
+                            .foregroundColor(.redmedAccent)
+                            .lineLimit(2)
+                        Text("Siren + full brightness on — local sensors only")
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(.redmedMuted)
+                            .lineLimit(2)
                     }
+                    Spacer(minLength: 0)
                 }
+                .padding(13)
+                .frame(minHeight: 96, alignment: .top)
 
                 Button {
                     monitor.disarm()
                 } label: {
-                    Text("I'm OK — cancel alarm")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(
-                            LinearGradient(
-                                colors: [Color(red: 1, green: 0.447, blue: 0.537), .redmedAccent],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                        .clipShape(Capsule())
-                        .shadow(color: Color.redmedAccent.opacity(0.28), radius: 7, y: 4)
+                    HStack {
+                        Text("I'm OK — cancel alarm")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.redmedDark)
+                        Spacer()
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.redmedAccent)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(Color.white.opacity(0.8))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.redmedDivider, lineWidth: 1)
+                    )
                 }
                 .buttonStyle(.plain)
+                .padding(.horizontal, 10)
+                .padding(.bottom, 14)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(14)
             .background(Color.redmedSurface)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(
