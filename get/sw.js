@@ -1,21 +1,24 @@
 /* RedMed passerby layout cache — zero servers, zero profile DB.
  *
- * Root copy for get.html / card.html pretty URLs. Preferred live path is
- * /get/ (get/index.html + get/sw.js) matching AppConfig.medicalCardBaseURL.
+ * Served under /get/ (see get/index.html). After a responder opens the card
+ * once online, these static assets stay in Cache Storage. A later bracelet
+ * tap with no signal still loads the shell; medical fields live only in the
+ * URL #d= fragment (never cached here — fragments are not part of the HTTP
+ * request).
  *
- * Bump CACHE in lockstep with get/sw.js on every decrypt/layout deploy.
+ * Bump CACHE on every deploy that changes get/index.html / decrypt logic so
+ * activate drops the previous bucket. Shell + install fetches use
+ * cache: 'reload' so neither HTTP disk cache nor Cache Storage keep a stale
+ * decrypt page.
  */
 var CACHE = 'redmed-get-v6';
 var ASSETS = [
   './',
-  './get.html',
-  './get/',
-  './get/index.html',
-  './get/sw.js',
+  './index.html',
   './sw.js',
   './BrandLogo.png',
-  './assets/BrandLogo.png',
-  './card.html'
+  '../assets/BrandLogo.png',
+  '../card.html'
 ];
 
 function networkReload(reqOrUrl) {
@@ -41,13 +44,11 @@ function isShellRequest(req) {
     if (url.origin !== self.location.origin) return false;
     var path = url.pathname;
     return (
-      path === '/' ||
       path === '/get' ||
       path === '/get/' ||
-      path.endsWith('/get.html') ||
       path.endsWith('/get/index.html') ||
-      path.endsWith('/card.html') ||
-      path.endsWith('/sw.js')
+      path.endsWith('/get/sw.js') ||
+      path.endsWith('/card.html')
     );
   } catch (e) {
     return false;
@@ -80,6 +81,8 @@ self.addEventListener('fetch', function (event) {
   var req = event.request;
   if (req.method !== 'GET') return;
 
+  // Shell / decrypt page: network-first + bypass HTTP cache so AES/layout
+  // deploys win while online. Offline → last good Cache Storage copy.
   if (isShellRequest(req)) {
     event.respondWith(
       networkReload(req).then(function (res) {
@@ -94,13 +97,8 @@ self.addEventListener('fetch', function (event) {
         return caches.match(req).then(function (cached) {
           return (
             cached ||
-            caches.match('./get/index.html').then(function (page) {
-              return (
-                page ||
-                caches.match('./get.html').then(function (legacy) {
-                  return legacy || caches.match('./get/') || caches.match('./');
-                })
-              );
+            caches.match('./index.html').then(function (page) {
+              return page || caches.match('./');
             })
           );
         });
@@ -109,6 +107,7 @@ self.addEventListener('fetch', function (event) {
     return;
   }
 
+  // Static assets: cache-first, then network + fill.
   event.respondWith(
     caches.match(req).then(function (cached) {
       if (cached) return cached;

@@ -1,19 +1,17 @@
 /* RedMed passerby layout cache — zero servers, zero profile DB.
  *
- * After a responder opens get.html once online, these static assets stay in
- * the browser Cache Storage. A later bracelet tap with no signal still loads
- * the shell; medical fields live only in the URL #d= fragment (never cached
- * here — fragments are not part of the HTTP request).
+ * Root copy for get.html / card.html pretty URLs. Preferred live path is
+ * /get/ (get/index.html + get/sw.js) matching AppConfig.medicalCardBaseURL.
  *
- * Bump CACHE on every deploy that changes get.html / decrypt logic so activate
- * drops the previous bucket. Shell + install fetches use cache: 'reload' so
- * neither HTTP disk cache nor Cache Storage keep a stale decrypt page.
+ * Bump CACHE in lockstep with get/sw.js on every decrypt/layout deploy.
  */
-var CACHE = 'redmed-get-v4';
+var CACHE = 'redmed-get-v6';
 var ASSETS = [
   './',
   './get.html',
   './get/',
+  './get/index.html',
+  './get/sw.js',
   './sw.js',
   './BrandLogo.png',
   './assets/BrandLogo.png',
@@ -47,6 +45,7 @@ function isShellRequest(req) {
       path === '/get' ||
       path === '/get/' ||
       path.endsWith('/get.html') ||
+      path.endsWith('/get/index.html') ||
       path.endsWith('/card.html') ||
       path.endsWith('/sw.js')
     );
@@ -81,8 +80,6 @@ self.addEventListener('fetch', function (event) {
   var req = event.request;
   if (req.method !== 'GET') return;
 
-  // Shell / decrypt page: network-first + bypass HTTP cache so AES/layout
-  // deploys win while online. Offline → last good Cache Storage copy.
   if (isShellRequest(req)) {
     event.respondWith(
       networkReload(req).then(function (res) {
@@ -97,8 +94,13 @@ self.addEventListener('fetch', function (event) {
         return caches.match(req).then(function (cached) {
           return (
             cached ||
-            caches.match('./get.html').then(function (page) {
-              return page || caches.match('./') || caches.match('./get/');
+            caches.match('./get/index.html').then(function (page) {
+              return (
+                page ||
+                caches.match('./get.html').then(function (legacy) {
+                  return legacy || caches.match('./get/') || caches.match('./');
+                })
+              );
             })
           );
         });
@@ -107,7 +109,6 @@ self.addEventListener('fetch', function (event) {
     return;
   }
 
-  // Static assets: cache-first, then network + fill.
   event.respondWith(
     caches.match(req).then(function (cached) {
       if (cached) return cached;

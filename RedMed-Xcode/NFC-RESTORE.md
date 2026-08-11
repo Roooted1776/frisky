@@ -3,7 +3,7 @@
 CoreNFC write/read is wired in production (`NFCWriter` / `NFCReader`) — real
 `NFCNDEFReaderSession` sessions with write + read-back verify. When hardware is
 off, `NFCView` still simulates Write/Scan by packing the compact `get.html#d=`
-URL (array indexes → zlib → Base64url). Real CoreNFC has **no** Simulator
+URL (flat array → AES-GCM → Base64url; legacy zlib still decodes). Real CoreNFC has **no** Simulator
 fake-success: if hardware is enabled and NFC is unavailable, write fails and
 the band is not marked linked.
 

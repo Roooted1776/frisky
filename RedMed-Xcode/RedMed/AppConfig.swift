@@ -6,8 +6,9 @@ enum AppConfig {
     /// Aid. Medical data is only in the `#d=` fragment (flat array → AES-GCM →
     /// base64url; no server storage). `sw.js` caches the static layout for offline
     /// taps. Owner edit / treatments live in `Main.swift`, not here. Source page:
-    /// `get.html` (identical at repo root + `RedMed-Xcode/RedMed/get.html`).
-    /// Legacy `card/` URLs redirect to `get.html` (preserve `#d=`).
+    /// `get.html` / `get/index.html` (identical at `get/`, repo root, and
+    /// `RedMed-Xcode/RedMed/get.html`). Legacy `card/` URLs redirect to `/get/`
+    /// (preserve `#d=`).
     static let medicalCardBaseURL = "https://redmed.pages.dev/get/"
 
     /// Deep link target for policy / card HTML “open owner app” redirects.

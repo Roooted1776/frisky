@@ -3,16 +3,12 @@ name: iOS build
 # Compiles the RedMed app so Swift errors are caught in CI instead of on a
 # developer's Mac. Paths are scoped so doc/HTML-only changes don't spend
 # macOS runner minutes (they bill at 10x on private repos).
+#
+# AUTOMATIC RUNS TEMPORARILY DISABLED: GitHub Actions billing/spending limit
+# is blocking macos-latest (jobs fail before start and paint every PR red).
+# Re-enable the push/pull_request triggers after Billing & plans is fixed.
+# Manual compile check: Actions → iOS build → Run workflow.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'RedMed-Xcode/**'
-      - '.github/workflows/ios-build.yml'
-  pull_request:
-    paths:
-      - 'RedMed-Xcode/**'
-      - '.github/workflows/ios-build.yml'
   workflow_dispatch:
 
 concurrency:

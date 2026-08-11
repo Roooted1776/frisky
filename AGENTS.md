@@ -26,8 +26,9 @@ The app has no backend, database, or web service.
 - **Scanner / passerby shell** (`PublicCardView` / bracelet tap → `get.html#d=…`,
   `isScannerSession == true`): tabs are **RedMed · Help · Aid** only — **no Edit**,
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain.
-- Product HTML is only (1) one passerby file `get.html` (identical in repo root
-  and the app bundle; legacy `card.html` redirects here, preserving `#d=`) and
+  Hosted at `https://redmed.pages.dev/get/` from `get/index.html`.
+- Product HTML is only (1) one passerby file `get.html` (identical in `get/index.html`,
+  repo root, and the app bundle; legacy `card.html` redirects to `/get/`, preserving `#d=`) and
   (2) policy pages bundled solely under `RedMed-Xcode/RedMed/` (`PrivacyPolicy`,
   `TOS`, `security`, `HowItWorks`, `legal-doc.css`). `HowItWorks.html` redirects
   into `redmed://main`. Policies CTA to the owner app; they do not host owner

@@ -1,0 +1,18 @@
+/*
+  Cloudflare Pages — always revalidate shell + SW so AES/decrypt deploys
+  replace any prior Cache Storage / edge copy quickly.
+*/
+/get
+  Cache-Control: public, max-age=0, must-revalidate
+/get/
+  Cache-Control: public, max-age=0, must-revalidate
+/get/*
+  Cache-Control: public, max-age=0, must-revalidate
+/get.html
+  Cache-Control: public, max-age=0, must-revalidate
+/card.html
+  Cache-Control: public, max-age=0, must-revalidate
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+/get/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
