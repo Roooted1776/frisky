@@ -51,8 +51,9 @@ The app has no backend, database, or web service.
 - **Always automatic (not Settings):** Find Help / scanner brightness → 100%
   (`BrightnessBoost`); owner Find Help locate-me beep every 5s
   (`LocatorBeacon`); on-device crash / hard-impact detection
-  (`CrashMotionGuard`) that arms the same siren + brightness. Do not add off
-  switches for these.
+  (`CrashMotionGuard`) for **vehicle crash / high-speed impact only** (not
+  running or daily activity) that arms the same siren + brightness. Do not add
+  off switches for these.
 - **LocatorBeacon** Find Help path is owner-only — never arm Find Help siren
   when `isScannerSession == true`. Crash survival hold may keep sounding in
   background until the user cancels (“I'm OK”).
