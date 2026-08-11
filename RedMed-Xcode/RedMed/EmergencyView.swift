@@ -20,6 +20,8 @@ struct EmergencyView: View {
                         .padding(.horizontal, 4)
                         .padding(.top, 2)
 
+                    CrashSurvivalCancelCard()
+
                     // NO CELL SIGNAL — top of Find Help (replaces call-first-contact)
                     NoCellSignalCard(showSatellite: $showSatellite)
 
