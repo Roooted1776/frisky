@@ -40,7 +40,6 @@ struct NFCView: View {
                         .padding(.top, 8)
                         .padding(.bottom, 6)
 
-                    let capacity = ProfileNFCCodec.capacityNote(for: profile)
                     let rf = AppConfig.BraceletRF.self
                     VStack(spacing: 0) {
                         statusRow(rf.carrierVsBluetoothSummary, showDivider: true)
@@ -55,9 +54,8 @@ struct NFCView: View {
                                 : profile.braceletLinked
                                     ? "Band written — finish name, birth date, and blood type on RedMed"
                                     : "Bracelet not linked yet — write once to set up",
-                            showDivider: true
+                            showDivider: false
                         )
-                        statusRow(capacity.text, showDivider: false)
                     }
                     .padding(.horizontal, 14)
                     .background(Color.white.opacity(0.7))
