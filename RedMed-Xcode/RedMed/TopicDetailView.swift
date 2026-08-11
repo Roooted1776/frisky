@@ -201,10 +201,11 @@ struct TopicDetailView: View {
                         }
                         .foregroundColor(.redmedAccent)
                     }
+                    .buttonStyle(.plain)
                 }
                 ToolbarItem(placement: .principal) {
                     Text(topic.title)
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(RedMedChrome.navTitleFont)
                         .foregroundColor(.redmedAccent)
                 }
             }

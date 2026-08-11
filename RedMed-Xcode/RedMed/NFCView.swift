@@ -149,7 +149,7 @@ struct NFCView: View {
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("NFC Bracelet").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedAccent)
+                    Text("NFC Bracelet").font(RedMedChrome.navTitleFont).foregroundColor(.redmedAccent)
                 }
             }
             .sheet(isPresented: $band.showScannedCard) {

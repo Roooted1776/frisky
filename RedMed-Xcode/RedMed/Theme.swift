@@ -108,6 +108,28 @@ struct SecondaryButton: View {
     }
 }
 
+/// Trailing chrome text — owner **Edit** and scanner **Back**.
+/// Plain style so fill is the page (`redmedBg`), not a system capsule. One red, one size.
+struct ChromeTextAction: View {
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 18, weight: .regular))
+                .foregroundColor(.redmedAccent)
+                .kerning(-0.2)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// Inline nav titles (Find Help, NFC, topic). Semibold 17 accent — pairs with ChromeTextAction.
+enum RedMedChrome {
+    static let navTitleFont: Font = .system(size: 17, weight: .semibold)
+}
+
 /// Wraps subviews onto new lines; each child keeps its intrinsic width
 /// so short labels (Percocet) stay smaller than long ones (Dextroamphetamine).
 /// Chips wider than the row are capped and remeasured so text wraps

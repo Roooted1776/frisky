@@ -8,157 +8,152 @@ struct EmergencyView: View {
     @ObservedObject private var survivalAlarm = CrashMotionGuard.shared
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Location nudge lives in Help → Settings only — not on Find Help chrome.
-            NavigationView {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 8) {
-                    Text("Siren + full brightness only on crash / severe impact or SOS. Stop here or on Aid.")
-                        .font(.system(size: 12, weight: .semibold))
+        // No NavigationView chrome — same overlay Back as RedMed / Aid (no system toolbar fill).
+        // Location nudge lives in Help → Settings only — not on Find Help chrome.
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 8) {
+                ZStack(alignment: .topTrailing) {
+                    Text("Find Help")
+                        .font(RedMedChrome.navTitleFont)
                         .foregroundColor(.redmedAccent)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 4)
-                        .padding(.top, 2)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.horizontal, isScannerSession ? 56 : 0)
 
-                    // NO CELL SIGNAL — carriers only (no satellite coach UI)
-                    NoCellSignalCard()
+                    if isScannerSession {
+                        ScannerBackButton()
+                            .padding(.top, 0)
+                    }
+                }
 
-                    // GPS + Call: 5px under coordinates. Dial only — no PII/PHI attach.
-                    VStack(alignment: .leading, spacing: 5) {
-                        GPSCard(location: locationEnabled ? locationManager.location : nil)
-                            .opacity(locationEnabled ? 1 : 0.45)
+                Text("Siren + full brightness only on crash / severe impact or SOS. Stop here or on Aid.")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.redmedAccent)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 4)
+                    .padding(.top, 2)
 
+                // NO CELL SIGNAL — carriers only (no satellite coach UI)
+                NoCellSignalCard()
+
+                // GPS + Call: 5px under coordinates. Dial only — no PII/PHI attach.
+                VStack(alignment: .leading, spacing: 5) {
+                    GPSCard(location: locationEnabled ? locationManager.location : nil)
+                        .opacity(locationEnabled ? 1 : 0.45)
+
+                    Button {
+                        PublicEmergencyAid.dial()
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "phone.fill")
+                            Text("Call \(EmergencyNumber.current)")
+                        }
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.redmedDark)
+                        .clipShape(Capsule())
+                    }
+
+                    // Owner SOS — same survival hold as crash. Scanners stay quiet.
+                    if !isScannerSession {
                         Button {
-                            PublicEmergencyAid.dial()
+                            if survivalAlarm.isArmed {
+                                survivalAlarm.disarm()
+                            } else {
+                                survivalAlarm.armSOS()
+                            }
                         } label: {
                             HStack(spacing: 8) {
-                                Image(systemName: "phone.fill")
-                                Text("Call \(EmergencyNumber.current)")
+                                Image(systemName: survivalAlarm.isArmed
+                                      ? "speaker.slash.fill"
+                                      : "sos.circle.fill")
+                                Text(survivalAlarm.isArmed ? "Stop SOS alarm" : "SOS · Locate me")
                             }
                             .font(.system(size: 13, weight: .bold))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
-                            .background(Color.redmedDark)
+                            .background(survivalAlarm.isArmed ? Color.redmedAccent : Color.redmedDark)
                             .clipShape(Capsule())
                         }
-
-                        // Owner SOS — same survival hold as crash. Scanners stay quiet.
-                        if !isScannerSession {
-                            Button {
-                                if survivalAlarm.isArmed {
-                                    survivalAlarm.disarm()
-                                } else {
-                                    survivalAlarm.armSOS()
-                                }
-                            } label: {
-                                HStack(spacing: 8) {
-                                    Image(systemName: survivalAlarm.isArmed
-                                          ? "speaker.slash.fill"
-                                          : "sos.circle.fill")
-                                    Text(survivalAlarm.isArmed ? "Stop SOS alarm" : "SOS · Locate me")
-                                }
-                                .font(.system(size: 13, weight: .bold))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(survivalAlarm.isArmed ? Color.redmedAccent : Color.redmedDark)
-                                .clipShape(Capsule())
-                            }
-                        }
                     }
-                    .padding(.vertical, 4)
+                }
+                .padding(.vertical, 4)
 
-                    // COPY COORDINATES
-                    Button {
-                        if locationEnabled, let loc = locationManager.location {
-                            SecurePasteboard.copyEphemeral(
-                                "\(loc.coordinate.latitude), \(loc.coordinate.longitude)"
-                            )
-                        }
-                    } label: {
-                        Text(locationEnabled ? "Copy coordinates" : "Location off — enable in Settings")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(Color.redmedDark)
-                            .clipShape(Capsule())
+                // COPY COORDINATES
+                Button {
+                    if locationEnabled, let loc = locationManager.location {
+                        SecurePasteboard.copyEphemeral(
+                            "\(loc.coordinate.latitude), \(loc.coordinate.longitude)"
+                        )
                     }
-                    .disabled(!locationEnabled || locationManager.location == nil)
-
-                    SeizureTimerStrip()
-
-                    // ROADSIDE FIRST RESPONSE
-                    InfoCard(
-                        icon: "cross.fill",
-                        title: "Roadside First Response",
-                        numbered: true,
-                        items: [
-                            "Turn on hazards. Don't move injured — unless fire or traffic danger.",
-                            "Check breathing. Tilt head, lift chin. If no pulse — start CPR.",
-                            "Press hard on bleeding. Don't lift to check. Add cloth on top.",
-                            "Keep them warm and still. Talk to them. Note time of injury."
-                        ]
-                    )
-
-                    InfoCard(
-                        icon: "info.circle.fill",
-                        title: "What to Tell \(EmergencyNumber.current)",
-                        numbered: false,
-                        items: [
-                            "Your exact location — read the GPS coordinates above.",
-                            "Number of people injured and visible injuries.",
-                            "If anyone is unconscious or not breathing.",
-                            "Stay on the line — let the dispatcher guide you."
-                        ]
-                    )
-
-                    Text(AppConfig.Satellite.localOnlyLine)
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .multilineTextAlignment(.center)
+                } label: {
+                    Text(locationEnabled ? "Copy coordinates" : "Location off — enable in Settings")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.redmedDark)
+                        .clipShape(Capsule())
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 6)
-                .padding(.bottom, 8)
+                .disabled(!locationEnabled || locationManager.location == nil)
+
+                SeizureTimerStrip()
+
+                // ROADSIDE FIRST RESPONSE
+                InfoCard(
+                    icon: "cross.fill",
+                    title: "Roadside First Response",
+                    numbered: true,
+                    items: [
+                        "Turn on hazards. Don't move injured — unless fire or traffic danger.",
+                        "Check breathing. Tilt head, lift chin. If no pulse — start CPR.",
+                        "Press hard on bleeding. Don't lift to check. Add cloth on top.",
+                        "Keep them warm and still. Talk to them. Note time of injury."
+                    ]
+                )
+
+                InfoCard(
+                    icon: "info.circle.fill",
+                    title: "What to Tell \(EmergencyNumber.current)",
+                    numbered: false,
+                    items: [
+                        "Your exact location — read the GPS coordinates above.",
+                        "Number of people injured and visible injuries.",
+                        "If anyone is unconscious or not breathing.",
+                        "Stay on the line — let the dispatcher guide you."
+                    ]
+                )
+
+                Text(AppConfig.Satellite.localOnlyLine)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.redmedMuted)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
             }
-            .background(Color.redmedBg)
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.redmedBg, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .tint(.redmedAccent)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Find Help").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedAccent)
-                }
-                if isScannerSession {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        ScannerCloseButton()
-                    }
-                }
+            .padding(.horizontal, 16)
+            .padding(.top, 6)
+            .padding(.bottom, 8)
+        }
+        .background(Color.redmedBg)
+        .task {
+            // First paint of Find Help before Core Location work.
+            await Task.yield()
+            if locationEnabled {
+                locationManager.start()
             }
-            .task {
-                // First paint of Find Help before Core Location work.
-                await Task.yield()
-                if locationEnabled {
-                    locationManager.start()
-                }
-            }
-            .onChange(of: locationEnabled) { _, on in
-                if on {
-                    locationManager.start()
-                } else {
-                    locationManager.stop()
-                }
-            }
-            .onDisappear {
+        }
+        .onChange(of: locationEnabled) { _, on in
+            if on {
+                locationManager.start()
+            } else {
                 locationManager.stop()
             }
-            } // NavigationView
-        } // VStack
+        }
+        .onDisappear {
+            locationManager.stop()
+        }
     }
 }
 

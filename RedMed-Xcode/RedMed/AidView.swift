@@ -71,7 +71,7 @@ struct AidView: View {
                         .padding(.trailing, isScannerSession ? 56 : 0)
 
                     if isScannerSession {
-                        ScannerCloseButton()
+                        ScannerBackButton()
                             .padding(.top, 4)
                     }
                 }

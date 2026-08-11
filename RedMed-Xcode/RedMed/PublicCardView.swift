@@ -47,22 +47,13 @@ struct PublicCardView: View {
 }
 
 /// Dismisses the Preview scanner / ped shell. Shown on RedMed, 911, and Aid.
-/// Matches owner Edit chrome: accent red text, page-bg fill (no system capsule).
-struct ScannerCloseButton: View {
+/// Same `ChromeTextAction` as owner Edit — accent red, page-bg fill, 18 regular.
+struct ScannerBackButton: View {
     @Environment(\.scannerDismiss) private var scannerDismiss
 
     var body: some View {
         if let scannerDismiss {
-            Button(action: scannerDismiss) {
-                Text("Back")
-                    .font(.system(size: 18, weight: .regular))
-                    .foregroundColor(.redmedAccent)
-                    .kerning(-0.2)
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 2)
-                    .background(Color.redmedBg)
-            }
-            .buttonStyle(.plain)
+            ChromeTextAction(title: "Back", action: scannerDismiss)
         }
     }
 }
