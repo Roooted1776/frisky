@@ -6,10 +6,10 @@
  * here — fragments are not part of the HTTP request).
  *
  * Bump CACHE on every deploy that changes get.html / decrypt logic so activate
- * drops the previous bucket. Install always re-fetches (cache: 'reload') so
- * Cache Storage is not filled from a stale HTTP disk cache.
+ * drops the previous bucket. Shell + install fetches use cache: 'reload' so
+ * neither HTTP disk cache nor Cache Storage keep a stale decrypt page.
  */
-var CACHE = 'redmed-get-v3';
+var CACHE = 'redmed-get-v4';
 var ASSETS = [
   './',
   './get.html',
@@ -20,10 +20,14 @@ var ASSETS = [
   './card.html'
 ];
 
+function networkReload(reqOrUrl) {
+  return fetch(reqOrUrl, { cache: 'reload' });
+}
+
 function precache(cache) {
   return Promise.all(
     ASSETS.map(function (url) {
-      return fetch(url, { cache: 'reload' })
+      return networkReload(url)
         .then(function (res) {
           if (!res || !res.ok) return;
           return cache.put(url, res);
@@ -77,11 +81,11 @@ self.addEventListener('fetch', function (event) {
   var req = event.request;
   if (req.method !== 'GET') return;
 
-  // Shell / decrypt page: network-first so AES/layout deploys win while online.
-  // Offline → last good Cache Storage copy.
+  // Shell / decrypt page: network-first + bypass HTTP cache so AES/layout
+  // deploys win while online. Offline → last good Cache Storage copy.
   if (isShellRequest(req)) {
     event.respondWith(
-      fetch(req).then(function (res) {
+      networkReload(req).then(function (res) {
         if (res && res.ok && res.type === 'basic') {
           var copy = res.clone();
           caches.open(CACHE).then(function (cache) {
