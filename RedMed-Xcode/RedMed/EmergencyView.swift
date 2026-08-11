@@ -5,7 +5,6 @@ struct EmergencyView: View {
     @Environment(\.isScannerSession) private var isScannerSession
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @StateObject private var locationManager = LocationManager()
-    @StateObject private var satellitePipeline = SatelliteOutboundPipeline()
     @State private var showSatellite = false
 
     var body: some View {
@@ -24,16 +23,13 @@ struct EmergencyView: View {
                     // NO CELL SIGNAL — top of Find Help (replaces call-first-contact)
                     NoCellSignalCard(showSatellite: $showSatellite)
 
-                    // GPS + satellite: exactly 5px under the coordinates pane
-                    // (LazyVStack spacing would otherwise add another 8pt).
+                    // GPS + public aid (Starlink DTC / carrier sat when available):
+                    // exactly 5px under the coordinates pane.
                     VStack(alignment: .leading, spacing: 5) {
                         GPSCard(location: locationEnabled ? locationManager.location : nil)
                             .opacity(locationEnabled ? 1 : 0.45)
 
-                        SatelliteFieldCard(
-                            pipeline: satellitePipeline,
-                            location: locationEnabled ? locationManager.location : nil
-                        )
+                        StarlinkDirectAidCard()
                     }
                     .padding(.vertical, 4)
 
@@ -106,9 +102,8 @@ struct EmergencyView: View {
                 }
             }
             .task {
-                // First paint of Find Help before Core Location / satellite link work.
+                // First paint of Find Help before Core Location work.
                 await Task.yield()
-                satellitePipeline.start()
                 if locationEnabled {
                     locationManager.start()
                 }
@@ -122,7 +117,6 @@ struct EmergencyView: View {
             }
             .onDisappear {
                 locationManager.stop()
-                satellitePipeline.stop()
             }
             } // NavigationView
         } // VStack
@@ -318,11 +312,11 @@ struct NoCellSignalCard: View {
 
             if showSatellite {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("iPhone 14+ (iOS 16.1+): hold Side + Volume until Emergency SOS appears, or Settings → Emergency SOS. RedMed cannot start Apple Satellite SOS.")
+                    Text(AppConfig.Satellite.directToCellBlurb)
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundColor(.redmedMuted)
                         .lineSpacing(3)
-                    Text("Separate path below: optional Bluetooth link to a local satellite terminal for short field notes (\(AppConfig.Satellite.payloadBudgetLabel)). That is not Apple SOS and not a RedMed server.")
+                    Text(AppConfig.Satellite.appleSOSBlurb)
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundColor(.redmedMuted)
                         .lineSpacing(3)

@@ -24,10 +24,6 @@
 	<string>RedMed uses Face ID, Touch ID, or your device passcode to unlock editing of your RedMed profile, authorize writing to your bracelet, and open the on-device local history vault. Scanned cards are read-only and cannot be changed without your app and authentication.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>RedMed uses your location to give 911 your exact GPS coordinates in an emergency.</string>
-	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>RedMed uses Bluetooth only to connect to an optional nearby satellite messaging terminal for short field notes. The medical bracelet itself is passive HF NFC and does not use Bluetooth.</string>
-	<key>NSBluetoothPeripheralUsageDescription</key>
-	<string>RedMed uses Bluetooth only to connect to an optional nearby satellite messaging terminal for short field notes. The medical bracelet itself is passive HF NFC and does not use Bluetooth.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

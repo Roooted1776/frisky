@@ -98,36 +98,23 @@ enum AppConfig {
         }
     }
 
-    /// Optional field-clinician path: phone → local satellite terminal over Bluetooth,
-    /// then the terminal uplinks. This is **not** Apple Emergency SOS via satellite,
-    /// not a RedMed server, and not the passive NFC bracelet (bracelet stays HF NFC).
+    /// Public emergency aid when terrestrial cell is unavailable.
     ///
-    /// Kill switch mirrors `nfcHardwareEnabled`: when `false`, Find Help still shows
-    /// the satellite composer UI but uses the simulated transport (queue + delayed
-    /// ack) so clinicians can rehearse payload limits without a terminal SDK.
-    /// Flip to `true` only after a vendor BLE adapter is wired in
-    /// `SatelliteVendorTransport` (see that file — no CocoaPods/SPM in this repo yet).
+    /// **Starlink Direct-to-Cell is carrier radio, not an app API.** RedMed dials
+    /// or texts the regional public number (`EmergencyNumber`) via the system
+    /// Phone / Messages apps. If the user’s carrier has enabled Starlink DTC,
+    /// iOS may route that call/SMS over satellite automatically — RedMed never
+    /// imports a Starlink SDK, never selects the radio, and never uploads PHI.
+    /// Distinct from Apple Emergency SOS via satellite (Globalstar path; Side + Volume).
     enum Satellite {
-        static let hardwareEnabled = false
+        static var publicAidTitle: String { "Public Aid · Satellite Path" }
 
-        /// Soft warn / hard refuse UTF-8 byte budgets for narrowband SBD-style uplinks.
-        static let softPayloadBytes = 160
-        static let hardPayloadBytes = 240
-
-        /// Simulated uplink latency window when hardware is parked (seconds).
-        static let simulatedTransmitSecondsMin: Double = 30
-        static let simulatedTransmitSecondsMax: Double = 90
-
-        static var payloadBudgetLabel: String {
-            "\(softPayloadBytes)–\(hardPayloadBytes) bytes"
+        static var directToCellBlurb: String {
+            "Call or text \(EmergencyNumber.current). Starlink Direct-to-Cell (where your carrier supports it) may carry that traffic when towers are down — the Phone app owns the radio, not RedMed."
         }
 
-        static var softWarnCopy: String {
-            "Approaching satellite limit (\(softPayloadBytes) B). Trim the note."
-        }
-
-        static var hardRefuseCopy: String {
-            "Over satellite limit (\(hardPayloadBytes) B). Shorten before queueing."
+        static var appleSOSBlurb: String {
+            "iPhone 14+ Apple Emergency SOS via satellite is separate (Side + Volume). RedMed cannot start it."
         }
     }
 }
