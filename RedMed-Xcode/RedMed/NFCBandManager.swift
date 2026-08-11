@@ -174,7 +174,7 @@ final class NFCBandManager: ObservableObject {
             self.writeVerified = true
             self.statusMessage = note.warn
                 ? "Simulated write OK — \(note.text)"
-                : "Simulated write OK — \(note.text). Open URL below or Simulate scan."
+                : "Simulated write OK — \(note.text)."
         }
     }
 
