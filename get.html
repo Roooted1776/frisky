@@ -1,133 +1,786 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Set up your RedMed band</title>
-<meta name="description" content="Program your RedMed NFC band once on iPhone. After that, anyone can tap the band — their phone opens your emergency card. No app for readers.">
-<link rel="stylesheet" href="assets/legal-doc.css">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#fff7f7">
+<link rel="apple-touch-icon" href="assets/BrandLogo.png">
+<link rel="icon" href="assets/BrandLogo.png">
+<title>RedMed</title>
+<!-- Packaging QR / get landing — same shell as main (and card.html): RedMed + Help + Aid.
+     No Edit button, no NFC write tab, no setup page before NFC.
+     Optional #d= profile fragment only (no backend). Keep visual parity with card.html /
+     PublicCardView scanner shell. -->
 <style>
-  body { display:flex; align-items:center; justify-content:center; padding:40px 16px 80px; }
-  .get-card {
-    width:100%; max-width:400px;
-    background:rgba(255,255,255,0.05);
-    border:1px solid rgba(255,255,255,0.08);
-    border-radius:24px;
-    padding:36px 28px 32px;
-    text-align:center;
+  :root {
+    --accent: #e11d48;
+    --bg: #fff7f7;
+    --dark: #1c1917;
+    --muted: #78716c;
+    --divider: rgba(28,25,23,0.07);
+    --tab-off: #5f6369;
+    --surface: rgba(255,255,255,0.92);
   }
-  .brand {
-    font-size:28px; font-weight:800; letter-spacing:-0.6px; color:#e11d48; margin-bottom:4px;
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--dark);
+    min-height: 100vh;
+    padding: 0 0 calc(72px + env(safe-area-inset-bottom));
   }
-  .hero-well {
-    width:88px; height:88px; margin:24px auto 20px;
-    display:grid; place-items:center; position:relative;
+  a { color: var(--accent); text-decoration: none; }
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
   }
-  .hero-well .ring { position:absolute; inset:0; border-radius:50%; border:1.5px solid rgba(225,29,72,0.2); }
-  .hero-well .fill { position:absolute; inset:10px; border-radius:50%; background:rgba(225,29,72,0.1); }
-  .hero-well svg { position:relative; width:38px; height:38px; }
-  .tagline {
-    font-size:15px; font-weight:500; color:rgba(255,255,255,0.75);
-    line-height:1.55; margin-bottom:12px;
+  .panel { display: none; padding: 10px 0 28px; }
+  .panel.active { display: block; }
+
+  /* —— RedMed tab (My ID look) —— */
+  .rm-header {
+    padding: 10px 20px 8px;
   }
-  .badge {
-    display:inline-block; background:rgba(225,29,72,0.12);
-    border:1px solid rgba(225,29,72,0.25); border-radius:999px;
-    padding:4px 12px; font-size:11px; font-weight:700;
-    color:#e11d48; letter-spacing:0.8px; text-transform:uppercase;
-    margin-bottom:20px;
+  .rm-lock {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    line-height: 1.35;
+    margin: 0 0 8px;
+  }
+  .rm-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+  }
+  .rm-logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 13px;
+    box-shadow: 0 3px 5px rgba(225,29,72,0.15);
+    flex-shrink: 0;
+    display: block;
+    object-fit: cover;
+    background: transparent;
+  }
+  .rm-name {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+    margin: 0;
+    line-height: 1.15;
+  }
+  .rm-updated {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(120,113,108,0.8);
+    margin: 4px 0 0;
+  }
+  .sec {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 12px 20px 5px;
+  }
+  .card {
+    margin: 0 16px;
+    background: var(--surface);
+    border: 1px solid rgba(28,25,23,0.08);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--divider);
+  }
+  .row:last-child { border-bottom: none; }
+  .row .k {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+  .row .v {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--dark);
+    text-align: right;
+  }
+  .row .v.empty { font-weight: 400; color: rgba(120,113,108,0.4); }
+  .list-item {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--divider);
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--dark);
+  }
+  .list-item:last-child { border-bottom: none; }
+  .contact-block {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--divider);
+  }
+  .contact-block:last-child { border-bottom: none; }
+  .contact-block .cn {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--dark);
+  }
+  .contact-block .cd {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .contact-block a.cd { color: var(--accent); font-weight: 600; display: block; }
+  .quote {
+    margin: 42px 20px 16px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--dark);
+    text-align: center;
+    line-height: 1.55;
+  }
+
+  /* —— Help tab —— */
+  .page-pad { padding: 6px 16px 0; }
+  .page-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--dark);
+    margin: 0 0 10px;
   }
   .btn {
-    display:block; width:100%; margin-top:10px; padding:17px;
-    border-radius:999px; font-size:16px; font-weight:700;
-    text-decoration:none; border:none; cursor:pointer;
-    font-family:'Inter',system-ui,sans-serif; letter-spacing:-0.2px;
+    display: block;
+    width: 100%;
+    text-align: center;
+    border-radius: 999px;
+    padding: 14px;
+    margin: 8px 0;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
   }
   .btn-primary {
-    background:linear-gradient(180deg,#fb7185,#e11d48); color:#fff;
-    box-shadow:0 4px 14px rgba(225,29,72,0.25);
+    background: linear-gradient(180deg, #ff7289, var(--accent));
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    box-shadow: 0 4px 7px rgba(225,29,72,0.28);
   }
-  .btn:active { transform:scale(0.97); }
-  .steps {
-    text-align:left; margin:20px 0 0; padding:16px; list-style:none;
-    background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07);
-    border-radius:16px;
+  .btn-secondary {
+    background: rgba(255,255,255,0.82);
+    border: 1px solid var(--divider);
+    color: var(--dark);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
   }
-  .steps li {
-    display:flex; gap:12px; align-items:flex-start;
-    margin-bottom:12px; font-size:14px; font-weight:500;
-    color:rgba(255,255,255,0.7); line-height:1.5;
+  .btn-ink {
+    background: var(--dark);
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
   }
-  .steps li:last-child { margin-bottom:0; }
-  .steps .n {
-    flex:0 0 24px; width:24px; height:24px; border-radius:50%;
-    background:rgba(225,29,72,0.15); color:#e11d48;
-    font-size:11px; font-weight:800; display:grid; place-items:center;
+  .hint {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--muted);
+    text-align: center;
+    margin: 0 0 8px;
   }
-  .note { margin:16px 0 0; font-size:12px; color:rgba(255,255,255,0.3); line-height:1.55; }
-  .support { margin-top:14px; font-size:13px; }
-  .support a { color:rgba(255,255,255,0.35); text-decoration:none; }
-  .support a:hover { color:#e11d48; }
-  .hidden { display:none !important; }
-  .detect { margin-bottom:6px; font-size:12px; color:rgba(255,255,255,0.3); }
+  .gps-card {
+    background: var(--surface);
+    border: 1px solid var(--divider);
+    border-radius: 18px;
+    padding: 14px;
+    text-align: center;
+    margin: 12px 0 8px;
+  }
+  .gps-pill {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.1px;
+    color: var(--accent);
+    background: rgba(225,29,72,0.1);
+    border-radius: 999px;
+    padding: 4px 9px;
+    margin-bottom: 6px;
+  }
+  .coords {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--dark);
+  }
+  .gps-acc {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .info {
+    background: var(--surface);
+    border: 1px solid var(--divider);
+    border-radius: 18px;
+    padding: 14px 16px;
+    margin: 10px 0;
+  }
+  .info-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .info-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: rgba(225,29,72,0.1);
+    color: var(--accent);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .info h2 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--dark);
+  }
+  .info ol, .info ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.45;
+    color: var(--dark);
+  }
+  .foot-note {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--muted);
+    text-align: center;
+    margin: 12px 0 8px;
+  }
+
+  /* —— Aid tab —— */
+  .aid-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 8px;
+  }
+  details.aid {
+    background: var(--surface);
+    border: 1px solid var(--divider);
+    border-radius: 14px;
+    padding: 0 12px;
+    grid-column: span 1;
+  }
+  details.aid[open] { grid-column: span 2; border-color: rgba(225,29,72,0.28); }
+  details.aid summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    padding: 12px 0;
+  }
+  details.aid summary::-webkit-details-marker { display: none; }
+  .aid-emoji {
+    width: 38px; height: 38px;
+    border-radius: 11px;
+    background: rgba(225,29,72,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  details.aid[open] .aid-emoji { background: var(--accent); }
+  .aid-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--dark);
+  }
+  .aid-sub {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+  details.aid[open] .aid-sub { display: none; }
+  details.aid ol {
+    margin: 0 0 12px;
+    padding-left: 18px;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.45;
+  }
+
+  /* —— Tab bar (matches CustomTabBar) —— */
+  .tabbar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    background: #fff;
+    border-top: 1px solid #e5e5e5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2px 0 calc(4px + env(safe-area-inset-bottom));
+    z-index: 30;
+  }
+  .tabs {
+    display: flex;
+    width: 100%;
+    max-width: 480px;
+  }
+  .tab {
+    flex: 1;
+    border: 0;
+    background: transparent;
+    padding: 4px 0 3px;
+    color: var(--tab-off);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: -0.1px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .tab .icon-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 54px;
+    height: 30px;
+    border-radius: 14px;
+    margin: 0 auto 2px;
+    font-size: 20px;
+    line-height: 1;
+  }
+  .tab.active { color: var(--accent); font-weight: 600; }
+  .tab.active .icon-wrap { background: rgba(225,29,72,0.10); }
+  .home-pill {
+    width: 134px;
+    height: 5px;
+    border-radius: 999px;
+    background: rgba(28,25,23,0.18);
+    margin-top: 2px;
+  }
 </style>
 </head>
 <body>
-<main class="get-card">
-  <div class="brand">RedMed</div>
-  <div class="hero-well" aria-hidden="true">
-    <div class="fill"></div>
-    <div class="ring"></div>
-    <svg viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M8.5 16.5a5 5 0 0 1 7 0"></path>
-      <path d="M5.5 13.5a9 9 0 0 1 13 0"></path>
-      <path d="M2.5 10.5a13 13 0 0 1 19 0"></path>
-      <circle cx="12" cy="20" r="1.4" fill="#e11d48" stroke="none"></circle>
-    </svg>
-  </div>
-  <p class="tagline">Tap the band — phone opens your emergency card. No app for readers.</p>
-  <div class="badge" id="detectLabel">Checking your phone…</div>
-  <a class="btn btn-primary hidden" id="btnStore" href="#">Set up your band</a>
-  <ol class="steps">
-    <li><span class="n">1</span><span>Open RedMed on iPhone and fill in your allergies, meds, and contacts.</span></li>
-    <li><span class="n">2</span><span>Hold your band to the top of your iPhone once — the chip stores your emergency card.</span></li>
-    <li><span class="n">3</span><span>Done. Anyone taps the band — their phone opens Call 911 and your critical info. No app needed.</span></li>
-  </ol>
-  <p class="note" id="autoNote"></p>
-  <p class="note">Passive 13.56 MHz HF NFC only — no battery, no Bluetooth pair. Walk-by won't fire; only a deliberate ~1–2″ antenna tap opens the card. POS ignore NDEF (wrong protocol). RedMed is not a medical device. In an emergency, call 911.</p>
-  <p class="support"><a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a></p>
-</main>
-<script>
-(function () {
-  var APP_STORE = "https://apps.apple.com/app/redmed/id0000000000";
-  var ua = navigator.userAgent || "";
-  var isIOS = /iPhone|iPod/i.test(ua);
-  var isIPad = /iPad/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  var detect = document.getElementById("detectLabel");
-  var btn = document.getElementById("btnStore");
-  var note = document.getElementById("autoNote");
+  <div class="app">
+    <!-- RedMed -->
+    <div class="panel active" id="panel-medical" data-panel="medical">
+      <div class="rm-header">
+        <p class="rm-lock">Read only — editing needs the owner’s RedMed app + Face&nbsp;ID / passcode.</p>
+        <div class="rm-title-row">
+          <img class="rm-logo" src="assets/BrandLogo.png" width="48" height="48" alt="RedMed">
+          <div>
+            <h1 class="rm-name" id="name">RedMed</h1>
+            <p class="rm-updated" id="updatedLine"></p>
+          </div>
+        </div>
+      </div>
 
-  if (isIOS) {
-    detect.textContent = "iPhone detected";
-    btn.textContent = "Set up your band (App Store)";
-    btn.href = APP_STORE;
-    btn.classList.remove("hidden");
-    note.textContent = "Opening the App Store to program your band…";
-    var p = new URLSearchParams(location.search);
-    if (p.get("noauto") !== "1") setTimeout(function(){ location.href = APP_STORE; }, 1600);
-  } else if (isIPad) {
-    detect.textContent = "iPad detected";
-    btn.textContent = "Set up on iPhone instead";
-    btn.href = APP_STORE;
-    btn.classList.remove("hidden");
-    note.textContent = "Band setup needs an iPhone with NFC. Your band still works — anyone can tap it with any smartphone.";
-  } else {
-    detect.textContent = "Band owner setup";
-    btn.textContent = "Program band on iPhone";
-    btn.href = APP_STORE;
-    btn.classList.remove("hidden");
-    note.textContent = "Use an iPhone once to write your band. After that, any phone tap opens your emergency card — no app required.";
+      <div class="card" style="margin-top:2px">
+        <div class="row"><span class="k">Name</span><span class="v" id="rowName">—</span></div>
+        <div class="row"><span class="k">Birth date</span><span class="v" id="rowDob">—</span></div>
+        <div class="row"><span class="k">Blood type</span><span class="v" id="rowBlood">—</span></div>
+      </div>
+
+      <div class="sec">Allergies</div>
+      <div class="card" id="allergies"></div>
+
+      <div class="sec">Medications</div>
+      <div class="card" id="meds"></div>
+
+      <div class="sec">Conditions</div>
+      <div class="card" id="conditions"></div>
+
+      <div class="sec">Contacts</div>
+      <div class="card" id="contacts"></div>
+
+      <p class="quote">“Control your fear. Control the moment.<br>You have what it takes to save a life.”</p>
+    </div>
+
+    <!-- Help -->
+    <div class="panel" id="panel-911" data-panel="911">
+      <div class="page-pad">
+        <h1 class="page-title">Find Help</h1>
+
+        <button class="btn btn-secondary" type="button" id="callContactBtn">Call first emergency contact</button>
+        <p class="hint">Calls the first saved contact — confirm before dialing.</p>
+
+        <div class="gps-card">
+          <div class="gps-pill">LIVE GPS</div>
+          <div class="coords" id="coords">Getting GPS…</div>
+          <div class="gps-acc" id="gpsAcc"></div>
+        </div>
+        <button class="btn btn-ink" type="button" id="copyCoordsBtn">Copy coordinates</button>
+        <button class="btn btn-secondary" type="button" id="gpsBtn">Text location to emergency contact</button>
+
+        <div class="info">
+          <div class="info-head">
+            <div class="info-icon">✚</div>
+            <h2>Roadside First Response</h2>
+          </div>
+          <ol>
+            <li>Turn on hazards. Don’t move injured — unless fire or traffic danger.</li>
+            <li>Check breathing. Tilt head, lift chin. If no pulse — start CPR.</li>
+            <li>Press hard on bleeding. Don’t lift to check. Add cloth on top.</li>
+            <li>Keep them warm and still. Talk to them. Note time of injury.</li>
+          </ol>
+        </div>
+
+        <div class="info">
+          <div class="info-head">
+            <div class="info-icon">ℹ</div>
+            <h2>What to Tell <span class="emg">112</span></h2>
+          </div>
+          <ul>
+            <li>Your exact location — read the GPS coordinates above.</li>
+            <li>Number of people injured and visible injuries.</li>
+            <li>If anyone is unconscious or not breathing.</li>
+            <li>Stay on the line — let the dispatcher guide you.</li>
+          </ul>
+        </div>
+
+        <div class="info">
+          <div class="info-head">
+            <div class="info-icon">📡</div>
+            <h2>No cell signal</h2>
+          </div>
+          <p style="margin:0;font-size:13px;font-weight:500;line-height:1.45;color:var(--dark)">
+            iPhone 14+ (iOS 16.1+): hold Side + Volume until Emergency SOS appears. RedMed cannot start Satellite SOS itself.
+          </p>
+        </div>
+
+        <p class="foot-note">Coordinates show on this screen only. RedMed has no servers.</p>
+      </div>
+    </div>
+
+    <!-- Aid -->
+    <div class="panel" id="panel-aid" data-panel="aid">
+      <div class="page-pad">
+        <h1 class="page-title">Roadside Aid</h1>
+        <p class="hint" style="text-align:left;margin-bottom:6px">Tap a pane — expand only what you need.</p>
+        <a class="btn btn-primary" id="callEmergency" href="tel:112">Call <span class="emg">112</span></a>
+
+        <div class="aid-grid">
+          <details class="aid"><summary><span class="aid-emoji">🚗</span><span><span class="aid-title">Crash &amp; Head</span><div class="aid-sub">Impact · neck · pupils</div></span></summary>
+            <ol>
+              <li>Call <span class="emg">112</span> — give exact location and number of people</li>
+              <li>Hazards on. Do not move them unless fire or traffic danger</li>
+              <li>Keep head/neck still. Control bleeding with firm pressure</li>
+            </ol>
+          </details>
+          <details class="aid"><summary><span class="aid-emoji">🩸</span><span><span class="aid-title">Bleeding</span><div class="aid-sub">Pressure · tourniquet</div></span></summary>
+            <ol>
+              <li>Press hard with both hands — do not lift to check</li>
+              <li>Add cloth on top if soaked. Limb: tourniquet 2–3 in above</li>
+              <li>Note the time. Stay on the line with <span class="emg">112</span></li>
+            </ol>
+          </details>
+          <details class="aid"><summary><span class="aid-emoji">❤️</span><span><span class="aid-title">Heart &amp; Airway</span><div class="aid-sub">CPR · choking</div></span></summary>
+            <ol>
+              <li>No breathing/pulse: hard compressions 100–120/min, 2 inches deep</li>
+              <li>Choking, cannot cough: 5 back blows, then 5 abdominal thrusts</li>
+              <li>Alternate until clear or unresponsive — then CPR</li>
+            </ol>
+          </details>
+          <details class="aid"><summary><span class="aid-emoji">⚡</span><span><span class="aid-title">Shock</span><div class="aid-sub">Pale · cold · clammy</div></span></summary>
+            <ol>
+              <li>Call <span class="emg">112</span>. Lay flat — do not let them walk</li>
+              <li>Elevate legs 12 inches unless head/neck/spine injury</li>
+              <li>Keep warm. No food, water, or medication</li>
+            </ol>
+          </details>
+          <details class="aid"><summary><span class="aid-emoji">🧠</span><span><span class="aid-title">Seizure</span><div class="aid-sub">Don’t restrain · time it</div></span></summary>
+            <ol>
+              <li>Time it. Clear sharp objects. Do not restrain</li>
+              <li>Nothing in the mouth. Cushion the head</li>
+              <li>Call <span class="emg">112</span> if first seizure, over 5 minutes, injury, or in water</li>
+            </ol>
+          </details>
+          <details class="aid"><summary><span class="aid-emoji">🥶</span><span><span class="aid-title">Hypothermia</span><div class="aid-sub">Warm core · no rubbing</div></span></summary>
+            <ol>
+              <li>Move to shelter. Remove wet clothes gently</li>
+              <li>Warm chest/neck/armpits/groin — not the limbs</li>
+              <li>No rubbing or massage. Warm drinks only if fully conscious</li>
+            </ol>
+          </details>
+          <details class="aid"><summary><span class="aid-emoji">🥵</span><span><span class="aid-title">Heat</span><div class="aid-sub">Cool fast · call <span class="emg">112</span></div></span></summary>
+            <ol>
+              <li>Heat stroke: call <span class="emg">112</span> — cool neck/armpits/groin fast</li>
+              <li>Move to shade. Remove extra clothing. Fan while cooling</li>
+              <li>Sip cool water only if fully conscious</li>
+            </ol>
+          </details>
+          <details class="aid"><summary><span class="aid-emoji">🏥</span><span><span class="aid-title">Trauma Hospitals</span><div class="aid-sub">Nearest Level I/II center</div></span></summary>
+            <ol>
+              <li>Call <span class="emg">112</span> — dispatch routes to the right trauma level</li>
+              <li>Do not self-transport major trauma if EMS is available</li>
+              <li>Note time of injury and mechanism for the team</li>
+            </ol>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="tabbar" aria-label="RedMed">
+    <div class="tabs">
+      <button class="tab active" type="button" data-tab="medical"><div class="icon-wrap">👤</div>RedMed</button>
+      <button class="tab" type="button" data-tab="911"><div class="icon-wrap">📞</div>Help</button>
+      <button class="tab" type="button" data-tab="aid"><div class="icon-wrap">✚</div>Aid</button>
+    </div>
+    <div class="home-pill" aria-hidden="true"></div>
+  </nav>
+
+  <script>
+(function () {
+  var MAX_PAYLOAD = 50000;
+  var MAX_LIST = 40;
+  var MAX_STR = 200;
+
+  function asString(v, fallback) {
+    if (typeof v !== 'string') return fallback || '';
+    return v.slice(0, MAX_STR);
   }
+
+  function asStringArray(v) {
+    if (!Array.isArray(v)) return [];
+    return v
+      .filter(function (x) { return typeof x === 'string'; })
+      .slice(0, MAX_LIST)
+      .map(function (s) { return s.slice(0, MAX_STR); });
+  }
+
+  function sanitizePhone(v) {
+    return String(v || '').replace(/[^\d+]/g, '').slice(0, 20);
+  }
+
+  function sanitizeProfile(raw) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+    var contacts = Array.isArray(raw.contacts) ? raw.contacts.slice(0, MAX_LIST).map(function (c) {
+      if (!c || typeof c !== 'object') return null;
+      return {
+        name: asString(c.name, 'Contact'),
+        rel: asString(c.rel),
+        phone: sanitizePhone(c.phone),
+        detail: asString(c.detail)
+      };
+    }).filter(Boolean) : [];
+    return {
+      name: asString(raw.name),
+      dob: asString(raw.dob),
+      blood: asString(raw.blood),
+      updated: asString(raw.updated),
+      allergies: asStringArray(raw.allergies),
+      meds: asStringArray(raw.meds),
+      conditions: asStringArray(raw.conditions),
+      contacts: contacts
+    };
+  }
+
+  function setRow(id, value) {
+    var el = document.getElementById(id);
+    if (!value) {
+      el.textContent = '—';
+      el.classList.add('empty');
+    } else {
+      el.textContent = value;
+      el.classList.remove('empty');
+    }
+  }
+
+  function list(el, items) {
+    el.textContent = '';
+    if (!items || !items.length) {
+      var empty = document.createElement('div');
+      empty.className = 'list-item';
+      empty.textContent = '—';
+      empty.style.color = 'rgba(120,113,108,0.4)';
+      el.appendChild(empty);
+      return;
+    }
+    items.forEach(function (t) {
+      var d = document.createElement('div');
+      d.className = 'list-item';
+      d.textContent = t;
+      el.appendChild(d);
+    });
+  }
+
+  function showTab(id) {
+    document.querySelectorAll('.panel').forEach(function (p) {
+      p.classList.toggle('active', p.getAttribute('data-panel') === id);
+    });
+    document.querySelectorAll('.tab').forEach(function (t) {
+      t.classList.toggle('active', t.getAttribute('data-tab') === id);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  document.querySelectorAll('.tab').forEach(function (t) {
+    t.addEventListener('click', function () { showTab(t.getAttribute('data-tab')); });
+  });
+  showTab('medical');
+
+  function decodeProfile() {
+    try {
+      var hash = location.hash || '';
+      var idx = hash.indexOf('d=');
+      if (idx < 0) return null;
+      var raw = decodeURIComponent(hash.slice(idx + 2).split('&')[0] || '');
+      var b64 = raw.replace(/-/g, '+').replace(/_/g, '/');
+      while (b64.length % 4) b64 += '=';
+      var bin = atob(b64);
+      if (bin.length > MAX_PAYLOAD) return null;
+      var bytes = Uint8Array.from(bin, function (c) { return c.charCodeAt(0); });
+      var json = new TextDecoder('utf-8').decode(bytes);
+      return sanitizeProfile(JSON.parse(json));
+    } catch (e) { return null; }
+  }
+
+  var p = decodeProfile() || {};
+  var displayName = p.name || 'RedMed';
+  document.getElementById('name').textContent = displayName;
+  setRow('rowName', p.name);
+  setRow('rowDob', p.dob);
+  setRow('rowBlood', p.blood);
+  if (p.updated) document.getElementById('updatedLine').textContent = 'Updated ' + p.updated;
+  list(document.getElementById('allergies'), p.allergies);
+  list(document.getElementById('meds'), p.meds);
+  list(document.getElementById('conditions'), p.conditions);
+
+  var contactsEl = document.getElementById('contacts');
+  contactsEl.textContent = '';
+  var contacts = p.contacts || [];
+  var firstPhone = '';
+  if (!contacts.length) {
+    var emptyC = document.createElement('div');
+    emptyC.className = 'list-item';
+    emptyC.textContent = '—';
+    emptyC.style.color = 'rgba(120,113,108,0.4)';
+    contactsEl.appendChild(emptyC);
+  } else {
+    contacts.forEach(function (c, i) {
+      var row = document.createElement('div');
+      row.className = 'contact-block';
+      var phone = sanitizePhone(c.phone);
+      if (!phone && c.detail) phone = sanitizePhone(c.detail);
+      if (i === 0 && phone) firstPhone = phone;
+      var name = document.createElement('div');
+      name.className = 'cn';
+      name.textContent = c.name || 'Contact';
+      row.appendChild(name);
+      var detailText = c.detail || (c.rel ? c.rel : '') || (phone || '');
+      if (phone) {
+        var a = document.createElement('a');
+        a.className = 'cd';
+        a.href = 'tel:' + phone;
+        a.textContent = (detailText || phone) + ' · Tap to call';
+        row.appendChild(a);
+      } else if (detailText) {
+        var d = document.createElement('div');
+        d.className = 'cd';
+        d.textContent = detailText;
+        row.appendChild(d);
+      }
+      contactsEl.appendChild(row);
+    });
+  }
+
+  function setCoords(lat, lon, acc) {
+    if (!isFinite(lat) || !isFinite(lon)) return;
+    document.getElementById('coords').textContent = lat.toFixed(6) + ', ' + lon.toFixed(6);
+    document.getElementById('gpsAcc').textContent = acc > 0 ? ('Accuracy ±' + Math.round(acc) + ' m') : '';
+    window.__redmedLoc = { latitude: lat, longitude: lon, accuracy: acc };
+  }
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      setCoords(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+    }, function () {
+      document.getElementById('coords').textContent = 'GPS unavailable';
+      document.getElementById('gpsAcc').textContent = 'Tell dispatcher landmarks';
+    }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 });
+  } else {
+    document.getElementById('coords').textContent = 'GPS unavailable';
+  }
+
+  document.getElementById('callContactBtn').addEventListener('click', function () {
+    if (!firstPhone) { alert('No emergency contact number on this card.'); return; }
+    location.href = 'tel:' + firstPhone;
+  });
+
+  document.getElementById('copyCoordsBtn').addEventListener('click', function () {
+    var loc = window.__redmedLoc;
+    if (!loc) { alert('Location not available yet.'); return; }
+    var text = loc.latitude.toFixed(6) + ', ' + loc.longitude.toFixed(6);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    } else {
+      prompt('Copy coordinates', text);
+    }
+  });
+
+  document.getElementById('gpsBtn').addEventListener('click', function (e) {
+    e.preventDefault();
+    function send(lat, lon) {
+      var maps = 'https://maps.apple.com/?ll=' + lat + ',' + lon;
+      var body = encodeURIComponent('Emergency location (RedMed): ' + lat + ', ' + lon + '\n' + maps);
+      location.href = firstPhone ? ('sms:' + firstPhone + '&body=' + body) : ('sms:&body=' + body);
+    }
+    if (window.__redmedLoc) {
+      send(window.__redmedLoc.latitude, window.__redmedLoc.longitude);
+      return;
+    }
+    if (!navigator.geolocation) { alert('Location not available.'); return; }
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      send(pos.coords.latitude, pos.coords.longitude);
+    }, function () { alert('Could not get location.'); });
+  });
+})();
+  </script>
+<script>
+// Local emergency number for the visitor's region. The band is tapped by
+// whoever is standing over the casualty, so the card must show the number that
+// works where they are, not where the profile owner set the app up.
+// Markup ships 112 (GSM standard, routed almost everywhere) and this refines it.
+(function () {
+  var byRegion = {
+    GB: '999', IE: '999', US: '911', CA: '911', MX: '911',
+    AU: '000', NZ: '111', JP: '119', IN: '112', BR: '192',
+    AR: '107', ZA: '10177'
+  };
+  var region = '';
+  try {
+    region = new Intl.Locale(navigator.language).region || '';
+  } catch (e) {
+    var m = /[-_]([A-Za-z]{2})\b/.exec(navigator.language || '');
+    region = m ? m[1].toUpperCase() : '';
+  }
+  var num = byRegion[region] || '112';
+  var spans = document.querySelectorAll('.emg');
+  for (var i = 0; i < spans.length; i++) { spans[i].textContent = num; }
+  var call = document.getElementById('callEmergency');
+  if (call) { call.setAttribute('href', 'tel:' + num); }
 })();
 </script>
 </body>
