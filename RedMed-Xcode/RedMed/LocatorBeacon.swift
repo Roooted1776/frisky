@@ -1,33 +1,13 @@
 import AVFoundation
-import SwiftUI
 
-/// Auto locator siren — Find Help + crash survival alarm.
-/// Plays through the silent switch (`.playback`). Crash hold keeps sounding in background.
+/// Crash / severe-impact survival siren only.
+/// Plays through the silent switch (`.playback`) and keeps sounding in background until cancelled.
 @MainActor
 enum LocatorBeacon {
-    private static var activeCount = 0
-    /// Crash / hard-impact hold — keeps beeping in background until cancelled.
     private static var survivalHold = false
     private static var timer: Timer?
     private static var player: AVAudioPlayer?
     private static let interval: TimeInterval = 5
-
-    static func begin() {
-        activeCount += 1
-        guard activeCount == 1 else { return }
-        if !survivalHold {
-            startRepeating()
-        }
-    }
-
-    static func end() {
-        guard activeCount > 0 else { return }
-        activeCount -= 1
-        guard activeCount == 0 else { return }
-        guard !survivalHold else { return }
-        stopRepeating()
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-    }
 
     /// Crash motion arm — siren continues while backgrounded until cancelled.
     static func beginSurvival() {
@@ -41,23 +21,8 @@ enum LocatorBeacon {
     static func endSurvival() {
         guard survivalHold else { return }
         survivalHold = false
-        if activeCount == 0 {
-            stopRepeating()
-            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        }
-    }
-
-    /// App foregrounded again while Find Help is still up.
-    static func resumeIfActive() {
-        guard (activeCount > 0 || survivalHold), timer == nil else { return }
-        startRepeating()
-    }
-
-    /// App backgrounded — stop making noise until we return (unless crash survival hold).
-    static func pause() {
-        guard !survivalHold else { return }
-        guard activeCount > 0 else { return }
         stopRepeating()
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
     private static func startRepeating() {
@@ -173,41 +138,5 @@ enum LocatorBeacon {
             withUnsafeBytes(of: &le) { data.append(contentsOf: $0) }
         }
         return data
-    }
-}
-
-private struct LocatorBeaconModifier: ViewModifier {
-    @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.isScannerSession) private var isScannerSession
-
-    func body(content: Content) -> some View {
-        content
-            .onAppear {
-                // Passerby / EMS card shell stays quiet — Find Help siren is owner-only.
-                guard !isScannerSession else { return }
-                LocatorBeacon.begin()
-            }
-            .onDisappear {
-                guard !isScannerSession else { return }
-                LocatorBeacon.end()
-            }
-            .onChange(of: scenePhase) { _, phase in
-                guard !isScannerSession else { return }
-                switch phase {
-                case .active:
-                    LocatorBeacon.resumeIfActive()
-                case .background:
-                    LocatorBeacon.pause()
-                default:
-                    break
-                }
-            }
-    }
-}
-
-extension View {
-    /// Auto loud locate-me beep every 5s on owner Find Help (not scanner shell).
-    func locatorBeaconEveryFiveSeconds() -> some View {
-        modifier(LocatorBeaconModifier())
     }
 }

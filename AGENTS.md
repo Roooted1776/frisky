@@ -49,18 +49,15 @@ The app has no backend, database, or web service.
 **Settings vs automatic (permanent):**
 - Help → Settings exposes **only** haptic feedback + Location (`AppSettings` /
   `HapticEngine.enabledKey`). No other toggles there.
-- **Always automatic (not Settings):** Find Help / scanner brightness → 100%
-  (`BrightnessBoost`); owner Find Help locate-me beep every 5s
-  (`LocatorBeacon`); on-device crash / hard-impact detection
-  (`CrashMotionGuard`) for **vehicle crash / high-speed impact only** (not
-  running or daily activity) that arms the same siren + brightness. Do not add
-  off switches for these.
-- **LocatorBeacon** Find Help path is owner-only — never arm Find Help siren
-  when `isScannerSession == true`. Crash survival hold may keep sounding in
-  background until the user taps “Stop the detection” on Aid.
-- **BrightnessBoost** restores the prior brightness + idle-timer on
-  `.inactive`/`.background` for normal Find Help / scanner hosts; crash
-  survival hold skips that pause until cancelled.
+- **Brightness + sound are crash-only (not Settings, not Find Help / scanner):**
+  on-device crash / hard-impact detection (`CrashMotionGuard`) for **vehicle
+  crash / high-speed impact only** (not running or daily activity) arms
+  `BrightnessBoost` + `LocatorBeacon`. Find Help and the scanner shell must
+  not force brightness or play the locate-me siren. Do not add off switches
+  for the survival alarm.
+- **LocatorBeacon** / **BrightnessBoost** survival hold may keep sounding /
+  max brightness in background until the user taps “Stop the detection” on
+  Aid.
 
 **Vault / privacy (permanent):**
 - `VaultHistoryView` Face ID unlock: relock on `.background` only. Do **not**
