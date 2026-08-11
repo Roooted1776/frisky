@@ -11,7 +11,7 @@ struct EmergencyView: View {
         // No NavigationView chrome — same overlay Back as RedMed / Aid (no system toolbar fill).
         // Location nudge lives in Help → Settings only — not on Find Help chrome.
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 8) {
+            LazyVStack(alignment: .leading, spacing: 5) {
                 ZStack(alignment: .topTrailing) {
                     Text("Find Help")
                         .font(RedMedChrome.navTitleFont)
@@ -25,17 +25,19 @@ struct EmergencyView: View {
                     }
                 }
 
-                Text("Siren + full brightness only on crash / severe impact or SOS. Stop here or on Aid.")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(.redmedAccent)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 4)
-                    .padding(.top, 2)
+                // Owner-only — scanners / HTML never arm brightness or audio.
+                if !isScannerSession {
+                    Text("Siren + full brightness only on crash / severe impact or SOS. Stop here or on Aid.")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.redmedAccent)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 4)
+                }
 
                 // NO CELL SIGNAL — carriers only (no satellite coach UI)
                 NoCellSignalCard()
 
-                // GPS + Call: 5px under coordinates. Dial only — no PII/PHI attach.
+                // GPS + Call: dial is the big action; copy / SOS stay compact.
                 VStack(alignment: .leading, spacing: 5) {
                     GPSCard(location: locationEnabled ? locationManager.location : nil)
                         .opacity(locationEnabled ? 1 : 0.45)
@@ -43,17 +45,34 @@ struct EmergencyView: View {
                     Button {
                         PublicEmergencyAid.dial()
                     } label: {
-                        HStack(spacing: 8) {
+                        HStack(spacing: 10) {
                             Image(systemName: "phone.fill")
                             Text("Call \(EmergencyNumber.current)")
                         }
-                        .font(.system(size: 13, weight: .bold))
+                        .font(.system(size: 17, weight: .bold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
+                        .padding(.vertical, 16)
                         .background(Color.redmedDark)
                         .clipShape(Capsule())
                     }
+
+                    Button {
+                        if locationEnabled, let loc = locationManager.location {
+                            SecurePasteboard.copyEphemeral(
+                                "\(loc.coordinate.latitude), \(loc.coordinate.longitude)"
+                            )
+                        }
+                    } label: {
+                        Text(locationEnabled ? "Copy coordinates" : "Location off — enable in Settings")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                            .background(Color.redmedDark)
+                            .clipShape(Capsule())
+                    }
+                    .disabled(!locationEnabled || locationManager.location == nil)
 
                     // Owner SOS — same survival hold as crash. Scanners stay quiet.
                     if !isScannerSession {
@@ -70,34 +89,15 @@ struct EmergencyView: View {
                                       : "sos.circle.fill")
                                 Text(survivalAlarm.isArmed ? "Stop SOS alarm" : "SOS · Locate me")
                             }
-                            .font(.system(size: 13, weight: .bold))
+                            .font(.system(size: 12, weight: .bold))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
+                            .padding(.vertical, 8)
                             .background(survivalAlarm.isArmed ? Color.redmedAccent : Color.redmedDark)
                             .clipShape(Capsule())
                         }
                     }
                 }
-                .padding(.vertical, 4)
-
-                // COPY COORDINATES
-                Button {
-                    if locationEnabled, let loc = locationManager.location {
-                        SecurePasteboard.copyEphemeral(
-                            "\(loc.coordinate.latitude), \(loc.coordinate.longitude)"
-                        )
-                    }
-                } label: {
-                    Text(locationEnabled ? "Copy coordinates" : "Location off — enable in Settings")
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(Color.redmedDark)
-                        .clipShape(Capsule())
-                }
-                .disabled(!locationEnabled || locationManager.location == nil)
 
                 SeizureTimerStrip()
 
@@ -127,14 +127,14 @@ struct EmergencyView: View {
                 )
 
                 Text(AppConfig.Satellite.localOnlyLine)
-                    .font(.system(size: 10, weight: .medium))
+                    .font(.system(size: 9, weight: .medium))
                     .foregroundColor(.redmedMuted)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
             }
             .padding(.horizontal, 16)
-            .padding(.top, 6)
-            .padding(.bottom, 8)
+            .padding(.top, 4)
+            .padding(.bottom, 6)
         }
         .background(Color.redmedBg)
         .task {
@@ -169,18 +169,18 @@ struct SeizureTimerStrip: View {
     private var pastThreshold: Bool { elapsed >= Self.callAt }
 
     var body: some View {
-        HStack(spacing: 10) {
-            VStack(alignment: .leading, spacing: 1) {
+        HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 0) {
                 Text("SEIZURE")
                     .font(.system(size: 9, weight: .bold))
                     .kerning(0.8)
                     .foregroundColor(.redmedMuted)
                 Text(format(elapsed))
-                    .font(.system(size: 20, weight: .bold, design: .monospaced))
+                    .font(.system(size: 17, weight: .bold, design: .monospaced))
                     .foregroundColor(pastThreshold ? .redmedAccent : .redmedDark)
                     .contentTransition(.numericText())
             }
-            .frame(minWidth: 64, alignment: .leading)
+            .frame(minWidth: 56, alignment: .leading)
 
             Text(pastThreshold ? "5:00 — call" : "→ \(EmergencyNumber.current) at 5:00")
                 .font(.system(size: 10, weight: .semibold))
@@ -192,19 +192,19 @@ struct SeizureTimerStrip: View {
             Button(running ? "Stop" : "Start") {
                 if running { stop(reset: false) } else { start() }
             }
-            .font(.system(size: 12, weight: .bold))
+            .font(.system(size: 11, weight: .bold))
             .foregroundColor(running ? .redmedDark : .white)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
             .background(running ? Color.white.opacity(0.9) : Color.redmedAccent)
             .clipShape(Capsule())
             .overlay(Capsule().stroke(Color.redmedDivider, lineWidth: running ? 1 : 0))
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
         .background(Color.redmedSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.redmedDivider, lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.redmedDivider, lineWidth: 1))
         .onDisappear { stop(reset: false) }
     }
 
@@ -253,28 +253,29 @@ struct GPSCard: View {
     var accuracy: String { location.map { "±\(Int($0.horizontalAccuracy)) m" } ?? "––" }
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 4) {
             Text("LIVE GPS")
                 .font(.system(size: 9, weight: .bold))
                 .kerning(1.1)
                 .foregroundColor(.redmedAccent)
-                .padding(.horizontal, 9).padding(.vertical, 4)
+                .padding(.horizontal, 8).padding(.vertical, 3)
                 .background(Capsule().fill(Color.redmedAccent.opacity(0.1)))
 
             Text("\(latStr), \(lonStr)")
-                .font(.system(size: 17, weight: .bold, design: .monospaced))
+                .font(.system(size: 15, weight: .bold, design: .monospaced))
                 .foregroundColor(.redmedDark)
                 .multilineTextAlignment(.center)
 
             Text("Accuracy \(accuracy)")
-                .font(.system(size: 11, weight: .semibold))
+                .font(.system(size: 10, weight: .semibold))
                 .foregroundColor(.redmedMuted)
         }
         .frame(maxWidth: .infinity)
-        .padding(14)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
         .background(Color.redmedSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.redmedDivider, lineWidth: 1))
     }
 }
 
@@ -286,21 +287,21 @@ struct InfoCard: View {
     let items: [String]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
                 Image(systemName: icon)
-                    .font(.system(size: 15))
+                    .font(.system(size: 13))
                     .foregroundColor(.redmedAccent)
-                    .frame(width: 28, height: 28)
+                    .frame(width: 24, height: 24)
                     .background(Color.redmedAccent.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: 7))
                 Text(title)
                     .font(.system(size: 12, weight: .bold))
                     .foregroundColor(.redmedDark)
             }
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 4) {
                 ForEach(Array(items.enumerated()), id: \.offset) { i, item in
-                    HStack(alignment: .top, spacing: 8) {
+                    HStack(alignment: .top, spacing: 6) {
                         Text(numbered ? "\(i+1)" : "→")
                             .font(.system(size: 10, weight: .bold))
                             .foregroundColor(.redmedAccent)
@@ -308,43 +309,46 @@ struct InfoCard: View {
                         Text(item)
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(.redmedDark)
-                            .lineSpacing(3)
+                            .lineSpacing(2)
                     }
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
         .background(Color.redmedSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.redmedDivider, lineWidth: 1))
     }
 }
 
 // MARK: - No Cell Signal
 struct NoCellSignalCard: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
                 Image(systemName: "antenna.radiowaves.left.and.right")
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.redmedAccent)
                 Text("No cell signal?")
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 12, weight: .bold))
                     .foregroundColor(.redmedAccent)
-                Spacer()
+                Spacer(minLength: 0)
             }
 
-            // T-Mobile first — carrier list only (Call button lives 5px under GPS).
+            // Compact field line — Call button lives under GPS.
             Text(AppConfig.Satellite.directToCellCarriersLine)
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundColor(.redmedMuted)
-                .lineSpacing(2)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
         .background(Color.redmedSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.redmedDivider, lineWidth: 1))
     }
 }
 
