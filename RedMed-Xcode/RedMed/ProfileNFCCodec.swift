@@ -340,47 +340,30 @@ enum ProfileNFCCodec {
     // MARK: - zlib + base64url
 
     private static func zlibEncode(_ source: Data) -> Data? {
-        streamProcess(source, operation: COMPRESSION_STREAM_ENCODE)
+        bufferProcess(source, encode: true)
     }
 
     private static func zlibDecode(_ source: Data) -> Data? {
-        streamProcess(source, operation: COMPRESSION_STREAM_DECODE)
+        bufferProcess(source, encode: false)
     }
 
-    private static func streamProcess(_ source: Data, operation: compression_stream_operation) -> Data? {
+    private static func bufferProcess(_ source: Data, encode: Bool) -> Data? {
         guard !source.isEmpty else { return nil }
-        var stream = compression_stream()
-        var status = compression_stream_init(&stream, operation, COMPRESSION_ZLIB)
-        guard status != COMPRESSION_STATUS_ERROR else { return nil }
-        defer { compression_stream_destroy(&stream) }
-
-        let dstChunk = 64 * 1024
-        var output = Data()
-        return source.withUnsafeBytes { (srcBuffer: UnsafeRawBufferPointer) -> Data? in
-            guard let srcBase = srcBuffer.bindMemory(to: UInt8.self).baseAddress else { return nil }
-            stream.src_ptr = srcBase
-            stream.src_size = source.count
-
-            let dstPointer = UnsafeMutablePointer<UInt8>.allocate(capacity: dstChunk)
-            defer { dstPointer.deallocate() }
-
-            repeat {
-                stream.dst_ptr = dstPointer
-                stream.dst_size = dstChunk
-                status = compression_stream_process(&stream, Int32(COMPRESSION_STREAM_FINALIZE.rawValue))
-                switch status {
-                case COMPRESSION_STATUS_OK, COMPRESSION_STATUS_END:
-                    let produced = dstChunk - stream.dst_size
-                    if produced > 0 {
-                        output.append(dstPointer, count: produced)
-                    }
-                default:
-                    return nil
+        let dstCapacity = encode ? source.count + 512 : max(source.count * 8, 1024)
+        var destination = Data(count: dstCapacity)
+        let written: Int = destination.withUnsafeMutableBytes { dstBuf in
+            source.withUnsafeBytes { srcBuf in
+                guard let dst = dstBuf.bindMemory(to: UInt8.self).baseAddress,
+                      let src = srcBuf.bindMemory(to: UInt8.self).baseAddress else { return 0 }
+                if encode {
+                    return compression_encode_buffer(dst, dstCapacity, src, source.count, nil, COMPRESSION_ZLIB)
                 }
-            } while status == COMPRESSION_STATUS_OK
-
-            return output.isEmpty ? nil : output
+                return compression_decode_buffer(dst, dstCapacity, src, source.count, nil, COMPRESSION_ZLIB)
+            }
         }
+        guard written > 0 else { return nil }
+        destination.count = written
+        return destination
     }
 
     private static func base64url(_ data: Data) -> String {
