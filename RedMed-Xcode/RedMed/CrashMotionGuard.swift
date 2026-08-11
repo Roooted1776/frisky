@@ -3,8 +3,8 @@ import Foundation
 import SwiftUI
 
 /// On-device **vehicle crash / high-speed impact** guard (CoreMotion only).
-/// Arms full brightness + locator siren. Ignores running, walking, and daily handling.
-/// Not Apple Crash Detection — no GPS/barometer fusion, no cloud.
+/// Arms full brightness + locator siren. Ignores running, walking, wrist flicks,
+/// and daily handling. Not Apple Crash Detection — no GPS/barometer fusion, no cloud.
 @MainActor
 final class CrashMotionGuard: ObservableObject {
     static let shared = CrashMotionGuard()
