@@ -50,7 +50,7 @@ struct HelpMenuView: View {
                 }
                 if profile.braceletLinked {
                     NavigationLink("NFC tap card (local)") {
-                        LocalWebView(filename: "card")
+                        LocalWebView(filename: "get")
                             .navigationTitle("NFC tap card")
                             .navigationBarTitleDisplayMode(.inline)
                     }

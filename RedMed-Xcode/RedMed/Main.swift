@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Owner app shell — edit profile, Aid treatments, NFC write, Find Help.
-/// Product HTML is only the passerby `card.html` + policy pages; those redirect
+/// Product HTML is only the passerby `get.html` + policy pages; those redirect
 /// here (`redmed://main`) for owner information.
 struct Main: View {
     var body: some View {
@@ -18,7 +18,7 @@ struct MainInfoView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Fill out your emergency profile once in the app, write it to a passive 13.56 MHz HF NFC bracelet (not Bluetooth), and anyone who taps the band with a phone sees your emergency card — no app or account required on their end.")
+                Text("Fill out your emergency profile once in the app, write it to a passive \(AppConfig.BraceletRF.carrierLabel) bracelet (not Bluetooth), and anyone who taps the band with a phone sees your emergency card — no app or account required on their end.")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.redmedMuted)
                     .fixedSize(horizontal: false, vertical: true)
@@ -32,7 +32,7 @@ struct MainInfoView: View {
                 }
 
                 section(num: "2", title: "Write your bracelet") {
-                    Text("Go to the NFC tab and tap Write to NFC tag. Confirm with Face ID, Touch ID, or your passcode, then hold the top of your iPhone near the bracelet when prompted. Your profile is written to the passive chip in the band. Walk-by distance will not fire the band; only a deliberate ~1–2″ antenna tap opens the card.")
+                    Text("Go to the NFC tab and tap Write to NFC tag. Confirm with Face ID, Touch ID, or your passcode, then hold the top of your iPhone near the bracelet when prompted. Your profile is written to the passive chip in the band. \(AppConfig.BraceletRF.writeBandDistanceBlurb)")
                     if let onOpenNFC {
                         Button("Open NFC tab") {
                             dismiss()
@@ -49,7 +49,7 @@ struct MainInfoView: View {
                 }
 
                 section(num: "4", title: "What a stranger sees") {
-                    Text("Anyone who taps the bracelet opens the passerby card page (card.html) with RedMed, Help, and Aid — your profile, Call emergency / GPS help, and roadside aid. No RedMed app or login is required, and they cannot edit your profile or write the band.")
+                    Text("Anyone who taps the bracelet opens the passerby page (get.html) with RedMed, Help, and Aid — your profile, Call emergency / GPS help, and roadside aid. No RedMed app or login is required, and they cannot edit your profile or write the band.")
                 }
 
                 section(num: "5", title: "In an emergency") {
@@ -67,7 +67,7 @@ struct MainInfoView: View {
                     setupStep(1, "Open RedMed on iPhone and fill in your allergies, meds, and contacts.")
                     setupStep(2, "Hold your band to the top of your iPhone once — the chip stores your emergency card.")
                     setupStep(3, "Done. Anyone taps the band — their phone opens emergency call and your critical info. No app needed.")
-                    Text("Passive 13.56 MHz HF NFC only — no battery, no Bluetooth pair. Local-only EMS assist: quicker Aid, help reaching 911, and a fast local handoff of patient ID to EMS/hospital via band tap — not a RedMed cloud. Not a medical device; no promised outcome. Call 911 first.")
+                    Text("Passive \(AppConfig.BraceletRF.carrierLabel) only — no battery, no Bluetooth pair. Local-only EMS assist: quicker Aid, help reaching 911, and a fast local handoff of patient ID to EMS/hospital via band tap — not a RedMed cloud. Not a medical device; no promised outcome. Call 911 first.")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .padding(.top, 4)

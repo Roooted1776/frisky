@@ -12,7 +12,8 @@ Deleted in `ea676c9` — restoring intent as Swift under `Main.swift` except car
 
 ## Kept as HTML (non-app)
 
-- `card.html` (+ `assets/`) — Passerby bracelet scan page for Cloudflare Pages
+- `get.html` — Passerby / scanner bracelet page (RedMed · Help · Aid)
+- `card.html` — Legacy redirect → `get.html` (preserves `#d=`)
 - Policy HTML + `legal-doc.css` — sole copies under `RedMed-Xcode/RedMed/` (app bundle);
   repo-root policy duplicates removed
 - `HowItWorks.html` — thin redirect stub under `RedMed-Xcode/RedMed/` → `redmed://main`

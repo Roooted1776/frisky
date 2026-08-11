@@ -18,13 +18,26 @@ set up a working runtime here:
 **There are no dependencies to install:** no Swift Package Manager, CocoaPods, Carthage, or npm.
 The app has no backend, database, or web service.
 
-**Roles / HTML:** Owner UI is Swift — `Main.swift` (tabs + `MainInfoView` How It
-Works / band setup). Product HTML is only (1) passerby `card.html` (repo root for
-Pages; mirrored under `RedMed-Xcode/RedMed/` for the bundle) and (2) policy pages
-bundled solely under `RedMed-Xcode/RedMed/` (`PrivacyPolicy`, `TOS`, `security`,
-`HowItWorks`, `legal-doc.css`). `HowItWorks.html` is a thin redirect into
-`redmed://main`. Card + policies CTA to the owner app; they do not host owner
-edit UI. Do not reintroduce repo-root copies of the policy HTML.
+**Roles / shells (permanent — do not regress):**
+- **Owner app** (`Main` → `ContentView`, `isScannerSession == false`): tabs are
+  **RedMed · Help · Aid · NFC**. Edit is available on RedMed. NFC tab is always
+  visible for owners; `AppConfig.nfcHardwareEnabled` only gates CoreNFC
+  write/read sessions, never tab chrome.
+- **Scanner / passerby shell** (`PublicCardView` / bracelet tap → `get.html#d=…`,
+  `isScannerSession == true`): tabs are **RedMed · Help · Aid** only — **no Edit**,
+  **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain.
+- Product HTML is only (1) one passerby file `get.html` (identical in repo root
+  and the app bundle; legacy `card.html` redirects here, preserving `#d=`) and
+  (2) policy pages bundled solely under `RedMed-Xcode/RedMed/` (`PrivacyPolicy`,
+  `TOS`, `security`, `HowItWorks`, `legal-doc.css`). `HowItWorks.html` redirects
+  into `redmed://main`. Policies CTA to the owner app; they do not host owner
+  edit UI. Do not reintroduce repo-root copies of the policy HTML. Owner How It
+  Works / band setup lives in `Main.swift` (`MainInfoView`).
+
+- **Bracelet tap (physics, not a setting):** `AppConfig.BraceletRF` is the single
+  source of truth — intentional tap ~1–2″, walk-by ~6–8″ does not fire, reliable
+  coupling dies past ~4″, passive 13.56 MHz HF NFC (not Bluetooth). NFC tab /
+  How It Works copy must use `BraceletRF` helpers, not hardcoded inches.
 
 **Cold launch:** Do **not** create `CLLocationManager`, start GPS / MapKit /
 trauma JSON, or show a Location banner at `@main`. First launch opens RedMed

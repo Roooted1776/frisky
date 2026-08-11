@@ -35,12 +35,13 @@ struct NFCView: View {
                         .padding(.bottom, 6)
 
                     let capacity = ProfileNFCCodec.capacityNote(for: profile)
+                    let rf = AppConfig.BraceletRF.self
                     VStack(spacing: 0) {
-                        statusRow("Passive band · 13.56 MHz HF NFC (NTAG) — not Bluetooth 2.4 GHz.", showDivider: true)
-                        statusRow("Walk-by won't fire (~6–8″). Only a deliberate ~1–2″ antenna tap opens the card.", showDivider: true)
-                        statusRow("Phone only powers the chip on write/scan. No background pair radio.", showDivider: true)
-                        statusRow("POS ignore this chip (EMV ≠ NDEF) — not a distance setting.", showDivider: true)
-                        statusRow("Tap the band · phone opens your card · no app for readers", showDivider: true)
+                        statusRow(rf.carrierVsBluetoothSummary, showDivider: true)
+                        statusRow(rf.tapDistanceSummary, showDivider: true)
+                        statusRow(rf.powerOnTapSummary, showDivider: true)
+                        statusRow(rf.paymentPOSSummary, showDivider: true)
+                        statusRow(rf.passerbyTapSummary, showDivider: true)
                         statusRow(
                             profile.braceletLinked
                                 ? "Bracelet linked — re-write after you edit RedMed"
