@@ -75,8 +75,9 @@ The app has no backend, database, or web service.
 **Cold launch:** Do **not** create `CLLocationManager`, start GPS / MapKit /
 trauma JSON, or show a Location banner at `@main`. First launch opens a cream
 shell (`redmedBg` / `LaunchBackground`) with **zero Keychain** on the first
-frame — `OwnerAppLock` defers `hasStoredProfile` / Face ID until after paint.
-Do not call Keychain in `@State` defaults. Location nudge lives in Help →
+frame — `OwnerAppLock` defers `hasStoredProfile` until after paint, then shows
+the lock UI; Face ID runs only after the owner taps **Accept** (never auto on
+appear). Do not call Keychain in `@State` defaults. Location nudge lives in Help →
 Settings; When-In-Use + GPS start on Find Help only when Location is enabled
 (`AppSettings.locationEnabled` + `LocationManager.start`). CoreMotion crash
 monitoring may start after first-frame yield (no Location); do not construct

@@ -55,8 +55,9 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Locked owner vs passerby shells; four owner tabs (RedMed · 911 · Aid · NFC); scanners RedMed/911/Aid.
 - Owner app on first launch; `Main.swift` owner shell; HTML policies redirect `redmed://main`.
 - Deferred all Core Location until Find Help; fixed SIGTERM/launch confusion.
-- Cold launch: cream shell first (no Keychain in `@State`); Face ID + off-main
-  profile decode after paint; lazy `CMMotionManager`; LaunchBackground dark=cream.
+- Cold launch: cream shell first (no Keychain in `@State`); Accept then Face ID
+  (no auto Face ID on appear); off-main profile decode; lazy `CMMotionManager`;
+  LaunchBackground dark=cream.
 - Custom tab bar spacing; Aid chrome/wordmark/headings; RedMed fonts; Preview scanner Close on all tabs.
 - Version 1.1 driven from build settings; simulator default iOS 27.0; CI iOS compile workflow (later gated when Actions billing blocked macOS).
 

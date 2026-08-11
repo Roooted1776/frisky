@@ -89,7 +89,7 @@ struct OwnerAppLock<Content: View>: View {
                 Text("RedMed is locked")
                     .font(.system(size: 22, weight: .bold))
                     .foregroundColor(.redmedDark)
-                Text("Face ID first. Passcode if Face ID fails or is locked out. Profile is wiped from RAM while locked — Keychain stays on-device. Local only, forever.")
+                Text("Tap Accept, then confirm with Face ID. Passcode if Face ID fails or is locked out. Profile stays wiped from RAM until you unlock — Keychain stays on-device.")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.redmedMuted)
                     .multilineTextAlignment(.center)
@@ -107,7 +107,7 @@ struct OwnerAppLock<Content: View>: View {
                         if isAuthenticating {
                             ProgressView().tint(.white)
                         } else {
-                            Text("Unlock with Face ID")
+                            Text("Accept")
                                 .font(.system(size: 15, weight: .bold))
                         }
                     }
@@ -122,9 +122,7 @@ struct OwnerAppLock<Content: View>: View {
                 .padding(.bottom, 28)
             }
         }
-        .onAppear {
-            if !isAuthenticating { unlock() }
-        }
+        // Face ID only after Accept — never auto-prompt on appear (cold launch felt stuck).
     }
 
     private func lock(purge: Bool) {
@@ -145,7 +143,7 @@ struct OwnerAppLock<Content: View>: View {
         authGeneration &+= 1
         let generation = authGeneration
         BiometricAuth.authenticate(
-            reason: "Unlock RedMed to show your on-device emergency profile."
+            reason: "Confirm with Face ID, Touch ID, or passcode after Accept to unlock your RedMed profile."
         ) { success in
             guard generation == authGeneration else { return }
             if !success {
