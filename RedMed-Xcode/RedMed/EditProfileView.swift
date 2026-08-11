@@ -27,7 +27,7 @@ struct EditProfileView: View {
         static let font: CGFloat = 15
         static let navFont: CGFloat = 17
         static let icon: CGFloat = 18
-        static let labelWidth: CGFloat = 90
+        static let labelWidth: CGFloat = 100
         static let rowHPad: CGFloat = 16
         static let rowVPad: CGFloat = 13
         static let sectionGap: CGFloat = 22
@@ -277,38 +277,49 @@ struct EditProfileView: View {
     @ViewBuilder
     private var contactsEditor: some View {
         ForEach($contacts) { $contact in
-            HStack(alignment: .top, spacing: 8) {
-                VStack(alignment: .leading, spacing: 8) {
-                    TextField("Name", text: $contact.name)
-                        .font(.system(size: Metrics.font, weight: .semibold))
+            if contact.id != contacts.first?.id {
+                Divider()
+            }
+
+            youRow(label: "Name") {
+                HStack(spacing: 0) {
+                    TextField("Full name", text: $contact.name)
+                        .font(.system(size: Metrics.font))
                         .foregroundColor(.redmedDark)
                         .textContentType(.name)
-                    TextField("Phone number", text: $contact.phone)
-                        .font(.system(size: Metrics.font))
-                        .foregroundColor(.redmedDark)
-                        .keyboardType(.phonePad)
-                        .textContentType(.telephoneNumber)
-                    TextField("Relationship (optional)", text: $contact.relationship)
-                        .font(.system(size: Metrics.font))
-                        .foregroundColor(.redmedDark)
+                    Button {
+                        let id = contact.id
+                        contacts.removeAll { $0.id == id }
+                    } label: {
+                        Text("✕")
+                            .font(.system(size: Metrics.icon))
+                            .foregroundColor(.redmedAccent)
+                            .padding(.leading, 10)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                Button {
-                    let id = contact.id
-                    contacts.removeAll { $0.id == id }
-                } label: {
-                    Text("✕")
-                        .font(.system(size: Metrics.icon))
-                        .foregroundColor(.redmedAccent)
-                        .padding(.leading, 10)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
             }
-            .padding(.horizontal, Metrics.rowHPad)
-            .padding(.vertical, Metrics.rowVPad)
-            Divider().padding(.leading, Metrics.rowHPad)
+            Divider().padding(.leading, Metrics.labelWidth + 12 + Metrics.rowHPad)
+
+            youRow(label: "Phone") {
+                TextField("Phone number", text: $contact.phone)
+                    .font(.system(size: Metrics.font))
+                    .foregroundColor(.redmedDark)
+                    .keyboardType(.phonePad)
+                    .textContentType(.telephoneNumber)
+            }
+            Divider().padding(.leading, Metrics.labelWidth + 12 + Metrics.rowHPad)
+
+            youRow(label: "Relationship") {
+                TextField("Optional", text: $contact.relationship)
+                    .font(.system(size: Metrics.font))
+                    .foregroundColor(.redmedDark)
+            }
+        }
+
+        if !contacts.isEmpty {
+            Divider()
         }
 
         Button {
