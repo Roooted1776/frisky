@@ -99,6 +99,7 @@ struct EmergencyView: View {
             }
             } // NavigationView
         } // VStack
+        .maxBrightnessForVisibility()
     }
 }
 
