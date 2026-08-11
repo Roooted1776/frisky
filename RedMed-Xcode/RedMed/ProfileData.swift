@@ -25,6 +25,18 @@ class ProfileData: ObservableObject {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    /// YOU-card identity filled (Name, birth date, blood type). Lists may stay empty.
+    var isEmergencyProfileConfigured: Bool {
+        hasData
+            && !birthDate.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !bloodType.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// Main header "Linked bracelet" — only after a verified write and a complete YOU card.
+    var showsBraceletAsLinked: Bool {
+        braceletLinked && isEmergencyProfileConfigured
+    }
+
     /// Any RedMed profile content that should require Face ID / passcode to edit.
     var hasSensitiveProfileData: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
