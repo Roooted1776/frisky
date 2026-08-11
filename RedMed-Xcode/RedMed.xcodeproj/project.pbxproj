@@ -27,6 +27,7 @@
 		AABB00000000000000000014 /* BiometricAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000014 /* BiometricAuth.swift */; };
 		AABB00000000000000000026 /* HapticEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000026 /* HapticEngine.swift */; };
 		AABB00000000000000000027 /* BrightnessBoost.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000027 /* BrightnessBoost.swift */; };
+		AABB00000000000000000028 /* LocatorBeacon.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000028 /* LocatorBeacon.swift */; };
 		AABB00000000000000000016 /* PrivacyPolicy.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000016 /* PrivacyPolicy.html */; };
 		AABB00000000000000000017 /* TOS.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000017 /* TOS.html */; };
 		AABB00000000000000000018 /* security.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000018 /* security.html */; };
@@ -72,6 +73,7 @@
 		AAAA00000000000000000014 /* BiometricAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuth.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000026 /* HapticEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticEngine.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000027 /* BrightnessBoost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessBoost.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000028 /* LocatorBeacon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocatorBeacon.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000016 /* PrivacyPolicy.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = PrivacyPolicy.html; sourceTree = "<group>"; };
 		AAAA00000000000000000017 /* TOS.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = TOS.html; sourceTree = "<group>"; };
 		AAAA00000000000000000018 /* security.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = security.html; sourceTree = "<group>"; };
@@ -132,6 +134,7 @@
 				AAAA00000000000000000014 /* BiometricAuth.swift */,
 				AAAA00000000000000000026 /* HapticEngine.swift */,
 				AAAA00000000000000000027 /* BrightnessBoost.swift */,
+				AAAA00000000000000000028 /* LocatorBeacon.swift */,
 				AAAA0000000000000000001B /* KeychainStore.swift */,
 				AAAA00000000000000000026 /* HIPAAOfflineVault.swift */,
 				AAAA00000000000000000027 /* VaultHistoryStore.swift */,
@@ -263,6 +266,7 @@
 				AABB00000000000000000014 /* BiometricAuth.swift in Sources */,
 				AABB00000000000000000026 /* HapticEngine.swift in Sources */,
 				AABB00000000000000000027 /* BrightnessBoost.swift in Sources */,
+				AABB00000000000000000028 /* LocatorBeacon.swift in Sources */,
 				AABB0000000000000000001B /* KeychainStore.swift in Sources */,
 				AABB00000000000000000026 /* HIPAAOfflineVault.swift in Sources */,
 				AABB00000000000000000027 /* VaultHistoryStore.swift in Sources */,
