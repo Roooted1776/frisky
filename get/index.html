@@ -31,7 +31,7 @@
      - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
        walk-by ~6–8″ does not fire, reliable coupling dies past ~4″,
        passive 13.56 MHz HF NFC (not Bluetooth) → opens this page
-     - Logo: BrandLogo.png (bundle /get/) or assets/BrandLogo.png (Pages)
+     - Logo: BrandLogo.png + BrandWordmark.png (bundle /get/) or assets/ (Pages)
      - Legacy card.html / card/ redirects to /get/ and keeps #d=
      Keep identical: get/index.html, repo-root get.html, RedMed-Xcode/RedMed/get.html.
      Cloudflare Pages serves AppConfig URL https://redmed.pages.dev/get/ from get/. -->
@@ -411,6 +411,14 @@
   }
 
   /* —— Aid tab —— */
+  .aid-wordmark {
+    display: block;
+    height: 42px;
+    width: auto;
+    max-width: 200px;
+    margin: 2px 0 10px;
+    object-fit: contain;
+  }
   .aid-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -621,11 +629,10 @@
       </div>
     </div>
 
-    <!-- Aid -->
+    <!-- Aid — same BrandWordmark chrome as owner AidView (no title/hint text). -->
     <div class="panel" id="panel-aid" data-panel="aid">
       <div class="page-pad">
-        <h1 class="page-title">Roadside Aid</h1>
-        <p class="hint" style="text-align:left;margin-bottom:6px">Tap a pane — expand only what you need.</p>
+        <img class="aid-wordmark" id="aidWordmark" src="BrandWordmark.png" width="168" height="42" alt="RedMed">
         <a class="btn btn-primary" id="callEmergency" href="tel:112">Call <span class="emg">112</span></a>
 
         <div class="aid-grid">
@@ -713,6 +720,21 @@
     page: 'get.html'
   };
 
+  function resolveAsset(elId, candidates) {
+    var img = document.getElementById(elId);
+    if (!img) return;
+    var i = 0;
+    function tryNext() {
+      if (i >= candidates.length) return;
+      var src = candidates[i++];
+      var probe = new Image();
+      probe.onload = function () { img.src = src; };
+      probe.onerror = tryNext;
+      probe.src = src;
+    }
+    tryNext();
+  }
+
   function resolveLogo() {
     var candidates = ['BrandLogo.png', 'assets/BrandLogo.png'];
     var img = document.getElementById('rmLogo');
@@ -730,6 +752,7 @@
       probe.src = src;
     }
     tryNext();
+    resolveAsset('aidWordmark', ['BrandWordmark.png', 'assets/BrandWordmark.png']);
   }
 
   var bandEl = document.getElementById('bandSpec');

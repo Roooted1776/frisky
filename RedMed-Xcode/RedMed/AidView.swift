@@ -76,11 +76,6 @@ struct AidView: View {
                     }
                 }
 
-                Text("Tap a pane to expand")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.redmedMuted)
-                    .padding(.bottom, 2)
-
                 // Panes + cancel + quote share one stack so LazyVStack spacing
                 // does not pad the 5pt gap under the lowest pane.
                 VStack(alignment: .leading, spacing: 0) {
