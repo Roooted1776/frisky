@@ -57,8 +57,10 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Deferred all Core Location until Find Help; fixed SIGTERM/launch confusion.
 - Cold launch: cream shell first (no Keychain in `@State`); Accept then Face ID
   (no auto Face ID on appear); off-main profile decode; lazy `CMMotionManager`;
-  LaunchBackground dark=cream.
-- Custom tab bar spacing; Aid chrome/wordmark/headings; RedMed fonts; Preview scanner Back = Edit chrome (`ChromeTextAction`: accent red, plain page-bg fill, 18 regular) on all tabs.
+  LaunchBackground dark=cream. Unlock fail-closed if Keychain decode fails.
+- Opacity keep-alive tabs: Find Help GPS + seizure autodial tear down via
+  `isVisible` (not `onDisappear` — opacity hide never fires it).
+- Custom tab bar spacing; Aid chrome/wordmark/headings; RedMed fonts; Preview scanner Back = Edit chrome (`ChromeTextAction`: accent red, plain page-bg fill, 18 regular) on all tabs. Find Help title + Back pinned above scroll.
 - Version 1.1 driven from build settings; simulator default iOS 27.0; CI iOS compile workflow (later gated when Actions billing blocked macOS).
 
 ### Edit / profile / Face ID
