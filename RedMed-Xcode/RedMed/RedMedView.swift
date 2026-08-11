@@ -54,10 +54,15 @@ struct RedMedView: View {
                                 Text(c.name.isEmpty ? "Emergency contact" : c.name)
                                     .font(.system(size: 12, weight: .semibold))
                                     .foregroundColor(.redmedDark)
-                                if !c.detail.isEmpty {
-                                    Text(c.detail)
+                                if !c.relationship.isEmpty {
+                                    Text(c.relationship)
                                         .font(.system(size: 13, weight: .medium))
                                         .foregroundColor(.redmedMuted)
+                                }
+                                if !c.phone.isEmpty {
+                                    Text(c.phone)
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundColor(.redmedAccent)
                                 }
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)

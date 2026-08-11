@@ -36,7 +36,7 @@ enum ProfileNFCCodec {
                 NFCChipContact(
                     name: contact.name,
                     rel: contact.relationship,
-                    phone: String(contact.phone.filter(\.isNumber))
+                    phone: contact.dialDigits.isEmpty ? contact.phone : contact.dialDigits
                 )
             },
             updated: profile.lastUpdated

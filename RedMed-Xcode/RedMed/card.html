@@ -690,18 +690,25 @@
       name.className = 'cn';
       name.textContent = c.name || 'Contact';
       row.appendChild(name);
-      var detailText = c.detail || (c.rel ? c.rel : '') || (phone || '');
+      var rel = asString(c.rel);
+      if (!rel && c.detail && phone) {
+        var parts = String(c.detail).split('·').map(function (s) { return s.trim(); });
+        if (parts.length > 1) rel = parts[0];
+      } else if (!rel && c.detail && !phone) {
+        rel = asString(c.detail);
+      }
+      if (rel) {
+        var relEl = document.createElement('div');
+        relEl.className = 'cd';
+        relEl.textContent = rel;
+        row.appendChild(relEl);
+      }
       if (phone) {
         var a = document.createElement('a');
         a.className = 'cd';
         a.href = 'tel:' + phone;
-        a.textContent = (detailText || phone) + ' · Tap to call';
+        a.textContent = (c.phone || phone) + ' · Tap to call';
         row.appendChild(a);
-      } else if (detailText) {
-        var d = document.createElement('div');
-        d.className = 'cd';
-        d.textContent = detailText;
-        row.appendChild(d);
       }
       contactsEl.appendChild(row);
     });

@@ -88,10 +88,16 @@ struct MyIDView: View {
                         } else {
                             ForEach(profile.contacts) { c in
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(c.name)
+                                    Text(c.name.isEmpty ? "Emergency contact" : c.name)
                                         .font(.system(size: 14, weight: .semibold)).foregroundColor(.redmedDark)
-                                    Text(c.detail)
-                                        .font(.system(size: 12, weight: .medium)).foregroundColor(.redmedMuted)
+                                    if !c.relationship.isEmpty {
+                                        Text(c.relationship)
+                                            .font(.system(size: 12, weight: .medium)).foregroundColor(.redmedMuted)
+                                    }
+                                    if !c.phone.isEmpty {
+                                        Text(c.phone)
+                                            .font(.system(size: 12, weight: .medium)).foregroundColor(.redmedAccent)
+                                    }
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal, 16).padding(.vertical, 11)

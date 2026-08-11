@@ -88,7 +88,9 @@ class ProfileData: ObservableObject {
             allergies: allergies,
             medications: medications,
             conditions: conditions,
-            contacts: contacts.map { PersistedContact(name: $0.name, detail: $0.detail) },
+            contacts: contacts.map {
+                PersistedContact(name: $0.name, relationship: $0.relationship, phone: $0.phone)
+            },
             braceletLinked: braceletLinked,
             isOrganDonor: isOrganDonor,
             lastUpdated: lastUpdated
@@ -108,7 +110,7 @@ class ProfileData: ObservableObject {
         allergies = blob.allergies
         medications = blob.medications
         conditions = blob.conditions
-        contacts = blob.contacts.map { EmergencyContact(name: $0.name, detail: $0.detail) }
+        contacts = blob.contacts.map { $0.asEmergencyContact() }
         braceletLinked = blob.braceletLinked
         isOrganDonor = blob.isOrganDonor
         lastUpdated = blob.lastUpdated
@@ -122,7 +124,20 @@ struct EmergencyContact: Identifiable, Equatable {
     var relationship: String
     var phone: String
 
-    /// Combined subtitle for the RedMed card (`Relationship · phone`).
+    /// Digits (and leading +) for `tel:` / `sms:` URLs.
+    var dialDigits: String {
+        var result = ""
+        for ch in phone {
+            if ch.isNumber {
+                result.append(ch)
+            } else if ch == "+", result.isEmpty {
+                result.append(ch)
+            }
+        }
+        return result
+    }
+
+    /// Combined subtitle for list rows (`Relationship · phone`).
     var detail: String {
         get {
             [relationship, phone].filter { !$0.isEmpty }.joined(separator: " · ")
@@ -180,9 +195,54 @@ private struct PersistedProfile: Codable {
     var lastUpdated: String
 }
 
+/// Keychain contact blob. Prefers `relationship` + `phone`; still reads legacy `detail`.
 private struct PersistedContact: Codable {
     var name: String
+    var relationship: String
+    var phone: String
+    /// Legacy combined field — written for older readers, used when loading old blobs.
     var detail: String
+
+    init(name: String, relationship: String, phone: String) {
+        self.name = name
+        self.relationship = relationship
+        self.phone = phone
+        self.detail = [relationship, phone].filter { !$0.isEmpty }.joined(separator: " · ")
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.decode(String.self, forKey: .name)
+        let rel = try c.decodeIfPresent(String.self, forKey: .relationship) ?? ""
+        let ph = try c.decodeIfPresent(String.self, forKey: .phone) ?? ""
+        let legacy = try c.decodeIfPresent(String.self, forKey: .detail) ?? ""
+        if !rel.isEmpty || !ph.isEmpty {
+            relationship = rel
+            phone = ph
+            detail = [rel, ph].filter { !$0.isEmpty }.joined(separator: " · ")
+        } else {
+            let parsed = EmergencyContact(name: name, detail: legacy)
+            relationship = parsed.relationship
+            phone = parsed.phone
+            detail = legacy
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(name, forKey: .name)
+        try c.encode(relationship, forKey: .relationship)
+        try c.encode(phone, forKey: .phone)
+        try c.encode(detail, forKey: .detail)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case name, relationship, phone, detail
+    }
+
+    func asEmergencyContact() -> EmergencyContact {
+        EmergencyContact(name: name, relationship: relationship, phone: phone)
+    }
 }
 
 // MARK: - First Aid Topics
