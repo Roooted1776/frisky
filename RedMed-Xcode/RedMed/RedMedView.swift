@@ -124,20 +124,10 @@ struct RedMedView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.top, 42)
-                    .padding(.bottom, 4)
-                }
-
-                Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.redmedDark)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(4)
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 20)
-                    .padding(.top, isScannerSession ? 42 : 33)
                     .padding(.bottom, 16)
+                }
             }
-            .padding(.bottom, 12)
+            .padding(.bottom, isScannerSession ? 42 : 12)
         }
         .background(Color.redmedBg)
         .fullScreenCover(isPresented: Binding(
