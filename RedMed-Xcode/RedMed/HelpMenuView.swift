@@ -18,6 +18,8 @@ struct HelpMenuView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.dismiss) var dismiss
     @AppStorage(HapticEngine.enabledKey) private var hapticsEnabled = true
+    @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
+    @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
     var onOpenNFC: (() -> Void)? = nil
 
     var body: some View {
@@ -30,13 +32,27 @@ struct HelpMenuView: View {
                     }
                     .foregroundColor(.redmedDark)
                 }
-                Section("Settings") {
+                Section {
                     Toggle("Haptic feedback", isOn: $hapticsEnabled)
                         .tint(.redmedAccent)
-                    Text("CPR beat taps use the Taptic Engine on a physical iPhone. Simulator still runs — haptics are skipped. Turn off here, or System Haptics in iOS Settings → Sounds & Haptics. Face ID is device-only; Simulator Edit/NFC uses an Authenticate prompt.")
-                        .font(.system(size: 12))
-                        .foregroundColor(.redmedMuted)
-                        .listRowSeparator(.hidden)
+                    Toggle("Location", isOn: $locationEnabled)
+                        .tint(.redmedAccent)
+                        .onChange(of: locationEnabled) { _, on in
+                            if on {
+                                locationSuggester.prepareForFindHelp()
+                                locationSuggester.primaryAction()
+                            }
+                        }
+                    if locationEnabled && locationSuggester.mustOpenSettings {
+                        Button("Open iOS Location Settings") {
+                            locationSuggester.openSettings()
+                        }
+                        .foregroundColor(.redmedAccent)
+                    }
+                } header: {
+                    Text("Settings")
+                } footer: {
+                    Text("Only haptic and location are adjustable. Find Help brightness and locate-me beeps stay automatic.")
                 }
                 NavigationLink("How It Works") {
                     // Owner info lives in Main.swift — not HowItWorks.html
@@ -74,6 +90,11 @@ struct HelpMenuView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") { dismiss() }.foregroundColor(.redmedAccent)
+                }
+            }
+            .onAppear {
+                if locationEnabled {
+                    locationSuggester.prepareForFindHelp()
                 }
             }
         }

@@ -37,7 +37,8 @@ struct VaultHistoryView: View {
             }
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase != .active {
+            // LAContext auth sheets put the scene in `.inactive`.
+            if phase == .background {
                 lockVault()
             }
         }

@@ -3,32 +3,38 @@ import CoreLocation
 
 struct EmergencyView: View {
     @Environment(\.isScannerSession) private var isScannerSession
+    @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @StateObject private var locationManager = LocationManager()
     @State private var showSatellite = false
 
     var body: some View {
         VStack(spacing: 0) {
-            // Location UI lives only here — never on cold launch / RedMed tab.
-            if !isScannerSession {
-                LocationSuggestionBanner()
-            }
+            // Location nudge lives in Help → Settings only — not on Find Help chrome.
             NavigationView {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 8) {
+                    Text("Locator on — full brightness, beep every 5s so rescuers can find you.")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.redmedAccent)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 4)
+                        .padding(.top, 2)
+
                     // NO CELL SIGNAL — top of Find Help (replaces call-first-contact)
                     NoCellSignalCard(showSatellite: $showSatellite)
 
                     // GPS CARD
-                    GPSCard(location: locationManager.location)
+                    GPSCard(location: locationEnabled ? locationManager.location : nil)
                         .padding(.vertical, 4)
+                        .opacity(locationEnabled ? 1 : 0.45)
 
                     // COPY COORDINATES
                     Button {
-                        if let loc = locationManager.location {
+                        if locationEnabled, let loc = locationManager.location {
                             UIPasteboard.general.string = "\(loc.coordinate.latitude), \(loc.coordinate.longitude)"
                         }
                     } label: {
-                        Text("Copy coordinates")
+                        Text(locationEnabled ? "Copy coordinates" : "Location off — enable in Settings")
                             .font(.system(size: 13, weight: .bold))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -36,6 +42,7 @@ struct EmergencyView: View {
                             .background(Color.redmedDark)
                             .clipShape(Capsule())
                     }
+                    .disabled(!locationEnabled || locationManager.location == nil)
 
                     SeizureTimerStrip()
 
@@ -92,7 +99,16 @@ struct EmergencyView: View {
             .task {
                 // First paint of Find Help before Core Location work.
                 await Task.yield()
-                locationManager.start()
+                if locationEnabled {
+                    locationManager.start()
+                }
+            }
+            .onChange(of: locationEnabled) { _, on in
+                if on {
+                    locationManager.start()
+                } else {
+                    locationManager.stop()
+                }
             }
             .onDisappear {
                 locationManager.stop()
@@ -100,6 +116,7 @@ struct EmergencyView: View {
             } // NavigationView
         } // VStack
         .maxBrightnessForVisibility()
+        .locatorBeaconEveryFiveSeconds()
     }
 }
 

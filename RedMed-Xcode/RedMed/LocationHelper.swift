@@ -4,9 +4,9 @@ import UIKit
 import SwiftUI
 import Combine
 
-/// Optional Location nudge for Find Help only.
-/// Does **not** run at cold launch — no `CLLocationManager` until Find Help
-/// appears or the user taps Allow. Never gates or replaces the main tabs.
+/// Optional Location nudge — surfaced from Help → Settings only.
+/// Does **not** run at cold launch — no `CLLocationManager` until Settings
+/// or Find Help (when Location is enabled) needs it.
 final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManagerDelegate {
     static let shared = LocationAccessSuggester()
 
@@ -85,7 +85,7 @@ final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManag
     }
 }
 
-/// Shown on Find Help only — never on cold launch / RedMed tab.
+/// Kept for reuse; Find Help no longer shows this — Location lives in Settings.
 struct LocationSuggestionBanner: View {
     @ObservedObject private var suggester = LocationAccessSuggester.shared
 

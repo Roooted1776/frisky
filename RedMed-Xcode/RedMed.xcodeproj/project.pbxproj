@@ -25,8 +25,10 @@
 		AABB00000000000000000012 /* PublicCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000012 /* PublicCardView.swift */; };
 		AABB00000000000000000013 /* LocationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000013 /* LocationHelper.swift */; };
 		AABB00000000000000000014 /* BiometricAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000014 /* BiometricAuth.swift */; };
-		AABB00000000000000000026 /* HapticEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000026 /* HapticEngine.swift */; };
-		AABB00000000000000000027 /* BrightnessBoost.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000027 /* BrightnessBoost.swift */; };
+		AABB0000000000000000002A /* HapticEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002A /* HapticEngine.swift */; };
+		AABB0000000000000000002B /* BrightnessBoost.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002B /* BrightnessBoost.swift */; };
+		AABB0000000000000000002C /* LocatorBeacon.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002C /* LocatorBeacon.swift */; };
+		AABB0000000000000000002D /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002D /* AppSettings.swift */; };
 		AABB00000000000000000016 /* PrivacyPolicy.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000016 /* PrivacyPolicy.html */; };
 		AABB00000000000000000017 /* TOS.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000017 /* TOS.html */; };
 		AABB00000000000000000018 /* security.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000018 /* security.html */; };
@@ -42,8 +44,8 @@
 		AABB00000000000000000024 /* get.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000024 /* get.html */; };
 		AABB00000000000000000025 /* sw.js in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000025 /* sw.js */; };
 		AABB00000000000000000022 /* BrandLogo.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000022 /* BrandLogo.png */; };
-		AABB0000000000000000002A /* HIPAAOfflineVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002A /* HIPAAOfflineVault.swift */; };
-		AABB0000000000000000002B /* VaultHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002B /* VaultHistoryStore.swift */; };
+		AABB0000000000000000002E /* HIPAAOfflineVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002E /* HIPAAOfflineVault.swift */; };
+		AABB0000000000000000002F /* VaultHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002F /* VaultHistoryStore.swift */; };
 		AABB00000000000000000028 /* VaultHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000028 /* VaultHistoryView.swift */; };
 		AABB00000000000000000029 /* PrivacySnapshotGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000029 /* PrivacySnapshotGuard.swift */; };
 /* End PBXBuildFile section */
@@ -70,8 +72,10 @@
 		AAAA00000000000000000012 /* PublicCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicCardView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000013 /* LocationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationHelper.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000014 /* BiometricAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuth.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000026 /* HapticEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticEngine.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000027 /* BrightnessBoost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessBoost.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000002A /* HapticEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticEngine.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000002B /* BrightnessBoost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessBoost.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000002C /* LocatorBeacon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocatorBeacon.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000002D /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000016 /* PrivacyPolicy.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = PrivacyPolicy.html; sourceTree = "<group>"; };
 		AAAA00000000000000000017 /* TOS.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = TOS.html; sourceTree = "<group>"; };
 		AAAA00000000000000000018 /* security.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = security.html; sourceTree = "<group>"; };
@@ -87,8 +91,8 @@
 		AAAA00000000000000000024 /* get.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = get.html; sourceTree = "<group>"; };
 		AAAA00000000000000000025 /* sw.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = sw.js; sourceTree = "<group>"; };
 		AAAA00000000000000000022 /* BrandLogo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BrandLogo.png; sourceTree = "<group>"; };
-		AAAA0000000000000000002A /* HIPAAOfflineVault.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HIPAAOfflineVault.swift; sourceTree = "<group>"; };
-		AAAA0000000000000000002B /* VaultHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultHistoryStore.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000002E /* HIPAAOfflineVault.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HIPAAOfflineVault.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000002F /* VaultHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultHistoryStore.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000028 /* VaultHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultHistoryView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000029 /* PrivacySnapshotGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacySnapshotGuard.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -130,11 +134,13 @@
 				AAAA00000000000000000012 /* PublicCardView.swift */,
 				AAAA00000000000000000013 /* LocationHelper.swift */,
 				AAAA00000000000000000014 /* BiometricAuth.swift */,
-				AAAA00000000000000000026 /* HapticEngine.swift */,
-				AAAA00000000000000000027 /* BrightnessBoost.swift */,
+				AAAA0000000000000000002A /* HapticEngine.swift */,
+				AAAA0000000000000000002B /* BrightnessBoost.swift */,
+				AAAA0000000000000000002C /* LocatorBeacon.swift */,
+				AAAA0000000000000000002D /* AppSettings.swift */,
 				AAAA0000000000000000001B /* KeychainStore.swift */,
-				AAAA0000000000000000002A /* HIPAAOfflineVault.swift */,
-				AAAA0000000000000000002B /* VaultHistoryStore.swift */,
+				AAAA0000000000000000002E /* HIPAAOfflineVault.swift */,
+				AAAA0000000000000000002F /* VaultHistoryStore.swift */,
 				AAAA00000000000000000028 /* VaultHistoryView.swift */,
 				AAAA00000000000000000029 /* PrivacySnapshotGuard.swift */,
 				AAAA00000000000000000020 /* EmergencyNumber.swift */,
@@ -261,11 +267,13 @@
 				AABB00000000000000000012 /* PublicCardView.swift in Sources */,
 				AABB00000000000000000013 /* LocationHelper.swift in Sources */,
 				AABB00000000000000000014 /* BiometricAuth.swift in Sources */,
-				AABB00000000000000000026 /* HapticEngine.swift in Sources */,
-				AABB00000000000000000027 /* BrightnessBoost.swift in Sources */,
+				AABB0000000000000000002A /* HapticEngine.swift in Sources */,
+				AABB0000000000000000002B /* BrightnessBoost.swift in Sources */,
+				AABB0000000000000000002C /* LocatorBeacon.swift in Sources */,
+				AABB0000000000000000002D /* AppSettings.swift in Sources */,
 				AABB0000000000000000001B /* KeychainStore.swift in Sources */,
-				AABB0000000000000000002A /* HIPAAOfflineVault.swift in Sources */,
-				AABB0000000000000000002B /* VaultHistoryStore.swift in Sources */,
+				AABB0000000000000000002E /* HIPAAOfflineVault.swift in Sources */,
+				AABB0000000000000000002F /* VaultHistoryStore.swift in Sources */,
 				AABB00000000000000000028 /* VaultHistoryView.swift in Sources */,
 				AABB00000000000000000029 /* PrivacySnapshotGuard.swift in Sources */,
 				AABB00000000000000000020 /* EmergencyNumber.swift in Sources */,

@@ -5,7 +5,7 @@ import Foundation
 /// Prepare once when the hosting view appears; play calculated patterns on tap / beat.
 @MainActor
 final class HapticEngine: ObservableObject {
-    /// `@AppStorage` / Settings toggle. Default on when unset.
+    /// `@AppStorage` / Help → Settings toggle. Default on when unset.
     static let enabledKey = "redmed.hapticsEnabled"
 
     private var engine: CHHapticEngine?

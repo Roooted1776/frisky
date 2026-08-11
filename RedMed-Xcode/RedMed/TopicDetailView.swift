@@ -6,10 +6,9 @@ extension AidTopic: Identifiable {}
 struct TopicDetailView: View {
     let topic: AidTopic
     @Environment(\.dismiss) var dismiss
-    @Environment(\.isScannerSession) private var isScannerSession
     /// Engine lives in the view hierarchy — prepared on appear, fired on tap / beat.
+    /// Enable/disable lives in Help → Settings only (not on this card).
     @StateObject private var hapticEngine = HapticEngine()
-    @AppStorage(HapticEngine.enabledKey) private var hapticsEnabled = true
     @State private var cprRunning = false
     @State private var cprCount = 0
     @State private var cprPhase = "compress" // or "breathe"
@@ -100,15 +99,6 @@ struct TopicDetailView: View {
                                     .clipShape(Capsule())
                             } else {
                                 PrimaryButton(title: "Start beat") { startCPR() }
-                            }
-                            // Scanner shell is read-only — never write owner @AppStorage.
-                            if !isScannerSession {
-                                Toggle("Haptic feedback", isOn: $hapticsEnabled)
-                                    .font(.system(size: 14, weight: .medium))
-                                    .tint(.redmedAccent)
-                                    .onChange(of: hapticsEnabled) { _, on in
-                                        if on { hapticEngine.prepare() }
-                                    }
                             }
                         }
                         .padding(20)
@@ -218,8 +208,10 @@ struct TopicDetailView: View {
     }
 }
 
-/// Owns MapKit + CLLocationManager only when the trauma-hospitals topic is open.
+/// Owns MapKit + CLLocationManager only when the trauma-hospitals topic is open
+/// and Location is enabled in Help → Settings.
 private struct LiveNearbyHospitalsSection: View {
+    @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @StateObject private var hospitalFinder = NearbyHospitalFinder()
 
     var body: some View {
@@ -233,7 +225,12 @@ private struct LiveNearbyHospitalsSection: View {
                 .padding(.bottom, 6)
                 .padding(.top, 24)
 
-            if hospitalFinder.isLoading {
+            if !locationEnabled {
+                Text("Location is off. Enable it in Help → Settings to find nearby hospitals.")
+                    .font(.system(size: 13))
+                    .foregroundColor(.redmedMuted)
+                    .padding(.vertical, 12)
+            } else if hospitalFinder.isLoading {
                 HStack {
                     ProgressView()
                     Text("Finding hospitals near you…")
@@ -294,6 +291,12 @@ private struct LiveNearbyHospitalsSection: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
         }
-        .task { hospitalFinder.search() }
+        .task {
+            guard locationEnabled else { return }
+            hospitalFinder.search()
+        }
+        .onChange(of: locationEnabled) { _, on in
+            if on { hospitalFinder.search() }
+        }
     }
 }
