@@ -26,7 +26,7 @@ struct NFCChipContact: Codable, Equatable {
 /// 1. Profile → tiny **positional array** (field indexes, not JSON keys):
 ///    `[name, dob, blood, donor, allergies, meds, conditions, contacts, updated?]`
 ///    contacts are `[name, rel, phone]` rows. Blood may be a 0…7 index.
-/// 2. UTF-8 JSON (no spaces). If smaller, wrap with zlib and prefix `0x01`.
+/// 2. UTF-8 JSON (no spaces). If smaller, zlib-compress and prefix `0x01`.
 /// 3. **Base64url** into short `…/get#d=…` (NDEF stores without the `https://` prefix byte).
 ///
 /// Legacy named JSON objects (`{"name":…}`) still decode. Payload is packed/encoded,
