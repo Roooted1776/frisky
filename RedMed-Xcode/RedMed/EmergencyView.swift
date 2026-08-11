@@ -5,7 +5,6 @@ struct EmergencyView: View {
     @Environment(\.isScannerSession) private var isScannerSession
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @StateObject private var locationManager = LocationManager()
-    @State private var showSatellite = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -20,18 +19,37 @@ struct EmergencyView: View {
                         .padding(.horizontal, 4)
                         .padding(.top, 2)
 
-                    // NO CELL SIGNAL — top of Find Help (replaces call-first-contact)
-                    NoCellSignalCard(showSatellite: $showSatellite)
+                    // NO CELL SIGNAL — carriers only (no satellite coach UI)
+                    NoCellSignalCard()
 
-                    // GPS CARD
-                    GPSCard(location: locationEnabled ? locationManager.location : nil)
-                        .padding(.vertical, 4)
-                        .opacity(locationEnabled ? 1 : 0.45)
+                    // GPS + Call: 5px under coordinates. Dial only — no PII/PHI attach.
+                    VStack(alignment: .leading, spacing: 5) {
+                        GPSCard(location: locationEnabled ? locationManager.location : nil)
+                            .opacity(locationEnabled ? 1 : 0.45)
+
+                        Button {
+                            PublicEmergencyAid.dial()
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "phone.fill")
+                                Text("Call \(EmergencyNumber.current)")
+                            }
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Color.redmedDark)
+                            .clipShape(Capsule())
+                        }
+                    }
+                    .padding(.vertical, 4)
 
                     // COPY COORDINATES
                     Button {
                         if locationEnabled, let loc = locationManager.location {
-                            UIPasteboard.general.string = "\(loc.coordinate.latitude), \(loc.coordinate.longitude)"
+                            SecurePasteboard.copyEphemeral(
+                                "\(loc.coordinate.latitude), \(loc.coordinate.longitude)"
+                            )
                         }
                     } label: {
                         Text(locationEnabled ? "Copy coordinates" : "Location off — enable in Settings")
@@ -71,7 +89,7 @@ struct EmergencyView: View {
                         ]
                     )
 
-                    Text("Coordinates show on this screen only. RedMed has no servers.")
+                    Text(AppConfig.Satellite.localOnlyLine)
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
@@ -286,35 +304,25 @@ struct InfoCard: View {
 
 // MARK: - No Cell Signal
 struct NoCellSignalCard: View {
-    @Binding var showSatellite: Bool
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Button { withAnimation(.easeInOut(duration: 0.2)) { showSatellite.toggle() } } label: {
-                HStack {
-                    Image(systemName: "antenna.radiowaves.left.and.right")
-                        .foregroundColor(.redmedAccent)
-                    Text("No cell signal?")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.redmedAccent)
-                    Spacer()
-                    Image(systemName: showSatellite ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.redmedMuted)
-                }
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "antenna.radiowaves.left.and.right")
+                    .foregroundColor(.redmedAccent)
+                Text("No cell signal?")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.redmedAccent)
+                Spacer()
             }
-            .padding(14)
 
-            if showSatellite {
-                Text("iPhone 14+ (iOS 16.1+): hold Side + Volume until Emergency SOS appears, or Settings → Emergency SOS.")
-                    .font(.system(size: 11))
-                    .foregroundColor(.redmedMuted)
-                    .lineSpacing(3)
-                    .padding(.horizontal, 14)
-                    .padding(.bottom, 14)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-            }
+            // T-Mobile first — carrier list only (Call button lives 5px under GPS).
+            Text(AppConfig.Satellite.directToCellCarriersLine)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(.redmedMuted)
+                .lineSpacing(2)
+                .fixedSize(horizontal: false, vertical: true)
         }
+        .padding(14)
         .background(Color.redmedSurface)
         .clipShape(RoundedRectangle(cornerRadius: 18))
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))

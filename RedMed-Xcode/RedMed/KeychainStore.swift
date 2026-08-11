@@ -2,11 +2,12 @@ import Foundation
 import Security
 
 /// Hardware-encrypted on-device storage for the RedMed profile blob.
-/// `.whenUnlockedThisDeviceOnly` keeps it out of iCloud/iTunes backups.
+/// `.whenUnlockedThisDeviceOnly` + non-synchronizable — never iCloud Keychain.
 enum KeychainStore {
-    private static let service = "com.redmed.app.profile"
+    private static let defaultService = "com.redmed.app.profile"
 
-    static func save(_ data: Data, account: String) {
+    @discardableResult
+    static func save(_ data: Data, account: String, service: String = defaultService) -> Bool {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -17,14 +18,16 @@ enum KeychainStore {
         var attributes = query
         attributes[kSecValueData as String] = data
         attributes[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
-        SecItemAdd(attributes as CFDictionary, nil)
+        attributes[kSecAttrSynchronizable as String] = kCFBooleanFalse as Any
+        return SecItemAdd(attributes as CFDictionary, nil) == errSecSuccess
     }
 
-    static func load(account: String) -> Data? {
+    static func load(account: String, service: String = defaultService) -> Data? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: kCFBooleanFalse as Any,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
@@ -34,11 +37,12 @@ enum KeychainStore {
         return result as? Data
     }
 
-    static func delete(account: String) {
+    static func delete(account: String, service: String = defaultService) {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: account
+            kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: kCFBooleanFalse as Any
         ]
         SecItemDelete(query as CFDictionary)
     }

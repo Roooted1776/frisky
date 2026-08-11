@@ -16,6 +16,7 @@ struct EditProfileView: View {
     @State private var conditions: [DraftLine] = []
     @State private var contacts: [EmergencyContact] = []
     @State private var showAuthFailedAlert = false
+    @State private var showSaveFailedAlert = false
     @State private var showBirthDatePicker = false
     @State private var showBloodTypePicker = false
     @State private var pickerBirthDate = EditProfileView.defaultBirthDate
@@ -138,6 +139,11 @@ struct EditProfileView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text("Face ID or passcode is required to save your RedMed profile.")
+        }
+        .alert("Couldn't Save", isPresented: $showSaveFailedAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Your profile could not be written to the secure on-device Keychain. Try again.")
         }
         .sheet(isPresented: $showBirthDatePicker) {
             birthDatePickerSheet
@@ -425,7 +431,10 @@ struct EditProfileView: View {
                 phone: trimmedPhone
             )
         }
-        profile.persist()
+        guard profile.persist() else {
+            showSaveFailedAlert = true
+            return
+        }
         VaultHistoryStore.shared.record(.profileSaved)
         dismiss()
     }

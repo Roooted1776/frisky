@@ -97,4 +97,18 @@ enum AppConfig {
             "Walk-by distance will not fire the band; only a deliberate \(intentionalTapRangeLabel) antenna tap opens the card."
         }
     }
+
+    /// Carrier notes + local-only rule for Find Help.
+    /// Call uses system `tel:` only — never attaches profile / PII / PHI / GPS.
+    enum Satellite {
+        /// Permanent product rule — do not soften or time-box.
+        static let localOnlyLine =
+            "Local only — forever. No Bluetooth · no RedMed servers · passive HF NFC. No PII or PHI leaves this device through RedMed."
+
+        /// US flagship first (T-Mobile / T-Satellite), then other announced Starlink
+        /// Direct-to-Cell / Starlink Mobile carrier partners. Availability and plan
+        /// terms change — one line for field awareness, not a coverage guarantee.
+        static let directToCellCarriersLine =
+            "Starlink Direct-to-Cell carriers: T-Mobile (US) · Rogers (CA) · KDDI · SoftBank · NTT Docomo (JP) · One NZ · Salt (CH) · Optus · Telstra (AU) · Entel (CL/PE) · Kyivstar (UA) · MasOrange (ES) · VMO2 (UK) · Beeline (KZ) · Airtel Africa — plan/region required; not a coverage promise."
+    }
 }

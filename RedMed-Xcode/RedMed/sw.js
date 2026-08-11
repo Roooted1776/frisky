@@ -5,7 +5,7 @@
  *
  * Bump CACHE in lockstep with get/sw.js on every decrypt/layout deploy.
  */
-var CACHE = 'redmed-get-v7';
+var CACHE = 'redmed-get-v8';
 var ASSETS = [
   './',
   './get.html',

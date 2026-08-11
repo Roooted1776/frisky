@@ -27,8 +27,8 @@
 
 Native iOS medical ID + emergency aid. Passive **13.56 MHz HF NFC** bracelet (not Bluetooth). Offline-first: no RedMed cloud backend for PHI.
 
-- **Owner app** (`Main` / `ContentView`): RedMed · Help · Aid · NFC (+ Edit). Local Keychain profile, Face ID gates, write band.
-- **Passerby / scanner**: `get.html#d=…` / `PublicCardView` — RedMed · Help · Aid only. Snapshot profile. No Edit, no NFC, no owner pref mutation.
+- **Owner app** (`Main` / `ContentView`): RedMed · 911 · Aid · NFC (+ Edit). Local Keychain profile, Face ID gates, write passive NFC band.
+- **Passerby / scanner**: `get.html#d=…` / `PublicCardView` — RedMed · 911 · Aid only. Snapshot profile. No Edit, no NFC, no owner pref mutation.
 - Hosted passerby path: `https://redmed.pages.dev/get/` (`get/index.html`).
 - Positioning: local EMS assist / fast ID handoff — not a medical device, no outcome promises, call 911 first. HIPAA-aligned offline posture; no false certification claims.
 
@@ -53,7 +53,7 @@ See also `AGENTS.md`. High-signal recap:
 Compressed from merged PRs / `main` history. Agents should treat these as **done** unless asked to change them.
 
 ### Roles, launch, chrome
-- Locked owner vs passerby shells; four owner tabs; scanners RedMed/Help/Aid.
+- Locked owner vs passerby shells; four owner tabs (RedMed · 911 · Aid · NFC); scanners RedMed/911/Aid.
 - Owner app on first launch; `Main.swift` owner shell; HTML policies redirect `redmed://main`.
 - Deferred all Core Location until Find Help; fixed SIGTERM/launch confusion.
 - Custom tab bar spacing; Aid chrome/wordmark/headings; RedMed fonts; Preview scanner Close on all tabs.

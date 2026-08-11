@@ -9,8 +9,10 @@ struct RedMedApp: App {
             // Owner UI lives in Main.swift — not HTML.
             // Privacy cover hides PHI from iOS app-switcher snapshots.
             PrivacySnapshotGuard {
-                Main()
-                    .environmentObject(profile)
+                OwnerAppLock {
+                    Main()
+                }
+                .environmentObject(profile)
             }
             .task {
                 // First paint with zero Location; CoreMotion starts after yield.
