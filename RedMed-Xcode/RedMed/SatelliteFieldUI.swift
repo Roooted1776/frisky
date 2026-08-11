@@ -23,7 +23,7 @@ struct StarlinkDirectAidCard: View {
                     .foregroundColor(.redmedDark)
             }
 
-            Text("Calls \(EmergencyNumber.current) through the Phone app. On carriers with Starlink Direct-to-Cell, the handset may use a satellite when towers are down — RedMed cannot select or control that radio. No RedMed server. No profile upload.")
+            Text("Calls \(EmergencyNumber.current) through the Phone app. On T-Mobile (and other Starlink Direct-to-Cell carriers listed under No cell signal), the handset may use a satellite when towers are down — hiking, canyons, remote roads. RedMed cannot select that radio. No RedMed server. No profile upload.")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundColor(.redmedMuted)
                 .lineSpacing(3)
