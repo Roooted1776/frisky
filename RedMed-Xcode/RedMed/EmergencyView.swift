@@ -13,7 +13,7 @@ struct EmergencyView: View {
             NavigationView {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 8) {
-                    Text("Locator on — full brightness, beep every 5s. Hard impact / crash on this iPhone auto-arms the same siren + brightness.")
+                    Text("Locator on — full brightness, beep every 5s. A car crash / high-speed impact on this iPhone auto-arms the same siren + brightness (not running or daily motion).")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.redmedAccent)
                         .frame(maxWidth: .infinity, alignment: .leading)

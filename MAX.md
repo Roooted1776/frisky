@@ -46,7 +46,7 @@ See also `AGENTS.md`. High-signal recap:
 8. Unique `project.pbxproj` IDs (duplicate IDs drop sources).
 9. Passerby SW: network-first shell; cache fallback on non-ok HTTP; bump `redmed-get-vN` in lockstep.
 10. `AppConfig.BraceletRF` owns tap-distance copy (no hardcoded inches).
-11. Crash / hard-impact detection is **local CoreMotion only** — not Apple Crash Detection, no cloud.
+11. Crash / high-speed **vehicle impact** detection is **local CoreMotion only** — not Apple Crash Detection, no cloud. Must ignore running and daily activity.
 
 ## What he has already done (shipped history)
 
@@ -79,7 +79,7 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Aid topics + trauma/hospital panes; CPR `CHHapticEngine` beat/breath.
 - Haptic preference in Help → Settings; CPR card toggle removed (Settings-only).
 - Auto max brightness on scanner + Find Help; owner Find Help locator beep every 5s.
-- On-device CoreMotion crash / hard-impact guard arms the same siren + full brightness (background hold until cancel).
+- On-device CoreMotion guard arms siren + full brightness on **vehicle crash / high-speed impact only** (filters running / daily motion; background hold until cancel).
 - Location toggle in Settings; Find Help GPS respects it; no Find Help location banner chrome.
 
 ### Privacy / HIPAA offline vault
