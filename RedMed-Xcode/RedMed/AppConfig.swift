@@ -98,31 +98,17 @@ enum AppConfig {
         }
     }
 
-    /// Offline coaching only. RedMed itself stays local-only forever:
-    /// **no Bluetooth, no RedMed servers, passive HF NFC bracelet only.**
-    ///
-    /// Starlink Direct-to-Cell and Apple Emergency SOS via satellite are **phone /
-    /// carrier / iOS** paths. RedMed may open `tel:` / `sms:` or coach Side+Volume —
-    /// it never pairs BLE, never uplinks PHI, never runs a sat SDK.
+    /// Carrier notes + local-only rule for Find Help.
+    /// RedMed never runs a satellite API/SDK — Call uses system `tel:` only.
     enum Satellite {
         /// Permanent product rule — do not soften or time-box.
         static let localOnlyLine =
             "Local only — forever. No Bluetooth · no RedMed servers · passive HF NFC. Profile stays on this phone and the band."
-
-        static var publicAidTitle: String { "Public Aid · Phone Radio" }
 
         /// US flagship first (T-Mobile / T-Satellite), then other announced Starlink
         /// Direct-to-Cell / Starlink Mobile carrier partners. Availability and plan
         /// terms change — one line for field awareness, not a coverage guarantee.
         static let directToCellCarriersLine =
             "Starlink Direct-to-Cell carriers: T-Mobile (US) · Rogers (CA) · KDDI · SoftBank · NTT Docomo (JP) · One NZ · Salt (CH) · Optus · Telstra (AU) · Entel (CL/PE) · Kyivstar (UA) · MasOrange (ES) · VMO2 (UK) · Beeline (KZ) · Airtel Africa — plan/region required; not a coverage promise."
-
-        static var directToCellBlurb: String {
-            "Hiking or remote with no towers: Call or text \(EmergencyNumber.current). On T-Mobile and other listed carriers, the Phone app may use Starlink Direct-to-Cell — that is your carrier’s radio, not RedMed. \(localOnlyLine)"
-        }
-
-        static var appleSOSBlurb: String {
-            "iPhone 14+: Apple Emergency SOS via satellite is separate (Side + Volume, clear sky). RedMed cannot start it. Band stays passive NFC — not Bluetooth."
-        }
     }
 }

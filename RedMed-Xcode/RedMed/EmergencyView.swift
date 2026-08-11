@@ -5,7 +5,6 @@ struct EmergencyView: View {
     @Environment(\.isScannerSession) private var isScannerSession
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @StateObject private var locationManager = LocationManager()
-    @State private var showSatellite = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -20,13 +19,30 @@ struct EmergencyView: View {
                         .padding(.horizontal, 4)
                         .padding(.top, 2)
 
-                    // NO CELL SIGNAL — top of Find Help (replaces call-first-contact)
-                    NoCellSignalCard(showSatellite: $showSatellite)
+                    // NO CELL SIGNAL — carriers only (no satellite coach UI)
+                    NoCellSignalCard()
 
-                    // GPS CARD
-                    GPSCard(location: locationEnabled ? locationManager.location : nil)
-                        .padding(.vertical, 4)
-                        .opacity(locationEnabled ? 1 : 0.45)
+                    // GPS + Call: exactly 5px under the coordinates pane
+                    VStack(alignment: .leading, spacing: 5) {
+                        GPSCard(location: locationEnabled ? locationManager.location : nil)
+                            .opacity(locationEnabled ? 1 : 0.45)
+
+                        Button {
+                            PublicEmergencyAid.dial()
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "phone.fill")
+                                Text("Call \(EmergencyNumber.current)")
+                            }
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Color.redmedDark)
+                            .clipShape(Capsule())
+                        }
+                    }
+                    .padding(.vertical, 4)
 
                     // COPY COORDINATES
                     Button {
@@ -286,145 +302,31 @@ struct InfoCard: View {
 
 // MARK: - No Cell Signal
 struct NoCellSignalCard: View {
-    @Binding var showSatellite: Bool
-
-    private let appleSteps: [(String, String)] = [
-        ("1", "Go outside — clear view of the sky (trees, canyons, and buildings block satellites)."),
-        ("2", "Hold the Side button and either Volume button until the Emergency SOS slider appears."),
-        ("3", "Drag Emergency SOS, or keep holding through the countdown."),
-        ("4", "When iPhone says Connecting via satellite, follow the on-screen arrow — slowly point and hold until it locks."),
-        ("5", "Stay still. Connection can take from under a minute to several minutes. Read GPS from the card below to the dispatcher.")
-    ]
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Button { withAnimation(.easeInOut(duration: 0.2)) { showSatellite.toggle() } } label: {
-                HStack {
-                    Image(systemName: "antenna.radiowaves.left.and.right")
-                        .foregroundColor(.redmedAccent)
-                    Text("No cell signal?")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.redmedAccent)
-                    Spacer()
-                    Image(systemName: showSatellite ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.redmedMuted)
-                }
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "antenna.radiowaves.left.and.right")
+                    .foregroundColor(.redmedAccent)
+                Text("No cell signal?")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.redmedAccent)
+                Spacer()
             }
-            .padding(.horizontal, 14)
-            .padding(.top, 14)
-            .padding(.bottom, 8)
 
-            // Always visible — product rule + T-Mobile-first DTC carriers.
             Text(AppConfig.Satellite.localOnlyLine)
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundColor(.redmedMuted)
                 .lineSpacing(2)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 14)
-                .padding(.bottom, 4)
 
+            // T-Mobile first — carrier radio path for Call below GPS (not a RedMed sat API).
             Text(AppConfig.Satellite.directToCellCarriersLine)
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundColor(.redmedMuted)
                 .lineSpacing(2)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 14)
-                .padding(.bottom, showSatellite ? 10 : 14)
-
-            if showSatellite {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text(AppConfig.Satellite.directToCellBlurb)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(.redmedMuted)
-                        .lineSpacing(3)
-
-                    // Apple Emergency SOS via satellite — same connection UX coaching as iOS.
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "iphone.radiowaves.left.and.right")
-                                .font(.system(size: 15))
-                                .foregroundColor(.redmedAccent)
-                                .frame(width: 28, height: 28)
-                                .background(Color.redmedAccent.opacity(0.1))
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Apple Satellite SOS")
-                                    .font(.system(size: 12, weight: .bold))
-                                    .foregroundColor(.redmedDark)
-                                Text("Connect for signal · hiking / remote")
-                                    .font(.system(size: 11, weight: .semibold))
-                                    .foregroundColor(.redmedMuted)
-                            }
-                        }
-
-                        Text(AppConfig.Satellite.appleSOSBlurb)
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(.redmedMuted)
-                            .lineSpacing(3)
-
-                        // Visual “point at sky” cue — mirrors Apple’s on-device satellite arrow UX.
-                        HStack(spacing: 10) {
-                            Image(systemName: "location.north.line.fill")
-                                .font(.system(size: 22, weight: .semibold))
-                                .foregroundColor(.redmedAccent)
-                                .frame(width: 44, height: 44)
-                                .background(Color.redmedAccent.opacity(0.1))
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Point toward open sky")
-                                    .font(.system(size: 11, weight: .semibold))
-                                    .foregroundColor(.redmedDark)
-                                Text("Follow iPhone’s arrow until Connected. Keep the top edge aimed up — same as Apple’s satellite UI.")
-                                    .font(.system(size: 11, weight: .semibold))
-                                    .foregroundColor(.redmedMuted)
-                                    .lineSpacing(3)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-                        }
-                        .padding(10)
-                        .background(Color.redmedAccent.opacity(0.08))
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-
-                        ForEach(appleSteps, id: \.0) { step in
-                            HStack(alignment: .top, spacing: 8) {
-                                Text(step.0)
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundColor(.redmedAccent)
-                                    .frame(width: 12)
-                                Text(step.1)
-                                    .font(.system(size: 11, weight: .semibold))
-                                    .foregroundColor(.redmedDark)
-                                    .lineSpacing(3)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-                        }
-
-                        Button {
-                            PublicEmergencyAid.dial()
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "phone.fill")
-                                Text("Call \(EmergencyNumber.current) now")
-                            }
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(Color.redmedDark)
-                            .clipShape(Capsule())
-                        }
-                    }
-                    .padding(12)
-                    .background(Color.white.opacity(0.7))
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
-                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.redmedDivider, lineWidth: 1))
-                }
-                .padding(.horizontal, 14)
-                .padding(.bottom, 14)
-                .transition(.opacity.combined(with: .move(edge: .top)))
-            }
         }
+        .padding(14)
         .background(Color.redmedSurface)
         .clipShape(RoundedRectangle(cornerRadius: 18))
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
