@@ -11,7 +11,7 @@
  * cache: 'reload' so neither HTTP disk cache nor Cache Storage keep a stale
  * decrypt page.
  */
-var CACHE = 'redmed-get-v7';
+var CACHE = 'redmed-get-v8';
 var ASSETS = [
   './',
   './index.html',

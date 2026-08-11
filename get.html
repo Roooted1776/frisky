@@ -11,7 +11,7 @@
 <title>RedMed</title>
 <!-- ONE scanner file: get.html (Pages + app bundle).
      Specs (permanent):
-     - Tabs: RedMed · Help · Aid only — no Edit, no NFC
+     - Tabs: RedMed · 911 · Aid only — no Edit, no NFC
      - Data: #d= only — no server DB. New writes: flat array → AES-GCM
        (public client key) → base64url. Legacy still works: named JSON,
        pre-AES compact arrays, optional 0x01 zlib.
@@ -583,7 +583,7 @@
   <nav class="tabbar" aria-label="RedMed">
     <div class="tabs">
       <button class="tab active" type="button" data-tab="medical"><div class="icon-wrap">👤</div>RedMed</button>
-      <button class="tab" type="button" data-tab="911"><div class="icon-wrap">📞</div>Help</button>
+      <button class="tab" type="button" data-tab="911"><div class="icon-wrap">📞</div>911</button>
       <button class="tab" type="button" data-tab="aid"><div class="icon-wrap">✚</div>Aid</button>
     </div>
     <div class="home-pill" aria-hidden="true"></div>
@@ -599,7 +599,7 @@
     tapMinIn: 1,
     tapMaxIn: 2,
     reliableMaxIn: 4,
-    tabs: ['RedMed', 'Help', 'Aid'],
+    tabs: ['RedMed', '911', 'Aid'],
     page: 'get.html'
   };
 

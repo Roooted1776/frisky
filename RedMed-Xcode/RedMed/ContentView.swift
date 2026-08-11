@@ -3,8 +3,8 @@ import SwiftUI
 /// Root tab shell.
 ///
 /// Permanent product rule:
-/// - Owner (`isScannerSession == false`): RedMed · Help · Aid · NFC (+ Edit on RedMed)
-/// - Scanner (`isScannerSession == true`): RedMed · Help · Aid only (no Edit, no NFC)
+/// - Owner (`isScannerSession == false`): RedMed · 911 · Aid · NFC (+ Edit on RedMed)
+/// - Scanner (`isScannerSession == true`): RedMed · 911 · Aid only (no Edit, no NFC)
 ///
 /// Never gate the NFC tab on `AppConfig.nfcHardwareEnabled` — that flag only
 /// disables CoreNFC sessions inside `NFCWriter` / `NFCReader`.
@@ -74,7 +74,7 @@ struct CustomTabBar: View {
             Divider().overlay(Color(red: 0.9, green: 0.9, blue: 0.9))
             HStack(spacing: -3) {
                 TabBarItem(icon: "person.fill",  label: "RedMed", isOn: tab == .redmed)      { tab = .redmed }
-                TabBarItem(icon: "phone.fill",   label: "Help",   isOn: tab == .emergency)  { tab = .emergency }
+                TabBarItem(icon: "phone.fill",   label: "911",    isOn: tab == .emergency)  { tab = .emergency }
                 TabBarItem(icon: "cross.case.fill", label: "Aid", isOn: tab == .aid)        { tab = .aid }
                 if showsNFC {
                     TabBarItem(icon: "wave.3.right", label: "NFC", isOn: tab == .nfc)        { tab = .nfc }

@@ -24,11 +24,12 @@ The app has no backend, database, or web service.
 
 **Roles / shells (permanent — do not regress):**
 - **Owner app** (`Main` → `ContentView`, `isScannerSession == false`): tabs are
-  **RedMed · Help · Aid · NFC**. Edit is available on RedMed. NFC tab is always
+  **RedMed · 911 · Aid · NFC**. Edit is available on RedMed. NFC tab is always
   visible for owners; `AppConfig.nfcHardwareEnabled` only gates CoreNFC
-  write/read sessions, never tab chrome.
+  write/read sessions, never tab chrome. Owner writes the passive HF NFC band
+  from the NFC tab (Face ID gated).
 - **Scanner / passerby shell** (`PublicCardView` / bracelet tap → `get.html#d=…`,
-  `isScannerSession == true`): tabs are **RedMed · Help · Aid** only — **no Edit**,
+  `isScannerSession == true`): tabs are **RedMed · 911 · Aid** only — **no Edit**,
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain or
   owner `@AppStorage` / UserDefaults prefs. Hosted at
   `https://redmed.pages.dev/get/` from `get/index.html`.

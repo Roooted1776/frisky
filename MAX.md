@@ -27,8 +27,8 @@
 
 Native iOS medical ID + emergency aid. Passive **13.56 MHz HF NFC** bracelet (not Bluetooth). Offline-first: no RedMed cloud backend for PHI.
 
-- **Owner app** (`Main` / `ContentView`): RedMed · Help · Aid · NFC (+ Edit). Local Keychain profile, Face ID gates, write band.
-- **Passerby / scanner**: `get.html#d=…` / `PublicCardView` — RedMed · Help · Aid only. Snapshot profile. No Edit, no NFC, no owner pref mutation.
+- **Owner app** (`Main` / `ContentView`): RedMed · 911 · Aid · NFC (+ Edit). Local Keychain profile, Face ID gates, write passive NFC band.
+- **Passerby / scanner**: `get.html#d=…` / `PublicCardView` — RedMed · 911 · Aid only. Snapshot profile. No Edit, no NFC, no owner pref mutation.
 - Hosted passerby path: `https://redmed.pages.dev/get/` (`get/index.html`).
 - Positioning: local EMS assist / fast ID handoff — not a medical device, no outcome promises, call 911 first. HIPAA-aligned offline posture; no false certification claims.
 
