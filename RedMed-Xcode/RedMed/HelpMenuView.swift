@@ -22,7 +22,7 @@ struct HelpMenuView: View {
     var body: some View {
         NavigationView {
             List {
-                if AppConfig.nfcHardwareEnabled {
+                if onOpenNFC != nil {
                     Button("Write your band") {
                         dismiss()
                         DispatchQueue.main.async { onOpenNFC?() }
@@ -48,7 +48,7 @@ struct HelpMenuView: View {
                         .navigationTitle("Security")
                         .navigationBarTitleDisplayMode(.inline)
                 }
-                if AppConfig.nfcHardwareEnabled, profile.braceletLinked {
+                if profile.braceletLinked {
                     NavigationLink("NFC tap card (local)") {
                         LocalWebView(filename: "card")
                             .navigationTitle("NFC tap card")

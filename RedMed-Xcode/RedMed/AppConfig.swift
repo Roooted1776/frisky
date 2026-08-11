@@ -14,8 +14,8 @@ enum AppConfig {
     /// Update when the App Store listing is live (App Store Connect app ID).
     static let appStoreURL = "https://apps.apple.com/app/redmed/id0000000000"
 
-    /// Product kill switch for owner NFC write/read UI and CoreNFC sessions.
-    /// `NFCWriter` / `NFCReader` are real CoreNFC (no Simulator fake-success).
+    /// Product kill switch for CoreNFC write/read sessions only.
+    /// Owner still always sees the NFC tab (ContentView.showsNFC); scanners never do.
     /// Keep `false` until paid Apple Developer NFC entitlement is restored —
     /// see `RedMed-Xcode/NFC-RESTORE.md` and `RedMed.entitlements`.
     static let nfcHardwareEnabled = false

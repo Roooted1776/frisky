@@ -33,7 +33,7 @@ struct MainInfoView: View {
 
                 section(num: "2", title: "Write your bracelet") {
                     Text("Go to the NFC tab and tap Write to NFC tag. Confirm with Face ID, Touch ID, or your passcode, then hold the top of your iPhone near the bracelet when prompted. Your profile is written to the passive chip in the band. Walk-by distance will not fire the band; only a deliberate ~1–2″ antenna tap opens the card.")
-                    if AppConfig.nfcHardwareEnabled, let onOpenNFC {
+                    if let onOpenNFC {
                         Button("Open NFC tab") {
                             dismiss()
                             DispatchQueue.main.async { onOpenNFC() }

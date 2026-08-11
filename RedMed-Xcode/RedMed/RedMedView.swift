@@ -78,28 +78,26 @@ struct RedMedView: View {
                 }
 
                 if !isScannerSession {
-                    // QUICK ACTIONS (owner only)
+                    // QUICK ACTIONS (owner only) — full app: Bracelet / How it works / Preview scanner
                     HStack(spacing: 10) {
-                        if AppConfig.nfcHardwareEnabled {
-                            Button { tab = .nfc } label: {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "plus.circle")
-                                        .font(.system(size: 17, weight: .semibold))
-                                        .foregroundColor(.redmedAccent)
-                                    Text("Bracelet")
-                                        .font(.system(size: 12, weight: .semibold))
-                                        .foregroundColor(.redmedAccent)
-                                        .kerning(-0.1)
-                                }
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
+                        Button { tab = .nfc } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "plus.circle")
+                                    .font(.system(size: 17, weight: .semibold))
+                                    .foregroundColor(.redmedAccent)
+                                Text("Bracelet")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundColor(.redmedAccent)
+                                    .kerning(-0.1)
                             }
-                            .buttonStyle(.plain)
-
-                            Rectangle()
-                                .fill(Color.redmedDark.opacity(0.12))
-                                .frame(width: 0.5, height: 18)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
                         }
+                        .buttonStyle(.plain)
+
+                        Rectangle()
+                            .fill(Color.redmedDark.opacity(0.12))
+                            .frame(width: 0.5, height: 18)
 
                         Button { showHelp = true } label: {
                             HStack(spacing: 6) {
@@ -116,7 +114,7 @@ struct RedMedView: View {
                         }
                         .buttonStyle(.plain)
 
-                        if AppConfig.nfcHardwareEnabled, profile.braceletLinked {
+                        if profile.hasData {
                             Button { showScannerPreview = true } label: {
                                 HStack(spacing: 6) {
                                     Image(systemName: "eye")
@@ -156,7 +154,7 @@ struct RedMedView: View {
                 .environmentObject(profile)
         }
         .fullScreenCover(isPresented: Binding(
-            get: { showScannerPreview && !isScannerSession && profile.braceletLinked },
+            get: { showScannerPreview && !isScannerSession && profile.hasData },
             set: { showScannerPreview = $0 && !isScannerSession }
         )) {
             PublicCardView(profile: profile)
@@ -184,11 +182,7 @@ struct RedMedView: View {
                     (
                         Text("Tap ").font(.system(size: 12, weight: .medium)).foregroundColor(.redmedMuted)
                         + Text("Edit").font(.system(size: 12, weight: .bold)).foregroundColor(.redmedAccent)
-                        + Text(
-                            AppConfig.nfcHardwareEnabled
-                                ? " to add your name and set up your bracelet."
-                                : " to add your name and medical details."
-                        )
+                        + Text(" to add your name and set up your bracelet.")
                             .font(.system(size: 12, weight: .medium)).foregroundColor(.redmedMuted)
                     )
                     .lineSpacing(2)
@@ -211,7 +205,7 @@ struct RedMedView: View {
                             .lineLimit(1)
                     }
                     .padding(.vertical, 4)
-                } else if AppConfig.nfcHardwareEnabled {
+                } else {
                     Button { tab = .nfc } label: {
                         HStack(spacing: 8) {
                             Image("BrandLogo")
@@ -242,22 +236,6 @@ struct RedMedView: View {
                         .padding(.vertical, 4)
                     }
                     .buttonStyle(.plain)
-                } else {
-                    HStack(spacing: 8) {
-                        Image("BrandLogo")
-                            .resizable()
-                            .frame(width: 48, height: 48)
-                            .clipShape(RoundedRectangle(cornerRadius: 13))
-                            .shadow(color: Color.redmedAccent.opacity(0.15), radius: 5, y: 3)
-                            .opacity(profile.hasData ? 1 : 0.5)
-
-                        Text(deviceName)
-                            .font(.system(size: 23, weight: .bold))
-                            .foregroundColor(.redmedDark)
-                            .kerning(-0.4)
-                            .lineLimit(1)
-                    }
-                    .padding(.vertical, 4)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
