@@ -8,6 +8,7 @@ struct TopicDetailView: View {
     @Environment(\.dismiss) var dismiss
     /// Engine lives in the view hierarchy — prepared on appear, fired on tap / beat.
     @StateObject private var hapticEngine = HapticEngine()
+    @AppStorage(HapticEngine.enabledKey) private var hapticsEnabled = true
     @State private var cprRunning = false
     @State private var cprCount = 0
     @State private var cprPhase = "compress" // or "breathe"
@@ -99,6 +100,12 @@ struct TopicDetailView: View {
                             } else {
                                 PrimaryButton(title: "Start beat") { startCPR() }
                             }
+                            Toggle("Haptic feedback", isOn: $hapticsEnabled)
+                                .font(.system(size: 14, weight: .medium))
+                                .tint(.redmedAccent)
+                                .onChange(of: hapticsEnabled) { _, on in
+                                    if on { hapticEngine.prepare() }
+                                }
                         }
                         .padding(20)
                         .frame(maxWidth: .infinity)
