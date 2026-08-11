@@ -9,12 +9,17 @@
 <link rel="apple-touch-icon" href="BrandLogo.png">
 <link rel="icon" href="BrandLogo.png">
 <title>RedMed</title>
-<!-- Passerby / rescuer shell (get/#d= + in-app preview). Owner edit lives in
-     the native app. Profile data only in #d= — no backend. Logo is
-     BrandLogo.png next to this file in the app bundle (repo-root get.html
-     keeps assets/BrandLogo.png for Pages). Ped/EMS: RedMed + Help + Aid,
-     read-only. No Edit. No NFC write. Sync with PublicCardView.
-     Legacy card/ bracelet URLs redirect here via card.html. -->
+<!-- ONE scanner file: get.html (Pages + app bundle).
+     Specs (permanent):
+     - Tabs: RedMed · Help · Aid only — no Edit, no NFC
+     - Data: #d= profile only (name, dob, blood, allergies, meds, conditions,
+       contacts with name|phone + optional relation)
+     - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
+       walk-by ~6–8″ does not fire, reliable coupling dies past ~4″,
+       passive 13.56 MHz HF NFC (not Bluetooth) → opens this page
+     - Logo: BrandLogo.png (bundle) or assets/BrandLogo.png (Pages)
+     - Legacy card.html / card/ redirects here and keeps #d=
+     Keep identical at repo-root get.html and RedMed-Xcode/RedMed/get.html. -->
 <style>
   :root {
     --accent: #e11d48;
@@ -53,7 +58,16 @@
     font-weight: 500;
     color: var(--muted);
     line-height: 1.35;
-    margin: 0 0 8px;
+    margin: 0 0 6px;
+  }
+  .rm-band {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    margin: 0 0 10px;
+    line-height: 1.4;
   }
   .rm-title-row {
     display: flex;
@@ -403,8 +417,9 @@
     <div class="panel active" id="panel-medical" data-panel="medical">
       <div class="rm-header">
         <p class="rm-lock">Read only — editing needs the <a href="redmed://main">owner’s RedMed app</a> (<a href="https://apps.apple.com/app/redmed/id0000000000">App Store</a>) + Face&nbsp;ID / passcode.</p>
+        <p class="rm-band" id="bandSpec"></p>
         <div class="rm-title-row">
-          <img class="rm-logo" src="BrandLogo.png" width="48" height="48" alt="RedMed">
+          <img class="rm-logo" id="rmLogo" src="BrandLogo.png" width="48" height="48" alt="RedMed">
           <div>
             <h1 class="rm-name" id="name">RedMed</h1>
             <p class="rm-updated" id="updatedLine"></p>
@@ -569,6 +584,46 @@
 
   <script>
 (function () {
+  // Must match AppConfig.BraceletRF — single scanner product contract.
+  var SPECS = {
+    carrierMHz: 13.56,
+    walkByMinIn: 6,
+    walkByMaxIn: 8,
+    tapMinIn: 1,
+    tapMaxIn: 2,
+    reliableMaxIn: 4,
+    tabs: ['RedMed', 'Help', 'Aid'],
+    page: 'get.html'
+  };
+
+  function resolveLogo() {
+    var candidates = ['BrandLogo.png', 'assets/BrandLogo.png'];
+    var img = document.getElementById('rmLogo');
+    var icons = document.querySelectorAll('link[rel="apple-touch-icon"], link[rel="icon"]');
+    var i = 0;
+    function tryNext() {
+      if (i >= candidates.length) return;
+      var src = candidates[i++];
+      var probe = new Image();
+      probe.onload = function () {
+        if (img) img.src = src;
+        icons.forEach(function (el) { el.setAttribute('href', src); });
+      };
+      probe.onerror = tryNext;
+      probe.src = src;
+    }
+    tryNext();
+  }
+
+  var bandEl = document.getElementById('bandSpec');
+  if (bandEl) {
+    bandEl.textContent =
+      'Passive ' + SPECS.carrierMHz.toFixed(2) + ' MHz HF NFC · deliberate ~' +
+      SPECS.tapMinIn + '–' + SPECS.tapMaxIn + '″ tap · walk-by ~' +
+      SPECS.walkByMinIn + '–' + SPECS.walkByMaxIn + '″ won’t fire';
+  }
+  resolveLogo();
+
   var MAX_PAYLOAD = 50000;
   var MAX_LIST = 40;
   var MAX_STR = 200;

@@ -26,11 +26,12 @@ The app has no backend, database, or web service.
 - **Scanner / passerby shell** (`PublicCardView` / bracelet tap → `get.html#d=…`,
   `isScannerSession == true`): tabs are **RedMed · Help · Aid** only — **no Edit**,
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain.
-- Product HTML is only (1) passerby `get.html` (legacy `card.html` redirects here,
-  preserving `#d=`) and (2) policy pages (`PrivacyPolicy`, `TOS`, `security`).
-  `HowItWorks.html` redirects into `redmed://main`. Card + policies CTA to the
-  owner app; they do not host owner edit UI. Owner How It Works / band setup
-  lives in `Main.swift` (`MainInfoView`).
+- Product HTML is only (1) one passerby file `get.html` (identical in repo root
+  and the app bundle; legacy `card.html` redirects here, preserving `#d=`) and
+  (2) policy pages (`PrivacyPolicy`, `TOS`, `security`). `HowItWorks.html`
+  redirects into `redmed://main`. Policies CTA to the owner app; they do not
+  host owner edit UI. Owner How It Works / band setup lives in `Main.swift`
+  (`MainInfoView`).
 
 - **Bracelet tap (physics, not a setting):** `AppConfig.BraceletRF` is the single
   source of truth — intentional tap ~1–2″, walk-by ~6–8″ does not fire, reliable
