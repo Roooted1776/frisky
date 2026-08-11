@@ -25,6 +25,7 @@
 		AABB00000000000000000012 /* PublicCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000012 /* PublicCardView.swift */; };
 		AABB00000000000000000013 /* LocationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000013 /* LocationHelper.swift */; };
 		AABB00000000000000000014 /* BiometricAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000014 /* BiometricAuth.swift */; };
+		AABB00000000000000000026 /* HapticEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000026 /* HapticEngine.swift */; };
 		AABB00000000000000000016 /* PrivacyPolicy.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000016 /* PrivacyPolicy.html */; };
 		AABB00000000000000000017 /* TOS.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000017 /* TOS.html */; };
 		AABB00000000000000000018 /* security.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000018 /* security.html */; };
@@ -64,6 +65,7 @@
 		AAAA00000000000000000012 /* PublicCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicCardView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000013 /* LocationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationHelper.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000014 /* BiometricAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuth.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000026 /* HapticEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticEngine.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000016 /* PrivacyPolicy.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = PrivacyPolicy.html; sourceTree = "<group>"; };
 		AAAA00000000000000000017 /* TOS.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = TOS.html; sourceTree = "<group>"; };
 		AAAA00000000000000000018 /* security.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = security.html; sourceTree = "<group>"; };
@@ -118,6 +120,7 @@
 				AAAA00000000000000000012 /* PublicCardView.swift */,
 				AAAA00000000000000000013 /* LocationHelper.swift */,
 				AAAA00000000000000000014 /* BiometricAuth.swift */,
+				AAAA00000000000000000026 /* HapticEngine.swift */,
 				AAAA0000000000000000001B /* KeychainStore.swift */,
 				AAAA00000000000000000020 /* EmergencyNumber.swift */,
 				AAAA0000000000000000001C /* AppConfig.swift */,
@@ -243,6 +246,7 @@
 				AABB00000000000000000012 /* PublicCardView.swift in Sources */,
 				AABB00000000000000000013 /* LocationHelper.swift in Sources */,
 				AABB00000000000000000014 /* BiometricAuth.swift in Sources */,
+				AABB00000000000000000026 /* HapticEngine.swift in Sources */,
 				AABB0000000000000000001B /* KeychainStore.swift in Sources */,
 				AABB00000000000000000020 /* EmergencyNumber.swift in Sources */,
 				AABB0000000000000000001C /* AppConfig.swift in Sources */,
