@@ -17,8 +17,7 @@ struct LocalWebView: UIViewRepresentable {
 struct HelpMenuView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.dismiss) var dismiss
-    @ObservedObject private var nfcGate = NFCAccessGate.shared
-    /// After Accept on Get (or immediately if already accepted), open the NFC tab.
+    /// Open the NFC write tab (no Get / Accept page in front of it).
     var onOpenNFC: (() -> Void)? = nil
 
     var body: some View {
@@ -40,6 +39,7 @@ struct HelpMenuView: View {
                         }
                     }
                 }
+                .foregroundColor(.redmedDark)
                 NavigationLink("Privacy Policy") {
                     LocalWebView(filename: "PrivacyPolicy")
                         .navigationTitle("Privacy Policy")
