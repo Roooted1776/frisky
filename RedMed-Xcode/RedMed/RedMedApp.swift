@@ -6,11 +6,13 @@ struct RedMedApp: App {
 
     var body: some Scene {
         WindowGroup {
-            // Owner app opens immediately — edit profile, Aid treatments, NFC write.
-            // Do not gate first launch on Location; Find Help asks When-In-Use only
-            // when that tab is visible (see EmergencyView / LocationManager).
-            ContentView()
+            // Owner UI lives in Main.swift — not HTML.
+            Main()
                 .environmentObject(profile)
+                .onOpenURL { url in
+                    // Policies / card.html redirect with redmed://main
+                    _ = url
+                }
         }
     }
 }

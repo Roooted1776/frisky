@@ -4,9 +4,15 @@ enum AppConfig {
     /// Passerby / rescuer shell written to passive NFC bands. Any phone that taps
     /// the bracelet opens this page in a browser — read-only medical card + Help +
     /// Aid. Medical data is only in the `#d=` fragment (no server storage). Owner
-    /// edit / treatments live in the native app, not here. Source page:
+    /// edit / treatments live in `Main.swift`, not here. Source page:
     /// `RedMed-Xcode/RedMed/card.html` (bundled) and repo-root `card.html` (Pages).
     static let medicalCardBaseURL = "https://redmed.pages.dev/card/"
+
+    /// Deep link target for policy / card HTML “open owner app” redirects.
+    static let mainAppURL = "redmed://main"
+
+    /// Update when the App Store listing is live (App Store Connect app ID).
+    static let appStoreURL = "https://apps.apple.com/app/redmed/id0000000000"
 
     /// Product kill switch for owner NFC write/read UI and CoreNFC sessions.
     /// `NFCWriter` / `NFCReader` are real CoreNFC (no Simulator fake-success).
