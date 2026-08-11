@@ -4,7 +4,17 @@ import UIKit
 /// Strict owner authentication — Face ID / Touch ID first; device passcode on fallback / lockout.
 /// Reuse window is zero so every gate re-prompts (Edit, NFC write, vault, app unlock).
 enum BiometricAuth {
-    static func authenticate(reason: String, completion: @escaping (Bool) -> Void) {
+    /// Distinguishes a failed scan from cancel / dismiss so lock UI does not
+    /// claim “couldn't verify” on every Accept that the owner backs out of.
+    enum Outcome: Equatable {
+        case success
+        /// Face ID / Touch ID (or passcode after fallback) did not match.
+        case notVerified
+        /// User or system cancelled; biometry unavailable with no passcode path.
+        case declined
+    }
+
+    static func authenticate(reason: String, completion: @escaping (Outcome) -> Void) {
         // Face ID is unreliable / often disabled while FaceTime screen share or
         // Screen Recording is active — go straight to device passcode.
         if UIScreen.main.isCaptured {
@@ -24,14 +34,14 @@ enum BiometricAuth {
                 DispatchQueue.main.async {
                     context.invalidate()
                     if success {
-                        completion(true)
+                        completion(.success)
                         return
                     }
                     // Fallback / lockout / biometry unavailable → device passcode.
                     if shouldOfferPasscodeFallback(evalError) {
                         authenticateWithDevicePasscode(reason: reason, completion: completion)
                     } else {
-                        completion(false)
+                        completion(outcome(for: evalError))
                     }
                 }
             }
@@ -48,7 +58,7 @@ enum BiometricAuth {
             presentSimulatorPrompt(reason: reason, completion: completion)
         }
         #else
-        DispatchQueue.main.async { completion(false) }
+        DispatchQueue.main.async { completion(.declined) }
         #endif
     }
 
@@ -72,14 +82,27 @@ enum BiometricAuth {
         }
     }
 
+    /// Map LAError to Outcome — only a mismatch is `notVerified`.
+    private static func outcome(for error: Error?) -> Outcome {
+        guard let la = error as? LAError else { return .declined }
+        switch la.code {
+        case .authenticationFailed:
+            // Face ID / Touch ID / passcode did not match.
+            return .notVerified
+        default:
+            // userCancel, systemCancel, appCancel, etc.
+            return .declined
+        }
+    }
+
     private static func authenticateWithDevicePasscode(
         reason: String,
-        completion: @escaping (Bool) -> Void
+        completion: @escaping (Outcome) -> Void
     ) {
         let context = makeContext()
         var error: NSError?
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
-            completion(false)
+            completion(.declined)
             return
         }
         evaluateDeviceOwner(context: context, reason: reason, completion: completion)
@@ -88,20 +111,24 @@ enum BiometricAuth {
     private static func evaluateDeviceOwner(
         context: LAContext,
         reason: String,
-        completion: @escaping (Bool) -> Void
+        completion: @escaping (Outcome) -> Void
     ) {
-        context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { success, _ in
+        context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { success, evalError in
             DispatchQueue.main.async {
                 context.invalidate()
-                completion(success)
+                if success {
+                    completion(.success)
+                } else {
+                    completion(outcome(for: evalError))
+                }
             }
         }
     }
 
     #if targetEnvironment(simulator)
-    private static func presentSimulatorPrompt(reason: String, completion: @escaping (Bool) -> Void) {
+    private static func presentSimulatorPrompt(reason: String, completion: @escaping (Outcome) -> Void) {
         guard let top = topViewController() else {
-            completion(false)
+            completion(.declined)
             return
         }
         let alert = UIAlertController(
@@ -110,10 +137,10 @@ enum BiometricAuth {
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "Don't Allow", style: .cancel) { _ in
-            completion(false)
+            completion(.declined)
         })
         alert.addAction(UIAlertAction(title: "Authenticate", style: .default) { _ in
-            completion(true)
+            completion(.success)
         })
         top.present(alert, animated: true)
     }
