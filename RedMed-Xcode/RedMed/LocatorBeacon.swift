@@ -2,6 +2,7 @@ import AVFoundation
 
 /// Survival siren for crash / severe-impact or owner SOS.
 /// Plays through the silent switch (`.playback`) and keeps sounding in background until cancelled.
+/// System volume is forced to max by `VolumeBoost` for the same survival hold.
 @MainActor
 enum LocatorBeacon {
     private static var survivalHold = false

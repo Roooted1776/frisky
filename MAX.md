@@ -37,15 +37,15 @@ Native iOS medical ID + emergency aid. Passive **13.56 MHz HF NFC** bracelet (no
 See also `AGENTS.md`. High-signal recap:
 
 1. Owner vs scanner shells are permanent product law.
-2. Settings = **haptic + Location only**. Brightness 100% + locator siren arm **only** on crash / severe-impact detection (`CrashMotionGuard`) or owner **SOS · Locate me** on Find Help — not from merely opening Find Help or the scanner shell.
-3. Survival hold may keep siren + brightness through background until cancel on Aid (or Stop SOS on Find Help).
+2. Settings = **haptic + Location only**. Brightness 100% + system volume 100% + locator siren arm **only** on crash / severe-impact detection (`CrashMotionGuard`) or owner **SOS · Locate me** on Find Help — not from merely opening Find Help or the scanner shell.
+3. Survival hold may keep siren + max volume + brightness through background until cancel on Aid (or Stop SOS on Find Help).
 4. Vault Face ID: relock on **`.background` only** (not `.inactive` — Face ID sheets).
 5. Privacy cover: opaque, no fade.
 6. Cold launch: zero Location / MapKit / trauma JSON at `@main`. CoreMotion crash monitor may start after first-frame yield.
 7. Unique `project.pbxproj` IDs (duplicate IDs drop sources).
 8. Passerby SW: cache-first multi-key shell for almost-instant EMT open; clear prior CACHE on activate; bump `redmed-get-vN` in lockstep. Tap-to-view = HTML, no Face ID.
 9. `AppConfig.BraceletRF` owns tap-distance copy (no hardcoded inches).
-10. Crash / high-speed **vehicle impact** detection is **local CoreMotion only** — not Apple Crash Detection, no cloud. Must ignore running, sex/intimate motion, eating, and hand/wrist handling. Brightness + siren are gated on crash detection **or** explicit owner SOS — never auto on Find Help / scanner open. Passerby HTML never touches brightness or audio.
+10. Crash / high-speed **vehicle impact** detection is **local CoreMotion only** — not Apple Crash Detection, no cloud. Must ignore running, sex/intimate motion, eating, and hand/wrist handling. Brightness + max volume + siren are gated on crash detection **or** explicit owner SOS — never auto on Find Help / scanner open. Passerby HTML never touches brightness or audio.
 
 ## What he has already done (shipped history)
 
@@ -83,7 +83,7 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Local emergency number dial (not hard-coded 911); GPS card; satellite/no-cell path.
 - Aid topics + trauma/hospital panes; CPR `CHHapticEngine` beat/breath.
 - Haptic preference in Help → Settings; CPR card toggle removed (Settings-only).
-- On-device CoreMotion guard arms siren + full brightness on **vehicle crash / high-speed impact only** (filters running / daily motion; background hold until cancel). Owner Find Help **SOS · Locate me** arms the same hold. Find Help / scanner do **not** auto-boost brightness or beep on open.
+- On-device CoreMotion guard arms siren + max system volume + full brightness on **vehicle crash / high-speed impact only** (filters running / daily motion; background hold until cancel). Owner Find Help **SOS · Locate me** arms the same hold. Find Help / scanner do **not** auto-boost brightness/volume or beep on open.
 - Location toggle in Settings; Find Help GPS respects it; no Find Help location banner chrome.
 
 ### Privacy / HIPAA offline vault

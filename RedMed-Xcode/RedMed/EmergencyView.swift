@@ -38,7 +38,7 @@ struct EmergencyView: View {
                 LazyVStack(alignment: .leading, spacing: 5) {
                     // Owner-only — scanners / HTML never arm brightness or audio.
                     if !isScannerSession {
-                        Text("Siren + full brightness only on crash / severe impact or SOS. Stop here or on Aid.")
+                        Text("Siren + max volume + full brightness only on crash / severe impact or SOS. Stop here or on Aid.")
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(.redmedAccent)
                             .frame(maxWidth: .infinity, alignment: .leading)

@@ -53,6 +53,7 @@
 		AABB00000000000000000032 /* SatelliteFieldUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000032 /* SatelliteFieldUI.swift */; };
 		AABB00000000000000000033 /* OwnerAppLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000033 /* OwnerAppLock.swift */; };
 		AABB00000000000000000034 /* SecurePasteboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000034 /* SecurePasteboard.swift */; };
+		AABB00000000000000000035 /* VolumeBoost.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000035 /* VolumeBoost.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -105,6 +106,7 @@
 		AAAA00000000000000000032 /* SatelliteFieldUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatelliteFieldUI.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000033 /* OwnerAppLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwnerAppLock.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000034 /* SecurePasteboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurePasteboard.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000035 /* VolumeBoost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeBoost.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -146,6 +148,7 @@
 				AAAA00000000000000000014 /* BiometricAuth.swift */,
 				AAAA0000000000000000002A /* HapticEngine.swift */,
 				AAAA0000000000000000002B /* BrightnessBoost.swift */,
+				AAAA00000000000000000035 /* VolumeBoost.swift */,
 				AAAA0000000000000000002C /* LocatorBeacon.swift */,
 				AAAA0000000000000000002D /* AppSettings.swift */,
 				AAAA0000000000000000001B /* KeychainStore.swift */,
@@ -284,6 +287,7 @@
 				AABB00000000000000000014 /* BiometricAuth.swift in Sources */,
 				AABB0000000000000000002A /* HapticEngine.swift in Sources */,
 				AABB0000000000000000002B /* BrightnessBoost.swift in Sources */,
+				AABB00000000000000000035 /* VolumeBoost.swift in Sources */,
 				AABB0000000000000000002C /* LocatorBeacon.swift in Sources */,
 				AABB0000000000000000002D /* AppSettings.swift in Sources */,
 				AABB0000000000000000001B /* KeychainStore.swift in Sources */,
