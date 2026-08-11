@@ -7,8 +7,9 @@ struct ContentView: View {
     @ObservedObject private var nfcGate = NFCAccessGate.shared
     @State private var tab: AppTab = .redmed
 
-    /// Ped/EMS scanners: never NFC. Owners always see the NFC tab; Get/Accept gates the write page.
-    private var showsNFC: Bool { !isScannerSession }
+    /// Ped/EMS scanners: never NFC. Owners see the NFC tab only when hardware is enabled
+    /// (`AppConfig.nfcHardwareEnabled`); Get/Accept still gates the write page.
+    private var showsNFC: Bool { !isScannerSession && AppConfig.nfcHardwareEnabled }
 
     private var scannerSafeTab: Binding<AppTab> {
         Binding(

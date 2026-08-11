@@ -7,6 +7,12 @@ enum AppConfig {
     /// and repo-root `card.html` (Pages).
     static let medicalCardBaseURL = "https://redmed.pages.dev/card/"
 
+    /// Product kill switch for owner NFC write/read UI and CoreNFC sessions.
+    /// `NFCWriter` / `NFCReader` are real CoreNFC (no Simulator fake-success).
+    /// Keep `false` until paid Apple Developer NFC entitlement is restored —
+    /// see `RedMed-Xcode/NFC-RESTORE.md` and `RedMed.entitlements`.
+    static let nfcHardwareEnabled = false
+
     /// Hardware RF contract for the RedMed bracelet.
     /// - Band is **passive**: no battery, no BLE/Wi‑Fi radio; the paired phone
     ///   only energises it during an intentional CoreNFC write/scan.

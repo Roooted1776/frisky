@@ -1,5 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict/>
+<!--
+  NFC Tag Reading entitlement is parked (empty dict) while AppConfig.nfcHardwareEnabled
+  is false. CoreNFC write/read code stays in the tree.
+
+  When enabling for a paid Apple Developer Program build:
+  1. Set AppConfig.nfcHardwareEnabled = true
+  2. Uncomment the key/array below
+  3. Enable Near Field Communication Tag Reading on App ID com.redmed.app
+  4. Follow RedMed-Xcode/NFC-RESTORE.md
+-->
+<dict>
+	<!-- UNHIDE WITH APPLE DEV LICENSE + AppConfig.nfcHardwareEnabled = true:
+	<key>com.apple.developer.nfc.readersession.formats</key>
+	<array>
+		<string>NDEF</string>
+	</array>
+	-->
+</dict>
 </plist>

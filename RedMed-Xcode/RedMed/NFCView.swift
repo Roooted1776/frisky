@@ -1,7 +1,6 @@
 // Owner-only NFC bracelet setup. Ped/EMS scanner shells never mount this tab —
 // see ContentView.showsNFC / scannerSafeTab.
 import SwiftUI
-import CoreNFC
 
 struct NFCView: View {
     @EnvironmentObject var profile: ProfileData
@@ -179,6 +178,10 @@ struct NFCView: View {
     }
 
     func beginWrite() {
+        guard AppConfig.nfcHardwareEnabled else {
+            statusAlert = "NFC writing is disabled in this build."
+            return
+        }
         guard !isScannerSession else { return }
         guard profile.hasData else { return }
         // Keep `#d=` as a raw string — `URL.absoluteString` can mangle fragments.
@@ -198,6 +201,10 @@ struct NFCView: View {
     }
 
     func beginScanVerify() {
+        guard AppConfig.nfcHardwareEnabled else {
+            statusAlert = "NFC reading is disabled in this build."
+            return
+        }
         reader.readTag(alertMessage: "Hold your iPhone near the bracelet to verify the card.") { chip, _ in
             let card = ProfileData(persisting: false)
             ProfileNFCCodec.apply(chip, to: card)

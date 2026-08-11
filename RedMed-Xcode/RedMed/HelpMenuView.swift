@@ -24,18 +24,20 @@ struct HelpMenuView: View {
     var body: some View {
         NavigationView {
             List {
-                if nfcGate.isAccepted {
-                    Button("Write your band") {
-                        dismiss()
-                        DispatchQueue.main.async { onOpenNFC?() }
-                    }
-                    .foregroundColor(.redmedDark)
-                } else {
-                    NavigationLink("Set up your band") {
-                        GetView(onAccept: {
+                if AppConfig.nfcHardwareEnabled {
+                    if nfcGate.isAccepted {
+                        Button("Write your band") {
                             dismiss()
                             DispatchQueue.main.async { onOpenNFC?() }
-                        })
+                        }
+                        .foregroundColor(.redmedDark)
+                    } else {
+                        NavigationLink("Set up your band") {
+                            GetView(onAccept: {
+                                dismiss()
+                                DispatchQueue.main.async { onOpenNFC?() }
+                            })
+                        }
                     }
                 }
                 NavigationLink("Privacy Policy") {
@@ -59,7 +61,7 @@ struct HelpMenuView: View {
                         .navigationBarTitleDisplayMode(.inline)
                 }
                 // Local tap-page source stays in the bundle; only surface it after a band is paired.
-                if profile.braceletLinked {
+                if AppConfig.nfcHardwareEnabled, profile.braceletLinked {
                     NavigationLink("NFC tap card (local)") {
                         LocalWebView(filename: "card")
                             .navigationTitle("NFC tap card")

@@ -11,10 +11,18 @@ final class NFCReader: NSObject, ObservableObject {
     private var didDeliver = false
 
     /// Starts a CoreNFC session only from an explicit Scan tap — never on proximity.
+    /// No Simulator fake-success path — failures stay failures.
     func readTag(
         alertMessage: String = "Hold your iPhone near the tag to read the RedMed card.",
         onProfile: @escaping (NFCChipProfile, String) -> Void
     ) {
+        guard AppConfig.nfcHardwareEnabled else {
+            DispatchQueue.main.async {
+                self.statusMessage = "NFC reading is disabled in this build."
+                self.isReading = false
+            }
+            return
+        }
         guard NFCNDEFReaderSession.readingAvailable else {
             DispatchQueue.main.async {
                 self.statusMessage = "NFC reading needs a physical iPhone with NFC Tag Reading enabled."

@@ -12,7 +12,16 @@ final class NFCWriter: NSObject, ObservableObject {
     private var urlToWrite: String = ""
 
     /// Starts a CoreNFC session only from an explicit Write tap — never on proximity.
+    /// No Simulator fake-success path — failures stay failures.
     func writeURL(_ urlString: String) {
+        guard AppConfig.nfcHardwareEnabled else {
+            DispatchQueue.main.async {
+                self.statusMessage = "NFC writing is disabled in this build."
+                self.success = false
+                self.isWriting = false
+            }
+            return
+        }
         guard NFCNDEFReaderSession.readingAvailable else {
             DispatchQueue.main.async {
                 self.statusMessage = "NFC writing needs a physical iPhone with NFC Tag Reading enabled."
