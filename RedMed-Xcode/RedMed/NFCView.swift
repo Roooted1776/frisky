@@ -45,9 +45,11 @@ struct NFCView: View {
                         }
                         statusRow(rf.passerbyTapSummary, showDivider: true)
                         statusRow(
-                            profile.braceletLinked
+                            profile.showsBraceletAsLinked
                                 ? "Bracelet linked — re-write after you edit RedMed"
-                                : "Bracelet not linked yet — write once to set up",
+                                : profile.braceletLinked
+                                    ? "Band written — finish name, birth date, and blood type on RedMed"
+                                    : "Bracelet not linked yet — write once to set up",
                             showDivider: true
                         )
                         statusRow(capacity.text, showDivider: false)
