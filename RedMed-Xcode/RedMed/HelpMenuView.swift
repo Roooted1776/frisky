@@ -22,13 +22,11 @@ struct HelpMenuView: View {
     var body: some View {
         NavigationView {
             List {
-                if AppConfig.nfcHardwareEnabled {
-                    Button("Write your band") {
-                        dismiss()
-                        DispatchQueue.main.async { onOpenNFC?() }
-                    }
-                    .foregroundColor(.redmedDark)
+                Button("Write your band") {
+                    dismiss()
+                    DispatchQueue.main.async { onOpenNFC?() }
                 }
+                .foregroundColor(.redmedDark)
                 NavigationLink("How It Works") {
                     // Owner info lives in Main.swift — not HowItWorks.html
                     MainInfoView(onOpenNFC: onOpenNFC)
@@ -48,9 +46,9 @@ struct HelpMenuView: View {
                         .navigationTitle("Security")
                         .navigationBarTitleDisplayMode(.inline)
                 }
-                if AppConfig.nfcHardwareEnabled, profile.braceletLinked {
+                if profile.braceletLinked {
                     NavigationLink("NFC tap card (local)") {
-                        LocalWebView(filename: "card")
+                        LocalWebView(filename: "get")
                             .navigationTitle("NFC tap card")
                             .navigationBarTitleDisplayMode(.inline)
                     }

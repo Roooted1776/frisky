@@ -8,13 +8,14 @@ Native iOS medical ID + emergency aid app. Shipable source of truth is
 | Path | Role |
 |------|------|
 | `RedMed-Xcode/RedMed/Main.swift` | **Owner app** — edit profile, Aid, NFC, How It Works (`MainInfoView`) |
-| `card.html` | **Passerby scan** — bracelet tap; links back to `redmed://main` for owners |
+| `get.html` | **Passerby scan** — bracelet tap; compact `#d=` payload; links back to `redmed://main` for owners |
+| `card.html` | Legacy redirect → `get.html` (older bands) |
 | Policy HTML (`PrivacyPolicy`, `TOS`, `security`) | Legal docs only; CTA redirects into the app (`Main.swift`) |
 | `HowItWorks.html` | Thin redirect stub → `redmed://main` / App Store (content is Swift) |
 | `uploads/` | Staged / experimental Swift — **not** in the Xcode project (see `uploads/README.md`) |
 | `compliance/` | MHRA / DTAC / cyber pack drafts |
 
-No other product HTML. Owner UI is native SwiftUI only.
+Passerby HTML is `get.html` (plus legacy `card.html` redirect). Owner UI is native SwiftUI only.
 
 Do not open a PR with `base: main` and `compare: main` — pick a feature
 branch from the compare dropdown (or push one first).

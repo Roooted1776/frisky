@@ -5,9 +5,9 @@ struct ContentView: View {
     @Environment(\.isScannerSession) private var isScannerSession
     @State private var tab: AppTab = .redmed
 
-    /// Ped/EMS scanners: never NFC. Owners see the NFC tab only when hardware is enabled
-    /// (`AppConfig.nfcHardwareEnabled`).
-    private var showsNFC: Bool { !isScannerSession && AppConfig.nfcHardwareEnabled }
+    /// Ped/EMS scanners: never NFC. Owners always see the NFC tab (simulate write when
+    /// `AppConfig.nfcHardwareEnabled` is false — no Apple NFC entitlement yet).
+    private var showsNFC: Bool { !isScannerSession }
 
     private var scannerSafeTab: Binding<AppTab> {
         Binding(

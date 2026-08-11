@@ -37,6 +37,7 @@
 		AABB0000000000000000001F /* NFCReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001F /* NFCReader.swift */; };
 		AABB00000000000000000020 /* EmergencyNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000020 /* EmergencyNumber.swift */; };
 		AABB00000000000000000021 /* card.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000021 /* card.html */; };
+		AABB00000000000000000024 /* get.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000024 /* get.html */; };
 		AABB00000000000000000022 /* BrandLogo.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000022 /* BrandLogo.png */; };
 /* End PBXBuildFile section */
 
@@ -74,6 +75,7 @@
 		AAAA0000000000000000001F /* NFCReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFCReader.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000020 /* EmergencyNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyNumber.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000021 /* card.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = card.html; sourceTree = "<group>"; };
+		AAAA00000000000000000024 /* get.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = get.html; sourceTree = "<group>"; };
 		AAAA00000000000000000022 /* BrandLogo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BrandLogo.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -127,6 +129,7 @@
 				AAAA00000000000000000018 /* security.html */,
 				AAAA00000000000000000019 /* HowItWorks.html */,
 				AAAA00000000000000000021 /* card.html */,
+				AAAA00000000000000000024 /* get.html */,
 				AAAA00000000000000000022 /* BrandLogo.png */,
 				AAAA0000000000000000001A /* legal-doc.css */,
 				AAAA0000000000000000000C /* Assets.xcassets */,
@@ -208,6 +211,7 @@
 				AABB00000000000000000018 /* security.html in Resources */,
 				AABB00000000000000000019 /* HowItWorks.html in Resources */,
 				AABB00000000000000000021 /* card.html in Resources */,
+				AABB00000000000000000024 /* get.html in Resources */,
 				AABB00000000000000000022 /* BrandLogo.png in Resources */,
 				AABB0000000000000000001A /* legal-doc.css in Resources */,
 			);

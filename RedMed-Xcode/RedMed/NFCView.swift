@@ -1,5 +1,7 @@
 // Owner-only NFC bracelet setup. Ped/EMS scanner shells never mount this tab —
 // see ContentView.showsNFC / scannerSafeTab.
+// When `AppConfig.nfcHardwareEnabled` is false (no Apple NFC entitlement yet),
+// Write/Scan still run a local simulation so the UX and compact `#d=` URL can be tested.
 import SwiftUI
 
 struct NFCView: View {
@@ -11,6 +13,9 @@ struct NFCView: View {
     @State private var scannedCard: ProfileData?
     @State private var showAuthFailedAlert = false
     @State private var statusAlert: String?
+    @State private var simulateBusy = false
+    @State private var simulateMessage = ""
+    @State private var lastSimulatedURL: String?
 
     var body: some View {
         if isScannerSession {
@@ -24,7 +29,9 @@ struct NFCView: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 12) {
-                    Text("iPhone only for setup. Fill RedMed, write the band once — Face ID, then hold to pair. No Bluetooth; the band stays passive.")
+                    Text(AppConfig.nfcHardwareEnabled
+                          ? "iPhone only for setup. Fill RedMed, write the band once — Face ID, then hold to pair. No Bluetooth; the band stays passive."
+                          : "Simulate band setup while learning (no Apple NFC entitlement yet). Write builds the same compact get.html#d= URL a real NTAG213 would hold.")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
@@ -36,11 +43,15 @@ struct NFCView: View {
 
                     let capacity = ProfileNFCCodec.capacityNote(for: profile)
                     VStack(spacing: 0) {
-                        statusRow("Passive band · 13.56 MHz HF NFC (NTAG) — not Bluetooth 2.4 GHz.", showDivider: true)
+                        statusRow("Passive band · 13.56 MHz HF NFC (NTAG213+) — not Bluetooth 2.4 GHz.", showDivider: true)
+                        statusRow("Compact `#d=` payload: array indexes + zlib + Base64url → get.html", showDivider: true)
                         statusRow("Walk-by won't fire (~6–8″). Only a deliberate ~1–2″ antenna tap opens the card.", showDivider: true)
-                        statusRow("Phone only powers the chip on write/scan. No background pair radio.", showDivider: true)
-                        statusRow("POS ignore this chip (EMV ≠ NDEF) — not a distance setting.", showDivider: true)
-                        statusRow("Tap the band · phone opens your card · no app for readers", showDivider: true)
+                        statusRow(
+                            AppConfig.nfcHardwareEnabled
+                                ? "Phone only powers the chip on write/scan. No background pair radio."
+                                : "Hardware NFC parked — simulate write packs the URL; flip AppConfig + entitlements to go live.",
+                            showDivider: true
+                        )
                         statusRow(
                             profile.braceletLinked
                                 ? "Bracelet linked — re-write after you edit RedMed"
@@ -59,7 +70,7 @@ struct NFCView: View {
                         Button { beginWrite() } label: {
                             HStack(spacing: 8) {
                                 Image(systemName: "wave.3.right")
-                                Text(writer.isWriting ? "Hold near tag…" : "Write to NFC tag")
+                                Text(writeButtonTitle)
                             }
                             .font(.system(size: 16, weight: .bold))
                             .foregroundColor(.white)
@@ -72,7 +83,7 @@ struct NFCView: View {
                             .clipShape(Capsule())
                             .shadow(color: Color.redmedAccent.opacity(0.28), radius: 7, y: 4)
                         }
-                        .disabled(!profile.hasData || writer.isWriting)
+                        .disabled(!profile.hasData || writer.isWriting || simulateBusy)
                         .opacity(profile.hasData ? 1 : 0.55)
                         if !profile.hasData {
                             Text("Add your name on RedMed before writing a tag.")
@@ -80,16 +91,16 @@ struct NFCView: View {
                                 .foregroundColor(.redmedAccent)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        if !writer.statusMessage.isEmpty {
-                            Text(writer.statusMessage)
+                        if !statusLine.isEmpty {
+                            Text(statusLine)
                                 .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(writer.success ? .redmedMuted : .redmedAccent)
+                                .foregroundColor(statusIsError ? .redmedAccent : .redmedMuted)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         VStack(alignment: .leading, spacing: 6) {
                             syncBullet("Link your bracelet once (write after RedMed is filled).")
-                            syncBullet("Save after every edit and hold your phone to the band when prompted.")
-                            syncBullet("After write, Scan your bracelet below — only mark linked when read-back matches.")
+                            syncBullet("Payload targets get.html — short path for NTAG213 URI budgets.")
+                            syncBullet("After write, Scan your bracelet below — only mark linked when read-back matches (or simulate succeeds).")
                             syncBullet("If you cancel the NFC prompt, the band stays stale until you write again.")
                         }
                     }
@@ -101,15 +112,25 @@ struct NFCView: View {
                     sectionLabel("Verify")
                     VStack(alignment: .leading, spacing: 12) {
                         if profile.braceletLinked {
-                            Text("Scan your band to see the same emergency card a stranger gets — no app required for them.")
+                            Text(AppConfig.nfcHardwareEnabled
+                                  ? "Scan your band to see the same emergency card a stranger gets — no app required for them."
+                                  : "Simulate scan to preview the passerby shell (same as get.html after a tap).")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(.redmedMuted)
                                 .lineSpacing(3)
-                            SecondaryButton("Scan your bracelet", icon: "qrcode.viewfinder") { beginScanVerify() }
+                            SecondaryButton(
+                                AppConfig.nfcHardwareEnabled ? "Scan your bracelet" : "Simulate scan (passerby view)",
+                                icon: "qrcode.viewfinder"
+                            ) { beginScanVerify() }
                             if reader.isReading {
                                 Text(reader.statusMessage.isEmpty ? "Hold near tag…" : reader.statusMessage)
                                     .font(.system(size: 13, weight: .medium))
                                     .foregroundColor(.redmedMuted)
+                            }
+                            if let url = lastSimulatedURL, let link = URL(string: url) {
+                                Link("Open packed get.html URL", destination: link)
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundColor(.redmedAccent)
                             }
                         } else {
                             Text("Write the band once above — then you can scan to verify the tap card.")
@@ -156,7 +177,6 @@ struct NFCView: View {
                 Text(statusAlert ?? "")
             }
             .onChange(of: writer.success) { _, ok in
-                // Only “linked” when read-back proves phones can parse the NDEF URI.
                 guard ok, writer.verified else { return }
                 profile.braceletLinked = true
                 profile.persist()
@@ -179,23 +199,40 @@ struct NFCView: View {
         }
     }
 
-    func beginWrite() {
-        guard AppConfig.nfcHardwareEnabled else {
-            statusAlert = "NFC writing is disabled in this build."
-            return
+    private var writeButtonTitle: String {
+        if writer.isWriting || simulateBusy {
+            return AppConfig.nfcHardwareEnabled ? "Hold near tag…" : "Packing URL…"
         }
+        return AppConfig.nfcHardwareEnabled ? "Write to NFC tag" : "Simulate write (pack get.html URL)"
+    }
+
+    private var statusLine: String {
+        if !simulateMessage.isEmpty { return simulateMessage }
+        return writer.statusMessage
+    }
+
+    private var statusIsError: Bool {
+        if !simulateMessage.isEmpty { return simulateMessage.contains("Couldn't") || simulateMessage.contains("failed") }
+        return !writer.success
+    }
+
+    func beginWrite() {
         guard !isScannerSession else { return }
         guard profile.hasData else { return }
-        // Keep `#d=` as a raw string — `URL.absoluteString` can mangle fragments.
         guard let urlString = ProfileNFCCodec.buildURLString(profile: profile) else {
             statusAlert = "Couldn't build tag payload from RedMed."
             return
         }
+
         BiometricAuth.authenticate(
             reason: "Confirm with Face ID, Touch ID, or passcode to write your RedMed card to the bracelet."
         ) { success in
             if success {
-                writer.writeURL(urlString)
+                if AppConfig.nfcHardwareEnabled {
+                    writer.writeURL(urlString)
+                } else {
+                    simulateWrite(urlString)
+                }
             } else {
                 showAuthFailedAlert = true
             }
@@ -203,15 +240,39 @@ struct NFCView: View {
     }
 
     func beginScanVerify() {
-        guard AppConfig.nfcHardwareEnabled else {
-            statusAlert = "NFC reading is disabled in this build."
+        if AppConfig.nfcHardwareEnabled {
+            reader.readTag(alertMessage: "Hold your iPhone near the bracelet to verify the card.") { chip, _ in
+                let card = ProfileData(persisting: false)
+                ProfileNFCCodec.apply(chip, to: card)
+                scannedCard = card
+                showPublicCard = true
+            }
             return
         }
-        reader.readTag(alertMessage: "Hold your iPhone near the bracelet to verify the card.") { chip, _ in
-            let card = ProfileData(persisting: false)
+        // Round-trip the packed URL so simulate scan matches get.html decode.
+        let source = lastSimulatedURL ?? ProfileNFCCodec.buildURLString(profile: profile)
+        let card = ProfileData(persisting: false)
+        if let source, let chip = ProfileNFCCodec.decodeProfile(fromURLString: source) {
             ProfileNFCCodec.apply(chip, to: card)
-            scannedCard = card
-            showPublicCard = true
+        } else {
+            ProfileNFCCodec.apply(ProfileNFCCodec.chipProfile(from: profile), to: card)
+        }
+        scannedCard = card
+        showPublicCard = true
+    }
+
+    private func simulateWrite(_ urlString: String) {
+        simulateBusy = true
+        simulateMessage = "Packing compact get.html#d= payload…"
+        lastSimulatedURL = urlString
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
+            let note = ProfileNFCCodec.capacityNote(for: profile)
+            profile.braceletLinked = true
+            profile.persist()
+            simulateBusy = false
+            simulateMessage = note.warn
+                ? "Simulated write OK — \(note.text)"
+                : "Simulated write OK — \(note.text). Open URL below or Simulate scan."
         }
     }
 

@@ -19,7 +19,8 @@ set up a working runtime here:
 The app has no backend, database, or web service.
 
 **Roles / HTML:** Owner UI is Swift — `Main.swift` (tabs + `MainInfoView` How It
-Works / band setup). Product HTML is only (1) passerby `card.html` and (2)
+Works / band setup). Product HTML is (1) passerby `get.html` (bracelet tap;
+compact `#d=` payload), (2) legacy `card.html` redirect to get, and (3)
 policy pages (`PrivacyPolicy`, `TOS`, `security`). `HowItWorks.html` is a thin
 redirect into `redmed://main`. Card + policies CTA to the owner app; they do not
 host owner edit UI.

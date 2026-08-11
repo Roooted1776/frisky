@@ -1,21 +1,25 @@
 # NFC Tag Reading
 
 CoreNFC write/read is wired in production (`NFCWriter` / `NFCReader`) — real
-`NFCNDEFReaderSession` sessions with write + read-back verify. There is **no**
-Simulator fake-success path: when NFC is unavailable the UI shows an error and
-does not mark the bracelet linked.
+`NFCNDEFReaderSession` sessions with write + read-back verify. When
+`AppConfig.nfcHardwareEnabled` is false, the owner **NFC tab still shows** and
+Write/Scan run a local simulation that packs the same compact `get.html#d=` URL
+(array indexes → zlib → Base64url). There is **no** Simulator fake-success for
+real CoreNFC: when hardware is enabled and NFC is unavailable the UI shows an
+error and does not mark the bracelet linked.
 
-## Currently disabled
+## Currently disabled (hardware only)
 
-Owner NFC UI and sessions are off via `AppConfig.nfcHardwareEnabled = false`.
+Real CoreNFC sessions are off via `AppConfig.nfcHardwareEnabled = false`.
 `RedMed.entitlements` keeps the NFC key commented so free/unsigned builds still
 sign. Flip both when you have a paid Apple Developer Program license and a
-physical iPhone to test.
+physical iPhone to test. Keep the NFC tab + simulate path until then.
 
 ## RF / hardware contract
 
 - Bracelet is **passive** HF NFC at **13.56 MHz** (`AppConfig.BraceletRF`) —
   ISO 14443 / NTAG213+ NDEF. No battery, no BLE.
+- Passerby URL: `https://redmed.pages.dev/get#d=…` (short path for NTAG213).
 - “Paired phone” means this iPhone wrote + verified the chip and stored a local
   link flag. The phone does **not** keep an active RF session or background-scan
   the band (different from Bluetooth pairing on ~2.4 GHz).
@@ -40,6 +44,6 @@ physical iPhone to test.
 3. Developer portal → App ID `com.redmed.app` → enable **NFC Tag Reading**
 4. Xcode → Signing & Capabilities → **Near Field Communication Tag Reading**
 5. Confirm `Info.plist` has `NFCReaderUsageDescription`
-6. Device test: write band → second phone Safari tap → emergency card
+6. Device test: write band → second phone Safari tap → `get.html` emergency card
 
 Free Apple Developer teams cannot ship the NFC entitlement — paid Program required.

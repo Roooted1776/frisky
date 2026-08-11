@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Owner app shell — edit profile, Aid treatments, NFC write, Find Help.
-/// Product HTML is only the passerby `card.html` + policy pages; those redirect
+/// Product HTML for tap/passerby is `get.html` (+ policy pages); those redirect
 /// here (`redmed://main`) for owner information.
 struct Main: View {
     var body: some View {
@@ -9,8 +9,8 @@ struct Main: View {
     }
 }
 
-/// Converted from former `HowItWorks.html` + `get.html` setup copy.
-/// Shown in-app from Help — not as a web shell.
+/// Converted from former `HowItWorks.html` setup copy.
+/// Shown in-app from Help — not as a web shell. Passerby tap UI is `get.html`.
 struct MainInfoView: View {
     @Environment(\.dismiss) private var dismiss
     var onOpenNFC: (() -> Void)? = nil
@@ -32,8 +32,8 @@ struct MainInfoView: View {
                 }
 
                 section(num: "2", title: "Write your bracelet") {
-                    Text("Go to the NFC tab and tap Write to NFC tag. Confirm with Face ID, Touch ID, or your passcode, then hold the top of your iPhone near the bracelet when prompted. Your profile is written to the passive chip in the band. Walk-by distance will not fire the band; only a deliberate ~1–2″ antenna tap opens the card.")
-                    if AppConfig.nfcHardwareEnabled, let onOpenNFC {
+                    Text("Go to the NFC tab and tap Write to NFC tag. Confirm with Face ID, Touch ID, or your passcode, then hold the top of your iPhone near the bracelet when prompted. Your profile is packed into a short `#d=` URL on the passive chip (array indexes + Base64). Walk-by distance will not fire the band; only a deliberate ~1–2″ antenna tap opens get.html.")
+                    if let onOpenNFC {
                         Button("Open NFC tab") {
                             dismiss()
                             DispatchQueue.main.async { onOpenNFC() }
@@ -49,7 +49,7 @@ struct MainInfoView: View {
                 }
 
                 section(num: "4", title: "What a stranger sees") {
-                    Text("Anyone who taps the bracelet opens the passerby card page (card.html) with RedMed, Help, and Aid — your profile, Call emergency / GPS help, and roadside aid. No RedMed app or login is required, and they cannot edit your profile or write the band.")
+                    Text("Anyone who taps the bracelet opens get.html with RedMed, Help, and Aid — your profile, Call emergency / GPS help, and roadside aid. No RedMed app or login is required, and they cannot edit your profile or write the band. Profile bytes live only in the URL fragment — no server.")
                 }
 
                 section(num: "5", title: "In an emergency") {

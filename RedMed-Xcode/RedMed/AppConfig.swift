@@ -5,8 +5,12 @@ enum AppConfig {
     /// the bracelet opens this page in a browser — read-only medical card + Help +
     /// Aid. Medical data is only in the `#d=` fragment (no server storage). Owner
     /// edit / treatments live in `Main.swift`, not here. Source page:
-    /// `RedMed-Xcode/RedMed/card.html` (bundled) and repo-root `card.html` (Pages).
-    static let medicalCardBaseURL = "https://redmed.pages.dev/card/"
+    /// `RedMed-Xcode/RedMed/get.html` (bundled) and repo-root `get.html` (Pages).
+    /// Short `/get` path keeps NTAG213 URI budgets tight.
+    static let medicalCardBaseURL = "https://redmed.pages.dev/get"
+
+    /// Legacy path still redirected from `card.html` for older bands.
+    static let legacyMedicalCardBaseURL = "https://redmed.pages.dev/card/"
 
     /// Deep link target for policy / card HTML “open owner app” redirects.
     static let mainAppURL = "redmed://main"
@@ -14,10 +18,11 @@ enum AppConfig {
     /// Update when the App Store listing is live (App Store Connect app ID).
     static let appStoreURL = "https://apps.apple.com/app/redmed/id0000000000"
 
-    /// Product kill switch for owner NFC write/read UI and CoreNFC sessions.
-    /// `NFCWriter` / `NFCReader` are real CoreNFC (no Simulator fake-success).
-    /// Keep `false` until paid Apple Developer NFC entitlement is restored —
-    /// see `RedMed-Xcode/NFC-RESTORE.md` and `RedMed.entitlements`.
+    /// Product kill switch for **real** CoreNFC sessions only.
+    /// Owner NFC tab + simulate write stay available when false (learning / no
+    /// paid Apple Developer NFC entitlement yet). Flip true + entitlements when
+    /// you have a Program license and a physical iPhone — see
+    /// `RedMed-Xcode/NFC-RESTORE.md` and `RedMed.entitlements`.
     static let nfcHardwareEnabled = false
 
     /// Hardware RF contract for the RedMed bracelet.

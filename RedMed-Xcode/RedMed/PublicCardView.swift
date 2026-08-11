@@ -23,7 +23,7 @@ extension EnvironmentValues {
 }
 
 /// Passerby / rescuer shell (ped / EMS): **RedMed + Help + Aid** — viewable,
-/// **no Edit**, **no NFC write tab**. Mirrors bracelet tap page `card.html#d=…`
+/// **no Edit**, **no NFC write tab**. Mirrors bracelet tap page `get.html#d=…`
 /// (owner edit + treatments are the native app). Payload stays in `#d=`.
 /// Holds a **snapshot** of the profile so scanner UI cannot mutate owner data.
 struct PublicCardView: View {

@@ -1,9 +1,9 @@
 import Foundation
 
-/// Builds the on-chip NDEF URI: profile JSON, base64url-encoded, after `#d=`.
-/// New writes use `AppConfig.medicalCardBaseURL` (HTTPS hosted card/) so any
-/// smartphone tap opens the emergency card in a browser. In-app decode also accepts `redmed://` and older
-/// HTTPS `#d=` tags.
+/// Builds the on-chip NDEF URI: compact profile array, optional zlib, base64url after `#d=`.
+/// New writes use `AppConfig.medicalCardBaseURL` (`…/get`) so any smartphone tap opens
+/// the emergency card in a browser. In-app decode also accepts `redmed://` and older
+/// HTTPS `#d=` tags (including legacy `/card/`).
 enum ProfileLinkBuilder {
 
     /// Match web `PROFILE_LIMITS.dEncodedMax` — reject hostile deep-link DoS before decode.
