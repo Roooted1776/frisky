@@ -16,8 +16,22 @@ struct EditProfileView: View {
     @State private var conditions: [DraftLine] = []
     @State private var contacts: [EmergencyContact] = []
     @State private var showAuthFailedAlert = false
+    @State private var showBirthDatePicker = false
+    @State private var showBloodTypePicker = false
+    @State private var pickerBirthDate = EditProfileView.defaultBirthDate
 
     private static let bloodTypeChoices = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
+
+    /// One body size across the edit form (labels, fields, prompts, section titles).
+    private enum Metrics {
+        static let font: CGFloat = 15
+        static let navFont: CGFloat = 17
+        static let icon: CGFloat = 18
+        static let labelWidth: CGFloat = 90
+        static let rowHPad: CGFloat = 16
+        static let rowVPad: CGFloat = 13
+        static let sectionGap: CGFloat = 22
+    }
 
     private static let birthDateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -46,13 +60,6 @@ struct EditProfileView: View {
 
     private var hasBirthDate: Bool { Self.parseBirthDate(birthDate) != nil }
 
-    private var birthDateBinding: Binding<Date> {
-        Binding(
-            get: { Self.parseBirthDate(birthDate) ?? Self.defaultBirthDate },
-            set: { birthDate = Self.birthDateFormatter.string(from: $0) }
-        )
-    }
-
     var body: some View {
         if isScannerSession {
             Color.clear.onAppear { dismiss() }
@@ -65,18 +72,18 @@ struct EditProfileView: View {
         VStack(spacing: 0) {
             HStack {
                 Button("Cancel") { dismiss() }
-                    .font(.system(size: 17))
+                    .font(.system(size: Metrics.navFont))
                     .foregroundColor(.redmedAccent)
                 Spacer()
                 Text("Edit RedMed")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.system(size: Metrics.navFont, weight: .semibold))
                     .foregroundColor(.redmedDark)
                 Spacer()
                 Button("Save") { save() }
-                    .font(.system(size: 17, weight: .bold))
+                    .font(.system(size: Metrics.navFont, weight: .bold))
                     .foregroundColor(.redmedAccent)
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, Metrics.rowHPad)
             .frame(height: 52)
             .background(Color(red: 0.949, green: 0.949, blue: 0.969).opacity(0.95))
             .overlay(alignment: .bottom) {
@@ -89,12 +96,12 @@ struct EditProfileView: View {
                     editCard {
                         youRow(label: "Name") {
                             TextField("Full name", text: $name)
-                                .font(.system(size: 15))
+                                .font(.system(size: Metrics.font))
                                 .foregroundColor(.redmedDark)
                         }
-                        Divider().padding(.leading, 106)
+                        Divider().padding(.leading, Metrics.labelWidth + 12 + Metrics.rowHPad)
                         birthDateRow
-                        Divider().padding(.leading, 106)
+                        Divider().padding(.leading, Metrics.labelWidth + 12 + Metrics.rowHPad)
                         bloodTypeRow
                     }
 
@@ -119,7 +126,7 @@ struct EditProfileView: View {
                     }
                 }
                 .padding(.top, 20)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, Metrics.rowHPad)
                 .padding(.bottom, 48)
             }
             .scrollDismissesKeyboard(.interactively)
@@ -131,6 +138,18 @@ struct EditProfileView: View {
         } message: {
             Text("Face ID or passcode is required to save your RedMed profile.")
         }
+        .sheet(isPresented: $showBirthDatePicker) {
+            birthDatePickerSheet
+        }
+        .confirmationDialog("Blood type", isPresented: $showBloodTypePicker, titleVisibility: .visible) {
+            ForEach(Self.bloodTypeChoices, id: \.self) { type in
+                Button(type) { bloodType = type }
+            }
+            if !bloodType.isEmpty {
+                Button("Clear", role: .destructive) { bloodType = "" }
+            }
+            Button("Cancel", role: .cancel) {}
+        }
     }
 
     // MARK: - You
@@ -138,95 +157,119 @@ struct EditProfileView: View {
     private func youRow<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {
         HStack(spacing: 0) {
             Text(label)
-                .font(.system(size: 15, weight: .medium))
+                .font(.system(size: Metrics.font, weight: .medium))
                 .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
-                .frame(width: 90, alignment: .leading)
+                .frame(width: Metrics.labelWidth, alignment: .leading)
                 .padding(.trailing, 12)
             content()
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 13)
+        .padding(.horizontal, Metrics.rowHPad)
+        .padding(.vertical, Metrics.rowVPad)
     }
 
     private var birthDateRow: some View {
         HStack(spacing: 0) {
             Text("Birth date")
-                .font(.system(size: 15, weight: .medium))
+                .font(.system(size: Metrics.font, weight: .medium))
                 .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
-                .frame(width: 90, alignment: .leading)
+                .frame(width: Metrics.labelWidth, alignment: .leading)
                 .padding(.trailing, 12)
 
-            if hasBirthDate {
-                DatePicker(
-                    "",
-                    selection: birthDateBinding,
-                    in: Self.birthDateRange,
-                    displayedComponents: .date
-                )
-                .labelsHidden()
-                .datePickerStyle(.compact)
-                .tint(.redmedAccent)
+            Button {
+                pickerBirthDate = Self.parseBirthDate(birthDate) ?? Self.defaultBirthDate
+                showBirthDatePicker = true
+            } label: {
+                Text(hasBirthDate ? birthDate : "Select date")
+                    .font(.system(size: Metrics.font, weight: .medium))
+                    .foregroundColor(hasBirthDate ? .redmedDark : .redmedAccent)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
 
+            if hasBirthDate {
                 Button {
                     birthDate = ""
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 18))
+                        .font(.system(size: Metrics.icon))
                         .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48).opacity(0.45))
                         .frame(width: 36, height: 36)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Clear birth date")
-            } else {
-                Button {
-                    birthDate = Self.birthDateFormatter.string(from: Self.defaultBirthDate)
-                } label: {
-                    Text("Select date")
-                        .font(.system(size: 15))
-                        .foregroundColor(.redmedAccent)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
             }
 
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, hasBirthDate ? 10 : 13)
+        .padding(.horizontal, Metrics.rowHPad)
+        .padding(.vertical, Metrics.rowVPad)
+    }
+
+    private var birthDatePickerSheet: some View {
+        NavigationStack {
+            VStack {
+                DatePicker(
+                    "Birth date",
+                    selection: $pickerBirthDate,
+                    in: Self.birthDateRange,
+                    displayedComponents: .date
+                )
+                .datePickerStyle(.wheel)
+                .labelsHidden()
+                .tint(.redmedAccent)
+                .padding(.top, 8)
+                Spacer()
+            }
+            .navigationTitle("Birth date")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { showBirthDatePicker = false }
+                        .foregroundColor(.redmedAccent)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        birthDate = Self.birthDateFormatter.string(from: pickerBirthDate)
+                        showBirthDatePicker = false
+                    }
+                    .fontWeight(.semibold)
+                    .foregroundColor(.redmedAccent)
+                }
+            }
+        }
+        .presentationDetents([.medium])
     }
 
     private var bloodTypeRow: some View {
         HStack(spacing: 0) {
             Text("Blood type")
-                .font(.system(size: 15, weight: .medium))
+                .font(.system(size: Metrics.font, weight: .medium))
                 .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
-                .frame(width: 90, alignment: .leading)
+                .frame(width: Metrics.labelWidth, alignment: .leading)
                 .padding(.trailing, 12)
 
-            Menu {
-                Button("Clear") { bloodType = "" }
-                ForEach(Self.bloodTypeChoices, id: \.self) { type in
-                    Button(type) { bloodType = type }
-                }
+            Button {
+                showBloodTypePicker = true
             } label: {
                 HStack(spacing: 6) {
                     Text(bloodType.isEmpty ? "Select" : bloodType)
-                        .font(.system(size: 15))
+                        .font(.system(size: Metrics.font, weight: .medium))
                         .foregroundColor(bloodType.isEmpty ? .redmedAccent : .redmedDark)
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48).opacity(0.55))
+                        .foregroundColor(.redmedAccent)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
 
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 13)
+        .padding(.horizontal, Metrics.rowHPad)
+        .padding(.vertical, Metrics.rowVPad)
     }
 
     // MARK: - Contacts
@@ -237,10 +280,10 @@ struct EditProfileView: View {
             HStack(alignment: .top, spacing: 8) {
                 VStack(alignment: .leading, spacing: 4) {
                     TextField("Name", text: $contact.name)
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.system(size: Metrics.font, weight: .semibold))
                         .foregroundColor(.redmedDark)
                     TextField("Relationship · phone", text: $contact.detail)
-                        .font(.system(size: 13))
+                        .font(.system(size: Metrics.font))
                         .foregroundColor(.redmedMuted)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -250,29 +293,29 @@ struct EditProfileView: View {
                     contacts.removeAll { $0.id == id }
                 } label: {
                     Text("✕")
-                        .font(.system(size: 18))
+                        .font(.system(size: Metrics.icon))
                         .foregroundColor(.redmedAccent)
                         .padding(.leading, 10)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 13)
-            Divider().padding(.leading, 16)
+            .padding(.horizontal, Metrics.rowHPad)
+            .padding(.vertical, Metrics.rowVPad)
+            Divider().padding(.leading, Metrics.rowHPad)
         }
 
         Button {
             contacts.append(EmergencyContact(name: "", detail: ""))
         } label: {
             HStack(spacing: 8) {
-                Image(systemName: "plus.circle.fill").font(.system(size: 18))
-                Text("Add contact").font(.system(size: 15))
+                Image(systemName: "plus.circle.fill").font(.system(size: Metrics.icon))
+                Text("Add contact").font(.system(size: Metrics.font, weight: .medium))
             }
             .foregroundColor(.redmedAccent)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 13)
+            .padding(.horizontal, Metrics.rowHPad)
+            .padding(.vertical, Metrics.rowVPad)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -283,12 +326,12 @@ struct EditProfileView: View {
     @ViewBuilder
     private func editSectionLabel(_ text: String) -> some View {
         Text(text.uppercased())
-            .font(.system(size: 13, weight: .semibold))
+            .font(.system(size: Metrics.font, weight: .semibold))
             .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
             .kerning(0.5)
             .padding(.horizontal, 4)
             .padding(.bottom, 6)
-            .padding(.top, text == "You" ? 0 : 22)
+            .padding(.top, text == "You" ? 0 : Metrics.sectionGap)
     }
 
     @ViewBuilder
@@ -319,18 +362,11 @@ struct EditProfileView: View {
         name = profile.name
         birthDate = profile.birthDate
         bloodType = profile.bloodType
-        // Empty sections open with one live TextField (placeholder), not a bare Add row.
-        allergies = Self.draftLines(from: profile.allergies)
-        medications = Self.draftLines(from: profile.medications)
-        conditions = Self.draftLines(from: profile.conditions)
-        contacts = profile.contacts.isEmpty
-            ? [EmergencyContact(name: "", detail: "")]
-            : profile.contacts
-    }
-
-    private static func draftLines(from values: [String]) -> [DraftLine] {
-        let lines = values.map { DraftLine(text: $0) }
-        return lines.isEmpty ? [DraftLine()] : lines
+        // Empty profile → empty sections (Add rows only). Never seed blank entries.
+        allergies = profile.allergies.map { DraftLine(text: $0) }
+        medications = profile.medications.map { DraftLine(text: $0) }
+        conditions = profile.conditions.map { DraftLine(text: $0) }
+        contacts = profile.contacts
     }
 
     private func save() {
@@ -389,40 +425,47 @@ private struct DraftLinesEditor: View {
     let placeholder: String
     let addLabel: String
 
+    private enum Metrics {
+        static let font: CGFloat = 15
+        static let icon: CGFloat = 18
+        static let rowHPad: CGFloat = 16
+        static let rowVPad: CGFloat = 13
+    }
+
     var body: some View {
         ForEach($lines) { $line in
             HStack(spacing: 0) {
                 TextField(placeholder, text: $line.text)
-                    .font(.system(size: 15))
+                    .font(.system(size: Metrics.font))
                     .foregroundColor(.redmedDark)
                 Button {
                     let id = line.id
                     lines.removeAll { $0.id == id }
                 } label: {
                     Text("✕")
-                        .font(.system(size: 18))
+                        .font(.system(size: Metrics.icon))
                         .foregroundColor(.redmedAccent)
                         .padding(.leading, 10)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 13)
-            Divider().padding(.leading, 16)
+            .padding(.horizontal, Metrics.rowHPad)
+            .padding(.vertical, Metrics.rowVPad)
+            Divider().padding(.leading, Metrics.rowHPad)
         }
 
         Button {
             lines.append(DraftLine())
         } label: {
             HStack(spacing: 8) {
-                Image(systemName: "plus.circle.fill").font(.system(size: 18))
-                Text(addLabel).font(.system(size: 15))
+                Image(systemName: "plus.circle.fill").font(.system(size: Metrics.icon))
+                Text(addLabel).font(.system(size: Metrics.font, weight: .medium))
             }
             .foregroundColor(.redmedAccent)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 13)
+            .padding(.horizontal, Metrics.rowHPad)
+            .padding(.vertical, Metrics.rowVPad)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
