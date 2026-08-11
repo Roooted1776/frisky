@@ -179,70 +179,36 @@ final class CrashMotionGuard: ObservableObject {
     }
 }
 
-/// Cancel control on Aid — under the pane grid, above the quote.
+/// Cancel on Aid — 5pt under the pane grid, above the quote.
 /// Outside LazyVGrid so pane expand/collapse is undisturbed.
-/// Sized like a full-width pane card; CTA matches open-pane topic rows.
 struct CrashSurvivalCancelCard: View {
     @ObservedObject private var monitor = CrashMotionGuard.shared
 
     var body: some View {
         if monitor.isArmed {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .top, spacing: 8) {
-                    Image(systemName: "light.beacon.max.fill")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(width: 38, height: 38)
-                        .background(Color.redmedAccent)
-                        .clipShape(RoundedRectangle(cornerRadius: 11))
-
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("Crash / high-speed impact")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(.redmedAccent)
-                            .lineLimit(2)
-                        Text("Siren + full brightness on — local sensors only")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(.redmedMuted)
-                            .lineLimit(2)
-                    }
-                    Spacer(minLength: 0)
+            Button {
+                monitor.disarm()
+            } label: {
+                HStack {
+                    Text("Stop the detection")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.redmedDark)
+                    Spacer()
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.redmedAccent)
                 }
-                .padding(13)
-                .frame(minHeight: 96, alignment: .top)
-
-                Button {
-                    monitor.disarm()
-                } label: {
-                    HStack {
-                        Text("I'm OK — cancel alarm")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(.redmedDark)
-                        Spacer()
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 14))
-                            .foregroundColor(.redmedAccent)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
-                    .background(Color.white.opacity(0.8))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.redmedDivider, lineWidth: 1)
-                    )
-                }
-                .buttonStyle(.plain)
-                .padding(.horizontal, 10)
-                .padding(.bottom, 14)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(Color.redmedSurface)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.redmedDivider, lineWidth: 1)
+                )
             }
-            .background(Color.redmedSurface)
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color.redmedAccent.opacity(0.28), lineWidth: 1)
-            )
-            .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
+            .buttonStyle(.plain)
+            .padding(.top, 5)
         }
     }
 }

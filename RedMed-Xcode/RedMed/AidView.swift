@@ -76,36 +76,38 @@ struct AidView: View {
                     }
                     .padding(.bottom, 2)
 
-                    // PANE GRID — cancel card stays outside so expand/collapse is untouched.
-                    LazyVGrid(columns: columns, spacing: 14) {
-                        ForEach(AidPaneCatalog.panes) { pane in
-                            let isOpen = openPane == pane.id
-                            PaneCard(pane: pane, isOpen: isOpen) { key in
-                                if key == nil {
-                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                                        openPane = isOpen ? nil : pane.id
+                    // Panes + cancel + quote share one stack so LazyVStack spacing
+                    // does not pad the 5pt gap under the lowest pane.
+                    VStack(alignment: .leading, spacing: 0) {
+                        LazyVGrid(columns: columns, spacing: 14) {
+                            ForEach(AidPaneCatalog.panes) { pane in
+                                let isOpen = openPane == pane.id
+                                PaneCard(pane: pane, isOpen: isOpen) { key in
+                                    if key == nil {
+                                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                            openPane = isOpen ? nil : pane.id
+                                        }
+                                    } else if let k = key, let topic = AidTopicCatalog.topics[k] {
+                                        activeTopic = topic
                                     }
-                                } else if let k = key, let topic = AidTopicCatalog.topics[k] {
-                                    activeTopic = topic
                                 }
+                                .gridCellColumns(isOpen ? 2 : 1)
                             }
-                            .gridCellColumns(isOpen ? 2 : 1)
                         }
+
+                        // 5pt under lowest pane; not a grid cell (pane dropdown undisturbed).
+                        CrashSurvivalCancelCard()
+
+                        Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.redmedDark)
+                            .multilineTextAlignment(.center)
+                            .lineSpacing(4)
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 20)
+                            .padding(.bottom, 8)
                     }
-
-                    // Under panes, above quote — not a grid cell (does not fight pane dropdown).
-                    CrashSurvivalCancelCard()
-
-                    // Quote moved from RedMed (main) tab — sits below the panes
-                    Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.redmedDark)
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(4)
-                        .frame(maxWidth: .infinity)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 28)
-                        .padding(.bottom, 8)
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 10)
