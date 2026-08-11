@@ -4,23 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RedMed</title>
-<!-- Legacy bracelet URL. Scanner shell is get.html — preserve #d=. -->
+<!-- Legacy bracelet URL. Canonical scanner shell is /get/ — preserve #d=. -->
 <script>
 (function () {
-  var path = location.pathname || "";
-  var next;
-  if (/\/card\/?$/i.test(path)) next = path.replace(/\/card\/?$/i, "/get/");
-  else if (/card\.html$/i.test(path)) next = path.replace(/card\.html$/i, "get.html");
-  else next = "get.html";
-  location.replace(next + (location.search || "") + (location.hash || ""));
+  location.replace("/get/" + (location.search || "") + (location.hash || ""));
 })();
 </script>
 </head>
 <body>
-  <p><a id="fallback" href="get.html">Open emergency card</a></p>
+  <p><a id="fallback" href="/get/">Open emergency card</a></p>
   <script>
     document.getElementById("fallback").href =
-      "get.html" + (location.search || "") + (location.hash || "");
+      "/get/" + (location.search || "") + (location.hash || "");
   </script>
 </body>
 </html>
