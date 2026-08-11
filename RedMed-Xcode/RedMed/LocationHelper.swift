@@ -89,38 +89,82 @@ final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManag
 /// Shown instead of the main tabs until Location has been asked (Allow / Don't Allow).
 struct LocationLaunchGateView: View {
     @ObservedObject private var suggester = LocationAccessSuggester.shared
+    @State private var appeared = false
+    @State private var pulse = false
 
     var body: some View {
-        VStack(spacing: 20) {
-            Spacer()
-            Image(systemName: "location.fill")
-                .font(.system(size: 36, weight: .semibold))
-                .foregroundColor(.redmedAccent)
-            Text("RedMed")
-                .font(.system(size: 28, weight: .bold))
-                .foregroundColor(.redmedDark)
-            Text("Allow Location so Find Help can show exact GPS for dispatch.")
-                .font(.system(size: 15, weight: .medium))
-                .foregroundColor(.redmedMuted)
-                .multilineTextAlignment(.center)
+        ZStack {
+            // Soft radial wash behind the mark — keeps the hero readable on #fff7f7.
+            RadialGradient(
+                colors: [
+                    Color.redmedAccent.opacity(0.14),
+                    Color.redmedBg.opacity(0)
+                ],
+                center: .center,
+                startRadius: 20,
+                endRadius: 260
+            )
+            .scaleEffect(pulse ? 1.06 : 0.94)
+            .opacity(appeared ? 1 : 0)
+            .animation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true), value: pulse)
+
+            VStack(spacing: 24) {
+                Spacer()
+
+                Image("BrandWordmark")
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFit()
+                    .frame(maxWidth: 280)
+                    .shadow(color: Color.redmedAccent.opacity(0.18), radius: 18, y: 10)
+                    .scaleEffect(appeared ? 1 : 0.92)
+                    .opacity(appeared ? 1 : 0)
+
+                HStack(spacing: 8) {
+                    Image(systemName: "location.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.redmedAccent)
+                    Text("Allow Location so Find Help can show exact GPS for dispatch.")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(.redmedMuted)
+                        .multilineTextAlignment(.leading)
+                }
+                .padding(.horizontal, 36)
+                .opacity(appeared ? 1 : 0)
+                .offset(y: appeared ? 0 : 10)
+
+                Button("Allow Location") {
+                    suggester.primaryAction()
+                }
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(
+                    LinearGradient(
+                        colors: [Color(red: 1, green: 0.447, blue: 0.537), .redmedAccent],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .shadow(color: Color.redmedAccent.opacity(0.28), radius: 10, y: 5)
                 .padding(.horizontal, 32)
-            Button("Allow Location") {
-                suggester.primaryAction()
+                .padding(.top, 4)
+                .opacity(appeared ? 1 : 0)
+                .offset(y: appeared ? 0 : 14)
+
+                Spacer()
             }
-            .font(.system(size: 16, weight: .bold))
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background(Color.redmedAccent)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .padding(.horizontal, 32)
-            .padding(.top, 8)
-            Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.redmedBg.ignoresSafeArea())
         .onAppear {
             suggester.askIfNeeded()
+            withAnimation(.spring(response: 0.65, dampingFraction: 0.82)) {
+                appeared = true
+            }
+            pulse = true
         }
     }
 }
