@@ -9,7 +9,7 @@
  * drops the previous bucket. Install always re-fetches (cache: 'reload') so
  * Cache Storage is not filled from a stale HTTP disk cache.
  */
-var CACHE = 'redmed-get-v2';
+var CACHE = 'redmed-get-v3';
 var ASSETS = [
   './',
   './get.html',
