@@ -15,6 +15,13 @@ struct EmergencyView: View {
             NavigationView {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 8) {
+                    Text("Locator on — full brightness, beep every 5s so rescuers can find you.")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.redmedAccent)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 4)
+                        .padding(.top, 2)
+
                     // NO CELL SIGNAL — top of Find Help (replaces call-first-contact)
                     NoCellSignalCard(showSatellite: $showSatellite)
 
@@ -100,6 +107,7 @@ struct EmergencyView: View {
             } // NavigationView
         } // VStack
         .maxBrightnessForVisibility()
+        .locatorBeaconEveryFiveSeconds()
     }
 }
 
