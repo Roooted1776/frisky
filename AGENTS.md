@@ -56,7 +56,7 @@ The app has no backend, database, or web service.
   off switches for these.
 - **LocatorBeacon** Find Help path is owner-only — never arm Find Help siren
   when `isScannerSession == true`. Crash survival hold may keep sounding in
-  background until the user cancels (“I'm OK”).
+  background until the user taps “Stop the detection” on Aid.
 - **BrightnessBoost** restores the prior brightness + idle-timer on
   `.inactive`/`.background` for normal Find Help / scanner hosts; crash
   survival hold skips that pause until cancelled.

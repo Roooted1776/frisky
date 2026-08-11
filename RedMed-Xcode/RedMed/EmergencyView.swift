@@ -13,7 +13,7 @@ struct EmergencyView: View {
             NavigationView {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 8) {
-                    Text("Locator on — full brightness, beep every 5s. A car crash / high-speed impact auto-arms siren + brightness. Sex, eating, hand/wrist motion, and running do not. Cancel on Aid.")
+                    Text("Locator on — full brightness, beep every 5s. Crash impact arms siren + brightness. Stop the detection on Aid.")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.redmedAccent)
                         .frame(maxWidth: .infinity, alignment: .leading)
