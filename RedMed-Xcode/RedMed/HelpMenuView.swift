@@ -17,6 +17,7 @@ struct LocalWebView: UIViewRepresentable {
 struct HelpMenuView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.dismiss) var dismiss
+    @AppStorage(HapticEngine.enabledKey) private var hapticsEnabled = true
     var onOpenNFC: (() -> Void)? = nil
 
     var body: some View {
@@ -28,6 +29,14 @@ struct HelpMenuView: View {
                         DispatchQueue.main.async { onOpenNFC?() }
                     }
                     .foregroundColor(.redmedDark)
+                }
+                Section("Settings") {
+                    Toggle("Haptic feedback", isOn: $hapticsEnabled)
+                        .tint(.redmedAccent)
+                    Text("CPR beat taps use the Taptic Engine on a physical iPhone. Simulator still runs — haptics are skipped. Turn off here, or System Haptics in iOS Settings → Sounds & Haptics. Face ID is device-only; Simulator Edit/NFC uses an Authenticate prompt.")
+                        .font(.system(size: 12))
+                        .foregroundColor(.redmedMuted)
+                        .listRowSeparator(.hidden)
                 }
                 NavigationLink("How It Works") {
                     // Owner info lives in Main.swift — not HowItWorks.html

@@ -5,16 +5,30 @@ import Foundation
 /// Prepare once when the hosting view appears; play calculated patterns on tap / beat.
 @MainActor
 final class HapticEngine: ObservableObject {
+    /// `@AppStorage` / Settings toggle. Default on when unset.
+    static let enabledKey = "redmed.hapticsEnabled"
+
     private var engine: CHHapticEngine?
     private(set) var isReady = false
 
     var supportsHaptics: Bool {
-        CHHapticEngine.capabilitiesForHardware().supportsHaptics
+        #if targetEnvironment(simulator)
+        // Taptic Engine is hardware-only — Simulator must still run the app.
+        return false
+        #else
+        return CHHapticEngine.capabilitiesForHardware().supportsHaptics
+        #endif
+    }
+
+    /// In-app preference (Help → Settings). iOS System Haptics also suppress playback.
+    var isEnabled: Bool {
+        if UserDefaults.standard.object(forKey: Self.enabledKey) == nil { return true }
+        return UserDefaults.standard.bool(forKey: Self.enabledKey)
     }
 
     /// Instantiate and start the engine. Safe to call repeatedly.
     func prepare() {
-        guard supportsHaptics else {
+        guard supportsHaptics, isEnabled else {
             isReady = false
             return
         }
@@ -56,7 +70,7 @@ final class HapticEngine: ObservableObject {
 
     /// Calculated transient pattern execution (intensity + sharpness → player).
     private func playTransient(intensity: Float, sharpness: Float) {
-        guard supportsHaptics else { return }
+        guard supportsHaptics, isEnabled else { return }
         if !isReady { prepare() }
         guard let engine else { return }
 
