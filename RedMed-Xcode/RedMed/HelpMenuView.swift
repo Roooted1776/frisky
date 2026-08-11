@@ -52,7 +52,7 @@ struct HelpMenuView: View {
                 } header: {
                     Text("Settings")
                 } footer: {
-                    Text("Only haptic and location are adjustable. Crash / severe impact arms brightness and locate-me siren automatically.")
+                    Text("Only haptic and location are adjustable. Siren and full brightness arm on crash / severe impact or SOS — not from opening Find Help.")
                 }
                 NavigationLink("How It Works") {
                     // Owner info lives in Main.swift — not HowItWorks.html

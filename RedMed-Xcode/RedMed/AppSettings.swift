@@ -1,7 +1,7 @@
 import Foundation
 
 /// In-app Settings prefs (Help → Settings). Only haptic + location live here.
-/// Brightness + locator siren arm only on crash / severe-impact detection.
+/// Brightness + locator siren arm on crash / severe-impact or owner SOS.
 enum AppSettings {
     static let locationEnabledKey = "redmed.locationEnabled"
 

@@ -12,6 +12,8 @@
 <!-- ONE scanner file: get.html (Pages + app bundle).
      Specs (permanent):
      - Tabs: RedMed · 911 · Aid only — no Edit, no NFC
+     - Tapper / EMT / helper: passive HF NFC opens this HTML page — no RedMed
+       app, no Face ID / biometrics to view. Owner Face ID is write/edit only.
      - Data: #d= only — no server DB. New writes: flat array → AES-GCM
        (public client key) → base64url. Legacy still works: named JSON,
        pre-AES compact arrays, optional 0x01 zlib.
@@ -19,7 +21,11 @@
        conditions, contacts, donor, updated?]
        Legacy array: [name, dob, blood, donor, allergies, meds,
        conditions, contacts, updated?]
-     - Offline: sw.js caches this layout after first online open
+     - Offline: sw.js Cache Storage — cache-first multi-key shell for almost-instant
+       EMT open after first online load; activate clears prior CACHE buckets
+       (bump redmed-get-vN). Never wait on network when a shell copy exists.
+     - No brightness / audio from this page — owner-phone crash motion or SOS
+       only (native app). Passerby HTML never touches those.
      - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
        walk-by ~6–8″ does not fire, reliable coupling dies past ~4″,
        passive 13.56 MHz HF NFC (not Bluetooth) → opens this page
@@ -1093,17 +1099,16 @@
 })();
 </script>
 <script>
-// Cache the static layout after first online open so a later basement / rural /
-// subway tap still paints get.html from the phone. Payload stays in #d= only —
-// the service worker never stores medical fields.
+// Register SW ASAP (not on window load) so the next bracelet tap is controlled
+// and paints almost instantly from Cache Storage. Payload stays in #d= only —
+// the service worker never stores medical fields. No Face ID to view.
+// No brightness / audio from this page.
 (function () {
   if (!('serviceWorker' in navigator)) return;
-  window.addEventListener('load', function () {
-    navigator.serviceWorker
-      .register('sw.js', { scope: './', updateViaCache: 'none' })
-      .then(function (reg) { return reg.update(); })
-      .catch(function () {});
-  });
+  navigator.serviceWorker
+    .register('sw.js', { scope: './', updateViaCache: 'none' })
+    .then(function (reg) { return reg.update(); })
+    .catch(function () {});
 })();
 </script>
 </body>

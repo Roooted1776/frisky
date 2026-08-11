@@ -1,6 +1,6 @@
 import AVFoundation
 
-/// Crash / severe-impact survival siren only.
+/// Survival siren for crash / severe-impact or owner SOS.
 /// Plays through the silent switch (`.playback`) and keeps sounding in background until cancelled.
 @MainActor
 enum LocatorBeacon {
@@ -14,7 +14,7 @@ enum LocatorBeacon {
     private static var sessionEpoch = 0
     private static var sessionReady = false
 
-    /// Crash motion arm — siren continues while backgrounded until cancelled.
+    /// Survival arm — siren continues while backgrounded until cancelled.
     static func beginSurvival() {
         let wasHeld = survivalHold
         survivalHold = true

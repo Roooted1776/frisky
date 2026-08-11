@@ -49,7 +49,7 @@ struct MainInfoView: View {
                 }
 
                 section(num: "4", title: "What a stranger sees") {
-                    Text("Anyone who taps the bracelet opens the passerby page (get.html) with RedMed, 911, and Aid — your profile, Call emergency / GPS help, and roadside aid. No RedMed app or login is required, and they cannot edit your profile or write the band.")
+                    Text("Anyone who taps the bracelet opens the passerby HTML page (get.html) with RedMed, 911, and Aid — your profile, Call emergency / GPS help, and roadside aid. No RedMed app, login, or Face ID on their phone. The page caches after first open so a later tap still paints instantly offline. They cannot edit your profile or write the band.")
                 }
 
                 section(num: "5", title: "In an emergency") {
