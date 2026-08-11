@@ -8,7 +8,7 @@
  * sw.js on every decrypt/layout deploy. Payload stays in #d= only — never
  * cached. No biometrics on view.
  */
-var CACHE = 'redmed-get-v17';
+var CACHE = 'redmed-get-v18';
 var ASSETS = [
   './',
   './get.html',

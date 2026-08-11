@@ -12,7 +12,7 @@
  * stale decrypt/layout. Bump CACHE in lockstep with root + bundled sw.js on
  * every decrypt/layout deploy.
  */
-var CACHE = 'redmed-get-v17';
+var CACHE = 'redmed-get-v18';
 var ASSETS = [
   './',
   './index.html',
