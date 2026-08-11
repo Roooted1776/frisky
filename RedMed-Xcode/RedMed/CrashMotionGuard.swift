@@ -179,7 +179,8 @@ final class CrashMotionGuard: ObservableObject {
     }
 }
 
-/// Cancel control on Aid — under panes, above the quote.
+/// Cancel control on Aid — under the pane grid, above the quote.
+/// Outside LazyVGrid so pane expand/collapse is undisturbed.
 /// Sized like a full-width pane card; CTA matches open-pane topic rows.
 struct CrashSurvivalCancelCard: View {
     @ObservedObject private var monitor = CrashMotionGuard.shared

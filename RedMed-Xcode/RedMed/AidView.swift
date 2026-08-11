@@ -76,7 +76,7 @@ struct AidView: View {
                     }
                     .padding(.bottom, 2)
 
-                    // PANE GRID
+                    // PANE GRID — cancel card stays outside so expand/collapse is untouched.
                     LazyVGrid(columns: columns, spacing: 14) {
                         ForEach(AidPaneCatalog.panes) { pane in
                             let isOpen = openPane == pane.id
@@ -91,11 +91,10 @@ struct AidView: View {
                             }
                             .gridCellColumns(isOpen ? 2 : 1)
                         }
-
-                        // Under panes, above quote — full-width like an open pane.
-                        CrashSurvivalCancelCard()
-                            .gridCellColumns(2)
                     }
+
+                    // Under panes, above quote — not a grid cell (does not fight pane dropdown).
+                    CrashSurvivalCancelCard()
 
                     // Quote moved from RedMed (main) tab — sits below the panes
                     Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
