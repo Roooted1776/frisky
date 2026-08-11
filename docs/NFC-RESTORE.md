@@ -12,7 +12,7 @@ and NFC is unavailable, write fails and the band is not marked linked.
 
 CoreNFC write/read sessions are off via `AppConfig.nfcHardwareEnabled = false`.
 **Do not hide the owner NFC tab** when flipping this — owners always get
-RedMed · Help · Aid · NFC; scanners never get NFC. The flag only blocks
+RedMed · 911 · Aid · NFC; scanners never get NFC. The flag only blocks
 `NFCWriter` / `NFCReader` sessions (simulate path stays).
 `RedMed.entitlements` keeps the NFC key commented so free/unsigned builds still
 sign. Flip both when you have a paid Apple Developer Program license and a

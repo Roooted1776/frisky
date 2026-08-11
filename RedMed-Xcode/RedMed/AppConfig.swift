@@ -2,7 +2,7 @@ import Foundation
 
 enum AppConfig {
     /// Passerby / rescuer shell written to passive NFC bands. Any phone that taps
-    /// the bracelet opens this page in a browser — read-only medical card + Help +
+    /// the bracelet opens this page in a browser — read-only medical card + 911 +
     /// Aid. No Face ID to view. Medical data is only in the `#d=` fragment (flat
     /// array → AES-GCM → base64url; no server storage). `sw.js` cache-first stores
     /// the static layout for instant offline / EMT taps (activate clears prior

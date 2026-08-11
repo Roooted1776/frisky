@@ -10,7 +10,7 @@ Native iOS medical ID + emergency aid app. Shipable source of truth is
 | `MAX.md` | **Max’s personal profile + shipped history** (agent memory) |
 | `AGENTS.md` | Permanent product/engineering rules for agents |
 | `RedMed-Xcode/RedMed/Main.swift` | **Owner app** — edit profile, Aid, NFC, How It Works (`MainInfoView`) |
-| `get/index.html` (+ root `get.html`) | **Passerby / scanner** — bracelet tap at `https://redmed.pages.dev/get/`; RedMed · Help · Aid (no Edit / NFC) |
+| `get/index.html` (+ root `get.html`) | **Passerby / scanner** — bracelet tap at `https://redmed.pages.dev/get/`; RedMed · 911 · Aid (no Edit / NFC) |
 | `card.html` | Legacy redirect → `get.html` (keeps `#d=` for old bands) |
 | `RedMed-Xcode/RedMed/{PrivacyPolicy,TOS,security,HowItWorks}.html` + `legal-doc.css` | Policy pages bundled in the app (sole copy — no repo-root duplicates) |
 | `assets/` + root `BrandLogo.png` | Pages / SW logo paths |
