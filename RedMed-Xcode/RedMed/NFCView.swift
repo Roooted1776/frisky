@@ -233,6 +233,9 @@ struct NFCView: View {
         ) { success in
             if success {
                 if AppConfig.nfcHardwareEnabled {
+                    // Drop stale simulate copy so NFCWriter progress/errors are visible.
+                    simulateBusy = false
+                    simulateMessage = ""
                     writer.writeURL(urlString)
                 } else {
                     simulateWrite(urlString)
@@ -245,6 +248,8 @@ struct NFCView: View {
 
     func beginScanVerify() {
         if AppConfig.nfcHardwareEnabled {
+            simulateBusy = false
+            simulateMessage = ""
             reader.readTag(alertMessage: "Hold your iPhone near the bracelet to verify the card.") { chip, _ in
                 let card = ProfileData(persisting: false)
                 ProfileNFCCodec.apply(chip, to: card)
