@@ -99,11 +99,11 @@ enum AppConfig {
     }
 
     /// Carrier notes + local-only rule for Find Help.
-    /// RedMed never runs a satellite API/SDK — Call uses system `tel:` only.
+    /// Call uses system `tel:` only — never attaches profile / PII / PHI / GPS.
     enum Satellite {
         /// Permanent product rule — do not soften or time-box.
         static let localOnlyLine =
-            "Local only — forever. No Bluetooth · no RedMed servers · passive HF NFC. Profile stays on this phone and the band."
+            "Local only — forever. No Bluetooth · no RedMed servers · passive HF NFC. No PII or PHI leaves this device through RedMed."
 
         /// US flagship first (T-Mobile / T-Satellite), then other announced Starlink
         /// Direct-to-Cell / Starlink Mobile carrier partners. Availability and plan

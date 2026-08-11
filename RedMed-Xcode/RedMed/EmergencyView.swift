@@ -22,7 +22,7 @@ struct EmergencyView: View {
                     // NO CELL SIGNAL — carriers only (no satellite coach UI)
                     NoCellSignalCard()
 
-                    // GPS + Call: exactly 5px under the coordinates pane
+                    // GPS + Call: 5px under coordinates. Dial only — no PII/PHI attach.
                     VStack(alignment: .leading, spacing: 5) {
                         GPSCard(location: locationEnabled ? locationManager.location : nil)
                             .opacity(locationEnabled ? 1 : 0.45)
