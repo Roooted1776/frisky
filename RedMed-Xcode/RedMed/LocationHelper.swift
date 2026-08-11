@@ -125,17 +125,29 @@ struct LocationSuggestionBanner: View {
 /// Grabs a one-shot GPS fix, then opens Messages pre-filled with a maps link
 /// to the emergency contact's phone number (parsed from their detail string).
 class LocationHelper: NSObject, ObservableObject, CLLocationManagerDelegate {
-    private let manager = CLLocationManager()
+    private var manager: CLLocationManager?
     private var pendingContactDetail: String?
-
-    override init() {
-        super.init()
-        manager.delegate = self
-    }
 
     func requestAndSend(to contactDetail: String?) {
         pendingContactDetail = contactDetail
-        manager.requestWhenInUseAuthorization()
+        let m: CLLocationManager
+        if let existing = manager {
+            m = existing
+        } else {
+            let created = CLLocationManager()
+            created.delegate = self
+            manager = created
+            m = created
+        }
+        m.requestWhenInUseAuthorization()
+        if m.authorizationStatus == .authorizedWhenInUse || m.authorizationStatus == .authorizedAlways {
+            m.requestLocation()
+        }
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        guard manager.authorizationStatus == .authorizedWhenInUse
+                || manager.authorizationStatus == .authorizedAlways else { return }
         manager.requestLocation()
     }
 

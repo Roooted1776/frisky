@@ -17,12 +17,7 @@ class NearbyHospitalFinder: NSObject, ObservableObject, CLLocationManagerDelegat
     @Published var isLoading = false
     @Published var errorMessage: String? = nil
 
-    private let manager = CLLocationManager()
-
-    override init() {
-        super.init()
-        manager.delegate = self
-    }
+    private var manager: CLLocationManager?
 
     func search() {
         let begin = {
@@ -34,8 +29,45 @@ class NearbyHospitalFinder: NSObject, ObservableObject, CLLocationManagerDelegat
         } else {
             DispatchQueue.main.async(execute: begin)
         }
-        manager.requestWhenInUseAuthorization()
-        manager.requestLocation()
+        let m: CLLocationManager
+        if let existing = manager {
+            m = existing
+        } else {
+            let created = CLLocationManager()
+            created.delegate = self
+            manager = created
+            m = created
+        }
+        switch m.authorizationStatus {
+        case .notDetermined:
+            m.requestWhenInUseAuthorization()
+        case .authorizedWhenInUse, .authorizedAlways:
+            m.requestLocation()
+        case .denied, .restricted:
+            let fail = {
+                self.isLoading = false
+                self.errorMessage = "Couldn't get your location. Check Location permission in Settings."
+            }
+            if Thread.isMainThread { fail() } else { DispatchQueue.main.async(execute: fail) }
+        @unknown default:
+            break
+        }
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        guard isLoading else { return }
+        switch manager.authorizationStatus {
+        case .authorizedWhenInUse, .authorizedAlways:
+            manager.requestLocation()
+        case .denied, .restricted:
+            let fail = {
+                self.isLoading = false
+                self.errorMessage = "Couldn't get your location. Check Location permission in Settings."
+            }
+            if Thread.isMainThread { fail() } else { DispatchQueue.main.async(execute: fail) }
+        default:
+            break
+        }
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
