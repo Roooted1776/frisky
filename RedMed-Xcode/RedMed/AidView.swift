@@ -59,15 +59,20 @@ struct AidView: View {
         NavigationView {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 12) {
-                    Text("Roadside Aid")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundColor(.redmedDark)
-                    Text("Tap a pane — expand only what you need.")
+                    // Brand wordmark in place of the old "Roadside Aid" hero title
+                    Image("BrandWordmark")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 42)
+                        .accessibilityLabel("RedMed")
+                        .padding(.top, 2)
+
+                    Text("expand pane - tap a pane")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.redmedMuted)
 
                     HStack(spacing: 8) {
-                        PillTag(text: "tap to expand", accent: true)
+                        PillTag(text: "expand pane - tap a pane", accent: true)
                     }
                     .padding(.bottom, 2)
 
@@ -88,6 +93,16 @@ struct AidView: View {
                         }
                     }
 
+                    // Quote moved from RedMed (main) tab — sits below the panes
+                    Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.redmedDark)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(4)
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 28)
+                        .padding(.bottom, 8)
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 10)
@@ -99,9 +114,8 @@ struct AidView: View {
             .toolbarBackground(Color.redmedBg, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Roadside Aid").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedAccent)
-                }
+                // No "Roadside Aid" principal — BrandWordmark is the hero brand signal.
+                // Keep main's matching redmedBg toolbar chrome.
                 if isScannerSession {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         ScannerCloseButton()
@@ -187,10 +201,14 @@ struct PaneCard: View {
             }
         }
         .background(Color.redmedSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 22))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 22)
-                .stroke(isOpen ? Color.redmedAccent.opacity(0.28) : Color.redmedDivider, lineWidth: 1)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(
+                    isOpen ? Color.redmedAccent.opacity(0.28) : Color.redmedDark.opacity(0.08),
+                    lineWidth: 1
+                )
         )
+        .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
     }
 }
