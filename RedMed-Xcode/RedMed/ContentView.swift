@@ -3,7 +3,6 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
-    @Environment(\.scenePhase) private var scenePhase
     @State private var tab: AppTab = .redmed
 
     /// Ped/EMS scanners: never NFC. Owners see the NFC tab only when hardware is enabled
@@ -28,7 +27,8 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if !isScannerSession {
+            // Location banner only on Find Help — never on cold launch / RedMed.
+            if !isScannerSession, scannerSafeTab.wrappedValue == .emergency {
                 LocationSuggestionBanner()
             }
             ZStack(alignment: .bottom) {
@@ -52,18 +52,7 @@ struct ContentView: View {
             }
             .ignoresSafeArea(edges: .bottom)
         }
-        // Refresh Location banner on foreground (e.g. back from Settings).
-        // Does not auto-prompt or start GPS — Find Help requests When-In-Use.
-        .onChange(of: scenePhase) { _, phase in
-            guard !isScannerSession, phase == .active else { return }
-            LocationAccessSuggester.shared.suggestIfNeeded()
-        }
-        .onAppear {
-            clampScannerTab()
-            if !isScannerSession {
-                LocationAccessSuggester.shared.suggestIfNeeded()
-            }
-        }
+        .onAppear { clampScannerTab() }
         .onChange(of: isScannerSession) { _, _ in clampScannerTab() }
     }
 

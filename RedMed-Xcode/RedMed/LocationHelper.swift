@@ -6,7 +6,7 @@ import Combine
 
 /// Optional Location nudge for Find Help only.
 /// Does **not** run at cold launch — no `CLLocationManager` until Find Help
-/// (or an explicit Allow) needs it. Never gates or replaces the main tabs.
+/// appears or the user taps Allow. Never gates or replaces the main tabs.
 final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManagerDelegate {
     static let shared = LocationAccessSuggester()
 
@@ -17,10 +17,9 @@ final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManag
 
     private override init() {
         super.init()
-        // No CLLocationManager here — creating one at launch can surface the
-        // system Location sheet / locationd work before the owner UI is ready.
     }
 
+    @discardableResult
     private func ensureManager() -> CLLocationManager {
         if let manager { return manager }
         let m = CLLocationManager()
@@ -29,15 +28,19 @@ final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManag
         return m
     }
 
+    /// Call when Find Help becomes visible — creates the manager lazily.
+    func prepareForFindHelp() {
+        let m = ensureManager()
+        apply(m.authorizationStatus)
+    }
+
     func refresh() {
-        // Without a manager yet, treat as undecided but do not prompt.
-        guard manager != nil || CLLocationManager.locationServicesEnabled() else {
-            needsSuggestion = true
+        guard let manager else {
+            needsSuggestion = false
             mustOpenSettings = false
             return
         }
-        let status = manager?.authorizationStatus ?? CLLocationManager().authorizationStatus
-        apply(status)
+        apply(manager.authorizationStatus)
     }
 
     private func apply(_ status: CLAuthorizationStatus) {
@@ -57,14 +60,9 @@ final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManag
         }
     }
 
-    /// Banner / Find Help only — never call from `@main` / first paint of RedMed.
-    func suggestIfNeeded() {
-        refresh()
-    }
-
     func primaryAction() {
         let m = ensureManager()
-        refresh()
+        apply(m.authorizationStatus)
         if mustOpenSettings {
             openSettings()
         } else {
@@ -120,7 +118,7 @@ struct LocationSuggestionBanner: View {
                 .overlay(Rectangle().fill(Color.redmedAccent.opacity(0.2)).frame(height: 1), alignment: .bottom)
             }
         }
-        .onAppear { suggester.suggestIfNeeded() }
+        .onAppear { suggester.prepareForFindHelp() }
     }
 }
 
