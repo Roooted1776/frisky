@@ -108,27 +108,39 @@ struct EditProfileView: View {
                     editSectionLabel("Emergency Contacts")
                     editCard {
                         ForEach($contacts) { $contact in
-                            HStack(alignment: .top, spacing: 8) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    TextField("Name", text: $contact.name)
-                                        .font(.system(size: 15, weight: .semibold))
-                                        .foregroundColor(.redmedDark)
-                                    TextField("Relationship · phone", text: $contact.detail)
-                                        .font(.system(size: 13))
-                                        .foregroundColor(.redmedMuted)
-                                }
-                                Spacer()
+                            HStack(alignment: .center, spacing: 10) {
+                                TextField("Name", text: $contact.name)
+                                    .font(.system(size: 15))
+                                    .foregroundColor(.redmedDark)
+                                    .textContentType(.name)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                                TextField("Phone", text: $contact.phone)
+                                    .font(.system(size: 15))
+                                    .foregroundColor(.redmedDark)
+                                    .keyboardType(.phonePad)
+                                    .textContentType(.telephoneNumber)
+                                    .multilineTextAlignment(.trailing)
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
+
                                 Button {
                                     withAnimation { contacts.removeAll { $0.id == contact.id } }
                                 } label: {
                                     Text("✕").font(.system(size: 18)).foregroundColor(.redmedAccent)
                                 }
-                                .padding(.top, 4)
                             }
                             .padding(.horizontal, 16).padding(.vertical, 13)
                             Divider().padding(.leading, 16)
+
+                            TextField("Relation (optional)", text: $contact.relationship)
+                                .font(.system(size: 15))
+                                .foregroundColor(.redmedDark)
+                                .padding(.horizontal, 16).padding(.vertical, 13)
+                            Divider().padding(.leading, 16)
                         }
-                        addButton("Add contact") { contacts.append(EmergencyContact(name: "", detail: "")) }
+                        addButton("Add contact") {
+                            contacts.append(EmergencyContact(name: "", relationship: "", phone: ""))
+                        }
                     }
                 }
                 .padding(.top, 20)
@@ -207,7 +219,13 @@ struct EditProfileView: View {
         profile.allergies = allergies.filter { !$0.isEmpty }
         profile.medications = medications.filter { !$0.isEmpty }
         profile.conditions = conditions.filter { !$0.isEmpty }
-        profile.contacts = contacts.filter { !$0.name.isEmpty }
+        profile.contacts = contacts.compactMap { contact -> EmergencyContact? in
+            let name = contact.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            let phone = contact.phone.trimmingCharacters(in: .whitespacesAndNewlines)
+            let rel = contact.relationship.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty || !phone.isEmpty else { return nil }
+            return EmergencyContact(name: name, relationship: rel, phone: phone)
+        }
         dismiss()
     }
 }

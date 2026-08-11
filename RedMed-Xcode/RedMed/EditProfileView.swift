@@ -27,7 +27,7 @@ struct EditProfileView: View {
         static let font: CGFloat = 15
         static let navFont: CGFloat = 17
         static let icon: CGFloat = 18
-        static let labelWidth: CGFloat = 90
+        static let labelWidth: CGFloat = 100
         static let rowHPad: CGFloat = 16
         static let rowVPad: CGFloat = 13
         static let sectionGap: CGFloat = 22
@@ -277,16 +277,20 @@ struct EditProfileView: View {
     @ViewBuilder
     private var contactsEditor: some View {
         ForEach($contacts) { $contact in
-            HStack(alignment: .top, spacing: 8) {
-                VStack(alignment: .leading, spacing: 4) {
-                    TextField("Name", text: $contact.name)
-                        .font(.system(size: Metrics.font, weight: .semibold))
-                        .foregroundColor(.redmedDark)
-                    TextField("Relationship · phone", text: $contact.detail)
-                        .font(.system(size: Metrics.font))
-                        .foregroundColor(.redmedMuted)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack(alignment: .center, spacing: 10) {
+                TextField("Name", text: $contact.name)
+                    .font(.system(size: Metrics.font))
+                    .foregroundColor(.redmedDark)
+                    .textContentType(.name)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                TextField("Phone", text: $contact.phone)
+                    .font(.system(size: Metrics.font))
+                    .foregroundColor(.redmedDark)
+                    .keyboardType(.phonePad)
+                    .textContentType(.telephoneNumber)
+                    .multilineTextAlignment(.trailing)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
 
                 Button {
                     let id = contact.id
@@ -295,18 +299,26 @@ struct EditProfileView: View {
                     Text("✕")
                         .font(.system(size: Metrics.icon))
                         .foregroundColor(.redmedAccent)
-                        .padding(.leading, 10)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, Metrics.rowHPad)
             .padding(.vertical, Metrics.rowVPad)
+
+            Divider().padding(.leading, Metrics.rowHPad)
+
+            TextField("Relation (optional)", text: $contact.relationship)
+                .font(.system(size: Metrics.font))
+                .foregroundColor(.redmedDark)
+                .padding(.horizontal, Metrics.rowHPad)
+                .padding(.vertical, Metrics.rowVPad)
+
             Divider().padding(.leading, Metrics.rowHPad)
         }
 
         Button {
-            contacts.append(EmergencyContact(name: "", detail: ""))
+            contacts.append(EmergencyContact(name: "", relationship: "", phone: ""))
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "plus.circle.fill").font(.system(size: Metrics.icon))
@@ -400,7 +412,17 @@ struct EditProfileView: View {
         profile.allergies = allergies.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         profile.medications = medications.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         profile.conditions = conditions.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-        profile.contacts = contacts.filter { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }
+        profile.contacts = contacts.compactMap { contact -> EmergencyContact? in
+            let trimmedName = contact.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedPhone = contact.phone.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedRel = contact.relationship.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedName.isEmpty || !trimmedPhone.isEmpty else { return nil }
+            return EmergencyContact(
+                name: trimmedName,
+                relationship: trimmedRel,
+                phone: trimmedPhone
+            )
+        }
         profile.persist()
         dismiss()
     }

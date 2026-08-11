@@ -123,13 +123,13 @@ struct LocationSuggestionBanner: View {
 }
 
 /// Grabs a one-shot GPS fix, then opens Messages pre-filled with a maps link
-/// to the emergency contact's phone number (parsed from their detail string).
+/// to the emergency contact's phone number.
 class LocationHelper: NSObject, ObservableObject, CLLocationManagerDelegate {
     private var manager: CLLocationManager?
-    private var pendingContactDetail: String?
+    private var pendingPhone: String?
 
-    func requestAndSend(to contactDetail: String?) {
-        pendingContactDetail = contactDetail
+    func requestAndSend(toPhone phone: String?) {
+        pendingPhone = phone
         let m: CLLocationManager
         if let existing = manager {
             m = existing
@@ -145,6 +145,11 @@ class LocationHelper: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
     }
 
+    /// Legacy: parse digits out of a combined `Relationship · phone` detail string.
+    func requestAndSend(to contactDetail: String?) {
+        requestAndSend(toPhone: contactDetail)
+    }
+
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         guard manager.authorizationStatus == .authorizedWhenInUse
                 || manager.authorizationStatus == .authorizedAlways else { return }
@@ -154,7 +159,7 @@ class LocationHelper: NSObject, ObservableObject, CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let loc = locations.first else { return }
         let url = "https://maps.google.com/?q=\(loc.coordinate.latitude),\(loc.coordinate.longitude)"
-        let digits = (pendingContactDetail ?? "").filter(\.isNumber)
+        let digits = (pendingPhone ?? "").filter { $0.isNumber || $0 == "+" }
         let body = "This is my current location: \(url)"
         guard let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return }
         let smsURLString = digits.isEmpty ? "sms:&body=\(encodedBody)" : "sms:\(digits)&body=\(encodedBody)"

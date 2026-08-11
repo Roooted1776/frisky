@@ -104,14 +104,19 @@ struct ProfileSummaryView: View {
                 } else {
                     ForEach(filledContacts) { contact in
                         VStack(alignment: .leading, spacing: layout.s(2)) {
-                            Text(contact.name.isEmpty ? "Unnamed contact" : contact.name)
-                                .font(layout.subheadlineFont(weight: .semibold))
-                            let detail = [contact.rel, contact.phone]
-                                .map { $0.trimmingCharacters(in: .whitespaces) }
-                                .filter { !$0.isEmpty }
-                                .joined(separator: " · ")
-                            if !detail.isEmpty {
-                                Text(detail)
+                            HStack(alignment: .firstTextBaseline, spacing: layout.s(8)) {
+                                Text(contact.name.isEmpty ? "Unnamed contact" : contact.name)
+                                    .font(layout.subheadlineFont(weight: .semibold))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                if !contact.phone.trimmingCharacters(in: .whitespaces).isEmpty {
+                                    Text(contact.phone)
+                                        .font(layout.captionFont(weight: .medium))
+                                        .foregroundStyle(AppTheme.medical)
+                                        .multilineTextAlignment(.trailing)
+                                }
+                            }
+                            if !contact.rel.trimmingCharacters(in: .whitespaces).isEmpty {
+                                Text(contact.rel)
                                     .font(layout.captionFont(weight: .medium))
                                     .foregroundStyle(AppTheme.muted)
                             }
