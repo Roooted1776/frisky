@@ -154,11 +154,17 @@ struct OwnerAppLock<Content: View>: View {
             }
             // Decode off the main thread — unlock UI stays on cream lock until apply.
             Task {
-                _ = await profile.reloadFromKeychainAsync()
+                let loaded = await profile.reloadFromKeychainAsync()
                 guard generation == authGeneration else { return }
                 isAuthenticating = false
-                gate = .unlocked
-                failed = false
+                if loaded {
+                    gate = .unlocked
+                    failed = false
+                } else {
+                    // Corrupt / unreadable Keychain — stay locked; do not open empty Edit.
+                    gate = .locked
+                    failed = true
+                }
             }
         }
     }
