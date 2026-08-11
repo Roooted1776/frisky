@@ -31,6 +31,11 @@ struct NFCView: View {
                         .multilineTextAlignment(.center)
                         .lineSpacing(3)
                         .frame(maxWidth: 275)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 12)
+                        .background(Color.redmedSurface)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.redmedDivider, lineWidth: 1))
                         .frame(maxWidth: .infinity)
                         .padding(.top, 8)
                         .padding(.bottom, 6)
@@ -56,8 +61,8 @@ struct NFCView: View {
                     }
                     .padding(.horizontal, 14)
                     .background(Color.white.opacity(0.7))
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
-                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.redmedDivider, lineWidth: 1))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.redmedDivider, lineWidth: 1))
 
                     sectionLabel("Set up")
                     VStack(spacing: 12) {
@@ -76,7 +81,7 @@ struct NFCView: View {
                                 LinearGradient(colors: [Color(red:1, green:0.447, blue:0.537), .redmedAccent],
                                                startPoint: .top, endPoint: .bottom)
                             )
-                            .clipShape(Capsule())
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
                             .shadow(color: Color.redmedAccent.opacity(0.28), radius: 7, y: 4)
                         }
                         .disabled(!profile.hasData || band.isBusy)
@@ -96,49 +101,14 @@ struct NFCView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             syncBullet("Link your bracelet once (write after RedMed is filled).")
                             syncBullet("Payload targets get.html — short path for NTAG213 URI budgets.")
-                            syncBullet("After write, Scan below — linked only when read-back matches (or simulate succeeds).")
+                            syncBullet("After write, linked when read-back matches (or simulate succeeds). Use Preview scanner on RedMed to see the passerby card.")
                             syncBullet("If you cancel the NFC prompt, the band stays stale until you write again.")
                         }
                     }
                     .padding(14)
                     .background(Color.redmedSurface)
-                    .clipShape(RoundedRectangle(cornerRadius: 18))
-                    .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
-
-                    sectionLabel("Verify")
-                    VStack(alignment: .leading, spacing: 12) {
-                        if profile.braceletLinked {
-                            Text(AppConfig.nfcHardwareEnabled
-                                  ? "Scan your band to see the same emergency card a stranger gets — no app required for them."
-                                  : "Simulate scan to preview the passerby shell (same as get.html after a tap).")
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(.redmedMuted)
-                                .lineSpacing(3)
-                            SecondaryButton(
-                                AppConfig.nfcHardwareEnabled ? "Scan your bracelet" : "Simulate scan (passerby view)",
-                                icon: "qrcode.viewfinder"
-                            ) { band.verifyBand(from: profile) }
-                            if band.isReading {
-                                Text(band.statusMessage.isEmpty ? "Hold near tag…" : band.statusMessage)
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(.redmedMuted)
-                            }
-                            if let url = band.lastPackedURL, let link = URL(string: url) {
-                                Link("Open packed get.html URL", destination: link)
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundColor(.redmedAccent)
-                            }
-                        } else {
-                            Text("Write the band once above — then you can scan to verify the tap card.")
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(.redmedMuted)
-                                .lineSpacing(3)
-                        }
-                    }
-                    .padding(14)
-                    .background(Color.redmedSurface)
-                    .clipShape(RoundedRectangle(cornerRadius: 18))
-                    .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.redmedDivider, lineWidth: 1))
                     .padding(.bottom, 16)
                 }
                 .padding(.horizontal, 16)
