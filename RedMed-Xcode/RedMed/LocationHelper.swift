@@ -4,27 +4,44 @@ import UIKit
 import SwiftUI
 import Combine
 
-/// Suggests Location until When-In-Use (or Always) is granted.
-/// Does **not** gate app launch and does **not** start GPS updates —
-/// Find Help still starts updates only when that tab is visible.
+/// Optional Location nudge for Find Help only.
+/// Does **not** run at cold launch — no `CLLocationManager` until Find Help
+/// (or an explicit Allow) needs it. Never gates or replaces the main tabs.
 final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManagerDelegate {
     static let shared = LocationAccessSuggester()
 
-    private let manager = CLLocationManager()
+    private var manager: CLLocationManager?
 
-    /// True when the owner app should keep suggesting Location.
     @Published private(set) var needsSuggestion = false
-    /// Denied/restricted — only Settings can fix it.
     @Published private(set) var mustOpenSettings = false
 
     private override init() {
         super.init()
-        manager.delegate = self
-        refresh()
+        // No CLLocationManager here — creating one at launch can surface the
+        // system Location sheet / locationd work before the owner UI is ready.
+    }
+
+    private func ensureManager() -> CLLocationManager {
+        if let manager { return manager }
+        let m = CLLocationManager()
+        m.delegate = self
+        manager = m
+        return m
     }
 
     func refresh() {
-        switch manager.authorizationStatus {
+        // Without a manager yet, treat as undecided but do not prompt.
+        guard manager != nil || CLLocationManager.locationServicesEnabled() else {
+            needsSuggestion = true
+            mustOpenSettings = false
+            return
+        }
+        let status = manager?.authorizationStatus ?? CLLocationManager().authorizationStatus
+        apply(status)
+    }
+
+    private func apply(_ status: CLAuthorizationStatus) {
+        switch status {
         case .authorizedAlways, .authorizedWhenInUse:
             needsSuggestion = false
             mustOpenSettings = false
@@ -40,19 +57,18 @@ final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManag
         }
     }
 
-    /// Refresh banner state on foreground. Does **not** auto-present the system
-    /// dialog — first launch stays on the main tabs. Authorization is requested
-    /// when the user taps Allow on the banner or opens Find Help.
+    /// Banner / Find Help only — never call from `@main` / first paint of RedMed.
     func suggestIfNeeded() {
         refresh()
     }
 
     func primaryAction() {
+        let m = ensureManager()
         refresh()
         if mustOpenSettings {
             openSettings()
         } else {
-            manager.requestWhenInUseAuthorization()
+            m.requestWhenInUseAuthorization()
         }
     }
 
@@ -62,45 +78,49 @@ final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManag
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        let status = manager.authorizationStatus
         if Thread.isMainThread {
-            refresh()
+            apply(status)
         } else {
-            DispatchQueue.main.async { [weak self] in self?.refresh() }
+            DispatchQueue.main.async { [weak self] in self?.apply(status) }
         }
     }
 }
 
-/// Always-visible nudge until Location is allowed. Never replaces the main tabs.
+/// Shown on Find Help only — never on cold launch / RedMed tab.
 struct LocationSuggestionBanner: View {
     @ObservedObject private var suggester = LocationAccessSuggester.shared
 
     var body: some View {
-        if suggester.needsSuggestion {
-            HStack(alignment: .center, spacing: 10) {
-                Image(systemName: "location.fill")
-                    .font(.system(size: 14, weight: .semibold))
+        Group {
+            if suggester.needsSuggestion {
+                HStack(alignment: .center, spacing: 10) {
+                    Image(systemName: "location.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.redmedAccent)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Location suggested")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.redmedDark)
+                        Text("Allow Location so Find Help can show exact GPS for dispatch.")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.redmedMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: 4)
+                    Button(suggester.mustOpenSettings ? "Settings" : "Allow") {
+                        suggester.primaryAction()
+                    }
+                    .font(.system(size: 12, weight: .bold))
                     .foregroundColor(.redmedAccent)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Location suggested")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.redmedDark)
-                    Text("Allow Location so Find Help can show exact GPS for dispatch.")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
-                Spacer(minLength: 4)
-                Button(suggester.mustOpenSettings ? "Settings" : "Allow") {
-                    suggester.primaryAction()
-                }
-                .font(.system(size: 12, weight: .bold))
-                .foregroundColor(.redmedAccent)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(Color.redmedAccent.opacity(0.08))
+                .overlay(Rectangle().fill(Color.redmedAccent.opacity(0.2)).frame(height: 1), alignment: .bottom)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
-            .background(Color.redmedAccent.opacity(0.08))
-            .overlay(Rectangle().fill(Color.redmedAccent.opacity(0.2)).frame(height: 1), alignment: .bottom)
         }
+        .onAppear { suggester.suggestIfNeeded() }
     }
 }
 
