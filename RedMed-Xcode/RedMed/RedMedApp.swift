@@ -12,8 +12,9 @@ struct RedMedApp: App {
                 OwnerAppLock {
                     Main()
                 }
-                .environmentObject(profile)
             }
+            // On the guard (not only the lock) so capture cover can see purged vs PHI-in-RAM.
+            .environmentObject(profile)
             // Match launch screen so any pre-paint gap stays cream, not system black.
             .background(Color.redmedBg.ignoresSafeArea())
             .task {

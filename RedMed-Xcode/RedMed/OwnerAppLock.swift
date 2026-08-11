@@ -26,6 +26,7 @@ struct OwnerAppLock<Content: View>: View {
     @State private var hasEverHadSensitiveData = false
     /// Bumps on lock so a late Face ID success cannot unlock after background.
     @State private var authGeneration = 0
+    @State private var screenCaptured = UIScreen.main.isCaptured
 
     var body: some View {
         ZStack {
@@ -59,6 +60,9 @@ struct OwnerAppLock<Content: View>: View {
         }
         .onChange(of: profile.hasSensitiveProfileData) { _, hasData in
             if hasData { hasEverHadSensitiveData = true }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)) { _ in
+            screenCaptured = UIScreen.main.isCaptured
         }
     }
 
@@ -94,6 +98,13 @@ struct OwnerAppLock<Content: View>: View {
                     .foregroundColor(.redmedMuted)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 28)
+                if screenCaptured {
+                    Text("Screen sharing is on — unlock with passcode. Profile stays hidden on the share until you stop sharing.")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.redmedMuted)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 28)
+                }
                 if failed {
                     Text("Couldn't verify it's you. Try again.")
                         .font(.system(size: 13, weight: .semibold))
