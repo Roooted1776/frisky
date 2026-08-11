@@ -85,10 +85,11 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Local History Face ID dashboard (timestamps/kind only).
 - `PrivacySnapshotGuard` for app-switcher snapshots.
 - Policy HTML: US/HIPAA-aligned rewrite; local EMS assist / ID handoff; no false cert claims.
-- Earlier UK/NHS/MHRA compliance pack drafts under `compliance/`.
+- Earlier UK/NHS/MHRA compliance pack drafts lived under `compliance/` (removed from tree; recoverable from git history).
 
 ### Integrity / tooling
 - Repo integrity passes (AppLock timer, hygiene, uploads purge, legal sync).
+- Repo slim: dropped staging `uploads/`, debug `screenshots/`, UK `compliance/` drafts, and unused `support.js` / `ios-frame.jsx`.
 - Cloud Linux cannot build — documented; `scripts/run.sh` for Mac.
 - Bugbot Autofix-style passes when Bugbot skipped / usage-capped (#85, #86, etc.).
 - Branch cleanup: only `main` kept as long-lived brainchild.
@@ -117,3 +118,5 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Repo-root policy HTML duplicates.
 - Parallel long-lived feature branches beside `main`.
 - Claiming Apple Crash Detection or cloud crash telemetry.
+- Re-adding staging `uploads/`, debug `screenshots/`, dead `support.js` /
+  `ios-frame.jsx`, or UK `compliance/` paper packs to the working tree.

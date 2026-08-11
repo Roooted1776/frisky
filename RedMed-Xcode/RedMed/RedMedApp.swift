@@ -14,6 +14,8 @@ struct RedMedApp: App {
                 }
                 .environmentObject(profile)
             }
+            // Match launch screen so any pre-paint gap stays cream, not system black.
+            .background(Color.redmedBg.ignoresSafeArea())
             .task {
                 // First paint with zero Location / vault / Keychain decode.
                 await Task.yield()

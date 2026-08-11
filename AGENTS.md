@@ -80,7 +80,10 @@ Settings; When-In-Use + GPS start on Find Help only when Location is enabled
 monitoring may start after first-frame yield (no Location). `ContentView` lazy
 tab mounting mounts RedMed only on cold start (911 / Aid / NFC on first visit,
 kept alive after). Keychain profile decode waits until Face ID unlock; vault
-prep runs off the main thread after first paint.
+prep runs off the main thread after first paint. `UILaunchScreen` must use
+`LaunchBackground` (same as `redmedBg`) — never an empty dict (system black).
+`PrivacySnapshotGuard` must not cover until the scene has been `.active` once
+(cold start begins `.inactive` and would otherwise blank the first paint).
 
 **Xcode project:** `project.pbxproj` object IDs must stay unique. Duplicate
 `AAAA`/`AABB` IDs silently drop sources from the target (seen when Haptic /
@@ -99,6 +102,11 @@ streaming bound in `get.html`. Passerby HTML never touches brightness or audio.
 
 **Repo hygiene:** `main` is the only long-lived branch. After merges, delete
 feature branches on the remote; do not leave parallel “brainchild” branches.
+Keep the tree product-only: `RedMed-Xcode/`, passerby `get*` / `sw.js` /
+`card.html` / `_headers`, `assets/` + root logo, `docs/` product notes,
+`scripts/`, `.github/`, and agent docs. Do not re-add staging `uploads/`,
+debug `screenshots/`, dead `support.js` / `ios-frame.jsx`, or UK
+`compliance/` paper packs.
 
 **Debugger note:** `Thread 1: signal SIGTERM` at `mach_msg2_trap` is usually
 Xcode Stop / Simulator killing the process — not a Swift crash. Look for
