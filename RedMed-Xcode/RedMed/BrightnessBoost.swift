@@ -9,17 +9,23 @@ enum BrightnessBoost {
     private static var savedBrightness: CGFloat?
     private static var savedIdleTimerDisabled: Bool?
     private static var activeCount = 0
+    /// True when a boost is armed but temporarily restored for background/inactive.
+    private static var pausedForBackground = false
 
     static func begin() {
         activeCount += 1
-        guard activeCount == 1 else { return }
+        guard activeCount == 1 else {
+            if !pausedForBackground {
+                applyBoost()
+            }
+            return
+        }
 
         let screen = UIScreen.main
         savedBrightness = screen.brightness
         savedIdleTimerDisabled = UIApplication.shared.isIdleTimerDisabled
-
-        screen.brightness = 1.0
-        UIApplication.shared.isIdleTimerDisabled = true
+        pausedForBackground = false
+        applyBoost()
     }
 
     static func end() {
@@ -27,14 +33,39 @@ enum BrightnessBoost {
         activeCount -= 1
         guard activeCount == 0 else { return }
 
+        restoreSaved()
+        savedBrightness = nil
+        savedIdleTimerDisabled = nil
+        pausedForBackground = false
+    }
+
+    /// Restore user brightness while the app is not active so Home / other apps
+    /// are not stuck at 100% (onDisappear does not run on background).
+    static func pauseForBackground() {
+        guard activeCount > 0, !pausedForBackground else { return }
+        pausedForBackground = true
+        restoreSaved()
+    }
+
+    /// Re-apply max brightness when returning to foreground with active hosts.
+    static func resumeFromBackground() {
+        guard activeCount > 0 else { return }
+        pausedForBackground = false
+        applyBoost()
+    }
+
+    private static func applyBoost() {
+        UIScreen.main.brightness = 1.0
+        UIApplication.shared.isIdleTimerDisabled = true
+    }
+
+    private static func restoreSaved() {
         if let savedBrightness {
             UIScreen.main.brightness = savedBrightness
         }
         if let savedIdleTimerDisabled {
             UIApplication.shared.isIdleTimerDisabled = savedIdleTimerDisabled
         }
-        savedBrightness = nil
-        savedIdleTimerDisabled = nil
     }
 }
 
@@ -46,10 +77,13 @@ private struct BrightnessBoostModifier: ViewModifier {
             .onAppear { BrightnessBoost.begin() }
             .onDisappear { BrightnessBoost.end() }
             .onChange(of: scenePhase) { _, phase in
-                // Keep max brightness while active and foregrounded.
-                if phase == .active {
-                    UIScreen.main.brightness = 1.0
-                    UIApplication.shared.isIdleTimerDisabled = true
+                switch phase {
+                case .active:
+                    BrightnessBoost.resumeFromBackground()
+                case .inactive, .background:
+                    BrightnessBoost.pauseForBackground()
+                @unknown default:
+                    BrightnessBoost.pauseForBackground()
                 }
             }
     }
