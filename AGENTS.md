@@ -50,12 +50,15 @@ The app has no backend, database, or web service.
   `HapticEngine.enabledKey`). No other toggles there.
 - **Always automatic (not Settings):** Find Help / scanner brightness → 100%
   (`BrightnessBoost`); owner Find Help locate-me beep every 5s
-  (`LocatorBeacon`). Do not add off switches for these.
-- **LocatorBeacon** is owner Find Help only — never arm it when
-  `isScannerSession == true` (passerby / EMS card stays quiet).
+  (`LocatorBeacon`); on-device crash / hard-impact detection
+  (`CrashMotionGuard`) that arms the same siren + brightness. Do not add off
+  switches for these.
+- **LocatorBeacon** Find Help path is owner-only — never arm Find Help siren
+  when `isScannerSession == true`. Crash survival hold may keep sounding in
+  background until the user cancels (“I'm OK”).
 - **BrightnessBoost** restores the prior brightness + idle-timer on
-  `.inactive`/`.background` (pause) and re-applies on `.active` while hosts
-  remain; do not leave the device stuck at 100% after Home.
+  `.inactive`/`.background` for normal Find Help / scanner hosts; crash
+  survival hold skips that pause until cancelled.
 
 **Vault / privacy (permanent):**
 - `VaultHistoryView` Face ID unlock: relock on `.background` only. Do **not**
@@ -70,7 +73,8 @@ The app has no backend, database, or web service.
 trauma JSON, or show a Location banner at `@main`. First launch opens RedMed
 tabs immediately with zero Location API. Location nudge lives in Help →
 Settings; When-In-Use + GPS start on Find Help only when Location is enabled
-(`AppSettings.locationEnabled` + `LocationManager.start`). Newer sources under
+(`AppSettings.locationEnabled` + `LocationManager.start`). CoreMotion crash
+monitoring may start after first-frame yield (no Location). Newer sources under
 `uploads/` use lazy tab mounting (switch + CustomTabBar), default RedMed, and
 async trauma catalog warm-up for the same reason.
 

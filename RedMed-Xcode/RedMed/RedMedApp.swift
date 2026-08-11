@@ -8,9 +8,18 @@ struct RedMedApp: App {
         WindowGroup {
             // Owner UI lives in Main.swift — not HTML.
             // Privacy cover hides PHI from iOS app-switcher snapshots.
-            PrivacySnapshotGuard {
-                Main()
-                    .environmentObject(profile)
+            // Crash overlay sits above privacy so cancel stays reachable.
+            ZStack {
+                PrivacySnapshotGuard {
+                    Main()
+                        .environmentObject(profile)
+                }
+                CrashSurvivalOverlay()
+            }
+            .task {
+                // First paint with zero Location; CoreMotion starts after yield.
+                await Task.yield()
+                CrashMotionGuard.shared.startMonitoring()
             }
             .onAppear {
                 HIPAAOfflineVault.prepare()

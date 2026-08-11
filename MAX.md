@@ -37,15 +37,16 @@ Native iOS medical ID + emergency aid. Passive **13.56 MHz HF NFC** bracelet (no
 See also `AGENTS.md`. High-signal recap:
 
 1. Owner vs scanner shells are permanent product law.
-2. Settings = **haptic + Location only**. Brightness 100% and locator beep are **automatic**.
-3. `LocatorBeacon` = owner Find Help only (quiet on scanner).
-4. `BrightnessBoost` pauses/restores on background; do not stick Home at 100%.
+2. Settings = **haptic + Location only**. Brightness 100%, locator beep, and on-device crash/impact survival alarm are **automatic**.
+3. `LocatorBeacon` Find Help path = owner only (quiet on scanner). Crash survival hold may keep siren + brightness through background until cancel.
+4. `BrightnessBoost` pauses/restores on background for normal hosts; survival hold skips pause.
 5. Vault Face ID: relock on **`.background` only** (not `.inactive` — Face ID sheets).
 6. Privacy cover: opaque, no fade.
-7. Cold launch: zero Location / MapKit / trauma JSON at `@main`.
+7. Cold launch: zero Location / MapKit / trauma JSON at `@main`. CoreMotion crash monitor may start after first-frame yield.
 8. Unique `project.pbxproj` IDs (duplicate IDs drop sources).
 9. Passerby SW: network-first shell; cache fallback on non-ok HTTP; bump `redmed-get-vN` in lockstep.
 10. `AppConfig.BraceletRF` owns tap-distance copy (no hardcoded inches).
+11. Crash / hard-impact detection is **local CoreMotion only** — not Apple Crash Detection, no cloud.
 
 ## What he has already done (shipped history)
 
@@ -78,6 +79,7 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Aid topics + trauma/hospital panes; CPR `CHHapticEngine` beat/breath.
 - Haptic preference in Help → Settings; CPR card toggle removed (Settings-only).
 - Auto max brightness on scanner + Find Help; owner Find Help locator beep every 5s.
+- On-device CoreMotion crash / hard-impact guard arms the same siren + full brightness (background hold until cancel).
 - Location toggle in Settings; Find Help GPS respects it; no Find Help location banner chrome.
 
 ### Privacy / HIPAA offline vault
@@ -109,9 +111,10 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 
 ## Do not reopen without explicit ask
 
-- Re-adding Settings toggles for brightness or locator.
-- Arming locator siren on scanner/passerby shell.
+- Re-adding Settings toggles for brightness, locator, or crash survival alarm.
+- Arming Find Help locator siren on scanner/passerby shell.
 - Relocking vault on `.inactive`.
 - Mutating owner `@AppStorage` from scanner UI.
 - Repo-root policy HTML duplicates.
 - Parallel long-lived feature branches beside `main`.
+- Claiming Apple Crash Detection or cloud crash telemetry.
