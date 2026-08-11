@@ -419,79 +419,79 @@
     margin: 2px 0 10px;
     object-fit: contain;
   }
+  /* Full-width accordion — same life-saving pattern as owner AidView. */
   .aid-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     margin-top: 8px;
-    align-items: start;
   }
   details.aid {
     background: var(--surface);
     border: 1px solid var(--divider);
     border-radius: var(--box);
-    padding: 0 10px;
-    grid-column: span 1;
+    padding: 0 12px;
+    width: 100%;
     min-width: 0;
-    overflow: hidden;
   }
-  details.aid[open] { grid-column: span 2; border-color: rgba(225,29,72,0.28); }
+  details.aid[open] { border-color: rgba(225,29,72,0.35); }
   details.aid summary {
     cursor: pointer;
     list-style: none;
     display: flex;
-    gap: 8px;
-    align-items: flex-start;
-    padding: 10px 0;
+    gap: 12px;
+    align-items: center;
+    min-height: 68px;
+    padding: 12px 0;
     min-width: 0;
+    -webkit-tap-highlight-color: transparent;
   }
   details.aid summary::-webkit-details-marker { display: none; }
   .aid-emoji {
-    width: 34px; height: 34px;
+    width: 44px; height: 44px;
     border-radius: var(--chip);
     background: rgba(225,29,72,0.1);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 17px;
+    font-size: 22px;
     flex-shrink: 0;
   }
   details.aid[open] .aid-emoji { background: var(--accent); }
   .aid-copy {
     min-width: 0;
     flex: 1;
-    overflow: hidden;
   }
   .aid-title {
     display: block;
-    font-size: 12px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--accent);
-    line-height: 1.25;
-    overflow-wrap: anywhere;
-    word-break: break-word;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .aid-sub {
     display: block;
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--muted);
-    margin-top: 3px;
-    line-height: 1.3;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-  }
-  details.aid[open] .aid-sub { display: none; }
-  details.aid ol {
-    margin: 0 0 10px;
-    padding-left: 16px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 500;
-    line-height: 1.4;
-    overflow-wrap: anywhere;
-    word-break: break-word;
+    color: var(--muted);
+    margin-top: 2px;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  details.aid ol li + li { margin-top: 4px; }
+  details.aid[open] .aid-sub { opacity: 0.55; }
+  details.aid ol {
+    margin: 0 0 12px;
+    padding-left: 18px;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.45;
+  }
+  details.aid ol li + li { margin-top: 8px; }
 
   /* —— Tab bar (matches CustomTabBar) —— */
   .tabbar {
@@ -783,6 +783,20 @@
       SPECS.walkByMinIn + '–' + SPECS.walkByMaxIn + '″ won’t fire';
   }
   resolveLogo();
+
+  // Aid accordion — one pane open at a time (matches owner AidView).
+  (function aidAccordion() {
+    var root = document.getElementById('panel-aid');
+    if (!root) return;
+    root.addEventListener('toggle', function (e) {
+      var t = e.target;
+      if (!t || t.tagName !== 'DETAILS' || !t.open) return;
+      root.querySelectorAll('details.aid[open]').forEach(function (d) {
+        if (d !== t) d.open = false;
+      });
+    }, true);
+  })();
+
 
   var MAX_PAYLOAD = 50000;
   var MAX_INFLATED = 65536;

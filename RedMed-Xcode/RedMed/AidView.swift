@@ -28,7 +28,7 @@ enum AidPaneCatalog {
                          ("Cold (Hypothermia)", "cold-hypothermia"), ("Heat (Exhaustion & Stroke)", "heat-stroke")]),
         AidPane(id: "seizure", emoji: "🧠", title: "Seizure", subtitle: "Don't restrain · time it", iconFilled: false,
                 topics: [("Seizure", "seizure")]),
-        AidPane(id: "hospitals", emoji: "🏥", title: "Nearby Hospitals", subtitle: "MapKit emergency POIs", iconFilled: false,
+        AidPane(id: "hospitals", emoji: "🏥", title: "Nearby Hospitals", subtitle: "Find an ER near you", iconFilled: false,
                 topics: [("Find Nearby Hospitals", "trauma-hospitals")]),
     ]
 
@@ -53,15 +53,12 @@ struct AidView: View {
     @State private var openPane: String? = nil
     @State private var activeTopic: AidTopic? = nil
 
-    let columns = [GridItem(.flexible()), GridItem(.flexible())]
-
     var body: some View {
-        // No NavigationView chrome — empty nav bar was parking BrandWordmark too low.
-        // Scanner Back mirrors RedMedView (overlay), not a trailing toolbar item.
+        // Full-width accordion — life-saving: big targets, text always fits, no
+        // 2-col reflow when a pane opens. Same pattern as passerby get.html Aid.
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 12) {
+            LazyVStack(alignment: .leading, spacing: 10) {
                 ZStack(alignment: .topTrailing) {
-                    // Brand wordmark in place of the old "Roadside Aid" hero title
                     Image("BrandWordmark")
                         .resizable()
                         .scaledToFit()
@@ -76,26 +73,20 @@ struct AidView: View {
                     }
                 }
 
-                // Panes + cancel + quote share one stack so LazyVStack spacing
-                // does not pad the 5pt gap under the lowest pane.
-                VStack(alignment: .leading, spacing: 0) {
-                    LazyVGrid(columns: columns, spacing: 12) {
-                        ForEach(AidPaneCatalog.panes) { pane in
-                            let isOpen = openPane == pane.id
-                            PaneCard(pane: pane, isOpen: isOpen) { key in
-                                if key == nil {
-                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                                        openPane = isOpen ? nil : pane.id
-                                    }
-                                } else if let k = key, let topic = AidTopicCatalog.topics[k] {
-                                    activeTopic = topic
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(AidPaneCatalog.panes) { pane in
+                        let isOpen = openPane == pane.id
+                        PaneCard(pane: pane, isOpen: isOpen) { key in
+                            if key == nil {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    openPane = isOpen ? nil : pane.id
                                 }
+                            } else if let k = key, let topic = AidTopicCatalog.topics[k] {
+                                activeTopic = topic
                             }
-                            .gridCellColumns(isOpen ? 2 : 1)
                         }
                     }
 
-                    // 5pt under lowest pane; not a grid cell (pane dropdown undisturbed).
                     CrashSurvivalCancelCard()
 
                     Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
@@ -103,13 +94,11 @@ struct AidView: View {
                         .foregroundColor(.redmedDark)
                         .multilineTextAlignment(.center)
                         .lineSpacing(4)
-                        .frame(maxWidth: 300)
+                        .frame(maxWidth: .infinity)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 14)
                         .redmedBox()
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 16)
-                        .padding(.bottom, 8)
+                        .padding(.top, 8)
                 }
             }
             .padding(.horizontal, 16)
@@ -139,64 +128,61 @@ struct PaneCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Button { onTap(nil) } label: {
-                HStack(alignment: .top, spacing: 8) {
+                HStack(alignment: .center, spacing: 12) {
                     Text(pane.emoji)
-                        .font(.system(size: 18))
-                        .frame(width: 34, height: 34)
+                        .font(.system(size: 22))
+                        .frame(width: 44, height: 44)
                         .background(isOpen ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
                         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+                        .accessibilityHidden(true)
 
-                    VStack(alignment: .leading, spacing: 3) {
+                    VStack(alignment: .leading, spacing: 2) {
                         Text(pane.title)
-                            .font(.system(size: 12, weight: .bold))
+                            .font(.system(size: 16, weight: .bold))
                             .foregroundColor(.redmedAccent)
-                            .multilineTextAlignment(.leading)
-                            .lineLimit(3)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .minimumScaleFactor(0.9)
-                        if !isOpen {
-                            Text(pane.subtitle)
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundColor(.redmedMuted)
-                                .multilineTextAlignment(.leading)
-                                .lineLimit(3)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
+                        Text(pane.subtitle)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.redmedMuted)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
+                            .opacity(isOpen ? 0.55 : 1)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .layoutPriority(1)
 
                     Image(systemName: isOpen ? "chevron.down" : "chevron.right")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.redmedAccent)
-                        .padding(.top, 2)
+                        .frame(width: 28, height: 28)
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 10)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 12)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(pane.title)
+            .accessibilityHint(isOpen ? "Collapse" : "Expand topics")
 
             if isOpen {
-                VStack(spacing: 6) {
+                VStack(spacing: 8) {
                     ForEach(pane.topics, id: \.key) { topic in
                         Button { onTap(topic.key) } label: {
-                            HStack(alignment: .top, spacing: 8) {
+                            HStack(spacing: 10) {
                                 Text(topic.label)
-                                    .font(.system(size: 13, weight: .semibold))
+                                    .font(.system(size: 16, weight: .semibold))
                                     .foregroundColor(.redmedDark)
                                     .multilineTextAlignment(.leading)
-                                    .lineLimit(3)
-                                    .fixedSize(horizontal: false, vertical: true)
+                                    .lineLimit(2)
+                                    .minimumScaleFactor(0.9)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                 Image(systemName: "chevron.right")
-                                    .font(.system(size: 11))
+                                    .font(.system(size: 13, weight: .semibold))
                                     .foregroundColor(.redmedMuted)
-                                    .padding(.top, 2)
                             }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 10)
-                            .background(Color.white.opacity(0.85))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 14)
+                            .background(Color.white.opacity(0.9))
                             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                             .overlay(
                                 RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
@@ -204,10 +190,11 @@ struct PaneCard: View {
                             )
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel(topic.label)
                     }
                 }
-                .padding(.horizontal, 8)
-                .padding(.bottom, 10)
+                .padding(.horizontal, 10)
+                .padding(.bottom, 12)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -216,7 +203,7 @@ struct PaneCard: View {
         .overlay(
             RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
                 .stroke(
-                    isOpen ? Color.redmedAccent.opacity(0.28) : Color.redmedDivider,
+                    isOpen ? Color.redmedAccent.opacity(0.35) : Color.redmedDivider,
                     lineWidth: 1
                 )
         )
