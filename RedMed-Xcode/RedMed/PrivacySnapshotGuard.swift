@@ -7,6 +7,9 @@ import UIKit
 struct PrivacySnapshotGuard<Content: View>: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var screenCaptured = UIScreen.main.isCaptured
+    /// Cold launch reports `.inactive` before first `.active`. Covering then paints
+    /// a blank shell over the real UI and reads as a long hang after the launch screen.
+    @State private var hasBeenActive = false
     private let content: Content
 
     init(@ViewBuilder content: () -> Content) {
@@ -14,7 +17,10 @@ struct PrivacySnapshotGuard<Content: View>: View {
     }
 
     private var mustCover: Bool {
-        scenePhase != .active || screenCaptured
+        if screenCaptured { return true }
+        // Stay uncovered until the first active frame so tabs paint immediately.
+        guard hasBeenActive else { return false }
+        return scenePhase != .active
     }
 
     var body: some View {
@@ -28,8 +34,15 @@ struct PrivacySnapshotGuard<Content: View>: View {
                     .zIndex(999)
             }
         }
+        .onAppear {
+            if scenePhase == .active {
+                hasBeenActive = true
+            }
+        }
         .onChange(of: scenePhase) { _, phase in
-            if phase != .active {
+            if phase == .active {
+                hasBeenActive = true
+            } else if hasBeenActive {
                 SecurePasteboard.clear()
             }
         }

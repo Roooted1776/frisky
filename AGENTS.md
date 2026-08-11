@@ -77,9 +77,13 @@ trauma JSON, or show a Location banner at `@main`. First launch opens RedMed
 tabs immediately with zero Location API. Location nudge lives in Help →
 Settings; When-In-Use + GPS start on Find Help only when Location is enabled
 (`AppSettings.locationEnabled` + `LocationManager.start`). CoreMotion crash
-monitoring may start after first-frame yield (no Location). Prefer lazy tab
-mounting (switch + CustomTabBar), default RedMed, and async trauma catalog
-warm-up for the same reason.
+monitoring may start after first-frame yield (no Location). `ContentView` lazy
+tab mounting mounts RedMed only on cold start (911 / Aid / NFC on first visit,
+kept alive after). Keychain profile decode waits until Face ID unlock; vault
+prep runs off the main thread after first paint. `UILaunchScreen` must use
+`LaunchBackground` (same as `redmedBg`) — never an empty dict (system black).
+`PrivacySnapshotGuard` must not cover until the scene has been `.active` once
+(cold start begins `.inactive` and would otherwise blank the first paint).
 
 **Xcode project:** `project.pbxproj` object IDs must stay unique. Duplicate
 `AAAA`/`AABB` IDs silently drop sources from the target (seen when Haptic /

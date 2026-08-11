@@ -40,23 +40,13 @@ class ProfileData: ObservableObject {
 
     init(persisting: Bool = true) {
         self.persists = persisting
-        if persisting {
-            _ = loadFromKeychain()
-            // First launch stays empty — no demo allergies/meds/identity.
-            // Scrub any leftover Alex Rivera demo blob from older builds.
-            if name == "Alex Rivera" {
-                name = ""
-                birthDate = ""
-                bloodType = ""
-                allergies = []
-                medications = []
-                conditions = []
-                contacts = []
-                isOrganDonor = false
-                lastUpdated = ""
-                persist()
-            }
-        }
+        // Keychain decode waits until Face ID unlock (OwnerAppLock) or explicit reload.
+        // Cold launch only checks blob presence via hasStoredProfile().
+    }
+
+    /// Lightweight gate for app lock — no JSON decode.
+    static func hasStoredProfile() -> Bool {
+        KeychainStore.exists(account: keychainAccount)
     }
 
     /// Detached copy for scanner / preview — mutations never touch the owner profile or Keychain.
@@ -138,6 +128,19 @@ class ProfileData: ObservableObject {
         braceletLinked = blob.braceletLinked
         isOrganDonor = blob.isOrganDonor
         lastUpdated = blob.lastUpdated
+        // Scrub any leftover Alex Rivera demo blob from older builds.
+        if name == "Alex Rivera" {
+            name = ""
+            birthDate = ""
+            bloodType = ""
+            allergies = []
+            medications = []
+            conditions = []
+            contacts = []
+            isOrganDonor = false
+            lastUpdated = ""
+            persist()
+        }
         return true
     }
 }

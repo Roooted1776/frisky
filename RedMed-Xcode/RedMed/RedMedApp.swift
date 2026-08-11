@@ -14,13 +14,15 @@ struct RedMedApp: App {
                 }
                 .environmentObject(profile)
             }
+            // Match launch screen so any pre-paint gap stays cream, not system black.
+            .background(Color.redmedBg.ignoresSafeArea())
             .task {
-                // First paint with zero Location; CoreMotion starts after yield.
+                // First paint with zero Location / vault / Keychain decode.
                 await Task.yield()
                 CrashMotionGuard.shared.startMonitoring()
-            }
-            .onAppear {
-                HIPAAOfflineVault.prepare()
+                Task.detached(priority: .utility) {
+                    _ = HIPAAOfflineVault.prepare()
+                }
             }
             .onOpenURL { url in
                 // Policies / get.html redirect with redmed://main
