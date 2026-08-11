@@ -193,86 +193,8 @@ struct NFCView: View {
         if msg.contains("Couldn't") || msg.contains("failed") || msg.contains("Failed") {
             return true
         }
-<<<<<<< HEAD
-        return !writer.success && !writer.statusMessage.isEmpty
-    }
-
-    func beginWrite() {
-        guard !isScannerSession else { return }
-        guard profile.hasData else { return }
-        guard let urlString = ProfileNFCCodec.buildURLString(profile: profile) else {
-            statusAlert = "Couldn't build tag payload from RedMed."
-            return
-        }
-
-        BiometricAuth.authenticate(
-            reason: "Confirm with Face ID, Touch ID, or passcode to write your RedMed card to the bracelet."
-        ) { success in
-            if success {
-                if AppConfig.nfcHardwareEnabled {
-                    // Drop stale simulate copy so NFCWriter progress/errors are visible.
-                    simulateBusy = false
-                    simulateMessage = ""
-                    writer.writeURL(urlString)
-                } else {
-                    simulateWrite(urlString)
-                }
-            } else {
-                showAuthFailedAlert = true
-            }
-        }
-    }
-
-    func beginScanVerify() {
-        if AppConfig.nfcHardwareEnabled {
-            simulateBusy = false
-            simulateMessage = ""
-            reader.readTag(alertMessage: "Hold your iPhone near the bracelet to verify the card.") { chip, _ in
-                let card = ProfileData(persisting: false)
-                ProfileNFCCodec.apply(chip, to: card)
-                scannedCard = card
-                showPublicCard = true
-            }
-            return
-        }
-        // Always pack the live RedMed profile (same as Preview scanner). Do not
-        // reuse lastSimulatedURL — that stays as the last “written” URL link only.
-        // Fail if pack/decode breaks — never present the editor profile as a
-        // successful `#d=` round-trip.
-        guard let source = ProfileNFCCodec.buildURLString(profile: profile),
-              let chip = ProfileNFCCodec.decodeProfile(fromURLString: source) else {
-            statusAlert = "Couldn't pack or decode the get.html#d= payload from RedMed."
-            return
-        }
-        let card = ProfileData(persisting: false)
-        ProfileNFCCodec.apply(chip, to: card)
-        scannedCard = card
-        showPublicCard = true
-    }
-
-    private func simulateWrite(_ urlString: String) {
-        simulateBusy = true
-        simulateMessage = "Packing compact get.html#d= payload…"
-        lastSimulatedURL = urlString
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
-            let note = ProfileNFCCodec.capacityNote(for: profile)
-            linkBraceletAfterWrite(detail: "Simulated write")
-            simulateBusy = false
-            simulateMessage = note.warn
-                ? "Simulated write OK — \(note.text)"
-                : "Simulated write OK — \(note.text). Open URL below or Simulate scan."
-        }
-    }
-
-    private func linkBraceletAfterWrite(detail: String) {
-        profile.braceletLinked = true
-        // Keychain write best-effort; bracelet flag is owner-local metadata only.
-        _ = profile.persist()
-        VaultHistoryStore.shared.record(.braceletWritten, detail: detail)
-=======
         return !band.writeSucceeded && !msg.isEmpty && !band.isWriting
             && msg != "Hold your iPhone near the NFC tag."
->>>>>>> origin/main
     }
 
     @ViewBuilder
