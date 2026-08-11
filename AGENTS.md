@@ -73,17 +73,22 @@ The app has no backend, database, or web service.
   events are timestamps/kind only (no field values).
 
 **Cold launch:** Do **not** create `CLLocationManager`, start GPS / MapKit /
-trauma JSON, or show a Location banner at `@main`. First launch opens RedMed
-tabs immediately with zero Location API. Location nudge lives in Help →
+trauma JSON, or show a Location banner at `@main`. First launch opens a cream
+shell (`redmedBg` / `LaunchBackground`) with **zero Keychain** on the first
+frame — `OwnerAppLock` defers `hasStoredProfile` / Face ID until after paint.
+Do not call Keychain in `@State` defaults. Location nudge lives in Help →
 Settings; When-In-Use + GPS start on Find Help only when Location is enabled
 (`AppSettings.locationEnabled` + `LocationManager.start`). CoreMotion crash
-monitoring may start after first-frame yield (no Location). `ContentView` lazy
+monitoring may start after first-frame yield (no Location); do not construct
+`CMMotionManager` at `CrashMotionGuard` shared init. `ContentView` lazy
 tab mounting mounts RedMed only on cold start (911 / Aid / NFC on first visit,
-kept alive after). Keychain profile decode waits until Face ID unlock; vault
-prep runs off the main thread after first paint. `UILaunchScreen` must use
-`LaunchBackground` (same as `redmedBg`) — never an empty dict (system black).
-`PrivacySnapshotGuard` must not cover until the scene has been `.active` once
-(cold start begins `.inactive` and would otherwise blank the first paint).
+kept alive after). Keychain profile decode runs off-main after Face ID unlock;
+vault prep runs off the main thread after first paint. `UILaunchScreen` must use
+`LaunchBackground` (same as `redmedBg`, including dark appearance) — never an
+empty dict (system black). `PrivacySnapshotGuard` must not cover until the
+scene has been `.active` once (cold start begins `.inactive` and would
+otherwise blank the first paint); store content as a `@ViewBuilder` closure,
+do not eagerly evaluate it in `init`.
 
 **Xcode project:** `project.pbxproj` object IDs must stay unique. Duplicate
 `AAAA`/`AABB` IDs silently drop sources from the target (seen when Haptic /

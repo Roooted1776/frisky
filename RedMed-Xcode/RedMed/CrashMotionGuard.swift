@@ -35,7 +35,8 @@ final class CrashMotionGuard: ObservableObject {
     private static let sampleHz: Double = 50.0
     private static let cooldownSeconds: TimeInterval = 90
 
-    private let manager = CMMotionManager()
+    /// Created in `startMonitoring()` — never at shared init / cold launch.
+    private var manager: CMMotionManager?
     private var freefallSince: Date?
     private var freefallEndedAt: Date?
     private var lastMagnitude: Double = 0
@@ -50,20 +51,22 @@ final class CrashMotionGuard: ObservableObject {
     /// Start after first paint so cold launch stays light.
     func startMonitoring() {
         guard !isMonitoring else { return }
-        guard manager.isDeviceMotionAvailable else { return }
+        let motion = manager ?? CMMotionManager()
+        manager = motion
+        guard motion.isDeviceMotionAvailable else { return }
         isMonitoring = true
         resetTransientState()
-        manager.deviceMotionUpdateInterval = 1.0 / Self.sampleHz
-        manager.startDeviceMotionUpdates(using: .xArbitraryZVertical, to: .main) { [weak self] motion, _ in
-            guard let self, let motion else { return }
-            self.evaluate(motion)
+        motion.deviceMotionUpdateInterval = 1.0 / Self.sampleHz
+        motion.startDeviceMotionUpdates(using: .xArbitraryZVertical, to: .main) { [weak self] sample, _ in
+            guard let self, let sample else { return }
+            self.evaluate(sample)
         }
     }
 
     func stopMonitoring() {
         guard isMonitoring else { return }
         isMonitoring = false
-        manager.stopDeviceMotionUpdates()
+        manager?.stopDeviceMotionUpdates()
         resetTransientState()
     }
 

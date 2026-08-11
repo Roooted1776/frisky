@@ -10,10 +10,10 @@ struct PrivacySnapshotGuard<Content: View>: View {
     /// Cold launch reports `.inactive` before first `.active`. Covering then paints
     /// a blank shell over the real UI and reads as a long hang after the launch screen.
     @State private var hasBeenActive = false
-    private let content: Content
+    @ViewBuilder private var content: () -> Content
 
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
+    init(@ViewBuilder content: @escaping () -> Content) {
+        self.content = content
     }
 
     private var mustCover: Bool {
@@ -25,7 +25,7 @@ struct PrivacySnapshotGuard<Content: View>: View {
 
     var body: some View {
         ZStack {
-            content
+            content()
 
             // No opacity animation — iOS may capture the switcher snapshot while a
             // fade is mid-flight, leaking PHI under a translucent cover.

@@ -17,7 +17,8 @@ struct RedMedApp: App {
             // Match launch screen so any pre-paint gap stays cream, not system black.
             .background(Color.redmedBg.ignoresSafeArea())
             .task {
-                // First paint with zero Location / vault / Keychain decode.
+                // First paint with zero Location / vault / Keychain / CoreMotion.
+                await Task.yield()
                 await Task.yield()
                 CrashMotionGuard.shared.startMonitoring()
                 Task.detached(priority: .utility) {

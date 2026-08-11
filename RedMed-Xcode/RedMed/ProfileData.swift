@@ -113,11 +113,34 @@ class ProfileData: ObservableObject {
         return loadFromKeychain()
     }
 
+    /// Off-main Keychain + JSON decode, then apply on MainActor — keeps unlock UI responsive.
+    @MainActor
+    @discardableResult
+    func reloadFromKeychainAsync() async -> Bool {
+        guard persists else { return false }
+        let account = Self.keychainAccount
+        let blob: PersistedProfile? = await Task.detached(priority: .userInitiated) {
+            guard let data = KeychainStore.load(account: account),
+                  let decoded = try? JSONDecoder().decode(PersistedProfile.self, from: data) else {
+                return nil
+            }
+            return decoded
+        }.value
+        guard let blob else { return false }
+        apply(blob)
+        return true
+    }
+
     /// - Returns: `true` when a profile blob was loaded from Keychain.
     @discardableResult
     private func loadFromKeychain() -> Bool {
         guard let data = KeychainStore.load(account: Self.keychainAccount),
               let blob = try? JSONDecoder().decode(PersistedProfile.self, from: data) else { return false }
+        apply(blob)
+        return true
+    }
+
+    private func apply(_ blob: PersistedProfile) {
         name = blob.name
         birthDate = blob.birthDate
         bloodType = blob.bloodType
@@ -141,7 +164,6 @@ class ProfileData: ObservableObject {
             lastUpdated = ""
             persist()
         }
-        return true
     }
 }
 
