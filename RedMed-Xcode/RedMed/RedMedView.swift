@@ -269,11 +269,11 @@ struct RedMedView: View {
         }
         BiometricAuth.authenticate(
             reason: "Unlock with Face ID, Touch ID, or passcode to edit your RedMed profile."
-        ) { success in
-            if success {
+        ) { outcome in
+            if outcome == .success {
                 requireAuthOnSave = false
                 showEdit = true
-            } else {
+            } else if outcome == .notVerified {
                 showAuthFailedAlert = true
             }
         }
