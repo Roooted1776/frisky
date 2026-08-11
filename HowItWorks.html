@@ -1,8 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-US">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#fff7f7">
 <title>RedMed — How It Works</title>
 <meta http-equiv="refresh" content="0;url=redmed://main">
 <link rel="stylesheet" href="assets/legal-doc.css">
@@ -10,7 +11,6 @@
 (function () {
   var APP = "redmed://main";
   var STORE = "https://apps.apple.com/app/redmed/id0000000000";
-  // Prefer the native Main.swift owner UI; fall back to App Store.
   location.replace(APP);
   setTimeout(function () { location.href = STORE; }, 700);
 })();
@@ -20,12 +20,53 @@
 <div class="legal-sheet">
   <header class="legal-letterhead">
     <p class="legal-firm">RedMed</p>
-    <p class="legal-tagline">How It Works</p>
+    <p class="legal-tagline">Legal · How It Works</p>
+    <p class="legal-entity">RedMed · Local-Only Software</p>
   </header>
-  <h1 class="legal-doc-title">Opening RedMed…</h1>
-  <p class="legal-parties">Owner setup and walkthrough live in the RedMed app (<code>Main.swift</code>), not on this page.</p>
-  <p><a href="redmed://main">Open RedMed app</a> · <a href="https://apps.apple.com/app/redmed/id0000000000">App Store</a></p>
-  <p><a href="PrivacyPolicy.html">Privacy Policy</a> · <a href="TOS.html">Terms Of Service</a> · <a href="security.html">Security</a></p>
+
+  <nav class="legal-nav legal-nav-top" aria-label="Related legal documents">
+    <a href="TOS.html">Terms Of Service</a>
+    <span aria-hidden="true">|</span>
+    <a href="PrivacyPolicy.html">Privacy Policy</a>
+    <span aria-hidden="true">|</span>
+    <a href="security.html">Security</a>
+    <span aria-hidden="true">|</span>
+    <a href="HowItWorks.html" aria-current="page">How It Works</a>
+  </nav>
+
+  <aside class="legal-notice legal-notice-owner">
+    <strong>Owner app</strong>
+    Profile editing, Aid treatments, band setup, and this walkthrough live in the RedMed iPhone app
+    (<code>Main.swift</code>).
+    <a href="redmed://main">Open RedMed</a>
+    · <a href="https://apps.apple.com/app/redmed/id0000000000">App Store</a>
+  </aside>
+
+  <hr class="legal-rule-thin" aria-hidden="true">
+
+  <h1 class="legal-doc-title">How It Works</h1>
+  <p class="legal-meta">
+    <strong>Effective Date</strong> August 2026<br>
+    <strong>Document Version</strong> 3.0 (United States)<br>
+    <strong>Location</strong> Native owner UI in the RedMed iPhone app
+  </p>
+  <p class="legal-parties">Setup steps for US users of the RedMed application and the associated passive NFC medical bracelet</p>
+
+  <div class="legal-notice">
+    <strong>Opening RedMed</strong>
+    This page redirects into the app. Owner setup is not hosted as a web editor — fill your profile, write the band, and review Aid / Find Help inside RedMed.
+  </div>
+
+  <article class="legal-body">
+    <p>If the app did not open automatically, use the links above. In an emergency in the United States, call <strong>911</strong> first.</p>
+    <p>Related: <a href="PrivacyPolicy.html">Privacy Policy</a> · <a href="TOS.html">Terms Of Service</a> · <a href="security.html">Security</a></p>
+  </article>
+
+  <footer class="legal-footer">
+    <p>© 2026 RedMed · All rights reserved</p>
+    <p><a href="TOS.html">Terms Of Service</a> · <a href="PrivacyPolicy.html">Privacy Policy</a> · <a href="security.html">Security</a> · <a href="HowItWorks.html">How It Works</a></p>
+    <p class="legal-footer-disclaimer">This page is a redirect into the RedMed app. It does not constitute legal advice.</p>
+  </footer>
 </div>
 </body>
 </html>
