@@ -18,11 +18,18 @@ set up a working runtime here:
 **There are no dependencies to install:** no Swift Package Manager, CocoaPods, Carthage, or npm.
 The app has no backend, database, or web service.
 
-**Roles / HTML:** Owner UI is Swift — `Main.swift` (tabs + `MainInfoView` How It
-Works / band setup). Product HTML is only (1) passerby `card.html` and (2)
-policy pages (`PrivacyPolicy`, `TOS`, `security`). `HowItWorks.html` is a thin
-redirect into `redmed://main`. Card + policies CTA to the owner app; they do not
-host owner edit UI.
+**Roles / shells (permanent — do not regress):**
+- **Owner app** (`Main` → `ContentView`, `isScannerSession == false`): tabs are
+  **RedMed · Help · Aid · NFC**. Edit is available on RedMed. NFC tab is always
+  visible for owners; `AppConfig.nfcHardwareEnabled` only gates CoreNFC
+  write/read sessions, never tab chrome.
+- **Scanner / passerby shell** (`PublicCardView` / bracelet tap, `isScannerSession == true`):
+  tabs are **RedMed · Help · Aid** only — **no Edit**, **no NFC**. Profile is a
+  snapshot; mutations must not touch owner Keychain.
+- Product HTML is only (1) passerby `card.html` and (2) policy pages
+  (`PrivacyPolicy`, `TOS`, `security`). `HowItWorks.html` redirects into
+  `redmed://main`. Card + policies CTA to the owner app; they do not host owner
+  edit UI. Owner How It Works / band setup lives in `Main.swift` (`MainInfoView`).
 
 **Cold launch:** Do **not** create `CLLocationManager`, start GPS / MapKit /
 trauma JSON, or show a Location banner at `@main`. First launch opens RedMed

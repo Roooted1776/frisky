@@ -1,11 +1,19 @@
 import SwiftUI
 
+/// Root tab shell.
+///
+/// Permanent product rule:
+/// - Owner (`isScannerSession == false`): RedMed · Help · Aid · NFC (+ Edit on RedMed)
+/// - Scanner (`isScannerSession == true`): RedMed · Help · Aid only (no Edit, no NFC)
+///
+/// Never gate the NFC tab on `AppConfig.nfcHardwareEnabled` — that flag only
+/// disables CoreNFC sessions inside `NFCWriter` / `NFCReader`.
 struct ContentView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
     @State private var tab: AppTab = .redmed
 
-    /// Owners always get RedMed / Help / Aid / NFC. Ped/EMS scanner shells never see NFC.
+    /// Owner-only fourth tab. Scanners never see NFC.
     private var showsNFC: Bool { !isScannerSession }
 
     private var scannerSafeTab: Binding<AppTab> {
@@ -36,7 +44,7 @@ struct ContentView: View {
                 case .aid:
                     AidView()
                 case .nfc:
-                    // Scanners never reach here. Owners go straight to NFC write.
+                    // Scanners never reach here — showsNFC clamps the binding.
                     NFCView()
                 }
             }
