@@ -181,6 +181,8 @@ final class NFCBandManager: ObservableObject {
     private func presentLocalCard(from chip: NFCChipProfile) {
         let card = ProfileData(persisting: false)
         ProfileNFCCodec.apply(chip, to: card)
+        // Chip read = band was written; Linked chrome still needs YOU-card configured.
+        card.braceletLinked = true
         scannedCard = card
         showScannedCard = true
     }
