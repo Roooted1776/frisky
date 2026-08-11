@@ -319,10 +319,18 @@ struct EditProfileView: View {
         name = profile.name
         birthDate = profile.birthDate
         bloodType = profile.bloodType
-        allergies = profile.allergies.map { DraftLine(text: $0) }
-        medications = profile.medications.map { DraftLine(text: $0) }
-        conditions = profile.conditions.map { DraftLine(text: $0) }
-        contacts = profile.contacts
+        // Empty sections open with one live TextField (placeholder), not a bare Add row.
+        allergies = Self.draftLines(from: profile.allergies)
+        medications = Self.draftLines(from: profile.medications)
+        conditions = Self.draftLines(from: profile.conditions)
+        contacts = profile.contacts.isEmpty
+            ? [EmergencyContact(name: "", detail: "")]
+            : profile.contacts
+    }
+
+    private static func draftLines(from values: [String]) -> [DraftLine] {
+        let lines = values.map { DraftLine(text: $0) }
+        return lines.isEmpty ? [DraftLine()] : lines
     }
 
     private func save() {

@@ -39,28 +39,21 @@ class ProfileData: ObservableObject {
     init(persisting: Bool = true) {
         self.persists = persisting
         if persisting {
-            let loaded = loadFromKeychain()
-            // Simulator demos: seed list rows only on a truly empty Keychain
-            // (first launch). Do not re-seed after the user deletes every row —
-            // `!hasSensitiveProfileData` is wrong for that (cleared lists still
-            // persist as empty arrays). Also strip the old Alex Rivera identity.
-            #if targetEnvironment(simulator)
+            _ = loadFromKeychain()
+            // First launch stays empty — no demo allergies/meds/identity.
+            // Scrub any leftover Alex Rivera demo blob from older builds.
             if name == "Alex Rivera" {
                 name = ""
                 birthDate = ""
                 bloodType = ""
+                allergies = []
+                medications = []
+                conditions = []
                 contacts = []
                 isOrganDonor = false
                 lastUpdated = ""
-                if allergies.isEmpty && medications.isEmpty && conditions.isEmpty {
-                    applySampleListData()
-                }
-                persist()
-            } else if !loaded {
-                applySampleListData()
                 persist()
             }
-            #endif
         }
     }
 
@@ -78,13 +71,6 @@ class ProfileData: ObservableObject {
         copy.isOrganDonor = isOrganDonor
         copy.lastUpdated = lastUpdated
         return copy
-    }
-
-    /// Simulator-only list samples — no fake identity (name / DOB / blood / contacts).
-    func applySampleListData() {
-        allergies = ["Penicillin", "Peanuts"]
-        medications = ["Lisinopril 10mg — daily", "Albuterol inhaler — as needed"]
-        conditions = ["Type 1 Diabetes", "Asthma"]
     }
 
     func persist() {

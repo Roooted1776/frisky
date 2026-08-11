@@ -152,17 +152,17 @@ window.addEventListener('resize', window._scalePhone);
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:11px 16px; border-bottom:0.5px solid rgba(28,25,23,0.07);">
                   <span style="font-size:11px; font-weight:500; color:#78716c;">Name</span>
                   <sc-if value="{{ hasData }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px; font-weight:600; color:#1c1917;">{{ profileName }}</span></sc-if>
-                  <sc-if value="{{ noData }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px; font-weight:600; color:#1c1917;">{{ profileName }}</span></sc-if>
+                  <sc-if value="{{ noData }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tapEdit }}" style="background:none; border:none; padding:0; cursor:pointer; font-size:11px; font-weight:600; color:#e11d48; font-family:inherit;">Add name</button></sc-if>
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:11px 16px; border-bottom:0.5px solid rgba(28,25,23,0.07);">
                   <span style="font-size:11px; font-weight:500; color:#78716c;">Birth date</span>
                   <sc-if value="{{ hasBirthDate }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px; font-weight:600; color:#1c1917;">{{ birthDate }}</span></sc-if>
-                  <sc-if value="{{ noBirthDate }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px; color:#78716c; opacity:0.4;">—</span></sc-if>
+                  <sc-if value="{{ noBirthDate }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tapEdit }}" style="background:none; border:none; padding:0; cursor:pointer; font-size:11px; font-weight:600; color:#e11d48; font-family:inherit;">Add birth date</button></sc-if>
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:11px 16px;">
                   <span style="font-size:11px; font-weight:500; color:#78716c;">Blood type</span>
                   <sc-if value="{{ hasBloodType }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px; font-weight:600; color:#1c1917;">{{ bloodType }}</span></sc-if>
-                  <sc-if value="{{ noBloodType }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px; color:#78716c; opacity:0.4;">—</span></sc-if>
+                  <sc-if value="{{ noBloodType }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tapEdit }}" style="background:none; border:none; padding:0; cursor:pointer; font-size:11px; font-weight:600; color:#e11d48; font-family:inherit;">Add blood type</button></sc-if>
                 </div>
               </div>
             </div>
@@ -177,7 +177,7 @@ window.addEventListener('resize', window._scalePhone);
                   </sc-for>
                 </sc-if>
                 <sc-if value="{{ noAllergies }}" hint-placeholder-val="{{ true }}">
-                  <div style="padding:11px 16px;"><span style="font-size:11px; color:#78716c; opacity:0.4;">—</span></div>
+                  <button onClick="{{ tapEdit }}" style="width:100%; background:none; border:none; padding:11px 16px; cursor:pointer; text-align:left; font-size:11px; font-weight:600; color:#e11d48; font-family:inherit;">Add allergy</button>
                 </sc-if>
               </div>
             </div>
@@ -192,7 +192,7 @@ window.addEventListener('resize', window._scalePhone);
                   </sc-for>
                 </sc-if>
                 <sc-if value="{{ noMeds }}" hint-placeholder-val="{{ true }}">
-                  <div style="padding:11px 16px;"><span style="font-size:11px; color:#78716c; opacity:0.4;">—</span></div>
+                  <button onClick="{{ tapEdit }}" style="width:100%; background:none; border:none; padding:11px 16px; cursor:pointer; text-align:left; font-size:11px; font-weight:600; color:#e11d48; font-family:inherit;">Add medication</button>
                 </sc-if>
               </div>
             </div>
@@ -207,7 +207,7 @@ window.addEventListener('resize', window._scalePhone);
                   </sc-for>
                 </sc-if>
                 <sc-if value="{{ noConditions }}" hint-placeholder-val="{{ true }}">
-                  <div style="padding:11px 16px;"><span style="font-size:11px; color:#78716c; opacity:0.4;">—</span></div>
+                  <button onClick="{{ tapEdit }}" style="width:100%; background:none; border:none; padding:11px 16px; cursor:pointer; text-align:left; font-size:11px; font-weight:600; color:#e11d48; font-family:inherit;">Add condition</button>
                 </sc-if>
               </div>
             </div>
@@ -225,7 +225,7 @@ window.addEventListener('resize', window._scalePhone);
                   </sc-for>
                 </sc-if>
                 <sc-if value="{{ noContacts }}" hint-placeholder-val="{{ true }}">
-                  <div style="padding:11px 16px;"><span style="font-size:11px; color:#78716c; opacity:0.4;">—</span></div>
+                  <button onClick="{{ tapEdit }}" style="width:100%; background:none; border:none; padding:11px 16px; cursor:pointer; text-align:left; font-size:11px; font-weight:600; color:#e11d48; font-family:inherit;">Add contact</button>
                 </sc-if>
               </div>
             </div>
@@ -840,38 +840,39 @@ window.addEventListener('resize', window._scalePhone);
           <div style="flex:1; overflow-y:auto; padding:20px 16px 48px;">
             <div style="font-size:11px; font-weight:600; color:#6b6e7a; text-transform:uppercase; letter-spacing:0.5px; padding:0 4px 6px;">You</div>
             <div style="background:white; border-radius:12px; overflow:hidden; margin-bottom:22px;">
-              <div style="display:flex; align-items:center; padding:0 16px; border-bottom:0.5px solid rgba(0,0,0,0.06);"><span style="font-size:15px; font-weight:500; color:#6b6e7a; min-width:90px; flex-shrink:0; padding:13px 12px 13px 0;">Name</span><input type="text" ref="{{ nameInputRef }}" defaultValue="{{ profileName }}" placeholder="Full name" style="flex:1; border:none; outline:none; font-size:15px; color:#1c1917; padding:13px 0; background:transparent; font-family:inherit;"></div>
-              <div style="display:flex; align-items:center; padding:0 16px; border-bottom:0.5px solid rgba(0,0,0,0.06);"><span style="font-size:15px; font-weight:500; color:#6b6e7a; min-width:90px; flex-shrink:0; padding:13px 12px 13px 0;">Birth date</span><input type="text" ref="{{ dobInputRef }}" defaultValue="{{ birthDate }}" placeholder="MM/DD/YYYY" style="flex:1; border:none; outline:none; font-size:15px; color:#1c1917; padding:13px 0; background:transparent; font-family:inherit;"></div>
-              <div style="display:flex; align-items:center; padding:0 16px;"><span style="font-size:15px; font-weight:500; color:#6b6e7a; min-width:90px; flex-shrink:0; padding:13px 12px 13px 0;">Blood type</span><input type="text" ref="{{ bloodInputRef }}" defaultValue="{{ bloodType }}" placeholder="e.g. O+" style="flex:1; border:none; outline:none; font-size:15px; color:#1c1917; padding:13px 0; background:transparent; font-family:inherit;"></div>
+              <div style="display:flex; align-items:center; padding:0 16px; border-bottom:0.5px solid rgba(0,0,0,0.06);"><span style="font-size:15px; font-weight:500; color:#6b6e7a; min-width:90px; flex-shrink:0; padding:13px 12px 13px 0;">Name</span><input type="text" ref="{{ nameInputRef }}" defaultValue="{{ profileName }}" placeholder="Full name" autocomplete="name" style="flex:1; border:none; outline:none; font-size:15px; color:#1c1917; padding:13px 0; background:transparent; font-family:inherit;"></div>
+              <div style="display:flex; align-items:center; padding:0 16px; border-bottom:0.5px solid rgba(0,0,0,0.06);"><span style="font-size:15px; font-weight:500; color:#6b6e7a; min-width:90px; flex-shrink:0; padding:13px 12px 13px 0;">Birth date</span><input type="text" ref="{{ dobInputRef }}" defaultValue="{{ birthDate }}" placeholder="MM/DD/YYYY" inputmode="numeric" style="flex:1; border:none; outline:none; font-size:15px; color:#1c1917; padding:13px 0; background:transparent; font-family:inherit;"></div>
+              <div style="display:flex; align-items:center; padding:0 16px;"><span style="font-size:15px; font-weight:500; color:#6b6e7a; min-width:90px; flex-shrink:0; padding:13px 12px 13px 0;">Blood type</span><input type="text" ref="{{ bloodInputRef }}" defaultValue="{{ bloodType }}" list="blood-options" placeholder="Select blood type" style="flex:1; border:none; outline:none; font-size:15px; color:#1c1917; padding:13px 0; background:transparent; font-family:inherit;"></div>
             </div>
+            <datalist id="blood-options"><option value="O+"></option><option value="O-"></option><option value="A+"></option><option value="A-"></option><option value="B+"></option><option value="B-"></option><option value="AB+"></option><option value="AB-"></option></datalist>
             <datalist id="allergy-options"><option value="Penicillin"></option><option value="Amoxicillin"></option><option value="Sulfa drugs (sulfonamides)"></option><option value="Aspirin"></option><option value="Ibuprofen (NSAIDs)"></option><option value="Naproxen"></option><option value="Codeine"></option><option value="Morphine"></option><option value="Cephalosporins"></option><option value="Erythromycin"></option><option value="Tetracycline"></option><option value="Contrast dye (IV)"></option><option value="Latex"></option><option value="Local anesthetics (lidocaine/novocaine)"></option><option value="ACE inhibitors"></option><option value="Statins"></option><option value="Insulin"></option><option value="Peanuts"></option><option value="Tree nuts (almonds, cashews, walnuts)"></option><option value="Shellfish (shrimp, crab, lobster)"></option><option value="Fish"></option><option value="Milk / dairy"></option><option value="Eggs"></option><option value="Soy"></option><option value="Wheat / gluten"></option><option value="Sesame"></option><option value="Corn"></option><option value="Strawberries"></option><option value="Kiwi"></option><option value="Avocado"></option><option value="Mustard"></option><option value="Sulfites"></option><option value="Bee stings"></option><option value="Wasp stings"></option><option value="Fire ant bites"></option><option value="Mosquito bites"></option><option value="Pollen"></option><option value="Grass"></option><option value="Ragweed"></option><option value="Dust mites"></option><option value="Mold"></option><option value="Pet dander (cats)"></option><option value="Pet dander (dogs)"></option><option value="Latex gloves"></option><option value="Adhesive tape / bandages"></option><option value="Nickel"></option><option value="Iodine"></option><option value="Chlorhexidine"></option><option value="Hair dye (PPD)"></option><option value="Fragrance / perfume"></option><option value="Other"></option></datalist>
 <datalist id="med-options"><option value="Tylenol (acetaminophen)"></option><option value="Advil (ibuprofen)"></option><option value="Motrin (ibuprofen)"></option><option value="Aleve (naproxen)"></option><option value="Aspirin"></option><option value="Excedrin"></option><option value="Bayer Aspirin"></option><option value="Goody's Powder"></option><option value="Benadryl (diphenhydramine)"></option><option value="Claritin (loratadine)"></option><option value="Zyrtec (cetirizine)"></option><option value="Allegra (fexofenadine)"></option><option value="Xyzal (levocetirizine)"></option><option value="Sudafed (pseudoephedrine)"></option><option value="Mucinex (guaifenesin)"></option><option value="NyQuil"></option><option value="DayQuil"></option><option value="Robitussin"></option><option value="Afrin nasal spray"></option><option value="Flonase (fluticasone)"></option><option value="Nasacort (triamcinolone)"></option><option value="Zicam"></option><option value="Theraflu"></option><option value="Coricidin"></option><option value="Tums (calcium carbonate)"></option><option value="Pepcid (famotidine)"></option><option value="Prilosec (omeprazole)"></option><option value="Nexium (esomeprazole)"></option><option value="Zantac (ranitidine)"></option><option value="Pepto-Bismol"></option><option value="Imodium (loperamide)"></option><option value="Gas-X (simethicone)"></option><option value="Miralax"></option><option value="Dulcolax"></option><option value="Metamucil"></option><option value="Colace (docusate)"></option><option value="Tagamet (cimetidine)"></option><option value="Hydrocortisone cream"></option><option value="Neosporin"></option><option value="Bacitracin"></option><option value="Calamine lotion"></option><option value="Cortizone-10"></option><option value="Benzoyl peroxide"></option><option value="Salicylic acid"></option><option value="Aquaphor"></option><option value="Unisom (doxylamine)"></option><option value="Melatonin"></option><option value="Dramamine (dimenhydrinate)"></option><option value="Emergen-C"></option><option value="Airborne"></option><option value="Lisinopril"></option><option value="Losartan"></option><option value="Amlodipine"></option><option value="Metoprolol"></option><option value="Atenolol"></option><option value="Carvedilol"></option><option value="Bisoprolol"></option><option value="Hydrochlorothiazide"></option><option value="Furosemide (Lasix)"></option><option value="Spironolactone"></option><option value="Atorvastatin (Lipitor)"></option><option value="Rosuvastatin (Crestor)"></option><option value="Simvastatin"></option><option value="Pravastatin"></option><option value="Clopidogrel (Plavix)"></option><option value="Warfarin (Coumadin)"></option><option value="Apixaban (Eliquis)"></option><option value="Rivaroxaban (Xarelto)"></option><option value="Digoxin"></option><option value="Nitroglycerin"></option><option value="Isosorbide mononitrate"></option><option value="Diltiazem"></option><option value="Verapamil"></option><option value="Valsartan"></option><option value="Irbesartan"></option><option value="Ramipril"></option><option value="Enalapril"></option><option value="Propranolol"></option><option value="Metformin"></option><option value="Glipizide"></option><option value="Glyburide"></option><option value="Insulin glargine (Lantus)"></option><option value="Insulin lispro (Humalog)"></option><option value="Insulin aspart (Novolog)"></option><option value="Sitagliptin (Januvia)"></option><option value="Empagliflozin (Jardiance)"></option><option value="Semaglutide (Ozempic)"></option><option value="Liraglutide (Victoza)"></option><option value="Dulaglutide (Trulicity)"></option><option value="Pioglitazone"></option><option value="Albuterol inhaler"></option><option value="Fluticasone/salmeterol (Advair)"></option><option value="Budesonide/formoterol (Symbicort)"></option><option value="Montelukast (Singulair)"></option><option value="Tiotropium (Spiriva)"></option><option value="Prednisone"></option><option value="Ipratropium (Atrovent)"></option><option value="Sertraline (Zoloft)"></option><option value="Escitalopram (Lexapro)"></option><option value="Fluoxetine (Prozac)"></option><option value="Citalopram (Celexa)"></option><option value="Paroxetine (Paxil)"></option><option value="Bupropion (Wellbutrin)"></option><option value="Venlafaxine (Effexor)"></option><option value="Duloxetine (Cymbalta)"></option><option value="Trazodone"></option><option value="Mirtazapine (Remeron)"></option><option value="Alprazolam (Xanax)"></option><option value="Lorazepam (Ativan)"></option><option value="Clonazepam (Klonopin)"></option><option value="Diazepam (Valium)"></option><option value="Buspirone"></option><option value="Quetiapine (Seroquel)"></option><option value="Aripiprazole (Abilify)"></option><option value="Risperidone"></option><option value="Olanzapine (Zyprexa)"></option><option value="Lithium"></option><option value="Lamotrigine (Lamictal)"></option><option value="Valproic acid (Depakote)"></option><option value="Gabapentin (Neurontin)"></option><option value="Pregabalin (Lyrica)"></option><option value="Tramadol"></option><option value="Hydrocodone/acetaminophen (Vicodin)"></option><option value="Oxycodone"></option><option value="Oxycodone/acetaminophen (Percocet)"></option><option value="Morphine sulfate"></option><option value="Fentanyl patch"></option><option value="Cyclobenzaprine (Flexeril)"></option><option value="Meloxicam (Mobic)"></option><option value="Celecoxib (Celebrex)"></option><option value="Diclofenac"></option><option value="Sumatriptan (Imitrex)"></option><option value="Topiramate (Topamax)"></option><option value="Levetiracetam (Keppra)"></option><option value="Baclofen"></option><option value="Levothyroxine (Synthroid)"></option><option value="Methimazole"></option><option value="Liothyronine"></option><option value="Amoxicillin"></option><option value="Azithromycin (Z-Pak)"></option><option value="Ciprofloxacin"></option><option value="Doxycycline"></option><option value="Cephalexin (Keflex)"></option><option value="Clindamycin"></option><option value="Metronidazole (Flagyl)"></option><option value="Trimethoprim/sulfamethoxazole (Bactrim)"></option><option value="Levofloxacin"></option><option value="Nitrofurantoin (Macrobid)"></option><option value="Penicillin V"></option><option value="Omeprazole"></option><option value="Esomeprazole"></option><option value="Pantoprazole (Protonix)"></option><option value="Ranitidine"></option><option value="Ondansetron (Zofran)"></option><option value="Sucralfate"></option><option value="Dicyclomine (Bentyl)"></option><option value="Mesalamine"></option><option value="Hydroxyzine (Atarax)"></option><option value="Cetirizine"></option><option value="EpiPen (epinephrine auto-injector)"></option><option value="Prednisolone"></option><option value="Montelukast"></option><option value="Heparin"></option><option value="Enoxaparin (Lovenox)"></option><option value="Norethindrone/ethinyl estradiol (birth control)"></option><option value="Medroxyprogesterone"></option><option value="Estradiol"></option><option value="Progesterone"></option><option value="Allopurinol"></option><option value="Colchicine"></option><option value="Finasteride"></option><option value="Tamsulosin (Flomax)"></option><option value="Sildenafil (Viagra)"></option><option value="Tadalafil (Cialis)"></option><option value="Latanoprost eye drops"></option><option value="Timolol eye drops"></option><option value="Methotrexate"></option><option value="Hydroxychloroquine"></option><option value="Adalimumab (Humira)"></option><option value="Etanercept (Enbrel)"></option><option value="Vitamin D3"></option><option value="Vitamin B12"></option><option value="Multivitamin"></option><option value="Fish oil"></option><option value="Iron supplement (ferrous sulfate)"></option><option value="Calcium supplement"></option><option value="Magnesium supplement"></option><option value="Folic acid"></option><option value="Biotin"></option><option value="Other"></option></datalist>
 <datalist id="condition-options"><option value="Hypertension (high blood pressure)"></option><option value="Coronary artery disease"></option><option value="Atrial fibrillation (AFib)"></option><option value="Congestive heart failure"></option><option value="Prior heart attack (MI)"></option><option value="Pacemaker"></option><option value="Implanted defibrillator (ICD)"></option><option value="High cholesterol"></option><option value="Deep vein thrombosis (DVT)"></option><option value="Pulmonary embolism history"></option><option value="Peripheral artery disease"></option><option value="Stroke history"></option><option value="Aortic aneurysm"></option><option value="Type 1 diabetes"></option><option value="Type 2 diabetes"></option><option value="Hypothyroidism"></option><option value="Hyperthyroidism"></option><option value="Obesity"></option><option value="Adrenal insufficiency"></option><option value="Osteoporosis"></option><option value="Asthma"></option><option value="COPD"></option><option value="Sleep apnea"></option><option value="Pulmonary fibrosis"></option><option value="Chronic bronchitis"></option><option value="Epilepsy / seizure disorder"></option><option value="Migraine"></option><option value="Parkinson's disease"></option><option value="Multiple sclerosis"></option><option value="Alzheimer's / dementia"></option><option value="Traumatic brain injury history"></option><option value="Depression"></option><option value="Anxiety disorder"></option><option value="Bipolar disorder"></option><option value="PTSD"></option><option value="Schizophrenia"></option><option value="ADHD"></option><option value="GERD / acid reflux"></option><option value="Crohn's disease"></option><option value="Ulcerative colitis"></option><option value="Celiac disease"></option><option value="Chronic kidney disease"></option><option value="Dialysis patient"></option><option value="Liver disease / cirrhosis"></option><option value="Gallstones"></option><option value="Anemia"></option><option value="Hemophilia"></option><option value="Sickle cell disease"></option><option value="Blood clotting disorder"></option><option value="HIV/AIDS"></option><option value="Autoimmune disorder"></option><option value="Rheumatoid arthritis"></option><option value="Lupus"></option><option value="Cancer (active treatment)"></option><option value="Pregnancy"></option><option value="Organ transplant recipient"></option><option value="Glaucoma"></option><option value="Chronic pain condition"></option><option value="Fibromyalgia"></option><option value="Gout"></option><option value="Other"></option></datalist>
             <div style="font-size:11px; font-weight:600; color:#6b6e7a; text-transform:uppercase; letter-spacing:0.5px; padding:0 4px 6px;">Allergies</div>
             <div style="background:white; border-radius:12px; overflow:hidden; margin-bottom:22px;">
-              <sc-for list="{{ allergyRows }}" as="row" hint-placeholder-count="2">
-                <div style="padding:13px 16px; border-bottom:0.5px solid rgba(0,0,0,0.06); display:flex; align-items:center;"><input type="text" list="allergy-options" defaultValue="{{ row.text }}" style="flex:1; border:none; outline:none; font-size:15px; color:#1c1917; background:transparent; font-family:inherit;"><button onClick="{{ row.onRemove }}" style="background:none; border:none; padding:0 0 0 10px; cursor:pointer; color:#e11d48; font-size:18px; line-height:1; flex-shrink:0;">✕</button></div>
+              <sc-for list="{{ allergyRows }}" as="row" hint-placeholder-count="1">
+                <div style="padding:13px 16px; border-bottom:0.5px solid rgba(0,0,0,0.06); display:flex; align-items:center;"><input type="text" list="allergy-options" value="{{ row.text }}" onInput="{{ row.onChange }}" placeholder="Allergy" style="flex:1; border:none; outline:none; font-size:15px; color:#1c1917; background:transparent; font-family:inherit;"><button onClick="{{ row.onRemove }}" style="background:none; border:none; padding:0 0 0 10px; cursor:pointer; color:#e11d48; font-size:18px; line-height:1; flex-shrink:0;">✕</button></div>
               </sc-for>
               <button onClick="{{ addAllergy }}" style="width:100%; background:none; border:none; padding:13px 16px; cursor:pointer; text-align:left; font-size:15px; color:#e11d48; display:flex; align-items:center; gap:8px; font-family:inherit;"><svg width="18" height="18" viewBox="0 0 18 18" fill="#e11d48"><circle cx="9" cy="9" r="9"></circle><path d="M9 5v8M5 9h8" stroke="white" stroke-width="1.8" stroke-linecap="round"></path></svg>Add allergy</button>
             </div>
             <div style="font-size:11px; font-weight:600; color:#6b6e7a; text-transform:uppercase; letter-spacing:0.5px; padding:0 4px 6px;">Medications</div>
             <div style="background:white; border-radius:12px; overflow:hidden; margin-bottom:22px;">
-              <sc-for list="{{ medRows }}" as="row" hint-placeholder-count="2">
-                <div style="padding:13px 16px; border-bottom:0.5px solid rgba(0,0,0,0.06); display:flex; align-items:center;"><input type="text" list="med-options" defaultValue="{{ row.text }}" style="flex:1; border:none; outline:none; font-size:15px; color:#1c1917; background:transparent; font-family:inherit;"><button onClick="{{ row.onRemove }}" style="background:none; border:none; padding:0 0 0 10px; cursor:pointer; color:#e11d48; font-size:18px; line-height:1; flex-shrink:0;">✕</button></div>
+              <sc-for list="{{ medRows }}" as="row" hint-placeholder-count="1">
+                <div style="padding:13px 16px; border-bottom:0.5px solid rgba(0,0,0,0.06); display:flex; align-items:center;"><input type="text" list="med-options" value="{{ row.text }}" onInput="{{ row.onChange }}" placeholder="Medication" style="flex:1; border:none; outline:none; font-size:15px; color:#1c1917; background:transparent; font-family:inherit;"><button onClick="{{ row.onRemove }}" style="background:none; border:none; padding:0 0 0 10px; cursor:pointer; color:#e11d48; font-size:18px; line-height:1; flex-shrink:0;">✕</button></div>
               </sc-for>
               <button onClick="{{ addMed }}" style="width:100%; background:none; border:none; padding:13px 16px; cursor:pointer; text-align:left; font-size:15px; color:#e11d48; display:flex; align-items:center; gap:8px; font-family:inherit;"><svg width="18" height="18" viewBox="0 0 18 18" fill="#e11d48"><circle cx="9" cy="9" r="9"></circle><path d="M9 5v8M5 9h8" stroke="white" stroke-width="1.8" stroke-linecap="round"></path></svg>Add medication</button>
             </div>
             <div style="font-size:11px; font-weight:600; color:#6b6e7a; text-transform:uppercase; letter-spacing:0.5px; padding:0 4px 6px;">Conditions</div>
             <div style="background:white; border-radius:12px; overflow:hidden; margin-bottom:22px;">
-              <sc-for list="{{ conditionRows }}" as="row" hint-placeholder-count="2">
-                <div style="padding:13px 16px; border-bottom:0.5px solid rgba(0,0,0,0.06); display:flex; align-items:center;"><input type="text" list="condition-options" defaultValue="{{ row.text }}" style="flex:1; border:none; outline:none; font-size:15px; color:#1c1917; background:transparent; font-family:inherit;"><button onClick="{{ row.onRemove }}" style="background:none; border:none; padding:0 0 0 10px; cursor:pointer; color:#e11d48; font-size:18px; line-height:1; flex-shrink:0;">✕</button></div>
+              <sc-for list="{{ conditionRows }}" as="row" hint-placeholder-count="1">
+                <div style="padding:13px 16px; border-bottom:0.5px solid rgba(0,0,0,0.06); display:flex; align-items:center;"><input type="text" list="condition-options" value="{{ row.text }}" onInput="{{ row.onChange }}" placeholder="Condition" style="flex:1; border:none; outline:none; font-size:15px; color:#1c1917; background:transparent; font-family:inherit;"><button onClick="{{ row.onRemove }}" style="background:none; border:none; padding:0 0 0 10px; cursor:pointer; color:#e11d48; font-size:18px; line-height:1; flex-shrink:0;">✕</button></div>
               </sc-for>
               <button onClick="{{ addCondition }}" style="width:100%; background:none; border:none; padding:13px 16px; cursor:pointer; text-align:left; font-size:15px; color:#e11d48; display:flex; align-items:center; gap:8px; font-family:inherit;"><svg width="18" height="18" viewBox="0 0 18 18" fill="#e11d48"><circle cx="9" cy="9" r="9"></circle><path d="M9 5v8M5 9h8" stroke="white" stroke-width="1.8" stroke-linecap="round"></path></svg>Add condition</button>
             </div>
             <div style="font-size:11px; font-weight:600; color:#6b6e7a; text-transform:uppercase; letter-spacing:0.5px; padding:0 4px 6px;">Emergency Contacts</div>
             <div style="background:white; border-radius:12px; overflow:hidden; margin-bottom:22px;">
-              <sc-for list="{{ contactRows }}" as="row" hint-placeholder-count="2">
-                <div style="padding:13px 16px; border-bottom:0.5px solid rgba(0,0,0,0.06); display:flex; align-items:flex-start; gap:8px;"><div style="flex:1;"><input type="text" defaultValue="{{ row.name }}" style="width:100%; border:none; outline:none; font-size:15px; font-weight:600; color:#1c1917; background:transparent; font-family:inherit; display:block; margin-bottom:4px;"><input type="text" defaultValue="{{ row.detail }}" style="width:100%; border:none; outline:none; font-size:11px; color:#6b6e7a; background:transparent; font-family:inherit;"></div><button onClick="{{ row.onRemove }}" style="background:none; border:none; padding:4px 0 0; cursor:pointer; color:#e11d48; font-size:18px; line-height:1; flex-shrink:0;">✕</button></div>
+              <sc-for list="{{ contactRows }}" as="row" hint-placeholder-count="1">
+                <div style="padding:13px 16px; border-bottom:0.5px solid rgba(0,0,0,0.06); display:flex; align-items:flex-start; gap:8px;"><div style="flex:1;"><input type="text" value="{{ row.name }}" onInput="{{ row.onNameChange }}" placeholder="Name" style="width:100%; border:none; outline:none; font-size:15px; font-weight:600; color:#1c1917; background:transparent; font-family:inherit; display:block; margin-bottom:4px;"><input type="text" value="{{ row.detail }}" onInput="{{ row.onDetailChange }}" placeholder="Relationship · phone" inputmode="tel" style="width:100%; border:none; outline:none; font-size:11px; color:#6b6e7a; background:transparent; font-family:inherit;"></div><button onClick="{{ row.onRemove }}" style="background:none; border:none; padding:4px 0 0; cursor:pointer; color:#e11d48; font-size:18px; line-height:1; flex-shrink:0;">✕</button></div>
               </sc-for>
               <button onClick="{{ addContact }}" style="width:100%; background:none; border:none; padding:13px 16px; cursor:pointer; text-align:left; font-size:15px; color:#e11d48; display:flex; align-items:center; gap:8px; font-family:inherit;"><svg width="18" height="18" viewBox="0 0 18 18" fill="#e11d48"><circle cx="9" cy="9" r="9"></circle><path d="M9 5v8M5 9h8" stroke="white" stroke-width="1.8" stroke-linecap="round"></path></svg>Add contact</button>
             </div>
@@ -1118,19 +1119,16 @@ class Component extends DCLogic {
     }
   }
   state = {
-    tab: 'myid', openPane: null, showSatellite: false, hasData: true, showHelp: false, braceletPaired: false,
+    tab: 'myid', openPane: null, showSatellite: false, hasData: false, showHelp: false, braceletPaired: false,
     activeTopic: null, showEdit: false, nfcWriting: false,
     showAppLock: false, appLockPending: null, appLockAuthenticating: false, appLockFailed: false,
     showPublicCard: false, cardTab: 'medical',
     hospitalsStatus: 'idle', hospitalsErrorMsg: '', hospitals: [],
-    profileName: 'Alex Rivera', birthDate: '03/14/1992', bloodType: 'O+', tagImported: false,
-    allergies: ['Penicillin', 'Bee stings'],
-    meds: ['Albuterol inhaler', 'Lisinopril'],
-    conditions: ['Asthma'],
-    contacts: [
-      { name: 'Sam Rivera', detail: 'Spouse · (555) 014-2291' },
-      { name: 'Dr. Patel', detail: 'Primary · (555) 018-4402' }
-    ]
+    profileName: '', birthDate: '', bloodType: '', tagImported: false,
+    allergies: [''],
+    meds: [''],
+    conditions: [''],
+    contacts: [{ name: '', detail: '' }]
   };
   topics = {};
 
@@ -1269,18 +1267,18 @@ class Component extends DCLogic {
       previewAppLock: () => this.setState({ showHelp: false, showAppLock: true, appLockPending: 'edit', appLockAuthenticating: false, appLockFailed: false }),
       hasData: this.state.hasData,
       noData: !this.state.hasData,
-      hasContacts: this.state.contacts.length > 0,
-      noContacts: this.state.contacts.length === 0,
-      hasAllergies: this.state.allergies.length > 0,
-      noAllergies: this.state.allergies.length === 0,
-      hasMeds: this.state.meds.length > 0,
-      noMeds: this.state.meds.length === 0,
-      hasConditions: this.state.conditions.length > 0,
-      noConditions: this.state.conditions.length === 0,
-      allergies: this.state.allergies,
-      meds: this.state.meds,
-      conditions: this.state.conditions,
-      contacts: this.state.contacts,
+      hasContacts: this.state.contacts.some(c => (c.name || '').trim() || (c.detail || '').trim()),
+      noContacts: !this.state.contacts.some(c => (c.name || '').trim() || (c.detail || '').trim()),
+      hasAllergies: this.state.allergies.some(t => (t || '').trim()),
+      noAllergies: !this.state.allergies.some(t => (t || '').trim()),
+      hasMeds: this.state.meds.some(t => (t || '').trim()),
+      noMeds: !this.state.meds.some(t => (t || '').trim()),
+      hasConditions: this.state.conditions.some(t => (t || '').trim()),
+      noConditions: !this.state.conditions.some(t => (t || '').trim()),
+      allergies: this.state.allergies.filter(t => (t || '').trim()),
+      meds: this.state.meds.filter(t => (t || '').trim()),
+      conditions: this.state.conditions.filter(t => (t || '').trim()),
+      contacts: this.state.contacts.filter(c => (c.name || '').trim() || (c.detail || '').trim()),
 
 
       call911: () => { window.location.href = 'tel:911'; },
@@ -1310,7 +1308,7 @@ class Component extends DCLogic {
       nfcStatusLine2: this.state.braceletPaired ? 'Tag capacity: 24% used — plenty of room' : 'Tag capacity: 0% used — nothing written yet',
       braceletStatusLabel: this.state.braceletPaired ? 'Linked bracelet ›' : 'Not linked — tap to pair ›',
       braceletStatusStyle: { fontSize: 10, fontWeight: 700, color: this.state.braceletPaired ? 'rgba(225,29,72,0.85)' : '#78716c', letterSpacing: '0.7px', textTransform: 'uppercase', marginTop: 3 },
-      deviceName: (this.state.profileName || 'Your') + "'s iPhone",
+      deviceName: this.state.profileName.trim() ? (this.state.profileName.trim() + "'s iPhone") : 'Your iPhone',
       showSatellite,
       satelliteChevronStyle: { transform: showSatellite ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease', width: 12, height: 12 },
       toggleSatellite: () => this.setState(s => ({ showSatellite: !s.showSatellite })),
@@ -1364,12 +1362,26 @@ class Component extends DCLogic {
       aidDetail: tab === 'aid' && !!this.state.activeTopic,
       showEdit: this.state.showEdit,
       closeEdit: () => this.setState({ showEdit: false }),
-      saveEdit: () => this.setState({
-        showEdit: false, hasData: true,
-        profileName: (this.nameInputRef && this.nameInputRef.value.trim()) || this.state.profileName,
-        birthDate: this.dobInputRef ? this.dobInputRef.value.trim() : this.state.birthDate,
-        bloodType: this.bloodInputRef ? this.bloodInputRef.value.trim() : this.state.bloodType,
-      }),
+      saveEdit: () => {
+        const profileName = this.nameInputRef ? this.nameInputRef.value.trim() : this.state.profileName.trim();
+        const birthDate = this.dobInputRef ? this.dobInputRef.value.trim() : this.state.birthDate;
+        const bloodType = this.bloodInputRef ? this.bloodInputRef.value.trim() : this.state.bloodType;
+        const allergies = this.state.allergies.map(t => (t || '').trim()).filter(Boolean);
+        const meds = this.state.meds.map(t => (t || '').trim()).filter(Boolean);
+        const conditions = this.state.conditions.map(t => (t || '').trim()).filter(Boolean);
+        const contacts = this.state.contacts.filter(c => (c.name || '').trim() || (c.detail || '').trim());
+        this.setState({
+          showEdit: false,
+          hasData: !!profileName,
+          profileName,
+          birthDate,
+          bloodType,
+          allergies: allergies.length ? allergies : [''],
+          meds: meds.length ? meds : [''],
+          conditions: conditions.length ? conditions : [''],
+          contacts: contacts.length ? contacts : [{ name: '', detail: '' }],
+        });
+      },
       nameInputRef: (el) => { this.nameInputRef = el; },
       dobInputRef: (el) => { this.dobInputRef = el; },
       bloodInputRef: (el) => { this.bloodInputRef = el; },
@@ -1383,17 +1395,55 @@ class Component extends DCLogic {
       bloodType: this.state.bloodType,
 
       allergyRows: this.state.allergies.map((text, i) => ({
-        text, onRemove: () => this.setState(s => ({ allergies: s.allergies.filter((_, j) => j !== i) }))
+        text,
+        onChange: (e) => this.setState(s => {
+          const allergies = s.allergies.slice();
+          allergies[i] = e.target.value;
+          return { allergies };
+        }),
+        onRemove: () => this.setState(s => {
+          const allergies = s.allergies.filter((_, j) => j !== i);
+          return { allergies: allergies.length ? allergies : [''] };
+        })
       })),
       medRows: this.state.meds.map((text, i) => ({
-        text, onRemove: () => this.setState(s => ({ meds: s.meds.filter((_, j) => j !== i) }))
+        text,
+        onChange: (e) => this.setState(s => {
+          const meds = s.meds.slice();
+          meds[i] = e.target.value;
+          return { meds };
+        }),
+        onRemove: () => this.setState(s => {
+          const meds = s.meds.filter((_, j) => j !== i);
+          return { meds: meds.length ? meds : [''] };
+        })
       })),
       conditionRows: this.state.conditions.map((text, i) => ({
-        text, onRemove: () => this.setState(s => ({ conditions: s.conditions.filter((_, j) => j !== i) }))
+        text,
+        onChange: (e) => this.setState(s => {
+          const conditions = s.conditions.slice();
+          conditions[i] = e.target.value;
+          return { conditions };
+        }),
+        onRemove: () => this.setState(s => {
+          const conditions = s.conditions.filter((_, j) => j !== i);
+          return { conditions: conditions.length ? conditions : [''] };
+        })
       })),
       contactRows: this.state.contacts.map((c, i) => ({
         name: c.name, detail: c.detail,
-        onRemove: () => this.setState(s => ({ contacts: s.contacts.filter((_, j) => j !== i) }))
+        onNameChange: (e) => this.setState(s => {
+          const contacts = s.contacts.map((row, j) => j === i ? { ...row, name: e.target.value } : row);
+          return { contacts };
+        }),
+        onDetailChange: (e) => this.setState(s => {
+          const contacts = s.contacts.map((row, j) => j === i ? { ...row, detail: e.target.value } : row);
+          return { contacts };
+        }),
+        onRemove: () => this.setState(s => {
+          const contacts = s.contacts.filter((_, j) => j !== i);
+          return { contacts: contacts.length ? contacts : [{ name: '', detail: '' }] };
+        })
       })),
       addAllergy: () => this.setState(s => ({ allergies: [...s.allergies, ''] })),
       addMed: () => this.setState(s => ({ meds: [...s.meds, ''] })),
