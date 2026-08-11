@@ -17,6 +17,8 @@ struct RedMedApp: App {
             .environmentObject(profile)
             // Match launch screen so any pre-paint gap stays cream, not system black.
             .background(Color.redmedBg.ignoresSafeArea())
+            // Main.dc / cream chrome is light-only — keep phone + Xcode/sim identical.
+            .preferredColorScheme(.light)
             .task {
                 // First paint with zero Location / vault / Keychain / CoreMotion.
                 await Task.yield()

@@ -20,7 +20,8 @@ struct RedMedView: View {
     }
 
     private var braceletStatusLabel: String {
-        profile.braceletLinked ? "Paired bracelet ›" : "Not paired — tap to set up ›"
+        // Main.dc.html / Xcode design frame copy — keep Linked, not Paired.
+        profile.braceletLinked ? "Linked bracelet ›" : "Not linked — tap to pair ›"
     }
 
     var body: some View {
@@ -54,19 +55,19 @@ struct RedMedView: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                                         Text(c.name.isEmpty ? "Emergency contact" : c.name)
-                                            .font(.system(size: 12, weight: .semibold))
+                                            .font(.system(size: 11, weight: .semibold))
                                             .foregroundColor(.redmedDark)
                                             .frame(maxWidth: .infinity, alignment: .leading)
                                         if !c.phone.isEmpty {
                                             Text(c.phone)
-                                                .font(.system(size: 13, weight: .medium))
+                                                .font(.system(size: 12, weight: .medium))
                                                 .foregroundColor(.redmedAccent)
                                                 .multilineTextAlignment(.trailing)
                                         }
                                     }
                                     if !c.relationship.isEmpty {
                                         Text(c.relationship)
-                                            .font(.system(size: 13, weight: .medium))
+                                            .font(.system(size: 12, weight: .medium))
                                             .foregroundColor(.redmedMuted)
                                     }
                                 }
@@ -84,10 +85,10 @@ struct RedMedView: View {
                             Button { tab = .nfc } label: {
                                 HStack(spacing: 6) {
                                     Image(systemName: "plus.circle")
-                                        .font(.system(size: 17, weight: .semibold))
+                                        .font(.system(size: 16, weight: .semibold))
                                         .foregroundColor(.redmedAccent)
                                     Text("Bracelet")
-                                        .font(.system(size: 12, weight: .semibold))
+                                        .font(.system(size: 11, weight: .semibold))
                                         .foregroundColor(.redmedAccent)
                                         .kerning(-0.1)
                                 }
@@ -103,10 +104,10 @@ struct RedMedView: View {
                             Button { showHelp = true } label: {
                                 HStack(spacing: 6) {
                                     Image(systemName: "questionmark.circle")
-                                        .font(.system(size: 17, weight: .regular))
+                                        .font(.system(size: 16, weight: .regular))
                                         .foregroundColor(.redmedMuted)
                                     Text("How it works")
-                                        .font(.system(size: 12, weight: .semibold))
+                                        .font(.system(size: 11, weight: .semibold))
                                         .foregroundColor(.redmedMuted)
                                         .kerning(-0.1)
                                 }
@@ -119,10 +120,10 @@ struct RedMedView: View {
                                 Button { showScannerPreview = true } label: {
                                     HStack(spacing: 6) {
                                         Image(systemName: "eye")
-                                            .font(.system(size: 17, weight: .regular))
+                                            .font(.system(size: 16, weight: .regular))
                                             .foregroundColor(.redmedMuted)
                                         Text("Preview scanner")
-                                            .font(.system(size: 12, weight: .semibold))
+                                            .font(.system(size: 11, weight: .semibold))
                                             .foregroundColor(.redmedMuted)
                                             .kerning(-0.1)
                                     }
@@ -178,16 +179,16 @@ struct RedMedView: View {
             VStack(alignment: .leading, spacing: 0) {
                 if isScannerSession {
                     Text("Read only — editing needs the owner’s RedMed app + Face ID / passcode.")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .lineSpacing(2)
                         .padding(.bottom, 4)
                 } else if !profile.hasData {
                     (
-                        Text("Tap ").font(.system(size: 12, weight: .medium)).foregroundColor(.redmedMuted)
-                        + Text("Edit").font(.system(size: 12, weight: .bold)).foregroundColor(.redmedAccent)
+                        Text("Tap ").font(.system(size: 11, weight: .medium)).foregroundColor(.redmedMuted)
+                        + Text("Edit").font(.system(size: 11, weight: .bold)).foregroundColor(.redmedAccent)
                         + Text(" to add your name and set up your bracelet.")
-                            .font(.system(size: 12, weight: .medium)).foregroundColor(.redmedMuted)
+                            .font(.system(size: 11, weight: .medium)).foregroundColor(.redmedMuted)
                     )
                     .lineSpacing(2)
                     .padding(.bottom, 4)
@@ -203,7 +204,7 @@ struct RedMedView: View {
                             .opacity(profile.hasData ? 1 : 0.5)
 
                         Text(deviceName)
-                            .font(.system(size: 23, weight: .bold))
+                            .font(.system(size: 22, weight: .bold))
                             .foregroundColor(.redmedDark)
                             .kerning(-0.4)
                             .lineLimit(1)
@@ -221,13 +222,13 @@ struct RedMedView: View {
 
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(deviceName)
-                                    .font(.system(size: 23, weight: .bold))
+                                    .font(.system(size: 22, weight: .bold))
                                     .foregroundColor(.redmedDark)
                                     .kerning(-0.4)
                                     .lineLimit(1)
 
                                 Text(braceletStatusLabel)
-                                    .font(.system(size: 11, weight: .bold))
+                                    .font(.system(size: 10, weight: .bold))
                                     .foregroundColor(
                                         profile.braceletLinked
                                             ? Color.redmedAccent.opacity(0.85)
@@ -296,16 +297,16 @@ struct RedMedView: View {
         } label: {
             HStack {
                 Text(label)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 11, weight: .medium))
                     .foregroundColor(.redmedMuted)
                 Spacer()
                 if value.isEmpty {
                     Text(isScannerSession ? "—" : emptyPrompt)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundColor(isScannerSession ? Color.redmedMuted.opacity(0.4) : .redmedAccent)
                 } else {
                     Text(value)
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: 11, weight: .semibold))
                         .foregroundColor(.redmedDark)
                 }
             }
@@ -323,7 +324,7 @@ struct RedMedView: View {
             if !isScannerSession { requestEdit() }
         } label: {
             Text(isScannerSession ? "—" : prompt)
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 11, weight: .medium))
                 .foregroundColor(isScannerSession ? Color.redmedMuted.opacity(0.4) : .redmedAccent)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 16)
@@ -352,7 +353,7 @@ struct RedMedView: View {
             } else {
                 ForEach(Array(items.enumerated()), id: \.offset) { i, item in
                     Text(item)
-                        .font(.system(size: 12))
+                        .font(.system(size: 11))
                         .foregroundColor(.redmedDark)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 16)
