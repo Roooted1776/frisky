@@ -182,7 +182,7 @@ struct RedMedView: View {
         ZStack(alignment: .topTrailing) {
             VStack(alignment: .leading, spacing: 0) {
                 if isScannerSession {
-                    Text("Read only — editing needs the owner’s RedMed app + Face ID / passcode.")
+                    Text("Read only — editing needs the owner’s RedMed app.")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .lineSpacing(2)
