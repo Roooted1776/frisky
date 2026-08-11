@@ -43,7 +43,6 @@ struct TopicDetailView: View {
         guard cprRunning else { return }
         cprPulse.toggle()
         if cprPhase == "compress" {
-            hapticEngine.playCompressionBeat()
             let next = cprCount + 1
             if next >= 30 {
                 cprCount = 30; cprPhase = "breathe"
@@ -51,6 +50,7 @@ struct TopicDetailView: View {
                 scheduleTick(after: 3.2)
             } else {
                 cprCount = next
+                hapticEngine.playCompressionBeat()
                 scheduleTick(after: 0.545)
             }
         } else {
