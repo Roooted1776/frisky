@@ -4,9 +4,9 @@
  * /get/ (get/index.html + get/sw.js) matching AppConfig.medicalCardBaseURL.
  *
  * Cache-first multi-key shell for almost-instant EMT / helper open; activate
- * clears prior CACHE buckets. Bump CACHE in lockstep with get/sw.js on every
- * decrypt/layout deploy. Payload stays in #d= only — never cached.
- * No biometrics on view.
+ * clears prior CACHE buckets. Bump CACHE in lockstep with get/sw.js + bundled
+ * copy on every decrypt/layout deploy. Payload stays in #d= only — never
+ * cached. No biometrics on view.
  */
 var CACHE = 'redmed-get-v16';
 var ASSETS = [

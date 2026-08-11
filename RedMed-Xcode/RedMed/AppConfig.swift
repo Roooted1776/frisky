@@ -21,7 +21,7 @@ enum AppConfig {
     /// Product kill switch for CoreNFC write/read sessions only.
     /// Owner still always sees the NFC tab (ContentView.showsNFC); scanners never do.
     /// Keep `false` until paid Apple Developer NFC entitlement is restored —
-    /// see `RedMed-Xcode/NFC-RESTORE.md` and `RedMed.entitlements`.
+    /// see `docs/NFC-RESTORE.md` and `RedMed.entitlements`.
     static let nfcHardwareEnabled = false
 
     /// Hardware RF contract for the RedMed bracelet.
