@@ -4,10 +4,13 @@ import SwiftUI
 /// Scanners must never mount this; Help entry is owner-shell only.
 struct VaultHistoryView: View {
     @ObservedObject private var store = VaultHistoryStore.shared
+    @Environment(\.scenePhase) private var scenePhase
     @State private var unlocked = false
     @State private var authenticating = false
     @State private var authFailed = false
     @State private var showClearConfirm = false
+    /// Bumps on lock / cancel so a late Face ID success cannot unlock after background.
+    @State private var authGeneration = 0
 
     private static let stampFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -31,6 +34,11 @@ struct VaultHistoryView: View {
             HIPAAOfflineVault.prepare()
             if !unlocked && !authenticating {
                 requestUnlock()
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active {
+                lockVault()
             }
         }
         .alert("Authentication Failed", isPresented: $authFailed) {
@@ -143,18 +151,28 @@ struct VaultHistoryView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Lock") {
-                    unlocked = false
+                    lockVault()
                 }
                 .foregroundColor(.redmedAccent)
             }
         }
     }
 
+    private func lockVault() {
+        authGeneration &+= 1
+        unlocked = false
+        authenticating = false
+        authFailed = false
+    }
+
     private func requestUnlock() {
         authenticating = true
+        authGeneration &+= 1
+        let generation = authGeneration
         BiometricAuth.authenticate(
             reason: "Unlock local history stored in the on-device vault."
         ) { success in
+            guard generation == authGeneration else { return }
             authenticating = false
             if success {
                 store.reload()

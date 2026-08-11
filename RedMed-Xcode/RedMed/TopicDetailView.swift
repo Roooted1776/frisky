@@ -6,6 +6,7 @@ extension AidTopic: Identifiable {}
 struct TopicDetailView: View {
     let topic: AidTopic
     @Environment(\.dismiss) var dismiss
+    @Environment(\.isScannerSession) private var isScannerSession
     /// Engine lives in the view hierarchy — prepared on appear, fired on tap / beat.
     @StateObject private var hapticEngine = HapticEngine()
     @AppStorage(HapticEngine.enabledKey) private var hapticsEnabled = true
@@ -100,12 +101,15 @@ struct TopicDetailView: View {
                             } else {
                                 PrimaryButton(title: "Start beat") { startCPR() }
                             }
-                            Toggle("Haptic feedback", isOn: $hapticsEnabled)
-                                .font(.system(size: 14, weight: .medium))
-                                .tint(.redmedAccent)
-                                .onChange(of: hapticsEnabled) { _, on in
-                                    if on { hapticEngine.prepare() }
-                                }
+                            // Scanner shell is read-only — never write owner @AppStorage.
+                            if !isScannerSession {
+                                Toggle("Haptic feedback", isOn: $hapticsEnabled)
+                                    .font(.system(size: 14, weight: .medium))
+                                    .tint(.redmedAccent)
+                                    .onChange(of: hapticsEnabled) { _, on in
+                                        if on { hapticEngine.prepare() }
+                                    }
+                            }
                         }
                         .padding(20)
                         .frame(maxWidth: .infinity)
