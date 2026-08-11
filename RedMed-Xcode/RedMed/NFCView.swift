@@ -260,13 +260,15 @@ struct NFCView: View {
         }
         // Always pack the live RedMed profile (same as Preview scanner). Do not
         // reuse lastSimulatedURL — that stays as the last “written” URL link only.
-        let card = ProfileData(persisting: false)
-        if let source = ProfileNFCCodec.buildURLString(profile: profile),
-           let chip = ProfileNFCCodec.decodeProfile(fromURLString: source) {
-            ProfileNFCCodec.apply(chip, to: card)
-        } else {
-            ProfileNFCCodec.apply(ProfileNFCCodec.chipProfile(from: profile), to: card)
+        // Fail if pack/decode breaks — never present the editor profile as a
+        // successful `#d=` round-trip.
+        guard let source = ProfileNFCCodec.buildURLString(profile: profile),
+              let chip = ProfileNFCCodec.decodeProfile(fromURLString: source) else {
+            statusAlert = "Couldn't pack or decode the get.html#d= payload from RedMed."
+            return
         }
+        let card = ProfileData(persisting: false)
+        ProfileNFCCodec.apply(chip, to: card)
         scannedCard = card
         showPublicCard = true
     }
