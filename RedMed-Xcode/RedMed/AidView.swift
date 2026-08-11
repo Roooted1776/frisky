@@ -111,7 +111,11 @@ struct AidView: View {
             .background(Color.redmedBg)
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.redmedBg, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
+                // No "Roadside Aid" principal — BrandWordmark is the hero brand signal.
+                // Keep main's matching redmedBg toolbar chrome.
                 if isScannerSession {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         ScannerCloseButton()
@@ -151,7 +155,7 @@ struct PaneCard: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(pane.title)
                             .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(.redmedDark)
+                            .foregroundColor(.redmedAccent)
                             .lineLimit(2)
                         if !isOpen {
                             Text(pane.subtitle)

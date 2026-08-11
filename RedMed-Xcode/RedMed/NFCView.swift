@@ -130,9 +130,11 @@ struct NFCView: View {
             .background(Color.redmedBg)
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.redmedBg, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("NFC Bracelet").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedDark)
+                    Text("NFC Bracelet").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedAccent)
                 }
             }
             .sheet(isPresented: $showPublicCard) {
