@@ -5,6 +5,7 @@ struct EmergencyView: View {
     @Environment(\.isScannerSession) private var isScannerSession
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @StateObject private var locationManager = LocationManager()
+    @ObservedObject private var survivalAlarm = CrashMotionGuard.shared
 
     var body: some View {
         VStack(spacing: 0) {
@@ -12,7 +13,7 @@ struct EmergencyView: View {
             NavigationView {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 8) {
-                    Text("Crash / severe impact arms siren + full brightness. Stop the detection on Aid.")
+                    Text("Siren + full brightness only on crash / severe impact or SOS. Stop the alarm on Aid.")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.redmedAccent)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -40,6 +41,30 @@ struct EmergencyView: View {
                             .padding(.vertical, 12)
                             .background(Color.redmedDark)
                             .clipShape(Capsule())
+                        }
+
+                        // Owner SOS — same survival hold as crash. Scanners stay quiet.
+                        if !isScannerSession {
+                            Button {
+                                if survivalAlarm.isArmed {
+                                    survivalAlarm.disarm()
+                                } else {
+                                    survivalAlarm.armSOS()
+                                }
+                            } label: {
+                                HStack(spacing: 8) {
+                                    Image(systemName: survivalAlarm.isArmed
+                                          ? "speaker.slash.fill"
+                                          : "sos.circle.fill")
+                                    Text(survivalAlarm.isArmed ? "Stop SOS alarm" : "SOS · Locate me")
+                                }
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(survivalAlarm.isArmed ? Color.redmedAccent : Color.redmedDark)
+                                .clipShape(Capsule())
+                            }
                         }
                     }
                     .padding(.vertical, 4)
