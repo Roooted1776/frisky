@@ -40,18 +40,29 @@ enum HIPAAOfflineVault {
                 return nil
             }
         }
-        harden(url: dir, isDirectory: true)
+        do {
+            try harden(url: dir, isDirectory: true)
+        } catch {
+            return nil
+        }
         return dir
     }
 
     /// Writes `data` under the vault with complete file protection + backup exclusion.
+    /// Deletes the file and throws if post-write hardening fails.
     static func write(_ data: Data, fileName: String) throws {
         guard let dir = prepare() else {
             throw VaultError.unavailable
         }
         let url = dir.appendingPathComponent(fileName, isDirectory: false)
         try data.write(to: url, options: [.atomic, .completeFileProtection])
-        harden(url: url, isDirectory: false)
+        do {
+            try harden(url: url, isDirectory: false)
+            try verifyHardened(url: url)
+        } catch {
+            try? FileManager.default.removeItem(at: url)
+            throw VaultError.hardenFailed
+        }
     }
 
     /// Reads a vault file, or `nil` if missing.
@@ -71,18 +82,29 @@ enum HIPAAOfflineVault {
 
     enum VaultError: Error {
         case unavailable
+        case hardenFailed
     }
 
     /// Re-applies complete protection + backup exclusion (idempotent).
-    private static func harden(url: URL, isDirectory: Bool) {
-        try? FileManager.default.setAttributes(
+    private static func harden(url: URL, isDirectory: Bool) throws {
+        try FileManager.default.setAttributes(
             [.protectionKey: protection],
             ofItemAtPath: url.path
         )
         var values = URLResourceValues()
         values.isExcludedFromBackup = true
         var mutable = url
-        try? mutable.setResourceValues(values)
+        try mutable.setResourceValues(values)
         _ = isDirectory
+    }
+
+    private static func verifyHardened(url: URL) throws {
+        // Backup exclusion is the durable check we can assert everywhere (incl. Simulator).
+        // File protection is applied via write options + setAttributes; Simulator does not
+        // reliably report protection attributes, so we do not gate on a re-read there.
+        let values = try url.resourceValues(forKeys: [.isExcludedFromBackupKey])
+        guard values.isExcludedFromBackup == true else {
+            throw VaultError.hardenFailed
+        }
     }
 }

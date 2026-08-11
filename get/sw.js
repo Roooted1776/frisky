@@ -12,7 +12,7 @@
  * stale decrypt/layout. Bump CACHE on every deploy that changes get/index.html
  * / decrypt logic.
  */
-var CACHE = 'redmed-get-v10';
+var CACHE = 'redmed-get-v11';
 var ASSETS = [
   './',
   './index.html',
@@ -21,6 +21,8 @@ var ASSETS = [
   '../assets/BrandLogo.png',
   '../card.html'
 ];
+/** Primary HTML shell — install must fail closed if this cannot be cached. */
+var REQUIRED_SHELL = './index.html';
 var SHELL_KEYS = ['./', './index.html', '/get/', '/get/index.html', '/get'];
 
 function networkReload(reqOrUrl) {
@@ -28,16 +30,25 @@ function networkReload(reqOrUrl) {
 }
 
 function precache(cache) {
-  return Promise.all(
-    ASSETS.map(function (url) {
-      return networkReload(url)
-        .then(function (res) {
-          if (!res || !res.ok) return;
-          return putShell(cache, url, res);
-        })
-        .catch(function () { /* optional path missing */ });
+  return networkReload(REQUIRED_SHELL)
+    .then(function (res) {
+      if (!res || !res.ok) {
+        return Promise.reject(new Error('shell precache failed'));
+      }
+      return putShell(cache, REQUIRED_SHELL, res);
     })
-  );
+    .then(function () {
+      return Promise.all(
+        ASSETS.filter(function (url) { return url !== REQUIRED_SHELL; }).map(function (url) {
+          return networkReload(url)
+            .then(function (res) {
+              if (!res || !res.ok) return;
+              return putShell(cache, url, res);
+            })
+            .catch(function () { /* optional path missing */ });
+        })
+      );
+    });
 }
 
 /** Store under the request URL plus canonical shell keys so /get/ always hits. */

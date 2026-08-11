@@ -1,3 +1,4 @@
+import Compression
 import CryptoKit
 import Foundation
 
@@ -519,15 +520,30 @@ enum ProfileNFCCodec {
     /// Hard cap on inflated legacy payloads (bracelet / `#d=` JSON is tiny).
     private static let maxInflatedBytes = 64 * 1024
 
-    /// Foundation zlib (iOS 13+) — same wrapper `DecompressionStream('deflate')` expects.
+    /// zlib inflate into a fixed 64 KiB destination — never allocate unbounded output.
+    /// Same wire wrapper `DecompressionStream('deflate')` / Foundation `.zlib` expect.
     private static func zlibDecompress(_ data: Data) -> Data? {
-        do {
-            let out: NSData = try (data as NSData).decompressed(using: .zlib)
-            guard out.length <= maxInflatedBytes else { return nil }
-            return out as Data
-        } catch {
-            return nil
+        guard !data.isEmpty else { return nil }
+        var destination = Data(count: maxInflatedBytes)
+        let decoded: Int = data.withUnsafeBytes { srcRaw in
+            destination.withUnsafeMutableBytes { dstRaw in
+                guard let src = srcRaw.bindMemory(to: UInt8.self).baseAddress,
+                      let dst = dstRaw.bindMemory(to: UInt8.self).baseAddress else {
+                    return 0
+                }
+                return compression_decode_buffer(
+                    dst,
+                    maxInflatedBytes,
+                    src,
+                    data.count,
+                    nil,
+                    COMPRESSION_ZLIB
+                )
+            }
         }
+        guard decoded > 0, decoded <= maxInflatedBytes else { return nil }
+        destination.count = decoded
+        return destination
     }
 
     private static func base64url(_ data: Data) -> String {
