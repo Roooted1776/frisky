@@ -85,14 +85,16 @@ async trauma catalog warm-up for the same reason.
 `AAAA`/`AABB` IDs silently drop sources from the target (seen when Haptic /
 Brightness collided with HIPAA vault files).
 
-**Passerby SW:** shell fetch is **cache-first** for instant EMT / helper open
-when Cache Storage already has a copy; background `cache: 'reload'` refresh
-updates the bucket while online. First visit (empty cache) waits on network,
-then stores. On activate, delete every prior `CACHE` name so deploys clear
-stale decrypt/layout. Bump `CACHE` (`redmed-get-vN`) in lockstep across
-`sw.js`, `get/sw.js`, and the bundled copy on every SW / decrypt deploy.
-Legacy zlib inflate is bounded (64 KiB) in Swift + streaming bound in `get.html`.
-Passerby HTML never touches brightness or audio.
+**Passerby SW:** shell fetch is **cache-first** (multi-key: `/get/`,
+`index.html`, etc.) for **almost-instant** EMT / helper open when Cache
+Storage has any shell copy — never wait on network in that case. Background
+`cache: 'reload'` refresh updates the bucket while online. First visit (empty
+cache) waits on network, then stores under every shell key. On activate,
+delete every prior `CACHE` name so deploys clear stale decrypt/layout. Bump
+`CACHE` (`redmed-get-vN`) in lockstep across `sw.js`, `get/sw.js`, and the
+bundled copy on every SW / decrypt deploy. Register the SW ASAP in `get.html`
+(not on `window.load`). Legacy zlib inflate is bounded (64 KiB) in Swift +
+streaming bound in `get.html`. Passerby HTML never touches brightness or audio.
 
 **Repo hygiene:** `main` is the only long-lived branch. After merges, delete
 feature branches on the remote; do not leave parallel “brainchild” branches.

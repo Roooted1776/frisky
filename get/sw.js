@@ -2,16 +2,17 @@
  *
  * Served under /get/ (see get/index.html). After a responder opens the card
  * once online, these static assets stay in Cache Storage. A later bracelet
- * tap (EMT / helper, no app, no Face ID) paints the shell instantly from
+ * tap (EMT / helper, no app, no Face ID) must paint almost instantly from
  * cache — even with no signal. Medical fields live only in the URL #d=
  * fragment (never cached here — fragments are not part of the HTTP request).
  *
- * Shell strategy: cache-first for instant open when Cache Storage has a copy;
- * background networkReload refreshes the bucket. Activate deletes prior
- * CACHE names so deploys clear stale decrypt/layout. Bump CACHE on every
- * deploy that changes get/index.html / decrypt logic.
+ * Shell strategy: cache-first with multi-key fallback (/get/ ↔ index.html);
+ * never wait on network when any shell copy exists. Background networkReload
+ * refreshes the bucket. Activate deletes prior CACHE names so deploys clear
+ * stale decrypt/layout. Bump CACHE on every deploy that changes get/index.html
+ * / decrypt logic.
  */
-var CACHE = 'redmed-get-v9';
+var CACHE = 'redmed-get-v10';
 var ASSETS = [
   './',
   './index.html',
@@ -20,6 +21,7 @@ var ASSETS = [
   '../assets/BrandLogo.png',
   '../card.html'
 ];
+var SHELL_KEYS = ['./', './index.html', '/get/', '/get/index.html', '/get'];
 
 function networkReload(reqOrUrl) {
   return fetch(reqOrUrl, { cache: 'reload' });
@@ -31,34 +33,44 @@ function precache(cache) {
       return networkReload(url)
         .then(function (res) {
           if (!res || !res.ok) return;
-          return cache.put(url, res);
+          return putShell(cache, url, res);
         })
         .catch(function () { /* optional path missing */ });
     })
   );
 }
 
-function cachedShell(req) {
-  return caches.match(req).then(function (cached) {
-    return (
-      cached ||
-      caches.match('./index.html').then(function (page) {
-        return page || caches.match('./');
-      })
-    );
+/** Store under the request URL plus canonical shell keys so /get/ always hits. */
+function putShell(cache, reqOrUrl, res) {
+  if (!res || !res.ok || (res.type !== 'basic' && res.type !== 'cors')) return Promise.resolve();
+  var writes = [cache.put(reqOrUrl, res.clone())];
+  SHELL_KEYS.forEach(function (key) {
+    writes.push(cache.put(key, res.clone()));
+  });
+  return Promise.all(writes).catch(function () { /* quota / opaque */ });
+}
+
+function matchOne(keys, i) {
+  if (i >= keys.length) return Promise.resolve(null);
+  return caches.match(keys[i], { ignoreSearch: true }).then(function (hit) {
+    return hit || matchOne(keys, i + 1);
   });
 }
 
-function storeShell(cache, req, res) {
-  if (!res || !res.ok || res.type !== 'basic') return;
-  cache.put(req, res.clone());
+/** Instant path: any cached shell wins. Do not wait on network. */
+function cachedShell(req) {
+  var keys = [req].concat(SHELL_KEYS);
+  return matchOne(keys, 0);
 }
 
 function refreshShell(cache, req) {
   return networkReload(req)
     .then(function (res) {
-      storeShell(cache, req, res);
-      return res && res.ok ? res : null;
+      if (res && res.ok) {
+        putShell(cache, req, res.clone());
+        return res;
+      }
+      return null;
     })
     .catch(function () {
       return null;
@@ -109,19 +121,19 @@ self.addEventListener('fetch', function (event) {
   var req = event.request;
   if (req.method !== 'GET') return;
 
-  // Shell / decrypt page: cache-first for instant EMT open; refresh in background.
-  // First visit (empty cache) waits on network, then stores.
+  // Shell: return cache immediately when present — almost-instant tap-to-view.
   if (isShellRequest(req)) {
     event.respondWith(
-      caches.open(CACHE).then(function (cache) {
-        return cache.match(req).then(function (cached) {
-          var network = refreshShell(cache, req);
-          if (cached) {
-            return cached;
-          }
-          return network.then(function (res) {
-            return res || cachedShell(req);
-          });
+      cachedShell(req).then(function (cached) {
+        var refresh = caches.open(CACHE).then(function (cache) {
+          return refreshShell(cache, req);
+        });
+        if (cached) {
+          event.waitUntil(refresh);
+          return cached;
+        }
+        return refresh.then(function (res) {
+          return res || cachedShell(req);
         });
       })
     );
@@ -130,7 +142,7 @@ self.addEventListener('fetch', function (event) {
 
   // Static assets: cache-first, then network + fill.
   event.respondWith(
-    caches.match(req).then(function (cached) {
+    caches.match(req, { ignoreSearch: true }).then(function (cached) {
       if (cached) return cached;
       return fetch(req).then(function (res) {
         try {

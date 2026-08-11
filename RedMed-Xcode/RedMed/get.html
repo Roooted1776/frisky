@@ -21,8 +21,9 @@
        conditions, contacts, donor, updated?]
        Legacy array: [name, dob, blood, donor, allergies, meds,
        conditions, contacts, updated?]
-     - Offline: sw.js Cache Storage — cache-first shell for instant open after
-       first online load; activate clears prior CACHE buckets (bump redmed-get-vN)
+     - Offline: sw.js Cache Storage — cache-first multi-key shell for almost-instant
+       EMT open after first online load; activate clears prior CACHE buckets
+       (bump redmed-get-vN). Never wait on network when a shell copy exists.
      - No brightness / audio from this page — owner-phone crash motion or SOS
        only (native app). Passerby HTML never touches those.
      - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
@@ -1098,18 +1099,16 @@
 })();
 </script>
 <script>
-// Cache the static layout after first online open so a later basement / rural /
-// subway tap still paints get.html instantly from the phone (cache-first SW).
-// Payload stays in #d= only — the service worker never stores medical fields.
-// No Face ID to view. No brightness / audio from this page.
+// Register SW ASAP (not on window load) so the next bracelet tap is controlled
+// and paints almost instantly from Cache Storage. Payload stays in #d= only —
+// the service worker never stores medical fields. No Face ID to view.
+// No brightness / audio from this page.
 (function () {
   if (!('serviceWorker' in navigator)) return;
-  window.addEventListener('load', function () {
-    navigator.serviceWorker
-      .register('sw.js', { scope: './', updateViaCache: 'none' })
-      .then(function (reg) { return reg.update(); })
-      .catch(function () {});
-  });
+  navigator.serviceWorker
+    .register('sw.js', { scope: './', updateViaCache: 'none' })
+    .then(function (reg) { return reg.update(); })
+    .catch(function () {});
 })();
 </script>
 </body>

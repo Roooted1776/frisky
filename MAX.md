@@ -43,7 +43,7 @@ See also `AGENTS.md`. High-signal recap:
 5. Privacy cover: opaque, no fade.
 6. Cold launch: zero Location / MapKit / trauma JSON at `@main`. CoreMotion crash monitor may start after first-frame yield.
 7. Unique `project.pbxproj` IDs (duplicate IDs drop sources).
-8. Passerby SW: cache-first shell for instant EMT open; clear prior CACHE on activate; bump `redmed-get-vN` in lockstep. Tap-to-view = HTML, no Face ID.
+8. Passerby SW: cache-first multi-key shell for almost-instant EMT open; clear prior CACHE on activate; bump `redmed-get-vN` in lockstep. Tap-to-view = HTML, no Face ID.
 9. `AppConfig.BraceletRF` owns tap-distance copy (no hardcoded inches).
 10. Crash / high-speed **vehicle impact** detection is **local CoreMotion only** — not Apple Crash Detection, no cloud. Must ignore running, sex/intimate motion, eating, and hand/wrist handling. Brightness + siren are gated on crash detection **or** explicit owner SOS — never auto on Find Help / scanner open. Passerby HTML never touches brightness or audio.
 
