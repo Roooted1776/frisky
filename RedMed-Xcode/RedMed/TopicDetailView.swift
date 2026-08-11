@@ -200,6 +200,9 @@ struct TopicDetailView: View {
                                 .kerning(-0.2)
                         }
                         .foregroundColor(.redmedAccent)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 2)
+                        .background(Color.redmedBg)
                     }
                     .buttonStyle(.plain)
                 }

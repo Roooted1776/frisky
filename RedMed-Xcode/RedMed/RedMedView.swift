@@ -30,98 +30,82 @@ struct RedMedView: View {
                 header
 
                 LazyVStack(alignment: .leading, spacing: 0) {
-                // YOU card (no section label in Main design)
-                cardGroup {
-                    profileRow(label: "Name", value: profile.name, emptyPrompt: "Add name")
-                    thinDivider
-                    profileRow(label: "Birth date", value: profile.birthDate, emptyPrompt: "Add birth date")
-                    thinDivider
-                    profileRow(label: "Blood type", value: profile.bloodType, emptyPrompt: "Add blood type")
-                }
-                .padding(.top, 2)
+                    // YOU card (no section label in Main design)
+                    cardGroup {
+                        profileRow(label: "Name", value: profile.name, emptyPrompt: "Add name")
+                        thinDivider
+                        profileRow(label: "Birth date", value: profile.birthDate, emptyPrompt: "Add birth date")
+                        thinDivider
+                        profileRow(label: "Blood type", value: profile.bloodType, emptyPrompt: "Add blood type")
+                    }
+                    .padding(.top, 2)
 
-                listSection(title: "Allergies", items: profile.allergies, emptyPrompt: "Add allergy")
-                listSection(title: "Medications", items: profile.medications, emptyPrompt: "Add medication")
-                listSection(title: "Conditions", items: profile.conditions, emptyPrompt: "Add condition")
+                    listSection(title: "Allergies", items: profile.allergies, emptyPrompt: "Add allergy")
+                    listSection(title: "Medications", items: profile.medications, emptyPrompt: "Add medication")
+                    listSection(title: "Conditions", items: profile.conditions, emptyPrompt: "Add condition")
 
-                // CONTACTS
-                SectionLabel(text: "Contacts").padding(.horizontal, 16).padding(.top, 12)
-                cardGroup {
-                    if profile.contacts.isEmpty {
-                        emptyPromptRow("Add contact")
-                    } else {
-                        ForEach(Array(profile.contacts.enumerated()), id: \.element.id) { i, c in
-                            VStack(alignment: .leading, spacing: 2) {
-                                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                                    Text(c.name.isEmpty ? "Emergency contact" : c.name)
-                                        .font(.system(size: 12, weight: .semibold))
-                                        .foregroundColor(.redmedDark)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                    if !c.phone.isEmpty {
-                                        Text(c.phone)
+                    // CONTACTS
+                    SectionLabel(text: "Contacts").padding(.horizontal, 16).padding(.top, 12)
+                    cardGroup {
+                        if profile.contacts.isEmpty {
+                            emptyPromptRow("Add contact")
+                        } else {
+                            ForEach(Array(profile.contacts.enumerated()), id: \.element.id) { i, c in
+                                VStack(alignment: .leading, spacing: 2) {
+                                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                        Text(c.name.isEmpty ? "Emergency contact" : c.name)
+                                            .font(.system(size: 12, weight: .semibold))
+                                            .foregroundColor(.redmedDark)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                        if !c.phone.isEmpty {
+                                            Text(c.phone)
+                                                .font(.system(size: 13, weight: .medium))
+                                                .foregroundColor(.redmedAccent)
+                                                .multilineTextAlignment(.trailing)
+                                        }
+                                    }
+                                    if !c.relationship.isEmpty {
+                                        Text(c.relationship)
                                             .font(.system(size: 13, weight: .medium))
-                                            .foregroundColor(.redmedAccent)
-                                            .multilineTextAlignment(.trailing)
+                                            .foregroundColor(.redmedMuted)
                                     }
                                 }
-                                if !c.relationship.isEmpty {
-                                    Text(c.relationship)
-                                        .font(.system(size: 13, weight: .medium))
-                                        .foregroundColor(.redmedMuted)
-                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 11)
+                                if i < profile.contacts.count - 1 { thinDivider }
                             }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 11)
-                            if i < profile.contacts.count - 1 { thinDivider }
                         }
                     }
-                }
 
-                if !isScannerSession {
-                    // QUICK ACTIONS (owner only) — full app: Bracelet / How it works / Preview scanner
-                    HStack(spacing: 10) {
-                        Button { tab = .nfc } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "plus.circle")
-                                    .font(.system(size: 17, weight: .semibold))
-                                    .foregroundColor(.redmedAccent)
-                                Text("Bracelet")
-                                    .font(.system(size: 12, weight: .semibold))
-                                    .foregroundColor(.redmedAccent)
-                                    .kerning(-0.1)
-                            }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                        }
-                        .buttonStyle(.plain)
-
-                        Rectangle()
-                            .fill(Color.redmedDark.opacity(0.12))
-                            .frame(width: 0.5, height: 18)
-
-                        Button { showHelp = true } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "questionmark.circle")
-                                    .font(.system(size: 17, weight: .regular))
-                                    .foregroundColor(.redmedMuted)
-                                Text("How it works")
-                                    .font(.system(size: 12, weight: .semibold))
-                                    .foregroundColor(.redmedMuted)
-                                    .kerning(-0.1)
-                            }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                        }
-                        .buttonStyle(.plain)
-
-                        if profile.hasData {
-                            Button { showScannerPreview = true } label: {
+                    if !isScannerSession {
+                        // QUICK ACTIONS (owner only) — full app: Bracelet / How it works / Preview scanner
+                        HStack(spacing: 10) {
+                            Button { tab = .nfc } label: {
                                 HStack(spacing: 6) {
-                                    Image(systemName: "eye")
+                                    Image(systemName: "plus.circle")
+                                        .font(.system(size: 17, weight: .semibold))
+                                        .foregroundColor(.redmedAccent)
+                                    Text("Bracelet")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundColor(.redmedAccent)
+                                        .kerning(-0.1)
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                            }
+                            .buttonStyle(.plain)
+
+                            Rectangle()
+                                .fill(Color.redmedDark.opacity(0.12))
+                                .frame(width: 0.5, height: 18)
+
+                            Button { showHelp = true } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "questionmark.circle")
                                         .font(.system(size: 17, weight: .regular))
                                         .foregroundColor(.redmedMuted)
-                                    Text("Preview scanner")
+                                    Text("How it works")
                                         .font(.system(size: 12, weight: .semibold))
                                         .foregroundColor(.redmedMuted)
                                         .kerning(-0.1)
@@ -130,14 +114,30 @@ struct RedMedView: View {
                                 .padding(.vertical, 6)
                             }
                             .buttonStyle(.plain)
+
+                            if profile.hasData {
+                                Button { showScannerPreview = true } label: {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "eye")
+                                            .font(.system(size: 17, weight: .regular))
+                                            .foregroundColor(.redmedMuted)
+                                        Text("Preview scanner")
+                                            .font(.system(size: 12, weight: .semibold))
+                                            .foregroundColor(.redmedMuted)
+                                            .kerning(-0.1)
+                                    }
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 42)
+                        .padding(.bottom, 16)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 42)
-                    .padding(.bottom, 16)
                 }
-                } // LazyVStack
-            } // header + list
+            }
             .padding(.bottom, isScannerSession ? 42 : 12)
         }
         // Owner profile only — never redact the passerby / EMS scanner card.
