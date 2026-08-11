@@ -39,14 +39,10 @@ struct NFCView: View {
                     let rf = AppConfig.BraceletRF.self
                     VStack(spacing: 0) {
                         statusRow(rf.carrierVsBluetoothSummary, showDivider: true)
-                        statusRow("Compact `#d=`: flat array → AES-GCM → Base64url → get.html", showDivider: true)
                         statusRow(rf.tapDistanceSummary, showDivider: true)
-                        statusRow(
-                            AppConfig.nfcHardwareEnabled
-                                ? rf.powerOnTapSummary
-                                : "Hardware NFC parked — simulate write packs the URL; flip AppConfig + entitlements to go live.",
-                            showDivider: true
-                        )
+                        if AppConfig.nfcHardwareEnabled {
+                            statusRow(rf.powerOnTapSummary, showDivider: true)
+                        }
                         statusRow(rf.passerbyTapSummary, showDivider: true)
                         statusRow(
                             profile.braceletLinked
