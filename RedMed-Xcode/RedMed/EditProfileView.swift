@@ -410,17 +410,18 @@ struct EditProfileView: View {
     }
 
     private func commitSave() {
-        profile.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let date = Self.parseBirthDate(birthDate) {
-            profile.birthDate = Self.birthDateFormatter.string(from: date)
-        } else {
-            profile.birthDate = birthDate.trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-        profile.bloodType = bloodType.trimmingCharacters(in: .whitespacesAndNewlines)
-        profile.allergies = allergies.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-        profile.medications = medications.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-        profile.conditions = conditions.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-        profile.contacts = contacts.compactMap { contact -> EmergencyContact? in
+        let nextName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let nextBirth: String = {
+            if let date = Self.parseBirthDate(birthDate) {
+                return Self.birthDateFormatter.string(from: date)
+            }
+            return birthDate.trimmingCharacters(in: .whitespacesAndNewlines)
+        }()
+        let nextBlood = bloodType.trimmingCharacters(in: .whitespacesAndNewlines)
+        let nextAllergies = allergies.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        let nextMeds = medications.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        let nextConditions = conditions.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        let nextContacts = contacts.compactMap { contact -> EmergencyContact? in
             let trimmedName = contact.name.trimmingCharacters(in: .whitespacesAndNewlines)
             let trimmedPhone = contact.phone.trimmingCharacters(in: .whitespacesAndNewlines)
             let trimmedRel = contact.relationship.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -431,6 +432,30 @@ struct EditProfileView: View {
                 phone: trimmedPhone
             )
         }
+
+        let changed =
+            nextName != profile.name
+            || nextBirth != profile.birthDate
+            || nextBlood != profile.bloodType
+            || nextAllergies != profile.allergies
+            || nextMeds != profile.medications
+            || nextConditions != profile.conditions
+            || nextContacts.map { "\($0.name)|\($0.relationship)|\($0.phone)" }
+                != profile.contacts.map { "\($0.name)|\($0.relationship)|\($0.phone)" }
+
+        profile.name = nextName
+        profile.birthDate = nextBirth
+        profile.bloodType = nextBlood
+        profile.allergies = nextAllergies
+        profile.medications = nextMeds
+        profile.conditions = nextConditions
+        profile.contacts = nextContacts
+
+        // Band holds a snapshot — real edits unpair until NFC rewrite.
+        if changed {
+            profile.clearBraceletPairingAfterProfileEdit()
+        }
+
         guard profile.persist() else {
             showSaveFailedAlert = true
             return

@@ -143,6 +143,23 @@ class ProfileData: ObservableObject {
         }
         return true
     }
+
+    /// Band pairing flag for Main / NFC chrome.
+    /// `true` only after a verified (or simulated) write; cleared when RedMed is edited.
+    func setBraceletPaired(_ paired: Bool) {
+        guard braceletLinked != paired else {
+            if persists { _ = persist() }
+            return
+        }
+        braceletLinked = paired
+        if persists { _ = persist() }
+    }
+
+    /// Chip holds a snapshot — any real profile edit unpairs until the band is rewritten.
+    func clearBraceletPairingAfterProfileEdit() {
+        guard braceletLinked else { return }
+        braceletLinked = false
+    }
 }
 
 struct EmergencyContact: Identifiable, Equatable {

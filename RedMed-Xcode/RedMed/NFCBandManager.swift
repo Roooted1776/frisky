@@ -92,11 +92,10 @@ final class NFCBandManager: ObservableObject {
         scannedCard = nil
     }
 
-    /// Mark owner bracelet linked after a verified (or simulated) write.
+    /// Mark owner bracelet paired after a verified (or simulated) write.
     func linkBracelet(on profile: ProfileData, detail: String) {
-        profile.braceletLinked = true
-        // Keychain write best-effort; bracelet flag is owner-local metadata only.
-        _ = profile.persist()
+        // Publishes + Keychain so Main's paired line flips immediately.
+        profile.setBraceletPaired(true)
         VaultHistoryStore.shared.record(.braceletWritten, detail: detail)
     }
 
