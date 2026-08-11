@@ -46,7 +46,7 @@ See also `AGENTS.md`. High-signal recap:
 8. Unique `project.pbxproj` IDs (duplicate IDs drop sources).
 9. Passerby SW: network-first shell; cache fallback on non-ok HTTP; bump `redmed-get-vN` in lockstep.
 10. `AppConfig.BraceletRF` owns tap-distance copy (no hardcoded inches).
-11. Crash / high-speed **vehicle impact** detection is **local CoreMotion only** — not Apple Crash Detection, no cloud. Must ignore running and daily activity.
+11. Crash / high-speed **vehicle impact** detection is **local CoreMotion only** — not Apple Crash Detection, no cloud. Must ignore running, sex/intimate motion, eating, and hand/wrist handling.
 
 ## What he has already done (shipped history)
 

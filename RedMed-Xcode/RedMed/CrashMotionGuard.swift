@@ -3,34 +3,35 @@ import Foundation
 import SwiftUI
 
 /// On-device **vehicle crash / high-speed impact** guard (CoreMotion only).
-/// Arms full brightness + locator siren. Ignores running, walking, wrist flicks,
-/// and daily handling. Not Apple Crash Detection — no GPS/barometer fusion, no cloud.
+/// Arms full brightness + locator siren.
+/// Ignores running, walking, eating, sex/intimate motion, and hand/wrist handling.
+/// Not Apple Crash Detection — no GPS/barometer fusion, no cloud.
 @MainActor
 final class CrashMotionGuard: ObservableObject {
     static let shared = CrashMotionGuard()
 
     @Published private(set) var isArmed = false
 
-    /// Direct high-speed impact peak (user-acceleration magnitude in g).
-    /// Running tops out ~2–4g; wrist flicks are high-jerk but usually well below this.
-    private static let crashPeakG: Double = 14.0
-    /// After true freefall, a slightly lower peak still counts (ejection / vault).
-    private static let postFreefallPeakG: Double = 11.0
-    /// Extreme peak that overrides wrist-rotation rejection (cabin smash).
-    private static let overrideWristPeakG: Double = 22.0
-    /// Near-zero user accel = freefall / ballistic.
-    private static let freefallMaxG: Double = 0.25
-    private static let freefallMinSeconds: TimeInterval = 0.18
-    private static let freefallImpactWindow: TimeInterval = 0.45
-    /// Ignore rhythmic mid-g spikes (running / gym).
-    private static let activityBandMinG: Double = 1.8
-    private static let activityBandMaxG: Double = 6.0
-    private static let activitySpikeCount: Int = 3
-    private static let activityWindow: TimeInterval = 2.0
-    /// Wrist / arm snap — high spin with non-extreme linear g. Reject unless override peak.
-    private static let wristSpinRadPerSec: Double = 7.0
-    /// Require a sharp onset so slow daily motion never arms.
-    private static let minJerkGPerSecond: Double = 100.0
+    /// Vehicle-level linear peak (g). Daily human motion stays well below this.
+    private static let crashPeakG: Double = 16.0
+    /// After true freefall, slightly lower peak still counts (ejection).
+    private static let postFreefallPeakG: Double = 13.0
+    /// Only this extreme peak can arm during recent human-activity / hand-busy windows.
+    private static let overrideBusyPeakG: Double = 24.0
+    /// Near-zero user accel = freefall / ballistic (longer than a hand dip).
+    private static let freefallMaxG: Double = 0.20
+    private static let freefallMinSeconds: TimeInterval = 0.22
+    private static let freefallImpactWindow: TimeInterval = 0.40
+    /// Broad human-activity band: walking, sex, eating gestures, phone handling.
+    private static let humanActivityMinG: Double = 0.7
+    private static let humanActivityMaxG: Double = 9.0
+    private static let humanActivitySpikeCount: Int = 2
+    private static let humanActivityWindow: TimeInterval = 8.0
+    /// Recent hand/body busyness blocks arming unless override peak.
+    private static let busyHoldSeconds: TimeInterval = 4.0
+    /// Hand / wrist motion — moderate spin is enough (eating, gestures, intimacy).
+    private static let handSpinRadPerSec: Double = 3.5
+    private static let minJerkGPerSecond: Double = 120.0
     private static let sampleHz: Double = 50.0
     private static let cooldownSeconds: TimeInterval = 90
 
@@ -38,7 +39,9 @@ final class CrashMotionGuard: ObservableObject {
     private var freefallSince: Date?
     private var freefallEndedAt: Date?
     private var lastMagnitude: Double = 0
-    private var recentActivityPeaks: [Date] = []
+    private var recentHumanPeaks: [Date] = []
+    private var recentHandSpins: [Date] = []
+    private var busyUntil: Date?
     private var lastArmAt: Date?
     private var isMonitoring = false
 
@@ -85,7 +88,20 @@ final class CrashMotionGuard: ObservableObject {
         freefallSince = nil
         freefallEndedAt = nil
         lastMagnitude = 0
-        recentActivityPeaks.removeAll(keepingCapacity: true)
+        recentHumanPeaks.removeAll(keepingCapacity: true)
+        recentHandSpins.removeAll(keepingCapacity: true)
+        busyUntil = nil
+    }
+
+    private func markBusy(at now: Date) {
+        let until = now.addingTimeInterval(Self.busyHoldSeconds)
+        if let existing = busyUntil {
+            busyUntil = max(existing, until)
+        } else {
+            busyUntil = until
+        }
+        freefallSince = nil
+        freefallEndedAt = nil
     }
 
     private func evaluate(_ motion: CMDeviceMotion) {
@@ -101,30 +117,35 @@ final class CrashMotionGuard: ObservableObject {
         let dt = 1.0 / Self.sampleHz
         let jerk = abs(magnitude - lastMagnitude) / dt
         lastMagnitude = magnitude
-
-        // Track mid-band spikes — running produces several per second.
         let now = Date()
-        if magnitude >= Self.activityBandMinG && magnitude <= Self.activityBandMaxG {
-            recentActivityPeaks.append(now)
+
+        // Human activity band — sex, eating gestures, jogging, pocket bounce.
+        if magnitude >= Self.humanActivityMinG && magnitude <= Self.humanActivityMaxG {
+            recentHumanPeaks.append(now)
         }
-        recentActivityPeaks.removeAll { now.timeIntervalSince($0) > Self.activityWindow }
-        if recentActivityPeaks.count >= Self.activitySpikeCount {
-            // Active locomotion / daily bounce — never arm from this window.
-            freefallSince = nil
-            freefallEndedAt = nil
+        recentHumanPeaks.removeAll { now.timeIntervalSince($0) > Self.humanActivityWindow }
+        if recentHumanPeaks.count >= Self.humanActivitySpikeCount {
+            markBusy(at: now)
             return
         }
 
-        // Wrist / arm snap: high rotation with non-extreme linear g.
-        // Phone on wrist (or hard wrist flick while held) must not arm.
-        let looksLikeWristJerk = spin >= Self.wristSpinRadPerSec && magnitude < Self.overrideWristPeakG
-        if looksLikeWristJerk {
-            freefallSince = nil
-            freefallEndedAt = nil
-            return
+        // Hand / wrist motion (phone in hand, on wrist, gesture while eating).
+        if spin >= Self.handSpinRadPerSec {
+            recentHandSpins.append(now)
+            recentHandSpins.removeAll { now.timeIntervalSince($0) > Self.humanActivityWindow }
+            if magnitude < Self.overrideBusyPeakG {
+                markBusy(at: now)
+                return
+            }
+        } else {
+            recentHandSpins.removeAll { now.timeIntervalSince($0) > Self.humanActivityWindow }
         }
 
-        // Freefall tracking (airborne then slam) — longer than a wrist arc dip.
+        let isBusy = (busyUntil.map { now < $0 } ?? false)
+            || !recentHandSpins.isEmpty
+            || recentHumanPeaks.count >= Self.humanActivitySpikeCount
+
+        // Freefall tracking — longer than a hand dip / body roll.
         if magnitude <= Self.freefallMaxG {
             if freefallSince == nil { freefallSince = now }
         } else if let since = freefallSince {
@@ -143,15 +164,16 @@ final class CrashMotionGuard: ObservableObject {
             return true
         }()
 
-        // Must be a sharp onset — filters slow daily lean / pocket shift.
         guard jerk >= Self.minJerkGPerSecond else { return }
 
-        if magnitude >= Self.crashPeakG {
+        // During recent sex / eating / hand motion, only an extreme smash can arm.
+        let requiredPeak = isBusy ? Self.overrideBusyPeakG : Self.crashPeakG
+        if magnitude >= requiredPeak {
             arm()
             return
         }
 
-        if inPostFreefallWindow, magnitude >= Self.postFreefallPeakG {
+        if !isBusy, inPostFreefallWindow, magnitude >= Self.postFreefallPeakG {
             arm()
         }
     }
