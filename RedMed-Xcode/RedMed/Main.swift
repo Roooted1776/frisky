@@ -45,15 +45,15 @@ struct MainInfoView: View {
                 }
 
                 section(num: "3", title: "Verify it") {
-                    Text("On the NFC tab, tap Scan your bracelet (or use Preview scanner on RedMed) to see the same read-only RedMed / Help / Aid shell a stranger gets. There is no Edit and no NFC write UI in that view.")
+                    Text("On the NFC tab, tap Scan your bracelet (or use Preview scanner on RedMed) to see the same read-only RedMed / 911 / Aid shell a stranger gets. There is no Edit and no NFC write UI in that view.")
                 }
 
                 section(num: "4", title: "What a stranger sees") {
-                    Text("Anyone who taps the bracelet opens the passerby page (get.html) with RedMed, Help, and Aid — your profile, Call emergency / GPS help, and roadside aid. No RedMed app or login is required, and they cannot edit your profile or write the band.")
+                    Text("Anyone who taps the bracelet opens the passerby page (get.html) with RedMed, 911, and Aid — your profile, Call emergency / GPS help, and roadside aid. No RedMed app or login is required, and they cannot edit your profile or write the band.")
                 }
 
                 section(num: "5", title: "In an emergency") {
-                    Text("Use the Help tab for one-tap dialing and live GPS coordinates to read off to a dispatcher. Use the Aid tab for step-by-step guidance on bleeding, CPR, shock, and other roadside situations while help is on the way.")
+                    Text("Use the 911 tab for one-tap dialing and live GPS coordinates to read off to a dispatcher. Use the Aid tab for step-by-step guidance on bleeding, CPR, shock, and other roadside situations while help is on the way.")
                 }
 
                 section(num: "6", title: "Keeping it in sync") {

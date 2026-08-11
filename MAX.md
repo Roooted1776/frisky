@@ -53,7 +53,7 @@ See also `AGENTS.md`. High-signal recap:
 Compressed from merged PRs / `main` history. Agents should treat these as **done** unless asked to change them.
 
 ### Roles, launch, chrome
-- Locked owner vs passerby shells; four owner tabs; scanners RedMed/Help/Aid.
+- Locked owner vs passerby shells; four owner tabs (RedMed · 911 · Aid · NFC); scanners RedMed/911/Aid.
 - Owner app on first launch; `Main.swift` owner shell; HTML policies redirect `redmed://main`.
 - Deferred all Core Location until Find Help; fixed SIGTERM/launch confusion.
 - Custom tab bar spacing; Aid chrome/wordmark/headings; RedMed fonts; Preview scanner Close on all tabs.
