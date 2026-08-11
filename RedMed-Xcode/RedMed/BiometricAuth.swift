@@ -56,11 +56,11 @@ enum BiometricAuth {
     private static func shouldOfferPasscodeFallback(_ error: Error?) -> Bool {
         guard let la = error as? LAError else { return false }
         switch la.code {
-        case .userFallback, .biometryLockout, .authenticationFailed, .biometryNotAvailable:
+        case .userFallback, .biometryLockout:
+            // Explicit Passcode tap, or Face ID locked out after failed attempts.
             return true
-        case .userCancel, .appCancel, .systemCancel, .notInteractive:
-            return false
         default:
+            // Cancel / failed scan → stay gated; user must retry Face ID.
             return false
         }
     }
