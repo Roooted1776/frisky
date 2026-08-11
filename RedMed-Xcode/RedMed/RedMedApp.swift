@@ -8,13 +8,9 @@ struct RedMedApp: App {
         WindowGroup {
             // Owner UI lives in Main.swift — not HTML.
             // Privacy cover hides PHI from iOS app-switcher snapshots.
-            // Crash overlay sits above privacy so cancel stays reachable.
-            ZStack {
-                PrivacySnapshotGuard {
-                    Main()
-                        .environmentObject(profile)
-                }
-                CrashSurvivalOverlay()
+            PrivacySnapshotGuard {
+                Main()
+                    .environmentObject(profile)
             }
             .task {
                 // First paint with zero Location; CoreMotion starts after yield.

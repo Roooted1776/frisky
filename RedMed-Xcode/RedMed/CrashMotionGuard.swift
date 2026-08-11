@@ -89,47 +89,60 @@ final class CrashMotionGuard: ObservableObject {
     }
 }
 
-/// Full-screen cancel surface while crash survival alarm is armed.
-struct CrashSurvivalOverlay: View {
-    @ObservedObject private var guardMonitor = CrashMotionGuard.shared
+/// Cancel card shown on Aid while crash survival alarm is armed.
+/// Matches pane / InfoCard chrome (surface + divider stroke).
+struct CrashSurvivalCancelCard: View {
+    @ObservedObject private var monitor = CrashMotionGuard.shared
 
     var body: some View {
-        if guardMonitor.isArmed {
-            ZStack {
-                Color.redmedAccent.ignoresSafeArea()
-                VStack(spacing: 20) {
-                    Spacer(minLength: 40)
+        if monitor.isArmed {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
                     Image(systemName: "light.beacon.max.fill")
-                        .font(.system(size: 56, weight: .bold))
-                        .foregroundColor(.white)
-                    Text("IMPACT DETECTED")
-                        .font(.system(size: 28, weight: .heavy))
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-                    Text("Full brightness + locate-me siren are on so rescuers can find this iPhone. Local sensors only — not Apple Crash Detection.")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(.white.opacity(0.92))
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 28)
-                    Spacer()
-                    Button {
-                        guardMonitor.disarm()
-                    } label: {
-                        Text("I'm OK — cancel alarm")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(.redmedAccent)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 18)
-                            .background(Color.white)
-                            .clipShape(Capsule())
+                        .font(.system(size: 15))
+                        .foregroundColor(.redmedAccent)
+                        .frame(width: 28, height: 28)
+                        .background(Color.redmedAccent.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Impact detected")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.redmedDark)
+                        Text("Full brightness + locate-me siren are on. Local sensors only.")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(.redmedMuted)
                     }
-                    .padding(.horizontal, 28)
-                    .padding(.bottom, 40)
                 }
+
+                Button {
+                    monitor.disarm()
+                } label: {
+                    Text("I'm OK — cancel alarm")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            LinearGradient(
+                                colors: [Color(red: 1, green: 0.447, blue: 0.537), .redmedAccent],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .clipShape(Capsule())
+                        .shadow(color: Color.redmedAccent.opacity(0.28), radius: 7, y: 4)
+                }
+                .buttonStyle(.plain)
             }
-            .transition(.opacity)
-            .zIndex(2000)
-            .accessibilityAddTraits(.isModal)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14)
+            .background(Color.redmedSurface)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(Color.redmedAccent.opacity(0.28), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
         }
     }
 }
