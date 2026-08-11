@@ -3,6 +3,7 @@ name: iOS build
 # Compiles the RedMed app so Swift errors are caught in CI instead of on a
 # developer's Mac. Paths are scoped so doc/HTML-only changes don't spend
 # macOS runner minutes (they bill at 10x on private repos).
+# Includes ProfileNFCCodec Compression changes on this PR.
 on:
   push:
     branches: [main]
