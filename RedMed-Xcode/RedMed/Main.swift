@@ -18,7 +18,7 @@ struct MainInfoView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Fill out your emergency profile once in the app, write it to a passive 13.56 MHz HF NFC bracelet (not Bluetooth), and anyone who taps the band with a phone sees your emergency card — no app or account required on their end.")
+                Text("Fill out your emergency profile once in the app, write it to a passive \(AppConfig.BraceletRF.carrierLabel) bracelet (not Bluetooth), and anyone who taps the band with a phone sees your emergency card — no app or account required on their end.")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.redmedMuted)
                     .fixedSize(horizontal: false, vertical: true)
@@ -32,7 +32,7 @@ struct MainInfoView: View {
                 }
 
                 section(num: "2", title: "Write your bracelet") {
-                    Text("Go to the NFC tab and tap Write to NFC tag. Confirm with Face ID, Touch ID, or your passcode, then hold the top of your iPhone near the bracelet when prompted. Your profile is written to the passive chip in the band. Walk-by distance will not fire the band; only a deliberate ~1–2″ antenna tap opens the card.")
+                    Text("Go to the NFC tab and tap Write to NFC tag. Confirm with Face ID, Touch ID, or your passcode, then hold the top of your iPhone near the bracelet when prompted. Your profile is written to the passive chip in the band. \(AppConfig.BraceletRF.writeBandDistanceBlurb)")
                     if let onOpenNFC {
                         Button("Open NFC tab") {
                             dismiss()
@@ -67,7 +67,7 @@ struct MainInfoView: View {
                     setupStep(1, "Open RedMed on iPhone and fill in your allergies, meds, and contacts.")
                     setupStep(2, "Hold your band to the top of your iPhone once — the chip stores your emergency card.")
                     setupStep(3, "Done. Anyone taps the band — their phone opens emergency call and your critical info. No app needed.")
-                    Text("Passive 13.56 MHz HF NFC only — no battery, no Bluetooth pair. RedMed is not a medical device. In an emergency, call your local emergency number.")
+                    Text("Passive \(AppConfig.BraceletRF.carrierLabel) only — no battery, no Bluetooth pair. RedMed is not a medical device. In an emergency, call your local emergency number.")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .padding(.top, 4)

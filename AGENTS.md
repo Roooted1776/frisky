@@ -32,6 +32,11 @@ The app has no backend, database, or web service.
   owner app; they do not host owner edit UI. Owner How It Works / band setup
   lives in `Main.swift` (`MainInfoView`).
 
+- **Bracelet tap (physics, not a setting):** `AppConfig.BraceletRF` is the single
+  source of truth — intentional tap ~1–2″, walk-by ~6–8″ does not fire, reliable
+  coupling dies past ~4″, passive 13.56 MHz HF NFC (not Bluetooth). NFC tab /
+  How It Works copy must use `BraceletRF` helpers, not hardcoded inches.
+
 **Cold launch:** Do **not** create `CLLocationManager`, start GPS / MapKit /
 trauma JSON, or show a Location banner at `@main`. First launch opens RedMed
 tabs immediately with zero Location API. When-In-Use + GPS start only on Find

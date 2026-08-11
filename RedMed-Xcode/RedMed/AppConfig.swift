@@ -50,5 +50,49 @@ enum AppConfig {
         static let reliableCouplingInchesMax = 4
         /// Payment terminals speak EMV; they do not open RedMed NDEF URLs.
         static let ignoredByPaymentPOS = true
+
+        // MARK: Product copy (single source — do not hardcode distances elsewhere)
+
+        static var carrierLabel: String {
+            String(format: "%.2f MHz HF NFC", carrierMHz)
+        }
+
+        static var walkByRangeLabel: String {
+            "~\(walkByStandoffInchesMin)–\(walkByStandoffInchesMax)″"
+        }
+
+        static var intentionalTapRangeLabel: String {
+            "~\(intentionalTapInchesMin)–\(intentionalTapInchesMax)″"
+        }
+
+        static var reliableCouplingLabel: String {
+            "~\(reliableCouplingInchesMax)″"
+        }
+
+        /// NFC tab status line: walk-by vs deliberate tap.
+        static var tapDistanceSummary: String {
+            "Walk-by won't fire (\(walkByRangeLabel)). Only a deliberate \(intentionalTapRangeLabel) antenna tap opens the card."
+        }
+
+        static var carrierVsBluetoothSummary: String {
+            "Passive band · \(carrierLabel) (NTAG) — not Bluetooth 2.4 GHz."
+        }
+
+        static var powerOnTapSummary: String {
+            "Phone only powers the chip on write/scan. No background pair radio."
+        }
+
+        static var paymentPOSSummary: String {
+            "POS ignore this chip (EMV ≠ NDEF) — not a distance setting."
+        }
+
+        static var passerbyTapSummary: String {
+            "Tap the band · phone opens get.html · no app for readers"
+        }
+
+        /// How It Works / setup prose for intentional tap vs walk-by.
+        static var writeBandDistanceBlurb: String {
+            "Walk-by distance will not fire the band; only a deliberate \(intentionalTapRangeLabel) antenna tap opens the card."
+        }
     }
 }

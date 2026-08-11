@@ -75,7 +75,7 @@
     <p>Open a private GitHub security advisory on <a href="https://github.com/RedmMed/RedMed">RedmMed/RedMed</a> for vulnerabilities in the hosted card page or XSS in <code>#d=</code> rendering. Do not file public issues with live API keys or real medical payloads.</p>
 
     <h2><span class="sec-num">7.</span> Trust Root (Cloudflare Pages)</h2>
-    <p>Every band tap opens the Cloudflare Pages deploy of <code>card/</code>, pushed by GitHub Actions on every merge to <code>main</code>. Treat <code>main</code> as production:</p>
+    <p>Every band tap opens the Cloudflare Pages deploy of <code>get/</code>, pushed by GitHub Actions on every merge to <code>main</code>. Treat <code>main</code> as production:</p>
     <ol>
       <li>Enable <strong>branch protection</strong> on <code>main</code> (required PR reviews, no force-push).</li>
       <li>Restrict who can edit the deploy workflow and repository secrets — <code>CLOUDFLARE_API_TOKEN</code> grants Pages deploy access.</li>
