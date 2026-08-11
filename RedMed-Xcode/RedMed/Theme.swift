@@ -13,7 +13,7 @@ struct SectionLabel: View {
     let text: String
     var body: some View {
         Text(text.uppercased())
-            .font(.system(size: 13, weight: .semibold))
+            .font(.system(size: 12, weight: .semibold))
             .foregroundColor(.redmedMuted)
             .kerning(0.6)
             .padding(.horizontal, 4)
