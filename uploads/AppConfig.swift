@@ -8,9 +8,11 @@ enum AppConfig {
     /// Alias for setup QR / deep links (same as `appStoreURL`).
     static let getStartedURL = appStoreURL
 
-    /// HTTPS URI written to passive NFC bands (CoreNFC). `#d=…` on chip.
+    /// HTTPS URI written to passive NFC bands (CoreNFC). `#d=…` is flat-array
+    /// AES-GCM sealed base64url — decoded in get.html / the app (no DB).
     /// Tap the band → any smartphone opens the hosted emergency card in the browser.
-    /// No app for readers. In-app NFC scan and `redmed://card` decode to `ScannedCardView`.
+    /// `sw.js` caches the static layout for offline taps. No app for readers.
+    /// In-app NFC scan and `redmed://card` decode to `ScannedCardView`.
     static let medicalCardBaseURL = "https://redmed.pages.dev/get/"
 
     /// Older bands may carry `redmed://card`; in-app decode still accepts `#d=` from those.

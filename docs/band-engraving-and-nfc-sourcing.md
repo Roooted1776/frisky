@@ -104,7 +104,7 @@ or `COND: T1 DIABETES` — one token, no essay.
 | Location | Encodes | Why |
 |----------|---------|-----|
 | Outer face, small | App Store URL (`AppConfig.appStoreURL`) | Owner setup path. Safe if scanned by a stranger — no health data. |
-| Chip (NDEF) | `https://redmed.pages.dev/get/#d=<base64url>` | Written by RedMed; rescuer tap opens the card. |
+| Chip (NDEF) | `https://redmed.pages.dev/get/#d=<base64url>` | Written by RedMed; flat array → AES-GCM → base64url; rescuer tap opens the card. |
 
 If the plate only fits one mark, prioritise **engraved text** over QR. NFC is the
 primary rescue path; QR is a setup affordance, not a backup medical record.
