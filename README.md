@@ -8,9 +8,8 @@ Native iOS medical ID + emergency aid app. Shipable source of truth is
 | Path | Role |
 |------|------|
 | `RedMed-Xcode/RedMed/Main.swift` | **Owner app** — edit profile, Aid, NFC, How It Works (`MainInfoView`) |
-| `card.html` | **Passerby scan** — bracelet tap; links back to `redmed://main` for owners |
-| Policy HTML (`PrivacyPolicy`, `TOS`, `security`) | Legal docs only; CTA redirects into the app (`Main.swift`) |
-| `HowItWorks.html` | Thin redirect stub → `redmed://main` / App Store (content is Swift) |
+| `card.html` (+ `assets/`) | **Passerby scan** (Cloudflare Pages) — bracelet tap; links back to `redmed://main` |
+| `RedMed-Xcode/RedMed/{PrivacyPolicy,TOS,security,HowItWorks}.html` + `legal-doc.css` | Policy pages bundled in the app (sole copy — no repo-root duplicates) |
 | `uploads/` | Staged / experimental Swift — **not** in the Xcode project (see `uploads/README.md`) |
 | `compliance/` | MHRA / DTAC / cyber pack drafts |
 

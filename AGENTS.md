@@ -19,10 +19,12 @@ set up a working runtime here:
 The app has no backend, database, or web service.
 
 **Roles / HTML:** Owner UI is Swift — `Main.swift` (tabs + `MainInfoView` How It
-Works / band setup). Product HTML is only (1) passerby `card.html` and (2)
-policy pages (`PrivacyPolicy`, `TOS`, `security`). `HowItWorks.html` is a thin
-redirect into `redmed://main`. Card + policies CTA to the owner app; they do not
-host owner edit UI.
+Works / band setup). Product HTML is only (1) passerby `card.html` (repo root for
+Pages; mirrored under `RedMed-Xcode/RedMed/` for the bundle) and (2) policy pages
+bundled solely under `RedMed-Xcode/RedMed/` (`PrivacyPolicy`, `TOS`, `security`,
+`HowItWorks`, `legal-doc.css`). `HowItWorks.html` is a thin redirect into
+`redmed://main`. Card + policies CTA to the owner app; they do not host owner
+edit UI. Do not reintroduce repo-root copies of the policy HTML.
 
 **Cold launch:** Do **not** create `CLLocationManager`, start GPS / MapKit /
 trauma JSON, or show a Location banner at `@main`. First launch opens RedMed

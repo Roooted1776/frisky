@@ -1,8 +1,7 @@
 # UK privacy notice + terms — drafting notes
 
-Bundled/published copies: `PrivacyPolicy.html` and `TOS.html`, kept byte-identical in
-three places — repo root, `RedMed-Xcode/RedMed/` (iOS bundle), and
-`code_and_design/RedMed-Xcode/RedMed/`. Edit one, copy to all three.
+Sole copy: `RedMed-Xcode/RedMed/PrivacyPolicy.html` and `TOS.html` (iOS bundle).
+Repo-root duplicates were removed — edit only under `RedMed-Xcode/RedMed/`.
 
 ## Status: UK rewrite landed (v2.0, Aug 2026) — counsel review still outstanding
 
