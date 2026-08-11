@@ -258,9 +258,11 @@ struct NFCView: View {
             }
             return
         }
-        let source = lastSimulatedURL ?? ProfileNFCCodec.buildURLString(profile: profile)
+        // Always pack the live RedMed profile (same as Preview scanner). Do not
+        // reuse lastSimulatedURL — that stays as the last “written” URL link only.
         let card = ProfileData(persisting: false)
-        if let source, let chip = ProfileNFCCodec.decodeProfile(fromURLString: source) {
+        if let source = ProfileNFCCodec.buildURLString(profile: profile),
+           let chip = ProfileNFCCodec.decodeProfile(fromURLString: source) {
             ProfileNFCCodec.apply(chip, to: card)
         } else {
             ProfileNFCCodec.apply(ProfileNFCCodec.chipProfile(from: profile), to: card)
