@@ -12,7 +12,12 @@ final class HapticEngine: ObservableObject {
     private(set) var isReady = false
 
     var supportsHaptics: Bool {
-        CHHapticEngine.capabilitiesForHardware().supportsHaptics
+        #if targetEnvironment(simulator)
+        // Taptic Engine is hardware-only — Simulator must still run the app.
+        return false
+        #else
+        return CHHapticEngine.capabilitiesForHardware().supportsHaptics
+        #endif
     }
 
     /// In-app preference (Help → Settings). iOS System Haptics also suppress playback.

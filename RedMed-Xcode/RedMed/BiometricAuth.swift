@@ -1,9 +1,10 @@
 import LocalAuthentication
 import UIKit
 
+/// Prompts for Face ID or device passcode.
+/// Simulator: no Face ID hardware — uses LA if enrolled, else an Authenticate
+/// confirm so Edit / NFC write still run under Xcode without a physical phone.
 enum BiometricAuth {
-    /// Prompts for Face ID or device passcode. On Simulator, uses LA when enrolled;
-    /// otherwise shows a confirm dialog so edit flows still demonstrate the gate.
     static func authenticate(reason: String, completion: @escaping (Bool) -> Void) {
         let context = LAContext()
         var error: NSError?
