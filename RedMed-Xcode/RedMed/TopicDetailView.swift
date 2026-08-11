@@ -98,7 +98,7 @@ struct TopicDetailView: View {
                     // RECOGNIZE
                     Text("Recognize")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
+                        .foregroundColor(.redmedAccent)
                         .kerning(0.5)
                         .textCase(.uppercase)
                         .padding(.horizontal, 4)
@@ -125,7 +125,7 @@ struct TopicDetailView: View {
                     // WHAT TO DO
                     Text("What to do")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
+                        .foregroundColor(.redmedAccent)
                         .kerning(0.5)
                         .textCase(.uppercase)
                         .padding(.horizontal, 4)
@@ -162,10 +162,12 @@ struct TopicDetailView: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 32)
             }
-            .background(Color(red: 0.949, green: 0.949, blue: 0.969))
+            .background(Color.redmedBg)
             .onDisappear { stopCPR() }
-            .navigationTitle(topic.title)
+            .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.redmedBg, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button {
@@ -180,6 +182,11 @@ struct TopicDetailView: View {
                         .foregroundColor(.redmedAccent)
                     }
                 }
+                ToolbarItem(placement: .principal) {
+                    Text(topic.title)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.redmedAccent)
+                }
             }
         }
     }
@@ -193,7 +200,7 @@ private struct LiveNearbyHospitalsSection: View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Nearest Hospitals — Live")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
+                .foregroundColor(.redmedAccent)
                 .kerning(0.5)
                 .textCase(.uppercase)
                 .padding(.horizontal, 4)

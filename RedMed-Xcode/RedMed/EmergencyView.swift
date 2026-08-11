@@ -77,9 +77,11 @@ struct EmergencyView: View {
             .background(Color.redmedBg)
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.redmedBg, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("Find Help").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedDark)
+                    Text("Find Help").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedAccent)
                 }
                 if isScannerSession {
                     ToolbarItem(placement: .navigationBarTrailing) {

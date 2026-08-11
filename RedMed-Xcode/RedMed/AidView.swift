@@ -96,9 +96,11 @@ struct AidView: View {
             .background(Color.redmedBg)
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.redmedBg, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("Roadside Aid").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedDark)
+                    Text("Roadside Aid").font(.system(size: 17, weight: .semibold)).foregroundColor(.redmedAccent)
                 }
                 if isScannerSession {
                     ToolbarItem(placement: .navigationBarTrailing) {
@@ -139,7 +141,7 @@ struct PaneCard: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(pane.title)
                             .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(.redmedDark)
+                            .foregroundColor(.redmedAccent)
                             .lineLimit(2)
                         if !isOpen {
                             Text(pane.subtitle)
