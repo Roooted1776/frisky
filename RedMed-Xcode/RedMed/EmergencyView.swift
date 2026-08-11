@@ -7,7 +7,12 @@ struct EmergencyView: View {
     @State private var showSatellite = false
 
     var body: some View {
-        NavigationView {
+        VStack(spacing: 0) {
+            // Location UI lives only here — never on cold launch / RedMed tab.
+            if !isScannerSession {
+                LocationSuggestionBanner()
+            }
+            NavigationView {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 8) {
                     // NO CELL SIGNAL — top of Find Help (replaces call-first-contact)
@@ -90,7 +95,8 @@ struct EmergencyView: View {
             .onDisappear {
                 locationManager.stop()
             }
-        }
+            } // NavigationView
+        } // VStack
     }
 }
 
@@ -297,26 +303,48 @@ struct NoCellSignalCard: View {
 
 // MARK: - Location Manager
 class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
-    private let manager = CLLocationManager()
+    /// Created only in `start()` — never at view/`@main` init.
+    private var manager: CLLocationManager?
     @Published var location: CLLocation?
 
-    override init() {
-        super.init()
-        manager.delegate = self
-        // Coarser first fix — Best accuracy waits longer before publishing.
-        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
-        manager.distanceFilter = 25
-    }
-
     func start() {
-        manager.requestWhenInUseAuthorization()
-        // One-shot first (fast), then continuous for the live GPS card.
-        manager.requestLocation()
-        manager.startUpdatingLocation()
+        let m: CLLocationManager
+        if let existing = manager {
+            m = existing
+        } else {
+            let created = CLLocationManager()
+            created.delegate = self
+            created.desiredAccuracy = kCLLocationAccuracyHundredMeters
+            created.distanceFilter = 25
+            manager = created
+            m = created
+        }
+        switch m.authorizationStatus {
+        case .notDetermined:
+            // Prompt only — wait for authorization callback before GPS.
+            m.requestWhenInUseAuthorization()
+        case .authorizedAlways, .authorizedWhenInUse:
+            m.requestLocation()
+            m.startUpdatingLocation()
+        case .denied, .restricted:
+            break
+        @unknown default:
+            break
+        }
     }
 
     func stop() {
-        manager.stopUpdatingLocation()
+        manager?.stopUpdatingLocation()
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        switch manager.authorizationStatus {
+        case .authorizedAlways, .authorizedWhenInUse:
+            manager.requestLocation()
+            manager.startUpdatingLocation()
+        default:
+            break
+        }
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {

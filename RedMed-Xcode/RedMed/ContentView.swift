@@ -26,32 +26,27 @@ struct ContentView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Location banner only on Find Help — never on cold launch / RedMed.
-            if !isScannerSession, scannerSafeTab.wrappedValue == .emergency {
-                LocationSuggestionBanner()
-            }
-            ZStack(alignment: .bottom) {
-                Group {
-                    switch scannerSafeTab.wrappedValue {
-                    case .redmed:
-                        RedMedView(tab: scannerSafeTab)
-                    case .emergency:
-                        EmergencyView()
-                    case .aid:
-                        AidView()
-                    case .nfc:
-                        // Scanners never reach here. Owners go straight to NFC write.
-                        NFCView()
-                    }
+        // No Location banner / CLLocationManager here — Find Help owns that.
+        ZStack(alignment: .bottom) {
+            Group {
+                switch scannerSafeTab.wrappedValue {
+                case .redmed:
+                    RedMedView(tab: scannerSafeTab)
+                case .emergency:
+                    EmergencyView()
+                case .aid:
+                    AidView()
+                case .nfc:
+                    // Scanners never reach here. Owners go straight to NFC write.
+                    NFCView()
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(.bottom, 64)
-
-                CustomTabBar(tab: scannerSafeTab, showsNFC: showsNFC)
             }
-            .ignoresSafeArea(edges: .bottom)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.bottom, 64)
+
+            CustomTabBar(tab: scannerSafeTab, showsNFC: showsNFC)
         }
+        .ignoresSafeArea(edges: .bottom)
         .onAppear { clampScannerTab() }
         .onChange(of: isScannerSession) { _, _ in clampScannerTab() }
     }
