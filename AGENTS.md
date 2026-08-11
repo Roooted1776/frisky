@@ -68,7 +68,11 @@ The app has no backend, database, or web service.
   lock on `.inactive` — LAContext / system auth sheets put the scene inactive
   and would discard a successful unlock via `authGeneration`.
 - `PrivacySnapshotGuard` cover must appear opaque with **no** opacity fade;
-  app-switcher snapshots can capture mid-transition PHI.
+  app-switcher snapshots can capture mid-transition PHI. FaceTime / Screen
+  Recording (`UIScreen.isCaptured`) covers **only while PHI is in RAM** —
+  never over the lock / cold-launch shell (cover was blocking Accept and
+  stuck owners on the lock screen). After unlock while still sharing, cover
+  again; copy should say screen sharing, not a vague “Profile hidden”.
 - `HIPAAOfflineVault`: complete file protection + backup exclusion; history
   events are timestamps/kind only (no field values).
 

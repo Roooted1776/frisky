@@ -5,6 +5,13 @@ import UIKit
 /// Reuse window is zero so every gate re-prompts (Edit, NFC write, vault, app unlock).
 enum BiometricAuth {
     static func authenticate(reason: String, completion: @escaping (Bool) -> Void) {
+        // Face ID is unreliable / often disabled while FaceTime screen share or
+        // Screen Recording is active — go straight to device passcode.
+        if UIScreen.main.isCaptured {
+            authenticateWithDevicePasscode(reason: reason, completion: completion)
+            return
+        }
+
         let context = makeContext()
         var error: NSError?
 
@@ -20,7 +27,7 @@ enum BiometricAuth {
                         completion(true)
                         return
                     }
-                    // Fallback / lockout / failed attempts → require device passcode.
+                    // Fallback / lockout / biometry unavailable → device passcode.
                     if shouldOfferPasscodeFallback(evalError) {
                         authenticateWithDevicePasscode(reason: reason, completion: completion)
                     } else {
@@ -56,8 +63,8 @@ enum BiometricAuth {
     private static func shouldOfferPasscodeFallback(_ error: Error?) -> Bool {
         guard let la = error as? LAError else { return false }
         switch la.code {
-        case .userFallback, .biometryLockout:
-            // Explicit Passcode tap, or Face ID locked out after failed attempts.
+        case .userFallback, .biometryLockout, .biometryNotAvailable:
+            // Passcode tap, lockout, or Face ID disabled (common during screen share).
             return true
         default:
             // Cancel / failed scan → stay gated; user must retry Face ID.
