@@ -58,7 +58,7 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Cold launch: cream shell first (no Keychain in `@State`); Accept then Face ID
   (no auto Face ID on appear); off-main profile decode; lazy `CMMotionManager`;
   LaunchBackground dark=cream.
-- Custom tab bar spacing; Aid chrome/wordmark/headings; RedMed fonts; Preview scanner Close on all tabs.
+- Custom tab bar spacing; Aid chrome/wordmark/headings; RedMed fonts; Preview scanner Back = Edit chrome (`ChromeTextAction`: accent red, plain page-bg fill, 18 regular) on all tabs.
 - Version 1.1 driven from build settings; simulator default iOS 27.0; CI iOS compile workflow (later gated when Actions billing blocked macOS).
 
 ### Edit / profile / Face ID

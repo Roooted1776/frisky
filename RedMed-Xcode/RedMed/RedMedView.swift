@@ -248,13 +248,10 @@ struct RedMedView: View {
             .padding(.trailing, 56)
 
             if isScannerSession {
-                ScannerCloseButton()
+                ScannerBackButton()
                     .padding(.top, 4)
             } else {
-                Button("Edit") { requestEdit() }
-                    .font(.system(size: 18, weight: .regular))
-                    .foregroundColor(.redmedAccent)
-                    .kerning(-0.2)
+                ChromeTextAction(title: "Edit") { requestEdit() }
                     .padding(.top, 4)
             }
         }

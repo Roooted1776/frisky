@@ -57,7 +57,7 @@ struct AidView: View {
 
     var body: some View {
         // No NavigationView chrome — empty nav bar was parking BrandWordmark too low.
-        // Scanner Close mirrors RedMedView (overlay), not a trailing toolbar item.
+        // Scanner Back mirrors RedMedView (overlay), not a trailing toolbar item.
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 12) {
                 ZStack(alignment: .topTrailing) {
@@ -71,7 +71,7 @@ struct AidView: View {
                         .padding(.trailing, isScannerSession ? 56 : 0)
 
                     if isScannerSession {
-                        ScannerCloseButton()
+                        ScannerBackButton()
                             .padding(.top, 4)
                     }
                 }

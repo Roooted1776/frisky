@@ -15,7 +15,7 @@ extension EnvironmentValues {
         set { self[ScannerSessionKey.self] = newValue }
     }
 
-    /// Optional Close action when the scanner shell is presented over the owner app.
+    /// Optional Back action when the scanner shell is presented over the owner app.
     var scannerDismiss: (() -> Void)? {
         get { self[ScannerDismissKey.self] }
         set { self[ScannerDismissKey.self] = newValue }
@@ -46,16 +46,14 @@ struct PublicCardView: View {
     }
 }
 
-/// Dismisses the Preview scanner / ped shell. Shown on RedMed, Help, and Aid.
-struct ScannerCloseButton: View {
+/// Dismisses the Preview scanner / ped shell. Shown on RedMed, 911, and Aid.
+/// Same `ChromeTextAction` as owner Edit — accent red, page-bg fill, 18 regular.
+struct ScannerBackButton: View {
     @Environment(\.scannerDismiss) private var scannerDismiss
 
     var body: some View {
         if let scannerDismiss {
-            Button("Close") { scannerDismiss() }
-                .font(.system(size: 17, weight: .regular))
-                .foregroundColor(.redmedMuted)
-                .kerning(-0.2)
+            ChromeTextAction(title: "Back", action: scannerDismiss)
         }
     }
 }
