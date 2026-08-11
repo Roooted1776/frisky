@@ -7,6 +7,7 @@ struct TopicDetailView: View {
     let topic: AidTopic
     @Environment(\.dismiss) var dismiss
     /// Engine lives in the view hierarchy — prepared on appear, fired on tap / beat.
+    /// Enable/disable lives in Help → Settings only (not on this card).
     @StateObject private var hapticEngine = HapticEngine()
     @State private var cprRunning = false
     @State private var cprCount = 0
