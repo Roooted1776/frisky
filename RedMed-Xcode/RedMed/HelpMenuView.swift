@@ -57,6 +57,10 @@ struct HelpMenuView: View {
                         .navigationTitle("Security")
                         .navigationBarTitleDisplayMode(.inline)
                 }
+                // Owner-only vault dashboard — Face ID gated inside the view.
+                NavigationLink("Local History") {
+                    VaultHistoryView()
+                }
                 if profile.braceletLinked {
                     NavigationLink("NFC tap card (local)") {
                         LocalWebView(filename: "get")

@@ -64,8 +64,11 @@
     <ul>
       <li>Profile fields persist in the iOS <strong>Keychain</strong> with <code>WhenUnlockedThisDeviceOnly</code>.</li>
       <li>Readable only while the device is unlocked; excluded from iCloud and encrypted device backups.</li>
-      <li>Face ID / Touch ID / device passcode gates edit and NFC write flows where implemented.</li>
-      <li>Clearing fields and saving overwrites the stored profile; deleting the App removes the Keychain entry.</li>
+      <li>Local history / vault files use <code>FileProtectionType.complete</code> and <code>isExcludedFromBackup</code> so they stay unreadable when the phone is locked or plugged into another computer, and are never copied to consumer iCloud backups.</li>
+      <li>Face ID / Touch ID / device passcode gates edit, NFC write, and the local history dashboard.</li>
+      <li>App-switcher snapshots are covered so live profile text is not cached to the system snapshot image.</li>
+      <li>Edit fields disable system autofill content types so medical text is not written into keyboard / autofill caches.</li>
+      <li>Clearing fields and saving overwrites the stored profile; deleting the App removes the Keychain entry and vault files.</li>
     </ul>
 
     <h2><span class="sec-num">5.</span> NFC Band (Deliberately Unencrypted)</h2>

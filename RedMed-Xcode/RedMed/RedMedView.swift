@@ -138,6 +138,8 @@ struct RedMedView: View {
             }
             .padding(.bottom, isScannerSession ? 42 : 12)
         }
+        // Owner profile only — never redact the passerby / EMS scanner card.
+        .privacySensitive(!isScannerSession)
         .background(Color.redmedBg)
         .fullScreenCover(isPresented: Binding(
             get: { showEdit && !isScannerSession },
