@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-US">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Security — RedMed</title>
+<meta name="theme-color" content="#fff7f7">
+<title>RedMed — Security</title>
 <link rel="stylesheet" href="assets/legal-doc.css">
 </head>
-<body>
+<body class="legal-doc">
 <div class="legal-sheet">
   <header class="legal-letterhead">
     <p class="legal-firm">RedMed</p>
@@ -24,7 +25,7 @@
     <a href="HowItWorks.html">How It Works</a>
   </nav>
 
-  <aside class="legal-notice" style="margin-top:12px;">
+  <aside class="legal-notice legal-notice-owner">
     <strong>Owner app</strong>
     Profile editing, Aid treatments, and band write live in the RedMed iPhone app
     (<code>Main.swift</code>).
@@ -35,54 +36,75 @@
   <hr class="legal-rule-thin" aria-hidden="true">
 
   <h1 class="legal-doc-title">Security</h1>
-  <p class="lead">RedMed is a local-first emergency ID band. No operator backend, no accounts, no cloud sync. Security work focuses on hosted page integrity and safe rendering of untrusted <code>#d=</code> payloads.</p>
+  <p class="legal-meta">
+    <strong>Effective Date</strong> August 2026<br>
+    <strong>Document Version</strong> 3.0 (United States)<br>
+    <strong>Applicable law</strong> United States — read with the Privacy Policy (HIPAA / state privacy)
+  </p>
+  <p class="legal-parties">Security practices for the RedMed iPhone app, passerby card page, and passive NFC medical bracelet used in the United States</p>
 
-  <div class="card">
-    <h2>Reporting</h2>
-    <p>Open a private GitHub security advisory on <a href="https://github.com/RedmMed/RedMed">RedmMed/RedMed</a> for vulnerabilities in the hosted card page or XSS in <code>#d=</code> rendering. Do not file public issues with live API keys or real medical payloads.</p>
+  <div class="legal-notice">
+    <strong>In Short</strong>
+    RedMed is local-first: no operator backend for your profile, no accounts, no cloud sync of medical fields. On-device storage uses the iOS Keychain. The NFC band is deliberately plaintext so any phone can open the emergency card — same trade-off as a printed medical ID. RedMed is not a HIPAA covered entity or business associate for that profile.
   </div>
 
-  <div class="card">
-    <h2>Trust Root (Cloudflare Pages)</h2>
+  <article class="legal-body">
+    <p>This page describes how RedMed approaches security for the App, the hosted passerby card, and the bracelet. It is informational, not a warranty. Read it with the <a href="PrivacyPolicy.html">Privacy Policy</a> and <a href="TOS.html">Terms Of Service</a>.</p>
+
+    <h2><span class="sec-num">1.</span> Threat Model</h2>
+    <p>Security work focuses on (1) keeping your profile off RedMed servers, (2) protecting on-device storage, (3) hosted page integrity for the passerby card, and (4) safe rendering of untrusted <code>#d=</code> payloads. We do <strong>not</strong> attempt to make a passive NFC medical ID confidential against a deliberate close tap — that would defeat the product.</p>
+
+    <h2><span class="sec-num">2.</span> HIPAA Context</h2>
+    <p>HIPAA regulates covered entities and their business associates when they handle protected health information. RedMed does not receive your RedMed profile on our systems and is not a covered entity or business associate for that profile. Device-local Keychain encryption and the absence of a profile backend reduce exposure; they are not a substitute for a covered entity’s HIPAA Security Rule program, and we do not market the band as “HIPAA certified.”</p>
+
+    <h2><span class="sec-num">3.</span> On-Device Profile Storage</h2>
+    <ul>
+      <li>Profile fields persist in the iOS <strong>Keychain</strong> with <code>WhenUnlockedThisDeviceOnly</code>.</li>
+      <li>Readable only while the device is unlocked; excluded from iCloud and encrypted device backups.</li>
+      <li>Face ID / Touch ID / device passcode gates edit and NFC write flows where implemented.</li>
+      <li>Clearing fields and saving overwrites the stored profile; deleting the App removes the Keychain entry.</li>
+    </ul>
+
+    <h2><span class="sec-num">4.</span> NFC Band (Deliberately Unencrypted)</h2>
+    <p>Passive NFC medical payloads are <strong>plaintext</strong> (<code>#d=</code> base64url JSON) so any smartphone can open the emergency card without an account. Cloning a tag is like photocopying a wallet medical card. Casual walk-by distance will not fire the band; only a deliberate ~1–2″ antenna tap reads it. Payment / POS terminals use a different protocol (EMV) and do not open the RedMed card.</p>
+
+    <h2><span class="sec-num">5.</span> Location</h2>
+    <p>GPS starts only on Find Help (When-In-Use). Coordinates stay on-device for display to you / a dispatcher. We do not receive, log, or retain them. Do not log <code>location.hash</code>, NFC URLs, profile JSON, or PIN material in any tooling you add later.</p>
+
+    <h2><span class="sec-num">6.</span> Reporting Vulnerabilities</h2>
+    <p>Open a private GitHub security advisory on <a href="https://github.com/RedmMed/RedMed">RedmMed/RedMed</a> for vulnerabilities in the hosted card page or XSS in <code>#d=</code> rendering. Do not file public issues with live API keys or real medical payloads.</p>
+
+    <h2><span class="sec-num">7.</span> Trust Root (Cloudflare Pages)</h2>
     <p>Every band tap opens the Cloudflare Pages deploy of <code>card/</code>, pushed by GitHub Actions on every merge to <code>main</code>. Treat <code>main</code> as production:</p>
     <ol>
       <li>Enable <strong>branch protection</strong> on <code>main</code> (required PR reviews, no force-push).</li>
       <li>Restrict who can edit the deploy workflow and repository secrets — <code>CLOUDFLARE_API_TOKEN</code> grants Pages deploy access.</li>
       <li>Actions are pinned to <strong>commit SHAs</strong> (not mutable tags) in the deploy workflow.</li>
     </ol>
-  </div>
 
-  <div class="card">
-    <h2>Google Maps API Key</h2>
-    <p>When set, the Pages workflow writes it to a <strong>world-readable</strong> <code>config/google-api-key</code> file. Assume the key is public.</p>
-    <table>
-      <tr><th>Restriction</th><th>Value</th></tr>
-      <tr><td>APIs</td><td>Geocoding + Places only</td></tr>
-      <tr><td>Web referrer</td><td><code>https://redmed.pages.dev/*</code></td></tr>
-      <tr><td>iOS</td><td>Bundle ID <code>com.redmed.app</code></td></tr>
-      <tr><td>Quotas</td><td>Hard daily caps + billing alerts</td></tr>
-    </table>
-  </div>
+    <h2><span class="sec-num">8.</span> Google Maps API Key</h2>
+    <p>When set, the Pages workflow writes it to a <strong>world-readable</strong> <code>config/google-api-key</code> file. Assume the key is public and restrict it accordingly:</p>
+    <div class="card">
+      <table>
+        <tr><th>Restriction</th><th>Value</th></tr>
+        <tr><td>APIs</td><td>Geocoding + Places only</td></tr>
+        <tr><td>Web referrer</td><td><code>https://redmed.pages.dev/*</code></td></tr>
+        <tr><td>iOS</td><td>Bundle ID <code>com.redmed.app</code></td></tr>
+        <tr><td>Quotas</td><td>Hard daily caps + billing alerts</td></tr>
+      </table>
+    </div>
 
-  <div class="card">
-    <h2>What We Deliberately Don't Encrypt</h2>
-    <p>Passive NFC medical payloads are <strong>plaintext</strong> (<code>#d=</code> base64url JSON) so any smartphone can open the emergency card. Cloning a tag is like photocopying a wallet medical card.</p>
-  </div>
+    <h2><span class="sec-num">9.</span> Dependencies</h2>
+    <p>Almost no runtime deps (no npm, no CocoaPods). Do <strong>not</strong> add analytics or crash SDKs that phone home profile or location without an explicit product decision — that would change both the privacy posture and, if PHI were ever transmitted to a vendor under a covered-entity arrangement, the HIPAA analysis.</p>
 
-  <div class="card">
-    <h2>Logging</h2>
-    <p>Do not log <code>location.hash</code>, NFC URLs, profile JSON, or PIN material.</p>
-  </div>
-
-  <div class="card">
-    <h2>Dependencies</h2>
-    <p>Almost no runtime deps (no npm, no CocoaPods). Do <strong>not</strong> add analytics or crash SDKs that phone home profile or location without an explicit product decision.</p>
-  </div>
+    <h2><span class="sec-num">10.</span> Contact</h2>
+    <p>Security questions: <a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a>.</p>
+  </article>
 
   <footer class="legal-footer">
     <p>© 2026 RedMed · All rights reserved</p>
-    <p><a href="PrivacyPolicy.html">Privacy Policy</a> · <a href="TOS.html">Terms Of Service</a> · <a href="HowItWorks.html">How It Works</a></p>
-    <p class="legal-footer-disclaimer">This document is provided for informational purposes and does not constitute legal advice.</p>
+    <p><a href="TOS.html">Terms Of Service</a> · <a href="PrivacyPolicy.html">Privacy Policy</a> · <a href="security.html">Security</a> · <a href="HowItWorks.html">How It Works</a></p>
+    <p class="legal-footer-disclaimer">This document is provided for informational purposes and does not constitute legal advice. It has not yet been reviewed by qualified US counsel.</p>
   </footer>
 </div>
 </body>
