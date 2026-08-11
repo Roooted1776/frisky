@@ -24,18 +24,18 @@ struct EmergencyView: View {
                     // NO CELL SIGNAL — top of Find Help (replaces call-first-contact)
                     NoCellSignalCard(showSatellite: $showSatellite)
 
-                    // GPS CARD
-                    GPSCard(location: locationEnabled ? locationManager.location : nil)
-                        .padding(.vertical, 4)
-                        .opacity(locationEnabled ? 1 : 0.45)
+                    // GPS + satellite: exactly 5px under the coordinates pane
+                    // (LazyVStack spacing would otherwise add another 8pt).
+                    VStack(alignment: .leading, spacing: 5) {
+                        GPSCard(location: locationEnabled ? locationManager.location : nil)
+                            .opacity(locationEnabled ? 1 : 0.45)
 
-                    // Optional local satellite terminal path — 5px under the coordinates pane.
-                    // Encrypts at SatelliteOutboundPipeline before transport — not a RedMed server.
-                    SatelliteFieldCard(
-                        pipeline: satellitePipeline,
-                        location: locationEnabled ? locationManager.location : nil
-                    )
-                    .padding(.top, 5)
+                        SatelliteFieldCard(
+                            pipeline: satellitePipeline,
+                            location: locationEnabled ? locationManager.location : nil
+                        )
+                    }
+                    .padding(.vertical, 4)
 
                     // COPY COORDINATES
                     Button {
@@ -319,11 +319,11 @@ struct NoCellSignalCard: View {
             if showSatellite {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("iPhone 14+ (iOS 16.1+): hold Side + Volume until Emergency SOS appears, or Settings → Emergency SOS. RedMed cannot start Apple Satellite SOS.")
-                        .font(.system(size: 11))
+                        .font(.system(size: 11, weight: .semibold))
                         .foregroundColor(.redmedMuted)
                         .lineSpacing(3)
                     Text("Separate path below: optional Bluetooth link to a local satellite terminal for short field notes (\(AppConfig.Satellite.payloadBudgetLabel)). That is not Apple SOS and not a RedMed server.")
-                        .font(.system(size: 11))
+                        .font(.system(size: 11, weight: .semibold))
                         .foregroundColor(.redmedMuted)
                         .lineSpacing(3)
                 }

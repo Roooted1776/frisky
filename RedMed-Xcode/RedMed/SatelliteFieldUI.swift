@@ -1,8 +1,8 @@
 import SwiftUI
 import CoreLocation
 
-/// Find Help satellite UX: Bluetooth terminal banner, UTF-8 byte budget on the
-/// note field, and “Pending Satellite Transmission” queue rows (no spinner-only wait).
+/// Find Help satellite UX — typography matches `InfoCard` / GPS neighbors:
+/// `.system` only (no monospaced / alternate designs), 12 bold titles, 11 semibold body.
 struct SatelliteFieldCard: View {
     @ObservedObject var pipeline: SatelliteOutboundPipeline
     var location: CLLocation?
@@ -33,16 +33,15 @@ struct SatelliteFieldCard: View {
                     .frame(width: 28, height: 28)
                     .background(Color.redmedAccent.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Satellite terminal")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.redmedDark)
-                    Text("Phone → Bluetooth terminal → uplink. Not Apple SOS. Not RedMed cloud.")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                Text("Satellite Terminal")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.redmedDark)
             }
+
+            Text("Phone → Bluetooth terminal → uplink. Not Apple SOS. Not RedMed cloud.")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(.redmedMuted)
+                .lineSpacing(3)
 
             SatelliteConnectionBanner(
                 isLinked: pipeline.isLinked,
@@ -51,40 +50,41 @@ struct SatelliteFieldCard: View {
                 onToggleSimulated: { pipeline.toggleSimulatedLink() }
             )
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Field note")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundColor(.redmedMuted)
-                TextEditor(text: $note)
-                    .font(.system(size: 13, weight: .medium, design: .default))
+            Text("Field note")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(.redmedMuted)
+
+            TextEditor(text: $note)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(.redmedDark)
+                .frame(minHeight: 72, maxHeight: 120)
+                .padding(8)
+                .scrollContentBackground(.hidden)
+                .background(Color.white.opacity(0.85))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.redmedDivider, lineWidth: 1))
+
+            SatelliteByteCounter(byteCount: byteCount, overSoft: overSoft, overHard: overHard)
+
+            Toggle(isOn: $includeGPS) {
+                Text("Append live GPS")
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.redmedDark)
-                    .frame(minHeight: 72, maxHeight: 120)
-                    .padding(8)
-                    .scrollContentBackground(.hidden)
-                    .background(Color.white.opacity(0.85))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.redmedDivider, lineWidth: 1))
+            }
+            .tint(.redmedAccent)
+            .disabled(location == nil)
 
-                SatelliteByteCounter(byteCount: byteCount, overSoft: overSoft, overHard: overHard)
-
-                Toggle(isOn: $includeGPS) {
-                    Text("Append live GPS")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.redmedDark)
-                }
-                .tint(.redmedAccent)
-                .disabled(location == nil)
-
-                if overSoft && !overHard {
-                    Text(AppConfig.Satellite.softWarnCopy)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(.orange)
-                }
-                if overHard {
-                    Text(AppConfig.Satellite.hardRefuseCopy)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(.redmedAccent)
-                }
+            if overSoft && !overHard {
+                Text(AppConfig.Satellite.softWarnCopy)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(.orange)
+                    .lineSpacing(3)
+            }
+            if overHard {
+                Text(AppConfig.Satellite.hardRefuseCopy)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(.redmedAccent)
+                    .lineSpacing(3)
             }
 
             Button {
@@ -95,19 +95,11 @@ struct SatelliteFieldCard: View {
                     Image(systemName: "paperplane.fill")
                     Text(pipeline.pendingCount > 0 ? "Queue another satellite note" : "Queue satellite note")
                 }
-                .font(.system(size: 14, weight: .bold))
+                .font(.system(size: 13, weight: .bold))
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
-                .background(
-                    LinearGradient(
-                        colors: overHard
-                            ? [Color.redmedMuted, Color.redmedMuted]
-                            : [Color(red: 1, green: 0.447, blue: 0.537), .redmedAccent],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
+                .background(overHard ? Color.redmedMuted : Color.redmedDark)
                 .clipShape(Capsule())
             }
             .disabled(overHard || composed.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -116,19 +108,19 @@ struct SatelliteFieldCard: View {
                 Text(err)
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.redmedAccent)
+                    .lineSpacing(3)
             }
 
             if !pipeline.queue.isEmpty {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Queue")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.redmedMuted)
-                    ForEach(pipeline.queue.prefix(5)) { item in
-                        SatelliteQueueRow(item: item)
-                    }
+                Text("Queue")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(.redmedMuted)
+                ForEach(pipeline.queue.prefix(5)) { item in
+                    SatelliteQueueRow(item: item)
                 }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
         .background(Color.redmedSurface)
         .clipShape(RoundedRectangle(cornerRadius: 18))
@@ -143,21 +135,25 @@ struct SatelliteConnectionBanner: View {
     let onToggleSimulated: () -> Void
 
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: 8) {
             Circle()
                 .fill(isLinked ? Color.green.opacity(0.85) : Color.redmedMuted.opacity(0.45))
                 .frame(width: 10, height: 10)
-                .padding(.top, 4)
-            VStack(alignment: .leading, spacing: 4) {
+                .padding(.top, 3)
+
+            VStack(alignment: .leading, spacing: 3) {
                 Text(isLinked ? "Terminal linked" : "Terminal not linked")
-                    .font(.system(size: 12, weight: .bold))
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.redmedDark)
                 Text(label)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.redmedMuted)
+                    .lineSpacing(3)
                     .fixedSize(horizontal: false, vertical: true)
             }
+
             Spacer(minLength: 4)
+
             if usesSimulation {
                 Button(isLinked ? "Disconnect" : "Connect") {
                     onToggleSimulated()
@@ -165,7 +161,7 @@ struct SatelliteConnectionBanner: View {
                 .font(.system(size: 12, weight: .bold))
                 .foregroundColor(isLinked ? .redmedDark : .white)
                 .padding(.horizontal, 12)
-                .padding(.vertical, 7)
+                .padding(.vertical, 8)
                 .background(isLinked ? Color.white.opacity(0.9) : Color.redmedAccent)
                 .clipShape(Capsule())
                 .overlay(Capsule().stroke(Color.redmedDivider, lineWidth: isLinked ? 1 : 0))
@@ -191,11 +187,11 @@ struct SatelliteByteCounter: View {
     var body: some View {
         HStack {
             Text("\(byteCount) / \(AppConfig.Satellite.hardPayloadBytes) bytes")
-                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .font(.system(size: 11, weight: .semibold))
                 .foregroundColor(color)
             Spacer()
             Text("soft \(AppConfig.Satellite.softPayloadBytes) · hard \(AppConfig.Satellite.hardPayloadBytes)")
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: 11, weight: .semibold))
                 .foregroundColor(.redmedMuted)
         }
     }
@@ -207,36 +203,34 @@ struct SatelliteQueueRow: View {
     private var statusColor: Color {
         switch item.status {
         case .pendingTransmission: return .orange
-        case .sent: return .green
+        case .sent: return Color.green.opacity(0.9)
         case .failed: return .redmedAccent
         }
     }
 
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
-            if item.status == .pendingTransmission {
-                Image(systemName: "clock.fill")
-                    .font(.system(size: 12))
-                    .foregroundColor(statusColor)
-                    .padding(.top, 2)
-            } else {
-                Image(systemName: item.status == .sent ? "checkmark.circle.fill" : "xmark.circle.fill")
-                    .font(.system(size: 12))
-                    .foregroundColor(statusColor)
-                    .padding(.top, 2)
-            }
-            VStack(alignment: .leading, spacing: 2) {
+            Image(systemName: {
+                switch item.status {
+                case .pendingTransmission: return "clock.fill"
+                case .sent: return "checkmark.circle.fill"
+                case .failed: return "xmark.circle.fill"
+                }
+            }())
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundColor(statusColor)
+            .padding(.top, 1)
+
+            VStack(alignment: .leading, spacing: 3) {
                 Text(item.status.rawValue)
-                    .font(.system(size: 11, weight: .bold))
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(statusColor)
                 Text(item.detail)
-                    .font(.system(size: 10, weight: .medium))
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.redmedMuted)
+                    .lineSpacing(3)
             }
             Spacer(minLength: 0)
         }
-        .padding(8)
-        .background(Color.white.opacity(0.7))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }
