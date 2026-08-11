@@ -397,10 +397,10 @@ struct EditProfileView: View {
         if requireAuthOnSave {
             BiometricAuth.authenticate(
                 reason: "Confirm with Face ID, Touch ID, or passcode to save your RedMed profile."
-            ) { success in
-                if success {
+            ) { outcome in
+                if outcome == .success {
                     commitSave()
-                } else {
+                } else if outcome == .notVerified {
                     showAuthFailedAlert = true
                 }
             }

@@ -49,9 +49,9 @@ final class NFCBandManager: ObservableObject {
 
         BiometricAuth.authenticate(
             reason: "Confirm with Face ID, Touch ID, or passcode to write your RedMed card to the bracelet."
-        ) { [weak self] success in
+        ) { [weak self] outcome in
             guard let self else { return }
-            if success {
+            if outcome == .success {
                 if AppConfig.nfcHardwareEnabled {
                     self.statusMessage = ""
                     self.writeSucceeded = false
@@ -60,7 +60,7 @@ final class NFCBandManager: ObservableObject {
                 } else {
                     self.simulateWrite(urlString, profile: profile)
                 }
-            } else {
+            } else if outcome == .notVerified {
                 self.authFailed = true
             }
         }
