@@ -5,7 +5,6 @@
 **/.DS_Store
 
 # Never commit key material — even empty placeholders invite real secrets.
-uploads/google-api-key
 **/google-api-key
 *.pem
 *.p12
@@ -24,7 +23,10 @@ build/
 !*.xcodeproj/xcshareddata/xcschemes/
 !*.xcodeproj/xcshareddata/xcschemes/*.xcscheme
 
-# Upload staging artifacts (Cursor/desktop dumps). Keep intentional Swift under uploads/.
-uploads/Screenshot*.png
-uploads/draw-*.png
-uploads/*-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f].*
+# Do not reintroduce removed staging / debug dumps on main.
+uploads/
+screenshots/
+compliance/
+Screenshot*.png
+support.js
+ios-frame.jsx

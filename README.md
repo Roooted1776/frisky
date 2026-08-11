@@ -13,10 +13,11 @@ Native iOS medical ID + emergency aid app. Shipable source of truth is
 | `get/index.html` (+ root `get.html`) | **Passerby / scanner** — bracelet tap at `https://redmed.pages.dev/get/`; RedMed · Help · Aid (no Edit / NFC) |
 | `card.html` | Legacy redirect → `get.html` (keeps `#d=` for old bands) |
 | `RedMed-Xcode/RedMed/{PrivacyPolicy,TOS,security,HowItWorks}.html` + `legal-doc.css` | Policy pages bundled in the app (sole copy — no repo-root duplicates) |
-| `uploads/` | Staged / experimental Swift — **not** in the Xcode project (see `uploads/README.md`) |
-| `compliance/` | MHRA / DTAC / cyber pack drafts |
+| `assets/` + root `BrandLogo.png` | Pages / SW logo paths |
+| `docs/band-engraving-and-nfc-sourcing.md` | Band engraving + NFC hardware notes |
 
-No other product HTML. Owner UI is native SwiftUI only.
+No other product HTML. Owner UI is native SwiftUI only. Do not reintroduce
+`uploads/`, `screenshots/`, or UK `compliance/` drafts — git history has them.
 
 Do not open a PR with `base: main` and `compare: main` — pick a feature
 branch from the compare dropdown (or push one first).
