@@ -12,8 +12,9 @@
 <!-- ONE scanner file: get.html (Pages + app bundle).
      Specs (permanent):
      - Tabs: RedMed · Help · Aid only — no Edit, no NFC
-     - Data: #d= profile only (name, dob, blood, allergies, meds, conditions,
-       contacts with name|phone + optional relation)
+     - Data: #d= profile only (compact array indexes → optional zlib → Base64url;
+       legacy named JSON still decodes). Fields: name, dob, blood, allergies,
+       meds, conditions, contacts with name|phone + optional relation
      - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
        walk-by ~6–8″ does not fire, reliable coupling dies past ~4″,
        passive 13.56 MHz HF NFC (not Bluetooth) → opens this page
@@ -627,6 +628,7 @@
   var MAX_PAYLOAD = 50000;
   var MAX_LIST = 40;
   var MAX_STR = 200;
+  var BLOOD = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"];
 
   function asString(v, fallback) {
     if (typeof v !== 'string') return fallback || '';
@@ -645,8 +647,62 @@
     return String(v || '').replace(/[^\d+]/g, '').slice(0, 20);
   }
 
+  function expandDob(dob) {
+    var digits = String(dob || '').replace(/\D/g, '');
+    if (digits.length === 6) {
+      var yy = parseInt(digits.slice(0, 2), 10);
+      var century = yy >= 70 ? '19' : '20';
+      return century + digits.slice(0, 2) + '-' + digits.slice(2, 4) + '-' + digits.slice(4, 6);
+    }
+    if (digits.length === 8) {
+      return digits.slice(0, 4) + '-' + digits.slice(4, 6) + '-' + digits.slice(6, 8);
+    }
+    return asString(dob);
+  }
+
+  function expandBlood(v) {
+    if (typeof v === 'number' && BLOOD[v]) return BLOOD[v];
+    return asString(v);
+  }
+
+  function expandUpdated(v) {
+    var digits = String(v || '').replace(/\D/g, '');
+    if (digits.length === 6) {
+      var yy = parseInt(digits.slice(0, 2), 10);
+      var century = yy >= 70 ? '19' : '20';
+      return century + digits.slice(0, 2) + '-' + digits.slice(2, 4) + '-' + digits.slice(4, 6);
+    }
+    return asString(v);
+  }
+
+  /** Positional array → profile. Indexes must match ProfileNFCCodec. */
+  function fromCompactArray(arr) {
+    if (!Array.isArray(arr)) return {};
+    var contacts = Array.isArray(arr[7]) ? arr[7].slice(0, MAX_LIST).map(function (row) {
+      if (!Array.isArray(row)) return null;
+      return {
+        name: asString(row[0], 'Contact'),
+        rel: asString(row[1]),
+        phone: sanitizePhone(row[2])
+      };
+    }).filter(Boolean) : [];
+    var donor = arr[3] === true || arr[3] === 1 || arr[3] === '1';
+    return {
+      name: asString(arr[0]),
+      dob: expandDob(arr[1]),
+      blood: expandBlood(arr[2]),
+      donor: donor,
+      allergies: asStringArray(arr[4]),
+      meds: asStringArray(arr[5]),
+      conditions: asStringArray(arr[6]),
+      contacts: contacts,
+      updated: expandUpdated(arr[8])
+    };
+  }
+
   function sanitizeProfile(raw) {
-    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+    if (Array.isArray(raw)) return fromCompactArray(raw);
+    if (!raw || typeof raw !== 'object') return {};
     var contacts = Array.isArray(raw.contacts) ? raw.contacts.slice(0, MAX_LIST).map(function (c) {
       if (!c || typeof c !== 'object') return null;
       return {
@@ -712,133 +768,165 @@
   });
   showTab('medical');
 
+  function b64ToBytes(raw) {
+    var b64 = raw.replace(/-/g, '+').replace(/_/g, '/');
+    while (b64.length % 4) b64 += '=';
+    var bin = atob(b64);
+    if (bin.length > MAX_PAYLOAD) throw new Error('payload too large');
+    return Uint8Array.from(bin, function (c) { return c.charCodeAt(0); });
+  }
+
+  function tryParseJSON(bytes) {
+    if (!bytes.length) return null;
+    var c = bytes[0];
+    if (c !== 0x7b && c !== 0x5b) return null;
+    var json = new TextDecoder('utf-8').decode(bytes);
+    return JSON.parse(json);
+  }
+
+  function inflateZlib(bytes) {
+    if (typeof DecompressionStream === 'undefined') {
+      return Promise.reject(new Error('no DecompressionStream'));
+    }
+    var ds = new DecompressionStream('deflate');
+    var stream = new Blob([bytes]).stream().pipeThrough(ds);
+    return new Response(stream).arrayBuffer().then(function (buf) {
+      return new Uint8Array(buf);
+    });
+  }
+
+  function decodeEncoded(raw) {
+    var bytes = b64ToBytes(raw);
+    var direct = null;
+    try { direct = tryParseJSON(bytes); } catch (e) { direct = null; }
+    if (direct != null) return Promise.resolve(sanitizeProfile(direct));
+
+    var body = bytes;
+    if (bytes[0] === 0x01) body = bytes.subarray(1);
+    return inflateZlib(body).then(function (inflated) {
+      var parsed = tryParseJSON(inflated);
+      if (parsed == null) throw new Error('bad inflate json');
+      return sanitizeProfile(parsed);
+    });
+  }
+
   function decodeProfile() {
     try {
       var hash = location.hash || '';
       var idx = hash.indexOf('d=');
-      if (idx < 0) return null;
+      if (idx < 0) return Promise.resolve(null);
       var raw = decodeURIComponent(hash.slice(idx + 2).split('&')[0] || '');
-      var b64 = raw.replace(/-/g, '+').replace(/_/g, '/');
-      while (b64.length % 4) b64 += '=';
-      var bin = atob(b64);
-      if (bin.length > MAX_PAYLOAD) return null;
-      var bytes = Uint8Array.from(bin, function (c) { return c.charCodeAt(0); });
-      var json = new TextDecoder('utf-8').decode(bytes);
-      return sanitizeProfile(JSON.parse(json));
-    } catch (e) { return null; }
+      if (!raw) return Promise.resolve(null);
+      return decodeEncoded(raw).catch(function () { return null; });
+    } catch (e) {
+      return Promise.resolve(null);
+    }
   }
 
-  var p = decodeProfile() || {};
-  var displayName = p.name || 'RedMed';
-  document.getElementById('name').textContent = displayName;
-  setRow('rowName', p.name);
-  setRow('rowDob', p.dob);
-  setRow('rowBlood', p.blood);
-  if (p.updated) document.getElementById('updatedLine').textContent = 'Updated ' + p.updated;
-  list(document.getElementById('allergies'), p.allergies);
-  list(document.getElementById('meds'), p.meds);
-  list(document.getElementById('conditions'), p.conditions);
+  function renderProfile(p) {
+    p = p || {};
+    var displayName = p.name || 'RedMed';
+    document.getElementById('name').textContent = displayName;
+    setRow('rowName', p.name);
+    setRow('rowDob', p.dob);
+    setRow('rowBlood', p.blood);
+    if (p.updated) document.getElementById('updatedLine').textContent = 'Updated ' + p.updated;
+    list(document.getElementById('allergies'), p.allergies);
+    list(document.getElementById('meds'), p.meds);
+    list(document.getElementById('conditions'), p.conditions);
 
-  var contactsEl = document.getElementById('contacts');
-  contactsEl.textContent = '';
-  var contacts = p.contacts || [];
-  var firstPhone = '';
-  if (!contacts.length) {
-    var emptyC = document.createElement('div');
-    emptyC.className = 'list-item';
-    emptyC.textContent = '—';
-    emptyC.style.color = 'rgba(120,113,108,0.4)';
-    contactsEl.appendChild(emptyC);
-  } else {
-    contacts.forEach(function (c, i) {
-      var row = document.createElement('div');
-      row.className = 'contact-block';
-      var phone = sanitizePhone(c.phone);
-      if (!phone && c.detail) phone = sanitizePhone(c.detail);
-      if (i === 0 && phone) firstPhone = phone;
+    var contactsEl = document.getElementById('contacts');
+    contactsEl.textContent = '';
+    var contacts = p.contacts || [];
+    var firstPhone = '';
+    if (!contacts.length) {
+      var emptyC = document.createElement('div');
+      emptyC.className = 'list-item';
+      emptyC.textContent = '—';
+      emptyC.style.color = 'rgba(120,113,108,0.4)';
+      contactsEl.appendChild(emptyC);
+    } else {
+      contacts.forEach(function (c, i) {
+        var row = document.createElement('div');
+        row.className = 'contact-block';
+        var phone = sanitizePhone(c.phone);
+        if (!phone && c.detail) phone = sanitizePhone(c.detail);
+        if (i === 0 && phone) firstPhone = phone;
+        var name = document.createElement('div');
+        name.className = 'cn';
+        name.textContent = c.name || 'Contact';
+        row.appendChild(name);
+        var detailText = c.detail || (c.rel ? c.rel : '') || (phone || '');
+        if (phone) {
+          var a = document.createElement('a');
+          a.className = 'cd';
+          a.href = 'tel:' + phone;
+          a.textContent = (detailText || phone) + ' · Tap to call';
+          row.appendChild(a);
+        } else if (detailText) {
+          var d = document.createElement('div');
+          d.className = 'cd';
+          d.textContent = detailText;
+          row.appendChild(d);
+        }
+        contactsEl.appendChild(row);
+      });
+    }
 
-      var nameRow = document.createElement('div');
-      nameRow.className = 'cn-row';
-      var name = document.createElement('div');
-      name.className = 'cn';
-      name.textContent = c.name || 'Contact';
-      nameRow.appendChild(name);
-      if (phone) {
-        var a = document.createElement('a');
-        a.className = 'cp';
-        a.href = 'tel:' + phone;
-        a.textContent = c.phone || phone;
-        nameRow.appendChild(a);
-      }
-      row.appendChild(nameRow);
+    function setCoords(lat, lon, acc) {
+      if (!isFinite(lat) || !isFinite(lon)) return;
+      document.getElementById('coords').textContent = lat.toFixed(6) + ', ' + lon.toFixed(6);
+      document.getElementById('gpsAcc').textContent = acc > 0 ? ('Accuracy ±' + Math.round(acc) + ' m') : '';
+      window.__redmedLoc = { latitude: lat, longitude: lon, accuracy: acc };
+    }
 
-      var rel = asString(c.rel);
-      if (!rel && c.detail && phone) {
-        var parts = String(c.detail).split('·').map(function (s) { return s.trim(); });
-        if (parts.length > 1) rel = parts[0];
-      } else if (!rel && c.detail && !phone) {
-        rel = asString(c.detail);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        setCoords(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+      }, function () {
+        document.getElementById('coords').textContent = 'GPS unavailable';
+        document.getElementById('gpsAcc').textContent = 'Tell dispatcher landmarks';
+      }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 });
+    } else {
+      document.getElementById('coords').textContent = 'GPS unavailable';
+    }
+
+    document.getElementById('callContactBtn').addEventListener('click', function () {
+      if (!firstPhone) { alert('No emergency contact number on this card.'); return; }
+      location.href = 'tel:' + firstPhone;
+    });
+
+    document.getElementById('copyCoordsBtn').addEventListener('click', function () {
+      var loc = window.__redmedLoc;
+      if (!loc) { alert('Location not available yet.'); return; }
+      var text = loc.latitude.toFixed(6) + ', ' + loc.longitude.toFixed(6);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+      } else {
+        prompt('Copy coordinates', text);
       }
-      if (rel) {
-        var relEl = document.createElement('div');
-        relEl.className = 'cd';
-        relEl.textContent = rel;
-        row.appendChild(relEl);
+    });
+
+    document.getElementById('gpsBtn').addEventListener('click', function (e) {
+      e.preventDefault();
+      function send(lat, lon) {
+        var maps = 'https://maps.apple.com/?ll=' + lat + ',' + lon;
+        var body = encodeURIComponent('Emergency location (RedMed): ' + lat + ', ' + lon + '\n' + maps);
+        location.href = firstPhone ? ('sms:' + firstPhone + '&body=' + body) : ('sms:&body=' + body);
       }
-      contactsEl.appendChild(row);
+      if (window.__redmedLoc) {
+        send(window.__redmedLoc.latitude, window.__redmedLoc.longitude);
+        return;
+      }
+      if (!navigator.geolocation) { alert('Location not available.'); return; }
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        send(pos.coords.latitude, pos.coords.longitude);
+      }, function () { alert('Could not get location.'); });
     });
   }
 
-  function setCoords(lat, lon, acc) {
-    if (!isFinite(lat) || !isFinite(lon)) return;
-    document.getElementById('coords').textContent = lat.toFixed(6) + ', ' + lon.toFixed(6);
-    document.getElementById('gpsAcc').textContent = acc > 0 ? ('Accuracy ±' + Math.round(acc) + ' m') : '';
-    window.__redmedLoc = { latitude: lat, longitude: lon, accuracy: acc };
-  }
+  decodeProfile().then(renderProfile);
 
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function (pos) {
-      setCoords(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
-    }, function () {
-      document.getElementById('coords').textContent = 'GPS unavailable';
-      document.getElementById('gpsAcc').textContent = 'Tell dispatcher landmarks';
-    }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 });
-  } else {
-    document.getElementById('coords').textContent = 'GPS unavailable';
-  }
-
-  document.getElementById('callContactBtn').addEventListener('click', function () {
-    if (!firstPhone) { alert('No emergency contact number on this card.'); return; }
-    location.href = 'tel:' + firstPhone;
-  });
-
-  document.getElementById('copyCoordsBtn').addEventListener('click', function () {
-    var loc = window.__redmedLoc;
-    if (!loc) { alert('Location not available yet.'); return; }
-    var text = loc.latitude.toFixed(6) + ', ' + loc.longitude.toFixed(6);
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text);
-    } else {
-      prompt('Copy coordinates', text);
-    }
-  });
-
-  document.getElementById('gpsBtn').addEventListener('click', function (e) {
-    e.preventDefault();
-    function send(lat, lon) {
-      var maps = 'https://maps.apple.com/?ll=' + lat + ',' + lon;
-      var body = encodeURIComponent('Emergency location (RedMed): ' + lat + ', ' + lon + '\n' + maps);
-      location.href = firstPhone ? ('sms:' + firstPhone + '&body=' + body) : ('sms:&body=' + body);
-    }
-    if (window.__redmedLoc) {
-      send(window.__redmedLoc.latitude, window.__redmedLoc.longitude);
-      return;
-    }
-    if (!navigator.geolocation) { alert('Location not available.'); return; }
-    navigator.geolocation.getCurrentPosition(function (pos) {
-      send(pos.coords.latitude, pos.coords.longitude);
-    }, function () { alert('Could not get location.'); });
-  });
 })();
   </script>
 <script>
