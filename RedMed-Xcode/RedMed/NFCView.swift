@@ -183,7 +183,7 @@ struct NFCView: View {
         if band.isWriting {
             return AppConfig.nfcHardwareEnabled ? "Hold near tag…" : "Packing URL…"
         }
-        return AppConfig.nfcHardwareEnabled ? "Write to NFC tag" : "Simulate write (pack get.html URL)"
+        return AppConfig.nfcHardwareEnabled ? "Write to NFC tag" : "Setup"
     }
 
     private var statusIsError: Bool {
