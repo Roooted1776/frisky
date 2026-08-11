@@ -24,22 +24,12 @@ struct HelpMenuView: View {
         NavigationView {
             List {
                 if AppConfig.nfcHardwareEnabled {
-                    if nfcGate.isAccepted {
-                        Button("Write your band") {
-                            dismiss()
-                            DispatchQueue.main.async { onOpenNFC?() }
-                        }
-                        .foregroundColor(.redmedDark)
-                    } else {
-                        NavigationLink("Set up your band") {
-                            GetView(onAccept: {
-                                dismiss()
-                                DispatchQueue.main.async { onOpenNFC?() }
-                            })
-                        }
+                    Button("Write your band") {
+                        dismiss()
+                        DispatchQueue.main.async { onOpenNFC?() }
                     }
+                    .foregroundColor(.redmedDark)
                 }
-                .foregroundColor(.redmedDark)
                 NavigationLink("Privacy Policy") {
                     LocalWebView(filename: "PrivacyPolicy")
                         .navigationTitle("Privacy Policy")

@@ -7,7 +7,7 @@ struct ContentView: View {
     @State private var tab: AppTab = .redmed
 
     /// Ped/EMS scanners: never NFC. Owners see the NFC tab only when hardware is enabled
-    /// (`AppConfig.nfcHardwareEnabled`); Get/Accept still gates the write page.
+    /// (`AppConfig.nfcHardwareEnabled`).
     private var showsNFC: Bool { !isScannerSession && AppConfig.nfcHardwareEnabled }
 
     private var scannerSafeTab: Binding<AppTab> {
