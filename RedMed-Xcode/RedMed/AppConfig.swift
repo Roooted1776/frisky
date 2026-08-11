@@ -98,15 +98,18 @@ enum AppConfig {
         }
     }
 
-    /// Public emergency aid when terrestrial cell is unavailable.
+    /// Offline / remote coaching only. RedMed itself stays:
+    /// **no Bluetooth, no RedMed servers, passive HF NFC bracelet only.**
     ///
-    /// **Starlink Direct-to-Cell / Starlink Mobile is carrier radio, not an app API.**
-    /// RedMed dials or texts the regional public number via Phone / Messages. If the
-    /// user’s carrier has enabled DTC, iOS may route over satellite — RedMed never
-    /// imports a Starlink SDK or uploads PHI. Distinct from Apple Emergency SOS via
-    /// satellite (Globalstar path; Side + Volume).
+    /// Starlink Direct-to-Cell and Apple Emergency SOS via satellite are **phone /
+    /// carrier / iOS** paths. RedMed may open `tel:` / `sms:` or coach Side+Volume —
+    /// it never pairs BLE, never uplinks PHI, never runs a sat SDK.
     enum Satellite {
-        static var publicAidTitle: String { "Public Aid · Satellite Path" }
+        /// Product rule line — same Theme type scale as other muted captions.
+        static let localOnlyLine =
+            "RedMed: no Bluetooth · no servers · passive HF NFC only. Profile stays on this phone and the band."
+
+        static var publicAidTitle: String { "Public Aid · Phone Radio" }
 
         /// US flagship first (T-Mobile / T-Satellite), then other announced Starlink
         /// Direct-to-Cell / Starlink Mobile carrier partners. Availability and plan
@@ -115,11 +118,11 @@ enum AppConfig {
             "Starlink Direct-to-Cell carriers: T-Mobile (US) · Rogers (CA) · KDDI · SoftBank · NTT Docomo (JP) · One NZ · Salt (CH) · Optus · Telstra (AU) · Entel (CL/PE) · Kyivstar (UA) · MasOrange (ES) · VMO2 (UK) · Beeline (KZ) · Airtel Africa — plan/region required; not a coverage promise."
 
         static var directToCellBlurb: String {
-            "Hiking or remote with no towers: Call or text \(EmergencyNumber.current). On T-Mobile and other listed carriers, Starlink Direct-to-Cell may carry that traffic when cell is down — the Phone app owns the radio, not RedMed."
+            "Hiking or remote with no towers: Call or text \(EmergencyNumber.current). On T-Mobile and other listed carriers, the Phone app may use Starlink Direct-to-Cell — that is your carrier’s radio, not RedMed. \(localOnlyLine)"
         }
 
         static var appleSOSBlurb: String {
-            "iPhone 14+: Apple Emergency SOS via satellite is separate. Clear view of the sky. RedMed cannot start it — use the steps below."
+            "iPhone 14+: Apple Emergency SOS via satellite is separate (Side + Volume, clear sky). RedMed cannot start it. Band stays passive NFC — not Bluetooth."
         }
     }
 }

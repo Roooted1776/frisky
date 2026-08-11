@@ -76,7 +76,7 @@ struct EmergencyView: View {
                         ]
                     )
 
-                    Text("Coordinates show on this screen only. RedMed has no servers.")
+                    Text("Coordinates on this screen only. RedMed: no Bluetooth · no servers · passive HF NFC.")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
@@ -320,7 +320,15 @@ struct NoCellSignalCard: View {
             .padding(.top, 14)
             .padding(.bottom, 8)
 
-            // Always visible — T-Mobile first, then other Starlink DTC partners.
+            // Always visible — product rule + T-Mobile-first DTC carriers.
+            Text(AppConfig.Satellite.localOnlyLine)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(.redmedMuted)
+                .lineSpacing(2)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 14)
+                .padding(.bottom, 4)
+
             Text(AppConfig.Satellite.directToCellCarriersLine)
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundColor(.redmedMuted)
@@ -339,7 +347,7 @@ struct NoCellSignalCard: View {
                     // Apple Emergency SOS via satellite — same connection UX coaching as iOS.
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(spacing: 8) {
-                            Image(systemName: "iphone.gen3.radiowaves.left.and.right")
+                            Image(systemName: "iphone.radiowaves.left.and.right")
                                 .font(.system(size: 15))
                                 .foregroundColor(.redmedAccent)
                                 .frame(width: 28, height: 28)
@@ -398,7 +406,7 @@ struct NoCellSignalCard: View {
                         }
 
                         Button {
-                            StarlinkPublicAid.dialEmergencyServices()
+                            PublicEmergencyAid.dial()
                         } label: {
                             HStack(spacing: 8) {
                                 Image(systemName: "phone.fill")
