@@ -33,12 +33,11 @@ enum ProfileNFCCodec {
             meds: profile.medications,
             conditions: profile.conditions,
             contacts: profile.contacts.map { contact in
-                let parts = contact.detail
-                    .split(separator: "·", maxSplits: 1)
-                    .map { $0.trimmingCharacters(in: .whitespaces) }
-                let rel = parts.first ?? ""
-                let phone = parts.count > 1 ? String(parts[1].filter(\.isNumber)) : String(contact.detail.filter(\.isNumber))
-                return NFCChipContact(name: contact.name, rel: rel, phone: phone)
+                NFCChipContact(
+                    name: contact.name,
+                    rel: contact.relationship,
+                    phone: String(contact.phone.filter(\.isNumber))
+                )
             },
             updated: profile.lastUpdated
         )
@@ -53,8 +52,7 @@ enum ProfileNFCCodec {
         profile.medications = chip.meds
         profile.conditions = chip.conditions
         profile.contacts = chip.contacts.map { c in
-            let detail = [c.rel, c.phone].filter { !$0.isEmpty }.joined(separator: " · ")
-            return EmergencyContact(name: c.name, detail: detail)
+            EmergencyContact(name: c.name, relationship: c.rel, phone: c.phone)
         }
         if !chip.updated.isEmpty {
             profile.lastUpdated = chip.updated

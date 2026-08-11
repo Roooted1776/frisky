@@ -278,13 +278,19 @@ struct EditProfileView: View {
     private var contactsEditor: some View {
         ForEach($contacts) { $contact in
             HStack(alignment: .top, spacing: 8) {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 8) {
                     TextField("Name", text: $contact.name)
                         .font(.system(size: Metrics.font, weight: .semibold))
                         .foregroundColor(.redmedDark)
-                    TextField("Relationship · phone", text: $contact.detail)
+                        .textContentType(.name)
+                    TextField("Phone number", text: $contact.phone)
                         .font(.system(size: Metrics.font))
-                        .foregroundColor(.redmedMuted)
+                        .foregroundColor(.redmedDark)
+                        .keyboardType(.phonePad)
+                        .textContentType(.telephoneNumber)
+                    TextField("Relationship (optional)", text: $contact.relationship)
+                        .font(.system(size: Metrics.font))
+                        .foregroundColor(.redmedDark)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -306,7 +312,7 @@ struct EditProfileView: View {
         }
 
         Button {
-            contacts.append(EmergencyContact(name: "", detail: ""))
+            contacts.append(EmergencyContact(name: "", relationship: "", phone: ""))
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "plus.circle.fill").font(.system(size: Metrics.icon))
@@ -400,7 +406,17 @@ struct EditProfileView: View {
         profile.allergies = allergies.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         profile.medications = medications.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         profile.conditions = conditions.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-        profile.contacts = contacts.filter { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }
+        profile.contacts = contacts.compactMap { contact -> EmergencyContact? in
+            let trimmedName = contact.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedPhone = contact.phone.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedRel = contact.relationship.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedName.isEmpty || !trimmedPhone.isEmpty else { return nil }
+            return EmergencyContact(
+                name: trimmedName,
+                relationship: trimmedRel,
+                phone: trimmedPhone
+            )
+        }
         profile.persist()
         dismiss()
     }

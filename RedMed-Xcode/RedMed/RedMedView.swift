@@ -51,12 +51,14 @@ struct RedMedView: View {
                     } else {
                         ForEach(Array(profile.contacts.enumerated()), id: \.element.id) { i, c in
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(c.name)
+                                Text(c.name.isEmpty ? "Emergency contact" : c.name)
                                     .font(.system(size: 12, weight: .semibold))
                                     .foregroundColor(.redmedDark)
-                                Text(c.detail)
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(.redmedMuted)
+                                if !c.detail.isEmpty {
+                                    Text(c.detail)
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundColor(.redmedMuted)
+                                }
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 16)

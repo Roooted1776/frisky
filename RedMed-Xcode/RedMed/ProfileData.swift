@@ -33,7 +33,9 @@ class ProfileData: ObservableObject {
             || !allergies.isEmpty
             || !medications.isEmpty
             || !conditions.isEmpty
-            || contacts.contains { !$0.name.isEmpty || !$0.detail.isEmpty }
+            || contacts.contains {
+                !$0.name.isEmpty || !$0.relationship.isEmpty || !$0.phone.isEmpty
+            }
     }
 
     init(persisting: Bool = true) {
@@ -66,7 +68,9 @@ class ProfileData: ObservableObject {
         copy.allergies = allergies
         copy.medications = medications
         copy.conditions = conditions
-        copy.contacts = contacts.map { EmergencyContact(name: $0.name, detail: $0.detail) }
+        copy.contacts = contacts.map {
+            EmergencyContact(name: $0.name, relationship: $0.relationship, phone: $0.phone)
+        }
         copy.braceletLinked = braceletLinked
         copy.isOrganDonor = isOrganDonor
         copy.lastUpdated = lastUpdated
@@ -115,7 +119,52 @@ class ProfileData: ObservableObject {
 struct EmergencyContact: Identifiable, Equatable {
     var id = UUID()
     var name: String
-    var detail: String
+    var relationship: String
+    var phone: String
+
+    /// Combined subtitle for the RedMed card (`Relationship · phone`).
+    var detail: String {
+        get {
+            [relationship, phone].filter { !$0.isEmpty }.joined(separator: " · ")
+        }
+        set {
+            let parts = newValue
+                .split(separator: "·", maxSplits: 1)
+                .map { $0.trimmingCharacters(in: .whitespaces) }
+            if parts.count > 1 {
+                relationship = parts[0]
+                phone = parts[1]
+            } else if parts.count == 1 {
+                let only = parts[0]
+                let digitCount = only.filter(\.isNumber).count
+                let letterCount = only.filter(\.isLetter).count
+                if digitCount >= 7 && digitCount >= letterCount {
+                    phone = only
+                    relationship = ""
+                } else {
+                    relationship = only
+                    phone = ""
+                }
+            } else {
+                relationship = ""
+                phone = ""
+            }
+        }
+    }
+
+    init(name: String, relationship: String = "", phone: String = "") {
+        self.name = name
+        self.relationship = relationship
+        self.phone = phone
+    }
+
+    /// Legacy Keychain / NFC path: `detail` is `"Relationship · phone"`.
+    init(name: String, detail: String) {
+        self.name = name
+        self.relationship = ""
+        self.phone = ""
+        self.detail = detail
+    }
 }
 
 private struct PersistedProfile: Codable {
