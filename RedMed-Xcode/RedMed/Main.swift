@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Owner app shell — edit profile, Aid treatments, NFC write, Find Help.
-/// Product HTML is only the passerby `card.html` + policy pages; those redirect
+/// Product HTML is only the passerby `get.html` + policy pages; those redirect
 /// here (`redmed://main`) for owner information.
 struct Main: View {
     var body: some View {
@@ -49,7 +49,7 @@ struct MainInfoView: View {
                 }
 
                 section(num: "4", title: "What a stranger sees") {
-                    Text("Anyone who taps the bracelet opens the passerby card page (card.html) with RedMed, Help, and Aid — your profile, Call emergency / GPS help, and roadside aid. No RedMed app or login is required, and they cannot edit your profile or write the band.")
+                    Text("Anyone who taps the bracelet opens the passerby page (get.html) with RedMed, Help, and Aid — your profile, Call emergency / GPS help, and roadside aid. No RedMed app or login is required, and they cannot edit your profile or write the band.")
                 }
 
                 section(num: "5", title: "In an emergency") {

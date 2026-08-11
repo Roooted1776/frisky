@@ -10,7 +10,7 @@ struct RedMedApp: App {
             Main()
                 .environmentObject(profile)
                 .onOpenURL { url in
-                    // Policies / card.html redirect with redmed://main
+                    // Policies / get.html redirect with redmed://main
                     _ = url
                 }
         }

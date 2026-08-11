@@ -11,7 +11,7 @@ enum AppConfig {
     /// HTTPS URI written to passive NFC bands (CoreNFC). `#d=…` on chip.
     /// Tap the band → any smartphone opens the hosted emergency card in the browser.
     /// No app for readers. In-app NFC scan and `redmed://card` decode to `ScannedCardView`.
-    static let medicalCardBaseURL = "https://redmed.pages.dev/card/"
+    static let medicalCardBaseURL = "https://redmed.pages.dev/get/"
 
     /// Older bands may carry `redmed://card`; in-app decode still accepts `#d=` from those.
     static let legacyHostedCardBaseURL = "https://maxroot1122.github.io/RedMed/card/"

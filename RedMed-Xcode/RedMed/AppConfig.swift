@@ -5,8 +5,9 @@ enum AppConfig {
     /// the bracelet opens this page in a browser — read-only medical card + Help +
     /// Aid. Medical data is only in the `#d=` fragment (no server storage). Owner
     /// edit / treatments live in `Main.swift`, not here. Source page:
-    /// `RedMed-Xcode/RedMed/card.html` (bundled) and repo-root `card.html` (Pages).
-    static let medicalCardBaseURL = "https://redmed.pages.dev/card/"
+    /// `RedMed-Xcode/RedMed/get.html` (bundled) and repo-root `get.html` (Pages).
+    /// Legacy `card/` URLs redirect to `get.html` (preserve `#d=`).
+    static let medicalCardBaseURL = "https://redmed.pages.dev/get/"
 
     /// Deep link target for policy / card HTML “open owner app” redirects.
     static let mainAppURL = "redmed://main"

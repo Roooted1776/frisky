@@ -12,7 +12,8 @@ Deleted in `ea676c9` — restoring intent as Swift under `Main.swift` except car
 
 ## Kept as HTML (non-app)
 
-- `card.html` — Passerby bracelet scan page (non-app HTML)
+- `get.html` — Passerby / scanner bracelet page (RedMed · Help · Aid)
+- `card.html` — Legacy redirect → `get.html` (preserves `#d=`)
 - `PrivacyPolicy.html` — Policy
 - `TOS.html` — Policy
 - `security.html` — Policy
