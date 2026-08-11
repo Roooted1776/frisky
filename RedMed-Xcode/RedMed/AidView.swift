@@ -56,87 +56,82 @@ struct AidView: View {
     let columns = [GridItem(.flexible()), GridItem(.flexible())]
 
     var body: some View {
-        NavigationView {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 12) {
+        // No NavigationView chrome — empty nav bar was parking BrandWordmark too low.
+        // Scanner Close mirrors RedMedView (overlay), not a trailing toolbar item.
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 12) {
+                ZStack(alignment: .topTrailing) {
                     // Brand wordmark in place of the old "Roadside Aid" hero title
                     Image("BrandWordmark")
                         .resizable()
                         .scaledToFit()
                         .frame(height: 42)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .accessibilityLabel("RedMed")
-                        .padding(.top, 2)
+                        .padding(.trailing, isScannerSession ? 56 : 0)
 
-                    Text("expand pane - tap a pane")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-
-                    HStack(spacing: 8) {
-                        PillTag(text: "expand pane - tap a pane", accent: true)
-                    }
-                    .padding(.bottom, 2)
-
-                    // Panes + cancel + quote share one stack so LazyVStack spacing
-                    // does not pad the 5pt gap under the lowest pane.
-                    VStack(alignment: .leading, spacing: 0) {
-                        LazyVGrid(columns: columns, spacing: 14) {
-                            ForEach(AidPaneCatalog.panes) { pane in
-                                let isOpen = openPane == pane.id
-                                PaneCard(pane: pane, isOpen: isOpen) { key in
-                                    if key == nil {
-                                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                                            openPane = isOpen ? nil : pane.id
-                                        }
-                                    } else if let k = key, let topic = AidTopicCatalog.topics[k] {
-                                        activeTopic = topic
-                                    }
-                                }
-                                .gridCellColumns(isOpen ? 2 : 1)
-                            }
-                        }
-
-                        // 5pt under lowest pane; not a grid cell (pane dropdown undisturbed).
-                        CrashSurvivalCancelCard()
-
-                        Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.redmedDark)
-                            .multilineTextAlignment(.center)
-                            .lineSpacing(4)
-                            .frame(maxWidth: .infinity)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 20)
-                            .padding(.bottom, 8)
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 10)
-                .padding(.bottom, 24)
-            }
-            .background(Color.redmedBg)
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.redmedBg, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbar {
-                // No "Roadside Aid" principal — BrandWordmark is the hero brand signal.
-                // Keep main's matching redmedBg toolbar chrome.
-                if isScannerSession {
-                    ToolbarItem(placement: .navigationBarTrailing) {
+                    if isScannerSession {
                         ScannerCloseButton()
+                            .padding(.top, 4)
                     }
                 }
+
+                Text("expand pane - tap a pane")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.redmedMuted)
+
+                HStack(spacing: 8) {
+                    PillTag(text: "expand pane - tap a pane", accent: true)
+                }
+                .padding(.bottom, 2)
+
+                // Panes + cancel + quote share one stack so LazyVStack spacing
+                // does not pad the 5pt gap under the lowest pane.
+                VStack(alignment: .leading, spacing: 0) {
+                    LazyVGrid(columns: columns, spacing: 14) {
+                        ForEach(AidPaneCatalog.panes) { pane in
+                            let isOpen = openPane == pane.id
+                            PaneCard(pane: pane, isOpen: isOpen) { key in
+                                if key == nil {
+                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                        openPane = isOpen ? nil : pane.id
+                                    }
+                                } else if let k = key, let topic = AidTopicCatalog.topics[k] {
+                                    activeTopic = topic
+                                }
+                            }
+                            .gridCellColumns(isOpen ? 2 : 1)
+                        }
+                    }
+
+                    // 5pt under lowest pane; not a grid cell (pane dropdown undisturbed).
+                    CrashSurvivalCancelCard()
+
+                    Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.redmedDark)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(4)
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 20)
+                        .padding(.bottom, 8)
+                }
             }
-            .sheet(item: $activeTopic) { topic in
-                TopicDetailView(topic: topic)
-            }
-            .task {
-                await Task.yield()
-                AidTopicCatalog.warmUp()
-                #if DEBUG
-                AidPaneCatalog.assertTopicCoverage()
-                #endif
-            }
+            .padding(.horizontal, 16)
+            .padding(.top, 2)
+            .padding(.bottom, 24)
+        }
+        .background(Color.redmedBg)
+        .sheet(item: $activeTopic) { topic in
+            TopicDetailView(topic: topic)
+        }
+        .task {
+            await Task.yield()
+            AidTopicCatalog.warmUp()
+            #if DEBUG
+            AidPaneCatalog.assertTopicCoverage()
+            #endif
         }
     }
 }
