@@ -9,11 +9,11 @@
 <link rel="apple-touch-icon" href="BrandLogo.png">
 <link rel="icon" href="BrandLogo.png">
 <title>RedMed</title>
-<!-- Bundled NFC tap page (Help preview + band #d= shell). Profile data lives
-     only in #d= — no backend. Logo is BrandLogo.png next to this file in the
-     app bundle (repo-root card.html keeps assets/BrandLogo.png for Pages).
-     Ped/EMS: RedMed + Help + Aid viewable. No Edit. No NFC write UI.
-     Keep in sync with PublicCardView scanner shell. -->
+<!-- Passerby / rescuer shell (band #d= + in-app preview). Owner edit lives in
+     the native app. Profile data only in #d= — no backend. Logo is
+     BrandLogo.png next to this file in the app bundle (repo-root card.html
+     keeps assets/BrandLogo.png for Pages). Ped/EMS: RedMed + Help + Aid,
+     read-only. No Edit. No NFC write. Sync with PublicCardView. -->
 <style>
   :root {
     --accent: #e11d48;
@@ -387,7 +387,7 @@
     <!-- RedMed -->
     <div class="panel active" id="panel-medical" data-panel="medical">
       <div class="rm-header">
-        <p class="rm-lock">Read only — editing needs the owner’s RedMed app + Face&nbsp;ID / passcode.</p>
+        <p class="rm-lock">Read only — editing needs the <a href="redmed://main">owner’s RedMed app</a> (<a href="https://apps.apple.com/app/redmed/id0000000000">App Store</a>) + Face&nbsp;ID / passcode.</p>
         <div class="rm-title-row">
           <img class="rm-logo" src="BrandLogo.png" width="48" height="48" alt="RedMed">
           <div>

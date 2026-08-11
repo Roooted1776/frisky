@@ -2,30 +2,17 @@ import SwiftUI
 
 @main
 struct RedMedApp: App {
-    @ObservedObject private var locationGate = LocationAccessSuggester.shared
+    @StateObject private var profile = ProfileData()
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                if locationGate.canOpenApp {
-                    // Profile/Keychain only after the launch gate — first install
-                    // never pays Keychain while Location is still undecided.
-                    MainAppRoot()
-                } else {
-                    // Ask Location before the main tabs open. No GPS updates here.
-                    LocationLaunchGateView()
+            // Owner UI lives in Main.swift — not HTML.
+            Main()
+                .environmentObject(profile)
+                .onOpenURL { url in
+                    // Policies / card.html redirect with redmed://main
+                    _ = url
                 }
-            }
         }
-    }
-}
-
-/// Owns the Keychain-backed profile. Mounted only once Location has been asked.
-private struct MainAppRoot: View {
-    @StateObject private var profile = ProfileData()
-
-    var body: some View {
-        ContentView()
-            .environmentObject(profile)
     }
 }

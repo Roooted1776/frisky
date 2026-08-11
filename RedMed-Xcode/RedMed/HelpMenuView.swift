@@ -1,7 +1,7 @@
 import SwiftUI
 import WebKit
 
-// MARK: - WebView wrapper
+// MARK: - WebView wrapper (policies + passerby card only)
 struct LocalWebView: UIViewRepresentable {
     let filename: String // e.g. "PrivacyPolicy"
 
@@ -17,7 +17,6 @@ struct LocalWebView: UIViewRepresentable {
 struct HelpMenuView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.dismiss) var dismiss
-    /// Open the NFC write tab (no Get / Accept page in front of it).
     var onOpenNFC: (() -> Void)? = nil
 
     var body: some View {
@@ -29,6 +28,10 @@ struct HelpMenuView: View {
                         DispatchQueue.main.async { onOpenNFC?() }
                     }
                     .foregroundColor(.redmedDark)
+                }
+                NavigationLink("How It Works") {
+                    // Owner info lives in Main.swift — not HowItWorks.html
+                    MainInfoView(onOpenNFC: onOpenNFC)
                 }
                 NavigationLink("Privacy Policy") {
                     LocalWebView(filename: "PrivacyPolicy")
@@ -45,12 +48,6 @@ struct HelpMenuView: View {
                         .navigationTitle("Security")
                         .navigationBarTitleDisplayMode(.inline)
                 }
-                NavigationLink("How It Works") {
-                    LocalWebView(filename: "HowItWorks")
-                        .navigationTitle("How It Works")
-                        .navigationBarTitleDisplayMode(.inline)
-                }
-                // Local tap-page source stays in the bundle; only surface it after a band is paired.
                 if AppConfig.nfcHardwareEnabled, profile.braceletLinked {
                     NavigationLink("NFC tap card (local)") {
                         LocalWebView(filename: "card")

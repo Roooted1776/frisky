@@ -22,10 +22,9 @@ extension EnvironmentValues {
     }
 }
 
-/// Same app shell as `ContentView` for people who scan (ped / EMS):
-/// **RedMed + Help + Aid** — all three viewable, **no Edit**, **no NFC write tab**.
-/// This mirrors the local no-server bracelet tap page (`card.html#d=…`) that
-/// strangers open in a browser — keep them in sync. Payload stays in `#d=`.
+/// Passerby / rescuer shell (ped / EMS): **RedMed + Help + Aid** — viewable,
+/// **no Edit**, **no NFC write tab**. Mirrors bracelet tap page `card.html#d=…`
+/// (owner edit + treatments are the native app). Payload stays in `#d=`.
 /// Holds a **snapshot** of the profile so scanner UI cannot mutate owner data.
 struct PublicCardView: View {
     @StateObject private var snapshot: ProfileData

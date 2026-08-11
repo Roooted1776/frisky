@@ -3,7 +3,6 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
-    @Environment(\.scenePhase) private var scenePhase
     @State private var tab: AppTab = .redmed
 
     /// Ped/EMS scanners: never NFC. Owners see the NFC tab only when hardware is enabled
@@ -28,7 +27,8 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if !isScannerSession {
+            // Location banner only on Find Help — never on cold launch / RedMed.
+            if !isScannerSession, scannerSafeTab.wrappedValue == .emergency {
                 LocationSuggestionBanner()
             }
             ZStack(alignment: .bottom) {
@@ -51,12 +51,6 @@ struct ContentView: View {
                 CustomTabBar(tab: scannerSafeTab, showsNFC: showsNFC)
             }
             .ignoresSafeArea(edges: .bottom)
-        }
-        // Location was already asked at the launch gate. Re-check on
-        // foreground for denied → Settings; still do not start GPS here.
-        .onChange(of: scenePhase) { _, phase in
-            guard !isScannerSession, phase == .active else { return }
-            LocationAccessSuggester.shared.suggestIfNeeded()
         }
         .onAppear { clampScannerTab() }
         .onChange(of: isScannerSession) { _, _ in clampScannerTab() }

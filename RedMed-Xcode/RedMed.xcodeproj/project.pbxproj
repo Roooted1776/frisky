@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		AABB00000000000000000001 /* RedMedApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000001 /* RedMedApp.swift */; };
+		AABB00000000000000000023 /* Main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000023 /* Main.swift */; };
 		AABB00000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000002 /* ContentView.swift */; };
 		AABB00000000000000000003 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000003 /* Theme.swift */; };
 		AABB00000000000000000004 /* ProfileData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000004 /* ProfileData.swift */; };
@@ -41,6 +42,7 @@
 
 /* Begin PBXFileReference section */
 		AAAA00000000000000000001 /* RedMedApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedMedApp.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000023 /* Main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Main.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000003 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000004 /* ProfileData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileData.swift; sourceTree = "<group>"; };
@@ -98,6 +100,7 @@
 			isa = PBXGroup;
 			children = (
 				AAAA00000000000000000001 /* RedMedApp.swift */,
+				AAAA00000000000000000023 /* Main.swift */,
 				AAAA00000000000000000002 /* ContentView.swift */,
 				AAAA00000000000000000003 /* Theme.swift */,
 				AAAA00000000000000000004 /* ProfileData.swift */,
@@ -218,6 +221,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AABB00000000000000000001 /* RedMedApp.swift in Sources */,
+				AABB00000000000000000023 /* Main.swift in Sources */,
 				AABB00000000000000000002 /* ContentView.swift in Sources */,
 				AABB00000000000000000003 /* Theme.swift in Sources */,
 				AABB00000000000000000004 /* ProfileData.swift in Sources */,

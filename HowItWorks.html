@@ -4,61 +4,28 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RedMed — How It Works</title>
+<meta http-equiv="refresh" content="0;url=redmed://main">
 <link rel="stylesheet" href="assets/legal-doc.css">
+<script>
+(function () {
+  var APP = "redmed://main";
+  var STORE = "https://apps.apple.com/app/redmed/id0000000000";
+  // Prefer the native Main.swift owner UI; fall back to App Store.
+  location.replace(APP);
+  setTimeout(function () { location.href = STORE; }, 700);
+})();
+</script>
 </head>
 <body class="legal-doc">
 <div class="legal-sheet">
   <header class="legal-letterhead">
     <p class="legal-firm">RedMed</p>
     <p class="legal-tagline">How It Works</p>
-    <p class="legal-entity">RedMed · Local-Only Software</p>
   </header>
-
-  <nav class="legal-nav legal-nav-top" aria-label="Related legal documents">
-    <a href="TOS.html">Terms Of Service</a>
-    <span aria-hidden="true">|</span>
-    <a href="PrivacyPolicy.html">Privacy Policy</a>
-    <span aria-hidden="true">|</span>
-    <a href="security.html">Security</a>
-    <span aria-hidden="true">|</span>
-    <a href="HowItWorks.html" aria-current="page">How It Works</a>
-  </nav>
-
-  <hr class="legal-rule-thin" aria-hidden="true">
-
-  <h1 class="legal-doc-title">How It Works</h1>
-  <p class="legal-parties">A quick walkthrough of the RedMed app and bracelet, for new users.</p>
-
-  <div class="legal-notice">
-    <strong>In short</strong>
-    Fill out your emergency profile once in the app, write it to a passive 13.56 MHz HF NFC bracelet (not Bluetooth), and anyone who taps the band with a phone sees your emergency card — no app or account required on their end.
-  </div>
-
-  <article class="legal-body">
-    <h2><span class="sec-num">1.</span> Set up RedMed</h2>
-    <p>Open the <strong>RedMed</strong> tab and tap <strong>Edit</strong>. Unlock with Face ID, Touch ID, or your device passcode when asked. Add your name, birth date, and blood type, then list any allergies, medications, and conditions a first responder should know. Add emergency contacts with phone numbers. Tap <strong>Save</strong> when done.</p>
-
-    <h2><span class="sec-num">2.</span> Write your bracelet</h2>
-    <p>Go to the <strong>NFC</strong> tab and tap <strong>Write to NFC tag</strong>. Confirm with Face ID, Touch ID, or your passcode, then hold the top of your iPhone near the bracelet when prompted. Your profile is written to the passive 13.56 MHz chip in the band. The phone does not stay paired over Bluetooth — it only powers the chip during that write (and later when someone deliberately taps). Walk-by distance will not fire the band; only a deliberate ~1–2″ antenna tap (after Write/Scan, or a stranger’s phone) opens the card. Payment terminals ignore this NDEF chip — wrong protocol, not a distance setting.</p>
-
-    <h2><span class="sec-num">3.</span> Verify it</h2>
-    <p>On the NFC tab, tap <strong>Scan your bracelet</strong> (or use <strong>Preview scanner</strong> on RedMed) to see the same read-only <strong>RedMed</strong> / <strong>911</strong> / <strong>Aid</strong> shell a stranger gets. Confirm your details look right — there is no Edit and no NFC write UI in that view.</p>
-
-    <h2><span class="sec-num">4.</span> What a stranger sees</h2>
-    <p>Anyone who taps the bracelet with their phone opens a read-only emergency card with the same three tabs as this app — <strong>RedMed</strong>, <strong>911</strong>, and <strong>Aid</strong> — including your RedMed profile, Call 911 / GPS help, and roadside aid steps. No RedMed app or login is required to view it, and they cannot edit your profile or write the band.</p>
-
-    <h2><span class="sec-num">5.</span> In an emergency</h2>
-    <p>Use the <strong>911</strong> tab for one-tap dialing and live GPS coordinates to read off to a dispatcher. Use the <strong>Aid</strong> tab for step-by-step guidance on bleeding, CPR, shock, and other roadside situations while help is on the way.</p>
-
-    <h2><span class="sec-num">6.</span> Keeping it in sync</h2>
-    <p>If you edit your profile later, reopen the NFC tab and write to the band again — the bracelet only shows what was last written to it. See our <a href="PrivacyPolicy.html">Privacy Policy</a> for where your data lives.</p>
-  </article>
-
-  <footer class="legal-footer">
-    <p>© 2026 RedMed · All rights reserved</p>
-    <p><a href="TOS.html">Terms Of Service</a> · <a href="PrivacyPolicy.html">Privacy Policy</a> · <a href="security.html">Security</a></p>
-    <p class="legal-footer-disclaimer">This document is provided for informational purposes only.</p>
-  </footer>
+  <h1 class="legal-doc-title">Opening RedMed…</h1>
+  <p class="legal-parties">Owner setup and walkthrough live in the RedMed app (<code>Main.swift</code>), not on this page.</p>
+  <p><a href="redmed://main">Open RedMed app</a> · <a href="https://apps.apple.com/app/redmed/id0000000000">App Store</a></p>
+  <p><a href="PrivacyPolicy.html">Privacy Policy</a> · <a href="TOS.html">Terms Of Service</a> · <a href="security.html">Security</a></p>
 </div>
 </body>
 </html>

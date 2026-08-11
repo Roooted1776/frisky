@@ -18,12 +18,22 @@ set up a working runtime here:
 **There are no dependencies to install:** no Swift Package Manager, CocoaPods, Carthage, or npm.
 The app has no backend, database, or web service.
 
-**Cold launch:** Do **not** start Core Location *updates* / MapKit / trauma JSON at
-`@main`. Ask When-In-Use authorization on a launch gate **before** the main tabs
-open (install prompt) — continuous GPS and hospital lookup still start only when
-Find 911 / that UI is visible (privacy + time-to-first-frame). Newer sources under
-`uploads/` use lazy tab mounting (switch + CustomTabBar), default RedMed, and async
-trauma catalog warm-up for the same reason.
+**Roles / HTML:** Owner UI is Swift — `Main.swift` (tabs + `MainInfoView` How It
+Works / band setup). Product HTML is only (1) passerby `card.html` and (2)
+policy pages (`PrivacyPolicy`, `TOS`, `security`). `HowItWorks.html` is a thin
+redirect into `redmed://main`. Card + policies CTA to the owner app; they do not
+host owner edit UI.
+
+**Cold launch:** Do **not** create `CLLocationManager`, start GPS / MapKit /
+trauma JSON, or show a Location banner at `@main`. First launch opens RedMed
+tabs immediately with zero Location API. When-In-Use + GPS start only on Find
+Help (banner + `LocationManager.start`). Newer sources under `uploads/` use lazy
+tab mounting (switch + CustomTabBar), default RedMed, and async trauma catalog
+warm-up for the same reason.
+
+**Debugger note:** `Thread 1: signal SIGTERM` at `mach_msg2_trap` is usually
+Xcode Stop / Simulator killing the process — not a Swift crash. Look for
+`EXC_BAD_ACCESS` / fatalError / assertion if it is a real fault.
 
 **Consequence for cloud agents:** the update script is intentionally a no-op. Code review and static
 edits to the `.swift` files are possible, but do not attempt to build/run/test here. Any actual

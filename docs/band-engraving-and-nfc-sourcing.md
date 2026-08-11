@@ -23,7 +23,7 @@ plus a **setup** QR — never the `#d=` medical payload.
 | Avoid | LF 125 kHz, UHF, MIFARE Classic-only, pre-encoded vendor URLs, password-locked UID products you cannot overwrite from CoreNFC |
 | UK / EU sourcing (blank or custom print, chip empty) | [Seritag](https://seritag.com/nfc-tags/wristbands) (UK), [Flexcard Print](https://flexcardprint.co.uk/product/silicone-rfid-wristbands/) (UK quote), [Shop NFC](https://shopnfc.com/en/nfc-wristbands/54-nfc-silicone-wristbands-premium.html), [NFC Tag Shop](https://www.nfc-tag-shop.de/en/NFC-Wristbands/NFC-silicone-bands/) |
 | Factory NDEF | Leave **empty** (or a harmless stub). Owner overwrites on first Write in the NFC tab. |
-| QR encode | `https://redmed.pages.dev/get.html` only — main app shell without NFC/Edit (no health data). **Do not** QR-encode `card/#d=…`. |
+| QR encode | App Store listing URL only (`AppConfig.appStoreURL`). **Do not** QR-encode `card/#d=…`. |
 
 Seritag is fine as a **hardware** vendor. Skip their tag-management / redirect
 platform for RedMed medical payloads.
@@ -103,7 +103,7 @@ or `COND: T1 DIABETES` — one token, no essay.
 
 | Location | Encodes | Why |
 |----------|---------|-----|
-| Outer face, small | `https://redmed.pages.dev/get.html` | Main shell minus NFC/Edit (`get.html`). Safe if scanned by a stranger — no health data. |
+| Outer face, small | App Store URL (`AppConfig.appStoreURL`) | Owner setup path. Safe if scanned by a stranger — no health data. |
 | Chip (NDEF) | `https://redmed.pages.dev/card/#d=<base64url>` | Written by RedMed; rescuer tap opens the card. |
 
 If the plate only fits one mark, prioritise **engraved text** over QR. NFC is the
@@ -116,9 +116,9 @@ primary rescue path; QR is a setup affordance, not a backup medical record.
 > Silicone (or metal face) wristband, adult size, red or black. Embed **NXP
 > NTAG216**, 13.56 MHz, ISO 14443A, **NDEF unlocked / blank**. Laser outer face:
 > `MEDICAL ID` / `TAP PHONE → CARD` / `REDMED`. Laser reverse with per-unit
-> variable: name, ICE phone, one allergy line, blood type. Optional QR to
-> `https://redmed.pages.dev/get.html` only. Do **not** pre-program medical URLs
-> or lock the chip. Sample 10 before production MOQ.
+> variable: name, ICE phone, one allergy line, blood type. Optional QR to the
+> App Store listing only. Do **not** pre-program medical URLs or lock the chip.
+> Sample 10 before production MOQ.
 
 ---
 
@@ -127,4 +127,4 @@ primary rescue path; QR is a setup affordance, not a backup medical record.
 RedMed already owns the tap URL (`AppConfig.medicalCardBaseURL`). A redirect SaaS
 adds: another DPIA party, outage risk on the critical path, and a product story
 that no longer matches “we run no servers for your profile.” Hardware-only
-vendors + Cloudflare Pages static `card.html` / `get.html` stay aligned.
+vendors + Cloudflare Pages static `card.html` (passerby scan) + policy HTML stay aligned.

@@ -4,71 +4,69 @@ import UIKit
 import SwiftUI
 import Combine
 
-/// Gates the owner app until Location has been asked, then keeps suggesting
-/// until When-In-Use (or Always) is granted.
-/// Does **not** start GPS updates — Find Help still starts updates only when visible.
+/// Optional Location nudge for Find Help only.
+/// Does **not** run at cold launch — no `CLLocationManager` until Find Help
+/// appears or the user taps Allow. Never gates or replaces the main tabs.
 final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManagerDelegate {
     static let shared = LocationAccessSuggester()
 
-    private let manager = CLLocationManager()
+    private var manager: CLLocationManager?
 
-    /// False while undecided — main tabs stay hidden until the system prompt is answered.
-    @Published private(set) var canOpenApp = false
-    /// True when the owner app should keep suggesting Location.
     @Published private(set) var needsSuggestion = false
-    /// Denied/restricted — only Settings can fix it.
     @Published private(set) var mustOpenSettings = false
 
     private override init() {
         super.init()
-        manager.delegate = self
-        refresh()
+    }
+
+    @discardableResult
+    private func ensureManager() -> CLLocationManager {
+        if let manager { return manager }
+        let m = CLLocationManager()
+        m.delegate = self
+        manager = m
+        return m
+    }
+
+    /// Call when Find Help becomes visible — creates the manager lazily.
+    func prepareForFindHelp() {
+        let m = ensureManager()
+        apply(m.authorizationStatus)
     }
 
     func refresh() {
-        switch manager.authorizationStatus {
+        guard let manager else {
+            needsSuggestion = false
+            mustOpenSettings = false
+            return
+        }
+        apply(manager.authorizationStatus)
+    }
+
+    private func apply(_ status: CLAuthorizationStatus) {
+        switch status {
         case .authorizedAlways, .authorizedWhenInUse:
-            canOpenApp = true
             needsSuggestion = false
             mustOpenSettings = false
         case .denied, .restricted:
-            // Asked and answered — open the app; banner nudges Settings.
-            canOpenApp = true
             needsSuggestion = true
             mustOpenSettings = true
         case .notDetermined:
-            canOpenApp = false
             needsSuggestion = true
             mustOpenSettings = false
         @unknown default:
-            canOpenApp = false
             needsSuggestion = true
             mustOpenSettings = false
-        }
-    }
-
-    /// System dialog while undecided. Safe to call repeatedly; does not start GPS.
-    func askIfNeeded() {
-        refresh()
-        guard manager.authorizationStatus == .notDetermined else { return }
-        manager.requestWhenInUseAuthorization()
-    }
-
-    /// Call on foreground once the app is open. Banner stays until granted.
-    func suggestIfNeeded() {
-        refresh()
-        guard needsSuggestion else { return }
-        if manager.authorizationStatus == .notDetermined {
-            manager.requestWhenInUseAuthorization()
         }
     }
 
     func primaryAction() {
-        refresh()
+        let m = ensureManager()
+        apply(m.authorizationStatus)
         if mustOpenSettings {
             openSettings()
         } else {
-            manager.requestWhenInUseAuthorization()
+            m.requestWhenInUseAuthorization()
         }
     }
 
@@ -78,128 +76,49 @@ final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManag
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        let status = manager.authorizationStatus
         if Thread.isMainThread {
-            refresh()
+            apply(status)
         } else {
-            DispatchQueue.main.async { [weak self] in self?.refresh() }
+            DispatchQueue.main.async { [weak self] in self?.apply(status) }
         }
     }
 }
 
-/// Shown instead of the main tabs until Location has been asked (Allow / Don't Allow).
-struct LocationLaunchGateView: View {
-    @ObservedObject private var suggester = LocationAccessSuggester.shared
-    @State private var appeared = false
-    @State private var pulse = false
-
-    var body: some View {
-        ZStack {
-            // Soft radial wash behind the mark — keeps the hero readable on #fff7f7.
-            RadialGradient(
-                colors: [
-                    Color.redmedAccent.opacity(0.14),
-                    Color.redmedBg.opacity(0)
-                ],
-                center: .center,
-                startRadius: 20,
-                endRadius: 260
-            )
-            .scaleEffect(pulse ? 1.06 : 0.94)
-            .opacity(appeared ? 1 : 0)
-            .animation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true), value: pulse)
-
-            VStack(spacing: 24) {
-                Spacer()
-
-                Image("BrandWordmark")
-                    .resizable()
-                    .interpolation(.high)
-                    .scaledToFit()
-                    .frame(maxWidth: 280)
-                    .shadow(color: Color.redmedAccent.opacity(0.18), radius: 18, y: 10)
-                    .scaleEffect(appeared ? 1 : 0.92)
-                    .opacity(appeared ? 1 : 0)
-
-                HStack(spacing: 8) {
-                    Image(systemName: "location.fill")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.redmedAccent)
-                    Text("Allow Location so Find Help can show exact GPS for dispatch.")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .multilineTextAlignment(.leading)
-                }
-                .padding(.horizontal, 36)
-                .opacity(appeared ? 1 : 0)
-                .offset(y: appeared ? 0 : 10)
-
-                Button("Allow Location") {
-                    suggester.primaryAction()
-                }
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(
-                    LinearGradient(
-                        colors: [Color(red: 1, green: 0.447, blue: 0.537), .redmedAccent],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .shadow(color: Color.redmedAccent.opacity(0.28), radius: 10, y: 5)
-                .padding(.horizontal, 32)
-                .padding(.top, 4)
-                .opacity(appeared ? 1 : 0)
-                .offset(y: appeared ? 0 : 14)
-
-                Spacer()
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.redmedBg.ignoresSafeArea())
-        .onAppear {
-            suggester.askIfNeeded()
-            withAnimation(.spring(response: 0.65, dampingFraction: 0.82)) {
-                appeared = true
-            }
-            pulse = true
-        }
-    }
-}
-
-/// Always-visible nudge until Location is allowed.
+/// Shown on Find Help only — never on cold launch / RedMed tab.
 struct LocationSuggestionBanner: View {
     @ObservedObject private var suggester = LocationAccessSuggester.shared
 
     var body: some View {
-        if suggester.needsSuggestion {
-            HStack(alignment: .center, spacing: 10) {
-                Image(systemName: "location.fill")
-                    .font(.system(size: 14, weight: .semibold))
+        Group {
+            if suggester.needsSuggestion {
+                HStack(alignment: .center, spacing: 10) {
+                    Image(systemName: "location.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.redmedAccent)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Location suggested")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.redmedDark)
+                        Text("Allow Location so Find Help can show exact GPS for dispatch.")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.redmedMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: 4)
+                    Button(suggester.mustOpenSettings ? "Settings" : "Allow") {
+                        suggester.primaryAction()
+                    }
+                    .font(.system(size: 12, weight: .bold))
                     .foregroundColor(.redmedAccent)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Location suggested")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.redmedDark)
-                    Text("Allow Location so Find Help can show exact GPS for dispatch.")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
-                Spacer(minLength: 4)
-                Button(suggester.mustOpenSettings ? "Settings" : "Allow") {
-                    suggester.primaryAction()
-                }
-                .font(.system(size: 12, weight: .bold))
-                .foregroundColor(.redmedAccent)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(Color.redmedAccent.opacity(0.08))
+                .overlay(Rectangle().fill(Color.redmedAccent.opacity(0.2)).frame(height: 1), alignment: .bottom)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
-            .background(Color.redmedAccent.opacity(0.08))
-            .overlay(Rectangle().fill(Color.redmedAccent.opacity(0.2)).frame(height: 1), alignment: .bottom)
         }
+        .onAppear { suggester.prepareForFindHelp() }
     }
 }
 

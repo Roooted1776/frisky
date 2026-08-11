@@ -26,28 +26,28 @@ struct RedMedView: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
-                // Header — matches Main.dc.html (no wordmark nav bar)
+                // Header — brand mark + Edit (no wordmark nav bar)
                 header
 
                 // YOU card (no section label in Main design)
                 cardGroup {
-                    profileRow(label: "Name", value: profile.name)
+                    profileRow(label: "Name", value: profile.name, emptyPrompt: "Add name")
                     thinDivider
-                    profileRow(label: "Birth date", value: profile.birthDate)
+                    profileRow(label: "Birth date", value: profile.birthDate, emptyPrompt: "Add birth date")
                     thinDivider
-                    profileRow(label: "Blood type", value: profile.bloodType)
+                    profileRow(label: "Blood type", value: profile.bloodType, emptyPrompt: "Add blood type")
                 }
                 .padding(.top, 2)
 
-                listSection(title: "Allergies", items: profile.allergies)
-                listSection(title: "Medications", items: profile.medications)
-                listSection(title: "Conditions", items: profile.conditions)
+                listSection(title: "Allergies", items: profile.allergies, emptyPrompt: "Add allergy")
+                listSection(title: "Medications", items: profile.medications, emptyPrompt: "Add medication")
+                listSection(title: "Conditions", items: profile.conditions, emptyPrompt: "Add condition")
 
                 // CONTACTS
                 SectionLabel(text: "Contacts").padding(.horizontal, 16).padding(.top, 12)
                 cardGroup {
                     if profile.contacts.isEmpty {
-                        emptyRow()
+                        emptyPromptRow("Add contact")
                     } else {
                         ForEach(Array(profile.contacts.enumerated()), id: \.element.id) { i, c in
                             VStack(alignment: .leading, spacing: 2) {
@@ -308,27 +308,48 @@ struct RedMedView: View {
     }
 
     @ViewBuilder
-    func profileRow(label: String, value: String) -> some View {
-        HStack {
-            Text(label)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(.redmedMuted)
-            Spacer()
-            Text(value.isEmpty ? "—" : value)
-                .font(.system(size: 12, weight: value.isEmpty ? .regular : .semibold))
-                .foregroundColor(value.isEmpty ? Color.redmedMuted.opacity(0.4) : .redmedDark)
+    func profileRow(label: String, value: String, emptyPrompt: String) -> some View {
+        Button {
+            if value.isEmpty && !isScannerSession { requestEdit() }
+        } label: {
+            HStack {
+                Text(label)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.redmedMuted)
+                Spacer()
+                if value.isEmpty {
+                    Text(isScannerSession ? "—" : emptyPrompt)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(isScannerSession ? Color.redmedMuted.opacity(0.4) : .redmedAccent)
+                } else {
+                    Text(value)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.redmedDark)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 11)
+            .contentShape(Rectangle())
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 11)
+        .buttonStyle(.plain)
+        .disabled(!value.isEmpty || isScannerSession)
     }
 
     @ViewBuilder
-    func emptyRow() -> some View {
-        Text("—")
-            .font(.system(size: 12))
-            .foregroundColor(Color.redmedMuted.opacity(0.4))
-            .padding(.horizontal, 16)
-            .padding(.vertical, 11)
+    func emptyPromptRow(_ prompt: String) -> some View {
+        Button {
+            if !isScannerSession { requestEdit() }
+        } label: {
+            Text(isScannerSession ? "—" : prompt)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(isScannerSession ? Color.redmedMuted.opacity(0.4) : .redmedAccent)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 11)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(isScannerSession)
     }
 
     @ViewBuilder
@@ -341,11 +362,11 @@ struct RedMedView: View {
     }
 
     @ViewBuilder
-    func listSection(title: String, items: [String]) -> some View {
+    func listSection(title: String, items: [String], emptyPrompt: String) -> some View {
         SectionLabel(text: title).padding(.horizontal, 16).padding(.top, 12)
         cardGroup {
             if items.isEmpty {
-                emptyRow()
+                emptyPromptRow(emptyPrompt)
             } else {
                 ForEach(Array(items.enumerated()), id: \.offset) { i, item in
                     Text(item)
