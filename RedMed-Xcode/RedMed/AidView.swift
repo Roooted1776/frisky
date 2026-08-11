@@ -141,48 +141,61 @@ struct PaneCard: View {
             Button { onTap(nil) } label: {
                 HStack(alignment: .top, spacing: 8) {
                     Text(pane.emoji)
-                        .font(.system(size: 20))
-                        .frame(width: 36, height: 36)
+                        .font(.system(size: 18))
+                        .frame(width: 34, height: 34)
                         .background(isOpen ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
                         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
 
                     VStack(alignment: .leading, spacing: 3) {
                         Text(pane.title)
-                            .font(.system(size: 13, weight: .bold))
+                            .font(.system(size: 12, weight: .bold))
                             .foregroundColor(.redmedAccent)
-                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                            .lineLimit(3)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .minimumScaleFactor(0.9)
                         if !isOpen {
                             Text(pane.subtitle)
-                                .font(.system(size: 11, weight: .semibold))
+                                .font(.system(size: 10, weight: .semibold))
                                 .foregroundColor(.redmedMuted)
-                                .lineLimit(1)
+                                .multilineTextAlignment(.leading)
+                                .lineLimit(3)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                     }
-                    Spacer()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .layoutPriority(1)
+
                     Image(systemName: isOpen ? "chevron.down" : "chevron.right")
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundColor(.redmedAccent)
+                        .padding(.top, 2)
                 }
-                .padding(12)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 10)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .frame(minHeight: 88, alignment: .top)
 
             if isOpen {
                 VStack(spacing: 6) {
                     ForEach(pane.topics, id: \.key) { topic in
                         Button { onTap(topic.key) } label: {
-                            HStack {
+                            HStack(alignment: .top, spacing: 8) {
                                 Text(topic.label)
-                                    .font(.system(size: 14, weight: .semibold))
+                                    .font(.system(size: 13, weight: .semibold))
                                     .foregroundColor(.redmedDark)
-                                Spacer()
+                                    .multilineTextAlignment(.leading)
+                                    .lineLimit(3)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                                 Image(systemName: "chevron.right")
                                     .font(.system(size: 11))
                                     .foregroundColor(.redmedMuted)
+                                    .padding(.top, 2)
                             }
-                            .padding(.horizontal, 12).padding(.vertical, 10)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 10)
                             .background(Color.white.opacity(0.85))
                             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                             .overlay(
@@ -193,10 +206,11 @@ struct PaneCard: View {
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(.horizontal, 10)
-                .padding(.bottom, 12)
+                .padding(.horizontal, 8)
+                .padding(.bottom, 10)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.redmedSurface)
         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
         .overlay(

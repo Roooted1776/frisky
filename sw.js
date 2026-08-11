@@ -8,7 +8,7 @@
  * copy on every decrypt/layout deploy. Payload stays in #d= only — never
  * cached. No biometrics on view.
  */
-var CACHE = 'redmed-get-v18';
+var CACHE = 'redmed-get-v19';
 var ASSETS = [
   './',
   './get.html',
