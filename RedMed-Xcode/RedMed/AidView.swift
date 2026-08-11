@@ -91,9 +91,11 @@ struct AidView: View {
                             }
                             .gridCellColumns(isOpen ? 2 : 1)
                         }
-                    }
 
-                    CrashSurvivalCancelCard()
+                        // Under panes, above quote — full-width like an open pane.
+                        CrashSurvivalCancelCard()
+                            .gridCellColumns(2)
+                    }
 
                     // Quote moved from RedMed (main) tab — sits below the panes
                     Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
