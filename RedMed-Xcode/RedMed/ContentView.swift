@@ -42,7 +42,9 @@ struct ContentView: View {
         ZStack(alignment: .bottom) {
             ZStack {
                 mountedTab(.redmed) { RedMedView(tab: scannerSafeTab) }
-                mountedTab(.emergency) { EmergencyView() }
+                mountedTab(.emergency) {
+                    EmergencyView(isVisible: activeTab == .emergency)
+                }
                 mountedTab(.aid) { AidView() }
                 if showsNFC {
                     mountedTab(.nfc) { NFCView() }

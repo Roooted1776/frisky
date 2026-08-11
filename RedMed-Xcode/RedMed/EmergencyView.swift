@@ -2,6 +2,10 @@ import SwiftUI
 import CoreLocation
 
 struct EmergencyView: View {
+    /// Opacity keep-alive tabs never call `onDisappear` — ContentView passes
+    /// whether 911 is the front tab so GPS + seizure autodial can tear down.
+    var isVisible: Bool = true
+
     @Environment(\.isScannerSession) private var isScannerSession
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @StateObject private var locationManager = LocationManager()
@@ -106,7 +110,7 @@ struct EmergencyView: View {
                         }
                     }
 
-                    SeizureTimerStrip()
+                    SeizureTimerStrip(isVisible: isVisible)
 
                     // ROADSIDE FIRST RESPONSE
                     InfoCard(
@@ -145,16 +149,28 @@ struct EmergencyView: View {
             }
         }
         .background(Color.redmedBg)
-        .task {
+        .task(id: isVisible) {
             // First paint of Find Help before Core Location work.
+            guard isVisible else {
+                locationManager.stop()
+                return
+            }
             await Task.yield()
             if locationEnabled {
                 locationManager.start()
             }
         }
         .onChange(of: locationEnabled) { _, on in
+            guard isVisible else { return }
             if on {
                 locationManager.start()
+            } else {
+                locationManager.stop()
+            }
+        }
+        .onChange(of: isVisible) { _, visible in
+            if visible {
+                if locationEnabled { locationManager.start() }
             } else {
                 locationManager.stop()
             }
@@ -168,9 +184,13 @@ struct EmergencyView: View {
 /// Compact seizure stopwatch on Find Help — no aid copy. Auto-dials the local
 /// emergency number at 5:00.
 struct SeizureTimerStrip: View {
+    /// When Find Help is hidden under opacity keep-alive, cancel autodial.
+    var isVisible: Bool = true
+
     @State private var running = false
     @State private var elapsed: TimeInterval = 0
-    @State private var task: Task<Void, Never>?
+    /// Reference so hide/stop clears arming the tick Task can still see.
+    @State private var engine = SeizureTimerEngine()
 
     private static let callAt: TimeInterval = 5 * 60
 
@@ -213,19 +233,26 @@ struct SeizureTimerStrip: View {
         .background(Color.redmedSurface)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.redmedDivider, lineWidth: 1))
+        .onChange(of: isVisible) { _, visible in
+            if !visible { stop(reset: false) }
+        }
         .onDisappear { stop(reset: false) }
     }
 
     private func start() {
+        guard isVisible else { return }
         stop(reset: true)
         running = true
+        engine.autodialArmed = true
         let started = Date()
-        task = Task { @MainActor in
+        let engine = self.engine
+        engine.task = Task { @MainActor in
             while !Task.isCancelled {
                 elapsed = Date().timeIntervalSince(started)
                 if elapsed >= Self.callAt {
+                    let shouldDial = engine.autodialArmed
                     stop(reset: false)
-                    if let url = EmergencyNumber.dialURL {
+                    if shouldDial, let url = EmergencyNumber.dialURL {
                         // Call the completion-handler overload explicitly: bare
                         // `open(_:)` resolves to the async one in here and would
                         // need `await`.
@@ -240,8 +267,9 @@ struct SeizureTimerStrip: View {
     }
 
     private func stop(reset: Bool) {
-        task?.cancel()
-        task = nil
+        engine.task?.cancel()
+        engine.task = nil
+        engine.autodialArmed = false
         running = false
         if reset { elapsed = 0 }
     }
@@ -250,6 +278,12 @@ struct SeizureTimerStrip: View {
         let total = max(0, Int(t))
         return String(format: "%d:%02d", total / 60, total % 60)
     }
+}
+
+/// Holds the seizure tick Task + autodial arm across opacity tab hides.
+private final class SeizureTimerEngine {
+    var task: Task<Void, Never>?
+    var autodialArmed = false
 }
 
 // MARK: - GPS Card
