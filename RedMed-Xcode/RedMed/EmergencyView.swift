@@ -23,15 +23,10 @@ struct EmergencyView: View {
                     // NO CELL SIGNAL — top of Find Help (replaces call-first-contact)
                     NoCellSignalCard(showSatellite: $showSatellite)
 
-                    // GPS + public aid (Starlink DTC / carrier sat when available):
-                    // exactly 5px under the coordinates pane.
-                    VStack(alignment: .leading, spacing: 5) {
-                        GPSCard(location: locationEnabled ? locationManager.location : nil)
-                            .opacity(locationEnabled ? 1 : 0.45)
-
-                        StarlinkDirectAidCard()
-                    }
-                    .padding(.vertical, 4)
+                    // GPS CARD
+                    GPSCard(location: locationEnabled ? locationManager.location : nil)
+                        .padding(.vertical, 4)
+                        .opacity(locationEnabled ? 1 : 0.45)
 
                     // COPY COORDINATES
                     Button {
