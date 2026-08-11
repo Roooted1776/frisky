@@ -70,6 +70,7 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 ### NFC / bracelet / passerby web
 - Passive HF NFC physics + BraceletRF constants.
 - NFC tab for owners; CoreNFC behind `nfcHardwareEnabled` (tab always visible).
+- Main paired line reactive: write → Paired; profile edit → Not paired until rewrite.
 - Compact NTAG213 `#d=` codec; AES-GCM seal; legacy zlib + pre-AES decode restored.
 - `get.html` single passerby shell; `card.html` legacy redirect preserving `#d=`.
 - Offline service worker; HTTP cache bypass; stale-shell fixes; Pages `/get/` deploy path.

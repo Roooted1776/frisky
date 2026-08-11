@@ -20,15 +20,16 @@ struct RedMedView: View {
     }
 
     private var braceletStatusLabel: String {
-        profile.braceletLinked ? "Linked bracelet ›" : "Not linked — tap to pair ›"
+        profile.braceletLinked ? "Paired bracelet ›" : "Not paired — tap to set up ›"
     }
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 0) {
-                // Header — brand mark + Edit (no wordmark nav bar)
+            // Header outside LazyVStack so band pairing flips immediately when NFC write / edit lands.
+            VStack(alignment: .leading, spacing: 0) {
                 header
 
+                LazyVStack(alignment: .leading, spacing: 0) {
                 // YOU card (no section label in Main design)
                 cardGroup {
                     profileRow(label: "Name", value: profile.name, emptyPrompt: "Add name")
@@ -135,7 +136,8 @@ struct RedMedView: View {
                     .padding(.top, 42)
                     .padding(.bottom, 16)
                 }
-            }
+                } // LazyVStack
+            } // header + list
             .padding(.bottom, isScannerSession ? 42 : 12)
         }
         // Owner profile only — never redact the passerby / EMS scanner card.
@@ -233,6 +235,8 @@ struct RedMedView: View {
                                     )
                                     .kerning(0.7)
                                     .textCase(.uppercase)
+                                    .id(profile.braceletLinked)
+                                    .animation(.easeInOut(duration: 0.2), value: profile.braceletLinked)
                             }
                         }
                         .padding(.vertical, 4)
