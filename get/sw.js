@@ -12,7 +12,7 @@
  * stale decrypt/layout. Bump CACHE on every deploy that changes get/index.html
  * / decrypt logic.
  */
-var CACHE = 'redmed-get-v12';
+var CACHE = 'redmed-get-v13';
 var ASSETS = [
   './',
   './index.html',
