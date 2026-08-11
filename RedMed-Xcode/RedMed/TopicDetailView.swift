@@ -6,6 +6,8 @@ extension AidTopic: Identifiable {}
 struct TopicDetailView: View {
     let topic: AidTopic
     @Environment(\.dismiss) var dismiss
+    /// Engine lives in the view hierarchy — prepared on appear, fired on tap / beat.
+    @StateObject private var hapticEngine = HapticEngine()
     @State private var cprRunning = false
     @State private var cprCount = 0
     @State private var cprPhase = "compress" // or "breathe"
@@ -23,11 +25,18 @@ struct TopicDetailView: View {
     func startCPR() {
         cprTimer?.invalidate()
         cprRunning = true; cprCount = 0; cprPhase = "compress"; cprPulse = false
+        // Tap → calculated haptic execution, then metronome ticks.
+        hapticEngine.playCompressionBeat()
+        cprPulse = true
         scheduleTick(after: 0.545)
     }
 
     func scheduleTick(after interval: TimeInterval) {
-        cprTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: false) { _ in tick() }
+        cprTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: false) { _ in
+            Task { @MainActor in
+                tick()
+            }
+        }
     }
 
     func tick() {
@@ -37,13 +46,16 @@ struct TopicDetailView: View {
             let next = cprCount + 1
             if next >= 30 {
                 cprCount = 30; cprPhase = "breathe"
+                hapticEngine.playBreathCue()
                 scheduleTick(after: 3.2)
             } else {
                 cprCount = next
+                hapticEngine.playCompressionBeat()
                 scheduleTick(after: 0.545)
             }
         } else {
             cprCount = 0; cprPhase = "compress"
+            hapticEngine.playCompressionBeat()
             scheduleTick(after: 0.545)
         }
     }
@@ -163,6 +175,9 @@ struct TopicDetailView: View {
                 .padding(.bottom, 32)
             }
             .background(Color.redmedBg)
+            .onAppear {
+                if isCPR { hapticEngine.prepare() }
+            }
             .onDisappear { stopCPR() }
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
