@@ -142,15 +142,26 @@ struct PaneCard: View {
         VStack(alignment: .leading, spacing: 0) {
             Button { onTap(nil) } label: {
                 HStack(alignment: .center, spacing: 12) {
-                    Text(pane.emoji)
-                        .font(.system(size: 22))
-                        .frame(width: 44, height: 44)
-                        .background(isOpen ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
-                        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
-                        .animation(RedMedMotion.snappy, value: isOpen)
-                        .accessibilityHidden(true)
+                    // Nearby Hospitals: BrandLogo (wordmark@3x catalog) on the left.
+                    // Other panes keep emoji chips.
+                    Group {
+                        if pane.id == "hospitals" {
+                            Image("BrandLogo")
+                                .resizable()
+                                .scaledToFit()
+                                .padding(8)
+                        } else {
+                            Text(pane.emoji)
+                                .font(.system(size: 22))
+                        }
+                    }
+                    .frame(width: 44, height: 44)
+                    .background(isOpen ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+                    .animation(RedMedMotion.snappy, value: isOpen)
+                    .accessibilityHidden(true)
 
-                    // Title + emoji only — red chrome, scales to fit the pane.
+                    // Title + mark only — red chrome, scales to fit the pane.
                     Text(pane.title)
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.redmedAccent)
