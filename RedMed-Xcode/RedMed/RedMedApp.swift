@@ -29,7 +29,7 @@ struct RedMedApp: App {
                 }
             }
             .onOpenURL { url in
-                // Policies / get.html redirect with redmed://main
+                // Policies / tapper.html redirect with redmed://main
                 _ = url
             }
         }

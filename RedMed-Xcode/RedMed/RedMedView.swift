@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Owner / scanner RedMed tab — same bundled `get.html` medical panel helpers see
+/// Owner / scanner RedMed tab — same bundled `tapper.html` medical panel helpers see
 /// on a band tap. Owner keeps Edit + Help chrome; scanners keep Back. Native
 /// 911 / Aid / NFC tabs stay separate (HTML tab bar hidden in app-embed).
 struct RedMedView: View {
@@ -48,7 +48,7 @@ struct RedMedView: View {
                     .transaction { $0.animation = nil }
                 } else {
                     VStack(spacing: 12) {
-                        Text("Couldn't pack get.html#d= from RedMed.")
+                        Text("Couldn't pack tapper.html#d= from RedMed.")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.redmedMuted)
                             .multilineTextAlignment(.center)

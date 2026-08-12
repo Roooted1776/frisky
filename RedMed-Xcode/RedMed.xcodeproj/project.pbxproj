@@ -39,7 +39,7 @@
 		AABB00000000000000000021 /* card.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000021 /* card.html */; };
 		AABB00000000000000000022 /* BrandLogo.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000022 /* BrandLogo.png */; };
 		AABB00000000000000000023 /* Main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000023 /* Main.swift */; };
-		AABB00000000000000000024 /* get.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000024 /* get.html */; };
+		AABB00000000000000000024 /* tapper.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000024 /* tapper.html */; };
 		AABB00000000000000000025 /* sw.js in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000025 /* sw.js */; };
 		AABB00000000000000000028 /* VaultHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000028 /* VaultHistoryView.swift */; };
 		AABB00000000000000000029 /* PrivacySnapshotGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000029 /* PrivacySnapshotGuard.swift */; };
@@ -96,7 +96,7 @@
 		AAAA00000000000000000021 /* card.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = card.html; sourceTree = "<group>"; };
 		AAAA00000000000000000022 /* BrandLogo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BrandLogo.png; sourceTree = "<group>"; };
 		AAAA00000000000000000023 /* Main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Main.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000024 /* get.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = get.html; sourceTree = "<group>"; };
+		AAAA00000000000000000024 /* tapper.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = tapper.html; sourceTree = "<group>"; };
 		AAAA00000000000000000025 /* sw.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = sw.js; sourceTree = "<group>"; };
 		AAAA00000000000000000028 /* VaultHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultHistoryView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000029 /* PrivacySnapshotGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacySnapshotGuard.swift; sourceTree = "<group>"; };
@@ -270,7 +270,7 @@
 		AAAA0000000000000000004A /* Passerby Bundle */ = {
 			isa = PBXGroup;
 			children = (
-				AAAA00000000000000000024 /* get.html */,
+				AAAA00000000000000000024 /* tapper.html */,
 				AAAA00000000000000000021 /* card.html */,
 				AAAA00000000000000000025 /* sw.js */,
 				AAAA00000000000000000022 /* BrandLogo.png */,
@@ -361,7 +361,7 @@
 				AABB00000000000000000018 /* security.html in Resources */,
 				AABB00000000000000000019 /* HowItWorks.html in Resources */,
 				AABB00000000000000000021 /* card.html in Resources */,
-				AABB00000000000000000024 /* get.html in Resources */,
+				AABB00000000000000000024 /* tapper.html in Resources */,
 				AABB00000000000000000025 /* sw.js in Resources */,
 				AABB00000000000000000022 /* BrandLogo.png in Resources */,
 				AABB00000000000000000036 /* BrandWordmark.png in Resources */,

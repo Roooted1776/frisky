@@ -1,5 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en-US">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no">
@@ -8,12 +8,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="format-detection" content="telephone=yes">
 <meta name="theme-color" content="#fff7f7">
+<meta name="color-scheme" content="light">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; worker-src 'self'; connect-src 'self'">
 <meta name="referrer" content="no-referrer">
 <link rel="apple-touch-icon" href="BrandLogo.png">
 <link rel="icon" href="BrandLogo.png">
-<title>RedMed</title>
-<!-- ONE scanner file: get.html (Pages + app bundle).
+<title>RedMed — tap to scan</title>
+<meta name="description" content="Tap the RedMed band to open the emergency card. Quick. No login. No server. No app — HTML only on this phone.">
+<!-- ONE scanner file: tapper.html (Pages + app bundle).
      Specs (permanent):
      - Tabs: RedMed · 911 · Aid only — no Edit, no NFC
      - Tapper / EMT / helper: passive HF NFC opens this HTML page — no RedMed
@@ -27,23 +29,23 @@
        conditions, contacts, updated?]
      - Offline: sw.js Cache Storage — cache-first multi-key shell for almost-instant
        EMT open after first online load; activate clears prior CACHE buckets
-       (bump redmed-get-vN). Never wait on network when a shell copy exists.
-     - Real bracelet NFC tap (`get.html#d=…`) → everything stays on that phone
+       (bump redmed-tapper-vN). Never wait on network when a shell copy exists.
+     - Real bracelet NFC tap (`tapper.html#d=…`) → everything stays on that phone
        (profile, 911, Aid, SOS siren). Local only once tap — everyone and
-       everything. No server / no online. Bare /get/ without `#d=` and in-app
+       everything. No server / no online. Bare /tapper/ without `#d=` and in-app
        Preview/Scan (`?src=app`) do not auto-arm SOS. Stop on Find Help or Aid.
        Explicit SOS toggle + DeviceMotion crash share the same local alarm.
      - Layout: any phone + iPad, iOS 15+ (and Android). Fluid width, safe-area
-       insets, no horizontal scroll. No Face ID / passcode / account on this page.
+       insets, no horizontal scroll. No account / login on this page (tap-to-view).
        iOS may need a gesture to unmute AudioContext; motion permission only
        when the helper taps SOS.
      - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
        walk-by ~6–8″ does not fire, reliable coupling dies past ~4″,
        passive 13.56 MHz HF NFC (not Bluetooth) → opens this page
-     - Logo: BrandLogo.png + BrandWordmark.png (bundle /get/) or assets/ (Pages)
-     - Legacy card.html / card/ redirects to /get/ and keeps #d=
-     Keep identical: get/index.html, repo-root get.html, RedMed-Xcode/RedMed/get.html.
-     Cloudflare Pages serves AppConfig URL https://redmed.pages.dev/get/ from get/. -->
+     - Logo: BrandLogo.png (bundle /tapper/) or assets/BrandLogo.png (Pages)
+     - Legacy card.html / get.html /get/ redirect to /tapper/ and keep #d=
+     Keep identical: tapper/index.html, repo-root tapper.html, RedMed-Xcode/RedMed/tapper.html.
+     Cloudflare Pages serves AppConfig URL https://redmed.pages.dev/tapper/ from tapper/. -->
 <style>
   :root {
     --accent: #e11d48;
@@ -265,6 +267,7 @@
     overflow: hidden;
     box-shadow: var(--shadow);
   }
+  .card.you-card { margin-top: 2px; }
   .row {
     display: flex;
     justify-content: space-between;
@@ -412,6 +415,9 @@
     font-weight: 500;
     color: rgba(120,113,108,0.4);
   }
+  .list-item.empty-slot {
+    color: rgba(120,113,108,0.4);
+  }
   .contact-block {
     padding: 12px 16px;
     border-bottom: 1px solid var(--divider);
@@ -488,13 +494,6 @@
 
   /* —— Help tab —— */
   .page-pad { padding: 4px var(--page-pad-x) 0; }
-  .page-title {
-    font-size: var(--fs-title);
-    font-weight: 600;
-    color: var(--accent);
-    margin: 0 0 6px;
-    text-align: center;
-  }
   .btn {
     display: block;
     width: 100%;
@@ -511,6 +510,17 @@
     transition: transform 0.16s ease, opacity 0.16s ease;
   }
   .btn:active { transform: scale(0.98); opacity: 0.92; }
+  .btn:focus-visible,
+  .seizure-btn:focus-visible,
+  .tab:focus-visible,
+  .aid-stop-alarm:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn, .tab, .tab .icon-wrap { transition: none; }
+    .btn:active, .tab:active { transform: none; }
+  }
   .btn-primary {
     background: linear-gradient(180deg, var(--accent-soft), var(--accent));
     color: #fff;
@@ -705,6 +715,13 @@
     min-width: 0;
     overflow-wrap: anywhere;
   }
+  .info-lead {
+    margin: 0;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--muted);
+  }
   .info ol, .info ul {
     margin: 0;
     padding-left: 16px;
@@ -751,16 +768,7 @@
     font-weight: 700;
   }
 
-  /* Aid / 911 — BrandWordmark metrics match owner BrandWordmarkHeader. */
-  .aid-wordmark,
-  .help-wordmark {
-    display: block;
-    height: 42px;
-    width: auto;
-    max-width: min(240px, 70vw);
-    margin: 6px 0 4px;
-    object-fit: contain;
-  }
+  /* Aid / 911 — no page header wordmark/title (content-first like owner). */
   /* Full-width accordion — same life-saving pattern as owner AidView. */
   .aid-grid {
     display: flex;
@@ -926,7 +934,7 @@
     <!-- RedMed — same header + YOU card as owner RedMedView (no Edit). -->
     <div class="panel active" id="panel-medical" data-panel="medical">
       <div class="rm-header">
-        <p class="rm-lock">No Face ID · no login · no app. Card opens on tap.</p>
+        <p class="rm-lock">Tap to scan · no login · no server · no app</p>
         <div class="rm-title-row">
           <img class="rm-logo" id="rmLogo" src="BrandLogo.png" width="48" height="48" alt="RedMed">
           <div>
@@ -936,7 +944,7 @@
         </div>
       </div>
 
-      <div class="card" style="margin-top:2px">
+      <div class="card you-card">
         <div class="row row-name" id="rowNameRow"><span class="k">Name</span><span class="v empty" id="rowName">—</span></div>
         <div class="row"><span class="k">Birth date</span><span class="v empty" id="rowDob">—</span></div>
         <div class="row row-blood" id="rowBloodRow"><span class="k">Blood type</span><span class="v empty" id="rowBlood">—</span></div>
@@ -975,17 +983,15 @@
       <p class="quote">“Control your fear. Control the moment.<br>You have what it takes to save a life.”</p>
     </div>
 
-    <!-- Help — mirrors owner EmergencyView (BrandWordmark + SOS). -->
+    <!-- Help — mirrors owner EmergencyView (content-first, no page header). -->
     <div class="panel" id="panel-911" data-panel="911">
       <div class="page-pad">
-        <img class="help-wordmark" id="helpWordmark" src="BrandWordmark.png" width="168" height="42" alt="RedMed">
-
         <div class="info">
           <div class="info-head">
-            <div class="info-icon">📡</div>
+            <div class="info-icon" aria-hidden="true">📡</div>
             <h2>No cell signal?</h2>
           </div>
-          <p style="margin:0;font-size:10px;font-weight:600;line-height:1.35;color:var(--muted)">
+          <p class="info-lead">
             T-Mobile (US) + Starlink Direct-to-Cell partners — plan/region required; not a coverage promise.
           </p>
         </div>
@@ -1015,7 +1021,7 @@
 
         <div class="info">
           <div class="info-head">
-            <div class="info-icon">✚</div>
+            <div class="info-icon" aria-hidden="true">✚</div>
             <h2>Roadside First Response</h2>
           </div>
           <ol>
@@ -1028,7 +1034,7 @@
 
         <div class="info">
           <div class="info-head">
-            <div class="info-icon">ℹ</div>
+            <div class="info-icon" aria-hidden="true">ℹ</div>
             <h2>What to Tell <span class="emg">112</span></h2>
           </div>
           <ul>
@@ -1041,11 +1047,9 @@
       </div>
     </div>
 
-    <!-- Aid — same BrandWordmark chrome as owner AidView (no title/hint text). -->
+    <!-- Aid — same content-first chrome as owner AidView (no page header). -->
     <div class="panel" id="panel-aid" data-panel="aid">
       <div class="page-pad">
-        <img class="aid-wordmark" id="aidWordmark" src="BrandWordmark.png" width="168" height="42" alt="RedMed">
-
         <div class="aid-grid">
           <details class="aid"><summary><span class="aid-emoji">🚗</span><span class="aid-title">Crash &amp; Head</span></summary>
             <ol>
@@ -1108,7 +1112,7 @@
         <button class="aid-stop-alarm" type="button" id="aidStopAlarm">Stop the alarm <span class="x" aria-hidden="true">✕</span></button>
 
         <p class="quote">“Control your fear. Control the moment.<br>You have what it takes to save a life.”</p>
-        <p class="foot-note">Local only once tap — everyone and everything. No servers · no online. No Bluetooth · passive HF NFC. No PII or PHI leaves this device through RedMed.</p>
+        <p class="foot-note">Tap to scan · stays on this phone. No login · no server · no app. Passive HF NFC only.</p>
       </div>
     </div>
   </div>
@@ -1133,7 +1137,7 @@
     tapMaxIn: 2,
     reliableMaxIn: 4,
     tabs: ['RedMed', '911', 'Aid'],
-    page: 'get.html'
+    page: 'tapper.html'
   };
 
   // In-app RedMed tab / Preview / Scan — ?src=app or injected flag. No SOS auto-arm.
@@ -1156,20 +1160,6 @@
     lock.style.color = 'var(--accent)';
   })();
 
-  function resolveAsset(elId, candidates) {
-    var img = document.getElementById(elId);
-    if (!img) return;
-    var i = 0;
-    function tryNext() {
-      if (i >= candidates.length) return;
-      var src = candidates[i++];
-      var probe = new Image();
-      probe.onload = function () { img.src = src; };
-      probe.onerror = tryNext;
-      probe.src = src;
-    }
-    tryNext();
-  }
 
   function resolveLogo() {
     var candidates = ['BrandLogo.png', 'assets/BrandLogo.png'];
@@ -1188,8 +1178,6 @@
       probe.src = src;
     }
     tryNext();
-    resolveAsset('aidWordmark', ['BrandWordmark.png', 'assets/BrandWordmark.png']);
-    resolveAsset('helpWordmark', ['BrandWordmark.png', 'assets/BrandWordmark.png']);
   }
 
   // Bundle / app-embed already has BrandLogo.png — probing doubles decode on cold open.
@@ -1469,9 +1457,8 @@
     var countEl = countId ? document.getElementById(countId) : null;
     if (!items || !items.length) {
       var empty = document.createElement('div');
-      empty.className = 'list-item';
+      empty.className = 'list-item empty-slot';
       empty.textContent = '—';
-      empty.style.color = 'rgba(120,113,108,0.4)';
       el.appendChild(empty);
       if (countEl) {
         countEl.textContent = '';
@@ -1594,9 +1581,8 @@
     firstPhone = '';
     if (!contacts.length) {
       var emptyC = document.createElement('div');
-      emptyC.className = 'list-item';
+      emptyC.className = 'list-item empty-slot';
       emptyC.textContent = '—';
-      emptyC.style.color = 'rgba(120,113,108,0.4)';
       contactsEl.appendChild(emptyC);
     } else {
       contacts.forEach(function (c, i) {
@@ -2302,7 +2288,7 @@
   });
 
   // Real HF NFC band tap brings #d= — arm local SOS on this phone only.
-  // No auto-arm for bare /get/ or in-app Preview/Scan (?src=app). No server / no online.
+  // No auto-arm for bare /tapper/ or in-app Preview/Scan (?src=app). No server / no online.
   function hasBandPayload() {
     return /^#d=/.test(location.hash || '') && !appPreview();
   }

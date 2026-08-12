@@ -4,7 +4,7 @@ CoreNFC write/read is wired in production via `NFCBandManager` (owns
 `NFCWriter` / `NFCReader`) — real `NFCNDEFReaderSession` sessions with write +
 read-back verify, NDEF URI strip, and CryptoKit AES-GCM via `ProfileNFCCodec`.
 When hardware is off, `NFCBandManager` still simulates Write/Scan by packing the
-compact `get.html#d=` URL (flat array → AES-GCM → Base64url; legacy zlib still
+compact `tapper.html#d=` URL (flat array → AES-GCM → Base64url; legacy zlib still
 decodes). Real CoreNFC has **no** Simulator fake-success: if hardware is enabled
 and NFC is unavailable, write fails and the band is not marked linked.
 
@@ -15,9 +15,9 @@ CoreNFC write/read sessions are off via `AppConfig.nfcHardwareEnabled = false`.
 RedMed · 911 · Aid · NFC; scanners never get NFC. The flag only blocks
 `NFCWriter` / `NFCReader` sessions (simulate path stays).
 Owner NFC page keeps **both** capabilities on one screen: user Setup/Write and
-tap Scan / Simulate scan (opens the same `get.html#d=` page helpers see).
+tap Scan / Simulate scan (opens the same `tapper.html#d=` page helpers see).
 Files that make hardware work stay in the tree (`NFCWriter`, `NFCReader`,
-`NFCBandManager`, `ProfileNFCCodec`, `PasserbyHTMLCardView`, bundled `get.html`,
+`NFCBandManager`, `ProfileNFCCodec`, `PasserbyHTMLCardView`, bundled `tapper.html`,
 `NFCReaderUsageDescription` in Info.plist) — entitlement stays commented.
 `RedMed.entitlements` keeps the NFC key commented so free/unsigned builds still
 sign. Flip both when you have a paid Apple Developer Program license and a

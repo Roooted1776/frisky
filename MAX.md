@@ -28,8 +28,8 @@
 Native iOS medical ID + emergency aid. Passive **13.56 MHz HF NFC** bracelet (not Bluetooth). Offline-first: no RedMed cloud backend for PHI.
 
 - **Owner app** (`Main` / `ContentView`): RedMed · 911 · Aid · NFC (+ Edit). Local Keychain profile, Face ID gates, write passive NFC band.
-- **Passerby / scanner**: `get.html#d=…` / `PublicCardView` — RedMed · 911 · Aid only. Snapshot profile. No Edit, no NFC, no owner pref mutation.
-- Hosted passerby path: `https://redmed.pages.dev/get/` (`get/index.html`).
+- **Passerby / scanner**: `tapper.html#d=…` / `PublicCardView` — RedMed · 911 · Aid only. Snapshot profile. No Edit, no NFC, no owner pref mutation.
+- Hosted passerby path: `https://redmed.pages.dev/tapper/` (`tapper/index.html`).
 - Positioning: local EMS assist / fast ID handoff — not a medical device, no outcome promises, call 911 first. HIPAA-aligned offline posture; no false certification claims.
 
 ## Permanent decisions he has locked (do not regress)
@@ -37,15 +37,15 @@ Native iOS medical ID + emergency aid. Passive **13.56 MHz HF NFC** bracelet (no
 See also `AGENTS.md`. High-signal recap:
 
 1. Owner vs scanner shells are permanent product law.
-2. Settings = **haptic + Location only**. Brightness 100% + system volume 100% + locator siren arm on crash / severe-impact (`CrashMotionGuard`), owner **SOS · Locate me**, or **real bracelet NFC** open of `get.html#d=…` (hardware-local SOS on that phone). Owner Find Help open, bare `/get/`, and in-app scanner preview do **not** auto-arm.
+2. Settings = **haptic + Location only**. Brightness 100% + system volume 100% + locator siren arm on crash / severe-impact (`CrashMotionGuard`), owner **SOS · Locate me**, or **real bracelet NFC** open of `tapper.html#d=…` (hardware-local SOS on that phone). Owner Find Help open, bare `/tapper/`, and in-app scanner preview do **not** auto-arm.
 3. Survival hold may keep siren + max volume + brightness through background until cancel on Aid (or Stop SOS on Find Help).
 4. Vault Face ID: relock on **`.background` only** (not `.inactive` — Face ID sheets).
 5. Privacy cover: opaque, no fade.
 6. Cold launch: zero Location / MapKit / trauma JSON at `@main`. CoreMotion crash monitor may start after first-frame yield.
 7. Unique `project.pbxproj` IDs (duplicate IDs drop sources).
-8. Passerby SW: cache-first multi-key shell for almost-instant EMT open; clear prior CACHE on activate; bump `redmed-get-vN` in lockstep. Tap-to-view = HTML; no biometric copy in any passerby / policy HTML.
+8. Passerby SW: cache-first multi-key shell for almost-instant EMT open; clear prior CACHE on activate; bump `redmed-tapper-vN` in lockstep. Tap-to-view = HTML; no biometric copy in any passerby / policy HTML.
 9. `AppConfig.BraceletRF` owns tap-distance copy (no hardcoded inches).
-10. Crash / high-speed **vehicle impact** detection is **local** — CoreMotion in the native app (owner + in-app scanner), DeviceMotion in passerby `get.html` (same g thresholds). Not Apple Crash Detection, no cloud. Must ignore running, walking, sex, masturbation, eating, hand/wrist handling, and other rhythmic daily activity. Real bracelet NFC (`#d=`) → local SOS on that phone only (no server). Owner Find Help does not auto-arm. Passerby HTML alarm is Web Audio + wake lock (no system volume/brightness APIs).
+10. Crash / high-speed **vehicle impact** detection is **local** — CoreMotion in the native app (owner + in-app scanner), DeviceMotion in passerby `tapper.html` (same g thresholds). Not Apple Crash Detection, no cloud. Must ignore running, walking, sex, masturbation, eating, hand/wrist handling, and other rhythmic daily activity. Real bracelet NFC (`#d=`) → local SOS on that phone only (no server). Owner Find Help does not auto-arm. Passerby HTML alarm is Web Audio + wake lock (no system volume/brightness APIs).
 
 ## What he has already done (shipped history)
 
@@ -59,7 +59,7 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
   profile gate opens Accept (or tabs) on first SwiftUI frame — no Keychain in
   `@State`; Accept then Face ID (no auto Face ID on appear); off-main profile
   decode; lazy `CMMotionManager`; LaunchBackground dark=cream. Unlock
-  fail-closed if Keychain decode fails. get.html first panel paints opaque
+  fail-closed if Keychain decode fails. tapper.html first panel paints opaque
   (tab switch may animate); in-app WKWebView stays opaque cream.
 - Vault Local History: Accept tap before Face ID (no auto-prompt on appear).
 - Opacity keep-alive tabs: Find Help GPS + seizure autodial tear down via
@@ -80,8 +80,8 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Same RedMed header for owner + responder; Linked only after NFC write **and**
   YOU-card identity (name, birth, blood) is filled.
 - Compact NTAG213 `#d=` codec; AES-GCM seal; legacy zlib + pre-AES decode restored.
-- `get.html` single passerby shell; `card.html` legacy redirect preserving `#d=`.
-- Offline service worker; HTTP cache bypass; stale-shell fixes; Pages `/get/` deploy path.
+- `tapper.html` single passerby shell; `card.html` / `get.html` / `/get/` legacy redirects preserving `#d=`.
+- Offline service worker; HTTP cache bypass; stale-shell fixes; Pages `/tapper/` deploy path.
 - Simulate scan from current profile; fail closed when pack/decode breaks.
 - Band engraving copy + hardware sourcing notes.
 
@@ -89,7 +89,7 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Local emergency number dial (not hard-coded 911); GPS card; satellite/no-cell path.
 - Aid topics + trauma/hospital panes; CPR `CHHapticEngine` beat/breath.
 - Haptic preference in Help → Settings; CPR card toggle removed (Settings-only).
-- On-device CoreMotion guard arms siren + max system volume + full brightness on **vehicle crash / high-speed impact only** (filters running / daily motion; background hold until cancel). Same thresholds on passerby `get.html` via DeviceMotion. Real bracelet NFC (`get.html#d=`) arms hardware-local SOS on that phone; owner Find Help **SOS · Locate me** is explicit. Owner Find Help open, bare `/get/`, and in-app preview do **not** auto-arm.
+- On-device CoreMotion guard arms siren + max system volume + full brightness on **vehicle crash / high-speed impact only** (filters running / daily motion; background hold until cancel). Same thresholds on passerby `tapper.html` via DeviceMotion. Real bracelet NFC (`tapper.html#d=`) arms hardware-local SOS on that phone; owner Find Help **SOS · Locate me** is explicit. Owner Find Help open, bare `/tapper/`, and in-app preview do **not** auto-arm.
 - Location toggle in Settings (default on); Find Help GPS respects it; no Find Help
   location banner / RedMed Allow gate. Help never prompts — only iOS system sheet
   once from Find Help. Passerby GPS starts on 911 tab only.
@@ -125,8 +125,8 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 ## Do not reopen without explicit ask
 
 - Re-adding Settings toggles for brightness, locator, or crash survival alarm.
-- Auto-arming brightness or locate-me siren just from opening **owner** Find Help, bare `/get/`, or in-app scanner preview (crash + explicit owner SOS; real bracelet `#d=` tap may arm hardware-local SOS).
-- Requiring Face ID / biometrics for passerby tap-to-view (`get.html` / scanner shell).
+- Auto-arming brightness or locate-me siren just from opening **owner** Find Help, bare `/tapper/`, or in-app scanner preview (crash + explicit owner SOS; real bracelet `#d=` tap may arm hardware-local SOS).
+- Requiring Face ID / biometrics for passerby tap-to-view (`tapper.html` / scanner shell).
 - Relocking vault on `.inactive`.
 - Mutating owner `@AppStorage` from scanner UI.
 - Repo-root policy HTML duplicates.
