@@ -3,15 +3,15 @@ import CoreLocation
 import UIKit
 import Combine
 
-/// Optional Location nudge — surfaced from Help → Settings only.
-/// Does **not** run at cold launch — no `CLLocationManager` until Settings
-/// or Find Help (when Location is enabled) needs it.
+/// Help → Settings status only. Never prompts.
+/// `CLLocationManager.requestWhenInUseAuthorization` runs from Find Help /
+/// nearby hospitals when Location is enabled — not from Help chrome.
 final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManagerDelegate {
     static let shared = LocationAccessSuggester()
 
     private var manager: CLLocationManager?
 
-    @Published private(set) var needsSuggestion = false
+    /// True when iOS Location is denied/restricted — show Open Settings, no RedMed gate.
     @Published private(set) var mustOpenSettings = false
 
     private override init() {
@@ -27,45 +27,18 @@ final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManag
         return m
     }
 
-    /// Call when Find Help becomes visible — creates the manager lazily.
-    func prepareForFindHelp() {
+    /// Read authorization without presenting the system sheet.
+    func refresh() {
         let m = ensureManager()
         apply(m.authorizationStatus)
-    }
-
-    func refresh() {
-        guard let manager else {
-            needsSuggestion = false
-            mustOpenSettings = false
-            return
-        }
-        apply(manager.authorizationStatus)
     }
 
     private func apply(_ status: CLAuthorizationStatus) {
         switch status {
-        case .authorizedAlways, .authorizedWhenInUse:
-            needsSuggestion = false
-            mustOpenSettings = false
         case .denied, .restricted:
-            needsSuggestion = true
             mustOpenSettings = true
-        case .notDetermined:
-            needsSuggestion = true
+        default:
             mustOpenSettings = false
-        @unknown default:
-            needsSuggestion = true
-            mustOpenSettings = false
-        }
-    }
-
-    func primaryAction() {
-        let m = ensureManager()
-        apply(m.authorizationStatus)
-        if mustOpenSettings {
-            openSettings()
-        } else {
-            m.requestWhenInUseAuthorization()
         }
     }
 

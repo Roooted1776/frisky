@@ -110,10 +110,9 @@ struct HelpMenuView: View {
                     Toggle("Location", isOn: $locationEnabled)
                         .tint(.redmedAccent)
                         .onChange(of: locationEnabled) { _, on in
-                            if on {
-                                locationSuggester.prepareForFindHelp()
-                                locationSuggester.primaryAction()
-                            }
+                            // Pref only — never call requestWhenInUseAuthorization here.
+                            // Find Help prompts the system sheet once when GPS is actually needed.
+                            if on { locationSuggester.refresh() }
                         }
                     if locationEnabled && locationSuggester.mustOpenSettings {
                         Button("Open iOS Location Settings") {
@@ -124,7 +123,7 @@ struct HelpMenuView: View {
                 } header: {
                     Text("Settings")
                 } footer: {
-                    Text("Only haptic and location are adjustable. Siren, max volume, and full brightness arm on crash / severe impact or SOS — not from opening Find Help.")
+                    Text("Location defaults on. No RedMed popup — iOS may ask Allow once the first time Find Help needs GPS (Apple requires that tap). Siren / max volume / brightness arm on crash or SOS only.")
                 }
                 NavigationLink("Privacy Policy") {
                     LocalWebView(filename: "PrivacyPolicy")
@@ -156,7 +155,7 @@ struct HelpMenuView: View {
             }
             .onAppear {
                 if locationEnabled {
-                    locationSuggester.prepareForFindHelp()
+                    locationSuggester.refresh()
                 }
             }
         }
