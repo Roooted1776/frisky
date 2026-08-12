@@ -8,7 +8,7 @@
  * copy on every decrypt/layout deploy. Payload stays in #d= only — never
  * cached.
  */
-var CACHE = 'redmed-get-v50';
+var CACHE = 'redmed-get-v51';
 var ASSETS = [
   './',
   './get.html',
