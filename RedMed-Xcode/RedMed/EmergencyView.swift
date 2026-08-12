@@ -158,12 +158,6 @@ struct EmergencyView: View {
                             "Stay on the line — let the dispatcher guide you."
                         ]
                     )
-
-                    Text(AppConfig.Satellite.localOnlyLine)
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 2)
