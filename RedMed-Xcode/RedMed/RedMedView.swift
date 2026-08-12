@@ -259,7 +259,7 @@ struct RedMedView: View {
                     .frame(width: 48, height: 48)
                     .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.logoRadius))
                     .shadow(color: Color.redmedAccent.opacity(0.15), radius: 5, y: 3)
-                    .opacity(0.5)
+                    .opacity(0.72)
                     .accessibilityHidden(true)
             }
 
@@ -327,10 +327,10 @@ struct RedMedView: View {
                 if !hasImportedName {
                     Text("Name")
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.redmedMuted)
+                        .foregroundColor(.redmedDark.opacity(0.55))
                     Text(isScannerSession ? "—" : "Add name")
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(isScannerSession ? Color.redmedMuted.opacity(0.4) : .redmedAccent)
+                        .foregroundColor(isScannerSession ? Color.redmedDark.opacity(0.45) : .redmedAccent)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
                     Text(profile.name)

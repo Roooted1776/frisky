@@ -112,7 +112,7 @@
     display: block;
     object-fit: cover;
     background: transparent;
-    opacity: 0.5;
+    opacity: 0.72;
   }
   .rm-logo.has-name { display: none; }
   .rm-name {
@@ -1192,6 +1192,11 @@
       else logo.classList.remove('has-name');
     }
     setRow('rowName', p.name);
+    var nameRow = document.getElementById('rowNameRow');
+    if (nameRow) {
+      if (rawName) nameRow.classList.add('has-name');
+      else nameRow.classList.remove('has-name');
+    }
     setRow('rowDob', p.dob);
     setRow('rowBlood', p.blood);
     if (p.updated) document.getElementById('updatedLine').textContent = 'Updated ' + p.updated;
