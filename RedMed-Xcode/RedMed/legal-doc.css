@@ -11,7 +11,7 @@
   --text: #1c1917;                        /* Color.redmedDark */
   --text-muted: #78716c;                  /* Color.redmedMuted */
   --text-dim: rgba(28, 25, 23, 0.45);
-  --radius: 18px;                         /* InfoCard / GPSCard */
+  --radius: 10px;                         /* RedMedChrome.boxRadius */
 
   /* Same SF system stack as SwiftUI `.font(.system(…))` — no alternate faces. */
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", system-ui, sans-serif;
@@ -32,7 +32,9 @@
 body {
   font-family: var(--font);
   -webkit-font-smoothing: antialiased;
-  background: var(--bg);
+  background:
+    radial-gradient(120% 60% at 50% -10%, #ffe8eb 0%, transparent 58%),
+    var(--bg);
   color: var(--text);
   font-size: var(--fs-base);
   line-height: var(--lh);

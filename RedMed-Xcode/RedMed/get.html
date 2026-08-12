@@ -487,7 +487,8 @@
   }
 
   /* —— Help tab —— */
-  .page-pad { padding: 4px var(--page-pad-x) 0; }
+  .page-pad { padding: 4px var(--page-pad-x) 24px; }
+  #panel-911 .page-pad { padding-bottom: 24px; }
   .page-title {
     font-size: var(--fs-title);
     font-weight: 600;
@@ -520,7 +521,7 @@
     box-shadow: var(--shadow-accent);
   }
   .btn-secondary {
-    background: rgba(255,255,255,0.88);
+    background: var(--bg);
     border: 1px solid var(--divider);
     color: var(--dark);
     box-shadow: var(--shadow);
@@ -722,27 +723,20 @@
     line-height: 1.4;
     margin: 12px 4px 0;
   }
-  .survival-note {
-    margin: 4px 0 8px;
-    font-size: clamp(10px, 2.6vw, 13px);
-    font-weight: 500;
-    color: var(--muted);
-    line-height: 1.35;
-    text-align: center;
-  }
   .aid-stop-alarm {
     display: none;
     width: 100%;
     margin-top: 10px;
-    padding: 10px 12px;
+    padding: 12px 14px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--dark);
-    background: var(--surface);
-    border: none;
+    background: var(--bg);
+    border: 1px solid var(--divider);
     border-radius: var(--box);
     text-align: left;
     cursor: pointer;
+    box-shadow: var(--shadow);
   }
   .aid-stop-alarm.show { display: block; }
   .aid-stop-alarm .x {
@@ -801,6 +795,7 @@
     max-width: 120px;
     margin: 0 0 6px;
     object-fit: contain;
+    object-position: left center;
   }
   details.aid summary {
     cursor: pointer;
@@ -818,6 +813,7 @@
     gap: 12px;
     align-items: center;
     min-width: 0;
+    width: 100%;
   }
   details.aid summary::-webkit-details-marker { display: none; }
   .aid-emoji {
@@ -1063,56 +1059,56 @@
         <img class="aid-wordmark" id="aidWordmark" src="BrandWordmark.png" width="168" height="42" alt="RedMed">
 
         <div class="aid-grid">
-          <details class="aid"><summary><span class="aid-emoji">🚗</span><span class="aid-title">Crash &amp; Head</span></summary>
+          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🚗</span><span class="aid-title">Crash &amp; Head</span></span></summary>
             <ol>
               <li>Call <span class="emg">112</span> — give exact location and number of people</li>
               <li>Hazards on. Do not move them unless fire or traffic danger</li>
               <li>Keep head/neck still. Control bleeding with firm pressure</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">🩸</span><span class="aid-title">Bleeding</span></summary>
+          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🩸</span><span class="aid-title">Bleeding</span></span></summary>
             <ol>
               <li>Press hard with both hands — do not lift to check</li>
               <li>Add cloth on top if soaked. Limb: tourniquet 2–3 in above</li>
               <li>Note the time. Stay on the line with <span class="emg">112</span></li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">❤️</span><span class="aid-title">Heart &amp; Airway</span></summary>
+          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">❤️</span><span class="aid-title">Heart &amp; Airway</span></span></summary>
             <ol>
               <li>No breathing/pulse: hard compressions 100–120/min, 2 inches deep</li>
               <li>Choking, cannot cough: 5 back blows, then 5 abdominal thrusts</li>
               <li>Alternate until clear or unresponsive — then CPR</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">⚡</span><span class="aid-title">Shock</span></summary>
+          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">⚡</span><span class="aid-title">Shock</span></span></summary>
             <ol>
               <li>Call <span class="emg">112</span>. Lay flat — do not let them walk</li>
               <li>Elevate legs 12 inches unless head/neck/spine injury</li>
               <li>Keep warm. No food, water, or medication</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">🧠</span><span class="aid-title">Seizure</span></summary>
+          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🧠</span><span class="aid-title">Seizure</span></span></summary>
             <ol>
               <li>Time it. Clear sharp objects. Do not restrain</li>
               <li>Nothing in the mouth. Cushion the head</li>
               <li>Call <span class="emg">112</span> if first seizure, over 5 minutes, injury, or in water</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">🥶</span><span class="aid-title">Hypothermia</span></summary>
+          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🥶</span><span class="aid-title">Hypothermia</span></span></summary>
             <ol>
               <li>Move to shelter. Remove wet clothes gently</li>
               <li>Warm chest/neck/armpits/groin — not the limbs</li>
               <li>No rubbing or massage. Warm drinks only if fully conscious</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">🥵</span><span class="aid-title">Heat</span></summary>
+          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🥵</span><span class="aid-title">Heat</span></span></summary>
             <ol>
               <li>Heat stroke: call <span class="emg">112</span> — cool neck/armpits/groin fast</li>
               <li>Move to shade. Remove extra clothing. Fan while cooling</li>
               <li>Sip cool water only if fully conscious</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">🏥</span><span class="aid-title">Trauma Hospitals</span></summary>
+          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🏥</span><span class="aid-title">Nearby Hospitals</span></span></summary>
             <ol>
               <li>Call <span class="emg">112</span> — dispatch routes to the right trauma level</li>
               <li>Do not self-transport major trauma if EMS is available</li>
@@ -1206,11 +1202,31 @@
     tryNext();
     resolveAsset('aidWordmark', ['BrandWordmark.png', 'assets/BrandWordmark.png']);
     resolveAsset('helpWordmark', ['BrandWordmark.png', 'assets/BrandWordmark.png']);
+    resolvePaneWordmarks(['BrandWordmark.png', 'assets/BrandWordmark.png']);
+  }
+
+  function resolvePaneWordmarks(candidates) {
+    var imgs = document.querySelectorAll('img.aid-pane-wordmark');
+    if (!imgs.length) return;
+    var i = 0;
+    function tryNext() {
+      if (i >= candidates.length) return;
+      var src = candidates[i++];
+      var probe = new Image();
+      probe.onload = function () {
+        imgs.forEach(function (img) { img.src = src; });
+      };
+      probe.onerror = tryNext;
+      probe.src = src;
+    }
+    tryNext();
   }
 
   // Bundle / app-embed already has BrandLogo.png — probing doubles decode on cold open.
   if (!isAppPreview()) {
     resolveLogo();
+  } else {
+    resolvePaneWordmarks(['BrandWordmark.png', 'assets/BrandWordmark.png']);
   }
 
   // Aid accordion — one pane open at a time (matches owner AidView).
