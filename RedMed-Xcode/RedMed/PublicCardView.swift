@@ -22,15 +22,12 @@ extension EnvironmentValues {
     }
 }
 
-/// Passerby / rescuer shell (ped / EMS).
+/// Passerby / rescuer shell helpers (ped / EMS).
 ///
-/// Permanent product rule — tabs are **RedMed · 911 · Aid** only:
-/// **no Edit**, **no NFC**. Mirrors bracelet tap page `get.html#d=…`
-/// (owner edit + NFC write live in the owner app). Payload stays in `#d=`.
-/// Holds a **snapshot** of the profile so scanner UI cannot mutate owner data.
-/// Tap-to-view: no Face ID / biometrics. SOS / crash stay on-device; auto-arm
-/// only happens on a real bracelet NFC open of `get.html#d=…` (hardware), not
-/// this in-app preview.
+/// Real bracelet tap opens hosted **HTML** `get.html#d=…` (no app). Owner
+/// Preview / NFC Scan use `PasserbyHTMLCardView` — same bundled `get.html` with
+/// `?src=app` so SOS does not auto-arm. This file keeps `isScannerSession` /
+/// Back chrome for any remaining native scanner embedding.
 struct PublicCardView: View {
     @StateObject private var snapshot: ProfileData
     @Environment(\.dismiss) private var dismiss
