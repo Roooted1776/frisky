@@ -55,7 +55,6 @@ final class HapticEngine: ObservableObject {
     private(set) var isReady = false
     private var audioPlayer: AVAudioPlayer?
     private var audioSessionReady = false
-    private let audioSessionQueue = DispatchQueue(label: "redmed.cpr-metronome.session")
     private var audioEpoch = 0
 
     var supportsHaptics: Bool {
@@ -112,9 +111,7 @@ final class HapticEngine: ObservableObject {
         audioSessionReady = false
         audioPlayer?.stop()
         audioPlayer = nil
-        audioSessionQueue.async {
-            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        }
+        AudioSessionGate.deactivate()
     }
 
     /// Sharp compression tap — used on Start and each CPR beat.
@@ -156,14 +153,7 @@ final class HapticEngine: ObservableObject {
     private func prepareAudioSession() {
         audioEpoch &+= 1
         let epoch = audioEpoch
-        audioSessionQueue.async {
-            let session = AVAudioSession.sharedInstance()
-            do {
-                try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
-                try session.setActive(true)
-            } catch {
-                return
-            }
+        AudioSessionGate.activatePlayback(options: [.mixWithOthers]) {
             Task { @MainActor in
                 guard epoch == self.audioEpoch else { return }
                 self.audioSessionReady = true
@@ -174,14 +164,24 @@ final class HapticEngine: ObservableObject {
     private func playTone(frequency: Double, seconds: Double, volume: Float) {
         if !audioSessionReady { prepareAudioSession() }
         guard let data = Self.clickWAV(frequency: frequency, seconds: seconds) else { return }
-        do {
-            let player = try AVAudioPlayer(data: data)
-            player.volume = volume
-            player.prepareToPlay()
-            player.play()
-            audioPlayer = player
-        } catch {
-            audioPlayer = nil
+        let epoch = audioEpoch
+        // prepareToPlay can activate the session — keep it on the gate queue.
+        AudioSessionGate.queue.async {
+            do {
+                let player = try AVAudioPlayer(data: data)
+                player.volume = volume
+                player.prepareToPlay()
+                player.play()
+                Task { @MainActor in
+                    guard epoch == self.audioEpoch else { return }
+                    self.audioPlayer = player
+                }
+            } catch {
+                Task { @MainActor in
+                    guard epoch == self.audioEpoch else { return }
+                    self.audioPlayer = nil
+                }
+            }
         }
     }
 

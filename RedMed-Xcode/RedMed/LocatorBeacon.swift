@@ -11,8 +11,6 @@ enum LocatorBeacon {
     /// Synth once — re-building PCM every 5s hitch on the main thread while SOS is armed.
     private static var cachedAlarmWAV: Data?
     private static let interval: TimeInterval = 5
-    /// Serial queue for blocking AVAudioSession work — never run setCategory/setActive on MainActor.
-    private static let sessionQueue = DispatchQueue(label: "redmed.locator-beacon.session")
     /// Bumped on prepare / end so late activate callbacks cannot arm after cancel.
     private static var sessionEpoch = 0
     private static var sessionReady = false
@@ -32,7 +30,7 @@ enum LocatorBeacon {
         sessionReady = false
         sessionEpoch &+= 1
         stopRepeating()
-        deactivateSession()
+        AudioSessionGate.deactivate()
     }
 
     private static func startRepeating() {
@@ -52,24 +50,26 @@ enum LocatorBeacon {
         sessionReady = false
         timer?.invalidate()
         timer = nil
+        player?.stop()
+        player = nil
 
-        // setCategory / setActive must stay off MainActor (Main Thread Checker).
-        // Do not use activate(options:completionHandler:) — that API is iOS 27+ only;
-        // deployment target is 17.0.
-        sessionQueue.async {
-            let session = AVAudioSession.sharedInstance()
-            do {
-                try session.setCategory(.playback, mode: .default, options: [.duckOthers])
-                try session.setActive(true)
-            } catch {
-                // Session failures stay silent — brightness boost still runs.
-                return
+        // WAV synth is CPU-only (no AVAudioSession). Cache on first arm.
+        let wav = alarmWAV()
+
+        // setCategory / setActive / prepareToPlay stay off MainActor.
+        AudioSessionGate.activatePlayback(options: [.duckOthers]) {
+            var prepared: AVAudioPlayer?
+            if let wav {
+                prepared = try? AVAudioPlayer(data: wav)
+                prepared?.volume = 1.0
+                prepared?.prepareToPlay()
             }
             Task { @MainActor in
                 guard Self.survivalHold, epoch == Self.sessionEpoch else {
-                    Self.deactivateSession()
+                    AudioSessionGate.deactivate()
                     return
                 }
+                Self.player = prepared
                 Self.sessionReady = true
                 Self.fire()
                 Self.armTimer()
@@ -86,30 +86,12 @@ enum LocatorBeacon {
         timer = t
     }
 
-    private static func deactivateSession() {
-        sessionQueue.async {
-            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        }
-    }
-
     private static func fire() {
         guard survivalHold, sessionReady else { return }
-        guard let data = alarmWAV() else { return }
-        do {
-            if let existing = player {
-                existing.currentTime = 0
-                existing.volume = 1.0
-                existing.play()
-                return
-            }
-            let p = try AVAudioPlayer(data: data)
-            p.volume = 1.0
-            p.prepareToPlay()
-            p.play()
-            player = p
-        } catch {
-            player = nil
-        }
+        guard let existing = player else { return }
+        existing.currentTime = 0
+        existing.volume = 1.0
+        existing.play()
     }
 
     /// Three piercing beeps (~880 / 1175 / 880 Hz). No bundled asset required.
