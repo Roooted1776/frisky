@@ -45,11 +45,11 @@ struct MainInfoView: View {
                 }
 
                 section(num: "3", title: "Verify it") {
-                    Text("On the NFC tab, tap Scan your bracelet (or use Preview scanner on RedMed) to see the same read-only RedMed / 911 / Aid shell a stranger gets. There is no Edit and no NFC write UI in that view.")
+                    Text("On the NFC tab, tap Scan your bracelet (or use Preview on RedMed) to check what you wrote. That preview is for you in the app only — helpers never install RedMed.")
                 }
 
                 section(num: "4", title: "What a stranger sees") {
-                    Text("Anyone who taps the bracelet opens the passerby HTML page (get.html) with RedMed, 911, and Aid — your profile, Call emergency / GPS help, and roadside aid. No RedMed app, login, or Face ID on their phone. The page caches after first open so a later tap still paints instantly offline. They cannot edit your profile or write the band.")
+                    Text("Anyone who taps the bracelet opens a plain HTML page in their phone’s browser (get.html) with RedMed, 911, and Aid — your profile, Call emergency / GPS help, and roadside aid. No RedMed app, login, or Face ID. The page caches after first open so a later tap still paints instantly offline. They cannot edit your profile or write the band.")
                 }
 
                 section(num: "5", title: "In an emergency") {
@@ -66,7 +66,7 @@ struct MainInfoView: View {
                         .foregroundColor(.redmedDark)
                     setupStep(1, "Open RedMed on iPhone and fill in your allergies, meds, and contacts.")
                     setupStep(2, "Hold your band to the top of your iPhone once — the chip stores your emergency card.")
-                    setupStep(3, "Done. Anyone taps the band — their phone opens emergency call and your critical info. No app needed.")
+                    setupStep(3, "Done. Anyone taps the band — their browser opens get.html with your card. HTML only · no app.")
                     Text("Passive \(AppConfig.BraceletRF.carrierLabel) only — no battery, no Bluetooth pair. Local only once tap — everyone and everything: quicker Aid, help reaching 911, and a fast local handoff of patient ID to EMS/hospital via band tap — no servers · no online · not a RedMed cloud. Not a medical device; no promised outcome. Call 911 first.")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.redmedMuted)

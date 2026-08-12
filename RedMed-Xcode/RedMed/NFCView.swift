@@ -22,7 +22,20 @@ struct NFCView: View {
     }
 
     private var ownerBody: some View {
-        NavigationView {
+        // Fixed cream chrome (no NavigationView / system toolbar) — BrandWordmark
+        // top-left like 911 / Aid. Owner-only tab; scanners never mount this.
+        VStack(spacing: 0) {
+            Image("BrandWordmark")
+                .resizable()
+                .scaledToFit()
+                .frame(height: 42)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityLabel("RedMed")
+                .padding(.horizontal, 16)
+                .padding(.top, 6)
+                .padding(.bottom, 4)
+                .background(Color.redmedBg)
+
             ScrollView {
                 VStack(spacing: 16) {
                     introBlock
@@ -35,37 +48,29 @@ struct NFCView: View {
                 .padding(.bottom, 28)
             }
             .background(Color.redmedBg)
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.redmedBg, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("NFC Bracelet").font(RedMedChrome.navTitleFont).foregroundColor(.redmedAccent)
-                }
+        }
+        .background(Color.redmedBg.ignoresSafeArea())
+        .sheet(isPresented: $band.showScannedCard) {
+            if let card = band.scannedCard {
+                PublicCardView(profile: card)
             }
-            .sheet(isPresented: $band.showScannedCard) {
-                if let card = band.scannedCard {
-                    PublicCardView(profile: card)
-                }
-            }
-            .alert("Authentication Failed", isPresented: $band.authFailed) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text("Face ID or passcode is required to write your emergency card to the bracelet.")
-            }
-            .alert("NFC", isPresented: Binding(
-                get: { band.alertMessage != nil },
-                set: { if !$0 { band.alertMessage = nil } }
-            )) {
-                Button("OK", role: .cancel) { band.alertMessage = nil }
-            } message: {
-                Text(band.alertMessage ?? "")
-            }
-            .onChange(of: band.writeVerified) { _, verified in
-                guard verified, band.writeSucceeded, AppConfig.nfcHardwareEnabled else { return }
-                band.linkBracelet(on: profile, detail: "NFC write verified")
-            }
+        }
+        .alert("Authentication Failed", isPresented: $band.authFailed) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Face ID or passcode is required to write your emergency card to the bracelet.")
+        }
+        .alert("NFC", isPresented: Binding(
+            get: { band.alertMessage != nil },
+            set: { if !$0 { band.alertMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) { band.alertMessage = nil }
+        } message: {
+            Text(band.alertMessage ?? "")
+        }
+        .onChange(of: band.writeVerified) { _, verified in
+            guard verified, band.writeSucceeded, AppConfig.nfcHardwareEnabled else { return }
+            band.linkBracelet(on: profile, detail: "NFC write verified")
         }
     }
 
@@ -79,8 +84,8 @@ struct NFCView: View {
                 .accessibilityHidden(true)
 
             Text(AppConfig.nfcHardwareEnabled
-                  ? "Fill RedMed, then write the band once. Face ID, hold to pair. Passive HF — no Bluetooth."
-                  : "Simulate band setup while learning. Same compact get.html#d= URL a real NTAG213 would hold.")
+                  ? "Fill RedMed, then write the band once. Face ID, hold to pair. Helpers who tap get HTML only — no app."
+                  : "Simulate band setup while learning. Same compact get.html#d= URL a real NTAG213 would hold — helpers still need no app.")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.redmedMuted)
                 .multilineTextAlignment(.center)
@@ -201,7 +206,7 @@ struct NFCView: View {
             VStack(alignment: .leading, spacing: 8) {
                 tipRow("Write once after RedMed is filled.")
                 tipRow("Cancel the NFC prompt and the band stays stale until you write again.")
-                tipRow("Scan below to verify the same card a stranger sees on tap.")
+                tipRow("A real tap opens get.html in their browser — no RedMed app.")
             }
             .padding(.top, 2)
         }
@@ -222,8 +227,8 @@ struct NFCView: View {
 
             if profile.braceletLinked {
                 Text(AppConfig.nfcHardwareEnabled
-                      ? "Hold near the band to open the same emergency card a stranger gets."
-                      : "Simulate scan to preview the passerby shell (same as get.html after a tap).")
+                      ? "Owner verify only. Helpers who tap the band open get.html in their browser — no app."
+                      : "Owner simulate only. Real taps still open get.html in the helper’s browser — no app.")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.redmedMuted)
                     .lineSpacing(3)
