@@ -158,8 +158,20 @@ struct RedMedView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.top, 28)
-                        .padding(.bottom, 16)
+                        .padding(.bottom, 8)
                     }
+
+                    // Whisper prayer — same on owner + tapper main RedMed (and Aid).
+                    Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
+                        .font(.system(size: 8, weight: .regular))
+                        .italic()
+                        .foregroundColor(.redmedMuted.opacity(0.55))
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(1)
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 28)
+                        .padding(.top, isScannerSession ? 28 : 16)
+                        .padding(.bottom, 8)
                 }
             }
             .padding(.bottom, isScannerSession ? 42 : 12)
