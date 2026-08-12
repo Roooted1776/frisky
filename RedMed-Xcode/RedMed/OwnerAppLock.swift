@@ -29,7 +29,8 @@ struct OwnerAppLock<Content: View>: View {
     @State private var hasEverHadSensitiveData = false
     /// Bumps on lock so a late Face ID success cannot unlock after background.
     @State private var authGeneration = 0
-    @State private var screenCaptured = UIScreen.main.isCaptured
+    /// Default false — read capture state after first paint (see onAppear).
+    @State private var screenCaptured = false
 
     var body: some View {
         ZStack {
@@ -41,6 +42,9 @@ struct OwnerAppLock<Content: View>: View {
             case .locked:
                 lockScreen
             }
+        }
+        .onAppear {
+            screenCaptured = UIScreen.main.isCaptured
         }
         .task {
             // First SwiftUI frame already committed — Keychain can wait.

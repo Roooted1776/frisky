@@ -3,6 +3,7 @@ import Combine
 
 /// Owner-only local history stored in `HIPAAOfflineVault`.
 /// Events never contain field values (no name/meds/contacts) — timestamps + kind only.
+/// Vault JSON is loaded on first `record` / `reload` — not at shared init / cold launch.
 final class VaultHistoryStore: ObservableObject {
     static let shared = VaultHistoryStore()
 
@@ -10,12 +11,12 @@ final class VaultHistoryStore: ObservableObject {
     private static let maxEvents = 200
 
     @Published private(set) var events: [VaultHistoryEvent] = []
+    private var didLoad = false
 
-    private init() {
-        reload()
-    }
+    private init() {}
 
     func reload() {
+        didLoad = true
         guard let data = HIPAAOfflineVault.read(fileName: Self.fileName),
               let decoded = try? JSONDecoder().decode([VaultHistoryEvent].self, from: data) else {
             events = []
@@ -25,6 +26,7 @@ final class VaultHistoryStore: ObservableObject {
     }
 
     func record(_ kind: VaultHistoryEvent.Kind, detail: String = "") {
+        ensureLoaded()
         // Coalesce duplicate writes from paired NFC success/verified callbacks.
         if let newest = events.first,
            newest.kind == kind,
@@ -45,8 +47,13 @@ final class VaultHistoryStore: ObservableObject {
     }
 
     func clear() {
+        didLoad = true
         events = []
         HIPAAOfflineVault.remove(fileName: Self.fileName)
+    }
+
+    private func ensureLoaded() {
+        if !didLoad { reload() }
     }
 
     private func persist(_ events: [VaultHistoryEvent]) {

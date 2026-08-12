@@ -20,7 +20,6 @@
 		AABB0000000000000000000B /* HelpMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000000E /* HelpMenuView.swift */; };
 		AABB0000000000000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000000C /* Assets.xcassets */; };
 		AABB00000000000000000010 /* NearbyHospitals.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000010 /* NearbyHospitals.swift */; };
-		AABB00000000000000000011 /* MedicationData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000011 /* MedicationData.swift */; };
 		AABB00000000000000000012 /* PublicCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000012 /* PublicCardView.swift */; };
 		AABB00000000000000000013 /* LocationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000013 /* LocationHelper.swift */; };
 		AABB00000000000000000014 /* BiometricAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000014 /* BiometricAuth.swift */; };
@@ -74,7 +73,6 @@
 		AAAA0000000000000000000E /* HelpMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpMenuView.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000000F /* RedMed.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RedMed.entitlements; sourceTree = "<group>"; };
 		AAAA00000000000000000010 /* NearbyHospitals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyHospitals.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000011 /* MedicationData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationData.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000012 /* PublicCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicCardView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000013 /* LocationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationHelper.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000014 /* BiometricAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuth.swift; sourceTree = "<group>"; };
@@ -168,7 +166,6 @@
 				AAAA00000000000000000005 /* RedMedView.swift */,
 				AAAA00000000000000000006 /* EditProfileView.swift */,
 				AAAA00000000000000000004 /* ProfileData.swift */,
-				AAAA00000000000000000011 /* MedicationData.swift */,
 			);
 			name = "Tab · RedMed";
 			sourceTree = "<group>";
@@ -381,7 +378,6 @@
 				AABB00000000000000000008 /* AidView.swift in Sources */,
 				AABB00000000000000000009 /* TopicDetailView.swift in Sources */,
 				AABB00000000000000000010 /* NearbyHospitals.swift in Sources */,
-				AABB00000000000000000011 /* MedicationData.swift in Sources */,
 				AABB00000000000000000012 /* PublicCardView.swift in Sources */,
 				AABB00000000000000000013 /* LocationHelper.swift in Sources */,
 				AABB00000000000000000014 /* BiometricAuth.swift in Sources */,
