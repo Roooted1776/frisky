@@ -168,6 +168,26 @@
     min-height: calc(100vh - var(--safe-t) - var(--safe-b));
     min-height: calc(100dvh - var(--safe-t) - var(--safe-b));
   }
+  /* Owner embed: BrandWordmark replaces the Face ID lock line — left, no bubble. */
+  html.app-embed .rm-lock,
+  body.app-embed .rm-lock {
+    margin: 0 0 10px;
+    max-width: none;
+    padding: 0;
+    text-align: left;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  html.app-embed .rm-embed-wordmark,
+  body.app-embed .rm-embed-wordmark {
+    display: block;
+    height: clamp(36px, 8vw, 42px);
+    width: auto;
+    max-width: min(220px, 72vw);
+    object-fit: contain;
+  }
   .rm-lock a {
     color: inherit;
     font-weight: inherit;
@@ -1599,7 +1619,16 @@
     try { document.body.classList.add('app-embed'); } catch (e) {}
     var lock = document.querySelector('.rm-lock');
     if (lock) {
-      lock.textContent = 'Face ID for Edit · no cloud. Same card a helper sees on tap.';
+      lock.textContent = '';
+      var img = document.createElement('img');
+      img.className = 'rm-embed-wordmark';
+      img.id = 'rmEmbedWordmark';
+      img.alt = 'RedMed';
+      img.width = 168;
+      img.height = 42;
+      img.src = 'BrandWordmark.png';
+      lock.appendChild(img);
+      resolveAsset('rmEmbedWordmark', ['BrandWordmark.png', 'assets/BrandWordmark.png']);
     }
   })();
 
