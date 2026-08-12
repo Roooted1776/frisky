@@ -1,23 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en-US">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fff7f7">
+<meta name="referrer" content="no-referrer">
 <title>RedMed</title>
 <!-- Site root → passerby shell. Any phone / tablet / desktop. Preserve #d=. -->
 <script>
 (function () {
   var q = location.search || "";
   var h = location.hash || "";
-  location.replace("get/" + q + h);
+  location.replace("tapper/" + q + h);
 })();
 </script>
-<meta http-equiv="refresh" content="0;url=get/">
+<meta http-equiv="refresh" content="0;url=tapper/">
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    background: #fff7f7;
+    color: #1c1917;
+  }
+  a { color: #e11d48; font-weight: 600; text-decoration: none; }
+  a:focus-visible { outline: 2px solid #e11d48; outline-offset: 3px; }
+</style>
 </head>
 <body>
-  <p><a id="go" href="get/">Open RedMed card</a></p>
+  <p><a id="go" href="tapper/">Open RedMed card</a></p>
   <script>
-    document.getElementById("go").href = "get/" + (location.search || "") + (location.hash || "");
+    document.getElementById("go").href = "tapper/" + (location.search || "") + (location.hash || "");
   </script>
 </body>
 </html>

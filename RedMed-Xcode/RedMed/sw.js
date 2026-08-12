@@ -1,20 +1,20 @@
 /* RedMed passerby layout cache — zero servers, zero profile DB.
  *
- * Bundled copy for get.html in the app. Preferred live path is
- * /get/ (get/index.html + get/sw.js) matching AppConfig.medicalCardBaseURL.
+ * Bundled copy for tapper.html in the app. Preferred live path is
+ * /tapper/ (tapper/index.html + tapper/sw.js) matching AppConfig.medicalCardBaseURL.
  *
  * Cache-first multi-key shell for almost-instant EMT / helper open; activate
- * clears prior CACHE buckets. Bump CACHE in lockstep with get/sw.js + root
- * sw.js on every decrypt/layout deploy. Payload stays in #d= only — never
+ * clears prior CACHE buckets. Bump CACHE in lockstep with tapper/sw.js + root
+ * copy on every decrypt/layout deploy. Payload stays in #d= only — never
  * cached.
  */
-var CACHE = 'redmed-get-v65';
+var CACHE = 'redmed-tapper-v65';
 var ASSETS = [
   './',
-  './get.html',
-  './get/',
-  './get/index.html',
-  './get/sw.js',
+  './tapper.html',
+  './tapper/',
+  './tapper/index.html',
+  './tapper/sw.js',
   './sw.js',
   './BrandLogo.png',
   './BrandWordmark.png',
@@ -23,16 +23,16 @@ var ASSETS = [
   './card.html'
 ];
 /** Primary HTML shell — install must fail closed if neither copy can be cached. */
-var REQUIRED_SHELLS = ['./get/index.html', './get.html'];
+var REQUIRED_SHELLS = ['./tapper/index.html', './tapper.html'];
 var SHELL_KEYS = [
   './',
-  './get.html',
-  './get/',
-  './get/index.html',
-  '/get/',
-  '/get/index.html',
-  '/get',
-  '/get.html'
+  './tapper.html',
+  './tapper/',
+  './tapper/index.html',
+  '/tapper/',
+  '/tapper/index.html',
+  '/tapper',
+  '/tapper.html'
 ];
 
 function networkReload(reqOrUrl) {
@@ -112,10 +112,10 @@ function isShellRequest(req) {
     var path = url.pathname;
     return (
       path === '/' ||
-      path === '/get' ||
-      path === '/get/' ||
-      path.endsWith('/get.html') ||
-      path.endsWith('/get/index.html') ||
+      path === '/tapper' ||
+      path === '/tapper/' ||
+      path.endsWith('/tapper.html') ||
+      path.endsWith('/tapper/index.html') ||
       path.endsWith('/card.html') ||
       path.endsWith('/sw.js')
     );

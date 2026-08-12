@@ -7,13 +7,13 @@ enum AppConfig {
     /// array → AES-GCM → base64url; no server storage). `sw.js` cache-first stores
     /// the static layout for instant offline / EMT taps (activate clears prior
     /// CACHE buckets). Owner edit / treatments live in `Main.swift`, not here.
-    /// Source page: `get.html` / `get/index.html` (identical at `get/`, repo root,
-    /// and `RedMed-Xcode/RedMed/get.html`). Legacy `card/` URLs redirect to `/get/`
-    /// (preserve `#d=`). Owner Preview / Scan always use the **bundled** get.html
+    /// Source page: `tapper.html` / `tapper/index.html` (identical at `tapper/`, repo root,
+    /// and `RedMed-Xcode/RedMed/tapper.html`). Legacy `card/` / `get/` URLs redirect to `/tapper/`
+    /// (preserve `#d=`). Owner Preview / Scan always use the **bundled** tapper.html
     /// (local-only). Hosted Pages must serve the tapper shell (RedMed · 911 · Aid).
     /// Local: `./scripts/deploy-pages.sh`. Live: `DEPLOY=1` + CF tokens, or the
     /// `Pages tapper deploy` GitHub Action on `main`.
-    static let medicalCardBaseURL = "https://redmed.pages.dev/get/"
+    static let medicalCardBaseURL = "https://redmed.pages.dev/tapper/"
 
     /// Deep link target for policy / card HTML “open owner app” redirects.
     static let mainAppURL = "redmed://main"

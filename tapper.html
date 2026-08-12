@@ -1,5 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en-US">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no">
@@ -8,13 +8,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="format-detection" content="telephone=yes">
 <meta name="theme-color" content="#fff7f7">
+<meta name="color-scheme" content="light">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; worker-src 'self'; connect-src 'self'">
 <meta name="referrer" content="no-referrer">
 <link rel="apple-touch-icon" href="BrandLogo.png">
 <link rel="icon" href="BrandLogo.png">
 <title>RedMed — tap to scan</title>
 <meta name="description" content="Tap the RedMed band to open the emergency card. Quick. No login. No server. No app — HTML only on this phone.">
-<!-- ONE scanner file: get.html (Pages + app bundle).
+<!-- ONE scanner file: tapper.html (Pages + app bundle).
      Specs (permanent):
      - Tabs: RedMed · 911 · Aid only — no Edit, no NFC
      - Tapper / EMT / helper: passive HF NFC opens this HTML page — no RedMed
@@ -28,23 +29,23 @@
        conditions, contacts, updated?]
      - Offline: sw.js Cache Storage — cache-first multi-key shell for almost-instant
        EMT open after first online load; activate clears prior CACHE buckets
-       (bump redmed-get-vN). Never wait on network when a shell copy exists.
-     - Real bracelet NFC tap (`get.html#d=…`) → everything stays on that phone
+       (bump redmed-tapper-vN). Never wait on network when a shell copy exists.
+     - Real bracelet NFC tap (`tapper.html#d=…`) → everything stays on that phone
        (profile, 911, Aid, SOS siren). Local only once tap — everyone and
-       everything. No server / no online. Bare /get/ without `#d=` and in-app
+       everything. No server / no online. Bare /tapper/ without `#d=` and in-app
        Preview/Scan (`?src=app`) do not auto-arm SOS. Stop on Find Help or Aid.
        Explicit SOS toggle + DeviceMotion crash share the same local alarm.
      - Layout: any phone + iPad, iOS 15+ (and Android). Fluid width, safe-area
-       insets, no horizontal scroll. No Face ID / passcode / account on this page.
+       insets, no horizontal scroll. No account / login on this page (tap-to-view).
        iOS may need a gesture to unmute AudioContext; motion permission only
        when the helper taps SOS.
      - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
        walk-by ~6–8″ does not fire, reliable coupling dies past ~4″,
        passive 13.56 MHz HF NFC (not Bluetooth) → opens this page
-     - Logo: BrandLogo.png + BrandWordmark.png (bundle /get/) or assets/ (Pages)
-     - Legacy card.html / card/ redirects to /get/ and keeps #d=
-     Keep identical: get/index.html, repo-root get.html, RedMed-Xcode/RedMed/get.html.
-     Cloudflare Pages serves AppConfig URL https://redmed.pages.dev/get/ from get/. -->
+     - Logo: BrandLogo.png + BrandWordmark.png (bundle /tapper/) or assets/ (Pages)
+     - Legacy card.html / get.html /get/ redirect to /tapper/ and keep #d=
+     Keep identical: tapper/index.html, repo-root tapper.html, RedMed-Xcode/RedMed/tapper.html.
+     Cloudflare Pages serves AppConfig URL https://redmed.pages.dev/tapper/ from tapper/. -->
 <style>
   :root {
     --accent: #e11d48;
@@ -266,6 +267,7 @@
     overflow: hidden;
     box-shadow: var(--shadow);
   }
+  .card.you-card { margin-top: 2px; }
   .row {
     display: flex;
     justify-content: space-between;
@@ -413,6 +415,9 @@
     font-weight: 500;
     color: rgba(120,113,108,0.4);
   }
+  .list-item.empty-slot {
+    color: rgba(120,113,108,0.4);
+  }
   .contact-block {
     padding: 12px 16px;
     border-bottom: 1px solid var(--divider);
@@ -479,7 +484,7 @@
     min-height: calc(100vh - var(--tabbar-h) - var(--safe-t) - var(--safe-b));
     min-height: calc(100dvh - var(--tabbar-h) - var(--safe-t) - var(--safe-b));
     box-sizing: border-box;
-    padding-bottom: 24px;
+    padding-bottom: 8px;
   }
   #panel-aid .quote {
     margin-top: auto;
@@ -488,8 +493,7 @@
   }
 
   /* —— Help tab —— */
-  .page-pad { padding: 4px var(--page-pad-x) 24px; }
-  #panel-911 .page-pad { padding-bottom: 24px; }
+  .page-pad { padding: 4px var(--page-pad-x) 0; }
   .page-title {
     font-size: var(--fs-title);
     font-weight: 600;
@@ -513,6 +517,17 @@
     transition: transform 0.16s ease, opacity 0.16s ease;
   }
   .btn:active { transform: scale(0.98); opacity: 0.92; }
+  .btn:focus-visible,
+  .seizure-btn:focus-visible,
+  .tab:focus-visible,
+  .aid-stop-alarm:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn, .tab, .tab .icon-wrap { transition: none; }
+    .btn:active, .tab:active { transform: none; }
+  }
   .btn-primary {
     background: linear-gradient(180deg, var(--accent-soft), var(--accent));
     color: #fff;
@@ -522,7 +537,7 @@
     box-shadow: var(--shadow-accent);
   }
   .btn-secondary {
-    background: var(--bg);
+    background: rgba(255,255,255,0.88);
     border: 1px solid var(--divider);
     color: var(--dark);
     box-shadow: var(--shadow);
@@ -661,12 +676,12 @@
     color: #fff;
   }
   .seizure-btn.on {
-    background: var(--bg);
+    background: rgba(255,255,255,0.9);
     color: var(--dark);
     border: 1px solid var(--divider);
   }
   .seizure-btn-reset {
-    background: var(--bg);
+    background: rgba(255,255,255,0.9);
     color: var(--dark);
     border: 1px solid var(--divider);
   }
@@ -707,6 +722,13 @@
     min-width: 0;
     overflow-wrap: anywhere;
   }
+  .info-lead {
+    margin: 0;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--muted);
+  }
   .info ol, .info ul {
     margin: 0;
     padding-left: 16px;
@@ -724,20 +746,27 @@
     line-height: 1.4;
     margin: 12px 4px 0;
   }
+  .survival-note {
+    margin: 4px 0 8px;
+    font-size: clamp(10px, 2.6vw, 13px);
+    font-weight: 500;
+    color: var(--muted);
+    line-height: 1.35;
+    text-align: center;
+  }
   .aid-stop-alarm {
     display: none;
     width: 100%;
     margin-top: 10px;
-    padding: 12px 14px;
+    padding: 10px 12px;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--dark);
-    background: var(--bg);
-    border: 1px solid var(--divider);
+    background: var(--surface);
+    border: none;
     border-radius: var(--box);
     text-align: left;
     cursor: pointer;
-    box-shadow: var(--shadow);
   }
   .aid-stop-alarm.show { display: block; }
   .aid-stop-alarm .x {
@@ -788,33 +817,15 @@
   details.aid[open] {
     background: rgba(225,29,72,0.03);
   }
-  /* Compact BrandWordmark top-left of every Aid pane — title row follows. */
-  .aid-pane-wordmark {
-    display: block;
-    height: 18px;
-    width: auto;
-    max-width: 120px;
-    margin: 0 0 6px;
-    object-fit: contain;
-    object-position: left center;
-  }
   details.aid summary {
     cursor: pointer;
     list-style: none;
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 6px;
+    gap: 12px;
+    align-items: center;
     padding: 10px 0;
     min-width: 0;
     -webkit-tap-highlight-color: transparent;
-  }
-  details.aid summary .aid-summary-row {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    min-width: 0;
-    width: 100%;
   }
   details.aid summary::-webkit-details-marker { display: none; }
   .aid-emoji {
@@ -854,7 +865,7 @@
   .tabbar {
     position: fixed;
     left: 0; right: 0; bottom: 0;
-    background: var(--bg);
+    background: rgba(255,255,255,0.96);
     border-top: 1px solid var(--divider);
     box-shadow: 0 -4px 18px rgba(28,25,23,0.06);
     display: flex;
@@ -949,7 +960,7 @@
         </div>
       </div>
 
-      <div class="card" style="margin-top:2px">
+      <div class="card you-card">
         <div class="row row-name" id="rowNameRow"><span class="k">Name</span><span class="v empty" id="rowName">—</span></div>
         <div class="row"><span class="k">Birth date</span><span class="v empty" id="rowDob">—</span></div>
         <div class="row row-blood" id="rowBloodRow"><span class="k">Blood type</span><span class="v empty" id="rowBlood">—</span></div>
@@ -995,10 +1006,10 @@
 
         <div class="info">
           <div class="info-head">
-            <div class="info-icon">📡</div>
+            <div class="info-icon" aria-hidden="true">📡</div>
             <h2>No cell signal?</h2>
           </div>
-          <p style="margin:0;font-size:10px;font-weight:600;line-height:1.35;color:var(--muted)">
+          <p class="info-lead">
             T-Mobile (US) + Starlink Direct-to-Cell partners — plan/region required; not a coverage promise.
           </p>
         </div>
@@ -1028,7 +1039,7 @@
 
         <div class="info">
           <div class="info-head">
-            <div class="info-icon">✚</div>
+            <div class="info-icon" aria-hidden="true">✚</div>
             <h2>Roadside First Response</h2>
           </div>
           <ol>
@@ -1041,7 +1052,7 @@
 
         <div class="info">
           <div class="info-head">
-            <div class="info-icon">ℹ</div>
+            <div class="info-icon" aria-hidden="true">ℹ</div>
             <h2>What to Tell <span class="emg">112</span></h2>
           </div>
           <ul>
@@ -1060,56 +1071,56 @@
         <img class="aid-wordmark" id="aidWordmark" src="BrandWordmark.png" width="168" height="42" alt="RedMed">
 
         <div class="aid-grid">
-          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🚗</span><span class="aid-title">Crash &amp; Head</span></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">🚗</span><span class="aid-title">Crash &amp; Head</span></summary>
             <ol>
               <li>Call <span class="emg">112</span> — give exact location and number of people</li>
               <li>Hazards on. Do not move them unless fire or traffic danger</li>
               <li>Keep head/neck still. Control bleeding with firm pressure</li>
             </ol>
           </details>
-          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🩸</span><span class="aid-title">Bleeding</span></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">🩸</span><span class="aid-title">Bleeding</span></summary>
             <ol>
               <li>Press hard with both hands — do not lift to check</li>
               <li>Add cloth on top if soaked. Limb: tourniquet 2–3 in above</li>
               <li>Note the time. Stay on the line with <span class="emg">112</span></li>
             </ol>
           </details>
-          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">❤️</span><span class="aid-title">Heart &amp; Airway</span></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">❤️</span><span class="aid-title">Heart &amp; Airway</span></summary>
             <ol>
               <li>No breathing/pulse: hard compressions 100–120/min, 2 inches deep</li>
               <li>Choking, cannot cough: 5 back blows, then 5 abdominal thrusts</li>
               <li>Alternate until clear or unresponsive — then CPR</li>
             </ol>
           </details>
-          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">⚡</span><span class="aid-title">Shock</span></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">⚡</span><span class="aid-title">Shock</span></summary>
             <ol>
               <li>Call <span class="emg">112</span>. Lay flat — do not let them walk</li>
               <li>Elevate legs 12 inches unless head/neck/spine injury</li>
               <li>Keep warm. No food, water, or medication</li>
             </ol>
           </details>
-          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🧠</span><span class="aid-title">Seizure</span></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">🧠</span><span class="aid-title">Seizure</span></summary>
             <ol>
               <li>Time it. Clear sharp objects. Do not restrain</li>
               <li>Nothing in the mouth. Cushion the head</li>
               <li>Call <span class="emg">112</span> if first seizure, over 5 minutes, injury, or in water</li>
             </ol>
           </details>
-          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🥶</span><span class="aid-title">Hypothermia</span></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">🥶</span><span class="aid-title">Hypothermia</span></summary>
             <ol>
               <li>Move to shelter. Remove wet clothes gently</li>
               <li>Warm chest/neck/armpits/groin — not the limbs</li>
               <li>No rubbing or massage. Warm drinks only if fully conscious</li>
             </ol>
           </details>
-          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🥵</span><span class="aid-title">Heat</span></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">🥵</span><span class="aid-title">Heat</span></summary>
             <ol>
               <li>Heat stroke: call <span class="emg">112</span> — cool neck/armpits/groin fast</li>
               <li>Move to shade. Remove extra clothing. Fan while cooling</li>
               <li>Sip cool water only if fully conscious</li>
             </ol>
           </details>
-          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🏥</span><span class="aid-title">Nearby Hospitals</span></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">🏥</span><span class="aid-title">Trauma Hospitals</span></summary>
             <ol>
               <li>Call <span class="emg">112</span> — dispatch routes to the right trauma level</li>
               <li>Do not self-transport major trauma if EMS is available</li>
@@ -1146,7 +1157,7 @@
     tapMaxIn: 2,
     reliableMaxIn: 4,
     tabs: ['RedMed', '911', 'Aid'],
-    page: 'get.html'
+    page: 'tapper.html'
   };
 
   // In-app RedMed tab / Preview / Scan — ?src=app or injected flag. No SOS auto-arm.
@@ -1203,31 +1214,11 @@
     tryNext();
     resolveAsset('aidWordmark', ['BrandWordmark.png', 'assets/BrandWordmark.png']);
     resolveAsset('helpWordmark', ['BrandWordmark.png', 'assets/BrandWordmark.png']);
-    resolvePaneWordmarks(['BrandWordmark.png', 'assets/BrandWordmark.png']);
-  }
-
-  function resolvePaneWordmarks(candidates) {
-    var imgs = document.querySelectorAll('img.aid-pane-wordmark');
-    if (!imgs.length) return;
-    var i = 0;
-    function tryNext() {
-      if (i >= candidates.length) return;
-      var src = candidates[i++];
-      var probe = new Image();
-      probe.onload = function () {
-        imgs.forEach(function (img) { img.src = src; });
-      };
-      probe.onerror = tryNext;
-      probe.src = src;
-    }
-    tryNext();
   }
 
   // Bundle / app-embed already has BrandLogo.png — probing doubles decode on cold open.
   if (!isAppPreview()) {
     resolveLogo();
-  } else {
-    resolvePaneWordmarks(['BrandWordmark.png', 'assets/BrandWordmark.png']);
   }
 
   // Aid accordion — one pane open at a time (matches owner AidView).
@@ -1502,9 +1493,8 @@
     var countEl = countId ? document.getElementById(countId) : null;
     if (!items || !items.length) {
       var empty = document.createElement('div');
-      empty.className = 'list-item';
+      empty.className = 'list-item empty-slot';
       empty.textContent = '—';
-      empty.style.color = 'rgba(120,113,108,0.4)';
       el.appendChild(empty);
       if (countEl) {
         countEl.textContent = '';
@@ -1627,9 +1617,8 @@
     firstPhone = '';
     if (!contacts.length) {
       var emptyC = document.createElement('div');
-      emptyC.className = 'list-item';
+      emptyC.className = 'list-item empty-slot';
       emptyC.textContent = '—';
-      emptyC.style.color = 'rgba(120,113,108,0.4)';
       contactsEl.appendChild(emptyC);
     } else {
       contacts.forEach(function (c, i) {
@@ -2335,7 +2324,7 @@
   });
 
   // Real HF NFC band tap brings #d= — arm local SOS on this phone only.
-  // No auto-arm for bare /get/ or in-app Preview/Scan (?src=app). No server / no online.
+  // No auto-arm for bare /tapper/ or in-app Preview/Scan (?src=app). No server / no online.
   function hasBandPayload() {
     return /^#d=/.test(location.hash || '') && !appPreview();
   }

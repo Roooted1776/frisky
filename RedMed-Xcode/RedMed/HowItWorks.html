@@ -9,15 +9,15 @@
 <script>
 (function () {
   // Owner app is iPhone-only. Everyone else (Android, desktop, EMT phones)
-  // opens the same passerby web card — no install, no Face ID.
+  // opens the same passerby web card — no install, no account.
   var APP = "redmed://main";
-  var WEB = "../get/index.html";
+  var WEB = "../tapper/index.html";
   try {
-    // Bundled under RedMed/ → sibling get.html; Pages/repo → /get/.
+    // Bundled under RedMed/ → sibling tapper.html; Pages/repo → /tapper/.
     if (/\/RedMed\//.test(location.pathname) || location.protocol === "file:") {
-      WEB = "get.html";
+      WEB = "tapper.html";
     } else {
-      WEB = "/get/" + (location.search || "") + (location.hash || "");
+      WEB = "/tapper/" + (location.search || "") + (location.hash || "");
     }
   } catch (e) {}
 
@@ -49,16 +49,13 @@
     <a href="PrivacyPolicy.html">Privacy Policy</a>
     <span aria-hidden="true">|</span>
     <a href="security.html">Security</a>
-    <span aria-hidden="true">|</span>
-    <a href="HowItWorks.html" aria-current="page">How It Works</a>
   </nav>
 
   <aside class="legal-notice legal-notice-owner">
     <strong>Owner app</strong>
-    Profile editing, Aid treatments, band setup, and this walkthrough live in the RedMed iPhone app
-    (<code>Main.swift</code>).
+    Profile editing, Aid treatments, and band setup live in the RedMed iPhone app.
     <a href="redmed://main">Open RedMed (iPhone)</a>
-    · <a href="../get/">Open emergency card (any phone)</a>
+    · <a href="../tapper/">Open emergency card (any phone)</a>
   </aside>
 
   <hr class="legal-rule-thin" aria-hidden="true">
@@ -78,14 +75,14 @@
 
   <article class="legal-body">
     <p><strong>iPhone owners:</strong> <a href="redmed://main">Open the RedMed app</a>.</p>
-    <p><strong>Any phone (EMT / helper / Android / desktop):</strong> <a href="../get/">Open the emergency card</a> — RedMed · 911 · Aid in the browser. No app install.</p>
+    <p><strong>Any phone (EMT / helper / Android / desktop):</strong> <a href="../tapper/">Open the emergency card</a> — RedMed · 911 · Aid in the browser. No app install.</p>
     <p>In an emergency in the United States, call <strong>911</strong> first — before reading Aid content or writing a band.</p>
     <p>Related: <a href="PrivacyPolicy.html">Privacy Policy</a> · <a href="TOS.html">Terms Of Service</a> · <a href="security.html">Security</a></p>
   </article>
 
   <footer class="legal-footer">
     <p>© 2026 RedMed · All rights reserved</p>
-    <p><a href="TOS.html">Terms Of Service</a> · <a href="PrivacyPolicy.html">Privacy Policy</a> · <a href="security.html">Security</a> · <a href="HowItWorks.html">How It Works</a></p>
+    <p><a href="TOS.html">Terms Of Service</a> · <a href="PrivacyPolicy.html">Privacy Policy</a> · <a href="security.html">Security</a></p>
     <p class="legal-footer-disclaimer">On iPhone this page opens the owner app when installed. On every other device it opens the passerby web card. It does not constitute legal advice.</p>
   </footer>
 </div>

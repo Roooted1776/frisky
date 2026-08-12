@@ -37,7 +37,7 @@ private enum CrashMotionThresholds {
 }
 
 /// Survival alarm arming: crash / severe impact (CoreMotion) or Find Help SOS
-/// (owner + tapper / in-app scanner). Passerby `get.html` mirrors thresholds
+/// (owner + tapper / in-app scanner). Passerby `tapper.html` mirrors thresholds
 /// via DeviceMotion. Arms full brightness + max system volume + locator siren.
 /// Cancel on Aid or Stop SOS on Find Help.
 /// Motion path ignores running, walking, eating, sex / masturbation / intimate

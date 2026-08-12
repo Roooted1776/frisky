@@ -1,5 +1,5 @@
 # Deploy the tapper shell to Cloudflare Pages so bracelet taps hit
-# https://redmed.pages.dev/get/ (RedMed · 911 · Aid — no login, no server).
+# https://redmed.pages.dev/tapper/ (RedMed · 911 · Aid — no login, no server).
 # Requires repo secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID.
 # Optional secret CLOUDFLARE_PAGES_PROJECT (defaults to redmed).
 
@@ -9,10 +9,12 @@ on:
   push:
     branches: [main]
     paths:
-      - 'get/**'
-      - 'get.html'
+      - 'tapper/**'
+      - 'tapper.html'
       - 'index.html'
       - 'card.html'
+      - 'get.html'
+      - 'get/**'
       - 'sw.js'
       - '_headers'
       - 'assets/**'
@@ -31,13 +33,14 @@ jobs:
       - name: Refuse band-setup / missing tabs
         run: |
           set -euo pipefail
-          f=get/index.html
+          f=tapper/index.html
           grep -q 'data-tab="medical"' "$f"
           grep -q 'data-tab="911"' "$f"
           grep -q 'data-tab="aid"' "$f"
           ! grep -q 'Checking your phone' "$f"
           ! grep -q 'Set up your RedMed band' "$f"
-          cmp -s get.html get/index.html
+          cmp -s tapper.html tapper/index.html
+          cmp -s tapper.html RedMed-Xcode/RedMed/tapper.html
 
       - name: Require Cloudflare secrets
         env:
@@ -45,7 +48,7 @@ jobs:
           ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           if [ -z "$TOKEN" ] || [ -z "$ACCOUNT" ]; then
-            echo "::error::Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID repo secrets, then re-run. Live /get/ is still the old band-setup page until this deploys."
+            echo "::error::Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID repo secrets, then re-run. Live /tapper/ stays stale until this deploys."
             exit 1
           fi
 

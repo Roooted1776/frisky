@@ -31,16 +31,16 @@ struct LocalWebView: UIViewRepresentable {
         webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
     }
 
-    /// Policy HTML + stylesheet only — never lateral loads into get.html / other bundle files.
+    /// Policy HTML + stylesheet only — never lateral loads into tapper.html / other bundle files.
     private static let allowedFileBasenames: Set<String> = [
         "PrivacyPolicy.html",
         "TOS.html",
         "security.html",
-        // Redirect-only → redmed://main (iPhone) or get.html (any device).
+        // Redirect-only → redmed://main (iPhone) or tapper.html (any device).
         "HowItWorks.html",
         "legal-doc.css",
         // Passerby card — policy “Emergency card (any phone)” CTA.
-        "get.html",
+        "tapper.html",
         "BrandLogo.png",
         "BrandWordmark.png",
         "sw.js"

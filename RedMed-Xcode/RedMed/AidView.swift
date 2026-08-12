@@ -54,7 +54,7 @@ struct AidView: View {
 
     var body: some View {
         // Full-width accordion — life-saving: big targets, text always fits, no
-        // 2-col reflow when a pane opens. Same pattern as passerby get.html Aid.
+        // 2-col reflow when a pane opens. Same pattern as passerby tapper.html Aid.
         VStack(spacing: 0) {
             BrandWordmarkHeader {
                 if isScannerSession {
