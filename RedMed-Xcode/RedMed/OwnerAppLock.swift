@@ -6,27 +6,28 @@ import SwiftUI
 /// On unlock: reload from Keychain. Scanner / passerby shells never mount this —
 /// they use `ProfileData(persisting: false)` snapshots only.
 ///
-/// Cold launch never touches Keychain on the first frame — a cream shell paints
-/// instantly, then an off-main presence check decides lock vs tabs.
+/// Cold launch never touches Keychain on the first frame. A UserDefaults gate
+/// (set on persist / Keychain presence check) picks lock vs tabs immediately;
+/// SecItem still confirms off-main and can correct a stale gate.
 struct OwnerAppLock<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
     @ViewBuilder var content: () -> Content
 
     private enum Gate {
-        /// First paint — cream shell, zero Keychain / Face ID.
-        case painting
         case locked
         case unlocked
     }
 
-    @State private var gate: Gate = .painting
+    /// Lock UI on first frame when a prior save set the gate — no cream-only stall
+    /// waiting on SecItem. Fresh installs open tabs immediately (empty profile).
+    @State private var gate: Gate = ProfileData.prefersLockOnLaunch ? .locked : .unlocked
     @State private var isAuthenticating = false
     /// True only after Face ID / Touch ID (or passcode) mismatch — never on cancel
     /// or cold launch, and never for Keychain decode failure.
     @State private var biometryFailed = false
     @State private var profileLoadFailed = false
-    @State private var hasEverHadSensitiveData = false
+    @State private var hasEverHadSensitiveData = ProfileData.prefersLockOnLaunch
     /// Bumps on lock so a late Face ID success cannot unlock after background.
     @State private var authGeneration = 0
     /// Default false — read capture state after first paint (see onAppear).
@@ -35,8 +36,6 @@ struct OwnerAppLock<Content: View>: View {
     var body: some View {
         ZStack {
             switch gate {
-            case .painting:
-                coldLaunchShell
             case .unlocked:
                 content()
             case .locked:
@@ -51,6 +50,7 @@ struct OwnerAppLock<Content: View>: View {
             let hasProfile = await Task.detached(priority: .userInitiated) {
                 ProfileData.hasStoredProfile()
             }.value
+            ProfileData.setStoredProfileGate(hasProfile)
             hasEverHadSensitiveData = hasProfile
             if hasProfile {
                 // Fresh lock UI every cold load — no stale “couldn't verify” banner.
@@ -77,18 +77,6 @@ struct OwnerAppLock<Content: View>: View {
         .onReceive(NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)) { _ in
             screenCaptured = UIScreen.main.isCaptured
         }
-    }
-
-    private var coldLaunchShell: some View {
-        ZStack {
-            RedMedPageBackground()
-            Image("BrandLogo")
-                .resizable()
-                .frame(width: 72, height: 72)
-                .clipShape(Circle())
-                .shadow(color: RedMedChrome.accentShadow, radius: 14, y: 6)
-        }
-        .accessibilityHidden(true)
     }
 
     private var lockScreen: some View {
