@@ -14,6 +14,11 @@ CoreNFC write/read sessions are off via `AppConfig.nfcHardwareEnabled = false`.
 **Do not hide the owner NFC tab** when flipping this — owners always get
 RedMed · 911 · Aid · NFC; scanners never get NFC. The flag only blocks
 `NFCWriter` / `NFCReader` sessions (simulate path stays).
+Owner NFC page keeps **both** capabilities on one screen: user Setup/Write and
+tap Scan / Simulate scan (opens the same `get.html#d=` page helpers see).
+Files that make hardware work stay in the tree (`NFCWriter`, `NFCReader`,
+`NFCBandManager`, `ProfileNFCCodec`, `PasserbyHTMLCardView`, bundled `get.html`,
+`NFCReaderUsageDescription` in Info.plist) — entitlement stays commented.
 `RedMed.entitlements` keeps the NFC key commented so free/unsigned builds still
 sign. Flip both when you have a paid Apple Developer Program license and a
 physical iPhone to test.

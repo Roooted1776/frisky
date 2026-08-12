@@ -1,7 +1,9 @@
 // Owner-only NFC bracelet setup. Ped/EMS scanner shells never mount this tab —
 // see ContentView.showsNFC / scannerSafeTab.
+// One page: user Setup/Write + tap Scan / Simulate scan → full-page get.html#d=.
 // When `AppConfig.nfcHardwareEnabled` is false, Write/Scan simulate packing the
 // compact get.html#d= URL so the UX works without an Apple NFC entitlement.
+// Hardware files stay in the tree; CoreNFC sessions stay gated off.
 // Pipeline (hardware): silicone band tap → CoreNFC → strip NDEF → CryptoKit → local card
 // via `NFCBandManager`.
 import SwiftUI
@@ -50,7 +52,8 @@ struct NFCView: View {
             .background(Color.redmedBg)
         }
         .background(Color.redmedBg.ignoresSafeArea())
-        .sheet(isPresented: $band.showScannedCard) {
+        // Same one-page tap card as RedMed Preview / a real band tap (get.html#d=).
+        .fullScreenCover(isPresented: $band.showScannedCard) {
             if let payload = band.scannedHTMLPayload {
                 PasserbyHTMLCardView(payloadOrURL: payload)
             }
@@ -84,8 +87,8 @@ struct NFCView: View {
                 .accessibilityHidden(true)
 
             Text(AppConfig.nfcHardwareEnabled
-                  ? "Fill RedMed, then write the band once. Face ID, hold to pair. Helpers who tap get HTML only — no app."
-                  : "Simulate band setup while learning. Same compact get.html#d= URL a real NTAG213 would hold — helpers still need no app.")
+                  ? "One page for both: write your band (user), then scan the tap card helpers see. Face ID on write. Helpers get HTML only — no app."
+                  : "One page for both: Setup packs your band URL (user), Simulate scan opens the same get.html#d= tap card helpers see — no app for them. CoreNFC hardware stays off until entitlement.")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.redmedMuted)
                 .multilineTextAlignment(.center)
@@ -204,9 +207,9 @@ struct NFCView: View {
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                tipRow("Write once after RedMed is filled.")
+                tipRow("User: write once after RedMed is filled.")
                 tipRow("Cancel the NFC prompt and the band stays stale until you write again.")
-                tipRow("Scan below opens the same get.html card a stranger sees — HTML, no app for them.")
+                tipRow("Tap: Scan / Simulate scan opens the same get.html card on one page — HTML, no app for helpers.")
             }
             .padding(.top, 2)
         }
@@ -227,8 +230,8 @@ struct NFCView: View {
 
             if profile.braceletLinked {
                 Text(AppConfig.nfcHardwareEnabled
-                      ? "Hold near the band to open get.html — same HTML page a stranger gets on tap."
-                      : "Simulate scan opens bundled get.html#d= (same page as a real band tap).")
+                      ? "Tap capability: hold near the band to open get.html — same HTML page a stranger gets."
+                      : "Tap capability: Simulate scan opens bundled get.html#d= on one page (same card a stranger gets on band tap).")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.redmedMuted)
                     .lineSpacing(3)
@@ -265,7 +268,7 @@ struct NFCView: View {
                         .foregroundColor(.redmedMuted)
                 }
             } else {
-                Text("Write the band once above — then scan here to verify the tap card.")
+                Text("User write above first — then Simulate scan here for the tap card helpers see.")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.redmedMuted)
                     .lineSpacing(3)
