@@ -133,6 +133,17 @@ struct PaneCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            // BrandWordmark top-left of every pane — left-aligned with title text.
+            Image("BrandWordmark")
+                .resizable()
+                .scaledToFit()
+                .frame(height: 22)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.top, 10)
+                .padding(.bottom, 2)
+                .accessibilityHidden(true)
+
             Button { onTap(nil) } label: {
                 HStack(alignment: .center, spacing: 12) {
                     Text(pane.emoji)
@@ -143,8 +154,7 @@ struct PaneCard: View {
                         .animation(RedMedMotion.snappy, value: isOpen)
                         .accessibilityHidden(true)
 
-                    // Title + emoji only — red chrome, scales to fit the pane.
-                    // Hospitals wordmark lives at top of TopicDetailView, not in this row.
+                    // Title + emoji — red chrome, scales to fit the pane.
                     Text(pane.title)
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.redmedAccent)
@@ -163,7 +173,8 @@ struct PaneCard: View {
                         .animation(RedMedMotion.snappy, value: isOpen)
                 }
                 .padding(.horizontal, 12)
-                .padding(.vertical, 10)
+                .padding(.top, 4)
+                .padding(.bottom, 10)
                 .contentShape(Rectangle())
             }
             .buttonStyle(RedMedPressStyle(scale: 0.985, haptic: nil))
