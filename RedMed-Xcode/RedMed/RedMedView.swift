@@ -37,113 +37,92 @@ struct RedMedView: View {
     }
 
     var body: some View {
-        ScrollView {
-            // Header outside LazyVStack so band pairing flips immediately when NFC write / edit lands.
-            VStack(alignment: .leading, spacing: 0) {
-                header
+        // Quote pins toward the bottom when RedMed is short; scrolls down as
+        // allergies / meds / conditions / contacts fill the page (same as Aid).
+        GeometryReader { geo in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    // Header outside LazyVStack so band pairing flips immediately when NFC write / edit lands.
+                    header
 
-                LazyVStack(alignment: .leading, spacing: 0) {
-                    // YOU card — Name: empty keeps grey label; filled name replaces it (owner + tap).
-                    cardGroup {
-                        nameProfileRow
-                        thinDivider
-                        profileRow(label: "Birth date", value: profile.birthDate, emptyPrompt: "Add birth date")
-                        thinDivider
-                        profileRow(label: "Blood type", value: profile.bloodType, emptyPrompt: "Add blood type")
-                    }
-                    .padding(.top, 2)
+                    LazyVStack(alignment: .leading, spacing: 0) {
+                        // YOU card — Name: empty keeps grey label; filled name replaces it (owner + tap).
+                        cardGroup {
+                            nameProfileRow
+                            thinDivider
+                            profileRow(label: "Birth date", value: profile.birthDate, emptyPrompt: "Add birth date")
+                            thinDivider
+                            profileRow(label: "Blood type", value: profile.bloodType, emptyPrompt: "Add blood type")
+                        }
+                        .padding(.top, 2)
 
-                    listDropdown(title: "Allergies", items: profile.allergies, emptyPrompt: "Add allergy", open: $openAllergies)
-                    listDropdown(title: "Medications", items: profile.medications, emptyPrompt: "Add medication", open: $openMedications)
-                    listDropdown(title: "Conditions", items: profile.conditions, emptyPrompt: "Add condition", open: $openConditions)
+                        listDropdown(title: "Allergies", items: profile.allergies, emptyPrompt: "Add allergy", open: $openAllergies)
+                        listDropdown(title: "Medications", items: profile.medications, emptyPrompt: "Add medication", open: $openMedications)
+                        listDropdown(title: "Conditions", items: profile.conditions, emptyPrompt: "Add condition", open: $openConditions)
 
-                    // CONTACTS
-                    SectionLabel(text: "Contacts").padding(.horizontal, 16).padding(.top, 12)
-                    cardGroup {
-                        if profile.contacts.isEmpty {
-                            emptyPromptRow("Add contact")
-                        } else {
-                            ForEach(Array(profile.contacts.enumerated()), id: \.element.id) { i, c in
-                                VStack(alignment: .leading, spacing: 2) {
-                                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                                        Text(c.name.isEmpty ? "Emergency contact" : c.name)
-                                            .font(.system(size: 11, weight: .semibold))
-                                            .foregroundColor(.black)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                        if !c.phone.isEmpty {
-                                            Text(c.phone)
+                        // CONTACTS
+                        SectionLabel(text: "Contacts").padding(.horizontal, 16).padding(.top, 12)
+                        cardGroup {
+                            if profile.contacts.isEmpty {
+                                emptyPromptRow("Add contact")
+                            } else {
+                                ForEach(Array(profile.contacts.enumerated()), id: \.element.id) { i, c in
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                            Text(c.name.isEmpty ? "Emergency contact" : c.name)
+                                                .font(.system(size: 11, weight: .semibold))
+                                                .foregroundColor(.black)
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                            if !c.phone.isEmpty {
+                                                Text(c.phone)
+                                                    .font(.system(size: 12, weight: .medium))
+                                                    .foregroundColor(.redmedDark)
+                                                    .multilineTextAlignment(.trailing)
+                                            }
+                                        }
+                                        if !c.relationship.isEmpty {
+                                            Text(c.relationship)
                                                 .font(.system(size: 12, weight: .medium))
-                                                .foregroundColor(.redmedDark)
-                                                .multilineTextAlignment(.trailing)
+                                                .foregroundColor(.redmedMuted)
                                         }
                                     }
-                                    if !c.relationship.isEmpty {
-                                        Text(c.relationship)
-                                            .font(.system(size: 12, weight: .medium))
-                                            .foregroundColor(.redmedMuted)
-                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 11)
+                                    if i < profile.contacts.count - 1 { thinDivider }
                                 }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 11)
-                                if i < profile.contacts.count - 1 { thinDivider }
                             }
                         }
-                    }
 
-                    if !isScannerSession {
-                        // QUICK ACTIONS (owner only) — Bracelet / Help / Preview
-                        HStack(spacing: 10) {
-                            Button { tab = .nfc } label: {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "plus.circle")
-                                        .font(.system(size: 15, weight: .semibold))
-                                        .foregroundColor(.redmedAccent)
-                                    Text("Bracelet")
-                                        .font(.system(size: 12, weight: .semibold))
-                                        .foregroundColor(.redmedAccent)
-                                }
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(Color.redmedSurface)
-                                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
-                                        .strokeBorder(Color.redmedDivider, lineWidth: 1)
-                                )
-                            }
-                            .buttonStyle(.plain)
-
-                            Button { showHelp = true } label: {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "questionmark.circle")
-                                        .font(.system(size: 15, weight: .regular))
-                                        .foregroundColor(.redmedMuted)
-                                    Text("Help")
-                                        .font(.system(size: 12, weight: .semibold))
-                                        .foregroundColor(.redmedMuted)
-                                }
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(Color.redmedSurface)
-                                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
-                                        .strokeBorder(Color.redmedDivider, lineWidth: 1)
-                                )
-                            }
-                            .buttonStyle(.plain)
-
-                            if profile.hasData {
-                                Button {
-                                    guard PasserbyHTMLCardView.payload(from: profile) != nil else { return }
-                                    showScannerPreview = true
-                                } label: {
+                        if !isScannerSession {
+                            // QUICK ACTIONS (owner only) — Bracelet / Help / Preview
+                            HStack(spacing: 10) {
+                                Button { tab = .nfc } label: {
                                     HStack(spacing: 6) {
-                                        Image(systemName: "eye")
+                                        Image(systemName: "plus.circle")
+                                            .font(.system(size: 15, weight: .semibold))
+                                            .foregroundColor(.redmedAccent)
+                                        Text("Bracelet")
+                                            .font(.system(size: 12, weight: .semibold))
+                                            .foregroundColor(.redmedAccent)
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(Color.redmedSurface)
+                                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
+                                            .strokeBorder(Color.redmedDivider, lineWidth: 1)
+                                    )
+                                }
+                                .buttonStyle(.plain)
+
+                                Button { showHelp = true } label: {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "questionmark.circle")
                                             .font(.system(size: 15, weight: .regular))
                                             .foregroundColor(.redmedMuted)
-                                        Text("Preview")
+                                        Text("Help")
                                             .font(.system(size: 12, weight: .semibold))
                                             .foregroundColor(.redmedMuted)
                                     }
@@ -157,14 +136,42 @@ struct RedMedView: View {
                                     )
                                 }
                                 .buttonStyle(.plain)
+
+                                if profile.hasData {
+                                    Button {
+                                        guard PasserbyHTMLCardView.payload(from: profile) != nil else { return }
+                                        showScannerPreview = true
+                                    } label: {
+                                        HStack(spacing: 6) {
+                                            Image(systemName: "eye")
+                                                .font(.system(size: 15, weight: .regular))
+                                                .foregroundColor(.redmedMuted)
+                                            Text("Preview")
+                                                .font(.system(size: 12, weight: .semibold))
+                                                .foregroundColor(.redmedMuted)
+                                        }
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .background(Color.redmedSurface)
+                                        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
+                                                .strokeBorder(Color.redmedDivider, lineWidth: 1)
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
+                                }
                             }
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 28)
+                            .padding(.bottom, 8)
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 28)
-                        .padding(.bottom, 8)
                     }
 
-                    // Whisper prayer — same on owner + tapper main RedMed (and Aid).
+                    // Prayer sits toward the bottom when the page leaves spare height;
+                    // filled lists push it down and the ScrollView shows an iOS indicator.
+                    Spacer(minLength: 28)
+
                     Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
                         .font(.system(size: 8, weight: .regular))
                         .italic()
@@ -173,11 +180,12 @@ struct RedMedView: View {
                         .lineSpacing(1)
                         .frame(maxWidth: .infinity)
                         .padding(.horizontal, 28)
-                        .padding(.top, isScannerSession ? 28 : 16)
                         .padding(.bottom, 8)
                 }
+                .padding(.bottom, isScannerSession ? 42 : 12)
+                .frame(minHeight: geo.size.height, alignment: .top)
             }
-            .padding(.bottom, isScannerSession ? 42 : 12)
+            .scrollIndicators(.visible)
         }
         // Owner profile only — never redact the passerby / EMS scanner card.
         .privacySensitive(!isScannerSession)

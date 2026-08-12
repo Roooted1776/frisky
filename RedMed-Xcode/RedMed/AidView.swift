@@ -114,6 +114,7 @@ struct AidView: View {
                 .padding(.bottom, 24)
                 .frame(minHeight: geo.size.height, alignment: .top)
             }
+            .scrollIndicators(.visible)
         }
         .background(Color.redmedBg)
         .sheet(item: $activeTopic) { topic in
