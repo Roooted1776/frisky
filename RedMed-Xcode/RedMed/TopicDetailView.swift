@@ -203,17 +203,16 @@ struct TopicDetailView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     // Same chrome as owner Edit / scanner Back: accent red text,
-                    // opaque page-bg fill (kills system bar-button gray capsule).
+                    // plain — no fill pill (system capsule / black fill).
                     ChromeTextAction(title: "Back") { dismiss() }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.redmedBg)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
                 ToolbarItem(placement: .principal) {
                     Text(topic.title)
                         .font(RedMedChrome.navTitleFont)
                         .foregroundColor(.redmedAccent)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .multilineTextAlignment(.center)
                 }
             }
         }

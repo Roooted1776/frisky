@@ -146,14 +146,16 @@ struct PaneCard: View {
                         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
                         .accessibilityHidden(true)
 
-                    // Title + emoji only — no muted subtitle (shorter field chrome).
+                    // Title + emoji only — red chrome, scales to fit the pane.
                     Text(pane.title)
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.redmedAccent)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.85)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.75)
                         .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .layoutPriority(1)
 
                     Image(systemName: isOpen ? "chevron.down" : "chevron.right")
                         .font(.system(size: 14, weight: .semibold))
@@ -172,17 +174,19 @@ struct PaneCard: View {
                 VStack(spacing: 8) {
                     ForEach(pane.topics, id: \.key) { topic in
                         Button { onTap(topic.key) } label: {
-                            HStack(spacing: 10) {
+                            HStack(alignment: .center, spacing: 10) {
                                 Text(topic.label)
                                     .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(.redmedDark)
+                                    .foregroundColor(.redmedAccent)
                                     .multilineTextAlignment(.leading)
                                     .lineLimit(2)
-                                    .minimumScaleFactor(0.9)
+                                    .minimumScaleFactor(0.75)
+                                    .fixedSize(horizontal: false, vertical: true)
                                     .frame(maxWidth: .infinity, alignment: .leading)
+                                    .layoutPriority(1)
                                 Image(systemName: "chevron.right")
                                     .font(.system(size: 13, weight: .semibold))
-                                    .foregroundColor(.redmedMuted)
+                                    .foregroundColor(.redmedAccent.opacity(0.55))
                             }
                             .padding(.horizontal, 14)
                             .padding(.vertical, 14)
