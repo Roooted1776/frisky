@@ -24,16 +24,17 @@ enum AudioSessionGate {
             let optionsChanged = lastOptions != options
             lastOptions = options
 
-            if wasEmpty || optionsChanged {
-                let session = AVAudioSession.sharedInstance()
-                do {
+            let session = AVAudioSession.sharedInstance()
+            do {
+                if wasEmpty || optionsChanged {
                     try session.setCategory(.playback, mode: .default, options: options)
-                    try session.setActive(true)
-                } catch {
-                    // Session failures stay silent — brightness / UI still run.
-                    onReady?()
-                    return
                 }
+                // Always re-assert active — Stop/Reset then re-arm can race a prior deactivate.
+                try session.setActive(true)
+            } catch {
+                // Session failures stay silent — brightness / UI still run.
+                onReady?()
+                return
             }
             onReady?()
         }
