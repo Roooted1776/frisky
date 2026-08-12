@@ -214,8 +214,42 @@ enum RedMedChrome {
     static let chipRadius: CGFloat = 7
     /// Brand mark is a circular disc — always `Circle()`, never a rounded rect.
     static let logoRadius: CGFloat = 0
+    /// Shared BrandWordmark lockup on 911 / Aid / NFC / topic pages.
+    static let wordmarkHeight: CGFloat = 42
+    static let pagePadX: CGFloat = 16
+    static let wordmarkTop: CGFloat = 6
+    static let wordmarkBottom: CGFloat = 4
     static let cardShadow = Color.black.opacity(0.045)
     static let accentShadow = Color.redmedAccent.opacity(0.18)
+}
+
+/// Pinned BrandWordmark row — same metrics on every owner / scanner user page.
+struct BrandWordmarkHeader<Trailing: View>: View {
+    var top: CGFloat = RedMedChrome.wordmarkTop
+    @ViewBuilder var trailing: () -> Trailing
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            Image("BrandWordmark")
+                .resizable()
+                .scaledToFit()
+                .frame(height: RedMedChrome.wordmarkHeight)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityLabel("RedMed")
+                .layoutPriority(1)
+            trailing()
+        }
+        .padding(.horizontal, RedMedChrome.pagePadX)
+        .padding(.top, top)
+        .padding(.bottom, RedMedChrome.wordmarkBottom)
+    }
+}
+
+extension BrandWordmarkHeader where Trailing == EmptyView {
+    init(top: CGFloat = RedMedChrome.wordmarkTop) {
+        self.top = top
+        self.trailing = { EmptyView() }
+    }
 }
 
 extension View {

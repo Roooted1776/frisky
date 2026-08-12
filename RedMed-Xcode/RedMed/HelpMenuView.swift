@@ -155,7 +155,8 @@ struct HelpMenuView: View {
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
-            .background(Color.redmedBg.ignoresSafeArea())
+            .scrollIndicators(.visible)
+            .background { RedMedPageBackground() }
             .navigationTitle("Help")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.redmedBg, for: .navigationBar)

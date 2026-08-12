@@ -27,16 +27,7 @@ struct NFCView: View {
         // Fixed cream chrome (no NavigationView / system toolbar) — BrandWordmark
         // top-left like 911 / Aid. Owner-only tab; scanners never mount this.
         VStack(spacing: 0) {
-            Image("BrandWordmark")
-                .resizable()
-                .scaledToFit()
-                .frame(height: 42)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityLabel("RedMed")
-                .padding(.horizontal, 16)
-                .padding(.top, 11)
-                .padding(.bottom, 4)
-                .background(Color.redmedBg)
+            BrandWordmarkHeader()
 
             ScrollView {
                 VStack(spacing: 16) {
@@ -44,7 +35,7 @@ struct NFCView: View {
                     setupCard
                     scanCard
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, RedMedChrome.pagePadX)
                 .padding(.top, 4)
                 .padding(.bottom, 28)
             }

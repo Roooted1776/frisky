@@ -15,24 +15,11 @@ struct EmergencyView: View {
         // Fixed cream chrome (no NavigationView / system toolbar fill).
         // Scanner Back overlays like RedMed / Aid. Location nudge is Settings-only.
         VStack(spacing: 0) {
-            HStack(alignment: .center, spacing: 12) {
-                // Brand wordmark — same Asset Catalog BrandWordmark (@1x/@2x/@3x) as Aid.
-                Image("BrandWordmark")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 42)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .accessibilityLabel("RedMed")
-                    .layoutPriority(1)
-
+            BrandWordmarkHeader {
                 if isScannerSession {
                     ScannerBackButton()
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 6)
-            .padding(.bottom, 4)
-            .background(Color.redmedBg)
 
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 10) {

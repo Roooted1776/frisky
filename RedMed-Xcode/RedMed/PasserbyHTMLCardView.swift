@@ -49,7 +49,7 @@ struct PasserbyHTMLCardView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .background(Color.redmedBg.ignoresSafeArea())
+        .background { RedMedPageBackground() }
     }
 
     static func extractPayload(_ raw: String) -> String? {

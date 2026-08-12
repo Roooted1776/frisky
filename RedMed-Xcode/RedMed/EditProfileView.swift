@@ -94,7 +94,7 @@ struct EditProfileView: View {
             .frame(height: 52)
             .background(Color.redmedBg.opacity(0.95))
             .overlay(alignment: .bottom) {
-                Divider().overlay(Color.black.opacity(0.12))
+                Divider().overlay(Color.redmedDivider)
             }
 
             ScrollView {
@@ -160,11 +160,11 @@ struct EditProfileView: View {
             }
             .scrollIndicators(.visible)
             .scrollDismissesKeyboard(.interactively)
-            .background(Color.redmedBg)
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 suggestionStrip
             }
         }
+        .background { RedMedPageBackground() }
         .onAppear {
             loadDraft()
             SuggestionCatalog.warmUp()
@@ -455,8 +455,7 @@ struct EditProfileView: View {
     @ViewBuilder
     private func editCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         VStack(spacing: 0) { content() }
-            .background(Color.redmedSurface)
-            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+            .redmedBox()
     }
 
     // MARK: - Persistence
