@@ -174,7 +174,7 @@ struct SecondaryButton: View {
 }
 
 /// Trailing chrome text — owner **Help** / **Edit**, scanner **Back**, Aid topic **Back**.
-/// Accent red text only — no fill (avoids a white/cream pill over the HTML shell).
+/// Accent red, centered in a page-bg bubble (full rounded rect — not a clipped capsule).
 struct ChromeTextAction: View {
     let title: String
     let action: () -> Void
@@ -185,14 +185,24 @@ struct ChromeTextAction: View {
             action()
         } label: {
             Text(title)
-                .font(.system(size: 18, weight: .regular))
+                .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(.redmedAccent)
                 .kerning(-0.2)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 4)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+                .multilineTextAlignment(.center)
+                .frame(minWidth: 52, minHeight: 32)
+                .padding(.horizontal, 12)
+                .background(Color.redmedBg)
+                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+                .overlay(
+                    RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
+                        .strokeBorder(Color.redmedDivider, lineWidth: 1)
+                )
         }
         .buttonStyle(RedMedPressStyle(scale: 0.96, haptic: nil))
         .tint(.redmedAccent)
+        .fixedSize()
     }
 }
 
