@@ -158,6 +158,17 @@
     text-align: right;
   }
   .row .v.empty { font-weight: 400; color: rgba(120,113,108,0.4); }
+  /* Name: bold value on the left (same 11px system stack as other YOU fields). */
+  .row.row-name {
+    justify-content: flex-start;
+    gap: 8px;
+  }
+  .row.row-name .v {
+    font-weight: 700;
+    text-align: left;
+    flex: 1;
+    min-width: 0;
+  }
   .list-item {
     padding: 11px 16px;
     border-bottom: 1px solid var(--divider);
@@ -441,8 +452,7 @@
     display: flex;
     gap: 12px;
     align-items: center;
-    min-height: 68px;
-    padding: 12px 0;
+    padding: 10px 0;
     min-width: 0;
     -webkit-tap-highlight-color: transparent;
   }
@@ -458,32 +468,18 @@
     flex-shrink: 0;
   }
   details.aid[open] .aid-emoji { background: var(--accent); }
-  .aid-copy {
-    min-width: 0;
-    flex: 1;
-  }
   .aid-title {
     display: block;
     font-size: 16px;
     font-weight: 700;
     color: var(--accent);
     line-height: 1.2;
+    flex: 1;
+    min-width: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .aid-sub {
-    display: block;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--muted);
-    margin-top: 2px;
-    line-height: 1.25;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  details.aid[open] .aid-sub { opacity: 0.55; }
   details.aid ol {
     margin: 0 0 12px;
     padding-left: 18px;
@@ -565,7 +561,7 @@
       </div>
 
       <div class="card" style="margin-top:2px">
-        <div class="row"><span class="k">Name</span><span class="v" id="rowName">—</span></div>
+        <div class="row row-name"><span class="k">Name</span><span class="v" id="rowName">—</span></div>
         <div class="row"><span class="k">Birth date</span><span class="v" id="rowDob">—</span></div>
         <div class="row"><span class="k">Blood type</span><span class="v" id="rowBlood">—</span></div>
       </div>
@@ -656,56 +652,56 @@
         <a class="btn btn-primary" id="callEmergency" href="tel:112">Call <span class="emg">112</span></a>
 
         <div class="aid-grid">
-          <details class="aid"><summary><span class="aid-emoji">🚗</span><span class="aid-copy"><span class="aid-title">Crash &amp; Head</span><div class="aid-sub">Impact · neck · pupils</div></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">🚗</span><span class="aid-title">Crash &amp; Head</span></summary>
             <ol>
               <li>Call <span class="emg">112</span> — give exact location and number of people</li>
               <li>Hazards on. Do not move them unless fire or traffic danger</li>
               <li>Keep head/neck still. Control bleeding with firm pressure</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">🩸</span><span class="aid-copy"><span class="aid-title">Bleeding</span><div class="aid-sub">Pressure · tourniquet</div></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">🩸</span><span class="aid-title">Bleeding</span></summary>
             <ol>
               <li>Press hard with both hands — do not lift to check</li>
               <li>Add cloth on top if soaked. Limb: tourniquet 2–3 in above</li>
               <li>Note the time. Stay on the line with <span class="emg">112</span></li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">❤️</span><span class="aid-copy"><span class="aid-title">Heart &amp; Airway</span><div class="aid-sub">CPR · choking</div></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">❤️</span><span class="aid-title">Heart &amp; Airway</span></summary>
             <ol>
               <li>No breathing/pulse: hard compressions 100–120/min, 2 inches deep</li>
               <li>Choking, cannot cough: 5 back blows, then 5 abdominal thrusts</li>
               <li>Alternate until clear or unresponsive — then CPR</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">⚡</span><span class="aid-copy"><span class="aid-title">Shock</span><div class="aid-sub">Pale · cold · clammy</div></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">⚡</span><span class="aid-title">Shock</span></summary>
             <ol>
               <li>Call <span class="emg">112</span>. Lay flat — do not let them walk</li>
               <li>Elevate legs 12 inches unless head/neck/spine injury</li>
               <li>Keep warm. No food, water, or medication</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">🧠</span><span class="aid-copy"><span class="aid-title">Seizure</span><div class="aid-sub">Don’t restrain · time it</div></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">🧠</span><span class="aid-title">Seizure</span></summary>
             <ol>
               <li>Time it. Clear sharp objects. Do not restrain</li>
               <li>Nothing in the mouth. Cushion the head</li>
               <li>Call <span class="emg">112</span> if first seizure, over 5 minutes, injury, or in water</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">🥶</span><span class="aid-copy"><span class="aid-title">Hypothermia</span><div class="aid-sub">Warm core · no rubbing</div></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">🥶</span><span class="aid-title">Hypothermia</span></summary>
             <ol>
               <li>Move to shelter. Remove wet clothes gently</li>
               <li>Warm chest/neck/armpits/groin — not the limbs</li>
               <li>No rubbing or massage. Warm drinks only if fully conscious</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">🥵</span><span class="aid-copy"><span class="aid-title">Heat</span><div class="aid-sub">Cool fast · call <span class="emg">112</span></div></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">🥵</span><span class="aid-title">Heat</span></summary>
             <ol>
               <li>Heat stroke: call <span class="emg">112</span> — cool neck/armpits/groin fast</li>
               <li>Move to shade. Remove extra clothing. Fan while cooling</li>
               <li>Sip cool water only if fully conscious</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">🏥</span><span class="aid-copy"><span class="aid-title">Trauma Hospitals</span><div class="aid-sub">Nearest Level I/II center</div></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">🏥</span><span class="aid-title">Trauma Hospitals</span></summary>
             <ol>
               <li>Call <span class="emg">112</span> — dispatch routes to the right trauma level</li>
               <li>Do not self-transport major trauma if EMS is available</li>

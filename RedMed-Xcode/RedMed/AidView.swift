@@ -4,7 +4,6 @@ struct AidPane: Identifiable {
     let id: String
     let emoji: String
     let title: String
-    let subtitle: String
     let iconFilled: Bool
     let topics: [(label: String, key: String)]
 }
@@ -12,23 +11,23 @@ struct AidPane: Identifiable {
 /// Pane chrome only — topic bodies stay in AidTopicCatalog until a topic opens.
 enum AidPaneCatalog {
     static let panes: [AidPane] = [
-        AidPane(id: "crash", emoji: "🚗", title: "Crash & Head", subtitle: "Impact · neck · spinal", iconFilled: false,
+        AidPane(id: "crash", emoji: "🚗", title: "Crash & Head", iconFilled: false,
                 topics: [("Car Crash", "car-crash"), ("Head & Pupils", "head-pupils"), ("Spinal", "spinal")]),
-        AidPane(id: "bleed", emoji: "🩸", title: "Bleeding", subtitle: "Pressure · tourniquet", iconFilled: true,
+        AidPane(id: "bleed", emoji: "🩸", title: "Bleeding", iconFilled: true,
                 topics: [("Find Bleeding", "find-bleeding"), ("Bad Bleeding", "bad-bleeding"),
                          ("Belt Tourniquet", "belt-tourniquet"), ("Gunshot / Stab", "gunshot-stab")]),
-        AidPane(id: "breathing", emoji: "🫁", title: "Not Breathing", subtitle: "CPR · airway", iconFilled: true,
+        AidPane(id: "breathing", emoji: "🫁", title: "Not Breathing", iconFilled: true,
                 topics: [("CPR", "cpr")]),
-        AidPane(id: "heart", emoji: "❤️", title: "Choking", subtitle: "Back blows · Heimlich", iconFilled: true,
+        AidPane(id: "heart", emoji: "❤️", title: "Choking", iconFilled: true,
                 topics: [("Choking", "choking")]),
-        AidPane(id: "shock", emoji: "⚡", title: "Shock", subtitle: "Pale · cold · clammy", iconFilled: false,
+        AidPane(id: "shock", emoji: "⚡", title: "Shock", iconFilled: false,
                 topics: [("Shock", "shock")]),
-        AidPane(id: "temp", emoji: "🌡️", title: "Burns · Cold · Heat", subtitle: "Cool · warm · cover", iconFilled: false,
+        AidPane(id: "temp", emoji: "🌡️", title: "Burns · Cold · Heat", iconFilled: false,
                 topics: [("Burn Care", "burn-care"), ("Electrical & Chemical", "electrical-chemical-burns"),
                          ("Cold (Hypothermia)", "cold-hypothermia"), ("Heat (Exhaustion & Stroke)", "heat-stroke")]),
-        AidPane(id: "seizure", emoji: "🧠", title: "Seizure", subtitle: "Don't restrain · time it", iconFilled: false,
+        AidPane(id: "seizure", emoji: "🧠", title: "Seizure", iconFilled: false,
                 topics: [("Seizure", "seizure")]),
-        AidPane(id: "hospitals", emoji: "🏥", title: "Nearby Hospitals", subtitle: "Find an ER near you", iconFilled: false,
+        AidPane(id: "hospitals", emoji: "🏥", title: "Nearby Hospitals", iconFilled: false,
                 topics: [("Find Nearby Hospitals", "trauma-hospitals")]),
     ]
 
@@ -136,20 +135,14 @@ struct PaneCard: View {
                         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
                         .accessibilityHidden(true)
 
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(pane.title)
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.redmedAccent)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.85)
-                        Text(pane.subtitle)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.redmedMuted)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.85)
-                            .opacity(isOpen ? 0.55 : 1)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    // Title + emoji only — no muted subtitle (shorter field chrome).
+                    Text(pane.title)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.redmedAccent)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
                     Image(systemName: isOpen ? "chevron.down" : "chevron.right")
                         .font(.system(size: 14, weight: .semibold))
@@ -157,7 +150,7 @@ struct PaneCard: View {
                         .frame(width: 28, height: 28)
                 }
                 .padding(.horizontal, 12)
-                .padding(.vertical, 12)
+                .padding(.vertical, 10)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)

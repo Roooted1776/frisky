@@ -199,24 +199,16 @@ struct TopicDetailView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.redmedBg, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
+            .tint(.redmedAccent)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 17, weight: .semibold))
-                            Text("Aid")
-                                .font(.system(size: 18, weight: .regular))
-                                .kerning(-0.2)
-                        }
-                        .foregroundColor(.redmedAccent)
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 2)
+                    // Same chrome as owner Edit / scanner Back: accent red text,
+                    // opaque page-bg fill (kills system bar-button gray capsule).
+                    ChromeTextAction(title: "Back") { dismiss() }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
                         .background(Color.redmedBg)
-                    }
-                    .buttonStyle(.plain)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
                 ToolbarItem(placement: .principal) {
                     Text(topic.title)
