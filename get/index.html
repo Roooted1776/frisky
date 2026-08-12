@@ -31,7 +31,7 @@
      - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
        walk-by ~6–8″ does not fire, reliable coupling dies past ~4″,
        passive 13.56 MHz HF NFC (not Bluetooth) → opens this page
-     - Logo: BrandLogo.png (bundle /get/) or assets/BrandLogo.png (Pages)
+     - Logo: BrandLogo.png + BrandWordmark.png (bundle /get/) or assets/ (Pages)
      - Legacy card.html / card/ redirects to /get/ and keeps #d=
      Keep identical: get/index.html, repo-root get.html, RedMed-Xcode/RedMed/get.html.
      Cloudflare Pages serves AppConfig URL https://redmed.pages.dev/get/ from get/. -->
@@ -44,6 +44,9 @@
     --divider: rgba(28,25,23,0.07);
     --tab-off: #5f6369;
     --surface: rgba(255,255,255,0.92);
+    --box: 8px;
+    --chip: 6px;
+    --logo: 10px;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; }
@@ -69,11 +72,17 @@
     padding: 10px 20px 8px;
   }
   .rm-lock {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--muted);
-    line-height: 1.35;
-    margin: 0 0 6px;
+    line-height: 1.4;
+    margin: 0 auto 10px;
+    max-width: 275px;
+    text-align: center;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--divider);
+    border-radius: var(--box);
   }
   .rm-band {
     font-size: 10px;
@@ -93,7 +102,7 @@
   .rm-logo {
     width: 48px;
     height: 48px;
-    border-radius: 13px;
+    border-radius: var(--logo);
     box-shadow: 0 3px 5px rgba(225,29,72,0.15);
     flex-shrink: 0;
     display: block;
@@ -125,7 +134,7 @@
     margin: 0 16px;
     background: var(--surface);
     border: 1px solid rgba(28,25,23,0.08);
-    border-radius: 12px;
+    border-radius: var(--box);
     overflow: hidden;
   }
   .row {
@@ -189,12 +198,19 @@
     margin-top: 2px;
   }
   .quote {
-    margin: 42px 20px 16px;
-    font-size: 11px;
+    margin: 28px 16px 16px;
+    padding: 14px 16px;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 13px;
     font-weight: 500;
     color: var(--dark);
     text-align: center;
-    line-height: 1.55;
+    line-height: 1.45;
+    background: var(--surface);
+    border: 1px solid var(--divider);
+    border-radius: var(--box);
   }
 
   /* —— Help tab —— */
@@ -210,7 +226,7 @@
     display: block;
     width: 100%;
     text-align: center;
-    border-radius: 999px;
+    border-radius: var(--box);
     padding: 14px;
     margin: 8px 0;
     border: none;
@@ -257,7 +273,7 @@
   .gps-card {
     background: var(--surface);
     border: 1px solid var(--divider);
-    border-radius: 14px;
+    border-radius: var(--box);
     padding: 10px 12px;
     text-align: center;
     margin: 6px 0 5px;
@@ -269,7 +285,7 @@
     letter-spacing: 1.1px;
     color: var(--accent);
     background: rgba(225,29,72,0.1);
-    border-radius: 999px;
+    border-radius: var(--chip);
     padding: 3px 8px;
     margin-bottom: 4px;
   }
@@ -300,7 +316,7 @@
     gap: 8px;
     background: var(--surface);
     border: 1px solid var(--divider);
-    border-radius: 12px;
+    border-radius: var(--box);
     padding: 8px 10px;
     margin: 5px 0;
   }
@@ -334,7 +350,7 @@
   }
   .seizure-btn {
     border: none;
-    border-radius: 999px;
+    border-radius: var(--chip);
     padding: 6px 12px;
     font-size: 11px;
     font-weight: 700;
@@ -351,7 +367,7 @@
   .info {
     background: var(--surface);
     border: 1px solid var(--divider);
-    border-radius: 14px;
+    border-radius: var(--box);
     padding: 10px 12px;
     margin: 5px 0;
   }
@@ -363,7 +379,7 @@
   }
   .info-icon {
     width: 24px; height: 24px;
-    border-radius: 7px;
+    border-radius: var(--chip);
     background: rgba(225,29,72,0.1);
     color: var(--accent);
     font-size: 12px;
@@ -395,59 +411,87 @@
   }
 
   /* —— Aid tab —— */
+  .aid-wordmark {
+    display: block;
+    height: 42px;
+    width: auto;
+    max-width: 200px;
+    margin: 2px 0 10px;
+    object-fit: contain;
+  }
+  /* Full-width accordion — same life-saving pattern as owner AidView. */
   .aid-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     margin-top: 8px;
   }
   details.aid {
     background: var(--surface);
     border: 1px solid var(--divider);
-    border-radius: 14px;
+    border-radius: var(--box);
     padding: 0 12px;
-    grid-column: span 1;
+    width: 100%;
+    min-width: 0;
   }
-  details.aid[open] { grid-column: span 2; border-color: rgba(225,29,72,0.28); }
+  details.aid[open] { border-color: rgba(225,29,72,0.35); }
   details.aid summary {
     cursor: pointer;
     list-style: none;
     display: flex;
-    gap: 8px;
-    align-items: flex-start;
+    gap: 12px;
+    align-items: center;
+    min-height: 68px;
     padding: 12px 0;
+    min-width: 0;
+    -webkit-tap-highlight-color: transparent;
   }
   details.aid summary::-webkit-details-marker { display: none; }
   .aid-emoji {
-    width: 38px; height: 38px;
-    border-radius: 11px;
+    width: 44px; height: 44px;
+    border-radius: var(--chip);
     background: rgba(225,29,72,0.1);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 22px;
     flex-shrink: 0;
   }
   details.aid[open] .aid-emoji { background: var(--accent); }
+  .aid-copy {
+    min-width: 0;
+    flex: 1;
+  }
   .aid-title {
-    font-size: 13px;
+    display: block;
+    font-size: 16px;
     font-weight: 700;
-    color: var(--dark);
+    color: var(--accent);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .aid-sub {
-    font-size: 11px;
-    font-weight: 600;
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
     color: var(--muted);
-    margin-top: 3px;
+    margin-top: 2px;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  details.aid[open] .aid-sub { display: none; }
+  details.aid[open] .aid-sub { opacity: 0.55; }
   details.aid ol {
     margin: 0 0 12px;
     padding-left: 18px;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 500;
     line-height: 1.45;
   }
+  details.aid ol li + li { margin-top: 8px; }
 
   /* —— Tab bar (matches CustomTabBar) —— */
   .tabbar {
@@ -509,7 +553,7 @@
     <!-- RedMed -->
     <div class="panel active" id="panel-medical" data-panel="medical">
       <div class="rm-header">
-        <p class="rm-lock">Read only — editing needs the <a href="redmed://main">owner’s RedMed app</a> (<a href="https://apps.apple.com/app/redmed/id0000000000">App Store</a>).</p>
+        <p class="rm-lock">Read only — editing needs the <a href="redmed://main">owner’s RedMed app</a>.</p>
         <p class="rm-band" id="bandSpec"></p>
         <div class="rm-title-row">
           <img class="rm-logo" id="rmLogo" src="BrandLogo.png" width="48" height="48" alt="RedMed">
@@ -562,8 +606,8 @@
           <div class="gps-acc" id="gpsAcc"></div>
         </div>
         <div class="gps-actions">
-          <a class="btn btn-call" id="callEmergency911" href="tel:112">Call <span class="emg">112</span></a>
           <button class="btn btn-ink" type="button" id="copyCoordsBtn">Copy coordinates</button>
+          <a class="btn btn-call" id="callEmergency911" href="tel:112">Call <span class="emg">112</span></a>
         </div>
 
         <div class="seizure-strip" id="seizureStrip">
@@ -605,64 +649,63 @@
       </div>
     </div>
 
-    <!-- Aid -->
+    <!-- Aid — same BrandWordmark chrome as owner AidView (no title/hint text). -->
     <div class="panel" id="panel-aid" data-panel="aid">
       <div class="page-pad">
-        <h1 class="page-title">Roadside Aid</h1>
-        <p class="hint" style="text-align:left;margin-bottom:6px">Tap a pane — expand only what you need.</p>
+        <img class="aid-wordmark" id="aidWordmark" src="BrandWordmark.png" width="168" height="42" alt="RedMed">
         <a class="btn btn-primary" id="callEmergency" href="tel:112">Call <span class="emg">112</span></a>
 
         <div class="aid-grid">
-          <details class="aid"><summary><span class="aid-emoji">🚗</span><span><span class="aid-title">Crash &amp; Head</span><div class="aid-sub">Impact · neck · pupils</div></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">🚗</span><span class="aid-copy"><span class="aid-title">Crash &amp; Head</span><div class="aid-sub">Impact · neck · pupils</div></span></summary>
             <ol>
               <li>Call <span class="emg">112</span> — give exact location and number of people</li>
               <li>Hazards on. Do not move them unless fire or traffic danger</li>
               <li>Keep head/neck still. Control bleeding with firm pressure</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">🩸</span><span><span class="aid-title">Bleeding</span><div class="aid-sub">Pressure · tourniquet</div></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">🩸</span><span class="aid-copy"><span class="aid-title">Bleeding</span><div class="aid-sub">Pressure · tourniquet</div></span></summary>
             <ol>
               <li>Press hard with both hands — do not lift to check</li>
               <li>Add cloth on top if soaked. Limb: tourniquet 2–3 in above</li>
               <li>Note the time. Stay on the line with <span class="emg">112</span></li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">❤️</span><span><span class="aid-title">Heart &amp; Airway</span><div class="aid-sub">CPR · choking</div></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">❤️</span><span class="aid-copy"><span class="aid-title">Heart &amp; Airway</span><div class="aid-sub">CPR · choking</div></span></summary>
             <ol>
               <li>No breathing/pulse: hard compressions 100–120/min, 2 inches deep</li>
               <li>Choking, cannot cough: 5 back blows, then 5 abdominal thrusts</li>
               <li>Alternate until clear or unresponsive — then CPR</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">⚡</span><span><span class="aid-title">Shock</span><div class="aid-sub">Pale · cold · clammy</div></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">⚡</span><span class="aid-copy"><span class="aid-title">Shock</span><div class="aid-sub">Pale · cold · clammy</div></span></summary>
             <ol>
               <li>Call <span class="emg">112</span>. Lay flat — do not let them walk</li>
               <li>Elevate legs 12 inches unless head/neck/spine injury</li>
               <li>Keep warm. No food, water, or medication</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">🧠</span><span><span class="aid-title">Seizure</span><div class="aid-sub">Don’t restrain · time it</div></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">🧠</span><span class="aid-copy"><span class="aid-title">Seizure</span><div class="aid-sub">Don’t restrain · time it</div></span></summary>
             <ol>
               <li>Time it. Clear sharp objects. Do not restrain</li>
               <li>Nothing in the mouth. Cushion the head</li>
               <li>Call <span class="emg">112</span> if first seizure, over 5 minutes, injury, or in water</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">🥶</span><span><span class="aid-title">Hypothermia</span><div class="aid-sub">Warm core · no rubbing</div></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">🥶</span><span class="aid-copy"><span class="aid-title">Hypothermia</span><div class="aid-sub">Warm core · no rubbing</div></span></summary>
             <ol>
               <li>Move to shelter. Remove wet clothes gently</li>
               <li>Warm chest/neck/armpits/groin — not the limbs</li>
               <li>No rubbing or massage. Warm drinks only if fully conscious</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">🥵</span><span><span class="aid-title">Heat</span><div class="aid-sub">Cool fast · call <span class="emg">112</span></div></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">🥵</span><span class="aid-copy"><span class="aid-title">Heat</span><div class="aid-sub">Cool fast · call <span class="emg">112</span></div></span></summary>
             <ol>
               <li>Heat stroke: call <span class="emg">112</span> — cool neck/armpits/groin fast</li>
               <li>Move to shade. Remove extra clothing. Fan while cooling</li>
               <li>Sip cool water only if fully conscious</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">🏥</span><span><span class="aid-title">Trauma Hospitals</span><div class="aid-sub">Nearest Level I/II center</div></span></summary>
+          <details class="aid"><summary><span class="aid-emoji">🏥</span><span class="aid-copy"><span class="aid-title">Trauma Hospitals</span><div class="aid-sub">Nearest Level I/II center</div></span></summary>
             <ol>
               <li>Call <span class="emg">112</span> — dispatch routes to the right trauma level</li>
               <li>Do not self-transport major trauma if EMS is available</li>
@@ -697,6 +740,21 @@
     page: 'get.html'
   };
 
+  function resolveAsset(elId, candidates) {
+    var img = document.getElementById(elId);
+    if (!img) return;
+    var i = 0;
+    function tryNext() {
+      if (i >= candidates.length) return;
+      var src = candidates[i++];
+      var probe = new Image();
+      probe.onload = function () { img.src = src; };
+      probe.onerror = tryNext;
+      probe.src = src;
+    }
+    tryNext();
+  }
+
   function resolveLogo() {
     var candidates = ['BrandLogo.png', 'assets/BrandLogo.png'];
     var img = document.getElementById('rmLogo');
@@ -714,6 +772,7 @@
       probe.src = src;
     }
     tryNext();
+    resolveAsset('aidWordmark', ['BrandWordmark.png', 'assets/BrandWordmark.png']);
   }
 
   var bandEl = document.getElementById('bandSpec');
@@ -724,6 +783,20 @@
       SPECS.walkByMinIn + '–' + SPECS.walkByMaxIn + '″ won’t fire';
   }
   resolveLogo();
+
+  // Aid accordion — one pane open at a time (matches owner AidView).
+  (function aidAccordion() {
+    var root = document.getElementById('panel-aid');
+    if (!root) return;
+    root.addEventListener('toggle', function (e) {
+      var t = e.target;
+      if (!t || t.tagName !== 'DETAILS' || !t.open) return;
+      root.querySelectorAll('details.aid[open]').forEach(function (d) {
+        if (d !== t) d.open = false;
+      });
+    }, true);
+  })();
+
 
   var MAX_PAYLOAD = 50000;
   var MAX_INFLATED = 65536;

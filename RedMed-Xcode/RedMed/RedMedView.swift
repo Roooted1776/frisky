@@ -20,8 +20,12 @@ struct RedMedView: View {
     }
 
     private var braceletStatusLabel: String {
-        // Main.dc.html / Xcode design frame copy — keep Linked, not Paired.
-        profile.braceletLinked ? "Linked bracelet ›" : "Not linked — tap to pair ›"
+        // One RedMed header for owner + responder. Linked only after NFC write
+        // and YOU-card identity (name, birth, blood) is filled.
+        if profile.showsBraceletAsLinked {
+            return isScannerSession ? "Linked bracelet" : "Linked bracelet ›"
+        }
+        return isScannerSession ? "Not linked" : "Not linked — tap to pair ›"
     }
 
     var body: some View {
@@ -85,34 +89,40 @@ struct RedMedView: View {
                             Button { tab = .nfc } label: {
                                 HStack(spacing: 6) {
                                     Image(systemName: "plus.circle")
-                                        .font(.system(size: 16, weight: .semibold))
+                                        .font(.system(size: 15, weight: .semibold))
                                         .foregroundColor(.redmedAccent)
                                     Text("Bracelet")
-                                        .font(.system(size: 11, weight: .semibold))
+                                        .font(.system(size: 12, weight: .semibold))
                                         .foregroundColor(.redmedAccent)
-                                        .kerning(-0.1)
                                 }
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(Color.redmedSurface)
+                                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
+                                        .stroke(Color.redmedDivider, lineWidth: 1)
+                                )
                             }
                             .buttonStyle(.plain)
-
-                            Rectangle()
-                                .fill(Color.redmedDark.opacity(0.12))
-                                .frame(width: 0.5, height: 18)
 
                             Button { showHelp = true } label: {
                                 HStack(spacing: 6) {
                                     Image(systemName: "questionmark.circle")
-                                        .font(.system(size: 16, weight: .regular))
+                                        .font(.system(size: 15, weight: .regular))
                                         .foregroundColor(.redmedMuted)
                                     Text("How it works")
-                                        .font(.system(size: 11, weight: .semibold))
+                                        .font(.system(size: 12, weight: .semibold))
                                         .foregroundColor(.redmedMuted)
-                                        .kerning(-0.1)
                                 }
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(Color.redmedSurface)
+                                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
+                                        .stroke(Color.redmedDivider, lineWidth: 1)
+                                )
                             }
                             .buttonStyle(.plain)
 
@@ -120,21 +130,26 @@ struct RedMedView: View {
                                 Button { showScannerPreview = true } label: {
                                     HStack(spacing: 6) {
                                         Image(systemName: "eye")
-                                            .font(.system(size: 16, weight: .regular))
+                                            .font(.system(size: 15, weight: .regular))
                                             .foregroundColor(.redmedMuted)
-                                        Text("Preview scanner")
-                                            .font(.system(size: 11, weight: .semibold))
+                                        Text("Preview")
+                                            .font(.system(size: 12, weight: .semibold))
                                             .foregroundColor(.redmedMuted)
-                                            .kerning(-0.1)
                                     }
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 6)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(Color.redmedSurface)
+                                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
+                                            .stroke(Color.redmedDivider, lineWidth: 1)
+                                    )
                                 }
                                 .buttonStyle(.plain)
                             }
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.top, 42)
+                        .padding(.top, 28)
                         .padding(.bottom, 16)
                     }
                 }
@@ -178,71 +193,40 @@ struct RedMedView: View {
         ZStack(alignment: .topTrailing) {
             VStack(alignment: .leading, spacing: 0) {
                 if isScannerSession {
-                    Text("Read only — editing needs the owner’s RedMed app + Face ID / passcode.")
-                        .font(.system(size: 11, weight: .medium))
+                    Text("Read only — editing needs the owner’s RedMed app.")
+                        .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.redmedMuted)
-                        .lineSpacing(2)
-                        .padding(.bottom, 4)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: 275)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .redmedBox()
+                        .frame(maxWidth: .infinity)
+                        .padding(.bottom, 10)
                 } else if !profile.hasData {
                     (
-                        Text("Tap ").font(.system(size: 11, weight: .medium)).foregroundColor(.redmedMuted)
-                        + Text("Edit").font(.system(size: 11, weight: .bold)).foregroundColor(.redmedAccent)
+                        Text("Tap ").font(.system(size: 12, weight: .medium)).foregroundColor(.redmedMuted)
+                        + Text("Edit").font(.system(size: 12, weight: .bold)).foregroundColor(.redmedAccent)
                         + Text(" to add your name and set up your bracelet.")
-                            .font(.system(size: 11, weight: .medium)).foregroundColor(.redmedMuted)
+                            .font(.system(size: 12, weight: .medium)).foregroundColor(.redmedMuted)
                     )
-                    .lineSpacing(2)
-                    .padding(.bottom, 4)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 275)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .redmedBox()
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 10)
                 }
 
-                if isScannerSession {
-                    HStack(spacing: 8) {
-                        Image("BrandLogo")
-                            .resizable()
-                            .frame(width: 48, height: 48)
-                            .clipShape(RoundedRectangle(cornerRadius: 13))
-                            .shadow(color: Color.redmedAccent.opacity(0.15), radius: 5, y: 3)
-                            .opacity(profile.hasData ? 1 : 0.5)
-
-                        Text(deviceName)
-                            .font(.system(size: 22, weight: .bold))
-                            .foregroundColor(.redmedDark)
-                            .kerning(-0.4)
-                            .lineLimit(1)
+                // Same title + bracelet line for owner and responder (scanner).
+                Group {
+                    if isScannerSession {
+                        titleRow
+                    } else {
+                        Button { tab = .nfc } label: { titleRow }
+                            .buttonStyle(.plain)
                     }
-                    .padding(.vertical, 4)
-                } else {
-                    Button { tab = .nfc } label: {
-                        HStack(spacing: 8) {
-                            Image("BrandLogo")
-                                .resizable()
-                                .frame(width: 48, height: 48)
-                                .clipShape(RoundedRectangle(cornerRadius: 13))
-                                .shadow(color: Color.redmedAccent.opacity(0.15), radius: 5, y: 3)
-                                .opacity(profile.hasData ? 1 : 0.5)
-
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(deviceName)
-                                    .font(.system(size: 22, weight: .bold))
-                                    .foregroundColor(.redmedDark)
-                                    .kerning(-0.4)
-                                    .lineLimit(1)
-
-                                Text(braceletStatusLabel)
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundColor(
-                                        profile.braceletLinked
-                                            ? Color.redmedAccent.opacity(0.85)
-                                            : .redmedMuted
-                                    )
-                                    .kerning(0.7)
-                                    .textCase(.uppercase)
-                                    .id(profile.braceletLinked)
-                                    .animation(.easeInOut(duration: 0.2), value: profile.braceletLinked)
-                            }
-                        }
-                        .padding(.vertical, 4)
-                    }
-                    .buttonStyle(.plain)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -261,6 +245,38 @@ struct RedMedView: View {
         .padding(.bottom, 8)
     }
 
+    private var titleRow: some View {
+        HStack(spacing: 8) {
+            Image("BrandLogo")
+                .resizable()
+                .frame(width: 48, height: 48)
+                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.logoRadius))
+                .shadow(color: Color.redmedAccent.opacity(0.15), radius: 5, y: 3)
+                .opacity(profile.hasData ? 1 : 0.5)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(deviceName)
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundColor(.redmedDark)
+                    .kerning(-0.4)
+                    .lineLimit(1)
+
+                Text(braceletStatusLabel)
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(
+                        profile.showsBraceletAsLinked
+                            ? Color.redmedAccent.opacity(0.85)
+                            : .redmedMuted
+                    )
+                    .kerning(0.7)
+                    .textCase(.uppercase)
+                    .id(profile.showsBraceletAsLinked)
+                    .animation(.easeInOut(duration: 0.2), value: profile.showsBraceletAsLinked)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
     // MARK: - Edit gate
 
     private func requestEdit() {
@@ -274,11 +290,11 @@ struct RedMedView: View {
         }
         BiometricAuth.authenticate(
             reason: "Unlock with Face ID, Touch ID, or passcode to edit your RedMed profile."
-        ) { success in
-            if success {
+        ) { outcome in
+            if outcome == .success {
                 requireAuthOnSave = false
                 showEdit = true
-            } else {
+            } else if outcome == .notVerified {
                 showAuthFailedAlert = true
             }
         }
@@ -339,8 +355,11 @@ struct RedMedView: View {
     func cardGroup<C: View>(@ViewBuilder content: () -> C) -> some View {
         VStack(spacing: 0) { content() }
             .background(Color.redmedSurface)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.redmedDark.opacity(0.08), lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
+                    .stroke(Color.redmedDark.opacity(0.08), lineWidth: 1)
+            )
             .padding(.horizontal, 16)
     }
 

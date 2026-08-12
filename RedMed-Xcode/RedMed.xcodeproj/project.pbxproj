@@ -54,6 +54,7 @@
 		AABB00000000000000000033 /* OwnerAppLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000033 /* OwnerAppLock.swift */; };
 		AABB00000000000000000034 /* SecurePasteboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000034 /* SecurePasteboard.swift */; };
 		AABB00000000000000000035 /* VolumeBoost.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000035 /* VolumeBoost.swift */; };
+		AABB00000000000000000036 /* BrandWordmark.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000036 /* BrandWordmark.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -107,6 +108,7 @@
 		AAAA00000000000000000033 /* OwnerAppLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwnerAppLock.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000034 /* SecurePasteboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurePasteboard.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000035 /* VolumeBoost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeBoost.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000036 /* BrandWordmark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BrandWordmark.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -266,6 +268,7 @@
 				AAAA00000000000000000021 /* card.html */,
 				AAAA00000000000000000025 /* sw.js */,
 				AAAA00000000000000000022 /* BrandLogo.png */,
+				AAAA00000000000000000036 /* BrandWordmark.png */,
 			);
 			name = "Passerby Bundle";
 			sourceTree = "<group>";
@@ -355,6 +358,7 @@
 				AABB00000000000000000024 /* get.html in Resources */,
 				AABB00000000000000000025 /* sw.js in Resources */,
 				AABB00000000000000000022 /* BrandLogo.png in Resources */,
+				AABB00000000000000000036 /* BrandWordmark.png in Resources */,
 				AABB0000000000000000001A /* legal-doc.css in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

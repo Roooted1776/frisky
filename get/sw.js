@@ -12,13 +12,15 @@
  * stale decrypt/layout. Bump CACHE in lockstep with root + bundled sw.js on
  * every decrypt/layout deploy.
  */
-var CACHE = 'redmed-get-v17';
+var CACHE = 'redmed-get-v21';
 var ASSETS = [
   './',
   './index.html',
   './sw.js',
   './BrandLogo.png',
+  './BrandWordmark.png',
   '../assets/BrandLogo.png',
+  '../assets/BrandWordmark.png',
   '../card.html'
 ];
 /** Primary HTML shell — install must fail closed if neither key can be cached. */
