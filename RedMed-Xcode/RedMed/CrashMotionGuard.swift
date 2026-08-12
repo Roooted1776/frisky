@@ -168,14 +168,18 @@ final class CrashMotionGuard: ObservableObject {
         }
 
         private func armNow() {
+            let generation: UInt64
             lock.lock()
-            defer { lock.unlock() }
-            guard !motionArmed else { return }
+            if motionArmed {
+                lock.unlock()
+                return
+            }
             motionArmed = true
             armGeneration &+= 1
-            let generation = armGeneration
+            generation = armGeneration
             lastArmAt = Date()
-            // Transient peaks reset outside the lock (queue-only fields).
+            lock.unlock()
+
             freefallSince = nil
             freefallEndedAt = nil
             lastMagnitude = 0
