@@ -40,7 +40,6 @@ struct NFCView: View {
 
             ScrollView {
                 VStack(spacing: 16) {
-                    introBlock
                     factsCard
                     setupCard
                     scanCard
@@ -77,33 +76,6 @@ struct NFCView: View {
             guard verified, band.writeSucceeded, AppConfig.nfcHardwareEnabled else { return }
             band.linkBracelet(on: profile, detail: "NFC write verified")
         }
-    }
-
-    // MARK: - Intro (page-ratio, boxy)
-
-    private var introBlock: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "wave.3.right.circle.fill")
-                .font(.system(size: 28, weight: .semibold))
-                .foregroundColor(.redmedAccent)
-                .accessibilityHidden(true)
-
-            Text(AppConfig.nfcHardwareEnabled
-                  ? "One page for both: write your band (user), then scan the tap card helpers see. Face ID on write. Helpers get HTML only — no app."
-                  : "One page for both: Setup packs your band URL (user), Simulate scan opens the same tap card helpers see — no app for them. CoreNFC hardware stays off until entitlement.")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.redmedMuted)
-                .multilineTextAlignment(.center)
-                .lineSpacing(3)
-        }
-        .frame(maxWidth: 275)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 16)
-        .background(Color.redmedSurface)
-        .clipShape(RoundedRectangle(cornerRadius: boxRadius))
-        .overlay(RoundedRectangle(cornerRadius: boxRadius).strokeBorder(Color.redmedDivider, lineWidth: 1))
-        .frame(maxWidth: .infinity)
-        .padding(.top, 6)
     }
 
     // MARK: - Bracelet facts
