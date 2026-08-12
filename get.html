@@ -88,11 +88,14 @@
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html {
-    height: 100%;
+    /* Document grows with content so WKWebView / iOS can scroll the page. */
+    height: auto;
+    min-height: 100%;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    scrollbar-gutter: stable;
   }
-  html, body { height: 100%; }
+  html, body { min-height: 100%; }
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", sans-serif;
@@ -105,9 +108,25 @@
     min-height: 100dvh;
     padding: var(--safe-t) var(--safe-r) calc(var(--tabbar-h) + var(--safe-b)) var(--safe-l);
     overflow-x: hidden;
-    overflow-y: scroll;
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     touch-action: manipulation;
+  }
+  /* Responsive scrollbar (desktop / Mac Catalyst; iOS uses UIScrollView indicators). */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(28, 25, 23, 0.28) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: clamp(6px, 1.2vw, 10px);
+    height: clamp(6px, 1.2vw, 10px);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(28, 25, 23, 0.28);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
   }
   a { color: var(--accent); text-decoration: none; }
   .app {
@@ -145,7 +164,7 @@
     text-align: center;
     padding: 11px 14px;
     background: var(--surface);
-    border: 1px solid var(--divider);
+    border: none;
     border-radius: var(--box);
     box-shadow: var(--shadow);
   }
@@ -162,31 +181,25 @@
   html.app-embed #panel-aid,
   body.app-embed #panel-911,
   body.app-embed #panel-aid { display: none !important; }
+  html.app-embed,
+  html.app-embed body,
+  body.app-embed {
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   html.app-embed #panel-medical,
   body.app-embed #panel-medical {
     display: flex !important;
-    min-height: calc(100vh - var(--safe-t) - var(--safe-b));
-    min-height: calc(100dvh - var(--safe-t) - var(--safe-b));
+    flex-direction: column;
+    min-height: calc(100vh - var(--safe-t) - 48px - var(--safe-b));
+    min-height: calc(100dvh - var(--safe-t) - 48px - var(--safe-b));
   }
-  /* Owner embed: BrandWordmark replaces the Face ID lock line — left, no bubble. */
+  /* Owner embed: no lock line / BrandWordmark above the medical card. */
   html.app-embed .rm-lock,
   body.app-embed .rm-lock {
-    margin: 0 0 10px;
-    max-width: none;
-    padding: 0;
-    text-align: left;
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-  }
-  html.app-embed .rm-embed-wordmark,
-  body.app-embed .rm-embed-wordmark {
-    display: block;
-    height: clamp(36px, 8vw, 42px);
-    width: auto;
-    max-width: min(220px, 72vw);
-    object-fit: contain;
+    display: none;
   }
   .rm-lock a {
     color: inherit;
@@ -247,7 +260,7 @@
   .card {
     margin: 0 var(--page-pad-x);
     background: var(--surface);
-    border: 1px solid var(--divider);
+    border: none;
     border-radius: var(--box);
     overflow: hidden;
     box-shadow: var(--shadow);
@@ -330,7 +343,7 @@
   }
   details.list-drop {
     background: var(--surface);
-    border: 1px solid var(--divider);
+    border: none;
     border-radius: var(--box);
     width: 100%;
     min-width: 0;
@@ -338,7 +351,6 @@
     box-shadow: var(--shadow);
   }
   details.list-drop[open] {
-    border-color: rgba(225,29,72,0.28);
     background: rgba(225,29,72,0.03);
   }
   details.list-drop summary {
@@ -548,7 +560,7 @@
   }
   .gps-card {
     background: var(--surface);
-    border: 1px solid var(--divider);
+    border: none;
     border-radius: var(--box);
     padding: 12px 14px;
     text-align: center;
@@ -594,7 +606,7 @@
     align-items: center;
     gap: 8px;
     background: var(--surface);
-    border: 1px solid var(--divider);
+    border: none;
     border-radius: var(--box);
     padding: 10px 12px;
     margin: 6px 0;
@@ -629,6 +641,12 @@
   .seizure-hint.hot {
     color: var(--accent);
   }
+  .seizure-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
   .seizure-btn {
     border: none;
     border-radius: var(--chip);
@@ -645,9 +663,18 @@
     color: var(--dark);
     border: 1px solid var(--divider);
   }
+  .seizure-btn-reset {
+    background: rgba(255,255,255,0.9);
+    color: var(--dark);
+    border: 1px solid var(--divider);
+  }
+  .seizure-btn-reset:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
   .info {
     background: var(--surface);
-    border: 1px solid var(--divider);
+    border: none;
     border-radius: var(--box);
     padding: 12px 14px;
     margin: 6px 0;
@@ -712,7 +739,7 @@
     font-weight: 600;
     color: var(--dark);
     background: var(--surface);
-    border: 1px solid var(--divider);
+    border: none;
     border-radius: var(--box);
     text-align: left;
     cursor: pointer;
@@ -724,14 +751,14 @@
     font-weight: 700;
   }
 
-  /* Aid / 911 — BrandWordmark like owner EmergencyView / AidView. */
+  /* Aid / 911 — BrandWordmark metrics match owner BrandWordmarkHeader. */
   .aid-wordmark,
   .help-wordmark {
     display: block;
-    height: clamp(36px, 8vw, 48px);
+    height: 42px;
     width: auto;
     max-width: min(240px, 70vw);
-    margin: 2px 0 10px;
+    margin: 6px 0 4px;
     object-fit: contain;
   }
   /* Full-width accordion — same life-saving pattern as owner AidView. */
@@ -756,7 +783,7 @@
   }
   details.aid {
     background: var(--surface);
-    border: 1px solid var(--divider);
+    border: none;
     border-radius: var(--box);
     padding: 0 12px;
     width: 100%;
@@ -764,7 +791,6 @@
     box-shadow: var(--shadow);
   }
   details.aid[open] {
-    border-color: rgba(225,29,72,0.28);
     background: rgba(225,29,72,0.03);
   }
   details.aid summary {
@@ -982,7 +1008,10 @@
             <div class="seizure-time" id="seizureTime">0:00</div>
           </div>
           <div class="seizure-hint" id="seizureHint">→ <span class="emg">112</span> at 5:00</div>
-          <button class="seizure-btn" type="button" id="seizureBtn">Start</button>
+          <div class="seizure-actions">
+            <button class="seizure-btn" type="button" id="seizureBtn">Start</button>
+            <button class="seizure-btn seizure-btn-reset" type="button" id="seizureResetBtn">Reset</button>
+          </div>
         </div>
 
         <div class="info">
@@ -1615,19 +1644,6 @@
     if (!isAppPreview()) return;
     try { document.documentElement.classList.add('app-embed'); } catch (e0) {}
     try { document.body.classList.add('app-embed'); } catch (e) {}
-    var lock = document.querySelector('.rm-lock');
-    if (lock) {
-      lock.textContent = '';
-      var img = document.createElement('img');
-      img.className = 'rm-embed-wordmark';
-      img.id = 'rmEmbedWordmark';
-      img.alt = 'RedMed';
-      img.width = 168;
-      img.height = 42;
-      img.src = 'BrandWordmark.png';
-      lock.appendChild(img);
-      resolveAsset('rmEmbedWordmark', ['BrandWordmark.png', 'assets/BrandWordmark.png']);
-    }
   })();
 
   decodeProfile().then(function (p) {
@@ -1686,6 +1702,7 @@
     var timeEl = document.getElementById('seizureTime');
     var hintEl = document.getElementById('seizureHint');
     var btn = document.getElementById('seizureBtn');
+    var resetBtn = document.getElementById('seizureResetBtn');
     if (!timeEl || !hintEl || !btn) return;
 
     function format(t) {
@@ -1716,6 +1733,9 @@
       }
       btn.textContent = running ? 'Stop' : 'Start';
       btn.classList.toggle('on', running);
+      if (resetBtn) {
+        resetBtn.disabled = !running && elapsed === 0;
+      }
     }
 
     function stop(reset) {
@@ -1746,6 +1766,12 @@
       paint();
       timerId = setInterval(tick, 1000);
     });
+
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function () {
+        stop(true);
+      });
+    }
 
     paint();
   })();

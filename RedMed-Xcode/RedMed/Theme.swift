@@ -34,7 +34,7 @@ extension Color {
     static let redmedDark     = Color(red: 0.110, green: 0.098, blue: 0.086) // #1c1917
     static let redmedMuted    = Color(red: 0.471, green: 0.443, blue: 0.424) // #78716c
     static let redmedSurface  = Color.white.opacity(0.94)
-    /// Card + hairline stroke — same 8% ink as passerby `.card` / legal `--border`.
+    /// Row / chip hairline — same 8% ink as passerby dividers / legal `--border`.
     static let redmedDivider  = Color(red: 0.110, green: 0.098, blue: 0.086).opacity(0.08)
     /// Soft top wash — pairs with passerby body gradient.
     static let redmedWash     = Color(red: 1.000, green: 0.910, blue: 0.922) // #ffe8eb
@@ -214,21 +214,51 @@ enum RedMedChrome {
     static let chipRadius: CGFloat = 7
     /// Brand mark is a circular disc — always `Circle()`, never a rounded rect.
     static let logoRadius: CGFloat = 0
+    /// Shared BrandWordmark lockup on 911 / Aid / NFC / topic pages.
+    static let wordmarkHeight: CGFloat = 42
+    static let pagePadX: CGFloat = 16
+    static let wordmarkTop: CGFloat = 6
+    static let wordmarkBottom: CGFloat = 4
     static let cardShadow = Color.black.opacity(0.045)
     static let accentShadow = Color.redmedAccent.opacity(0.18)
 }
 
+/// Pinned BrandWordmark row — same metrics on every owner / scanner user page.
+struct BrandWordmarkHeader<Trailing: View>: View {
+    var top: CGFloat = RedMedChrome.wordmarkTop
+    @ViewBuilder var trailing: () -> Trailing
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            Image("BrandWordmark")
+                .resizable()
+                .scaledToFit()
+                .frame(height: RedMedChrome.wordmarkHeight)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityLabel("RedMed")
+                .layoutPriority(1)
+            trailing()
+        }
+        .padding(.horizontal, RedMedChrome.pagePadX)
+        .padding(.top, top)
+        .padding(.bottom, RedMedChrome.wordmarkBottom)
+    }
+}
+
+extension BrandWordmarkHeader where Trailing == EmptyView {
+    init(top: CGFloat = RedMedChrome.wordmarkTop) {
+        self.top = top
+        self.trailing = { EmptyView() }
+    }
+}
+
 extension View {
     /// Surface card chrome used on RedMed / 911 / Aid / NFC (owner + scanner).
-    /// `strokeBorder` keeps the full 1pt hairline inside the shape (`.stroke` half-clips).
-    func redmedBox(strokeOpacity: Double = 1, elevated: Bool = true) -> some View {
+    /// No outer stroke — fill + radius + optional shadow only.
+    func redmedBox(elevated: Bool = true) -> some View {
         self
             .background(Color.redmedSurface)
             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-            .overlay(
-                RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                    .strokeBorder(Color.redmedDivider.opacity(strokeOpacity), lineWidth: 1)
-            )
             .shadow(color: elevated ? RedMedChrome.cardShadow : .clear, radius: 8, y: 3)
     }
 }

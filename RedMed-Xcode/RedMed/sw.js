@@ -8,7 +8,7 @@
  * sw.js on every decrypt/layout deploy. Payload stays in #d= only — never
  * cached.
  */
-var CACHE = 'redmed-get-v57';
+var CACHE = 'redmed-get-v62';
 var ASSETS = [
   './',
   './get.html',
