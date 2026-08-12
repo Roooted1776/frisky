@@ -63,6 +63,17 @@ struct TopicDetailView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // BrandWordmark lockup at top of every Aid topic page (same as Aid / 911).
+            Image("BrandWordmark")
+                .resizable()
+                .scaledToFit()
+                .frame(height: 42)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.top, 2)
+                .padding(.bottom, 4)
+                .accessibilityLabel("RedMed")
+
             // Pane-style chrome — not system toolbar (that paints black fill/text).
             HStack(alignment: .center, spacing: 12) {
                 ChromeTextAction(title: "Back") { dismiss() }
@@ -77,7 +88,7 @@ struct TopicDetailView: View {
                     .layoutPriority(1)
             }
             .padding(.horizontal, 16)
-            .padding(.top, 14)
+            .padding(.top, 6)
             .padding(.bottom, 8)
 
             ScrollView {
