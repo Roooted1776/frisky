@@ -107,16 +107,6 @@ struct EmergencyView: View {
                         }
                         .buttonStyle(RedMedPressStyle(haptic: nil))
                         .accessibilityLabel(survivalAlarm.isArmed ? "Stop SOS alarm" : "SOS Locate me")
-
-                        Text(isScannerSession
-                             ? "Siren + max volume + full brightness: local once tap — bracelet NFC, crash, or SOS on this device. Everyone and everything stays here. No servers · no online. Stop here or on Aid."
-                             : "Siren + max volume + full brightness only on crash / severe impact or SOS. Local only once tap — everyone and everything. No servers · no online. Stop here or on Aid.")
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundColor(.redmedMuted)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: .infinity)
-                            .padding(.horizontal, 4)
-                            .padding(.top, 2)
                     }
 
                     SeizureTimerStrip(isVisible: isVisible)
