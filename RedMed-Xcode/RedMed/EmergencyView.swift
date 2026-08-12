@@ -37,18 +37,6 @@ struct EmergencyView: View {
 
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 8) {
-                    if !isScannerSession {
-                        Text("Siren + max volume + full brightness only on crash / severe impact or SOS. Stop here or on Aid.")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(.redmedAccent)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: 320)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 10)
-                            .redmedBox()
-                            .frame(maxWidth: .infinity)
-                    }
-
                     // NO CELL SIGNAL — carriers only (no satellite coach UI)
                     NoCellSignalCard()
 
@@ -89,29 +77,37 @@ struct EmergencyView: View {
                             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                         }
 
-                        // Owner SOS — same survival hold as crash. Scanners stay quiet.
-                        if !isScannerSession {
-                            Button {
-                                if survivalAlarm.isArmed {
-                                    survivalAlarm.disarm()
-                                } else {
-                                    survivalAlarm.armSOS()
-                                }
-                            } label: {
-                                HStack(spacing: 8) {
-                                    Image(systemName: survivalAlarm.isArmed
-                                          ? "speaker.slash.fill"
-                                          : "sos.circle.fill")
-                                    Text(survivalAlarm.isArmed ? "Stop SOS alarm" : "SOS · Locate me")
-                                }
-                                .font(.system(size: 13, weight: .bold))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 10)
-                                .background(survivalAlarm.isArmed ? Color.redmedAccent : Color.redmedDark)
-                                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                        // SOS — owner + tapper. Same survival hold as crash.
+                        Button {
+                            if survivalAlarm.isArmed {
+                                survivalAlarm.disarm()
+                            } else {
+                                survivalAlarm.armSOS()
                             }
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: survivalAlarm.isArmed
+                                      ? "speaker.slash.fill"
+                                      : "sos.circle.fill")
+                                Text(survivalAlarm.isArmed ? "Stop SOS alarm" : "SOS · Locate me")
+                            }
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(survivalAlarm.isArmed ? Color.redmedAccent : Color.redmedDark)
+                            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                         }
+
+                        Text(isScannerSession
+                             ? "Siren + max volume + full brightness: local once tap — bracelet NFC, crash, or SOS on this device. Everyone and everything stays here. No servers · no online. Stop here or on Aid."
+                             : "Siren + max volume + full brightness only on crash / severe impact or SOS. Local only once tap — everyone and everything. No servers · no online. Stop here or on Aid.")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.redmedMuted)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 4)
+                            .padding(.top, 2)
                     }
 
                     SeizureTimerStrip(isVisible: isVisible)

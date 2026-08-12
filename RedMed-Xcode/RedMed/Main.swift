@@ -67,7 +67,7 @@ struct MainInfoView: View {
                     setupStep(1, "Open RedMed on iPhone and fill in your allergies, meds, and contacts.")
                     setupStep(2, "Hold your band to the top of your iPhone once — the chip stores your emergency card.")
                     setupStep(3, "Done. Anyone taps the band — their phone opens emergency call and your critical info. No app needed.")
-                    Text("Passive \(AppConfig.BraceletRF.carrierLabel) only — no battery, no Bluetooth pair. Local only — forever: quicker Aid, help reaching 911, and a fast local handoff of patient ID to EMS/hospital via band tap — not a RedMed cloud. Not a medical device; no promised outcome. Call 911 first.")
+                    Text("Passive \(AppConfig.BraceletRF.carrierLabel) only — no battery, no Bluetooth pair. Local only once tap — everyone and everything: quicker Aid, help reaching 911, and a fast local handoff of patient ID to EMS/hospital via band tap — no servers · no online · not a RedMed cloud. Not a medical device; no promised outcome. Call 911 first.")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .padding(.top, 4)

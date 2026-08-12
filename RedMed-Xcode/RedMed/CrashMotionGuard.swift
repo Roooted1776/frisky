@@ -3,6 +3,8 @@ import Foundation
 import SwiftUI
 
 /// Shared crash thresholds — nonisolated so the off-main motion engine can read them.
+/// Tuned to ignore walking, running, eating, phone handling, sex / masturbation,
+/// and other rhythmic daily motion. Vehicle crash / high-speed impact only.
 private enum CrashMotionThresholds {
     /// Vehicle-level linear peak (g). Daily human motion stays well below this.
     static let crashPeakG: Double = 16.0
@@ -14,23 +16,32 @@ private enum CrashMotionThresholds {
     static let freefallMaxG: Double = 0.20
     static let freefallMinSeconds: TimeInterval = 0.22
     static let freefallImpactWindow: TimeInterval = 0.40
-    /// Broad human-activity band: walking, sex, eating gestures, phone handling.
-    static let humanActivityMinG: Double = 0.7
-    static let humanActivityMaxG: Double = 9.0
+    /// Broad human-activity band: walking, sex, masturbation, eating, phone handling.
+    static let humanActivityMinG: Double = 0.45
+    static let humanActivityMaxG: Double = 10.0
     static let humanActivitySpikeCount: Int = 2
-    static let humanActivityWindow: TimeInterval = 8.0
-    /// Recent hand/body busyness blocks arming unless override peak.
-    static let busyHoldSeconds: TimeInterval = 4.0
-    /// Hand / wrist motion — moderate spin is enough (eating, gestures, intimacy).
-    static let handSpinRadPerSec: Double = 3.5
-    static let minJerkGPerSecond: Double = 120.0
+    static let humanActivityWindow: TimeInterval = 12.0
+    /// How long a human/rhythm/hand busy lockout lasts (covers pauses in intimacy).
+    static let busyHoldSeconds: TimeInterval = 14.0
+    /// Hand / wrist rock — low enough to catch sex / masturbation / gestures.
+    static let handSpinRadPerSec: Double = 2.0
+    /// Repeating thrust / stroke cadence (seconds between human-band peaks).
+    static let rhythmMinInterval: TimeInterval = 0.12
+    static let rhythmMaxInterval: TimeInterval = 2.0
+    static let rhythmHitCount: Int = 3
+    /// Sustained human-band motion longer than this → busy (not a single bump).
+    static let sustainedHumanSeconds: TimeInterval = 1.2
+    static let minJerkGPerSecond: Double = 140.0
     static let sampleHz: Double = 50.0
     static let cooldownSeconds: TimeInterval = 90
 }
 
-/// Survival alarm arming: crash / severe impact (CoreMotion) or owner SOS.
-/// Arms full brightness + max system volume + locator siren. Cancel on Aid.
-/// Motion path ignores running, walking, eating, sex/intimate motion, and hand/wrist handling.
+/// Survival alarm arming: crash / severe impact (CoreMotion) or Find Help SOS
+/// (owner + tapper / in-app scanner). Passerby `get.html` mirrors thresholds
+/// via DeviceMotion. Arms full brightness + max system volume + locator siren.
+/// Cancel on Aid or Stop SOS on Find Help.
+/// Motion path ignores running, walking, eating, sex / masturbation / intimate
+/// motion, rhythmic daily activity, and hand/wrist handling.
 /// Not Apple Crash Detection — no GPS/barometer fusion, no cloud.
 ///
 /// Motion samples run on a private serial queue (not the main thread) so Accept /
@@ -71,7 +82,8 @@ final class CrashMotionGuard: ObservableObject {
         LocatorBeacon.endSurvival()
     }
 
-    /// Owner Find Help SOS — same survival hold as crash (siren + max volume + full brightness).
+    /// Find Help SOS (owner + tapper) — same survival hold as crash
+    /// (siren + max volume + full brightness).
     func armSOS() {
         engine.requestArm { [weak self] generation in
             Task { @MainActor in
@@ -110,6 +122,7 @@ final class CrashMotionGuard: ObservableObject {
         private var lastMagnitude: Double = 0
         private var recentHumanPeaks: [Date] = []
         private var recentHandSpins: [Date] = []
+        private var humanBurstStart: Date?
         private var busyUntil: Date?
         private var lastArmAt: Date?
         private var onArm: ((UInt64) -> Void)?
@@ -185,6 +198,7 @@ final class CrashMotionGuard: ObservableObject {
             lastMagnitude = 0
             recentHumanPeaks.removeAll(keepingCapacity: true)
             recentHandSpins.removeAll(keepingCapacity: true)
+            humanBurstStart = nil
             busyUntil = nil
             onArm?(generation)
         }
@@ -195,6 +209,7 @@ final class CrashMotionGuard: ObservableObject {
             lastMagnitude = 0
             recentHumanPeaks.removeAll(keepingCapacity: true)
             recentHandSpins.removeAll(keepingCapacity: true)
+            humanBurstStart = nil
             busyUntil = nil
         }
 
@@ -207,6 +222,25 @@ final class CrashMotionGuard: ObservableObject {
             }
             freefallSince = nil
             freefallEndedAt = nil
+            humanBurstStart = nil
+        }
+
+        /// Sex / masturbation / jogging / similar — repeating human-band peaks.
+        private func isRhythmicHumanActivity(now: Date) -> Bool {
+            let peaks = recentHumanPeaks.filter {
+                now.timeIntervalSince($0) <= CrashMotionThresholds.humanActivityWindow
+            }
+            guard peaks.count >= CrashMotionThresholds.rhythmHitCount + 1 else { return false }
+            var hits = 0
+            for i in 1..<peaks.count {
+                let dt = peaks[i].timeIntervalSince(peaks[i - 1])
+                if dt >= CrashMotionThresholds.rhythmMinInterval
+                    && dt <= CrashMotionThresholds.rhythmMaxInterval {
+                    hits += 1
+                    if hits >= CrashMotionThresholds.rhythmHitCount { return true }
+                }
+            }
+            return false
         }
 
         private func evaluate(_ motion: CMDeviceMotion) {
@@ -230,8 +264,27 @@ final class CrashMotionGuard: ObservableObject {
 
             if magnitude >= CrashMotionThresholds.humanActivityMinG && magnitude <= CrashMotionThresholds.humanActivityMaxG {
                 recentHumanPeaks.append(now)
+                if humanBurstStart == nil { humanBurstStart = now }
+            } else if let start = humanBurstStart,
+                      now.timeIntervalSince(start) > CrashMotionThresholds.humanActivityWindow {
+                humanBurstStart = nil
             }
             recentHumanPeaks.removeAll { now.timeIntervalSince($0) > CrashMotionThresholds.humanActivityWindow }
+
+            // Sustained human-band motion (sex, masturbation, jogging phone bounce).
+            if let start = humanBurstStart,
+               now.timeIntervalSince(start) >= CrashMotionThresholds.sustainedHumanSeconds,
+               !recentHumanPeaks.isEmpty {
+                markBusy(at: now)
+                return
+            }
+
+            // Rhythmic cadence — repeating thrust / stroke / step intervals.
+            if isRhythmicHumanActivity(now: now) {
+                markBusy(at: now)
+                return
+            }
+
             if recentHumanPeaks.count >= CrashMotionThresholds.humanActivitySpikeCount {
                 markBusy(at: now)
                 return
@@ -251,6 +304,7 @@ final class CrashMotionGuard: ObservableObject {
             let isBusy = (busyUntil.map { now < $0 } ?? false)
                 || !recentHandSpins.isEmpty
                 || recentHumanPeaks.count >= CrashMotionThresholds.humanActivitySpikeCount
+                || isRhythmicHumanActivity(now: now)
 
             if magnitude <= CrashMotionThresholds.freefallMaxG {
                 if freefallSince == nil { freefallSince = now }
@@ -285,7 +339,7 @@ final class CrashMotionGuard: ObservableObject {
     }
 }
 
-/// Cancel on Aid — 5pt under the pane grid, above the quote.
+/// Cancel on Aid — under the pane grid, above the prayer.
 /// Outside LazyVGrid so pane expand/collapse is undisturbed.
 struct CrashSurvivalCancelCard: View {
     @ObservedObject private var monitor = CrashMotionGuard.shared

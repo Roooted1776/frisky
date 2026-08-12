@@ -28,8 +28,9 @@ extension EnvironmentValues {
 /// **no Edit**, **no NFC**. Mirrors bracelet tap page `get.html#d=…`
 /// (owner edit + NFC write live in the owner app). Payload stays in `#d=`.
 /// Holds a **snapshot** of the profile so scanner UI cannot mutate owner data.
-/// Tap-to-view: no Face ID / biometrics. No brightness / audio unless the
-/// owner phone separately arms crash / SOS survival (this shell does not).
+/// Tap-to-view: no Face ID / biometrics. SOS / crash stay on-device; auto-arm
+/// only happens on a real bracelet NFC open of `get.html#d=…` (hardware), not
+/// this in-app preview.
 struct PublicCardView: View {
     @StateObject private var snapshot: ProfileData
     @Environment(\.dismiss) private var dismiss

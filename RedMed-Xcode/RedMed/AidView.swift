@@ -89,14 +89,21 @@ struct AidView: View {
                     CrashSurvivalCancelCard()
 
                     Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.redmedDark)
+                        .font(.system(size: 10, weight: .regular))
+                        .italic()
+                        .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
-                        .lineSpacing(4)
+                        .lineSpacing(2)
                         .frame(maxWidth: .infinity)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 14)
-                        .redmedBox()
+                        .padding(.horizontal, 24)
+                        .padding(.top, 14)
+                        .padding(.bottom, 2)
+
+                    Text(AppConfig.Satellite.localOnlyLine)
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundColor(.redmedMuted)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
                         .padding(.top, 8)
                 }
             }
