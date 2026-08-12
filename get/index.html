@@ -28,8 +28,8 @@
        (bump redmed-get-vN). Never wait on network when a shell copy exists.
      - Real bracelet NFC tap (`get.html#d=…`) → everything stays on that phone
        (profile, 911, Aid, SOS siren). Local only once tap — everyone and
-       everything. No server / no online. Bare /get/ without `#d=` does not
-       auto-arm SOS. Stop on Find Help or Aid.
+       everything. No server / no online. Bare /get/ without `#d=` and in-app
+       Preview/Scan (`?src=app`) do not auto-arm SOS. Stop on Find Help or Aid.
        Explicit SOS toggle + DeviceMotion crash share the same local alarm.
        iOS may need a gesture to unmute AudioContext / grant motion.
      - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
@@ -1867,9 +1867,14 @@
   });
 
   // Real HF NFC band tap brings #d= — arm local SOS on this phone only.
-  // No auto-arm for bare /get/ (no hardware payload). No server / no online.
+  // No auto-arm for bare /get/ or in-app Preview/Scan (?src=app). No server / no online.
+  function isAppPreview() {
+    try {
+      return new URLSearchParams(location.search || '').get('src') === 'app';
+    } catch (e) { return false; }
+  }
   function hasBandPayload() {
-    return /^#d=/.test(location.hash || '');
+    return /^#d=/.test(location.hash || '') && !isAppPreview();
   }
   if (hasBandPayload()) {
     arm();

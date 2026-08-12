@@ -132,7 +132,10 @@ struct RedMedView: View {
                             .buttonStyle(.plain)
 
                             if profile.hasData {
-                                Button { showScannerPreview = true } label: {
+                                Button {
+                                    guard PasserbyHTMLCardView.payload(from: profile) != nil else { return }
+                                    showScannerPreview = true
+                                } label: {
                                     HStack(spacing: 6) {
                                         Image(systemName: "eye")
                                             .font(.system(size: 15, weight: .regular))
@@ -181,7 +184,9 @@ struct RedMedView: View {
             get: { showScannerPreview && !isScannerSession && profile.hasData },
             set: { showScannerPreview = $0 && !isScannerSession }
         )) {
-            PublicCardView(profile: profile)
+            PasserbyHTMLCardView(
+                payloadOrURL: PasserbyHTMLCardView.payload(from: profile) ?? ""
+            )
         }
         .alert("Authentication Failed", isPresented: $showAuthFailedAlert) {
             Button("OK", role: .cancel) {}

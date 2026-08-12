@@ -51,8 +51,8 @@ struct NFCView: View {
         }
         .background(Color.redmedBg.ignoresSafeArea())
         .sheet(isPresented: $band.showScannedCard) {
-            if let card = band.scannedCard {
-                PublicCardView(profile: card)
+            if let payload = band.scannedHTMLPayload {
+                PasserbyHTMLCardView(payloadOrURL: payload)
             }
         }
         .alert("Authentication Failed", isPresented: $band.authFailed) {
@@ -206,7 +206,7 @@ struct NFCView: View {
             VStack(alignment: .leading, spacing: 8) {
                 tipRow("Write once after RedMed is filled.")
                 tipRow("Cancel the NFC prompt and the band stays stale until you write again.")
-                tipRow("A real tap opens get.html in their browser — no RedMed app.")
+                tipRow("Scan below opens the same get.html card a stranger sees — HTML, no app for them.")
             }
             .padding(.top, 2)
         }
@@ -227,8 +227,8 @@ struct NFCView: View {
 
             if profile.braceletLinked {
                 Text(AppConfig.nfcHardwareEnabled
-                      ? "Owner verify only. Helpers who tap the band open get.html in their browser — no app."
-                      : "Owner simulate only. Real taps still open get.html in the helper’s browser — no app.")
+                      ? "Hold near the band to open get.html — same HTML page a stranger gets on tap."
+                      : "Simulate scan opens bundled get.html#d= (same page as a real band tap).")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.redmedMuted)
                     .lineSpacing(3)

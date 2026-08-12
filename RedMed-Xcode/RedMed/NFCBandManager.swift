@@ -7,13 +7,14 @@ import SwiftUI
 /// ```
 /// [Silicone NFC Band] ──(Tap)──> [iPhone Antenna]
 ///        ──> [CoreNFC] ──> strip NDEF URI ──> [CryptoKit AES-GCM]
-///        ──> [Local app screen]
+///        ──> [get.html#d= HTML shell]
 /// ```
 ///
 /// Owns hardware write/read sessions (`NFCWriter` / `NFCReader`), NDEF URI
 /// envelope handling (`NFCURICodec`), and CryptoKit pack/unpack
 /// (`ProfileNFCCodec`). No network — chip bytes stay on device. Owner NFC tab
 /// only; scanners never mount this manager for setup.
+/// Band writes use live `AppConfig.medicalCardBaseURL#d=` so strangers open HTML.
 final class NFCBandManager: ObservableObject {
     @Published var statusMessage: String = ""
     @Published var isWriting = false
@@ -21,7 +22,8 @@ final class NFCBandManager: ObservableObject {
     @Published var writeSucceeded = false
     @Published var writeVerified = false
     @Published var lastPackedURL: String?
-    @Published var scannedCard: ProfileData?
+    /// `#d=` payload or full band URL for `PasserbyHTMLCardView` (HTML shell).
+    @Published var scannedHTMLPayload: String?
     @Published var showScannedCard = false
     @Published var authFailed = false
     @Published var alertMessage: String?
@@ -66,30 +68,29 @@ final class NFCBandManager: ObservableObject {
         }
     }
 
-    // MARK: - Verify / scan (local card screen)
+    // MARK: - Verify / scan (same HTML shell a stranger gets on band tap)
 
-    /// Hardware path: CoreNFC → strip NDEF → CryptoKit decrypt → local snapshot card.
-    /// Simulate path: pack live RedMed → round-trip decode → same card sheet.
+    /// Hardware path: CoreNFC → strip NDEF → open bundled get.html#d= (?src=app, no SOS arm).
+    /// Simulate path: pack live RedMed → same HTML sheet.
     func verifyBand(from profile: ProfileData) {
         if AppConfig.nfcHardwareEnabled {
             statusMessage = ""
-            reader.readTag(alertMessage: "Hold your iPhone near the bracelet to verify the card.") { [weak self] chip, _ in
-                self?.presentLocalCard(from: chip)
+            reader.readTag(alertMessage: "Hold your iPhone near the bracelet to verify the card.") { [weak self] _, urlString in
+                self?.presentHTMLCard(payloadOrURL: urlString)
             }
             return
         }
 
-        guard let source = ProfileNFCCodec.buildURLString(profile: profile),
-              let chip = ProfileNFCCodec.decodeProfile(fromURLString: source) else {
+        guard let source = ProfileNFCCodec.buildURLString(profile: profile) else {
             alertMessage = "Couldn't pack or decode the get.html#d= payload from RedMed."
             return
         }
-        presentLocalCard(from: chip)
+        presentHTMLCard(payloadOrURL: source)
     }
 
     func dismissScannedCard() {
         showScannedCard = false
-        scannedCard = nil
+        scannedHTMLPayload = nil
     }
 
     /// Mark owner bracelet paired after a verified (or simulated) write.
@@ -178,12 +179,12 @@ final class NFCBandManager: ObservableObject {
         }
     }
 
-    private func presentLocalCard(from chip: NFCChipProfile) {
-        let card = ProfileData(persisting: false)
-        ProfileNFCCodec.apply(chip, to: card)
-        // Chip read = band was written; Linked chrome still needs YOU-card configured.
-        card.braceletLinked = true
-        scannedCard = card
+    private func presentHTMLCard(payloadOrURL: String) {
+        guard PasserbyHTMLCardView.extractPayload(payloadOrURL) != nil else {
+            alertMessage = "Couldn't read a RedMed get.html#d= card from this tag."
+            return
+        }
+        scannedHTMLPayload = payloadOrURL
         showScannedCard = true
     }
 }
