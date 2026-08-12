@@ -12,11 +12,16 @@ struct RedMedView: View {
     @State private var showAuthFailedAlert = false
 
     private var deviceName: String {
-        if isScannerSession {
-            return profile.name.isEmpty ? "RedMed" : profile.name
+        // Filled name replaces the grey logo on the left (owner + tap / Preview).
+        if !profile.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return profile.name
         }
-        if profile.name.isEmpty { return "Your iPhone" }
-        return "\(profile.name)'s iPhone"
+        if isScannerSession { return "RedMed" }
+        return "Your iPhone"
+    }
+
+    private var hasImportedName: Bool {
+        !profile.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private var braceletStatusLabel: String {
@@ -35,11 +40,9 @@ struct RedMedView: View {
                 header
 
                 LazyVStack(alignment: .leading, spacing: 0) {
-                    // YOU card (no section label in Main design)
-                    // Name shares the same 11pt / #1c1917 row chrome as Birth date + Blood type
-                    // on owner and tap (Preview + get.html).
+                    // YOU card — Name: empty keeps grey label; filled name replaces it (owner + tap).
                     cardGroup {
-                        profileRow(label: "Name", value: profile.name, emptyPrompt: "Add name")
+                        nameProfileRow
                         thinDivider
                         profileRow(label: "Birth date", value: profile.birthDate, emptyPrompt: "Add birth date")
                         thinDivider
@@ -249,19 +252,24 @@ struct RedMedView: View {
 
     private var titleRow: some View {
         HStack(spacing: 8) {
-            Image("BrandLogo")
-                .resizable()
-                .frame(width: 48, height: 48)
-                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.logoRadius))
-                .shadow(color: Color.redmedAccent.opacity(0.15), radius: 5, y: 3)
-                .opacity(profile.hasData ? 1 : 0.5)
+            // Empty: grey logo on the left. Filled: logo drops; imported name takes the row.
+            if !hasImportedName {
+                Image("BrandLogo")
+                    .resizable()
+                    .frame(width: 48, height: 48)
+                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.logoRadius))
+                    .shadow(color: Color.redmedAccent.opacity(0.15), radius: 5, y: 3)
+                    .opacity(0.72)
+                    .accessibilityHidden(true)
+            }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(deviceName)
                     .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(.redmedDark)
+                    .foregroundColor(.black)
                     .kerning(-0.4)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.75)
 
                 Text(braceletStatusLabel)
                     .font(.system(size: 10, weight: .bold))
@@ -275,6 +283,7 @@ struct RedMedView: View {
                     .id(profile.showsBraceletAsLinked)
                     .animation(.easeInOut(duration: 0.2), value: profile.showsBraceletAsLinked)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.vertical, 4)
     }
@@ -308,6 +317,38 @@ struct RedMedView: View {
         Divider().overlay(Color.redmedDivider)
     }
 
+    /// Empty: muted "Name" + prompt. Filled: grey label drops; imported name sits left.
+    @ViewBuilder
+    private var nameProfileRow: some View {
+        Button {
+            if !hasImportedName && !isScannerSession { requestEdit() }
+        } label: {
+            HStack(spacing: 8) {
+                if !hasImportedName {
+                    Text("Name")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.redmedDark)
+                    Text(isScannerSession ? "—" : "Add name")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(isScannerSession ? Color.redmedDark.opacity(0.55) : .redmedAccent)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    Text(profile.name)
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.85)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 11)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(hasImportedName || isScannerSession)
+    }
+
     @ViewBuilder
     func profileRow(label: String, value: String, emptyPrompt: String) -> some View {
         Button {
@@ -316,16 +357,16 @@ struct RedMedView: View {
             HStack {
                 Text(label)
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.redmedMuted)
+                    .foregroundColor(.redmedDark)
                 Spacer()
                 if value.isEmpty {
                     Text(isScannerSession ? "—" : emptyPrompt)
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(isScannerSession ? Color.redmedMuted.opacity(0.4) : .redmedAccent)
+                        .foregroundColor(isScannerSession ? Color.redmedDark.opacity(0.55) : .redmedAccent)
                 } else {
                     Text(value)
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(.redmedDark)
+                        .foregroundColor(.black)
                 }
             }
             .padding(.horizontal, 16)

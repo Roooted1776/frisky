@@ -112,14 +112,16 @@
     display: block;
     object-fit: cover;
     background: transparent;
+    opacity: 0.72;
   }
+  .rm-logo.has-name { display: none; }
   .rm-name {
     font-size: 22px;
     font-weight: 700;
     letter-spacing: -0.4px;
     margin: 0;
     line-height: 1.15;
-    color: var(--dark);
+    color: #000;
   }
   .rm-updated {
     font-size: 10px;
@@ -154,15 +156,28 @@
   .row .k {
     font-size: 11px;
     font-weight: 500;
-    color: var(--muted);
+    color: var(--dark);
   }
   .row .v {
     font-size: 11px;
     font-weight: 600;
-    color: var(--dark);
+    color: #000;
     text-align: right;
   }
-  .row .v.empty { font-weight: 400; color: rgba(120,113,108,0.4); }
+  .row .v.empty { font-weight: 400; color: rgba(28,25,23,0.55); }
+  /* Empty: Name label. Filled: label drops; imported name sits left (black). */
+  .row.row-name.has-name {
+    justify-content: flex-start;
+    gap: 8px;
+  }
+  .row.row-name.has-name .k { display: none; }
+  .row.row-name.has-name .v {
+    font-weight: 700;
+    text-align: left;
+    color: #000;
+    flex: 1;
+    min-width: 0;
+  }
   .list-item {
     padding: 11px 16px;
     border-bottom: 1px solid var(--divider);
@@ -606,7 +621,7 @@
       </div>
 
       <div class="card" style="margin-top:2px">
-        <div class="row"><span class="k">Name</span><span class="v" id="rowName">—</span></div>
+        <div class="row row-name" id="rowNameRow"><span class="k">Name</span><span class="v" id="rowName">—</span></div>
         <div class="row"><span class="k">Birth date</span><span class="v" id="rowDob">—</span></div>
         <div class="row"><span class="k">Blood type</span><span class="v" id="rowBlood">—</span></div>
       </div>
@@ -1167,9 +1182,22 @@
 
   function renderProfile(p) {
     p = p || {};
-    var displayName = p.name || 'RedMed';
-    document.getElementById('name').textContent = displayName;
+    var rawName = (p.name || '').trim();
+    var displayName = rawName || 'RedMed';
+    var nameEl = document.getElementById('name');
+    var logo = document.getElementById('rmLogo');
+    nameEl.textContent = displayName;
+    // Empty: grey logo on the left. Filled: logo drops; imported name takes the row.
+    if (logo) {
+      if (rawName) logo.classList.add('has-name');
+      else logo.classList.remove('has-name');
+    }
     setRow('rowName', p.name);
+    var nameRow = document.getElementById('rowNameRow');
+    if (nameRow) {
+      if (rawName) nameRow.classList.add('has-name');
+      else nameRow.classList.remove('has-name');
+    }
     setRow('rowDob', p.dob);
     setRow('rowBlood', p.blood);
     if (p.updated) document.getElementById('updatedLine').textContent = 'Updated ' + p.updated;
