@@ -197,7 +197,7 @@ struct PaneCard: View {
                             }
                             .padding(.horizontal, 14)
                             .padding(.vertical, 14)
-                            .background(Color.white.opacity(0.9))
+                            .background(Color.redmedSurface)
                             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                             .overlay(
                                 RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)

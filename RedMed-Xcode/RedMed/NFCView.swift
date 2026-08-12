@@ -254,7 +254,7 @@ struct NFCView: View {
                     .foregroundColor(.redmedAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(Color.white.opacity(0.9))
+                    .background(Color.redmedSurface)
                     .clipShape(RoundedRectangle(cornerRadius: boxRadius))
                     .overlay(
                         RoundedRectangle(cornerRadius: boxRadius)

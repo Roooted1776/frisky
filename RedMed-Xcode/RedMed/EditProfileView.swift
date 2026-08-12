@@ -92,7 +92,7 @@ struct EditProfileView: View {
             }
             .padding(.horizontal, Metrics.rowHPad)
             .frame(height: 52)
-            .background(Color(red: 0.949, green: 0.949, blue: 0.969).opacity(0.95))
+            .background(Color.redmedBg.opacity(0.95))
             .overlay(alignment: .bottom) {
                 Divider().overlay(Color.black.opacity(0.12))
             }
@@ -159,7 +159,7 @@ struct EditProfileView: View {
                 .padding(.bottom, 48)
             }
             .scrollDismissesKeyboard(.interactively)
-            .background(Color(red: 0.949, green: 0.949, blue: 0.969))
+            .background(Color.redmedBg)
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 suggestionStrip
             }
@@ -219,7 +219,7 @@ struct EditProfileView: View {
                     .padding(.horizontal, Metrics.rowHPad)
                     .padding(.vertical, 10)
                 }
-                .background(Color(red: 0.949, green: 0.949, blue: 0.969))
+                .background(Color.redmedBg)
             }
         }
     }
@@ -454,7 +454,7 @@ struct EditProfileView: View {
     @ViewBuilder
     private func editCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         VStack(spacing: 0) { content() }
-            .background(Color.white)
+            .background(Color.redmedSurface)
             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
