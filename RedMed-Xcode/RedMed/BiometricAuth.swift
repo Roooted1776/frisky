@@ -1,8 +1,14 @@
 import LocalAuthentication
 import UIKit
 
-/// Strict owner authentication — Face ID / Touch ID first; device passcode on fallback / lockout.
+/// Strict owner authentication — Face ID / Touch ID first; device passcode on
+/// the same LocalAuthentication evaluation (fallback / lockout / failed scans).
 /// Reuse window is zero so every gate re-prompts (Edit, NFC write, vault, app unlock).
+///
+/// Use a single `.deviceOwnerAuthentication` call — not biometrics-only followed by
+/// a second evaluate. A second `.deviceOwnerAuthentication` after `userFallback`
+/// prefers Face ID again when biometrics are still available, so tapping Passcode
+/// re-scans instead of opening the passcode pad.
 enum BiometricAuth {
     /// Distinguishes a failed scan from cancel / dismiss so lock UI does not
     /// claim “couldn't verify” on every Accept that the owner backs out of.
@@ -15,51 +21,33 @@ enum BiometricAuth {
     }
 
     static func authenticate(reason: String, completion: @escaping (Outcome) -> Void) {
-        // Face ID is unreliable / often disabled while FaceTime screen share or
-        // Screen Recording is active — go straight to device passcode.
-        if UIScreen.main.isCaptured {
-            authenticateWithDevicePasscode(reason: reason, completion: completion)
-            return
-        }
-
         let context = makeContext()
         var error: NSError?
 
-        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
-            context.localizedFallbackTitle = "Passcode"
-            context.evaluatePolicy(
-                .deviceOwnerAuthenticationWithBiometrics,
-                localizedReason: reason
-            ) { success, evalError in
-                DispatchQueue.main.async {
-                    context.invalidate()
-                    if success {
-                        completion(.success)
-                        return
-                    }
-                    // Fallback / lockout / biometry unavailable → device passcode.
-                    if shouldOfferPasscodeFallback(evalError) {
-                        authenticateWithDevicePasscode(reason: reason, completion: completion)
-                    } else {
-                        completion(outcome(for: evalError))
-                    }
+        // One evaluation: system shows Face ID / Touch ID first, then Enter
+        // Passcode in-sheet (including after failed scans / lockout). Screen
+        // share often disables Face ID — same policy still reaches passcode.
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
+            #if targetEnvironment(simulator)
+            DispatchQueue.main.async {
+                presentSimulatorPrompt(reason: reason, completion: completion)
+            }
+            #else
+            DispatchQueue.main.async { completion(.declined) }
+            #endif
+            return
+        }
+
+        context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { success, evalError in
+            DispatchQueue.main.async {
+                context.invalidate()
+                if success {
+                    completion(.success)
+                } else {
+                    completion(outcome(for: evalError))
                 }
             }
-            return
         }
-
-        if context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) {
-            evaluateDeviceOwner(context: context, reason: reason, completion: completion)
-            return
-        }
-
-        #if targetEnvironment(simulator)
-        DispatchQueue.main.async {
-            presentSimulatorPrompt(reason: reason, completion: completion)
-        }
-        #else
-        DispatchQueue.main.async { completion(.declined) }
-        #endif
     }
 
     private static func makeContext() -> LAContext {
@@ -67,19 +55,10 @@ enum BiometricAuth {
         // No Face ID / Touch ID reuse across gates — every unlock is fresh.
         context.touchIDAuthenticationAllowableReuseDuration = 0
         context.localizedCancelTitle = "Cancel"
+        // Default system fallback ("Enter Passcode") stays inside this evaluation.
+        // Do not set localizedFallbackTitle — a custom title with a biometrics-only
+        // policy hands userFallback to the app and invites a second Face ID prompt.
         return context
-    }
-
-    private static func shouldOfferPasscodeFallback(_ error: Error?) -> Bool {
-        guard let la = error as? LAError else { return false }
-        switch la.code {
-        case .userFallback, .biometryLockout, .biometryNotAvailable:
-            // Passcode tap, lockout, or Face ID disabled (common during screen share).
-            return true
-        default:
-            // Cancel / failed scan → stay gated; user must retry Face ID.
-            return false
-        }
     }
 
     /// Map LAError to Outcome — only a mismatch is `notVerified`.
@@ -90,38 +69,8 @@ enum BiometricAuth {
             // Face ID / Touch ID / passcode did not match.
             return .notVerified
         default:
-            // userCancel, systemCancel, appCancel, etc.
+            // userCancel, systemCancel, appCancel, userFallback (if ever), etc.
             return .declined
-        }
-    }
-
-    private static func authenticateWithDevicePasscode(
-        reason: String,
-        completion: @escaping (Outcome) -> Void
-    ) {
-        let context = makeContext()
-        var error: NSError?
-        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
-            completion(.declined)
-            return
-        }
-        evaluateDeviceOwner(context: context, reason: reason, completion: completion)
-    }
-
-    private static func evaluateDeviceOwner(
-        context: LAContext,
-        reason: String,
-        completion: @escaping (Outcome) -> Void
-    ) {
-        context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { success, evalError in
-            DispatchQueue.main.async {
-                context.invalidate()
-                if success {
-                    completion(.success)
-                } else {
-                    completion(outcome(for: evalError))
-                }
-            }
         }
     }
 
