@@ -659,12 +659,12 @@
     color: #fff;
   }
   .seizure-btn.on {
-    background: rgba(255,255,255,0.9);
+    background: var(--bg);
     color: var(--dark);
     border: 1px solid var(--divider);
   }
   .seizure-btn-reset {
-    background: rgba(255,255,255,0.9);
+    background: var(--bg);
     color: var(--dark);
     border: 1px solid var(--divider);
   }
@@ -793,15 +793,31 @@
   details.aid[open] {
     background: rgba(225,29,72,0.03);
   }
+  /* Compact BrandWordmark top-left of every Aid pane — title row follows. */
+  .aid-pane-wordmark {
+    display: block;
+    height: 18px;
+    width: auto;
+    max-width: 120px;
+    margin: 0 0 6px;
+    object-fit: contain;
+  }
   details.aid summary {
     cursor: pointer;
     list-style: none;
     display: flex;
-    gap: 12px;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
     padding: 10px 0;
     min-width: 0;
     -webkit-tap-highlight-color: transparent;
+  }
+  details.aid summary .aid-summary-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    min-width: 0;
   }
   details.aid summary::-webkit-details-marker { display: none; }
   .aid-emoji {
@@ -841,7 +857,7 @@
   .tabbar {
     position: fixed;
     left: 0; right: 0; bottom: 0;
-    background: rgba(255,255,255,0.96);
+    background: var(--bg);
     border-top: 1px solid var(--divider);
     box-shadow: 0 -4px 18px rgba(28,25,23,0.06);
     display: flex;
@@ -1047,56 +1063,56 @@
         <img class="aid-wordmark" id="aidWordmark" src="BrandWordmark.png" width="168" height="42" alt="RedMed">
 
         <div class="aid-grid">
-          <details class="aid"><summary><span class="aid-emoji">🚗</span><span class="aid-title">Crash &amp; Head</span></summary>
+          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🚗</span><span class="aid-title">Crash &amp; Head</span></span></summary>
             <ol>
               <li>Call <span class="emg">112</span> — give exact location and number of people</li>
               <li>Hazards on. Do not move them unless fire or traffic danger</li>
               <li>Keep head/neck still. Control bleeding with firm pressure</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">🩸</span><span class="aid-title">Bleeding</span></summary>
+          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🩸</span><span class="aid-title">Bleeding</span></span></summary>
             <ol>
               <li>Press hard with both hands — do not lift to check</li>
               <li>Add cloth on top if soaked. Limb: tourniquet 2–3 in above</li>
               <li>Note the time. Stay on the line with <span class="emg">112</span></li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">❤️</span><span class="aid-title">Heart &amp; Airway</span></summary>
+          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">❤️</span><span class="aid-title">Heart &amp; Airway</span></span></summary>
             <ol>
               <li>No breathing/pulse: hard compressions 100–120/min, 2 inches deep</li>
               <li>Choking, cannot cough: 5 back blows, then 5 abdominal thrusts</li>
               <li>Alternate until clear or unresponsive — then CPR</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">⚡</span><span class="aid-title">Shock</span></summary>
+          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">⚡</span><span class="aid-title">Shock</span></span></summary>
             <ol>
               <li>Call <span class="emg">112</span>. Lay flat — do not let them walk</li>
               <li>Elevate legs 12 inches unless head/neck/spine injury</li>
               <li>Keep warm. No food, water, or medication</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">🧠</span><span class="aid-title">Seizure</span></summary>
+          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🧠</span><span class="aid-title">Seizure</span></span></summary>
             <ol>
               <li>Time it. Clear sharp objects. Do not restrain</li>
               <li>Nothing in the mouth. Cushion the head</li>
               <li>Call <span class="emg">112</span> if first seizure, over 5 minutes, injury, or in water</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">🥶</span><span class="aid-title">Hypothermia</span></summary>
+          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🥶</span><span class="aid-title">Hypothermia</span></span></summary>
             <ol>
               <li>Move to shelter. Remove wet clothes gently</li>
               <li>Warm chest/neck/armpits/groin — not the limbs</li>
               <li>No rubbing or massage. Warm drinks only if fully conscious</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">🥵</span><span class="aid-title">Heat</span></summary>
+          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🥵</span><span class="aid-title">Heat</span></span></summary>
             <ol>
               <li>Heat stroke: call <span class="emg">112</span> — cool neck/armpits/groin fast</li>
               <li>Move to shade. Remove extra clothing. Fan while cooling</li>
               <li>Sip cool water only if fully conscious</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-emoji">🏥</span><span class="aid-title">Trauma Hospitals</span></summary>
+          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🏥</span><span class="aid-title">Trauma Hospitals</span></span></summary>
             <ol>
               <li>Call <span class="emg">112</span> — dispatch routes to the right trauma level</li>
               <li>Do not self-transport major trauma if EMS is available</li>
@@ -1190,11 +1206,31 @@
     tryNext();
     resolveAsset('aidWordmark', ['BrandWordmark.png', 'assets/BrandWordmark.png']);
     resolveAsset('helpWordmark', ['BrandWordmark.png', 'assets/BrandWordmark.png']);
+    resolvePaneWordmarks(['BrandWordmark.png', 'assets/BrandWordmark.png']);
+  }
+
+  function resolvePaneWordmarks(candidates) {
+    var imgs = document.querySelectorAll('img.aid-pane-wordmark');
+    if (!imgs.length) return;
+    var i = 0;
+    function tryNext() {
+      if (i >= candidates.length) return;
+      var src = candidates[i++];
+      var probe = new Image();
+      probe.onload = function () {
+        imgs.forEach(function (img) { img.src = src; });
+      };
+      probe.onerror = tryNext;
+      probe.src = src;
+    }
+    tryNext();
   }
 
   // Bundle / app-embed already has BrandLogo.png — probing doubles decode on cold open.
   if (!isAppPreview()) {
     resolveLogo();
+  } else {
+    resolvePaneWordmarks(['BrandWordmark.png', 'assets/BrandWordmark.png']);
   }
 
   // Aid accordion — one pane open at a time (matches owner AidView).

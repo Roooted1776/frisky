@@ -659,12 +659,12 @@
     color: #fff;
   }
   .seizure-btn.on {
-    background: rgba(255,255,255,0.9);
+    background: var(--bg);
     color: var(--dark);
     border: 1px solid var(--divider);
   }
   .seizure-btn-reset {
-    background: rgba(255,255,255,0.9);
+    background: var(--bg);
     color: var(--dark);
     border: 1px solid var(--divider);
   }
@@ -793,15 +793,31 @@
   details.aid[open] {
     background: rgba(225,29,72,0.03);
   }
+  /* Compact BrandWordmark top-left of every Aid pane — title row follows. */
+  .aid-pane-wordmark {
+    display: block;
+    height: 18px;
+    width: auto;
+    max-width: 120px;
+    margin: 0 0 6px;
+    object-fit: contain;
+  }
   details.aid summary {
     cursor: pointer;
     list-style: none;
     display: flex;
-    gap: 12px;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
     padding: 10px 0;
     min-width: 0;
     -webkit-tap-highlight-color: transparent;
+  }
+  details.aid summary .aid-summary-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    min-width: 0;
   }
   details.aid summary::-webkit-details-marker { display: none; }
   .aid-emoji {
@@ -841,7 +857,7 @@
   .tabbar {
     position: fixed;
     left: 0; right: 0; bottom: 0;
-    background: rgba(255,255,255,0.96);
+    background: var(--bg);
     border-top: 1px solid var(--divider);
     box-shadow: 0 -4px 18px rgba(28,25,23,0.06);
     display: flex;

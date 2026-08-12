@@ -117,8 +117,7 @@ struct NFCView: View {
             thinRule
             factRow(icon: "person.2.fill", text: rf.passerbyTapSummary)
         }
-        .background(Color.redmedSurface)
-        .clipShape(RoundedRectangle(cornerRadius: boxRadius))
+        .redmedBox()
     }
 
     // MARK: - Setup
@@ -179,8 +178,7 @@ struct NFCView: View {
             .padding(.top, 2)
         }
         .padding(16)
-        .background(Color.redmedSurface)
-        .clipShape(RoundedRectangle(cornerRadius: boxRadius))
+        .redmedBox()
     }
 
     // MARK: - Scan (bottom of page)
@@ -216,7 +214,7 @@ struct NFCView: View {
                     .foregroundColor(.redmedAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(Color.redmedSurface)
+                    .background(Color.redmedBg)
                     .clipShape(RoundedRectangle(cornerRadius: boxRadius))
                     .overlay(
                         RoundedRectangle(cornerRadius: boxRadius)
@@ -241,8 +239,7 @@ struct NFCView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.redmedSurface)
-        .clipShape(RoundedRectangle(cornerRadius: boxRadius))
+        .redmedBox()
     }
 
     // MARK: - Pieces
