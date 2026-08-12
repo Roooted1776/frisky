@@ -52,7 +52,7 @@ struct RedMedView: View {
                             thinDivider
                             profileRow(label: "Birth date", value: profile.birthDate, emptyPrompt: "Add birth date")
                             thinDivider
-                            profileRow(label: "Blood type", value: profile.bloodType, emptyPrompt: "Add blood type")
+                            bloodTypeRow
                         }
                         .padding(.top, 2)
 
@@ -70,19 +70,19 @@ struct RedMedView: View {
                                     VStack(alignment: .leading, spacing: 2) {
                                         HStack(alignment: .firstTextBaseline, spacing: 8) {
                                             Text(c.name.isEmpty ? "Emergency contact" : c.name)
-                                                .font(.system(size: 11, weight: .semibold))
+                                                .font(.system(size: 14, weight: .semibold))
                                                 .foregroundColor(.black)
                                                 .frame(maxWidth: .infinity, alignment: .leading)
                                             if !c.phone.isEmpty {
                                                 Text(c.phone)
-                                                    .font(.system(size: 12, weight: .medium))
+                                                    .font(.system(size: 14, weight: .medium))
                                                     .foregroundColor(.redmedDark)
                                                     .multilineTextAlignment(.trailing)
                                             }
                                         }
                                         if !c.relationship.isEmpty {
                                             Text(c.relationship)
-                                                .font(.system(size: 12, weight: .medium))
+                                                .font(.system(size: 13, weight: .medium))
                                                 .foregroundColor(.redmedMuted)
                                         }
                                     }
@@ -189,7 +189,7 @@ struct RedMedView: View {
         }
         // Owner profile only — never redact the passerby / EMS scanner card.
         .privacySensitive(!isScannerSession)
-        .background(Color.redmedBg)
+        .background { RedMedPageBackground() }
         .fullScreenCover(isPresented: Binding(
             get: { showEdit && !isScannerSession },
             set: { showEdit = $0 && !isScannerSession }
@@ -286,27 +286,27 @@ struct RedMedView: View {
                     .resizable()
                     .frame(width: 48, height: 48)
                     .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.logoRadius))
-                    .shadow(color: Color.redmedAccent.opacity(0.15), radius: 5, y: 3)
-                    .opacity(0.72)
+                    .shadow(color: Color.redmedAccent.opacity(0.22), radius: 8, y: 4)
+                    .opacity(0.88)
                     .accessibilityHidden(true)
             }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(deviceName)
-                    .font(.system(size: 22, weight: .bold))
+                    .font(.system(size: 24, weight: .bold))
                     .foregroundColor(.black)
-                    .kerning(-0.4)
+                    .kerning(-0.5)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
 
                 Text(braceletStatusLabel)
-                    .font(.system(size: 10, weight: .bold))
+                    .font(.system(size: 11, weight: .bold))
                     .foregroundColor(
                         profile.showsBraceletAsLinked
-                            ? Color.redmedAccent.opacity(0.85)
+                            ? Color.redmedAccent.opacity(0.9)
                             : .redmedMuted
                     )
-                    .kerning(0.7)
+                    .kerning(0.6)
                     .textCase(.uppercase)
                     .id(profile.showsBraceletAsLinked)
                     .animation(RedMedMotion.soft, value: profile.showsBraceletAsLinked)
@@ -354,15 +354,15 @@ struct RedMedView: View {
             HStack(spacing: 8) {
                 if !hasImportedName {
                     Text("Name")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.redmedMuted)
                     Text(isScannerSession ? "—" : "Add name")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundColor(isScannerSession ? Color.redmedDark.opacity(0.55) : .redmedAccent)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
                     Text(profile.name)
-                        .font(.system(size: 11, weight: .bold))
+                        .font(.system(size: 15, weight: .bold))
                         .foregroundColor(.black)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .lineLimit(2)
@@ -384,25 +384,58 @@ struct RedMedView: View {
         } label: {
             HStack {
                 Text(label)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.redmedMuted)
                 Spacer()
                 if value.isEmpty {
                     Text(isScannerSession ? "—" : emptyPrompt)
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundColor(isScannerSession ? Color.redmedDark.opacity(0.55) : .redmedAccent)
                 } else {
                     Text(value)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(.black)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.redmedDark)
                 }
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 11)
+            .padding(.vertical, 12)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .disabled(!value.isEmpty || isScannerSession)
+    }
+
+    /// Blood type is the EMT glance field — chip when filled, same empty affordance as other rows.
+    @ViewBuilder
+    private var bloodTypeRow: some View {
+        Button {
+            if profile.bloodType.isEmpty && !isScannerSession { requestEdit() }
+        } label: {
+            HStack {
+                Text("Blood type")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.redmedMuted)
+                Spacer()
+                if profile.bloodType.isEmpty {
+                    Text(isScannerSession ? "—" : "Add blood type")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(isScannerSession ? Color.redmedDark.opacity(0.55) : .redmedAccent)
+                } else {
+                    Text(profile.bloodType)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(.redmedAccent)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Color.redmedAccent.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!profile.bloodType.isEmpty || isScannerSession)
     }
 
     @ViewBuilder
@@ -411,11 +444,11 @@ struct RedMedView: View {
             if !isScannerSession { requestEdit() }
         } label: {
             Text(isScannerSession ? "—" : prompt)
-                .font(.system(size: 11, weight: .medium))
+                .font(.system(size: 13, weight: .medium))
                 .foregroundColor(isScannerSession ? Color.redmedMuted.opacity(0.4) : .redmedAccent)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 16)
-                .padding(.vertical, 11)
+                .padding(.vertical, 12)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -437,7 +470,7 @@ struct RedMedView: View {
             } label: {
                 HStack(alignment: .center, spacing: 10) {
                     Text(title)
-                        .font(.system(size: 14, weight: .bold))
+                        .font(.system(size: 15, weight: .bold))
                         .foregroundColor(.redmedAccent)
                         .lineLimit(1)
                         .minimumScaleFactor(0.85)
@@ -448,7 +481,7 @@ struct RedMedView: View {
                             .foregroundColor(.redmedAccent)
                             .padding(.horizontal, 7)
                             .padding(.vertical, 3)
-                            .background(Color.redmedAccent.opacity(0.1))
+                            .background(Color.redmedAccent.opacity(0.12))
                             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
                     }
                     Image(systemName: open.wrappedValue ? "chevron.down" : "chevron.right")
@@ -457,7 +490,7 @@ struct RedMedView: View {
                         .frame(width: 24, height: 24)
                 }
                 .padding(.horizontal, 14)
-                .padding(.vertical, 12)
+                .padding(.vertical, 13)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -471,11 +504,11 @@ struct RedMedView: View {
                     } else {
                         ForEach(Array(items.enumerated()), id: \.offset) { i, item in
                             Text(item)
-                                .font(.system(size: 11))
+                                .font(.system(size: 14, weight: .medium))
                                 .foregroundColor(.redmedDark)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal, 16)
-                                .padding(.vertical, 11)
+                                .padding(.vertical, 12)
                             if i < items.count - 1 { thinDivider }
                         }
                     }
@@ -485,15 +518,20 @@ struct RedMedView: View {
                 }
             }
         }
-        .background(Color.redmedSurface)
+        .background(
+            open.wrappedValue
+                ? Color.redmedAccent.opacity(0.03)
+                : Color.redmedSurface
+        )
         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
         .overlay(
             RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
                 .strokeBorder(
-                    open.wrappedValue ? Color.redmedAccent.opacity(0.35) : Color.redmedDivider,
+                    open.wrappedValue ? Color.redmedAccent.opacity(0.28) : Color.redmedDivider,
                     lineWidth: 1
                 )
         )
+        .shadow(color: RedMedChrome.cardShadow, radius: 8, y: 3)
         .padding(.horizontal, 16)
         .padding(.top, 12)
     }

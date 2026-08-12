@@ -49,9 +49,8 @@ struct NFCView: View {
                 .padding(.top, 4)
                 .padding(.bottom, 28)
             }
-            .background(Color.redmedBg)
         }
-        .background(Color.redmedBg.ignoresSafeArea())
+        .background { RedMedPageBackground() }
         // Same one-page tap card as RedMed Preview / a real band tap (get.html#d=).
         .fullScreenCover(isPresented: $band.showScannedCard) {
             if let payload = band.scannedHTMLPayload {

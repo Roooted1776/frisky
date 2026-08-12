@@ -118,7 +118,7 @@ struct AidView: View {
             }
             .scrollIndicators(.visible)
         }
-        .background(Color.redmedBg)
+        .background { RedMedPageBackground() }
         .sheet(item: $activeTopic) { topic in
             TopicDetailView(topic: topic)
         }
@@ -213,15 +213,18 @@ struct PaneCard: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.redmedSurface)
+        .background(
+            isOpen ? Color.redmedAccent.opacity(0.03) : Color.redmedSurface
+        )
         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
         .overlay(
             RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
                 .strokeBorder(
-                    isOpen ? Color.redmedAccent.opacity(0.35) : Color.redmedDivider,
+                    isOpen ? Color.redmedAccent.opacity(0.28) : Color.redmedDivider,
                     lineWidth: 1
                 )
                 .animation(RedMedMotion.snappy, value: isOpen)
         )
+        .shadow(color: RedMedChrome.cardShadow, radius: 8, y: 3)
     }
 }

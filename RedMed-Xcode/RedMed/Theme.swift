@@ -33,9 +33,31 @@ extension Color {
     static let redmedBg       = Color(red: 1.000, green: 0.969, blue: 0.969) // #fff7f7
     static let redmedDark     = Color(red: 0.110, green: 0.098, blue: 0.086) // #1c1917
     static let redmedMuted    = Color(red: 0.471, green: 0.443, blue: 0.424) // #78716c
-    static let redmedSurface  = Color.white.opacity(0.92)
+    static let redmedSurface  = Color.white.opacity(0.94)
     /// Card + hairline stroke — same 8% ink as passerby `.card` / legal `--border`.
     static let redmedDivider  = Color(red: 0.110, green: 0.098, blue: 0.086).opacity(0.08)
+    /// Soft top wash — pairs with passerby body gradient.
+    static let redmedWash     = Color(red: 1.000, green: 0.910, blue: 0.922) // #ffe8eb
+}
+
+/// Cream page with a quiet rose wash behind chrome (owner + scanner).
+struct RedMedPageBackground: View {
+    var body: some View {
+        ZStack {
+            Color.redmedBg
+            RadialGradient(
+                colors: [Color.redmedWash.opacity(0.85), Color.redmedBg.opacity(0)],
+                center: .top,
+                startRadius: 20,
+                endRadius: 420
+            )
+            .frame(maxHeight: 520)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
 }
 
 struct SectionLabel: View {
@@ -110,7 +132,7 @@ struct PrimaryButton: View {
                                    startPoint: .top, endPoint: .bottom)
                 )
                 .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-                .shadow(color: Color.redmedAccent.opacity(0.28), radius: 7, y: 4)
+                .shadow(color: RedMedChrome.accentShadow, radius: 10, y: 5)
         }
         .buttonStyle(RedMedPressStyle(haptic: nil))
     }
@@ -139,13 +161,13 @@ struct SecondaryButton: View {
             .foregroundColor(.redmedDark)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background(Color.white.opacity(0.82))
+            .background(Color.white.opacity(0.88))
             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
                     .strokeBorder(Color.redmedDivider, lineWidth: 1)
             )
-            .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
+            .shadow(color: RedMedChrome.cardShadow, radius: 6, y: 2)
         }
         .buttonStyle(RedMedPressStyle(haptic: nil))
     }
@@ -179,15 +201,17 @@ struct ChromeTextAction: View {
 /// Box radius is shared by owner + scanner cards / CTAs (square-ish, not capsules).
 enum RedMedChrome {
     static let navTitleFont: Font = .system(size: 17, weight: .semibold)
-    static let boxRadius: CGFloat = 8
-    static let chipRadius: CGFloat = 6
-    static let logoRadius: CGFloat = 10
+    static let boxRadius: CGFloat = 10
+    static let chipRadius: CGFloat = 7
+    static let logoRadius: CGFloat = 12
+    static let cardShadow = Color.black.opacity(0.045)
+    static let accentShadow = Color.redmedAccent.opacity(0.18)
 }
 
 extension View {
     /// Surface card chrome used on RedMed / 911 / Aid / NFC (owner + scanner).
     /// `strokeBorder` keeps the full 1pt hairline inside the shape (`.stroke` half-clips).
-    func redmedBox(strokeOpacity: Double = 1) -> some View {
+    func redmedBox(strokeOpacity: Double = 1, elevated: Bool = true) -> some View {
         self
             .background(Color.redmedSurface)
             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
@@ -195,6 +219,7 @@ extension View {
                 RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
                     .strokeBorder(Color.redmedDivider.opacity(strokeOpacity), lineWidth: 1)
             )
+            .shadow(color: elevated ? RedMedChrome.cardShadow : .clear, radius: 8, y: 3)
     }
 }
 

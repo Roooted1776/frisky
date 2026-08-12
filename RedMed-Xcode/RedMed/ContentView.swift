@@ -101,7 +101,9 @@ struct CustomTabBar: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Divider().overlay(Color.redmedDivider)
+            Rectangle()
+                .fill(Color.redmedDivider)
+                .frame(height: 1)
             HStack(spacing: -3) {
                 TabBarItem(icon: "person.fill",  label: "RedMed", isOn: tab == .redmed) {
                     select(.redmed)
@@ -118,15 +120,18 @@ struct CustomTabBar: View {
                     }
                 }
             }
-            .padding(.top, 2)
+            .padding(.top, 4)
 
             Capsule()
-                .fill(Color(red: 0.11, green: 0.098, blue: 0.086).opacity(0.18))
+                .fill(Color(red: 0.11, green: 0.098, blue: 0.086).opacity(0.16))
                 .frame(width: 134, height: 5)
-                .padding(.top, 2)
-                .padding(.bottom, 4)
+                .padding(.top, 4)
+                .padding(.bottom, 5)
         }
-        .background(Color.white)
+        .background(
+            Color.white.opacity(0.96)
+                .shadow(color: Color.black.opacity(0.06), radius: 16, y: -4)
+        )
     }
 
     private func select(_ next: AppTab) {
@@ -149,18 +154,18 @@ struct TabBarItem: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 2) {
+            VStack(spacing: 3) {
                 Image(systemName: icon)
-                    .font(.system(size: 22))
+                    .font(.system(size: 22, weight: isOn ? .semibold : .regular))
                     .foregroundColor(isOn ? .redmedAccent : Color(red: 0.372, green: 0.388, blue: 0.408))
                     .symbolEffect(.bounce, value: isOn)
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 5)
                     .background(
                         RoundedRectangle(cornerRadius: 14)
-                            .fill(isOn ? Color.redmedAccent.opacity(0.10) : Color.clear)
+                            .fill(isOn ? Color.redmedAccent.opacity(0.12) : Color.clear)
                     )
-                    .scaleEffect(isOn ? 1.04 : 1)
+                    .scaleEffect(isOn ? 1.05 : 1)
                 Text(label)
                     .font(.system(size: 10, weight: isOn ? .semibold : .medium))
                     .foregroundColor(isOn ? .redmedAccent : Color(red: 0.372, green: 0.388, blue: 0.408))

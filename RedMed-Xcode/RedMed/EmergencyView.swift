@@ -36,7 +36,7 @@ struct EmergencyView: View {
             .background(Color.redmedBg)
 
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 8) {
+                LazyVStack(alignment: .leading, spacing: 10) {
                     // NO CELL SIGNAL — carriers only (no satellite coach UI)
                     NoCellSignalCard()
 
@@ -72,12 +72,19 @@ struct EmergencyView: View {
                                 Image(systemName: "phone.fill")
                                 Text("Call \(EmergencyNumber.current)")
                             }
-                            .font(.system(size: 17, weight: .bold))
+                            .font(.system(size: 18, weight: .bold))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Color.redmedDark)
+                            .padding(.vertical, 17)
+                            .background(
+                                LinearGradient(
+                                    colors: [Color(red: 1, green: 0.447, blue: 0.537), .redmedAccent],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
                             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                            .shadow(color: RedMedChrome.accentShadow, radius: 12, y: 5)
                         }
                         .buttonStyle(RedMedPressStyle(haptic: nil))
 
@@ -164,7 +171,7 @@ struct EmergencyView: View {
                 .padding(.bottom, 6)
             }
         }
-        .background(Color.redmedBg)
+        .background { RedMedPageBackground() }
         .task(id: isVisible) {
             // First paint of Find Help before Core Location work.
             guard isVisible else {

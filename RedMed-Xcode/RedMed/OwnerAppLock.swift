@@ -79,30 +79,36 @@ struct OwnerAppLock<Content: View>: View {
         }
     }
 
-    /// Matches launch screen / redmedBg so the post-splash gap is never black.
     private var coldLaunchShell: some View {
         ZStack {
-            Color.redmedBg.ignoresSafeArea()
+            RedMedPageBackground()
             Image("BrandLogo")
                 .resizable()
-                .frame(width: 64, height: 64)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .frame(width: 72, height: 72)
+                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.logoRadius + 4))
+                .shadow(color: RedMedChrome.accentShadow, radius: 14, y: 6)
         }
         .accessibilityHidden(true)
     }
 
     private var lockScreen: some View {
         ZStack {
-            Color.redmedBg.ignoresSafeArea()
-            VStack(spacing: 20) {
-                Spacer(minLength: 40)
+            RedMedPageBackground()
+            VStack(spacing: 18) {
+                Spacer(minLength: 48)
                 Image("BrandLogo")
                     .resizable()
-                    .frame(width: 64, height: 64)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .frame(width: 72, height: 72)
+                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.logoRadius + 4))
+                    .shadow(color: RedMedChrome.accentShadow, radius: 14, y: 6)
+                Text("RedMed")
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundColor(.redmedDark)
+                    .kerning(-0.4)
                 Image(systemName: "lock.fill")
-                    .font(.system(size: 36, weight: .semibold))
+                    .font(.system(size: 28, weight: .semibold))
                     .foregroundColor(.redmedAccent)
+                    .padding(.top, 2)
                     .accessibilityLabel("RedMed is locked")
                 if screenCaptured {
                     Text("Screen sharing is on — unlock with passcode. Profile stays hidden on the share until you stop sharing.")
@@ -129,18 +135,26 @@ struct OwnerAppLock<Content: View>: View {
                             ProgressView().tint(.white)
                         } else {
                             Text("Accept")
-                                .font(.system(size: 15, weight: .bold))
+                                .font(.system(size: 16, weight: .bold))
                         }
                     }
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(Color.redmedAccent)
-                    .clipShape(Capsule())
+                    .padding(.vertical, 15)
+                    .background(
+                        LinearGradient(
+                            colors: [Color(red: 1, green: 0.447, blue: 0.537), .redmedAccent],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                    .shadow(color: RedMedChrome.accentShadow, radius: 10, y: 5)
                 }
                 .buttonStyle(RedMedPressStyle(haptic: nil))
                 .disabled(isAuthenticating)
-                .padding(.horizontal, 24)
+                .padding(.horizontal, 28)
+                .padding(.top, 8)
                 Spacer()
             }
         }
