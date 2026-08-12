@@ -20,7 +20,9 @@ struct LocalWebView: UIViewRepresentable {
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
+        guard context.coordinator.loadedFilename != filename else { return }
         guard let url = Bundle.main.url(forResource: filename, withExtension: "html") else { return }
+        context.coordinator.loadedFilename = filename
         // Read access limited to the HTML file's directory (bundle resources).
         webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
     }
@@ -42,6 +44,8 @@ struct LocalWebView: UIViewRepresentable {
 
     /// Blocks in-webview navigation to untrusted schemes; opens http(s)/tel/mailto/redmed externally.
     final class Coordinator: NSObject, WKNavigationDelegate {
+        var loadedFilename: String?
+
         func webView(
             _ webView: WKWebView,
             decidePolicyFor navigationAction: WKNavigationAction,

@@ -8,6 +8,8 @@ enum LocatorBeacon {
     private static var survivalHold = false
     private static var timer: Timer?
     private static var player: AVAudioPlayer?
+    /// Synth once — re-building PCM every 5s hitch on the main thread while SOS is armed.
+    private static var cachedAlarmWAV: Data?
     private static let interval: TimeInterval = 5
     /// Serial queue for blocking AVAudioSession work — never run setCategory/setActive on MainActor.
     private static let sessionQueue = DispatchQueue(label: "redmed.locator-beacon.session")
@@ -94,6 +96,12 @@ enum LocatorBeacon {
         guard survivalHold, sessionReady else { return }
         guard let data = alarmWAV() else { return }
         do {
+            if let existing = player {
+                existing.currentTime = 0
+                existing.volume = 1.0
+                existing.play()
+                return
+            }
             let p = try AVAudioPlayer(data: data)
             p.volume = 1.0
             p.prepareToPlay()
@@ -106,6 +114,7 @@ enum LocatorBeacon {
 
     /// Three piercing beeps (~880 / 1175 / 880 Hz). No bundled asset required.
     private static func alarmWAV() -> Data? {
+        if let cachedAlarmWAV { return cachedAlarmWAV }
         let sampleRate = 22050
         let beepDuration = 0.22
         let gapDuration = 0.10
@@ -119,7 +128,9 @@ enum LocatorBeacon {
             }
         }
 
-        return pcm16MonoWAV(samples: samples, sampleRate: sampleRate)
+        let data = pcm16MonoWAV(samples: samples, sampleRate: sampleRate)
+        cachedAlarmWAV = data
+        return data
     }
 
     private static func tone(frequency: Double, seconds: Double, sampleRate: Int) -> [Int16] {

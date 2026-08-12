@@ -12,9 +12,28 @@ struct RedMedView: View {
     @State private var requireAuthOnSave = false
     @State private var showHelp = false
     @State private var showAuthFailedAlert = false
+    /// Cached `#d=` — never AES-pack inside `body` (random nonce remounted WKWebView).
+    @State private var packedPayload: String?
+    @State private var packFingerprint = ""
 
-    private var packedPayload: String? {
-        PasserbyHTMLCardView.payload(from: profile)
+    /// Durable profile fields only — ignores `holdsEditingSession` so Edit open/close
+    /// does not rebuild the shell.
+    private var profilePackFingerprint: String {
+        let contacts = profile.contacts
+            .map { "\($0.name)|\($0.relationship)|\($0.phone)" }
+            .joined(separator: ";")
+        return [
+            profile.name,
+            profile.birthDate,
+            profile.bloodType,
+            profile.allergies.joined(separator: ","),
+            profile.medications.joined(separator: ","),
+            profile.conditions.joined(separator: ","),
+            contacts,
+            profile.isOrganDonor ? "1" : "0",
+            profile.lastUpdated,
+            profile.showsBraceletAsLinked ? "1" : "0"
+        ].joined(separator: "\u{1e}")
     }
 
     var body: some View {
@@ -25,6 +44,8 @@ struct RedMedView: View {
                         encodedPayload: packedPayload,
                         braceletLinked: profile.showsBraceletAsLinked
                     )
+                    // Opacity tab swaps must not animate WKWebView (jank + flash).
+                    .transaction { $0.animation = nil }
                 } else {
                     VStack(spacing: 12) {
                         Text("Couldn't pack get.html#d= from RedMed.")
@@ -57,6 +78,8 @@ struct RedMedView: View {
         // Owner profile only — never redact the passerby / EMS scanner card.
         .privacySensitive(!isScannerSession)
         .background { RedMedPageBackground() }
+        .onAppear { syncPackedPayload() }
+        .onChange(of: profilePackFingerprint) { _, _ in syncPackedPayload() }
         .fullScreenCover(isPresented: Binding(
             get: { showEdit && !isScannerSession },
             set: { showEdit = $0 && !isScannerSession }
@@ -75,6 +98,13 @@ struct RedMedView: View {
         } message: {
             Text("Face ID or passcode is required to edit your RedMed profile.")
         }
+    }
+
+    private func syncPackedPayload() {
+        let fp = profilePackFingerprint
+        guard fp != packFingerprint || packedPayload == nil else { return }
+        packFingerprint = fp
+        packedPayload = PasserbyHTMLCardView.previewPayload(from: profile)
     }
 
     // MARK: - Edit gate

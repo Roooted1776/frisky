@@ -78,9 +78,8 @@ enum ProfileNFCCodec {
         static let updated = 8
     }
 
-    private static var aesKey: SymmetricKey {
-        SymmetricKey(data: Data(SHA256.hash(data: Data(keyLabel.utf8))))
-    }
+    /// Stable key — do not re-hash SHA-256 on every seal/open.
+    private static let aesKey = SymmetricKey(data: Data(SHA256.hash(data: Data(keyLabel.utf8))))
 
     static func chipProfile(from profile: ProfileData) -> NFCChipProfile {
         NFCChipProfile(
@@ -120,9 +119,22 @@ enum ProfileNFCCodec {
 
     /// Full NDEF URI string including `#d=` — prefer this over `URL` when writing tags
     /// so the fragment is never dropped by URL parsing.
+    /// Stamps a fresh `updated` time (band write / capacity). In-app preview must use
+    /// `buildPreviewURLString` so SwiftUI body re-evals do not mint a new AES ciphertext.
     static func buildURLString(profile: ProfileData, baseURL: String = AppConfig.medicalCardBaseURL) -> String? {
         var chip = chipProfile(from: profile)
         chip.updated = ISO8601DateFormatter().string(from: Date())
+        guard let encoded = encodePayload(chip) else { return nil }
+        return baseURL + "#d=" + encoded
+    }
+
+    /// Stable `#d=` for WKWebView embed — keeps `profile.lastUpdated` (or one stamp if empty)
+    /// and must only be called when durable fields change, not every `body` pass.
+    static func buildPreviewURLString(profile: ProfileData, baseURL: String = AppConfig.medicalCardBaseURL) -> String? {
+        var chip = chipProfile(from: profile)
+        if chip.updated.isEmpty {
+            chip.updated = ISO8601DateFormatter().string(from: Date())
+        }
         guard let encoded = encodePayload(chip) else { return nil }
         return baseURL + "#d=" + encoded
     }
