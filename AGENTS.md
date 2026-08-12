@@ -52,13 +52,14 @@ The app has no backend, database, or web service.
 **Settings vs automatic (permanent):**
 - Help → Settings exposes **only** haptic feedback + Location (`AppSettings` /
   `HapticEngine.enabledKey`). No other toggles there.
-- **Brightness + sound are survival-alarm only (not Settings, not auto on Find Help / scanner):**
+- **Brightness + sound are survival-alarm only (not Settings, not auto on owner Find Help):**
   arm `BrightnessBoost` + `VolumeBoost` + `LocatorBeacon` only when (1) on-device crash /
   hard-impact detection (`CrashMotionGuard`) fires for **vehicle crash /
-  high-speed impact only** (not running or daily activity), or (2) owner or
-  tapper taps **SOS · Locate me** on Find Help. Opening Find Help or the scanner
-  shell must not force brightness, max volume, or play the siren by itself. Do not add
-  Settings off switches for the survival alarm.
+  high-speed impact only** (not running or daily activity), (2) owner taps
+  **SOS · Locate me** on Find Help, or (3) bracelet tap opens passerby
+  `get.html` / in-app scanner shell (local SOS on that device immediately).
+  Opening owner Find Help must not force brightness, max volume, or play the
+  siren by itself. Do not add Settings off switches for the survival alarm.
 - **LocatorBeacon** / **BrightnessBoost** / **VolumeBoost** survival hold may keep sounding /
   max brightness / max system volume in background until the user taps “Stop the alarm” on Aid
   (or Stop SOS alarm on Find Help).
@@ -115,10 +116,11 @@ delete every prior `CACHE` name so deploys clear stale decrypt/layout. Bump
 `CACHE` (`redmed-get-vN`) in lockstep across `sw.js`, `get/sw.js`, and the
 bundled copy on every SW / decrypt deploy. Register the SW ASAP in `get.html`
 (not on `window.load`). Legacy zlib inflate is bounded (64 KiB) in Swift +
-streaming bound in `get.html`. Passerby HTML arms local SOS siren on explicit
-**SOS · Locate me**, and DeviceMotion crash / severe-impact (same g thresholds
-as `CrashMotionGuard`) after a gesture grants motion permission — not on open.
-Native still owns system volume / brightness boost.
+streaming bound in `get.html`. Passerby HTML **arms local SOS when the tap page
+opens** (this device only; no server). Explicit Stop / SOS toggle and DeviceMotion
+crash (same g thresholds as `CrashMotionGuard`) share that alarm. iOS may need a
+gesture to unmute AudioContext / grant motion. Native still owns system volume /
+brightness boost.
 
 **Repo hygiene:** `main` is the only long-lived branch. After merges, delete
 feature branches on the remote; do not leave parallel “brainchild” branches.

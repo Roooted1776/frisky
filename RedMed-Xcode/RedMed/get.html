@@ -26,9 +26,10 @@
      - Offline: sw.js Cache Storage — cache-first multi-key shell for almost-instant
        EMT open after first online load; activate clears prior CACHE buckets
        (bump redmed-get-vN). Never wait on network when a shell copy exists.
-     - Find Help SOS · Locate me (explicit tap only) + DeviceMotion crash /
-       severe-impact detection (same g thresholds as native CrashMotionGuard).
-       Local siren on this device; not auto on open. No Edit / NFC.
+     - Bracelet tap opens this page → arms local SOS siren immediately
+       (this device only; no server). Stop on Find Help or Aid.
+       Explicit SOS toggle + DeviceMotion crash use the same local alarm.
+       iOS may need a gesture to unmute AudioContext / grant motion.
      - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
        walk-by ~6–8″ does not fire, reliable coupling dies past ~4″,
        passive 13.56 MHz HF NFC (not Bluetooth) → opens this page
@@ -634,7 +635,7 @@
           <a class="btn btn-call" id="callEmergency911" href="tel:112">Call <span class="emg">112</span></a>
           <button class="btn btn-sos" type="button" id="sosBtn">SOS · Locate me</button>
         </div>
-        <p class="survival-note">Siren + max volume + full brightness only on crash / severe impact or SOS. Local only — no servers · no online. Stop here or on Aid.</p>
+        <p class="survival-note">Siren arms when this page opens — local only, no servers · no online. Also on crash. Stop here or on Aid.</p>
 
         <div class="seizure-strip" id="seizureStrip">
           <div>
@@ -1358,9 +1359,9 @@
 </script>
 <script>
 // Survival alarm for tapper Find Help — mirrors native CrashMotionGuard + SOS.
-// Explicit SOS tap OR DeviceMotion vehicle crash / severe impact.
-// Web Audio siren + screen wake lock (browsers cannot force system volume /
-// brightness; native does VolumeBoost + BrightnessBoost).
+// Bracelet tap opens this page → arm local SOS immediately (this device only;
+// no server). Explicit SOS toggle and DeviceMotion crash share the same alarm.
+// Web Audio + wake lock (browsers cannot force system volume / brightness).
 (function () {
   var sosBtn = document.getElementById('sosBtn');
   var aidStop = document.getElementById('aidStopAlarm');
@@ -1605,15 +1606,23 @@
     }
   }
 
-  // iOS requires a user gesture for DeviceMotion permission — first tap anywhere.
+  // iOS requires a user gesture for DeviceMotion permission + often for audio.
+  // Bracelet tap already opened the page — arm local SOS now; unmute on gesture.
   function onFirstGesture() {
     document.removeEventListener('touchstart', onFirstGesture, true);
     document.removeEventListener('click', onFirstGesture, true);
     requestMotionThenStart();
+    if (armed) {
+      if (ctx && ctx.state === 'suspended') {
+        ctx.resume();
+      } else if (!ctx) {
+        startAudio();
+      }
+    }
   }
   document.addEventListener('touchstart', onFirstGesture, true);
   document.addEventListener('click', onFirstGesture, true);
-  // Non-iOS: start without a gesture when the API needs no permission.
+  // Non-iOS: start crash monitor without a gesture when the API needs no permission.
   if (!(window.DeviceMotionEvent && typeof window.DeviceMotionEvent.requestPermission === 'function')) {
     startCrashMonitor();
   }
@@ -1637,7 +1646,8 @@
     }
   });
 
-  paint();
+  // Bracelet tap → this page: arm local SOS immediately (no server / no online).
+  arm();
 })();
 </script>
 </body>

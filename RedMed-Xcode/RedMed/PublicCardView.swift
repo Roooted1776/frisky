@@ -28,12 +28,15 @@ extension EnvironmentValues {
 /// **no Edit**, **no NFC**. Mirrors bracelet tap page `get.html#d=…`
 /// (owner edit + NFC write live in the owner app). Payload stays in `#d=`.
 /// Holds a **snapshot** of the profile so scanner UI cannot mutate owner data.
-/// Tap-to-view: no Face ID / biometrics. CrashMotionGuard (app-wide) plus Find
-/// Help **SOS · Locate me** arm local survival on this device — same as owner;
-/// not auto on open.
+/// Tap-to-view: no Face ID / biometrics. Opening this shell (bracelet-tap
+/// preview) arms local SOS survival on this device — no server. Disarm on
+/// dismiss or Stop. CrashMotionGuard still runs for severe impact.
 struct PublicCardView: View {
     @StateObject private var snapshot: ProfileData
     @Environment(\.dismiss) private var dismiss
+    /// True when this presentation armed SOS so dismiss can cancel without
+    /// clearing an unrelated already-armed crash hold.
+    @State private var armedForTapOpen = false
 
     init(profile: ProfileData) {
         _snapshot = StateObject(wrappedValue: profile.snapshot())
@@ -44,6 +47,18 @@ struct PublicCardView: View {
             .environmentObject(snapshot)
             .environment(\.isScannerSession, true)
             .environment(\.scannerDismiss, { dismiss() })
+            .onAppear {
+                // Mirror get.html: bracelet tap page opens → local SOS.
+                guard !CrashMotionGuard.shared.isArmed else { return }
+                CrashMotionGuard.shared.armSOS()
+                armedForTapOpen = true
+            }
+            .onDisappear {
+                if armedForTapOpen {
+                    CrashMotionGuard.shared.disarm()
+                    armedForTapOpen = false
+                }
+            }
     }
 }
 
