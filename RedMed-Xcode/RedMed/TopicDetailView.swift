@@ -131,7 +131,7 @@ struct TopicDetailView: View {
                         }
                         .padding(20)
                         .frame(maxWidth: .infinity)
-                        .background(Color.white)
+                        .background(Color.redmedSurface)
                         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                         .overlay(
                             RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
@@ -164,7 +164,7 @@ struct TopicDetailView: View {
                             }
                         }
                     }
-                    .background(Color.white)
+                    .background(Color.redmedSurface)
                     .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                     .overlay(
                         RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
@@ -201,7 +201,7 @@ struct TopicDetailView: View {
                             }
                         }
                     }
-                    .background(Color.white)
+                    .background(Color.redmedSurface)
                     .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                     .overlay(
                         RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
@@ -310,7 +310,7 @@ private struct LiveNearbyHospitalsSection: View {
                         }
                     }
                 }
-                .background(Color.white)
+                .background(Color.redmedSurface)
                 .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                 .overlay(
                     RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)

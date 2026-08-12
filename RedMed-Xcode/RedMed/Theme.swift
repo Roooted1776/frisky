@@ -104,7 +104,7 @@ struct PillTag: View {
             .padding(.vertical, 5)
             .background(
                 RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
-                    .fill(accent ? Color.redmedAccent.opacity(0.1) : Color.white.opacity(0.7))
+                    .fill(accent ? Color.redmedAccent.opacity(0.1) : Color.redmedSurface)
                     .overlay(
                         RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
                             .strokeBorder(accent ? Color.clear : Color.redmedDivider, lineWidth: 1)
@@ -161,7 +161,7 @@ struct SecondaryButton: View {
             .foregroundColor(.redmedDark)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background(Color.white.opacity(0.88))
+            .background(Color.redmedSurface)
             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)

@@ -246,7 +246,7 @@ struct SeizureTimerStrip: View {
             .foregroundColor(running ? .redmedDark : .white)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .background(running ? Color.white.opacity(0.9) : Color.redmedAccent)
+            .background(running ? Color.redmedSurface : Color.redmedAccent)
             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
