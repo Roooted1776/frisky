@@ -132,7 +132,7 @@ struct ChromeTextAction: View {
     }
 }
 
-/// Inline nav titles (Find Help, NFC, topic). Semibold 17 accent — pairs with ChromeTextAction.
+/// Inline nav titles (Find Help, topic). Semibold 17 accent — pairs with ChromeTextAction.
 /// Box radius is shared by owner + scanner cards / CTAs (square-ish, not capsules).
 enum RedMedChrome {
     static let navTitleFont: Font = .system(size: 17, weight: .semibold)
