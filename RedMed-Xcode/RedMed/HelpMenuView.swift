@@ -142,8 +142,13 @@ struct HelpMenuView: View {
                         .navigationBarTitleDisplayMode(.inline)
                 }
             }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(Color.redmedBg.ignoresSafeArea())
             .navigationTitle("Help")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.redmedBg, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") { dismiss() }.foregroundColor(.redmedAccent)
@@ -155,5 +160,6 @@ struct HelpMenuView: View {
                 }
             }
         }
+        .navigationViewStyle(.stack)
     }
 }
