@@ -142,34 +142,33 @@ struct PaneCard: View {
         VStack(alignment: .leading, spacing: 0) {
             Button { onTap(nil) } label: {
                 HStack(alignment: .center, spacing: 12) {
-                    // Nearby Hospitals: BrandLogo on the left. Other panes keep emoji.
-                    Group {
-                        if pane.id == "hospitals" {
-                            Image("BrandLogo")
-                                .resizable()
-                                .scaledToFit()
-                                .padding(8)
-                        } else {
-                            Text(pane.emoji)
-                                .font(.system(size: 22))
-                        }
-                    }
-                    .frame(width: 44, height: 44)
-                    .background(isOpen ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
-                    .animation(RedMedMotion.snappy, value: isOpen)
-                    .accessibilityHidden(true)
+                    if pane.id == "hospitals" {
+                        // Full BrandWordmark lockup (logo + RedMed) on the left.
+                        Image("BrandWordmark")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 28)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .accessibilityLabel("RedMed Nearby Hospitals")
+                    } else {
+                        Text(pane.emoji)
+                            .font(.system(size: 22))
+                            .frame(width: 44, height: 44)
+                            .background(isOpen ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+                            .animation(RedMedMotion.snappy, value: isOpen)
+                            .accessibilityHidden(true)
 
-                    // Title + mark only — red chrome, scales to fit the pane.
-                    Text(pane.title)
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.redmedAccent)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.75)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .layoutPriority(1)
+                        Text(pane.title)
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.redmedAccent)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.75)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .layoutPriority(1)
+                    }
 
                     Image(systemName: "chevron.right")
                         .font(.system(size: 14, weight: .semibold))

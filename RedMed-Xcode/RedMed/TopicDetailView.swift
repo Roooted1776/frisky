@@ -236,23 +236,16 @@ private struct LiveNearbyHospitalsSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .center, spacing: 10) {
-                Image("BrandLogo")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 28, height: 28)
-                    .clipShape(Circle())
-                    .accessibilityHidden(true)
-                Text("Find Nearby Hospitals")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.redmedAccent)
-                    .kerning(0.5)
-                    .textCase(.uppercase)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .padding(.horizontal, 4)
-            .padding(.bottom, 6)
-            .padding(.top, 24)
+            // Same BrandWordmark lockup the user sent (logo + RedMed) on the left.
+            Image("BrandWordmark")
+                .resizable()
+                .scaledToFit()
+                .frame(height: 32)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 4)
+                .padding(.bottom, 10)
+                .padding(.top, 24)
+                .accessibilityLabel("RedMed Find Nearby Hospitals")
 
             if !locationEnabled {
                 Text("Location is off. Enable it in Help → Settings to find nearby hospitals.")
