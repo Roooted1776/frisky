@@ -143,13 +143,22 @@ struct PaneCard: View {
             Button { onTap(nil) } label: {
                 HStack(alignment: .center, spacing: 12) {
                     if pane.id == "hospitals" {
-                        // Full BrandWordmark lockup (logo + RedMed) on the left.
+                        // Full BrandWordmark lockup (logo + RedMed text) on the left.
                         Image("BrandWordmark")
                             .resizable()
                             .scaledToFit()
                             .frame(height: 28)
+                            .accessibilityHidden(true)
+                        Text(pane.title)
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.redmedAccent)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.75)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .accessibilityLabel("RedMed Nearby Hospitals")
+                            .layoutPriority(1)
+                            .accessibilityLabel("RedMed \(pane.title)")
                     } else {
                         Text(pane.emoji)
                             .font(.system(size: 22))
