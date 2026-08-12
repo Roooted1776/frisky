@@ -12,7 +12,7 @@
  * stale decrypt/layout. Bump CACHE in lockstep with root + bundled sw.js on
  * every decrypt/layout deploy.
  */
-var CACHE = 'redmed-get-v24';
+var CACHE = 'redmed-get-v23';
 var ASSETS = [
   './',
   './index.html',
@@ -61,7 +61,7 @@ function precache(cache) {
         return networkReload(url)
           .then(function (res) {
             if (!res || !res.ok) return;
-            return putAsset(cache, url, res);
+            return putShell(cache, url, res);
           })
           .catch(function () { /* optional path missing */ });
       })
@@ -69,18 +69,9 @@ function precache(cache) {
   });
 }
 
-function putAsset(cache, reqOrUrl, res) {
-  if (!res || !res.ok || (res.type !== 'basic' && res.type !== 'cors')) return Promise.resolve();
-  return cache.put(reqOrUrl, res).catch(function () { /* quota / opaque */ });
-}
-
-/** Fan HTML shells only — never logos / sw.js / card.html into SHELL_KEYS. */
+/** Store under the request URL plus canonical shell keys so /get/ always hits. */
 function putShell(cache, reqOrUrl, res) {
   if (!res || !res.ok || (res.type !== 'basic' && res.type !== 'cors')) return Promise.resolve();
-  var ct = (res.headers.get('content-type') || '').toLowerCase();
-  if (ct.indexOf('text/html') === -1) {
-    return putAsset(cache, reqOrUrl, res);
-  }
   var writes = [cache.put(reqOrUrl, res.clone())];
   SHELL_KEYS.forEach(function (key) {
     writes.push(cache.put(key, res.clone()));
@@ -122,7 +113,9 @@ function isShellRequest(req) {
     return (
       path === '/get' ||
       path === '/get/' ||
-      path.endsWith('/get/index.html')
+      path.endsWith('/get/index.html') ||
+      path.endsWith('/get/sw.js') ||
+      path.endsWith('/card.html')
     );
   } catch (e) {
     return false;

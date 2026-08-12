@@ -598,7 +598,7 @@
 
         <div class="gps-card">
           <div class="gps-pill">LIVE GPS</div>
-          <div class="coords" id="coords">Open 911 for live GPS</div>
+          <div class="coords" id="coords">Getting GPS…</div>
           <div class="gps-acc" id="gpsAcc"></div>
         </div>
         <div class="gps-actions">
@@ -794,7 +794,7 @@
   })();
 
 
-  var MAX_PAYLOAD = 8192;
+  var MAX_PAYLOAD = 50000;
   var MAX_INFLATED = 65536;
   var MAX_LIST = 40;
   var MAX_STR = 200;
@@ -1073,7 +1073,6 @@
       t.classList.toggle('active', t.getAttribute('data-tab') === id);
     });
     window.scrollTo(0, 0);
-    if (id === '911') requestGpsOnce();
   }
 
   document.querySelectorAll('.tab').forEach(function (t) {
@@ -1084,9 +1083,9 @@
   function decodeProfile() {
     try {
       var hash = location.hash || '';
-      var match = /(?:^#|&)d=([^&]*)/.exec(hash);
-      if (!match) return Promise.resolve(null);
-      var raw = decodeURIComponent(match[1] || '');
+      var idx = hash.indexOf('d=');
+      if (idx < 0) return Promise.resolve(null);
+      var raw = decodeURIComponent(hash.slice(idx + 2).split('&')[0] || '');
       var bytes = b64urlToBytes(raw);
       if (!bytes || !bytes.length) return Promise.resolve(null);
       if (bytes[0] === AES_VERSION) {
@@ -1186,23 +1185,16 @@
     window.__redmedLoc = { latitude: lat, longitude: lon, accuracy: acc };
   }
 
-  var gpsRequested = false;
-  function requestGpsOnce() {
-    if (gpsRequested) return;
-    gpsRequested = true;
-    if (!navigator.geolocation) {
-      document.getElementById('coords').textContent = 'GPS unavailable';
-      return;
-    }
-    document.getElementById('coords').textContent = 'Getting GPS…';
+  if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(function (pos) {
       setCoords(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
     }, function () {
       document.getElementById('coords').textContent = 'GPS unavailable';
       document.getElementById('gpsAcc').textContent = 'Tell dispatcher landmarks';
     }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 });
+  } else {
+    document.getElementById('coords').textContent = 'GPS unavailable';
   }
-  document.getElementById('coords').textContent = 'Open 911 for live GPS';
 
   document.getElementById('copyCoordsBtn').addEventListener('click', function () {
     var loc = window.__redmedLoc;
