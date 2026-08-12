@@ -151,6 +151,7 @@ struct PaneCard: View {
                         .accessibilityHidden(true)
 
                     // Title + emoji only — red chrome, scales to fit the pane.
+                    // Hospitals wordmark lives at top of TopicDetailView, not in this row.
                     Text(pane.title)
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.redmedAccent)
