@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en-US">
 <head>
 <meta charset="UTF-8">
@@ -21,14 +21,11 @@
     <a href="PrivacyPolicy.html">Privacy Policy</a>
     <span aria-hidden="true">|</span>
     <a href="security.html" aria-current="page">Security</a>
-    <span aria-hidden="true">|</span>
-    <a href="HowItWorks.html">How It Works</a>
   </nav>
 
   <aside class="legal-notice legal-notice-owner">
     <strong>Owner app</strong>
-    Profile editing, Aid treatments, and band write live in the RedMed iPhone app
-    (<code>Main.swift</code>).
+    Profile editing, Aid treatments, and band write live in the RedMed iPhone app.
     <a href="redmed://main">Open RedMed (iPhone)</a>
     · <a href="get.html">Emergency card (any phone)</a>
   </aside>
@@ -65,7 +62,7 @@
       <li>Profile fields persist in the iOS <strong>Keychain</strong> with <code>WhenUnlockedThisDeviceOnly</code>.</li>
       <li>Readable only while the device is unlocked; excluded from iCloud and encrypted device backups.</li>
       <li>Local history / vault files use <code>FileProtectionType.complete</code> and <code>isExcludedFromBackup</code> so they stay unreadable when the phone is locked or plugged into another computer, and are never copied to consumer iCloud backups.</li>
-      <li>The owner app gates edit, NFC write, and the local history dashboard.</li>
+      <li>Owner biometrics / device passcode gate edit, NFC write, and the local history dashboard.</li>
       <li>App-switcher snapshots are covered so live profile text is not cached to the system snapshot image.</li>
       <li>Edit fields disable system autofill content types so medical text is not written into keyboard / autofill caches.</li>
       <li>Clearing fields and saving overwrites the stored profile; deleting the App removes the Keychain entry and vault files.</li>
@@ -81,7 +78,7 @@
     <p>Open a private GitHub security advisory on <a href="https://github.com/Roooted1776/frisky">Roooted1776/frisky</a> for XSS in <code>#d=</code> rendering, Keychain / vault bypass, or owner-app unlock gate bypass. Or email <a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a>. Do not file public issues with live API keys or real medical payloads. See root <code>SECURITY.md</code>.</p>
 
     <h2><span class="sec-num">8.</span> Trust Root (On-Device)</h2>
-    <p>There is <strong>no RedMed profile server</strong>. The trust root is the owner’s iPhone: Keychain for the profile blob, Face ID / passcode gates, RAM purge on background, vault file protection, and the passive band fragment if written. Treat <code>main</code> as the product source of truth for the app binary and bundled card shell — enable branch protection on <code>main</code> when the team size warrants it.</p>
+    <p>There is <strong>no RedMed profile server</strong>. The trust root is the owner’s iPhone: Keychain for the profile blob, biometrics / passcode gates, RAM purge on background, vault file protection, and the passive band fragment if written. Treat <code>main</code> as the product source of truth for the app binary and bundled card shell.</p>
 
     <h2><span class="sec-num">9.</span> Third-Party Keys</h2>
     <p>RedMed does not ship a Google Maps (or other) API key in the app bundle today, and does not call a RedMed backend. Never commit key material — <code>**/google-api-key</code> stays in <code>.gitignore</code>.</p>
@@ -95,7 +92,7 @@
 
   <footer class="legal-footer">
     <p>© 2026 RedMed · All rights reserved</p>
-    <p><a href="TOS.html">Terms Of Service</a> · <a href="PrivacyPolicy.html">Privacy Policy</a> · <a href="security.html">Security</a> · <a href="HowItWorks.html">How It Works</a></p>
+    <p><a href="TOS.html">Terms Of Service</a> · <a href="PrivacyPolicy.html">Privacy Policy</a> · <a href="security.html">Security</a></p>
     <p class="legal-footer-disclaimer">This document is provided for informational purposes and does not constitute legal advice. It has not yet been reviewed by qualified US counsel.</p>
   </footer>
 </div>
