@@ -112,7 +112,6 @@ final class HapticEngine: ObservableObject {
     func shutdown() {
         audioEpoch &+= 1
         audioSessionReady = false
-        sessionHeld = false
         let box = clickPlayer
         AudioSessionGate.queue.async {
             box.player?.stop()
@@ -160,7 +159,6 @@ final class HapticEngine: ObservableObject {
     private func prepareAudioSession() {
         audioEpoch &+= 1
         let epoch = audioEpoch
-        sessionHeld = true
         AudioSessionGate.retain(client: Self.sessionClient, options: [.mixWithOthers]) {
             Task { @MainActor in
                 guard epoch == self.audioEpoch else { return }
@@ -172,7 +170,6 @@ final class HapticEngine: ObservableObject {
     private func playTone(frequency: Double, seconds: Double, volume: Float) {
         if !audioSessionReady { prepareAudioSession() }
         guard let data = Self.clickWAV(frequency: frequency, seconds: seconds) else { return }
-        let epoch = audioEpoch
         let box = clickPlayer
         // create / prepareToPlay / play all stay on the gate queue.
         AudioSessionGate.queue.async {
@@ -187,7 +184,6 @@ final class HapticEngine: ObservableObject {
                 box.player = nil
             }
         }
-        _ = epoch
     }
 
     private static func clickWAV(frequency: Double, seconds: Double) -> Data? {
