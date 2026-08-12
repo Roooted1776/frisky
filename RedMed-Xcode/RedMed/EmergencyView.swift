@@ -228,7 +228,7 @@ struct SeizureTimerStrip: View {
             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
-                    .stroke(Color.redmedDivider, lineWidth: running ? 1 : 0)
+                    .strokeBorder(Color.redmedDivider, lineWidth: running ? 1 : 0)
             )
         }
         .padding(.horizontal, 12)

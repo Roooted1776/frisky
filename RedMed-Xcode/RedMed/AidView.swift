@@ -186,7 +186,7 @@ struct PaneCard: View {
                             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                             .overlay(
                                 RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                                    .stroke(Color.redmedDivider, lineWidth: 1)
+                                    .strokeBorder(Color.redmedDivider, lineWidth: 1)
                             )
                         }
                         .buttonStyle(.plain)
@@ -202,7 +202,7 @@ struct PaneCard: View {
         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
         .overlay(
             RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                .stroke(
+                .strokeBorder(
                     isOpen ? Color.redmedAccent.opacity(0.35) : Color.redmedDivider,
                     lineWidth: 1
                 )

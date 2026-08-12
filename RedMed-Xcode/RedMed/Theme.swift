@@ -6,7 +6,8 @@ extension Color {
     static let redmedDark     = Color(red: 0.110, green: 0.098, blue: 0.086) // #1c1917
     static let redmedMuted    = Color(red: 0.471, green: 0.443, blue: 0.424) // #78716c
     static let redmedSurface  = Color.white.opacity(0.92)
-    static let redmedDivider  = Color(red: 0.110, green: 0.098, blue: 0.086).opacity(0.07)
+    /// Card + hairline stroke — same 8% ink as passerby `.card` / legal `--border`.
+    static let redmedDivider  = Color(red: 0.110, green: 0.098, blue: 0.086).opacity(0.08)
 }
 
 struct SectionLabel: View {
@@ -56,7 +57,7 @@ struct PillTag: View {
                     .fill(accent ? Color.redmedAccent.opacity(0.1) : Color.white.opacity(0.7))
                     .overlay(
                         RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
-                            .stroke(accent ? Color.clear : Color.redmedDivider, lineWidth: 1)
+                            .strokeBorder(accent ? Color.clear : Color.redmedDivider, lineWidth: 1)
                     )
             )
     }
@@ -107,7 +108,7 @@ struct SecondaryButton: View {
             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                    .stroke(Color.redmedDivider, lineWidth: 1)
+                    .strokeBorder(Color.redmedDivider, lineWidth: 1)
             )
             .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
         }
@@ -142,13 +143,14 @@ enum RedMedChrome {
 
 extension View {
     /// Surface card chrome used on RedMed / 911 / Aid / NFC (owner + scanner).
+    /// `strokeBorder` keeps the full 1pt hairline inside the shape (`.stroke` half-clips).
     func redmedBox(strokeOpacity: Double = 1) -> some View {
         self
             .background(Color.redmedSurface)
             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                    .stroke(Color.redmedDivider.opacity(strokeOpacity), lineWidth: 1)
+                    .strokeBorder(Color.redmedDivider.opacity(strokeOpacity), lineWidth: 1)
             )
     }
 }

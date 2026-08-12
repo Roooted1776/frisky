@@ -91,7 +91,7 @@ struct NFCView: View {
         .padding(.vertical, 16)
         .background(Color.redmedSurface)
         .clipShape(RoundedRectangle(cornerRadius: boxRadius))
-        .overlay(RoundedRectangle(cornerRadius: boxRadius).stroke(Color.redmedDivider, lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: boxRadius).strokeBorder(Color.redmedDivider, lineWidth: 1))
         .frame(maxWidth: .infinity)
         .padding(.top, 6)
     }
@@ -145,7 +145,7 @@ struct NFCView: View {
         }
         .background(Color.redmedSurface)
         .clipShape(RoundedRectangle(cornerRadius: boxRadius))
-        .overlay(RoundedRectangle(cornerRadius: boxRadius).stroke(Color.redmedDivider, lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: boxRadius).strokeBorder(Color.redmedDivider, lineWidth: 1))
     }
 
     // MARK: - Setup
@@ -208,7 +208,7 @@ struct NFCView: View {
         .padding(16)
         .background(Color.redmedSurface)
         .clipShape(RoundedRectangle(cornerRadius: boxRadius))
-        .overlay(RoundedRectangle(cornerRadius: boxRadius).stroke(Color.redmedDivider, lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: boxRadius).strokeBorder(Color.redmedDivider, lineWidth: 1))
     }
 
     // MARK: - Scan (bottom of page)
@@ -248,7 +248,7 @@ struct NFCView: View {
                     .clipShape(RoundedRectangle(cornerRadius: boxRadius))
                     .overlay(
                         RoundedRectangle(cornerRadius: boxRadius)
-                            .stroke(Color.redmedAccent.opacity(0.45), lineWidth: 1.5)
+                            .strokeBorder(Color.redmedAccent.opacity(0.45), lineWidth: 1.5)
                     )
                 }
                 .disabled(band.isBusy)
@@ -271,7 +271,7 @@ struct NFCView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.redmedSurface)
         .clipShape(RoundedRectangle(cornerRadius: boxRadius))
-        .overlay(RoundedRectangle(cornerRadius: boxRadius).stroke(Color.redmedDivider, lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: boxRadius).strokeBorder(Color.redmedDivider, lineWidth: 1))
     }
 
     // MARK: - Pieces
