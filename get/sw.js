@@ -2,9 +2,9 @@
  *
  * Served under /get/ (see get/index.html). After a responder opens the card
  * once online, these static assets stay in Cache Storage. A later bracelet
- * tap (EMT / helper, no app, no Face ID) must paint almost instantly from
- * cache — even with no signal. Medical fields live only in the URL #d=
- * fragment (never cached here — fragments are not part of the HTTP request).
+ * tap (EMT / helper, no app) must paint almost instantly from cache — even
+ * with no signal. Medical fields live only in the URL #d= fragment (never
+ * cached here — fragments are not part of the HTTP request).
  *
  * Shell strategy: cache-first with multi-key fallback (/get/ ↔ index.html);
  * never wait on network when any shell copy exists. Background networkReload
@@ -12,13 +12,15 @@
  * stale decrypt/layout. Bump CACHE in lockstep with root + bundled sw.js on
  * every decrypt/layout deploy.
  */
-var CACHE = 'redmed-get-v18';
+var CACHE = 'redmed-get-v22';
 var ASSETS = [
   './',
   './index.html',
   './sw.js',
   './BrandLogo.png',
+  './BrandWordmark.png',
   '../assets/BrandLogo.png',
+  '../assets/BrandWordmark.png',
   '../card.html'
 ];
 /** Primary HTML shell — install must fail closed if neither key can be cached. */

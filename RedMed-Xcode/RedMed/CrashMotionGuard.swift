@@ -215,9 +215,9 @@ struct CrashSurvivalCancelCard: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .background(Color.redmedSurface)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
                         .stroke(Color.redmedDivider, lineWidth: 1)
                 )
             }

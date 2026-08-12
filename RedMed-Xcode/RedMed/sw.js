@@ -6,9 +6,9 @@
  * Cache-first multi-key shell for almost-instant EMT / helper open; activate
  * clears prior CACHE buckets. Bump CACHE in lockstep with get/sw.js + root
  * sw.js on every decrypt/layout deploy. Payload stays in #d= only — never
- * cached. No biometrics on view.
+ * cached.
  */
-var CACHE = 'redmed-get-v18';
+var CACHE = 'redmed-get-v22';
 var ASSETS = [
   './',
   './get.html',
@@ -17,7 +17,9 @@ var ASSETS = [
   './get/sw.js',
   './sw.js',
   './BrandLogo.png',
+  './BrandWordmark.png',
   './assets/BrandLogo.png',
+  './assets/BrandWordmark.png',
   './card.html'
 ];
 /** Primary HTML shell — install must fail closed if neither copy can be cached. */
