@@ -83,7 +83,7 @@ final class NFCBandManager: ObservableObject {
         }
 
         guard let source = ProfileNFCCodec.buildURLString(profile: profile) else {
-            alertMessage = "Couldn't pack or decode the get.html#d= payload from RedMed."
+            alertMessage = "Couldn't pack or decode the tap card from RedMed."
             return
         }
         isReading = true
@@ -172,7 +172,7 @@ final class NFCBandManager: ObservableObject {
         isWriting = true
         writeSucceeded = false
         writeVerified = false
-        statusMessage = "Packing compact get.html#d= payload…"
+        statusMessage = "Packing compact tap card…"
         lastPackedURL = urlString
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) { [weak self] in
             guard let self else { return }
@@ -189,7 +189,7 @@ final class NFCBandManager: ObservableObject {
 
     private func presentHTMLCard(payloadOrURL: String) {
         guard PasserbyHTMLCardView.extractPayload(payloadOrURL) != nil else {
-            alertMessage = "Couldn't read a RedMed get.html#d= card from this tag."
+            alertMessage = "Couldn't read a RedMed tap card from this tag."
             return
         }
         scannedHTMLPayload = payloadOrURL
