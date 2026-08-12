@@ -142,8 +142,7 @@ struct PaneCard: View {
         VStack(alignment: .leading, spacing: 0) {
             Button { onTap(nil) } label: {
                 HStack(alignment: .center, spacing: 12) {
-                    // Nearby Hospitals: BrandLogo (wordmark@3x catalog) on the left.
-                    // Other panes keep emoji chips.
+                    // Nearby Hospitals: BrandLogo on the left. Other panes keep emoji.
                     Group {
                         if pane.id == "hospitals" {
                             Image("BrandLogo")
