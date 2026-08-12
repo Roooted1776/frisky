@@ -20,6 +20,10 @@ struct EditProfileView: View {
     @State private var showBirthDatePicker = false
     @State private var showBloodTypePicker = false
     @State private var pickerBirthDate = EditProfileView.defaultBirthDate
+    /// Active allergy/med/condition row for the bottom suggestion strip.
+    /// No FocusState — sheet-wide focus tracking hung Edit between sections.
+    @State private var suggestionLineID: UUID?
+    @State private var suggestionMatches: [String] = []
 
     private static let bloodTypeChoices = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
 
@@ -109,17 +113,38 @@ struct EditProfileView: View {
 
                     editSectionLabel("Allergies")
                     editCard {
-                        DraftLinesEditor(lines: $allergies, placeholder: "Allergy", addLabel: "Add allergy")
+                        DraftLinesEditor(
+                            lines: $allergies,
+                            placeholder: "Allergy",
+                            addLabel: "Add allergy",
+                            onTextChange: { id, text in
+                                refreshSuggestions(lineID: id, text: text, lines: allergies, catalog: SuggestionCatalog.allergies)
+                            }
+                        )
                     }
 
                     editSectionLabel("Medications")
                     editCard {
-                        DraftLinesEditor(lines: $medications, placeholder: "Medication", addLabel: "Add medication")
+                        DraftLinesEditor(
+                            lines: $medications,
+                            placeholder: "Medication",
+                            addLabel: "Add medication",
+                            onTextChange: { id, text in
+                                refreshSuggestions(lineID: id, text: text, lines: medications, catalog: SuggestionCatalog.medications)
+                            }
+                        )
                     }
 
                     editSectionLabel("Conditions")
                     editCard {
-                        DraftLinesEditor(lines: $conditions, placeholder: "Condition", addLabel: "Add condition")
+                        DraftLinesEditor(
+                            lines: $conditions,
+                            placeholder: "Condition",
+                            addLabel: "Add condition",
+                            onTextChange: { id, text in
+                                refreshSuggestions(lineID: id, text: text, lines: conditions, catalog: SuggestionCatalog.conditions)
+                            }
+                        )
                     }
 
                     editSectionLabel("Emergency Contacts")
@@ -133,8 +158,14 @@ struct EditProfileView: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .background(Color(red: 0.949, green: 0.949, blue: 0.969))
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                suggestionStrip
+            }
         }
-        .onAppear { loadDraft() }
+        .onAppear {
+            loadDraft()
+            SuggestionCatalog.warmUp()
+        }
         .alert("Authentication Failed", isPresented: $showAuthFailedAlert) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -157,6 +188,69 @@ struct EditProfileView: View {
             }
             Button("Cancel", role: .cancel) {}
         }
+    }
+
+    // MARK: - Suggestion strip (no FocusState — keyed off text changes only)
+
+    @ViewBuilder
+    private var suggestionStrip: some View {
+        if !suggestionMatches.isEmpty {
+            VStack(spacing: 0) {
+                Divider().overlay(Color.black.opacity(0.12))
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(suggestionMatches, id: \.self) { suggestion in
+                            Button {
+                                applySuggestion(suggestion)
+                            } label: {
+                                Text(suggestion)
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.redmedDark)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(Color.redmedAccent.opacity(0.10))
+                                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, Metrics.rowHPad)
+                    .padding(.vertical, 10)
+                }
+                .background(Color(red: 0.949, green: 0.949, blue: 0.969))
+            }
+        }
+    }
+
+    private func refreshSuggestions(
+        lineID: UUID,
+        text: String,
+        lines: [DraftLine],
+        catalog: [SuggestionCatalog.Entry]
+    ) {
+        suggestionLineID = lineID
+        let taken = Set(
+            lines.lazy
+                .filter { $0.id != lineID }
+                .map { $0.text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+                .filter { !$0.isEmpty }
+        )
+        let next = SuggestionCatalog.matches(query: text, in: catalog, excludingTaken: taken)
+        if next != suggestionMatches {
+            suggestionMatches = next
+        }
+    }
+
+    private func applySuggestion(_ suggestion: String) {
+        guard let id = suggestionLineID else { return }
+        if let i = allergies.firstIndex(where: { $0.id == id }) {
+            allergies[i].text = suggestion
+        } else if let i = medications.firstIndex(where: { $0.id == id }) {
+            medications[i].text = suggestion
+        } else if let i = conditions.firstIndex(where: { $0.id == id }) {
+            conditions[i].text = suggestion
+        }
+        suggestionMatches = []
     }
 
     // MARK: - You
@@ -481,12 +575,13 @@ struct DraftLine: Identifiable, Equatable {
     }
 }
 
-/// Edit rows: padding 13/16, TextField + ✕. No FocusState, no autocomplete UI —
-/// those were hanging the sheet when moving between sections / typing.
+/// Edit rows: padding 13/16, TextField + ✕. No FocusState — sheet-wide focus
+/// tracking hung Edit. Suggestions live in a fixed bottom strip via onTextChange.
 private struct DraftLinesEditor: View {
     @Binding var lines: [DraftLine]
     let placeholder: String
     let addLabel: String
+    var onTextChange: ((UUID, String) -> Void)? = nil
 
     private enum Metrics {
         static let font: CGFloat = 15
@@ -502,8 +597,12 @@ private struct DraftLinesEditor: View {
                     .font(.system(size: Metrics.font))
                     .foregroundColor(.redmedDark)
                     .vaultSafeTextInput(capitalization: .words)
+                    .onChange(of: line.text) { _, newValue in
+                        onTextChange?(line.id, newValue)
+                    }
                 Button {
                     let id = line.id
+                    onTextChange?(id, "")
                     lines.removeAll { $0.id == id }
                 } label: {
                     Text("✕")
