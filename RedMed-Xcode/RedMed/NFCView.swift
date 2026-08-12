@@ -173,7 +173,7 @@ struct NFCView: View {
             VStack(alignment: .leading, spacing: 8) {
                 tipRow("User: write once after RedMed is filled.")
                 tipRow("Cancel the NFC prompt and the band stays stale until you write again.")
-                tipRow("Tap: Scan / Simulate scan opens the same tap card on one page — HTML, no app for helpers.")
+                tipRow("Tap to scan: same HTML card helpers get — quick, no login, no server, no app.")
             }
             .padding(.top, 2)
         }
@@ -192,8 +192,8 @@ struct NFCView: View {
 
             if profile.braceletLinked {
                 Text(AppConfig.nfcHardwareEnabled
-                      ? "Tap capability: hold near the band to open the tap card — same HTML page a stranger gets."
-                      : "Tap capability: Simulate scan opens the bundled tap card on one page (same card a stranger gets on band tap).")
+                      ? "Tap to scan: hold near the band — card opens in their browser. Quick. No login. No server. No app."
+                      : "Simulate scan opens the same tap card helpers get — quick, no login, no server, no app.")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.redmedMuted)
                     .lineSpacing(3)
