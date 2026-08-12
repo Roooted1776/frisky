@@ -5,15 +5,19 @@ import AVFoundation
 /// System volume is forced to max by `VolumeBoost` for the same survival hold.
 @MainActor
 enum LocatorBeacon {
+    private static let sessionClient = "locator-beacon"
+
     private static var survivalHold = false
     private static var timer: Timer?
-    private static var player: AVAudioPlayer?
     /// Synth once — re-building PCM every 5s hitch on the main thread while SOS is armed.
     private static var cachedAlarmWAV: Data?
     private static let interval: TimeInterval = 5
     /// Bumped on prepare / end so late activate callbacks cannot arm after cancel.
     private static var sessionEpoch = 0
     private static var sessionReady = false
+
+    /// Player is confined to `AudioSessionGate.queue` — never touch from MainActor.
+    private static let siren = SirenPlayerBox()
 
     /// Survival arm — siren continues while backgrounded until cancelled.
     static func beginSurvival() {
@@ -30,7 +34,7 @@ enum LocatorBeacon {
         sessionReady = false
         sessionEpoch &+= 1
         stopRepeating()
-        AudioSessionGate.deactivate()
+        AudioSessionGate.release(client: sessionClient)
     }
 
     private static func startRepeating() {
@@ -40,8 +44,11 @@ enum LocatorBeacon {
     private static func stopRepeating() {
         timer?.invalidate()
         timer = nil
-        player?.stop()
-        player = nil
+        let box = siren
+        AudioSessionGate.queue.async {
+            box.player?.stop()
+            box.player = nil
+        }
     }
 
     private static func prepareSessionThenArm() {
@@ -50,26 +57,28 @@ enum LocatorBeacon {
         sessionReady = false
         timer?.invalidate()
         timer = nil
-        player?.stop()
-        player = nil
 
-        // WAV synth is CPU-only (no AVAudioSession). Cache on first arm.
         let wav = alarmWAV()
+        let box = siren
 
-        // setCategory / setActive / prepareToPlay stay off MainActor.
-        AudioSessionGate.activatePlayback(options: [.duckOthers]) {
-            var prepared: AVAudioPlayer?
+        AudioSessionGate.retain(client: sessionClient, options: [.duckOthers]) {
+            box.player?.stop()
+            box.player = nil
             if let wav {
-                prepared = try? AVAudioPlayer(data: wav)
+                let prepared = try? AVAudioPlayer(data: wav)
                 prepared?.volume = 1.0
                 prepared?.prepareToPlay()
+                box.player = prepared
             }
             Task { @MainActor in
                 guard Self.survivalHold, epoch == Self.sessionEpoch else {
-                    AudioSessionGate.deactivate()
+                    AudioSessionGate.release(client: sessionClient)
+                    AudioSessionGate.queue.async {
+                        box.player?.stop()
+                        box.player = nil
+                    }
                     return
                 }
-                Self.player = prepared
                 Self.sessionReady = true
                 Self.fire()
                 Self.armTimer()
@@ -88,10 +97,13 @@ enum LocatorBeacon {
 
     private static func fire() {
         guard survivalHold, sessionReady else { return }
-        guard let existing = player else { return }
-        existing.currentTime = 0
-        existing.volume = 1.0
-        existing.play()
+        let box = siren
+        AudioSessionGate.queue.async {
+            guard let player = box.player else { return }
+            player.currentTime = 0
+            player.volume = 1.0
+            player.play()
+        }
     }
 
     /// Three piercing beeps (~880 / 1175 / 880 Hz). No bundled asset required.
@@ -169,4 +181,9 @@ enum LocatorBeacon {
         }
         return data
     }
+}
+
+/// Queue-confined `AVAudioPlayer` holder — only touch from `AudioSessionGate.queue`.
+private final class SirenPlayerBox: @unchecked Sendable {
+    var player: AVAudioPlayer?
 }

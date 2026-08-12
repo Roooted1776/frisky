@@ -51,9 +51,12 @@ enum RedMedHaptics {
 /// without stealing the crash / SOS locator siren session.
 @MainActor
 final class HapticEngine: ObservableObject {
+    private static let sessionClient = "cpr-metronome"
+
     private var engine: CHHapticEngine?
     private(set) var isReady = false
-    private var audioPlayer: AVAudioPlayer?
+    /// Player confined to `AudioSessionGate.queue` — never touch from MainActor.
+    private let clickPlayer = ClickPlayerBox()
     private var audioSessionReady = false
     private var audioEpoch = 0
 
@@ -109,9 +112,13 @@ final class HapticEngine: ObservableObject {
     func shutdown() {
         audioEpoch &+= 1
         audioSessionReady = false
-        audioPlayer?.stop()
-        audioPlayer = nil
-        AudioSessionGate.deactivate()
+        sessionHeld = false
+        let box = clickPlayer
+        AudioSessionGate.queue.async {
+            box.player?.stop()
+            box.player = nil
+        }
+        AudioSessionGate.release(client: Self.sessionClient)
     }
 
     /// Sharp compression tap — used on Start and each CPR beat.
@@ -153,7 +160,8 @@ final class HapticEngine: ObservableObject {
     private func prepareAudioSession() {
         audioEpoch &+= 1
         let epoch = audioEpoch
-        AudioSessionGate.activatePlayback(options: [.mixWithOthers]) {
+        sessionHeld = true
+        AudioSessionGate.retain(client: Self.sessionClient, options: [.mixWithOthers]) {
             Task { @MainActor in
                 guard epoch == self.audioEpoch else { return }
                 self.audioSessionReady = true
@@ -165,24 +173,21 @@ final class HapticEngine: ObservableObject {
         if !audioSessionReady { prepareAudioSession() }
         guard let data = Self.clickWAV(frequency: frequency, seconds: seconds) else { return }
         let epoch = audioEpoch
-        // prepareToPlay can activate the session — keep it on the gate queue.
+        let box = clickPlayer
+        // create / prepareToPlay / play all stay on the gate queue.
         AudioSessionGate.queue.async {
+            box.player?.stop()
             do {
                 let player = try AVAudioPlayer(data: data)
                 player.volume = volume
                 player.prepareToPlay()
                 player.play()
-                Task { @MainActor in
-                    guard epoch == self.audioEpoch else { return }
-                    self.audioPlayer = player
-                }
+                box.player = player
             } catch {
-                Task { @MainActor in
-                    guard epoch == self.audioEpoch else { return }
-                    self.audioPlayer = nil
-                }
+                box.player = nil
             }
         }
+        _ = epoch
     }
 
     private static func clickWAV(frequency: Double, seconds: Double) -> Data? {
@@ -239,4 +244,9 @@ final class HapticEngine: ObservableObject {
         }
         return data
     }
+}
+
+/// Queue-confined click player — only touch from `AudioSessionGate.queue`.
+private final class ClickPlayerBox: @unchecked Sendable {
+    var player: AVAudioPlayer?
 }

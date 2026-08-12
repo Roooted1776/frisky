@@ -7,25 +7,44 @@ import Foundation
 enum AudioSessionGate {
     static let queue = DispatchQueue(label: "redmed.audio-session")
 
-    /// Activate `.playback` with the given options. `onReady` runs on this gate's queue.
-    static func activatePlayback(
+    /// Clients that currently need an active playback session (queue-only).
+    private static var clients: Set<String> = []
+    private static var lastOptions: AVAudioSession.CategoryOptions?
+
+    /// Keep the session active for `client`. Idempotent per client.
+    /// `onReady` runs on this gate's queue after activate succeeds (or session already up).
+    static func retain(
+        client: String,
         options: AVAudioSession.CategoryOptions,
-        onReady: @escaping () -> Void
+        onReady: (@Sendable () -> Void)? = nil
     ) {
         queue.async {
-            let session = AVAudioSession.sharedInstance()
-            do {
-                try session.setCategory(.playback, mode: .default, options: options)
-                try session.setActive(true)
-                onReady()
-            } catch {
-                // Session failures stay silent — brightness / UI still run.
+            let wasEmpty = clients.isEmpty
+            clients.insert(client)
+            let optionsChanged = lastOptions != options
+            lastOptions = options
+
+            if wasEmpty || optionsChanged {
+                let session = AVAudioSession.sharedInstance()
+                do {
+                    try session.setCategory(.playback, mode: .default, options: options)
+                    try session.setActive(true)
+                } catch {
+                    // Session failures stay silent — brightness / UI still run.
+                    onReady?()
+                    return
+                }
             }
+            onReady?()
         }
     }
 
-    static func deactivate() {
+    /// Drop `client`. Deactivates only when nobody else still holds the session.
+    static func release(client: String) {
         queue.async {
+            clients.remove(client)
+            guard clients.isEmpty else { return }
+            lastOptions = nil
             try? AVAudioSession.sharedInstance().setActive(
                 false,
                 options: .notifyOthersOnDeactivation
@@ -33,16 +52,16 @@ enum AudioSessionGate {
         }
     }
 
-    static func readOutputVolume(_ body: @escaping (Float) -> Void) {
+    static func readOutputVolume(_ body: @escaping @Sendable (Float) -> Void) {
         queue.async {
             body(AVAudioSession.sharedInstance().outputVolume)
         }
     }
 
-    /// Install KVO for system volume changes. Observation object is returned on the gate queue.
+    /// Install KVO for system volume changes. Observation handed back on the gate queue.
     static func observeOutputVolume(
-        _ handler: @escaping (Float) -> Void,
-        ready: @escaping (NSKeyValueObservation) -> Void
+        _ handler: @escaping @Sendable (Float) -> Void,
+        ready: @escaping @Sendable (NSKeyValueObservation) -> Void
     ) {
         queue.async {
             let observation = AVAudioSession.sharedInstance().observe(
