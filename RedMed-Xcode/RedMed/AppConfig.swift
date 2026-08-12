@@ -10,8 +10,9 @@ enum AppConfig {
     /// Source page: `tapper.html` / `tapper/index.html` (identical at `tapper/`, repo root,
     /// and `RedMed-Xcode/RedMed/tapper.html`). Legacy `card/` / `get/` URLs redirect to `/tapper/`
     /// (preserve `#d=`). Owner Preview / Scan always use the **bundled** tapper.html
-    /// (local-only). Hosted Pages is optional; `./scripts/deploy-pages.sh` serves
-    /// `/tapper/` locally — it does not push to Cloudflare.
+    /// (local-only). Hosted Pages must serve the tapper shell (RedMed · 911 · Aid).
+    /// Local: `./scripts/deploy-pages.sh`. Live: `DEPLOY=1` + CF tokens, or the
+    /// `Pages tapper deploy` GitHub Action on `main`.
     static let medicalCardBaseURL = "https://redmed.pages.dev/tapper/"
 
     /// Deep link target for policy / card HTML “open owner app” redirects.
@@ -92,7 +93,7 @@ enum AppConfig {
         }
 
         static var passerbyTapSummary: String {
-            "Tap opens the card in the phone’s browser — HTML only, no app for helpers"
+            "Tap to scan — card opens in the browser. Quick. No login. No server. No app for helpers."
         }
 
         /// How It Works / setup prose for intentional tap vs walk-by.

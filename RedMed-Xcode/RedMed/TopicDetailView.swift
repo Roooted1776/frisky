@@ -122,8 +122,7 @@ struct TopicDetailView: View {
                         }
                         .padding(20)
                         .frame(maxWidth: .infinity)
-                        .background(Color.redmedSurface)
-                        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                        .redmedBox()
                         .padding(.bottom, 22)
                     }
 
@@ -151,8 +150,7 @@ struct TopicDetailView: View {
                             }
                         }
                     }
-                    .background(Color.redmedSurface)
-                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                    .redmedBox()
                     .padding(.bottom, 22)
 
                     // WHAT TO DO
@@ -184,8 +182,7 @@ struct TopicDetailView: View {
                             }
                         }
                     }
-                    .background(Color.redmedSurface)
-                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                    .redmedBox()
                     .padding(.bottom, 24)
 
                     if isTraumaHospitals {
@@ -290,8 +287,7 @@ private struct LiveNearbyHospitalsSection: View {
                         }
                     }
                 }
-                .background(Color.redmedSurface)
-                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                .redmedBox()
             }
         }
         .task {

@@ -134,33 +134,41 @@ struct PaneCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Button { onTap(nil) } label: {
-                HStack(alignment: .center, spacing: 12) {
-                    Text(pane.emoji)
-                        .font(.system(size: 22))
-                        .frame(width: 44, height: 44)
-                        .background(isOpen ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
-                        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
-                        .animation(RedMedMotion.snappy, value: isOpen)
+                VStack(alignment: .leading, spacing: 6) {
+                    // Compact BrandWordmark top-left — title row follows underneath.
+                    Image("BrandWordmark")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 18)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .accessibilityHidden(true)
 
-                    // Title + emoji only — red chrome, scales to fit the pane.
-                    // Hospitals wordmark lives at top of TopicDetailView, not in this row.
-                    Text(pane.title)
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.redmedAccent)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.75)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .layoutPriority(1)
+                    HStack(alignment: .center, spacing: 12) {
+                        Text(pane.emoji)
+                            .font(.system(size: 22))
+                            .frame(width: 44, height: 44)
+                            .background(isOpen ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+                            .animation(RedMedMotion.snappy, value: isOpen)
+                            .accessibilityHidden(true)
 
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.redmedAccent)
-                        .rotationEffect(.degrees(isOpen ? 90 : 0))
-                        .frame(width: 28, height: 28)
-                        .animation(RedMedMotion.snappy, value: isOpen)
+                        Text(pane.title)
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.redmedAccent)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.75)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .layoutPriority(1)
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.redmedAccent)
+                            .rotationEffect(.degrees(isOpen ? 90 : 0))
+                            .frame(width: 28, height: 28)
+                            .animation(RedMedMotion.snappy, value: isOpen)
+                    }
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
