@@ -13,9 +13,11 @@ enum LocatorBeacon {
     private static var cachedAlarmWAV: Data?
     private static let interval: TimeInterval = 5
     /// Bumped on prepare / end so late activate callbacks cannot arm after cancel.
-    private static var sessionEpoch = 0
+    private static var sessionEpoch: UInt64 = 0
     private static var sessionReady = false
 
+    /// Published for gate-queue stale checks (same value as `sessionEpoch`).
+    private static let publishedEpoch = EpochBox()
     /// Player is confined to `AudioSessionGate.queue` — never touch from MainActor.
     private static let siren = SirenPlayerBox()
 
@@ -33,6 +35,7 @@ enum LocatorBeacon {
         survivalHold = false
         sessionReady = false
         sessionEpoch &+= 1
+        publishedEpoch.value = sessionEpoch
         stopRepeating()
         AudioSessionGate.release(client: sessionClient)
     }
@@ -54,31 +57,33 @@ enum LocatorBeacon {
     private static func prepareSessionThenArm() {
         sessionEpoch &+= 1
         let epoch = sessionEpoch
+        publishedEpoch.value = epoch
         sessionReady = false
         timer?.invalidate()
         timer = nil
 
         let wav = alarmWAV()
         let box = siren
+        let epochBox = publishedEpoch
 
         AudioSessionGate.retain(client: sessionClient, options: [.duckOthers]) {
+            // Stale prepare — newer arm/end owns the session. Do not release or nil
+            // the player (that was wiping sound after Stop → SOS again).
+            guard epochBox.value == epoch else { return }
+
             box.player?.stop()
             box.player = nil
             if let wav {
                 let prepared = try? AVAudioPlayer(data: wav)
                 prepared?.volume = 1.0
+                prepared?.numberOfLoops = 0
                 prepared?.prepareToPlay()
                 box.player = prepared
             }
+
             Task { @MainActor in
-                guard Self.survivalHold, epoch == Self.sessionEpoch else {
-                    AudioSessionGate.release(client: sessionClient)
-                    AudioSessionGate.queue.async {
-                        box.player?.stop()
-                        box.player = nil
-                    }
-                    return
-                }
+                // Epoch mismatch / disarmed: endSurvival already released. Do nothing.
+                guard Self.survivalHold, epoch == Self.sessionEpoch else { return }
                 Self.sessionReady = true
                 Self.fire()
                 Self.armTimer()
@@ -98,11 +103,13 @@ enum LocatorBeacon {
     private static func fire() {
         guard survivalHold, sessionReady else { return }
         let box = siren
+        let epoch = sessionEpoch
+        let epochBox = publishedEpoch
         AudioSessionGate.queue.async {
-            guard let player = box.player else { return }
+            guard epochBox.value == epoch, let player = box.player else { return }
             player.currentTime = 0
             player.volume = 1.0
-            player.play()
+            _ = player.play()
         }
     }
 
@@ -186,4 +193,8 @@ enum LocatorBeacon {
 /// Queue-confined `AVAudioPlayer` holder — only touch from `AudioSessionGate.queue`.
 private final class SirenPlayerBox: @unchecked Sendable {
     var player: AVAudioPlayer?
+}
+
+private final class EpochBox: @unchecked Sendable {
+    var value: UInt64 = 0
 }
