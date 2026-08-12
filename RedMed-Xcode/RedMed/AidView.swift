@@ -55,38 +55,43 @@ struct AidView: View {
     var body: some View {
         // Full-width accordion — life-saving: big targets, text always fits, no
         // 2-col reflow when a pane opens. Same pattern as passerby get.html Aid.
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 10) {
-                ZStack(alignment: .topTrailing) {
-                    Image("BrandWordmark")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 42)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .accessibilityLabel("RedMed")
-                        .padding(.trailing, isScannerSession ? 56 : 0)
+        GeometryReader { geo in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 10) {
+                    ZStack(alignment: .topTrailing) {
+                        Image("BrandWordmark")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 42)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .accessibilityLabel("RedMed")
+                            .padding(.trailing, isScannerSession ? 56 : 0)
 
-                    if isScannerSession {
-                        ScannerBackButton()
-                            .padding(.top, 4)
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 8) {
-                    ForEach(AidPaneCatalog.panes) { pane in
-                        let isOpen = openPane == pane.id
-                        PaneCard(pane: pane, isOpen: isOpen) { key in
-                            if key == nil {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    openPane = isOpen ? nil : pane.id
-                                }
-                            } else if let k = key, let topic = AidTopicCatalog.topics[k] {
-                                activeTopic = topic
-                            }
+                        if isScannerSession {
+                            ScannerBackButton()
+                                .padding(.top, 4)
                         }
                     }
 
-                    CrashSurvivalCancelCard()
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(AidPaneCatalog.panes) { pane in
+                            let isOpen = openPane == pane.id
+                            PaneCard(pane: pane, isOpen: isOpen) { key in
+                                if key == nil {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        openPane = isOpen ? nil : pane.id
+                                    }
+                                } else if let k = key, let topic = AidTopicCatalog.topics[k] {
+                                    activeTopic = topic
+                                }
+                            }
+                        }
+
+                        CrashSurvivalCancelCard()
+                    }
+
+                    // Prayer sits toward the bottom when panes leave spare height.
+                    Spacer(minLength: 28)
 
                     Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
                         .font(.system(size: 8, weight: .regular))
@@ -96,8 +101,6 @@ struct AidView: View {
                         .lineSpacing(1)
                         .frame(maxWidth: .infinity)
                         .padding(.horizontal, 28)
-                        .padding(.top, 12)
-                        .padding(.bottom, 2)
 
                     Text(AppConfig.Satellite.localOnlyLine)
                         .font(.system(size: 9, weight: .medium))
@@ -106,10 +109,11 @@ struct AidView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.top, 8)
                 }
+                .padding(.horizontal, 16)
+                .padding(.top, 2)
+                .padding(.bottom, 24)
+                .frame(minHeight: geo.size.height, alignment: .top)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 2)
-            .padding(.bottom, 24)
         }
         .background(Color.redmedBg)
         .sheet(item: $activeTopic) { topic in
