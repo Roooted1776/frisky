@@ -10,6 +10,9 @@ struct RedMedView: View {
     @State private var showHelp = false
     @State private var showScannerPreview = false
     @State private var showAuthFailedAlert = false
+    @State private var openAllergies = true
+    @State private var openMedications = true
+    @State private var openConditions = true
 
     private var deviceName: String {
         // Filled name replaces the grey logo on the left (owner + tap / Preview).
@@ -50,9 +53,9 @@ struct RedMedView: View {
                     }
                     .padding(.top, 2)
 
-                    listSection(title: "Allergies", items: profile.allergies, emptyPrompt: "Add allergy")
-                    listSection(title: "Medications", items: profile.medications, emptyPrompt: "Add medication")
-                    listSection(title: "Conditions", items: profile.conditions, emptyPrompt: "Add condition")
+                    listDropdown(title: "Allergies", items: profile.allergies, emptyPrompt: "Add allergy", open: $openAllergies)
+                    listDropdown(title: "Medications", items: profile.medications, emptyPrompt: "Add medication", open: $openMedications)
+                    listDropdown(title: "Conditions", items: profile.conditions, emptyPrompt: "Add condition", open: $openConditions)
 
                     // CONTACTS
                     SectionLabel(text: "Contacts").padding(.horizontal, 16).padding(.top, 12)
@@ -419,22 +422,71 @@ struct RedMedView: View {
     }
 
     @ViewBuilder
-    func listSection(title: String, items: [String], emptyPrompt: String) -> some View {
-        SectionLabel(text: title).padding(.horizontal, 16).padding(.top, 12)
-        cardGroup {
-            if items.isEmpty {
-                emptyPromptRow(emptyPrompt)
-            } else {
-                ForEach(Array(items.enumerated()), id: \.offset) { i, item in
-                    Text(item)
-                        .font(.system(size: 11))
-                        .foregroundColor(.redmedDark)
+    func listDropdown(title: String, items: [String], emptyPrompt: String, open: Binding<Bool>) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { open.wrappedValue.toggle() }
+            } label: {
+                HStack(alignment: .center, spacing: 10) {
+                    Text(title)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.redmedAccent)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 11)
-                    if i < items.count - 1 { thinDivider }
+                    if !items.isEmpty {
+                        Text("\(items.count)")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.redmedAccent)
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 3)
+                            .background(Color.redmedAccent.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+                    }
+                    Image(systemName: open.wrappedValue ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.redmedAccent)
+                        .frame(width: 24, height: 24)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(title)
+            .accessibilityHint(open.wrappedValue ? "Collapse" : "Expand")
+
+            if open.wrappedValue {
+                VStack(spacing: 0) {
+                    if items.isEmpty {
+                        emptyPromptRow(emptyPrompt)
+                    } else {
+                        ForEach(Array(items.enumerated()), id: \.offset) { i, item in
+                            Text(item)
+                                .font(.system(size: 11))
+                                .foregroundColor(.redmedDark)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 11)
+                            if i < items.count - 1 { thinDivider }
+                        }
+                    }
+                }
+                .overlay(alignment: .top) {
+                    Divider().overlay(Color.redmedDivider)
                 }
             }
         }
+        .background(Color.redmedSurface)
+        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+        .overlay(
+            RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
+                .strokeBorder(
+                    open.wrappedValue ? Color.redmedAccent.opacity(0.35) : Color.redmedDivider,
+                    lineWidth: 1
+                )
+        )
+        .padding(.horizontal, 16)
+        .padding(.top, 12)
     }
 }

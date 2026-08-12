@@ -198,6 +198,81 @@
     color: var(--dark);
   }
   .list-item:last-child { border-bottom: none; }
+  /* Allergies / Meds / Conditions — dropdowns like owner RedMedView. */
+  .list-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 12px 16px 0;
+  }
+  details.list-drop {
+    background: var(--surface);
+    border: 1px solid var(--divider);
+    border-radius: var(--box);
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+  details.list-drop[open] { border-color: rgba(225,29,72,0.35); }
+  details.list-drop summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    min-width: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  details.list-drop summary::-webkit-details-marker { display: none; }
+  .list-drop-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1.2;
+  }
+  .list-drop-count {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(225,29,72,0.1);
+    border-radius: var(--chip);
+    padding: 3px 7px;
+  }
+  .list-drop-chevron {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .list-drop-chevron::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 7px;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--accent);
+    border-bottom: 2px solid var(--accent);
+    transform: rotate(-45deg);
+  }
+  details.list-drop[open] .list-drop-chevron::before {
+    top: 6px;
+    transform: rotate(45deg);
+  }
+  .list-drop-body {
+    border-top: 1px solid var(--divider);
+  }
+  .list-drop-body:empty::after {
+    content: '—';
+    display: block;
+    padding: 11px 16px;
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(120,113,108,0.4);
+  }
   .contact-block {
     padding: 11px 16px;
     border-bottom: 1px solid var(--divider);
@@ -648,14 +723,32 @@
         <div class="row"><span class="k">Blood type</span><span class="v empty" id="rowBlood">—</span></div>
       </div>
 
-      <div class="sec">Allergies</div>
-      <div class="card" id="allergies"></div>
-
-      <div class="sec">Medications</div>
-      <div class="card" id="meds"></div>
-
-      <div class="sec">Conditions</div>
-      <div class="card" id="conditions"></div>
+      <div class="list-grid">
+        <details class="list-drop" id="dropAllergies" open>
+          <summary>
+            <span class="list-drop-title">Allergies</span>
+            <span class="list-drop-count" id="countAllergies" hidden></span>
+            <span class="list-drop-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="list-drop-body" id="allergies"></div>
+        </details>
+        <details class="list-drop" id="dropMedications" open>
+          <summary>
+            <span class="list-drop-title">Medications</span>
+            <span class="list-drop-count" id="countMedications" hidden></span>
+            <span class="list-drop-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="list-drop-body" id="meds"></div>
+        </details>
+        <details class="list-drop" id="dropConditions" open>
+          <summary>
+            <span class="list-drop-title">Conditions</span>
+            <span class="list-drop-count" id="countConditions" hidden></span>
+            <span class="list-drop-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="list-drop-body" id="conditions"></div>
+        </details>
+      </div>
 
       <div class="sec">Contacts</div>
       <div class="card" id="contacts"></div>
@@ -1129,15 +1222,24 @@
     }
   }
 
-  function list(el, items) {
+  function list(el, items, countId) {
     el.textContent = '';
+    var countEl = countId ? document.getElementById(countId) : null;
     if (!items || !items.length) {
       var empty = document.createElement('div');
       empty.className = 'list-item';
       empty.textContent = '—';
       empty.style.color = 'rgba(120,113,108,0.4)';
       el.appendChild(empty);
+      if (countEl) {
+        countEl.textContent = '';
+        countEl.hidden = true;
+      }
       return;
+    }
+    if (countEl) {
+      countEl.textContent = String(items.length);
+      countEl.hidden = false;
     }
     items.forEach(function (t) {
       var d = document.createElement('div');
@@ -1225,9 +1327,9 @@
     }
     setRow('rowDob', p.dob);
     setRow('rowBlood', p.blood);
-    list(document.getElementById('allergies'), p.allergies);
-    list(document.getElementById('meds'), p.meds);
-    list(document.getElementById('conditions'), p.conditions);
+    list(document.getElementById('allergies'), p.allergies, 'countAllergies');
+    list(document.getElementById('meds'), p.meds, 'countMedications');
+    list(document.getElementById('conditions'), p.conditions, 'countConditions');
 
     var contactsEl = document.getElementById('contacts');
     contactsEl.textContent = '';
