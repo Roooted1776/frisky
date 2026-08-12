@@ -62,7 +62,24 @@ struct TopicDetailView: View {
     }
 
     var body: some View {
-        NavigationView {
+        VStack(spacing: 0) {
+            // Pane-style chrome — not system toolbar (that paints black fill/text).
+            HStack(alignment: .center, spacing: 12) {
+                ChromeTextAction(title: "Back") { dismiss() }
+                Text(topic.title)
+                    .font(RedMedChrome.navTitleFont)
+                    .foregroundColor(.redmedAccent)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.75)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .layoutPriority(1)
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 14)
+            .padding(.bottom, 8)
+
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     if isCPR {
@@ -84,7 +101,7 @@ struct TopicDetailView: View {
                             }
                             Text(cprPhase == "breathe" ? "Give 2 breaths" : "Push hard, push fast")
                                 .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(.redmedDark)
+                                .foregroundColor(.redmedAccent)
                             Text("110 beats/min · haptic + click · 30 compressions, then 2 breaths")
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundColor(.redmedMuted)
@@ -95,7 +112,7 @@ struct TopicDetailView: View {
                                     .foregroundColor(.white)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
-                                    .background(Color.redmedDark)
+                                    .background(Color.redmedAccent)
                                     .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                             } else {
                                 PrimaryButton(title: "Start beat") { startCPR() }
@@ -126,12 +143,13 @@ struct TopicDetailView: View {
                         ForEach(Array(topic.symptoms.enumerated()), id: \.offset) { i, sym in
                             Text(sym)
                                 .font(.system(size: 15))
-                                .foregroundColor(.redmedDark)
+                                .foregroundColor(.redmedAccent)
                                 .lineSpacing(3)
+                                .fixedSize(horizontal: false, vertical: true)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal, 16).padding(.vertical, 13)
                             if i < topic.symptoms.count - 1 {
-                                Divider().overlay(Color.black.opacity(0.06))
+                                Divider().overlay(Color.redmedDivider)
                             }
                         }
                     }
@@ -161,13 +179,14 @@ struct TopicDetailView: View {
                                     .padding(.top, 4)
                                 Text(step)
                                     .font(.system(size: 15))
-                                    .foregroundColor(.redmedDark)
+                                    .foregroundColor(.redmedAccent)
                                     .lineSpacing(3)
+                                    .fixedSize(horizontal: false, vertical: true)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }
                             .padding(.horizontal, 16).padding(.vertical, 13)
                             if i < topic.care.count - 1 {
-                                Divider().overlay(Color.black.opacity(0.06))
+                                Divider().overlay(Color.redmedDivider)
                             }
                         }
                     }
@@ -187,35 +206,14 @@ struct TopicDetailView: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 32)
             }
-            .background(Color.redmedBg)
-            .onAppear {
-                if isCPR { hapticEngine.prepare() }
-            }
-            .onDisappear {
-                stopCPR()
-                if isCPR { hapticEngine.shutdown() }
-            }
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.redmedBg, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .tint(.redmedAccent)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    // Same chrome as owner Edit / scanner Back: accent red text,
-                    // opaque page-bg fill (kills system bar-button gray capsule).
-                    ChromeTextAction(title: "Back") { dismiss() }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.redmedBg)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
-                ToolbarItem(placement: .principal) {
-                    Text(topic.title)
-                        .font(RedMedChrome.navTitleFont)
-                        .foregroundColor(.redmedAccent)
-                }
-            }
+        }
+        .background(Color.redmedBg.ignoresSafeArea())
+        .onAppear {
+            if isCPR { hapticEngine.prepare() }
+        }
+        .onDisappear {
+            stopCPR()
+            if isCPR { hapticEngine.shutdown() }
         }
     }
 }
@@ -265,7 +263,7 @@ private struct LiveNearbyHospitalsSection: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color.redmedDark)
+                    .background(Color.redmedAccent)
                     .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
             } else {
                 VStack(spacing: 0) {
@@ -281,12 +279,14 @@ private struct LiveNearbyHospitalsSection: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(hosp.name)
                                         .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(.redmedDark)
+                                        .foregroundColor(.redmedAccent)
+                                        .fixedSize(horizontal: false, vertical: true)
                                     Text(hosp.address.isEmpty ? String(format: "%.1f mi away", hosp.distanceMiles) : "\(hosp.address) · \(String(format: "%.1f", hosp.distanceMiles)) mi")
                                         .font(.system(size: 12, weight: .medium))
                                         .foregroundColor(.redmedMuted)
+                                        .fixedSize(horizontal: false, vertical: true)
                                 }
-                                Spacer()
+                                Spacer(minLength: 0)
                                 Image(systemName: "arrow.triangle.turn.up.right.circle.fill")
                                     .font(.system(size: 18))
                                     .foregroundColor(.redmedAccent)
@@ -295,7 +295,7 @@ private struct LiveNearbyHospitalsSection: View {
                         }
                         .buttonStyle(.plain)
                         if i < hospitalFinder.hospitals.count - 1 {
-                            Divider().overlay(Color.black.opacity(0.06))
+                            Divider().overlay(Color.redmedDivider)
                         }
                     }
                 }

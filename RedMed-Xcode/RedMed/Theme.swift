@@ -115,8 +115,8 @@ struct SecondaryButton: View {
     }
 }
 
-/// Trailing chrome text — owner **Edit** and scanner **Back**.
-/// Plain style so fill is the page (`redmedBg`), not a system capsule. One red, one size.
+/// Trailing chrome text — owner **Edit**, scanner **Back**, Aid topic **Back**.
+/// Plain style: accent red text, no fill pill (page shows through). One red, one size.
 struct ChromeTextAction: View {
     let title: String
     let action: () -> Void
