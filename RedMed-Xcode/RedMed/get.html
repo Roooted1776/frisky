@@ -40,7 +40,7 @@
      - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
        walk-by ~6–8″ does not fire, reliable coupling dies past ~4″,
        passive 13.56 MHz HF NFC (not Bluetooth) → opens this page
-     - Logo: BrandLogo.png + BrandWordmark.png (bundle /get/) or assets/ (Pages)
+     - Logo: BrandLogo.png (bundle /get/) or assets/BrandLogo.png (Pages)
      - Legacy card.html / card/ redirects to /get/ and keeps #d=
      Keep identical: get/index.html, repo-root get.html, RedMed-Xcode/RedMed/get.html.
      Cloudflare Pages serves AppConfig URL https://redmed.pages.dev/get/ from get/. -->
@@ -488,13 +488,6 @@
 
   /* —— Help tab —— */
   .page-pad { padding: 4px var(--page-pad-x) 0; }
-  .page-title {
-    font-size: var(--fs-title);
-    font-weight: 600;
-    color: var(--accent);
-    margin: 0 0 6px;
-    text-align: center;
-  }
   .btn {
     display: block;
     width: 100%;
@@ -751,16 +744,7 @@
     font-weight: 700;
   }
 
-  /* Aid / 911 — BrandWordmark metrics match owner BrandWordmarkHeader. */
-  .aid-wordmark,
-  .help-wordmark {
-    display: block;
-    height: 42px;
-    width: auto;
-    max-width: min(240px, 70vw);
-    margin: 6px 0 4px;
-    object-fit: contain;
-  }
+  /* Aid / 911 — no page header wordmark/title (content-first like owner). */
   /* Full-width accordion — same life-saving pattern as owner AidView. */
   .aid-grid {
     display: flex;
@@ -975,11 +959,9 @@
       <p class="quote">“Control your fear. Control the moment.<br>You have what it takes to save a life.”</p>
     </div>
 
-    <!-- Help — mirrors owner EmergencyView (BrandWordmark + SOS). -->
+    <!-- Help — mirrors owner EmergencyView (content-first, no page header). -->
     <div class="panel" id="panel-911" data-panel="911">
       <div class="page-pad">
-        <img class="help-wordmark" id="helpWordmark" src="BrandWordmark.png" width="168" height="42" alt="RedMed">
-
         <div class="info">
           <div class="info-head">
             <div class="info-icon">📡</div>
@@ -1041,11 +1023,9 @@
       </div>
     </div>
 
-    <!-- Aid — same BrandWordmark chrome as owner AidView (no title/hint text). -->
+    <!-- Aid — same content-first chrome as owner AidView (no page header). -->
     <div class="panel" id="panel-aid" data-panel="aid">
       <div class="page-pad">
-        <img class="aid-wordmark" id="aidWordmark" src="BrandWordmark.png" width="168" height="42" alt="RedMed">
-
         <div class="aid-grid">
           <details class="aid"><summary><span class="aid-emoji">🚗</span><span class="aid-title">Crash &amp; Head</span></summary>
             <ol>
@@ -1156,20 +1136,6 @@
     lock.style.color = 'var(--accent)';
   })();
 
-  function resolveAsset(elId, candidates) {
-    var img = document.getElementById(elId);
-    if (!img) return;
-    var i = 0;
-    function tryNext() {
-      if (i >= candidates.length) return;
-      var src = candidates[i++];
-      var probe = new Image();
-      probe.onload = function () { img.src = src; };
-      probe.onerror = tryNext;
-      probe.src = src;
-    }
-    tryNext();
-  }
 
   function resolveLogo() {
     var candidates = ['BrandLogo.png', 'assets/BrandLogo.png'];
@@ -1188,8 +1154,6 @@
       probe.src = src;
     }
     tryNext();
-    resolveAsset('aidWordmark', ['BrandWordmark.png', 'assets/BrandWordmark.png']);
-    resolveAsset('helpWordmark', ['BrandWordmark.png', 'assets/BrandWordmark.png']);
   }
 
   // Bundle / app-embed already has BrandLogo.png — probing doubles decode on cold open.

@@ -13,14 +13,9 @@ struct EmergencyView: View {
 
     var body: some View {
         // Fixed cream chrome (no NavigationView / system toolbar fill).
-        // Scanner Back overlays like RedMed / Aid. Location nudge is Settings-only.
-        VStack(spacing: 0) {
-            BrandWordmarkHeader {
-                if isScannerSession {
-                    ScannerBackButton()
-                }
-            }
-
+        // No page header text / BrandWordmark — content-first like RedMed / Aid.
+        // Scanner Back overlays top-trailing. Location nudge is Settings-only.
+        ZStack(alignment: .topTrailing) {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 10) {
                     // NO CELL SIGNAL — carriers only (no satellite coach UI)
@@ -136,11 +131,17 @@ struct EmergencyView: View {
                         ]
                     )
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 2)
-                .padding(.bottom, 6)
+                .padding(.horizontal, RedMedChrome.pagePadX)
+                .padding(.top, isScannerSession ? 44 : RedMedChrome.wordmarkTop)
+                .padding(.bottom, 24)
             }
             .scrollIndicators(.visible)
+
+            if isScannerSession {
+                ScannerBackButton()
+                    .padding(.horizontal, RedMedChrome.pagePadX)
+                    .padding(.top, RedMedChrome.wordmarkTop)
+            }
         }
         .background { RedMedPageBackground() }
         .task(id: isVisible) {
