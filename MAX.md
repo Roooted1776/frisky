@@ -87,7 +87,9 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Aid topics + trauma/hospital panes; CPR `CHHapticEngine` beat/breath.
 - Haptic preference in Help → Settings; CPR card toggle removed (Settings-only).
 - On-device CoreMotion guard arms siren + max system volume + full brightness on **vehicle crash / high-speed impact only** (filters running / daily motion; background hold until cancel). Same thresholds on passerby `get.html` via DeviceMotion. Real bracelet NFC (`get.html#d=`) arms hardware-local SOS on that phone; owner Find Help **SOS · Locate me** is explicit. Owner Find Help open, bare `/get/`, and in-app preview do **not** auto-arm.
-- Location toggle in Settings; Find Help GPS respects it; no Find Help location banner chrome.
+- Location toggle in Settings (default on); Find Help GPS respects it; no Find Help
+  location banner / RedMed Allow gate. Help never prompts — only iOS system sheet
+  once from Find Help. Passerby GPS starts on 911 tab only.
 
 ### Privacy / HIPAA offline vault
 - `HIPAAOfflineVault` complete protection + backup exclusion.

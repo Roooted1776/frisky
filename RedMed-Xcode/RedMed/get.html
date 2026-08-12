@@ -1443,6 +1443,8 @@
       t.classList.toggle('active', t.getAttribute('data-tab') === id);
     });
     window.scrollTo(0, 0);
+    // GPS only when 911 is open — medical open must not trigger a location popup.
+    if (id === '911') ensureGeo();
   }
 
   document.querySelectorAll('.tab').forEach(function (t) {
@@ -1596,15 +1598,28 @@
     window.__redmedLoc = { latitude: lat, longitude: lon, accuracy: acc };
   }
 
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function (pos) {
-      setCoords(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
-    }, function () {
+  // Lazy GPS — do not call getCurrentPosition on medical-tab load (browser location popup).
+  // App-embed: native Find Help owns location. Passerby: start only from 911 tab.
+  var geoStarted = false;
+  function ensureGeo() {
+    if (geoStarted) return;
+    try {
+      if (window.__REDMED_APP_PREVIEW) return;
+      if (new URLSearchParams(location.search || '').get('src') === 'app') return;
+    } catch (e) {
+      if (window.__REDMED_APP_PREVIEW) return;
+    }
+    geoStarted = true;
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        setCoords(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+      }, function () {
+        document.getElementById('coords').textContent = 'GPS unavailable';
+        document.getElementById('gpsAcc').textContent = 'Tell dispatcher landmarks';
+      }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 });
+    } else {
       document.getElementById('coords').textContent = 'GPS unavailable';
-      document.getElementById('gpsAcc').textContent = 'Tell dispatcher landmarks';
-    }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 });
-  } else {
-    document.getElementById('coords').textContent = 'GPS unavailable';
+    }
   }
 
   document.getElementById('copyCoordsBtn').addEventListener('click', function () {

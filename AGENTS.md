@@ -87,9 +87,12 @@ trauma JSON, or show a Location banner at `@main`. First launch opens a cream
 shell (`redmedBg` / `LaunchBackground`) with **zero Keychain** on the first
 frame — `OwnerAppLock` defers `hasStoredProfile` until after paint, then shows
 the lock UI; Face ID runs only after the owner taps **Accept** (never auto on
-appear). Do not call Keychain in `@State` defaults. Location nudge lives in Help →
-Settings; When-In-Use + GPS start on Find Help only when Location is enabled
-(`AppSettings.locationEnabled` + `LocationManager.start`). CoreMotion crash
+appear). Do not call Keychain in `@State` defaults. Location defaults on in Help →
+Settings with **no RedMed location gate / banner / Allow popup** — Help must not
+call `requestWhenInUseAuthorization`. When-In-Use + GPS start on Find Help only
+when Location is enabled (`AppSettings.locationEnabled` + `LocationManager.start`);
+iOS may show its system Allow sheet once (cannot auto-accept). Passerby
+`get.html` must not call `geolocation` until the 911 tab opens. CoreMotion crash
 monitoring may start after first-frame yield (no Location); do not construct
 `CMMotionManager` at `CrashMotionGuard` shared init. `ContentView` lazy
 tab mounting mounts RedMed only on cold start (911 / Aid / NFC on first visit,
