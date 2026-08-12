@@ -16,6 +16,10 @@ struct LocalWebView: UIViewRepresentable {
         webView.navigationDelegate = context.coordinator
         webView.allowsBackForwardNavigationGestures = false
         webView.allowsLinkPreview = false
+        webView.scrollView.isScrollEnabled = true
+        webView.scrollView.alwaysBounceVertical = true
+        webView.scrollView.showsVerticalScrollIndicator = true
+        webView.scrollView.showsHorizontalScrollIndicator = false
         return webView
     }
 
@@ -45,6 +49,10 @@ struct LocalWebView: UIViewRepresentable {
     /// Blocks in-webview navigation to untrusted schemes; opens http(s)/tel/mailto/redmed externally.
     final class Coordinator: NSObject, WKNavigationDelegate {
         var loadedFilename: String?
+
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            webView.scrollView.flashScrollIndicators()
+        }
 
         func webView(
             _ webView: WKWebView,

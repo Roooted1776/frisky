@@ -205,6 +205,7 @@ struct TopicDetailView: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 32)
             }
+            .scrollIndicators(.visible)
         }
         .background(Color.redmedBg.ignoresSafeArea())
         .onAppear {

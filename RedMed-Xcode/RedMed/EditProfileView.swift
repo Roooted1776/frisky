@@ -158,6 +158,7 @@ struct EditProfileView: View {
                 .padding(.horizontal, Metrics.rowHPad)
                 .padding(.bottom, 48)
             }
+            .scrollIndicators(.visible)
             .scrollDismissesKeyboard(.interactively)
             .background(Color.redmedBg)
             .safeAreaInset(edge: .bottom, spacing: 0) {

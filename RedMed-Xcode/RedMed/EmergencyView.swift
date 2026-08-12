@@ -169,6 +169,7 @@ struct EmergencyView: View {
                 .padding(.top, 2)
                 .padding(.bottom, 6)
             }
+            .scrollIndicators(.visible)
         }
         .background { RedMedPageBackground() }
         .task(id: isVisible) {

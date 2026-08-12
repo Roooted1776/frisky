@@ -88,11 +88,14 @@
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html {
-    height: 100%;
+    /* Document grows with content so WKWebView / iOS can scroll the page. */
+    height: auto;
+    min-height: 100%;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    scrollbar-gutter: stable;
   }
-  html, body { height: 100%; }
+  html, body { min-height: 100%; }
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", sans-serif;
@@ -105,9 +108,25 @@
     min-height: 100dvh;
     padding: var(--safe-t) var(--safe-r) calc(var(--tabbar-h) + var(--safe-b)) var(--safe-l);
     overflow-x: hidden;
-    overflow-y: scroll;
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     touch-action: manipulation;
+  }
+  /* Responsive scrollbar (desktop / Mac Catalyst; iOS uses UIScrollView indicators). */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(28, 25, 23, 0.28) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: clamp(6px, 1.2vw, 10px);
+    height: clamp(6px, 1.2vw, 10px);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(28, 25, 23, 0.28);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
   }
   a { color: var(--accent); text-decoration: none; }
   .app {
@@ -162,11 +181,20 @@
   html.app-embed #panel-aid,
   body.app-embed #panel-911,
   body.app-embed #panel-aid { display: none !important; }
+  html.app-embed,
+  html.app-embed body,
+  body.app-embed {
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   html.app-embed #panel-medical,
   body.app-embed #panel-medical {
     display: flex !important;
-    min-height: calc(100vh - var(--safe-t) - var(--safe-b));
-    min-height: calc(100dvh - var(--safe-t) - var(--safe-b));
+    flex-direction: column;
+    min-height: calc(100vh - var(--safe-t) - 48px - var(--safe-b));
+    min-height: calc(100dvh - var(--safe-t) - 48px - var(--safe-b));
   }
   /* Owner embed: no lock line / BrandWordmark above the medical card. */
   html.app-embed .rm-lock,

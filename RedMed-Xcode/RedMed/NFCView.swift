@@ -48,6 +48,7 @@ struct NFCView: View {
                 .padding(.top, 4)
                 .padding(.bottom, 28)
             }
+            .scrollIndicators(.visible)
         }
         .background { RedMedPageBackground() }
         // Same one-page tap card as RedMed Preview / a real band tap.
