@@ -49,7 +49,7 @@ struct PasserbyHTMLCardView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .background(Color.redmedBg.ignoresSafeArea())
+        .background { RedMedPageBackground() }
     }
 
     static func extractPayload(_ raw: String) -> String? {
@@ -118,6 +118,12 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         webView.scrollView.isOpaque = true
         webView.scrollView.backgroundColor = cream
         webView.scrollView.contentInsetAdjustmentBehavior = .never
+        // Document scroll + visible bar (same idea as Aid `.scrollIndicators(.visible)`).
+        webView.scrollView.isScrollEnabled = true
+        webView.scrollView.alwaysBounceVertical = true
+        webView.scrollView.showsVerticalScrollIndicator = true
+        webView.scrollView.showsHorizontalScrollIndicator = false
+        webView.scrollView.indicatorStyle = .default
         return webView
     }
 
@@ -185,6 +191,10 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
 
     final class Coordinator: NSObject, WKNavigationDelegate {
         var loadedKey: String?
+
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            webView.scrollView.flashScrollIndicators()
+        }
 
         func webView(
             _ webView: WKWebView,

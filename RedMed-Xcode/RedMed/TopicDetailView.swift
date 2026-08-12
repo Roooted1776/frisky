@@ -63,16 +63,7 @@ struct TopicDetailView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // BrandWordmark lockup at top of every Aid topic page (same as Aid / 911).
-            Image("BrandWordmark")
-                .resizable()
-                .scaledToFit()
-                .frame(height: 42)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 16)
-                .padding(.top, 2)
-                .padding(.bottom, 4)
-                .accessibilityLabel("RedMed")
+            BrandWordmarkHeader()
 
             // Pane-style chrome — not system toolbar (that paints black fill/text).
             HStack(alignment: .center, spacing: 12) {
@@ -87,8 +78,8 @@ struct TopicDetailView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .layoutPriority(1)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 6)
+            .padding(.horizontal, RedMedChrome.pagePadX)
+            .padding(.top, 2)
             .padding(.bottom, 8)
 
             ScrollView {
@@ -133,10 +124,6 @@ struct TopicDetailView: View {
                         .frame(maxWidth: .infinity)
                         .background(Color.redmedSurface)
                         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                                .strokeBorder(Color.redmedDivider, lineWidth: 1)
-                        )
                         .padding(.bottom, 22)
                     }
 
@@ -166,10 +153,6 @@ struct TopicDetailView: View {
                     }
                     .background(Color.redmedSurface)
                     .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                            .strokeBorder(Color.redmedDivider, lineWidth: 1)
-                    )
                     .padding(.bottom, 22)
 
                     // WHAT TO DO
@@ -203,10 +186,6 @@ struct TopicDetailView: View {
                     }
                     .background(Color.redmedSurface)
                     .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                            .strokeBorder(Color.redmedDivider, lineWidth: 1)
-                    )
                     .padding(.bottom, 24)
 
                     if isTraumaHospitals {
@@ -217,8 +196,9 @@ struct TopicDetailView: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 32)
             }
+            .scrollIndicators(.visible)
         }
-        .background(Color.redmedBg.ignoresSafeArea())
+        .background { RedMedPageBackground() }
         .onAppear {
             if isCPR { hapticEngine.prepare() }
         }
@@ -312,10 +292,6 @@ private struct LiveNearbyHospitalsSection: View {
                 }
                 .background(Color.redmedSurface)
                 .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-                .overlay(
-                    RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                        .strokeBorder(Color.redmedDivider, lineWidth: 1)
-                )
             }
         }
         .task {

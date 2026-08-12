@@ -236,11 +236,11 @@ body {
   line-height: 1.6 !important;
 }
 
-/* Section card — same surface + hairline as app InfoCard */
+/* Section card — same surface fill as app cards (no outer border) */
 .card {
   font-family: var(--font);
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: none;
   border-radius: var(--radius);
   padding: 16px 18px;
   margin-bottom: 16px;

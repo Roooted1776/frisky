@@ -27,16 +27,7 @@ struct NFCView: View {
         // Fixed cream chrome (no NavigationView / system toolbar) — BrandWordmark
         // top-left like 911 / Aid. Owner-only tab; scanners never mount this.
         VStack(spacing: 0) {
-            Image("BrandWordmark")
-                .resizable()
-                .scaledToFit()
-                .frame(height: 42)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityLabel("RedMed")
-                .padding(.horizontal, 16)
-                .padding(.top, 11)
-                .padding(.bottom, 4)
-                .background(Color.redmedBg)
+            BrandWordmarkHeader()
 
             ScrollView {
                 VStack(spacing: 16) {
@@ -44,10 +35,11 @@ struct NFCView: View {
                     setupCard
                     scanCard
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, RedMedChrome.pagePadX)
                 .padding(.top, 4)
                 .padding(.bottom, 28)
             }
+            .scrollIndicators(.visible)
         }
         .background { RedMedPageBackground() }
         // Same one-page tap card as RedMed Preview / a real band tap.
@@ -127,7 +119,6 @@ struct NFCView: View {
         }
         .background(Color.redmedSurface)
         .clipShape(RoundedRectangle(cornerRadius: boxRadius))
-        .overlay(RoundedRectangle(cornerRadius: boxRadius).strokeBorder(Color.redmedDivider, lineWidth: 1))
     }
 
     // MARK: - Setup
@@ -190,7 +181,6 @@ struct NFCView: View {
         .padding(16)
         .background(Color.redmedSurface)
         .clipShape(RoundedRectangle(cornerRadius: boxRadius))
-        .overlay(RoundedRectangle(cornerRadius: boxRadius).strokeBorder(Color.redmedDivider, lineWidth: 1))
     }
 
     // MARK: - Scan (bottom of page)
@@ -253,7 +243,6 @@ struct NFCView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.redmedSurface)
         .clipShape(RoundedRectangle(cornerRadius: boxRadius))
-        .overlay(RoundedRectangle(cornerRadius: boxRadius).strokeBorder(Color.redmedDivider, lineWidth: 1))
     }
 
     // MARK: - Pieces

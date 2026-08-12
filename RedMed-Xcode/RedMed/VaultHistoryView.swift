@@ -27,7 +27,7 @@ struct VaultHistoryView: View {
                 lockGate
             }
         }
-        .background(Color.redmedBg.ignoresSafeArea())
+        .background { RedMedPageBackground() }
         .navigationTitle("Local History")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
@@ -88,7 +88,7 @@ struct VaultHistoryView: View {
                 }
             }
             .background(Color.redmedAccent)
-            .clipShape(Capsule())
+            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
             .padding(.horizontal, 40)
             .disabled(authenticating)
             Spacer()

@@ -15,24 +15,11 @@ struct EmergencyView: View {
         // Fixed cream chrome (no NavigationView / system toolbar fill).
         // Scanner Back overlays like RedMed / Aid. Location nudge is Settings-only.
         VStack(spacing: 0) {
-            HStack(alignment: .center, spacing: 12) {
-                // Brand wordmark — same Asset Catalog BrandWordmark (@1x/@2x/@3x) as Aid.
-                Image("BrandWordmark")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 42)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .accessibilityLabel("RedMed")
-                    .layoutPriority(1)
-
+            BrandWordmarkHeader {
                 if isScannerSession {
                     ScannerBackButton()
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 6)
-            .padding(.bottom, 4)
-            .background(Color.redmedBg)
 
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 10) {
@@ -169,6 +156,7 @@ struct EmergencyView: View {
                 .padding(.top, 2)
                 .padding(.bottom, 6)
             }
+            .scrollIndicators(.visible)
         }
         .background { RedMedPageBackground() }
         .task(id: isVisible) {
@@ -233,27 +221,47 @@ struct SeizureTimerStrip: View {
 
             Spacer(minLength: 4)
 
-            Button(running ? "Stop" : "Start") {
-                if running {
-                    RedMedHaptics.light()
-                    stop(reset: false)
-                } else {
-                    RedMedHaptics.medium()
-                    start()
+            HStack(spacing: 6) {
+                Button(running ? "Stop" : "Start") {
+                    if running {
+                        RedMedHaptics.light()
+                        stop(reset: false)
+                    } else {
+                        RedMedHaptics.medium()
+                        start()
+                    }
                 }
+                .font(.system(size: 11, weight: .bold))
+                .foregroundColor(running ? .redmedDark : .white)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(running ? Color.redmedSurface : Color.redmedAccent)
+                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+                .overlay(
+                    RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
+                        .strokeBorder(Color.redmedDivider, lineWidth: running ? 1 : 0)
+                )
+                .animation(RedMedMotion.snappy, value: running)
+                .buttonStyle(RedMedPressStyle(scale: 0.95, haptic: nil))
+
+                Button("Reset") {
+                    RedMedHaptics.light()
+                    stop(reset: true)
+                }
+                .font(.system(size: 11, weight: .bold))
+                .foregroundColor(.redmedDark)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.redmedSurface)
+                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+                .overlay(
+                    RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
+                        .strokeBorder(Color.redmedDivider, lineWidth: 1)
+                )
+                .buttonStyle(RedMedPressStyle(scale: 0.95, haptic: nil))
+                .disabled(!running && elapsed == 0)
+                .opacity((!running && elapsed == 0) ? 0.45 : 1)
             }
-            .font(.system(size: 11, weight: .bold))
-            .foregroundColor(running ? .redmedDark : .white)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(running ? Color.redmedSurface : Color.redmedAccent)
-            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
-            .overlay(
-                RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
-                    .strokeBorder(Color.redmedDivider, lineWidth: running ? 1 : 0)
-            )
-            .animation(RedMedMotion.snappy, value: running)
-            .buttonStyle(RedMedPressStyle(scale: 0.95, haptic: nil))
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)

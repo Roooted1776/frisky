@@ -55,67 +55,61 @@ struct AidView: View {
     var body: some View {
         // Full-width accordion — life-saving: big targets, text always fits, no
         // 2-col reflow when a pane opens. Same pattern as passerby get.html Aid.
-        GeometryReader { geo in
-            ScrollView {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(alignment: .center, spacing: 12) {
-                        Image("BrandWordmark")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 42)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .accessibilityLabel("RedMed")
-                            .layoutPriority(1)
+        VStack(spacing: 0) {
+            BrandWordmarkHeader {
+                if isScannerSession {
+                    ScannerBackButton()
+                }
+            }
 
-                        if isScannerSession {
-                            ScannerBackButton()
-                        }
-                    }
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(AidPaneCatalog.panes) { pane in
-                            let isOpen = openPane == pane.id
-                            PaneCard(pane: pane, isOpen: isOpen) { key in
-                                if key == nil {
-                                    RedMedHaptics.selection()
-                                    withAnimation(RedMedMotion.expand) {
-                                        openPane = isOpen ? nil : pane.id
+            GeometryReader { geo in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 10) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            ForEach(AidPaneCatalog.panes) { pane in
+                                let isOpen = openPane == pane.id
+                                PaneCard(pane: pane, isOpen: isOpen) { key in
+                                    if key == nil {
+                                        RedMedHaptics.selection()
+                                        withAnimation(RedMedMotion.expand) {
+                                            openPane = isOpen ? nil : pane.id
+                                        }
+                                    } else if let k = key, let topic = AidTopicCatalog.topics[k] {
+                                        RedMedHaptics.light()
+                                        activeTopic = topic
                                     }
-                                } else if let k = key, let topic = AidTopicCatalog.topics[k] {
-                                    RedMedHaptics.light()
-                                    activeTopic = topic
                                 }
                             }
+
+                            CrashSurvivalCancelCard()
                         }
 
-                        CrashSurvivalCancelCard()
+                        // Prayer sits toward the bottom when panes leave spare height.
+                        Spacer(minLength: 28)
+
+                        Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
+                            .font(.system(size: 8, weight: .regular))
+                            .italic()
+                            .foregroundColor(.redmedMuted.opacity(0.55))
+                            .multilineTextAlignment(.center)
+                            .lineSpacing(1)
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 28)
+
+                        Text(AppConfig.Satellite.localOnlyLine)
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundColor(.redmedMuted)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 8)
                     }
-
-                    // Prayer sits toward the bottom when panes leave spare height.
-                    Spacer(minLength: 28)
-
-                    Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
-                        .font(.system(size: 8, weight: .regular))
-                        .italic()
-                        .foregroundColor(.redmedMuted.opacity(0.55))
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(1)
-                        .frame(maxWidth: .infinity)
-                        .padding(.horizontal, 28)
-
-                    Text(AppConfig.Satellite.localOnlyLine)
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 8)
+                    .padding(.horizontal, RedMedChrome.pagePadX)
+                    .padding(.top, 2)
+                    .padding(.bottom, 24)
+                    .frame(minHeight: geo.size.height, alignment: .top)
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 2)
-                .padding(.bottom, 24)
-                .frame(minHeight: geo.size.height, alignment: .top)
+                .scrollIndicators(.visible)
             }
-            .scrollIndicators(.visible)
         }
         .background { RedMedPageBackground() }
         .sheet(item: $activeTopic) { topic in
@@ -198,10 +192,6 @@ struct PaneCard: View {
                             .padding(.vertical, 14)
                             .background(Color.redmedSurface)
                             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                                    .strokeBorder(Color.redmedDivider, lineWidth: 1)
-                            )
                         }
                         .buttonStyle(RedMedPressStyle(scale: 0.98, haptic: nil))
                         .accessibilityLabel(topic.label)
@@ -217,14 +207,6 @@ struct PaneCard: View {
             isOpen ? Color.redmedAccent.opacity(0.03) : Color.redmedSurface
         )
         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-        .overlay(
-            RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                .strokeBorder(
-                    isOpen ? Color.redmedAccent.opacity(0.28) : Color.redmedDivider,
-                    lineWidth: 1
-                )
-                .animation(RedMedMotion.snappy, value: isOpen)
-        )
         .shadow(color: RedMedChrome.cardShadow, radius: 8, y: 3)
     }
 }
