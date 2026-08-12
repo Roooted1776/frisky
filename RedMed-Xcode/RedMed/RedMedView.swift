@@ -10,6 +10,9 @@ struct RedMedView: View {
     @State private var showHelp = false
     @State private var showScannerPreview = false
     @State private var showAuthFailedAlert = false
+    @State private var openAllergies = true
+    @State private var openMedications = true
+    @State private var openConditions = true
 
     private var deviceName: String {
         // Filled name replaces the grey logo on the left (owner + tap / Preview).
@@ -34,113 +37,92 @@ struct RedMedView: View {
     }
 
     var body: some View {
-        ScrollView {
-            // Header outside LazyVStack so band pairing flips immediately when NFC write / edit lands.
-            VStack(alignment: .leading, spacing: 0) {
-                header
+        // Quote pins toward the bottom when RedMed is short; scrolls down as
+        // allergies / meds / conditions / contacts fill the page (same as Aid).
+        GeometryReader { geo in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    // Header outside LazyVStack so band pairing flips immediately when NFC write / edit lands.
+                    header
 
-                LazyVStack(alignment: .leading, spacing: 0) {
-                    // YOU card — Name: empty keeps grey label; filled name replaces it (owner + tap).
-                    cardGroup {
-                        nameProfileRow
-                        thinDivider
-                        profileRow(label: "Birth date", value: profile.birthDate, emptyPrompt: "Add birth date")
-                        thinDivider
-                        profileRow(label: "Blood type", value: profile.bloodType, emptyPrompt: "Add blood type")
-                    }
-                    .padding(.top, 2)
+                    LazyVStack(alignment: .leading, spacing: 0) {
+                        // YOU card — Name: empty keeps grey label; filled name replaces it (owner + tap).
+                        cardGroup {
+                            nameProfileRow
+                            thinDivider
+                            profileRow(label: "Birth date", value: profile.birthDate, emptyPrompt: "Add birth date")
+                            thinDivider
+                            profileRow(label: "Blood type", value: profile.bloodType, emptyPrompt: "Add blood type")
+                        }
+                        .padding(.top, 2)
 
-                    listSection(title: "Allergies", items: profile.allergies, emptyPrompt: "Add allergy")
-                    listSection(title: "Medications", items: profile.medications, emptyPrompt: "Add medication")
-                    listSection(title: "Conditions", items: profile.conditions, emptyPrompt: "Add condition")
+                        listDropdown(title: "Allergies", items: profile.allergies, emptyPrompt: "Add allergy", open: $openAllergies)
+                        listDropdown(title: "Medications", items: profile.medications, emptyPrompt: "Add medication", open: $openMedications)
+                        listDropdown(title: "Conditions", items: profile.conditions, emptyPrompt: "Add condition", open: $openConditions)
 
-                    // CONTACTS
-                    SectionLabel(text: "Contacts").padding(.horizontal, 16).padding(.top, 12)
-                    cardGroup {
-                        if profile.contacts.isEmpty {
-                            emptyPromptRow("Add contact")
-                        } else {
-                            ForEach(Array(profile.contacts.enumerated()), id: \.element.id) { i, c in
-                                VStack(alignment: .leading, spacing: 2) {
-                                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                                        Text(c.name.isEmpty ? "Emergency contact" : c.name)
-                                            .font(.system(size: 11, weight: .semibold))
-                                            .foregroundColor(.redmedDark)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                        if !c.phone.isEmpty {
-                                            Text(c.phone)
+                        // CONTACTS
+                        SectionLabel(text: "Contacts").padding(.horizontal, 16).padding(.top, 12)
+                        cardGroup {
+                            if profile.contacts.isEmpty {
+                                emptyPromptRow("Add contact")
+                            } else {
+                                ForEach(Array(profile.contacts.enumerated()), id: \.element.id) { i, c in
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                            Text(c.name.isEmpty ? "Emergency contact" : c.name)
+                                                .font(.system(size: 11, weight: .semibold))
+                                                .foregroundColor(.black)
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                            if !c.phone.isEmpty {
+                                                Text(c.phone)
+                                                    .font(.system(size: 12, weight: .medium))
+                                                    .foregroundColor(.redmedDark)
+                                                    .multilineTextAlignment(.trailing)
+                                            }
+                                        }
+                                        if !c.relationship.isEmpty {
+                                            Text(c.relationship)
                                                 .font(.system(size: 12, weight: .medium))
-                                                .foregroundColor(.redmedAccent)
-                                                .multilineTextAlignment(.trailing)
+                                                .foregroundColor(.redmedMuted)
                                         }
                                     }
-                                    if !c.relationship.isEmpty {
-                                        Text(c.relationship)
-                                            .font(.system(size: 12, weight: .medium))
-                                            .foregroundColor(.redmedMuted)
-                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 11)
+                                    if i < profile.contacts.count - 1 { thinDivider }
                                 }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 11)
-                                if i < profile.contacts.count - 1 { thinDivider }
                             }
                         }
-                    }
 
-                    if !isScannerSession {
-                        // QUICK ACTIONS (owner only) — Bracelet / Help / Preview
-                        HStack(spacing: 10) {
-                            Button { tab = .nfc } label: {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "plus.circle")
-                                        .font(.system(size: 15, weight: .semibold))
-                                        .foregroundColor(.redmedAccent)
-                                    Text("Bracelet")
-                                        .font(.system(size: 12, weight: .semibold))
-                                        .foregroundColor(.redmedAccent)
-                                }
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(Color.redmedSurface)
-                                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
-                                        .strokeBorder(Color.redmedDivider, lineWidth: 1)
-                                )
-                            }
-                            .buttonStyle(.plain)
-
-                            Button { showHelp = true } label: {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "questionmark.circle")
-                                        .font(.system(size: 15, weight: .regular))
-                                        .foregroundColor(.redmedMuted)
-                                    Text("Help")
-                                        .font(.system(size: 12, weight: .semibold))
-                                        .foregroundColor(.redmedMuted)
-                                }
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(Color.redmedSurface)
-                                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
-                                        .strokeBorder(Color.redmedDivider, lineWidth: 1)
-                                )
-                            }
-                            .buttonStyle(.plain)
-
-                            if profile.hasData {
-                                Button {
-                                    guard PasserbyHTMLCardView.payload(from: profile) != nil else { return }
-                                    showScannerPreview = true
-                                } label: {
+                        if !isScannerSession {
+                            // QUICK ACTIONS (owner only) — Bracelet / Help / Preview
+                            HStack(spacing: 10) {
+                                Button { tab = .nfc } label: {
                                     HStack(spacing: 6) {
-                                        Image(systemName: "eye")
+                                        Image(systemName: "plus.circle")
+                                            .font(.system(size: 15, weight: .semibold))
+                                            .foregroundColor(.redmedAccent)
+                                        Text("Bracelet")
+                                            .font(.system(size: 12, weight: .semibold))
+                                            .foregroundColor(.redmedAccent)
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(Color.redmedSurface)
+                                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
+                                            .strokeBorder(Color.redmedDivider, lineWidth: 1)
+                                    )
+                                }
+                                .buttonStyle(.plain)
+
+                                Button { showHelp = true } label: {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "questionmark.circle")
                                             .font(.system(size: 15, weight: .regular))
                                             .foregroundColor(.redmedMuted)
-                                        Text("Preview")
+                                        Text("Help")
                                             .font(.system(size: 12, weight: .semibold))
                                             .foregroundColor(.redmedMuted)
                                     }
@@ -154,15 +136,56 @@ struct RedMedView: View {
                                     )
                                 }
                                 .buttonStyle(.plain)
+
+                                if profile.hasData {
+                                    Button {
+                                        guard PasserbyHTMLCardView.payload(from: profile) != nil else { return }
+                                        showScannerPreview = true
+                                    } label: {
+                                        HStack(spacing: 6) {
+                                            Image(systemName: "eye")
+                                                .font(.system(size: 15, weight: .regular))
+                                                .foregroundColor(.redmedMuted)
+                                            Text("Preview")
+                                                .font(.system(size: 12, weight: .semibold))
+                                                .foregroundColor(.redmedMuted)
+                                        }
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .background(Color.redmedSurface)
+                                        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
+                                                .strokeBorder(Color.redmedDivider, lineWidth: 1)
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
+                                }
                             }
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 28)
+                            .padding(.bottom, 8)
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 28)
-                        .padding(.bottom, 16)
                     }
+
+                    // Prayer sits toward the bottom when the page leaves spare height;
+                    // filled lists push it down and the ScrollView shows an iOS indicator.
+                    Spacer(minLength: 28)
+
+                    Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
+                        .font(.system(size: 8, weight: .regular))
+                        .italic()
+                        .foregroundColor(.redmedMuted.opacity(0.55))
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(1)
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 28)
+                        .padding(.bottom, 8)
                 }
+                .padding(.bottom, isScannerSession ? 42 : 12)
+                .frame(minHeight: geo.size.height, alignment: .top)
             }
-            .padding(.bottom, isScannerSession ? 42 : 12)
+            .scrollIndicators(.visible)
         }
         // Owner profile only — never redact the passerby / EMS scanner card.
         .privacySensitive(!isScannerSession)
@@ -242,6 +265,7 @@ struct RedMedView: View {
             .padding(.trailing, 56)
 
             if isScannerSession {
+                // Same slot + chrome as owner Edit (main page).
                 ScannerBackButton()
                     .padding(.top, 4)
             } else {
@@ -331,7 +355,7 @@ struct RedMedView: View {
                 if !hasImportedName {
                     Text("Name")
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.redmedDark)
+                        .foregroundColor(.redmedMuted)
                     Text(isScannerSession ? "—" : "Add name")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(isScannerSession ? Color.redmedDark.opacity(0.55) : .redmedAccent)
@@ -361,7 +385,7 @@ struct RedMedView: View {
             HStack {
                 Text(label)
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.redmedDark)
+                    .foregroundColor(.redmedMuted)
                 Spacer()
                 if value.isEmpty {
                     Text(isScannerSession ? "—" : emptyPrompt)
@@ -406,22 +430,71 @@ struct RedMedView: View {
     }
 
     @ViewBuilder
-    func listSection(title: String, items: [String], emptyPrompt: String) -> some View {
-        SectionLabel(text: title).padding(.horizontal, 16).padding(.top, 12)
-        cardGroup {
-            if items.isEmpty {
-                emptyPromptRow(emptyPrompt)
-            } else {
-                ForEach(Array(items.enumerated()), id: \.offset) { i, item in
-                    Text(item)
-                        .font(.system(size: 11))
-                        .foregroundColor(.redmedDark)
+    func listDropdown(title: String, items: [String], emptyPrompt: String, open: Binding<Bool>) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { open.wrappedValue.toggle() }
+            } label: {
+                HStack(alignment: .center, spacing: 10) {
+                    Text(title)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.redmedAccent)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 11)
-                    if i < items.count - 1 { thinDivider }
+                    if !items.isEmpty {
+                        Text("\(items.count)")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.redmedAccent)
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 3)
+                            .background(Color.redmedAccent.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+                    }
+                    Image(systemName: open.wrappedValue ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.redmedAccent)
+                        .frame(width: 24, height: 24)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(title)
+            .accessibilityHint(open.wrappedValue ? "Collapse" : "Expand")
+
+            if open.wrappedValue {
+                VStack(spacing: 0) {
+                    if items.isEmpty {
+                        emptyPromptRow(emptyPrompt)
+                    } else {
+                        ForEach(Array(items.enumerated()), id: \.offset) { i, item in
+                            Text(item)
+                                .font(.system(size: 11))
+                                .foregroundColor(.redmedDark)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 11)
+                            if i < items.count - 1 { thinDivider }
+                        }
+                    }
+                }
+                .overlay(alignment: .top) {
+                    Divider().overlay(Color.redmedDivider)
                 }
             }
         }
+        .background(Color.redmedSurface)
+        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+        .overlay(
+            RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
+                .strokeBorder(
+                    open.wrappedValue ? Color.redmedAccent.opacity(0.35) : Color.redmedDivider,
+                    lineWidth: 1
+                )
+        )
+        .padding(.horizontal, 16)
+        .padding(.top, 12)
     }
 }
