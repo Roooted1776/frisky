@@ -20,6 +20,8 @@ class ProfileData: ObservableObject {
     @Published var braceletLinked: Bool = false
     @Published var isOrganDonor: Bool = false
     @Published var lastUpdated: String = ""
+    /// True while owner Edit holds draft PHI that may not yet be in Keychain.
+    @Published var holdsEditingSession: Bool = false
 
     var hasData: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -42,6 +44,7 @@ class ProfileData: ObservableObject {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             || !birthDate.isEmpty
             || !bloodType.isEmpty
+            || isOrganDonor
             || !allergies.isEmpty
             || !medications.isEmpty
             || !conditions.isEmpty
@@ -116,6 +119,7 @@ class ProfileData: ObservableObject {
         braceletLinked = false
         isOrganDonor = false
         lastUpdated = ""
+        holdsEditingSession = false
     }
 
     /// Reload owner profile from Keychain after Face ID unlock.

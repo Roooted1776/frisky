@@ -27,7 +27,7 @@ struct PrivacySnapshotGuard<Content: View>: View {
         // Capture cover only while PHI is resident — lock screen must stay tappable
         // during FaceTime screen share / Screen Recording.
         if screenCaptured {
-            return profile.hasSensitiveProfileData
+            return profile.hasSensitiveProfileData || profile.holdsEditingSession
         }
         // Stay uncovered until the first active frame so tabs paint immediately.
         guard hasBeenActive else { return false }
@@ -54,7 +54,9 @@ struct PrivacySnapshotGuard<Content: View>: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 hasBeenActive = true
-            } else if hasBeenActive {
+            } else if phase == .background, hasBeenActive {
+                // Clear on true background only — `.inactive` (Control Center /
+                // app switcher peek) would wipe coords before the user can paste.
                 SecurePasteboard.clear()
             }
         }

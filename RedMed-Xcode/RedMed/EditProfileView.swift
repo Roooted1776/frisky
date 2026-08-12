@@ -70,6 +70,8 @@ struct EditProfileView: View {
             Color.clear.onAppear { dismiss() }
         } else {
             editorBody
+                .onAppear { profile.holdsEditingSession = true }
+                .onDisappear { profile.holdsEditingSession = false }
         }
     }
 

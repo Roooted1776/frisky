@@ -84,7 +84,7 @@
 
     <h2><span class="sec-num">7.</span> The Bracelet Is Readable by Anyone</h2>
     <p>Your RedMed profile is written to a <strong>passive</strong> HF NFC chip at <strong>13.56 MHz</strong> (ISO 14443 / NTAG-style). That is a different radio band from Bluetooth (~2.4 GHz): the band is not paired over Bluetooth and has no battery, sensors, or radio of its own. Your phone powers it only for a moment during an intentional tap or write — the App does not keep an active RF session with the bracelet. It does not track you, monitor you, or record anything.</p>
-    <p><strong>The information on the chip is not encrypted and can be read by any smartphone that taps it.</strong> That is a deliberate design decision so that an EMS clinician or a bystander needs no app, no account, and no password in an emergency. The trade-off is real: treat the band as you would a printed medical ID card, and do not put anything on it that you would not accept a stranger reading. If you would rather not disclose a particular condition, leave it out.</p>
+    <p><strong>Anyone who deliberately taps the band can read the card.</strong> New writes use AES-GCM packing with a <strong>public client key</strong> shared by the iPhone app and the passerby page — that is obfuscation so the fragment is not casual plaintext JSON, not confidentiality against a responder (or anyone else) who opens the URL. EMS needs no app, no account, and no password. Treat the band as you would a printed medical ID card, and do not put anything on it that you would not accept a stranger reading. If you would rather not disclose a particular condition, leave it out. See also <a href="security.html">Security</a>.</p>
 
     <h2><span class="sec-num">8.</span> Location (Find Help)</h2>
     <p>Find Help shows your coordinates only while that screen is open, so that you can read them out to a 911 dispatcher. Continuous GPS starts only when the screen is visible and stops when you leave it or close the App. It is never used for advertising, profiling, or background monitoring, and your coordinates are not sent to us.</p>
@@ -99,8 +99,7 @@
     </ul>
 
     <h2><span class="sec-num">10.</span> Third-Party Maps Lookups</h2>
-    <p>RedMed does not transfer your RedMed profile anywhere, because we never receive it.</p>
-    <p>Where a Google Maps Platform key is configured for the hosted web version, the Find Help screen may send coordinates to Google to look up nearby hospital names. That request goes to Google LLC. It is optional, limited to that screen, and involves coordinates only — never your RedMed profile. Google’s terms and privacy policy apply to that lookup.</p>
+    <p>RedMed does not transfer your RedMed profile anywhere, because we never receive it. Nearby-hospital assist on the owner Find Help screen uses on-device / system map APIs only — RedMed does not ship a Google Maps (or other) API key in the app bundle today, and the passerby card does not call a maps lookup service.</p>
 
     <h2><span class="sec-num">11.</span> How Long Information Is Kept</h2>
     <p>We keep nothing of your RedMed profile, because we receive nothing. Your data persists on your device and on your bracelet until you remove it.</p>
@@ -117,7 +116,7 @@
     <p>There is none. RedMed does not carry out profiling or automated decision-making that produces legal or similarly significant effects. It does not score, triage, or risk-rate you. The seizure stopwatch is a timer you start yourself; it does not detect seizures or diagnose anything.</p>
 
     <h2><span class="sec-num">14.</span> Cookies and Local Storage</h2>
-    <p>The web version stores what you enter in your own browser so the App can work at all. We set no advertising, analytics, or tracking cookies.</p>
+    <p>The passerby card page may keep its static shell in the browser’s Cache Storage (service worker) so a later bracelet tap opens quickly offline. Medical fields stay only in the URL <code>#d=</code> fragment and are not written into that cache. We set no advertising, analytics, or tracking cookies. The owner profile lives in the iOS Keychain, not in web localStorage.</p>
 
     <h2><span class="sec-num">15.</span> Children and People You Support</h2>
     <p>RedMed is not directed to children under 13, and we do not knowingly collect personal information from children under 13 on RedMed servers. A parent, guardian, or caregiver may create a profile for a child or for an adult they support. Whoever does so is responsible for the accuracy of that information and for the decision to use a bracelet. Bear in mind that a child’s band is as readable as an adult’s — apply the same judgement about what to put on it.</p>
@@ -130,7 +129,7 @@
       <li><strong>Nothing pre-filled:</strong> the profile is empty until you enter something.</li>
       <li><strong>You can clear it:</strong> clearing the fields and saving overwrites the stored profile; deleting the App removes it from the device.</li>
       <li><strong>No background NFC scanning:</strong> the App does not continuously energize your band. Casual walk-by distance will not fire it; only a deliberate close antenna tap (~1–2 inches) reads the chip. Payment / POS terminals speak a different protocol (EMV) and do not open the RedMed card.</li>
-      <li><strong>Deliberately unencrypted chip:</strong> see section 7. This is the one place where we have traded confidentiality for emergency access, and we would rather say so plainly than bury it. See also <a href="security.html">Security</a>.</li>
+      <li><strong>Band readable by design:</strong> see section 7 — public-key AES packing, not a private medical vault. We would rather say so plainly than bury it. See also <a href="security.html">Security</a>.</li>
     </ul>
 
     <h2><span class="sec-num">17.</span> Changes to This Policy</h2>

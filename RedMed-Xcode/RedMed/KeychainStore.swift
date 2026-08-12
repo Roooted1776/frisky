@@ -6,19 +6,30 @@ import Security
 enum KeychainStore {
     private static let defaultService = "com.redmed.app.profile"
 
+    /// Update-or-add. Never delete-then-add — a failed add after delete would wipe PHI.
     @discardableResult
     static func save(_ data: Data, account: String, service: String = defaultService) -> Bool {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: account
+            kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: kCFBooleanFalse as Any
         ]
-        SecItemDelete(query as CFDictionary)
+        let update: [String: Any] = [
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+        ]
+        let updateStatus = SecItemUpdate(query as CFDictionary, update as CFDictionary)
+        if updateStatus == errSecSuccess {
+            return true
+        }
+        guard updateStatus == errSecItemNotFound else {
+            return false
+        }
 
         var attributes = query
         attributes[kSecValueData as String] = data
         attributes[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
-        attributes[kSecAttrSynchronizable as String] = kCFBooleanFalse as Any
         return SecItemAdd(attributes as CFDictionary, nil) == errSecSuccess
     }
 

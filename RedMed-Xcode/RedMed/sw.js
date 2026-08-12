@@ -1,16 +1,15 @@
 /* RedMed passerby layout cache — zero servers, zero profile DB.
  *
- * Bundled copy for get.html in the app. Preferred live path is
+ * Root copy for get.html / card.html pretty URLs. Preferred live path is
  * /get/ (get/index.html + get/sw.js) matching AppConfig.medicalCardBaseURL.
  *
  * Cache-first multi-key shell for almost-instant EMT / helper open; activate
- * clears prior CACHE buckets. Bump CACHE in lockstep with get/sw.js + root
- * sw.js on every decrypt/layout deploy. Payload stays in #d= only — never
+ * clears prior CACHE buckets. Bump CACHE in lockstep with get/sw.js + bundled
+ * copy on every decrypt/layout deploy. Payload stays in #d= only — never
  * cached.
  */
-var CACHE = 'redmed-get-v23';
+var CACHE = 'redmed-get-v24';
 var ASSETS = [
-  './',
   './get.html',
   './get/',
   './get/index.html',
@@ -25,7 +24,6 @@ var ASSETS = [
 /** Primary HTML shell — install must fail closed if neither copy can be cached. */
 var REQUIRED_SHELLS = ['./get/index.html', './get.html'];
 var SHELL_KEYS = [
-  './',
   './get.html',
   './get/',
   './get/index.html',
@@ -63,7 +61,7 @@ function precache(cache) {
         return networkReload(url)
           .then(function (res) {
             if (!res || !res.ok) return;
-            return putShell(cache, url, res);
+            return putAsset(cache, url, res);
           })
           .catch(function () { /* optional path missing */ });
       })
@@ -71,8 +69,18 @@ function precache(cache) {
   });
 }
 
+function putAsset(cache, reqOrUrl, res) {
+  if (!res || !res.ok || (res.type !== 'basic' && res.type !== 'cors')) return Promise.resolve();
+  return cache.put(reqOrUrl, res).catch(function () { /* quota / opaque */ });
+}
+
+/** Fan HTML shells only — never logos / sw.js / card.html into SHELL_KEYS. */
 function putShell(cache, reqOrUrl, res) {
   if (!res || !res.ok || (res.type !== 'basic' && res.type !== 'cors')) return Promise.resolve();
+  var ct = (res.headers.get('content-type') || '').toLowerCase();
+  if (ct.indexOf('text/html') === -1) {
+    return putAsset(cache, reqOrUrl, res);
+  }
   var writes = [cache.put(reqOrUrl, res.clone())];
   SHELL_KEYS.forEach(function (key) {
     writes.push(cache.put(key, res.clone()));
@@ -111,13 +119,10 @@ function isShellRequest(req) {
     if (url.origin !== self.location.origin) return false;
     var path = url.pathname;
     return (
-      path === '/' ||
       path === '/get' ||
       path === '/get/' ||
       path.endsWith('/get.html') ||
-      path.endsWith('/get/index.html') ||
-      path.endsWith('/card.html') ||
-      path.endsWith('/sw.js')
+      path.endsWith('/get/index.html')
     );
   } catch (e) {
     return false;

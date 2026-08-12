@@ -1,22 +1,16 @@
-/*
-  Cloudflare Pages — almost-instant tap-to-view + security headers.
-  Shell + logo may use short TTL + stale-while-revalidate so a prior open
-  paints from browser disk cache without waiting on origin. SW file always
-  revalidates so CACHE bumps take effect. Service Worker Cache Storage is the
-  primary offline path (see get/sw.js redmed-get-vN).
+# Cloudflare Pages — cache + security headers for the passerby card.
+# Comments are `#` only. `/*` is the all-paths URL pattern (not a block comment).
+# Shell + logo may use short TTL + stale-while-revalidate. SW always revalidates
+# so CACHE bumps take effect. Payload stays in #d= only — never in HTTP cache keys.
+# CSP allows unsafe-inline because get.html ships decrypt + locale scripts inline.
 
-  Security: apply to every Pages response. CSP allows unsafe-inline because
-  get.html ships decrypt + locale scripts inline (no build-time nonces).
-  frame-ancestors / X-Frame-Options block clickjacking of the medical card.
-  Payload stays in #d= only — never in HTTP cache keys.
-*/
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
   X-Frame-Options: DENY
   Permissions-Policy: camera=(), microphone=(), payment=(), usb=(), interest-cohort=()
   Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; worker-src 'self'; connect-src 'self'; manifest-src 'self'
-*/
+
 /get/sw.js
   Cache-Control: public, max-age=0, must-revalidate
 /sw.js

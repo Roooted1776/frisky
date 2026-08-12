@@ -125,7 +125,7 @@
     <ul>
       <li>Your medical information is written to a <strong>passive HF NFC chip at 13.56 MHz</strong> (ISO 14443 / NTAG). The chip has no battery, no Bluetooth radio, and no sensors — your phone powers it briefly on tap or write only. It does not track you, monitor you, or keep a paired RF link. Casual walk-by distance will not fire the band; only a deliberate close antenna tap (~1–2 inches) reads it.</li>
       <li>The chip can be read by any smartphone that deliberately taps it. That is deliberate, so that responders need no app and no password. Payment terminals speak a different protocol (EMV) and do not open the RedMed card.</li>
-      <li>Information on the chip is <strong>not encrypted</strong>. Treat the bracelet as you would a conventional medical ID card.</li>
+      <li>The chip payload uses public-key AES packing (readable by anyone who taps). Treat the bracelet as you would a conventional medical ID card.</li>
       <li>You are responsible for keeping the chip contents current by rewriting the band after you change your profile.</li>
       <li>If you purchased online, your return and refund rights are as stated at checkout and as required by applicable state law. A bracelet that has been written with your personal data can be returned; we recommend you overwrite or erase it first, as we cannot erase a chip remotely.</li>
     </ul>
