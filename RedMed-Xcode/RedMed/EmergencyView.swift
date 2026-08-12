@@ -36,23 +36,43 @@ struct EmergencyView: View {
             .background(Color.redmedBg)
 
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 5) {
-                    // Owner-only — scanners / HTML never arm brightness or audio.
+                LazyVStack(alignment: .leading, spacing: 8) {
                     if !isScannerSession {
                         Text("Siren + max volume + full brightness only on crash / severe impact or SOS. Stop here or on Aid.")
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.system(size: 12, weight: .semibold))
                             .foregroundColor(.redmedAccent)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 4)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: 320)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 10)
+                            .redmedBox()
+                            .frame(maxWidth: .infinity)
                     }
 
                     // NO CELL SIGNAL — carriers only (no satellite coach UI)
                     NoCellSignalCard()
 
                     // GPS + Call: dial is the big action; copy / SOS stay compact.
-                    VStack(alignment: .leading, spacing: 5) {
+                    VStack(alignment: .leading, spacing: 8) {
                         GPSCard(location: locationEnabled ? locationManager.location : nil)
                             .opacity(locationEnabled ? 1 : 0.45)
+
+                        Button {
+                            if locationEnabled, let loc = locationManager.location {
+                                SecurePasteboard.copyEphemeral(
+                                    "\(loc.coordinate.latitude), \(loc.coordinate.longitude)"
+                                )
+                            }
+                        } label: {
+                            Text(locationEnabled ? "Copy coordinates" : "Location off — enable in Settings")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                                .background(Color.redmedDark)
+                                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                        }
+                        .disabled(!locationEnabled || locationManager.location == nil)
 
                         Button {
                             PublicEmergencyAid.dial()
@@ -66,25 +86,8 @@ struct EmergencyView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                             .background(Color.redmedDark)
-                            .clipShape(Capsule())
+                            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                         }
-
-                        Button {
-                            if locationEnabled, let loc = locationManager.location {
-                                SecurePasteboard.copyEphemeral(
-                                    "\(loc.coordinate.latitude), \(loc.coordinate.longitude)"
-                                )
-                            }
-                        } label: {
-                            Text(locationEnabled ? "Copy coordinates" : "Location off — enable in Settings")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 8)
-                                .background(Color.redmedDark)
-                                .clipShape(Capsule())
-                        }
-                        .disabled(!locationEnabled || locationManager.location == nil)
 
                         // Owner SOS — same survival hold as crash. Scanners stay quiet.
                         if !isScannerSession {
@@ -101,12 +104,12 @@ struct EmergencyView: View {
                                           : "sos.circle.fill")
                                     Text(survivalAlarm.isArmed ? "Stop SOS alarm" : "SOS · Locate me")
                                 }
-                                .font(.system(size: 12, weight: .bold))
+                                .font(.system(size: 13, weight: .bold))
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
-                                .padding(.vertical, 8)
+                                .padding(.vertical, 10)
                                 .background(survivalAlarm.isArmed ? Color.redmedAccent : Color.redmedDark)
-                                .clipShape(Capsule())
+                                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                             }
                         }
                     }
@@ -226,14 +229,15 @@ struct SeizureTimerStrip: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(running ? Color.white.opacity(0.9) : Color.redmedAccent)
-            .clipShape(Capsule())
-            .overlay(Capsule().stroke(Color.redmedDivider, lineWidth: running ? 1 : 0))
+            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
+                    .stroke(Color.redmedDivider, lineWidth: running ? 1 : 0)
+            )
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .background(Color.redmedSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.redmedDivider, lineWidth: 1))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .redmedBox()
         .onChange(of: isVisible) { _, visible in
             if !visible { stop(reset: false) }
         }
@@ -302,7 +306,10 @@ struct GPSCard: View {
                 .kerning(1.1)
                 .foregroundColor(.redmedAccent)
                 .padding(.horizontal, 8).padding(.vertical, 3)
-                .background(Capsule().fill(Color.redmedAccent.opacity(0.1)))
+                .background(
+                    RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
+                        .fill(Color.redmedAccent.opacity(0.1))
+                )
 
             Text("\(latStr), \(lonStr)")
                 .font(.system(size: 15, weight: .bold, design: .monospaced))
@@ -315,10 +322,8 @@ struct GPSCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(Color.redmedSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.redmedDivider, lineWidth: 1))
+        .padding(.vertical, 12)
+        .redmedBox()
     }
 }
 
@@ -337,20 +342,20 @@ struct InfoCard: View {
                     .foregroundColor(.redmedAccent)
                     .frame(width: 24, height: 24)
                     .background(Color.redmedAccent.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 7))
+                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
                 Text(title)
-                    .font(.system(size: 12, weight: .bold))
+                    .font(.system(size: 13, weight: .bold))
                     .foregroundColor(.redmedDark)
             }
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 ForEach(Array(items.enumerated()), id: \.offset) { i, item in
                     HStack(alignment: .top, spacing: 6) {
                         Text(numbered ? "\(i+1)" : "→")
-                            .font(.system(size: 10, weight: .bold))
+                            .font(.system(size: 11, weight: .bold))
                             .foregroundColor(.redmedAccent)
-                            .frame(width: 12)
+                            .frame(width: 14)
                         Text(item)
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.system(size: 12, weight: .semibold))
                             .foregroundColor(.redmedDark)
                             .lineSpacing(2)
                     }
@@ -358,11 +363,9 @@ struct InfoCard: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(Color.redmedSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.redmedDivider, lineWidth: 1))
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .redmedBox()
     }
 }
 
@@ -387,11 +390,9 @@ struct NoCellSignalCard: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(Color.redmedSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.redmedDivider, lineWidth: 1))
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .redmedBox()
     }
 }
 

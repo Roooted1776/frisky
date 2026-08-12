@@ -49,9 +49,9 @@ final class NFCBandManager: ObservableObject {
 
         BiometricAuth.authenticate(
             reason: "Confirm with Face ID, Touch ID, or passcode to write your RedMed card to the bracelet."
-        ) { [weak self] success in
+        ) { [weak self] outcome in
             guard let self else { return }
-            if success {
+            if outcome == .success {
                 if AppConfig.nfcHardwareEnabled {
                     self.statusMessage = ""
                     self.writeSucceeded = false
@@ -60,7 +60,7 @@ final class NFCBandManager: ObservableObject {
                 } else {
                     self.simulateWrite(urlString, profile: profile)
                 }
-            } else {
+            } else if outcome == .notVerified {
                 self.authFailed = true
             }
         }
@@ -174,13 +174,15 @@ final class NFCBandManager: ObservableObject {
             self.writeVerified = true
             self.statusMessage = note.warn
                 ? "Simulated write OK — \(note.text)"
-                : "Simulated write OK — \(note.text). Open URL below or Simulate scan."
+                : "Simulated write OK — \(note.text)."
         }
     }
 
     private func presentLocalCard(from chip: NFCChipProfile) {
         let card = ProfileData(persisting: false)
         ProfileNFCCodec.apply(chip, to: card)
+        // Chip read = band was written; Linked chrome still needs YOU-card configured.
+        card.braceletLinked = true
         scannedCard = card
         showScannedCard = true
     }

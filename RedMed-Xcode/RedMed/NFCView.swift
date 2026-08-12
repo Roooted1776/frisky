@@ -11,6 +11,8 @@ struct NFCView: View {
     @Environment(\.isScannerSession) private var isScannerSession
     @StateObject private var band = NFCBandManager()
 
+    private let boxRadius = RedMedChrome.boxRadius
+
     var body: some View {
         if isScannerSession {
             Color.redmedBg.ignoresSafeArea()
@@ -22,125 +24,14 @@ struct NFCView: View {
     private var ownerBody: some View {
         NavigationView {
             ScrollView {
-                VStack(spacing: 12) {
-                    Text(AppConfig.nfcHardwareEnabled
-                          ? "iPhone only for setup. Fill RedMed, write the band once — Face ID, then hold to pair. No Bluetooth; the band stays passive."
-                          : "Simulate band setup while learning (no Apple NFC entitlement yet). Write packs the same compact get.html#d= URL a real NTAG213 would hold.")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(3)
-                        .frame(maxWidth: 275)
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 8)
-                        .padding(.bottom, 6)
-
-                    let capacity = ProfileNFCCodec.capacityNote(for: profile)
-                    let rf = AppConfig.BraceletRF.self
-                    VStack(spacing: 0) {
-                        statusRow(rf.carrierVsBluetoothSummary, showDivider: true)
-                        statusRow(rf.tapDistanceSummary, showDivider: true)
-                        if AppConfig.nfcHardwareEnabled {
-                            statusRow(rf.powerOnTapSummary, showDivider: true)
-                        }
-                        statusRow(rf.passerbyTapSummary, showDivider: true)
-                        statusRow(
-                            profile.braceletLinked
-                                ? "Bracelet linked — re-write after you edit RedMed"
-                                : "Bracelet not linked yet — write once to set up",
-                            showDivider: true
-                        )
-                        statusRow(capacity.text, showDivider: false)
-                    }
-                    .padding(.horizontal, 14)
-                    .background(Color.white.opacity(0.7))
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
-                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.redmedDivider, lineWidth: 1))
-
-                    sectionLabel("Set up")
-                    VStack(spacing: 12) {
-                        Button {
-                            band.writeBand(from: profile, isScannerSession: isScannerSession)
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "wave.3.right")
-                                Text(writeButtonTitle)
-                            }
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 17)
-                            .background(
-                                LinearGradient(colors: [Color(red:1, green:0.447, blue:0.537), .redmedAccent],
-                                               startPoint: .top, endPoint: .bottom)
-                            )
-                            .clipShape(Capsule())
-                            .shadow(color: Color.redmedAccent.opacity(0.28), radius: 7, y: 4)
-                        }
-                        .disabled(!profile.hasData || band.isBusy)
-                        .opacity(profile.hasData ? 1 : 0.55)
-                        if !profile.hasData {
-                            Text("Add your name on RedMed before writing a tag.")
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(.redmedAccent)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        if !band.statusMessage.isEmpty {
-                            Text(band.statusMessage)
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(statusIsError ? .redmedAccent : .redmedMuted)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        VStack(alignment: .leading, spacing: 6) {
-                            syncBullet("Link your bracelet once (write after RedMed is filled).")
-                            syncBullet("Payload targets get.html — short path for NTAG213 URI budgets.")
-                            syncBullet("After write, Scan below — linked only when read-back matches (or simulate succeeds).")
-                            syncBullet("If you cancel the NFC prompt, the band stays stale until you write again.")
-                        }
-                    }
-                    .padding(14)
-                    .background(Color.redmedSurface)
-                    .clipShape(RoundedRectangle(cornerRadius: 18))
-                    .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
-
-                    sectionLabel("Verify")
-                    VStack(alignment: .leading, spacing: 12) {
-                        if profile.braceletLinked {
-                            Text(AppConfig.nfcHardwareEnabled
-                                  ? "Scan your band to see the same emergency card a stranger gets — no app required for them."
-                                  : "Simulate scan to preview the passerby shell (same as get.html after a tap).")
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(.redmedMuted)
-                                .lineSpacing(3)
-                            SecondaryButton(
-                                AppConfig.nfcHardwareEnabled ? "Scan your bracelet" : "Simulate scan (passerby view)",
-                                icon: "qrcode.viewfinder"
-                            ) { band.verifyBand(from: profile) }
-                            if band.isReading {
-                                Text(band.statusMessage.isEmpty ? "Hold near tag…" : band.statusMessage)
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(.redmedMuted)
-                            }
-                            if let url = band.lastPackedURL, let link = URL(string: url) {
-                                Link("Open packed get.html URL", destination: link)
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundColor(.redmedAccent)
-                            }
-                        } else {
-                            Text("Write the band once above — then you can scan to verify the tap card.")
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(.redmedMuted)
-                                .lineSpacing(3)
-                        }
-                    }
-                    .padding(14)
-                    .background(Color.redmedSurface)
-                    .clipShape(RoundedRectangle(cornerRadius: 18))
-                    .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.redmedDivider, lineWidth: 1))
-                    .padding(.bottom, 16)
+                VStack(spacing: 16) {
+                    introBlock
+                    factsCard
+                    setupCard
                 }
                 .padding(.horizontal, 16)
-                .padding(.bottom, 24)
+                .padding(.top, 4)
+                .padding(.bottom, 28)
             }
             .background(Color.redmedBg)
             .navigationTitle("")
@@ -177,11 +68,155 @@ struct NFCView: View {
         }
     }
 
+    // MARK: - Intro (page-ratio, boxy)
+
+    private var introBlock: some View {
+        VStack(spacing: 10) {
+            Image(systemName: "wave.3.right.circle.fill")
+                .font(.system(size: 28, weight: .semibold))
+                .foregroundColor(.redmedAccent)
+                .accessibilityHidden(true)
+
+            Text(AppConfig.nfcHardwareEnabled
+                  ? "Fill RedMed, then write the band once. Face ID, hold to pair. Passive HF — no Bluetooth."
+                  : "Simulate band setup while learning. Same compact get.html#d= URL a real NTAG213 would hold.")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.redmedMuted)
+                .multilineTextAlignment(.center)
+                .lineSpacing(3)
+        }
+        .frame(maxWidth: 275)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 16)
+        .background(Color.redmedSurface)
+        .clipShape(RoundedRectangle(cornerRadius: boxRadius))
+        .overlay(RoundedRectangle(cornerRadius: boxRadius).stroke(Color.redmedDivider, lineWidth: 1))
+        .frame(maxWidth: .infinity)
+        .padding(.top, 6)
+    }
+
+    // MARK: - Bracelet facts
+
+    private var linkStatus: (title: String, detail: String, linked: Bool) {
+        if profile.showsBraceletAsLinked {
+            return ("Linked", "Re-write after you edit RedMed", true)
+        }
+        if profile.braceletLinked {
+            return ("Band written", "Finish name, birth date, and blood type on RedMed", false)
+        }
+        return ("Not linked", "Write once to set up the bracelet", false)
+    }
+
+    private var factsCard: some View {
+        let rf = AppConfig.BraceletRF.self
+        let status = linkStatus
+        return VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .center, spacing: 12) {
+                Image(systemName: status.linked ? "checkmark.seal.fill" : "link")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(status.linked ? .redmedAccent : .redmedMuted)
+                    .frame(width: 28, alignment: .center)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(status.title)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(.redmedDark)
+                    Text(status.detail)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.redmedMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 14)
+
+            thinRule
+
+            factRow(icon: "antenna.radiowaves.left.and.right", text: rf.carrierVsBluetoothSummary)
+            thinRule
+            factRow(icon: "hand.point.up.left.fill", text: rf.tapDistanceSummary)
+            if AppConfig.nfcHardwareEnabled {
+                thinRule
+                factRow(icon: "iphone.radiowaves.left.and.right", text: rf.powerOnTapSummary)
+            }
+            thinRule
+            factRow(icon: "person.2.fill", text: rf.passerbyTapSummary)
+        }
+        .background(Color.redmedSurface)
+        .clipShape(RoundedRectangle(cornerRadius: boxRadius))
+        .overlay(RoundedRectangle(cornerRadius: boxRadius).stroke(Color.redmedDivider, lineWidth: 1))
+    }
+
+    // MARK: - Setup
+
+    private var setupCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("SET UP")
+                .font(.system(size: 11, weight: .semibold))
+                .kerning(0.6)
+                .foregroundColor(.redmedMuted)
+
+            Button {
+                band.writeBand(from: profile, isScannerSession: isScannerSession)
+            } label: {
+                HStack(spacing: 8) {
+                    if band.isWriting {
+                        ProgressView().tint(.white)
+                    } else {
+                        Image(systemName: "wave.3.right")
+                    }
+                    Text(writeButtonTitle)
+                }
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(
+                    LinearGradient(
+                        colors: [Color(red: 1, green: 0.447, blue: 0.537), .redmedAccent],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .clipShape(RoundedRectangle(cornerRadius: boxRadius))
+                .shadow(color: Color.redmedAccent.opacity(profile.hasData ? 0.28 : 0), radius: 7, y: 4)
+            }
+            .disabled(!profile.hasData || band.isBusy)
+            .opacity(profile.hasData ? 1 : 0.55)
+
+            if !profile.hasData {
+                Text("Add your name on RedMed before writing a tag.")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.redmedAccent)
+            }
+
+            if !band.statusMessage.isEmpty {
+                Text(band.statusMessage)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(statusIsError ? .redmedAccent : .redmedMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                tipRow("Write once after RedMed is filled.")
+                tipRow("Cancel the NFC prompt and the band stays stale until you write again.")
+                tipRow("Preview scanner on RedMed shows the passerby card.")
+            }
+            .padding(.top, 2)
+        }
+        .padding(16)
+        .background(Color.redmedSurface)
+        .clipShape(RoundedRectangle(cornerRadius: boxRadius))
+        .overlay(RoundedRectangle(cornerRadius: boxRadius).stroke(Color.redmedDivider, lineWidth: 1))
+    }
+
+    // MARK: - Pieces
+
     private var writeButtonTitle: String {
         if band.isWriting {
-            return AppConfig.nfcHardwareEnabled ? "Hold near tag…" : "Packing URL…"
+            return AppConfig.nfcHardwareEnabled ? "Hold near tag…" : "Packing…"
         }
-        return AppConfig.nfcHardwareEnabled ? "Write to NFC tag" : "Simulate write (pack get.html URL)"
+        return AppConfig.nfcHardwareEnabled ? "Write to NFC tag" : "Setup"
     }
 
     private var statusIsError: Bool {
@@ -193,39 +228,40 @@ struct NFCView: View {
             && msg != "Hold your iPhone near the NFC tag."
     }
 
-    @ViewBuilder
-    func statusRow(_ text: String, showDivider: Bool) -> some View {
-        VStack(spacing: 0) {
-            Text(text)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(.redmedMuted)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.vertical, 10)
-            if showDivider {
-                Divider().overlay(Color.black.opacity(0.06))
-            }
-        }
+    private var thinRule: some View {
+        Divider().overlay(Color.redmedDivider)
     }
 
     @ViewBuilder
-    func sectionLabel(_ text: String) -> some View {
-        Text(text.uppercased())
-            .font(.system(size: 11, weight: .semibold))
-            .kerning(0.5)
-            .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
-            .padding(.horizontal, 4)
-    }
-
-    @ViewBuilder
-    func syncBullet(_ text: String) -> some View {
-        HStack(alignment: .top, spacing: 8) {
-            Text("•")
-                .font(.system(size: 13, weight: .bold))
+    private func factRow(icon: String, text: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .semibold))
                 .foregroundColor(.redmedAccent)
+                .frame(width: 28, alignment: .center)
+                .padding(.top, 1)
+            Text(text)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.redmedDark)
+                .lineSpacing(2)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+    }
+
+    @ViewBuilder
+    private func tipRow(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Circle()
+                .fill(Color.redmedAccent)
+                .frame(width: 5, height: 5)
+                .padding(.top, 6)
             Text(text)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundColor(.redmedMuted)
-                .lineSpacing(3)
+                .lineSpacing(2)
         }
     }
 }

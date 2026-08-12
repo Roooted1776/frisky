@@ -169,15 +169,15 @@ struct VaultHistoryView: View {
         authGeneration &+= 1
         let generation = authGeneration
         BiometricAuth.authenticate(
-            reason: "Confirm with Face ID, Touch ID, or passcode after Accept to open local history."
-        ) { success in
+            reason: "Unlock local history stored in the on-device vault."
+        ) { outcome in
             guard generation == authGeneration else { return }
             authenticating = false
-            if success {
+            if outcome == .success {
                 store.reload()
                 unlocked = true
                 authFailed = false
-            } else {
+            } else if outcome == .notVerified {
                 authFailed = true
             }
         }
