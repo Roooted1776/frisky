@@ -31,7 +31,8 @@
        everything. No server / no online. Bare /get/ without `#d=` and in-app
        Preview/Scan (`?src=app`) do not auto-arm SOS. Stop on Find Help or Aid.
        Explicit SOS toggle + DeviceMotion crash share the same local alarm.
-       iOS may need a gesture to unmute AudioContext / grant motion.
+       No Face ID / passcode / account on this page. iOS may need a gesture to
+       unmute AudioContext; motion permission only when the helper taps SOS.
      - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
        walk-by ~6–8″ does not fire, reliable coupling dies past ~4″,
        passive 13.56 MHz HF NFC (not Bluetooth) → opens this page
@@ -60,9 +61,10 @@
     background: var(--bg);
     color: var(--dark);
     min-height: 100vh;
-    padding: 0 0 calc(72px + env(safe-area-inset-bottom));
+    padding: 0 0 calc(84px + env(safe-area-inset-bottom));
     overflow-y: scroll;
     -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
   }
   a { color: var(--accent); text-decoration: none; }
   .app {
@@ -78,12 +80,12 @@
     padding: 10px 20px 8px;
   }
   .rm-lock {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dark);
     line-height: 1.4;
     margin: 0 auto 10px;
-    max-width: 275px;
+    max-width: 320px;
     text-align: center;
     padding: 10px 14px;
     background: var(--surface);
@@ -651,7 +653,7 @@
   }
   details.aid ol li + li { margin-top: 8px; }
 
-  /* —— Tab bar (matches CustomTabBar) —— */
+  /* —— Tab bar (matches CustomTabBar; larger hit targets for EMT / gloves) —— */
   .tabbar {
     position: fixed;
     left: 0; right: 0; bottom: 0;
@@ -660,7 +662,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 2px 0 calc(4px + env(safe-area-inset-bottom));
+    padding: 4px 0 calc(6px + env(safe-area-inset-bottom));
     z-index: 30;
   }
   .tabs {
@@ -672,10 +674,11 @@
     flex: 1;
     border: 0;
     background: transparent;
-    padding: 4px 0 3px;
+    padding: 8px 0 6px;
+    min-height: 56px;
     color: var(--tab-off);
-    font-size: 10px;
-    font-weight: 500;
+    font-size: 12px;
+    font-weight: 600;
     letter-spacing: -0.1px;
     cursor: pointer;
     font-family: inherit;
@@ -683,26 +686,29 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
   }
   .tab .icon-wrap {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 54px;
-    height: 30px;
+    width: 58px;
+    height: 32px;
     border-radius: 14px;
-    margin: 0 0 2px;
+    margin: 0 0 3px;
     line-height: 1;
   }
   /* Match owner CustomTabBar SF Symbols (person.fill / phone.fill / cross.case.fill). */
   .tab .icon-wrap svg {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     display: block;
     fill: currentColor;
   }
-  .tab.active { color: var(--accent); font-weight: 600; }
-  .tab.active .icon-wrap { background: rgba(225,29,72,0.10); }
+  .tab.active { color: var(--accent); font-weight: 700; }
+  .tab.active .icon-wrap { background: rgba(225,29,72,0.12); }
   .home-pill {
     width: 134px;
     height: 5px;
@@ -717,7 +723,7 @@
     <!-- RedMed — same header + YOU card as owner RedMedView (no Edit). -->
     <div class="panel active" id="panel-medical" data-panel="medical">
       <div class="rm-header">
-        <p class="rm-lock">Read only — editing needs the owner’s RedMed app.</p>
+        <p class="rm-lock">No Face ID · no login · no app. Card opens on tap.</p>
         <div class="rm-title-row">
           <img class="rm-logo" id="rmLogo" src="BrandLogo.png" width="48" height="48" alt="RedMed">
           <div>
@@ -1962,12 +1968,12 @@
     }
   }
 
-  // iOS requires a user gesture for DeviceMotion permission + often for audio.
-  // Bracelet tap already opened the page — arm local SOS now; unmute on gesture.
+  // Unmute SOS audio on first gesture only — do NOT request DeviceMotion here.
+  // iOS motion permission looks like an auth gate and interrupts RedMed · 911 · Aid
+  // taps. Motion is requested only from the SOS button (explicit).
   function onFirstGesture() {
     document.removeEventListener('touchstart', onFirstGesture, true);
     document.removeEventListener('click', onFirstGesture, true);
-    requestMotionThenStart();
     if (armed) {
       // NFC open often blocks autoplay until a gesture — unlock and play now.
       if (!ctx && !htmlAudio) startAudio();
@@ -1980,13 +1986,14 @@
   }
   document.addEventListener('touchstart', onFirstGesture, true);
   document.addEventListener('click', onFirstGesture, true);
-  // Non-iOS: start crash monitor without a gesture when the API needs no permission.
+  // Non-iOS: crash monitor needs no permission prompt.
   if (!(window.DeviceMotionEvent && typeof window.DeviceMotionEvent.requestPermission === 'function')) {
     startCrashMonitor();
   }
 
   sosBtn.addEventListener('click', function (e) {
     e.preventDefault();
+    // Explicit SOS tap is the only iOS path that may show a motion prompt.
     requestMotionThenStart();
     if (armed) disarm(); else arm();
   });
