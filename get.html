@@ -88,14 +88,11 @@
     border: 1px solid var(--divider);
     border-radius: var(--box);
   }
-  .rm-band {
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--muted);
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    margin: 0 0 10px;
-    line-height: 1.4;
+  .rm-lock a {
+    color: inherit;
+    font-weight: inherit;
+    text-decoration: none;
+    pointer-events: none;
   }
   .rm-title-row {
     display: flex;
@@ -123,11 +120,17 @@
     line-height: 1.15;
     color: #000;
   }
-  .rm-updated {
+  /* Same as owner braceletStatusLabel under the name. */
+  .rm-status {
     font-size: 10px;
-    font-weight: 600;
-    color: rgba(120,113,108,0.8);
-    margin: 4px 0 0;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 3px 0 0;
+  }
+  .rm-status.linked {
+    color: rgba(225,29,72,0.85);
   }
   .sec {
     font-size: 12px;
@@ -164,8 +167,17 @@
     color: #000;
     text-align: right;
   }
-  .row .v.empty { font-weight: 400; color: rgba(28,25,23,0.55); }
-  /* Empty: Name label. Filled: label drops; imported name sits left (black). */
+  .row .v.empty { font-weight: 500; color: rgba(28,25,23,0.55); }
+  /* Empty: Name + dash left (owner nameProfileRow). Filled: label drops. */
+  .row.row-name:not(.has-name) {
+    justify-content: flex-start;
+    gap: 8px;
+  }
+  .row.row-name:not(.has-name) .v {
+    text-align: left;
+    flex: 1;
+    min-width: 0;
+  }
   .row.row-name.has-name {
     justify-content: flex-start;
     gap: 8px;
@@ -195,7 +207,7 @@
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: 10px;
+    gap: 8px;
   }
   .contact-block .cn {
     font-size: 11px;
@@ -206,7 +218,7 @@
   }
   .contact-block a.cp {
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--accent);
     text-decoration: none;
     white-space: nowrap;
@@ -216,6 +228,9 @@
     font-weight: 500;
     color: var(--muted);
     margin-top: 2px;
+  }
+  #panel-medical {
+    padding-bottom: 42px;
   }
   /* Quiet prayer under Aid panes — matches owner AidView. Whisper, not focus. */
   .quote {
@@ -481,8 +496,9 @@
     font-weight: 700;
   }
 
-  /* —— Aid tab —— */
-  .aid-wordmark {
+  /* Aid / 911 — BrandWordmark like owner EmergencyView / AidView. */
+  .aid-wordmark,
+  .help-wordmark {
     display: block;
     height: 42px;
     width: auto;
@@ -612,24 +628,23 @@
 </head>
 <body>
   <div class="app">
-    <!-- RedMed -->
+    <!-- RedMed — same header + YOU card as owner RedMedView (no Edit). -->
     <div class="panel active" id="panel-medical" data-panel="medical">
       <div class="rm-header">
-        <p class="rm-lock">Read only — editing needs the <a href="redmed://main">owner’s RedMed app</a>.</p>
-        <p class="rm-band" id="bandSpec"></p>
+        <p class="rm-lock">Read only — editing needs the owner’s RedMed app.</p>
         <div class="rm-title-row">
           <img class="rm-logo" id="rmLogo" src="BrandLogo.png" width="48" height="48" alt="RedMed">
           <div>
             <h1 class="rm-name" id="name">RedMed</h1>
-            <p class="rm-updated" id="updatedLine"></p>
+            <p class="rm-status" id="statusLine">Not linked</p>
           </div>
         </div>
       </div>
 
       <div class="card" style="margin-top:2px">
-        <div class="row row-name" id="rowNameRow"><span class="k">Name</span><span class="v" id="rowName">—</span></div>
-        <div class="row"><span class="k">Birth date</span><span class="v" id="rowDob">—</span></div>
-        <div class="row"><span class="k">Blood type</span><span class="v" id="rowBlood">—</span></div>
+        <div class="row row-name" id="rowNameRow"><span class="k">Name</span><span class="v empty" id="rowName">—</span></div>
+        <div class="row"><span class="k">Birth date</span><span class="v empty" id="rowDob">—</span></div>
+        <div class="row"><span class="k">Blood type</span><span class="v empty" id="rowBlood">—</span></div>
       </div>
 
       <div class="sec">Allergies</div>
@@ -643,14 +658,12 @@
 
       <div class="sec">Contacts</div>
       <div class="card" id="contacts"></div>
-
-      <p class="foot-note">Local only once tap — everyone and everything. No servers · no online. No Bluetooth · passive HF NFC. No PII or PHI leaves this device through RedMed.</p>
     </div>
 
-    <!-- Help — mirrors owner EmergencyView (SOS · Locate me on explicit tap) -->
+    <!-- Help — mirrors owner EmergencyView (BrandWordmark + SOS). -->
     <div class="panel" id="panel-911" data-panel="911">
       <div class="page-pad">
-        <h1 class="page-title">Find Help</h1>
+        <img class="help-wordmark" id="helpWordmark" src="BrandWordmark.png" width="168" height="42" alt="RedMed">
 
         <div class="info">
           <div class="info-head">
@@ -672,7 +685,7 @@
           <a class="btn btn-call" id="callEmergency911" href="tel:112">Call <span class="emg">112</span></a>
           <button class="btn btn-sos" type="button" id="sosBtn">SOS · Locate me</button>
         </div>
-        <p class="survival-note">Siren arms and plays on real bracelet NFC tap (`#d=`) — local only once tap, everyone and everything on this phone. No servers · no online. Also on crash / SOS. Stop here or on Aid.</p>
+        <p class="survival-note">Siren + max volume + full brightness: local once tap — bracelet NFC, crash, or SOS on this device. Everyone and everything stays here. No servers · no online. Stop here or on Aid.</p>
 
         <div class="seizure-strip" id="seizureStrip">
           <div>
@@ -717,7 +730,6 @@
     <div class="panel" id="panel-aid" data-panel="aid">
       <div class="page-pad">
         <img class="aid-wordmark" id="aidWordmark" src="BrandWordmark.png" width="168" height="42" alt="RedMed">
-        <a class="btn btn-primary" id="callEmergency" href="tel:112">Call <span class="emg">112</span></a>
 
         <div class="aid-grid">
           <details class="aid"><summary><span class="aid-emoji">🚗</span><span class="aid-title">Crash &amp; Head</span></summary>
@@ -842,15 +854,9 @@
     }
     tryNext();
     resolveAsset('aidWordmark', ['BrandWordmark.png', 'assets/BrandWordmark.png']);
+    resolveAsset('helpWordmark', ['BrandWordmark.png', 'assets/BrandWordmark.png']);
   }
 
-  var bandEl = document.getElementById('bandSpec');
-  if (bandEl) {
-    bandEl.textContent =
-      'Passive ' + SPECS.carrierMHz.toFixed(2) + ' MHz HF NFC · deliberate ~' +
-      SPECS.tapMinIn + '–' + SPECS.tapMaxIn + '″ tap · walk-by ~' +
-      SPECS.walkByMinIn + '–' + SPECS.walkByMaxIn + '″ won’t fire';
-  }
   resolveLogo();
 
   // Aid accordion — one pane open at a time (matches owner AidView).
@@ -1186,17 +1192,27 @@
 
   var firstPhone = '';
 
-  function renderProfile(p) {
+  function renderProfile(p, fromBand) {
     p = p || {};
     var rawName = (p.name || '').trim();
+    var rawDob = (p.dob || '').trim();
+    var rawBlood = (p.blood || '').trim();
     var displayName = rawName || 'RedMed';
     var nameEl = document.getElementById('name');
     var logo = document.getElementById('rmLogo');
+    var statusEl = document.getElementById('statusLine');
     nameEl.textContent = displayName;
     // Empty: grey logo on the left. Filled: logo drops; imported name takes the row.
     if (logo) {
       if (rawName) logo.classList.add('has-name');
       else logo.classList.remove('has-name');
+    }
+    // Owner: Linked only after band write + YOU card (name, birth, blood).
+    // Tap `#d=` decode ≈ write; YOU complete → Linked bracelet.
+    if (statusEl) {
+      var linked = !!fromBand && !!rawName && !!rawDob && !!rawBlood;
+      statusEl.textContent = linked ? 'Linked bracelet' : 'Not linked';
+      statusEl.classList.toggle('linked', linked);
     }
     setRow('rowName', p.name);
     var nameRow = document.getElementById('rowNameRow');
@@ -1206,7 +1222,6 @@
     }
     setRow('rowDob', p.dob);
     setRow('rowBlood', p.blood);
-    if (p.updated) document.getElementById('updatedLine').textContent = 'Updated ' + p.updated;
     list(document.getElementById('allergies'), p.allergies);
     list(document.getElementById('meds'), p.meds);
     list(document.getElementById('conditions'), p.conditions);
@@ -1233,7 +1248,7 @@
         nameRow.className = 'cn-row';
         var name = document.createElement('div');
         name.className = 'cn';
-        name.textContent = c.name || 'Contact';
+        name.textContent = c.name || 'Emergency contact';
         nameRow.appendChild(name);
         if (phone) {
           var a = document.createElement('a');
@@ -1262,7 +1277,9 @@
     }
   }
 
-  decodeProfile().then(renderProfile);
+  decodeProfile().then(function (p) {
+    renderProfile(p, p != null);
+  });
 
   function setCoords(lat, lon, acc) {
     if (!isFinite(lat) || !isFinite(lon)) return;
