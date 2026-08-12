@@ -115,8 +115,8 @@ struct SecondaryButton: View {
     }
 }
 
-/// Trailing chrome text — owner **Edit**, scanner **Back**, Aid topic **Back**.
-/// Plain style: accent red text, no fill pill (page shows through). One red, one size.
+/// Trailing chrome text — owner **Edit** (main RedMed), scanner **Back**, Aid topic **Back**.
+/// One look on tap + use: accent red text, opaque `redmedBg` fill (not a system capsule).
 struct ChromeTextAction: View {
     let title: String
     let action: () -> Void
@@ -127,8 +127,12 @@ struct ChromeTextAction: View {
                 .font(.system(size: 18, weight: .regular))
                 .foregroundColor(.redmedAccent)
                 .kerning(-0.2)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 4)
+                .background(Color.redmedBg)
         }
         .buttonStyle(.plain)
+        .tint(.redmedAccent)
     }
 }
 

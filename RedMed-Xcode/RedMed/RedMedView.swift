@@ -242,6 +242,7 @@ struct RedMedView: View {
             .padding(.trailing, 56)
 
             if isScannerSession {
+                // Same slot + chrome as owner Edit (main page).
                 ScannerBackButton()
                     .padding(.top, 4)
             } else {
