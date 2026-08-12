@@ -636,7 +636,7 @@
           <a class="btn btn-call" id="callEmergency911" href="tel:112">Call <span class="emg">112</span></a>
           <button class="btn btn-sos" type="button" id="sosBtn">SOS · Locate me</button>
         </div>
-        <p class="survival-note">Siren arms on real bracelet NFC tap (`#d=`) — hardware local only, no servers · no online. Also on crash / SOS. Stop here or on Aid.</p>
+        <p class="survival-note">Siren arms and plays on real bracelet NFC tap (`#d=`) — hardware local only, no servers · no online. Also on crash / SOS. Stop here or on Aid.</p>
 
         <div class="seizure-strip" id="seizureStrip">
           <div>
@@ -1360,8 +1360,8 @@
 </script>
 <script>
 // Survival alarm — hardware-local only (this phone).
-// Real bracelet NFC open with #d= → arm local SOS (no server). Explicit SOS
-// toggle and DeviceMotion crash share the same on-device alarm.
+// Real bracelet NFC open with #d= → arm + PLAY local siren (no server).
+// Explicit SOS toggle and DeviceMotion crash share the same on-device alarm.
 // Crash path ignores sex, masturbation, walking, eating, daily rhythm (same
 // gates as native CrashMotionGuard). Web Audio + wake lock only.
 (function () {
@@ -1411,14 +1411,125 @@
   var humanBurstStart = 0;
   var busyUntil = 0;
 
+  var sirenUrl = null;
+  var htmlAudio = null;
+  var fireTimer = null;
+  var keepAliveTimer = null;
+  var audioNeedsGesture = false;
+
   function paint() {
-    sosBtn.textContent = armed ? 'Stop SOS alarm' : 'SOS · Locate me';
+    var label = armed ? 'Stop SOS alarm' : 'SOS · Locate me';
+    if (armed && audioNeedsGesture) label = 'Tap to play siren · Stop';
+    sosBtn.textContent = label;
     sosBtn.classList.toggle('armed', armed);
     if (aidStop) aidStop.classList.toggle('show', armed);
   }
 
+  function writeU16(view, offset, v) { view.setUint16(offset, v, true); }
+  function writeU32(view, offset, v) { view.setUint32(offset, v, true); }
+
+  // Same three-beep pattern as native LocatorBeacon.alarmWAV (880 / 1175 / 880).
+  function buildSirenWavUrl() {
+    var sampleRate = 22050;
+    var beepDuration = 0.22;
+    var gapDuration = 0.10;
+    var freqs = [880, 1174.7, 880];
+    var samples = [];
+    function tone(freq, seconds) {
+      var count = Math.floor(sampleRate * seconds);
+      var out = new Array(count);
+      var twoPiF = 2 * Math.PI * freq;
+      for (var n = 0; n < count; n++) {
+        var t = n / sampleRate;
+        var attack = 0.015, release = 0.03, env = 1;
+        if (t < attack) env = t / attack;
+        else if (t > seconds - release) env = Math.max(0, (seconds - t) / release);
+        out[n] = Math.sin(twoPiF * t) * env * 0.95;
+      }
+      return out;
+    }
+    for (var i = 0; i < freqs.length; i++) {
+      samples = samples.concat(tone(freqs[i], beepDuration));
+      if (i < freqs.length - 1) {
+        var gap = Math.floor(sampleRate * gapDuration);
+        for (var g = 0; g < gap; g++) samples.push(0);
+      }
+    }
+    var dataSize = samples.length * 2;
+    var buf = new ArrayBuffer(44 + dataSize);
+    var view = new DataView(buf);
+    var u8 = new Uint8Array(buf);
+    u8.set([0x52,0x49,0x46,0x46], 0); // RIFF
+    writeU32(view, 4, 36 + dataSize);
+    u8.set([0x57,0x41,0x56,0x45], 8); // WAVE
+    u8.set([0x66,0x6D,0x74,0x20], 12); // fmt
+    writeU32(view, 16, 16);
+    writeU16(view, 20, 1);
+    writeU16(view, 22, 1);
+    writeU32(view, 24, sampleRate);
+    writeU32(view, 28, sampleRate * 2);
+    writeU16(view, 32, 2);
+    writeU16(view, 34, 16);
+    u8.set([0x64,0x61,0x74,0x61], 36); // data
+    writeU32(view, 40, dataSize);
+    for (var s = 0; s < samples.length; s++) {
+      var v = Math.max(-1, Math.min(1, samples[s]));
+      view.setInt16(44 + s * 2, (v * 32767) | 0, true);
+    }
+    var blob = new Blob([buf], { type: 'audio/wav' });
+    return URL.createObjectURL(blob);
+  }
+
+  function vibrateBurst() {
+    try {
+      if (navigator.vibrate) navigator.vibrate([220, 100, 220, 100, 220]);
+    } catch (e) {}
+  }
+
+  function fireSirenBurst() {
+    if (!armed) return;
+    if (!sirenUrl) sirenUrl = buildSirenWavUrl();
+    try {
+      if (!htmlAudio) {
+        htmlAudio = new Audio(sirenUrl);
+        htmlAudio.setAttribute('playsinline', 'true');
+        htmlAudio.playsInline = true;
+        htmlAudio.preload = 'auto';
+        htmlAudio.volume = 1;
+      }
+      htmlAudio.currentTime = 0;
+      var p = htmlAudio.play();
+      if (p && typeof p.then === 'function') {
+        p.then(function () { audioNeedsGesture = false; paint(); })
+         .catch(function () { audioNeedsGesture = true; paint(); });
+      } else {
+        audioNeedsGesture = false;
+      }
+    } catch (e) {
+      audioNeedsGesture = true;
+      paint();
+    }
+    vibrateBurst();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().then(function () { audioNeedsGesture = false; paint(); }).catch(function () {});
+    }
+  }
+
+  function ensurePlaying() {
+    if (!armed) return;
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(function () {});
+    }
+    if (htmlAudio && htmlAudio.paused) {
+      var p = htmlAudio.play();
+      if (p && p.catch) p.catch(function () { audioNeedsGesture = true; paint(); });
+    }
+  }
+
   function stopAudio() {
     if (beepTimer) { clearInterval(beepTimer); beepTimer = null; }
+    if (fireTimer) { clearInterval(fireTimer); fireTimer = null; }
+    if (keepAliveTimer) { clearInterval(keepAliveTimer); keepAliveTimer = null; }
     try { if (osc) osc.stop(); } catch (e) {}
     try { if (lfo) lfo.stop(); } catch (e) {}
     osc = null;
@@ -1428,44 +1539,52 @@
       try { ctx.close(); } catch (e) {}
       ctx = null;
     }
+    if (htmlAudio) {
+      try { htmlAudio.pause(); htmlAudio.currentTime = 0; } catch (e) {}
+      htmlAudio = null;
+    }
     if (wake) {
       try { wake.release(); } catch (e) {}
       wake = null;
     }
+    audioNeedsGesture = false;
   }
 
   function startAudio() {
     stopAudio();
+    if (!sirenUrl) sirenUrl = buildSirenWavUrl();
+
     var AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-    ctx = new AC();
-    gain = ctx.createGain();
-    gain.gain.value = 0.85;
-    gain.connect(ctx.destination);
+    if (AC) {
+      ctx = new AC();
+      gain = ctx.createGain();
+      gain.gain.value = 0.55;
+      gain.connect(ctx.destination);
 
-    osc = ctx.createOscillator();
-    osc.type = 'square';
-    osc.frequency.value = 880;
-    osc.connect(gain);
+      osc = ctx.createOscillator();
+      osc.type = 'square';
+      osc.frequency.value = 880;
+      osc.connect(gain);
 
-    lfo = ctx.createOscillator();
-    lfo.type = 'sine';
-    lfo.frequency.value = 2;
-    var lfoGain = ctx.createGain();
-    lfoGain.gain.value = 220;
-    lfo.connect(lfoGain);
-    lfoGain.connect(osc.frequency);
+      lfo = ctx.createOscillator();
+      lfo.type = 'sine';
+      lfo.frequency.value = 2;
+      var lfoGain = ctx.createGain();
+      lfoGain.gain.value = 220;
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc.frequency);
 
-    osc.start();
-    lfo.start();
+      osc.start();
+      lfo.start();
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(function () { audioNeedsGesture = true; });
+      }
+    }
 
-    beepTimer = setInterval(function () {
-      if (!ctx || !armed) return;
-      if (ctx.state === 'suspended') ctx.resume();
-      try {
-        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-      } catch (e) {}
-    }, 5000);
+    // Play immediately — HTMLAudio + Web Audio + vibrate (mirrors LocatorBeacon).
+    fireSirenBurst();
+    fireTimer = setInterval(fireSirenBurst, 5000);
+    keepAliveTimer = setInterval(ensurePlaying, 1000);
 
     if (navigator.wakeLock && navigator.wakeLock.request) {
       navigator.wakeLock.request('screen').then(function (lock) {
@@ -1489,7 +1608,7 @@
     armed = true;
     lastArmAt = Date.now() / 1000;
     resetMotionTransient();
-    startAudio();
+    startAudio(); // must play — not armed-only UI
     paint();
   }
 
@@ -1669,10 +1788,12 @@
     document.removeEventListener('click', onFirstGesture, true);
     requestMotionThenStart();
     if (armed) {
-      if (ctx && ctx.state === 'suspended') {
-        ctx.resume();
-      } else if (!ctx) {
-        startAudio();
+      // NFC open often blocks autoplay until a gesture — unlock and play now.
+      if (!ctx && !htmlAudio) startAudio();
+      else {
+        if (ctx && ctx.state === 'suspended') ctx.resume();
+        fireSirenBurst();
+        ensurePlaying();
       }
     }
   }
