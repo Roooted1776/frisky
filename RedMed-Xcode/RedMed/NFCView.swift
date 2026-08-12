@@ -22,7 +22,20 @@ struct NFCView: View {
     }
 
     private var ownerBody: some View {
-        NavigationView {
+        // Fixed cream chrome (no NavigationView / system toolbar) — BrandWordmark
+        // top-left like 911 / Aid. Owner-only tab; scanners never mount this.
+        VStack(spacing: 0) {
+            Image("BrandWordmark")
+                .resizable()
+                .scaledToFit()
+                .frame(height: 42)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityLabel("RedMed")
+                .padding(.horizontal, 16)
+                .padding(.top, 6)
+                .padding(.bottom, 4)
+                .background(Color.redmedBg)
+
             ScrollView {
                 VStack(spacing: 16) {
                     introBlock
@@ -35,37 +48,29 @@ struct NFCView: View {
                 .padding(.bottom, 28)
             }
             .background(Color.redmedBg)
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.redmedBg, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("NFC Bracelet").font(RedMedChrome.navTitleFont).foregroundColor(.redmedAccent)
-                }
+        }
+        .background(Color.redmedBg.ignoresSafeArea())
+        .sheet(isPresented: $band.showScannedCard) {
+            if let card = band.scannedCard {
+                PublicCardView(profile: card)
             }
-            .sheet(isPresented: $band.showScannedCard) {
-                if let card = band.scannedCard {
-                    PublicCardView(profile: card)
-                }
-            }
-            .alert("Authentication Failed", isPresented: $band.authFailed) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text("Face ID or passcode is required to write your emergency card to the bracelet.")
-            }
-            .alert("NFC", isPresented: Binding(
-                get: { band.alertMessage != nil },
-                set: { if !$0 { band.alertMessage = nil } }
-            )) {
-                Button("OK", role: .cancel) { band.alertMessage = nil }
-            } message: {
-                Text(band.alertMessage ?? "")
-            }
-            .onChange(of: band.writeVerified) { _, verified in
-                guard verified, band.writeSucceeded, AppConfig.nfcHardwareEnabled else { return }
-                band.linkBracelet(on: profile, detail: "NFC write verified")
-            }
+        }
+        .alert("Authentication Failed", isPresented: $band.authFailed) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Face ID or passcode is required to write your emergency card to the bracelet.")
+        }
+        .alert("NFC", isPresented: Binding(
+            get: { band.alertMessage != nil },
+            set: { if !$0 { band.alertMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) { band.alertMessage = nil }
+        } message: {
+            Text(band.alertMessage ?? "")
+        }
+        .onChange(of: band.writeVerified) { _, verified in
+            guard verified, band.writeSucceeded, AppConfig.nfcHardwareEnabled else { return }
+            band.linkBracelet(on: profile, detail: "NFC write verified")
         }
     }
 
