@@ -26,9 +26,10 @@
      - Offline: sw.js Cache Storage — cache-first multi-key shell for almost-instant
        EMT open after first online load; activate clears prior CACHE buckets
        (bump redmed-get-vN). Never wait on network when a shell copy exists.
-     - Real bracelet NFC tap (`get.html#d=…`) → arms local SOS on this phone
-       only (hardware + on-device audio; no server / no online). Bare /get/
-       without `#d=` does not auto-arm. Stop on Find Help or Aid.
+     - Real bracelet NFC tap (`get.html#d=…`) → everything stays on that phone
+       (profile, 911, Aid, SOS siren). Local only once tap — everyone and
+       everything. No server / no online. Bare /get/ without `#d=` does not
+       auto-arm SOS. Stop on Find Help or Aid.
        Explicit SOS toggle + DeviceMotion crash share the same local alarm.
        iOS may need a gesture to unmute AudioContext / grant motion.
      - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
@@ -609,6 +610,8 @@
 
       <div class="sec">Contacts</div>
       <div class="card" id="contacts"></div>
+
+      <p class="foot-note">Local only once tap — everyone and everything. No servers · no online. No Bluetooth · passive HF NFC. No PII or PHI leaves this device through RedMed.</p>
     </div>
 
     <!-- Help — mirrors owner EmergencyView (SOS · Locate me on explicit tap) -->
