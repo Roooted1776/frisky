@@ -55,13 +55,9 @@ struct AidView: View {
     var body: some View {
         // Full-width accordion — life-saving: big targets, text always fits, no
         // 2-col reflow when a pane opens. Same pattern as passerby tapper.html Aid.
-        VStack(spacing: 0) {
-            BrandWordmarkHeader {
-                if isScannerSession {
-                    ScannerBackButton()
-                }
-            }
-
+        // No page header text / BrandWordmark — content-first like RedMed.
+        // Scanner Back overlays top-trailing.
+        ZStack(alignment: .topTrailing) {
             GeometryReader { geo in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 10) {
@@ -104,11 +100,17 @@ struct AidView: View {
                             .padding(.top, 8)
                     }
                     .padding(.horizontal, RedMedChrome.pagePadX)
-                    .padding(.top, 2)
+                    .padding(.top, isScannerSession ? 44 : RedMedChrome.wordmarkTop)
                     .padding(.bottom, 24)
                     .frame(minHeight: geo.size.height, alignment: .top)
                 }
                 .scrollIndicators(.visible)
+            }
+
+            if isScannerSession {
+                ScannerBackButton()
+                    .padding(.horizontal, RedMedChrome.pagePadX)
+                    .padding(.top, RedMedChrome.wordmarkTop)
             }
         }
         .background { RedMedPageBackground() }

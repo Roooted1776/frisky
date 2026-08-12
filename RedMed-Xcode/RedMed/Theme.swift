@@ -206,7 +206,7 @@ struct ChromeTextAction: View {
     }
 }
 
-/// Inline nav titles (Find Help, topic). Semibold 17 accent — pairs with ChromeTextAction.
+/// Inline nav titles (topic detail). Semibold 17 accent — pairs with ChromeTextAction.
 /// Box radius is shared by owner + scanner cards / CTAs (square-ish, not capsules).
 enum RedMedChrome {
     static let navTitleFont: Font = .system(size: 17, weight: .semibold)
@@ -214,7 +214,7 @@ enum RedMedChrome {
     static let chipRadius: CGFloat = 7
     /// Brand mark is a circular disc — always `Circle()`, never a rounded rect.
     static let logoRadius: CGFloat = 0
-    /// Shared BrandWordmark lockup on 911 / Aid / NFC / topic pages.
+    /// BrandWordmark lockup on NFC / topic pages (Aid + 911 are content-first).
     static let wordmarkHeight: CGFloat = 42
     static let pagePadX: CGFloat = 16
     static let wordmarkTop: CGFloat = 6
@@ -223,7 +223,7 @@ enum RedMedChrome {
     static let accentShadow = Color.redmedAccent.opacity(0.18)
 }
 
-/// Pinned BrandWordmark row — same metrics on every owner / scanner user page.
+/// Pinned BrandWordmark row — NFC / topic pages (not Aid or 911).
 struct BrandWordmarkHeader<Trailing: View>: View {
     var top: CGFloat = RedMedChrome.wordmarkTop
     @ViewBuilder var trailing: () -> Trailing
