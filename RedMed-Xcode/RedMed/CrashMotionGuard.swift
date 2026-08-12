@@ -28,8 +28,10 @@ private enum CrashMotionThresholds {
     static let cooldownSeconds: TimeInterval = 90
 }
 
-/// Survival alarm arming: crash / severe impact (CoreMotion) or owner SOS.
-/// Arms full brightness + max system volume + locator siren. Cancel on Aid.
+/// Survival alarm arming: crash / severe impact (CoreMotion) or Find Help SOS
+/// (owner + tapper / in-app scanner). Passerby `get.html` mirrors thresholds
+/// via DeviceMotion. Arms full brightness + max system volume + locator siren.
+/// Cancel on Aid or Stop SOS on Find Help.
 /// Motion path ignores running, walking, eating, sex/intimate motion, and hand/wrist handling.
 /// Not Apple Crash Detection — no GPS/barometer fusion, no cloud.
 ///
@@ -71,7 +73,8 @@ final class CrashMotionGuard: ObservableObject {
         LocatorBeacon.endSurvival()
     }
 
-    /// Owner Find Help SOS — same survival hold as crash (siren + max volume + full brightness).
+    /// Find Help SOS (owner + tapper) — same survival hold as crash
+    /// (siren + max volume + full brightness).
     func armSOS() {
         engine.requestArm { [weak self] generation in
             Task { @MainActor in
@@ -285,7 +288,7 @@ final class CrashMotionGuard: ObservableObject {
     }
 }
 
-/// Cancel on Aid — 5pt under the pane grid, above the quote.
+/// Cancel on Aid — under the pane grid, above the prayer.
 /// Outside LazyVGrid so pane expand/collapse is undisturbed.
 struct CrashSurvivalCancelCard: View {
     @ObservedObject private var monitor = CrashMotionGuard.shared

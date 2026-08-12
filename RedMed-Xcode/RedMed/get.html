@@ -26,8 +26,9 @@
      - Offline: sw.js Cache Storage — cache-first multi-key shell for almost-instant
        EMT open after first online load; activate clears prior CACHE buckets
        (bump redmed-get-vN). Never wait on network when a shell copy exists.
-     - No brightness / audio from this page — owner-phone crash motion or SOS
-       only (native app). Passerby HTML never touches those.
+     - Find Help SOS · Locate me (explicit tap only) + DeviceMotion crash /
+       severe-impact detection (same g thresholds as native CrashMotionGuard).
+       Local siren on this device; not auto on open. No Edit / NFC.
      - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
        walk-by ~6–8″ does not fire, reliable coupling dies past ~4″,
        passive 13.56 MHz HF NFC (not Bluetooth) → opens this page
@@ -198,20 +199,19 @@
     color: var(--muted);
     margin-top: 2px;
   }
+  /* Quiet prayer under Aid panes — matches owner AidView. */
   .quote {
-    margin: 28px 16px 16px;
-    padding: 14px 16px;
-    max-width: 300px;
-    margin-left: auto;
-    margin-right: auto;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--dark);
+    margin: 14px 24px 2px;
+    padding: 0;
+    max-width: none;
+    font-size: 10px;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--muted);
     text-align: center;
-    line-height: 1.45;
-    background: var(--surface);
-    border: 1px solid var(--divider);
-    border-radius: var(--box);
+    line-height: 1.4;
+    background: none;
+    border: none;
   }
 
   /* —— Help tab —— */
@@ -263,6 +263,16 @@
     font-weight: 700;
     font-size: 17px;
     padding: 16px;
+  }
+  .btn-sos {
+    background: var(--dark);
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 10px;
+  }
+  .btn-sos.armed {
+    background: var(--accent);
   }
   .hint {
     font-size: 10px;
@@ -409,6 +419,36 @@
     color: var(--muted);
     text-align: center;
     margin: 8px 0 6px;
+  }
+  /* Under SOS on Find Help — mirrors owner EmergencyView. */
+  .survival-note {
+    margin: 6px 4px 0;
+    padding: 0;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.35;
+  }
+  .aid-stop-alarm {
+    display: none;
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dark);
+    background: var(--surface);
+    border: 1px solid var(--divider);
+    border-radius: var(--box);
+    text-align: left;
+    cursor: pointer;
+  }
+  .aid-stop-alarm.show { display: block; }
+  .aid-stop-alarm .x {
+    float: right;
+    color: var(--accent);
+    font-weight: 700;
   }
 
   /* —— Aid tab —— */
@@ -567,11 +607,9 @@
 
       <div class="sec">Contacts</div>
       <div class="card" id="contacts"></div>
-
-      <p class="quote">“Control your fear. Control the moment.<br>You have what it takes to save a life.”</p>
     </div>
 
-    <!-- Help — mirrors owner EmergencyView (no SOS / brightness / audio) -->
+    <!-- Help — mirrors owner EmergencyView (SOS · Locate me on explicit tap) -->
     <div class="panel" id="panel-911" data-panel="911">
       <div class="page-pad">
         <h1 class="page-title">Find Help</h1>
@@ -594,7 +632,9 @@
         <div class="gps-actions">
           <button class="btn btn-ink" type="button" id="copyCoordsBtn">Copy coordinates</button>
           <a class="btn btn-call" id="callEmergency911" href="tel:112">Call <span class="emg">112</span></a>
+          <button class="btn btn-sos" type="button" id="sosBtn">SOS · Locate me</button>
         </div>
+        <p class="survival-note">Siren + max volume + full brightness only on crash / severe impact or SOS. Stop here or on Aid.</p>
 
         <div class="seizure-strip" id="seizureStrip">
           <div>
@@ -699,6 +739,10 @@
             </ol>
           </details>
         </div>
+
+        <button class="aid-stop-alarm" type="button" id="aidStopAlarm">Stop the alarm <span class="x" aria-hidden="true">✕</span></button>
+
+        <p class="quote">“Control your fear. Control the moment.<br>You have what it takes to save a life.”</p>
       </div>
     </div>
   </div>
@@ -1300,16 +1344,299 @@
 })();
 </script>
 <script>
-// Register SW ASAP (not on window load) so the next bracelet tap is controlled
+// Register SW ASAP (not on window.load) so the next bracelet tap is controlled
 // and paints almost instantly from Cache Storage. Payload stays in #d= only —
 // the service worker never stores medical fields.
-// No brightness / audio from this page.
 (function () {
   if (!('serviceWorker' in navigator)) return;
   navigator.serviceWorker
     .register('sw.js', { scope: './', updateViaCache: 'none' })
     .then(function (reg) { return reg.update(); })
     .catch(function () {});
+})();
+</script>
+<script>
+// Survival alarm for tapper Find Help — mirrors native CrashMotionGuard + SOS.
+// Explicit SOS tap OR DeviceMotion vehicle crash / severe impact.
+// Web Audio siren + screen wake lock (browsers cannot force system volume /
+// brightness; native does VolumeBoost + BrightnessBoost).
+(function () {
+  var sosBtn = document.getElementById('sosBtn');
+  var aidStop = document.getElementById('aidStopAlarm');
+  if (!sosBtn) return;
+
+  // Match CrashMotionThresholds (g, rad/s). DeviceMotion accel is m/s².
+  var G = 9.80665;
+  var CRASH_PEAK_G = 16.0;
+  var POST_FREEFALL_PEAK_G = 13.0;
+  var OVERRIDE_BUSY_PEAK_G = 24.0;
+  var FREEFALL_MAX_G = 0.20;
+  var FREEFALL_MIN_S = 0.22;
+  var FREEFALL_IMPACT_WINDOW_S = 0.40;
+  var HUMAN_MIN_G = 0.7;
+  var HUMAN_MAX_G = 9.0;
+  var HUMAN_SPIKE_COUNT = 2;
+  var HUMAN_WINDOW_S = 8.0;
+  var BUSY_HOLD_S = 4.0;
+  var HAND_SPIN_RAD = 3.5;
+  var MIN_JERK_G_S = 120.0;
+  var SAMPLE_HZ = 50.0;
+  var COOLDOWN_S = 90.0;
+  var DT = 1.0 / SAMPLE_HZ;
+
+  var armed = false;
+  var ctx = null;
+  var osc = null;
+  var gain = null;
+  var lfo = null;
+  var wake = null;
+  var beepTimer = null;
+
+  var motionListening = false;
+  var lastArmAt = 0;
+  var lastMagnitude = 0;
+  var freefallSince = 0;
+  var freefallEndedAt = 0;
+  var recentHumanPeaks = [];
+  var recentHandSpins = [];
+  var busyUntil = 0;
+
+  function paint() {
+    sosBtn.textContent = armed ? 'Stop SOS alarm' : 'SOS · Locate me';
+    sosBtn.classList.toggle('armed', armed);
+    if (aidStop) aidStop.classList.toggle('show', armed);
+  }
+
+  function stopAudio() {
+    if (beepTimer) { clearInterval(beepTimer); beepTimer = null; }
+    try { if (osc) osc.stop(); } catch (e) {}
+    try { if (lfo) lfo.stop(); } catch (e) {}
+    osc = null;
+    lfo = null;
+    gain = null;
+    if (ctx) {
+      try { ctx.close(); } catch (e) {}
+      ctx = null;
+    }
+    if (wake) {
+      try { wake.release(); } catch (e) {}
+      wake = null;
+    }
+  }
+
+  function startAudio() {
+    stopAudio();
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    ctx = new AC();
+    gain = ctx.createGain();
+    gain.gain.value = 0.85;
+    gain.connect(ctx.destination);
+
+    osc = ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.value = 880;
+    osc.connect(gain);
+
+    lfo = ctx.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.value = 2;
+    var lfoGain = ctx.createGain();
+    lfoGain.gain.value = 220;
+    lfo.connect(lfoGain);
+    lfoGain.connect(osc.frequency);
+
+    osc.start();
+    lfo.start();
+
+    beepTimer = setInterval(function () {
+      if (!ctx || !armed) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      try {
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      } catch (e) {}
+    }, 5000);
+
+    if (navigator.wakeLock && navigator.wakeLock.request) {
+      navigator.wakeLock.request('screen').then(function (lock) {
+        wake = lock;
+      }).catch(function () {});
+    }
+  }
+
+  function resetMotionTransient() {
+    lastMagnitude = 0;
+    freefallSince = 0;
+    freefallEndedAt = 0;
+    recentHumanPeaks = [];
+    recentHandSpins = [];
+    busyUntil = 0;
+  }
+
+  function arm() {
+    if (armed) return;
+    armed = true;
+    lastArmAt = Date.now() / 1000;
+    resetMotionTransient();
+    startAudio();
+    paint();
+  }
+
+  function disarm() {
+    if (!armed) return;
+    armed = false;
+    stopAudio();
+    resetMotionTransient();
+    paint();
+  }
+
+  function markBusy(now) {
+    busyUntil = Math.max(busyUntil, now + BUSY_HOLD_S);
+    freefallSince = 0;
+    freefallEndedAt = 0;
+  }
+
+  function prune(list, now, windowS) {
+    var i = 0;
+    while (i < list.length && now - list[i] > windowS) i++;
+    if (i) list.splice(0, i);
+  }
+
+  function evaluate(ax, ay, az, spinRad, now, usingGravity) {
+    if (armed) return;
+    if (lastArmAt && now - lastArmAt < COOLDOWN_S) return;
+
+    var magnitude = Math.sqrt(ax * ax + ay * ay + az * az) / G;
+    var jerk = Math.abs(magnitude - lastMagnitude) / DT;
+    lastMagnitude = magnitude;
+
+    // including-gravity rests near 1g — skip human-activity busy marking there.
+    if (!usingGravity) {
+      if (magnitude >= HUMAN_MIN_G && magnitude <= HUMAN_MAX_G) {
+        recentHumanPeaks.push(now);
+      }
+      prune(recentHumanPeaks, now, HUMAN_WINDOW_S);
+      if (recentHumanPeaks.length >= HUMAN_SPIKE_COUNT) {
+        markBusy(now);
+        return;
+      }
+    }
+
+    if (spinRad >= HAND_SPIN_RAD) {
+      recentHandSpins.push(now);
+      prune(recentHandSpins, now, HUMAN_WINDOW_S);
+      if (magnitude < OVERRIDE_BUSY_PEAK_G) {
+        markBusy(now);
+        return;
+      }
+    } else {
+      prune(recentHandSpins, now, HUMAN_WINDOW_S);
+    }
+
+    var isBusy = now < busyUntil
+      || recentHandSpins.length > 0
+      || (!usingGravity && recentHumanPeaks.length >= HUMAN_SPIKE_COUNT);
+
+    if (magnitude <= FREEFALL_MAX_G) {
+      if (!freefallSince) freefallSince = now;
+    } else if (freefallSince) {
+      if (now - freefallSince >= FREEFALL_MIN_S) freefallEndedAt = now;
+      freefallSince = 0;
+    }
+
+    var inPostFreefall = false;
+    if (freefallEndedAt) {
+      if (now - freefallEndedAt > FREEFALL_IMPACT_WINDOW_S) {
+        freefallEndedAt = 0;
+      } else {
+        inPostFreefall = true;
+      }
+    }
+
+    if (jerk < MIN_JERK_G_S) return;
+
+    var requiredPeak = isBusy ? OVERRIDE_BUSY_PEAK_G : CRASH_PEAK_G;
+    if (magnitude >= requiredPeak) {
+      arm();
+      return;
+    }
+    if (!isBusy && inPostFreefall && magnitude >= POST_FREEFALL_PEAK_G) {
+      arm();
+    }
+  }
+
+  function onDeviceMotion(e) {
+    var a = e.acceleration;
+    var ag = e.accelerationIncludingGravity;
+    var ax = 0, ay = 0, az = 0;
+    var usingGravity = false;
+    if (a && a.x != null && a.y != null && a.z != null) {
+      ax = a.x; ay = a.y; az = a.z;
+    } else if (ag && ag.x != null && ag.y != null && ag.z != null) {
+      // No user-accel — use including-gravity (impact peaks still dominate).
+      ax = ag.x; ay = ag.y; az = ag.z;
+      usingGravity = true;
+    } else {
+      return;
+    }
+    var rr = e.rotationRate || {};
+    // Spec: degrees/sec. Native CrashMotionGuard uses rad/sec.
+    var sx = rr.alpha || 0, sy = rr.beta || 0, sz = rr.gamma || 0;
+    var spinRad = Math.sqrt(sx * sx + sy * sy + sz * sz) * Math.PI / 180;
+    evaluate(ax, ay, az, spinRad, Date.now() / 1000, usingGravity);
+  }
+
+  function startCrashMonitor() {
+    if (motionListening || typeof window.DeviceMotionEvent === 'undefined') return;
+    window.addEventListener('devicemotion', onDeviceMotion, { passive: true });
+    motionListening = true;
+  }
+
+  function requestMotionThenStart() {
+    if (motionListening) return;
+    var DME = window.DeviceMotionEvent;
+    if (DME && typeof DME.requestPermission === 'function') {
+      DME.requestPermission().then(function (state) {
+        if (state === 'granted') startCrashMonitor();
+      }).catch(function () {});
+    } else {
+      startCrashMonitor();
+    }
+  }
+
+  // iOS requires a user gesture for DeviceMotion permission — first tap anywhere.
+  function onFirstGesture() {
+    document.removeEventListener('touchstart', onFirstGesture, true);
+    document.removeEventListener('click', onFirstGesture, true);
+    requestMotionThenStart();
+  }
+  document.addEventListener('touchstart', onFirstGesture, true);
+  document.addEventListener('click', onFirstGesture, true);
+  // Non-iOS: start without a gesture when the API needs no permission.
+  if (!(window.DeviceMotionEvent && typeof window.DeviceMotionEvent.requestPermission === 'function')) {
+    startCrashMonitor();
+  }
+
+  sosBtn.addEventListener('click', function (e) {
+    e.preventDefault();
+    requestMotionThenStart();
+    if (armed) disarm(); else arm();
+  });
+  if (aidStop) {
+    aidStop.addEventListener('click', function (e) {
+      e.preventDefault();
+      disarm();
+    });
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    if (!armed || !ctx) return;
+    if (document.visibilityState === 'visible' && ctx.state === 'suspended') {
+      ctx.resume();
+    }
+  });
+
+  paint();
 })();
 </script>
 </body>

@@ -66,7 +66,7 @@ struct ContentView: View {
         .onChange(of: isScannerSession) { _, _ in clampScannerTab() }
         .onChange(of: survivalAlarm.isArmed) { _, armed in
             // Crash / SOS → jump to 911 so Call + Stop SOS sit on the GPS page.
-            guard armed, !isScannerSession else { return }
+            guard armed else { return }
             tab = .emergency
             mountedTabs.insert(.emergency)
         }

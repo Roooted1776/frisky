@@ -37,7 +37,7 @@ Native iOS medical ID + emergency aid. Passive **13.56 MHz HF NFC** bracelet (no
 See also `AGENTS.md`. High-signal recap:
 
 1. Owner vs scanner shells are permanent product law.
-2. Settings = **haptic + Location only**. Brightness 100% + system volume 100% + locator siren arm **only** on crash / severe-impact detection (`CrashMotionGuard`) or owner **SOS · Locate me** on Find Help — not from merely opening Find Help or the scanner shell.
+2. Settings = **haptic + Location only**. Brightness 100% + system volume 100% + locator siren arm **only** on crash / severe-impact detection (`CrashMotionGuard`) or **SOS · Locate me** on Find Help (owner + tapper) — not from merely opening Find Help or the scanner shell.
 3. Survival hold may keep siren + max volume + brightness through background until cancel on Aid (or Stop SOS on Find Help).
 4. Vault Face ID: relock on **`.background` only** (not `.inactive` — Face ID sheets).
 5. Privacy cover: opaque, no fade.
@@ -45,7 +45,7 @@ See also `AGENTS.md`. High-signal recap:
 7. Unique `project.pbxproj` IDs (duplicate IDs drop sources).
 8. Passerby SW: cache-first multi-key shell for almost-instant EMT open; clear prior CACHE on activate; bump `redmed-get-vN` in lockstep. Tap-to-view = HTML; no biometric copy in any passerby / policy HTML.
 9. `AppConfig.BraceletRF` owns tap-distance copy (no hardcoded inches).
-10. Crash / high-speed **vehicle impact** detection is **local CoreMotion only** — not Apple Crash Detection, no cloud. Must ignore running, sex/intimate motion, eating, and hand/wrist handling. Brightness + max volume + siren are gated on crash detection **or** explicit owner SOS — never auto on Find Help / scanner open. Passerby HTML never touches brightness or audio.
+10. Crash / high-speed **vehicle impact** detection is **local** — CoreMotion in the native app (owner + in-app scanner), DeviceMotion in passerby `get.html` (same g thresholds). Not Apple Crash Detection, no cloud. Must ignore running, sex/intimate motion, eating, and hand/wrist handling. Brightness + max volume + siren are gated on crash detection **or** explicit SOS (owner + tapper Find Help) — never auto on Find Help / scanner open. Passerby HTML alarm is Web Audio + wake lock (no system volume/brightness APIs).
 
 ## What he has already done (shipped history)
 
@@ -86,7 +86,7 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Local emergency number dial (not hard-coded 911); GPS card; satellite/no-cell path.
 - Aid topics + trauma/hospital panes; CPR `CHHapticEngine` beat/breath.
 - Haptic preference in Help → Settings; CPR card toggle removed (Settings-only).
-- On-device CoreMotion guard arms siren + max system volume + full brightness on **vehicle crash / high-speed impact only** (filters running / daily motion; background hold until cancel). Owner Find Help **SOS · Locate me** arms the same hold. Find Help / scanner do **not** auto-boost brightness/volume or beep on open.
+- On-device CoreMotion guard arms siren + max system volume + full brightness on **vehicle crash / high-speed impact only** (filters running / daily motion; background hold until cancel). Same thresholds on passerby `get.html` via DeviceMotion. Find Help **SOS · Locate me** (owner + tapper) arms the same hold. Find Help / scanner do **not** auto-boost brightness/volume or beep on open.
 - Location toggle in Settings; Find Help GPS respects it; no Find Help location banner chrome.
 
 ### Privacy / HIPAA offline vault
@@ -120,7 +120,7 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 ## Do not reopen without explicit ask
 
 - Re-adding Settings toggles for brightness, locator, or crash survival alarm.
-- Auto-arming brightness or locate-me siren just from opening Find Help / scanner (crash + owner SOS only).
+- Auto-arming brightness or locate-me siren just from opening Find Help / scanner (crash + explicit SOS only).
 - Requiring Face ID / biometrics for passerby tap-to-view (`get.html` / scanner shell).
 - Relocking vault on `.inactive`.
 - Mutating owner `@AppStorage` from scanner UI.

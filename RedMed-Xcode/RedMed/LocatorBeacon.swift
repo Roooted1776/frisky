@@ -1,6 +1,6 @@
 import AVFoundation
 
-/// Survival siren for crash / severe-impact or owner SOS.
+/// Survival siren for crash / severe-impact or Find Help SOS (owner + tapper).
 /// Plays through the silent switch (`.playback`) and keeps sounding in background until cancelled.
 /// System volume is forced to max by `VolumeBoost` for the same survival hold.
 @MainActor
