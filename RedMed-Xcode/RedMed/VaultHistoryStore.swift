@@ -52,6 +52,12 @@ final class VaultHistoryStore: ObservableObject {
         HIPAAOfflineVault.remove(fileName: Self.fileName)
     }
 
+    /// Drop in-RAM events after UI lock — disk blob stays until Face ID reload.
+    func purgeFromMemory() {
+        events = []
+        didLoad = false
+    }
+
     private func ensureLoaded() {
         if !didLoad { reload() }
     }

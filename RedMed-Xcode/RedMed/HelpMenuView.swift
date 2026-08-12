@@ -25,6 +25,15 @@ struct LocalWebView: UIViewRepresentable {
         webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
     }
 
+    /// Policy HTML + stylesheet only — never lateral loads into get.html / other bundle files.
+    private static let allowedFileBasenames: Set<String> = [
+        "PrivacyPolicy.html",
+        "TOS.html",
+        "security.html",
+        "HowItWorks.html",
+        "legal-doc.css"
+    ]
+
     /// Blocks in-webview navigation to untrusted schemes; opens http(s)/tel/mailto/redmed externally.
     final class Coordinator: NSObject, WKNavigationDelegate {
         func webView(
@@ -37,7 +46,12 @@ struct LocalWebView: UIViewRepresentable {
                 return
             }
             if url.isFileURL {
-                decisionHandler(.allow)
+                let name = url.lastPathComponent
+                if LocalWebView.allowedFileBasenames.contains(name) {
+                    decisionHandler(.allow)
+                } else {
+                    decisionHandler(.cancel)
+                }
                 return
             }
             let scheme = (url.scheme ?? "").lowercased()

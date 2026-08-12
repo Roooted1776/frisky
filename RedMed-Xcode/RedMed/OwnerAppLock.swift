@@ -64,7 +64,10 @@ struct OwnerAppLock<Content: View>: View {
         .onChange(of: scenePhase) { _, phase in
             // LAContext / system auth sheets put the scene `.inactive`.
             // Only purge + lock on true background (same rule as VaultHistoryView).
-            if phase == .background, profile.hasSensitiveProfileData || hasEverHadSensitiveData {
+            if phase == .background,
+               profile.hasSensitiveProfileData
+                || hasEverHadSensitiveData
+                || profile.holdsEditingSession {
                 lock(purge: true)
             }
         }

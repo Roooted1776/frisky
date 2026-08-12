@@ -162,6 +162,7 @@ struct VaultHistoryView: View {
         unlocked = false
         authenticating = false
         authFailed = false
+        store.purgeFromMemory()
     }
 
     private func requestUnlock() {
