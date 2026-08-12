@@ -67,7 +67,9 @@ struct ContentView: View {
         .onChange(of: survivalAlarm.isArmed) { _, armed in
             // Crash / SOS → jump to 911 so Call + Stop SOS sit on the GPS page.
             guard armed else { return }
-            tab = .emergency
+            withAnimation(RedMedMotion.snappy) {
+                tab = .emergency
+            }
             mountedTabs.insert(.emergency)
         }
     }
@@ -80,6 +82,7 @@ struct ContentView: View {
         if mountedTabs.contains(tab) {
             content()
                 .opacity(activeTab == tab ? 1 : 0)
+                .animation(RedMedMotion.tabFade, value: activeTab)
                 .allowsHitTesting(activeTab == tab)
                 .accessibilityHidden(activeTab != tab)
         }
@@ -100,11 +103,19 @@ struct CustomTabBar: View {
         VStack(spacing: 0) {
             Divider().overlay(Color.redmedDivider)
             HStack(spacing: -3) {
-                TabBarItem(icon: "person.fill",  label: "RedMed", isOn: tab == .redmed)      { tab = .redmed }
-                TabBarItem(icon: "phone.fill",   label: "911",    isOn: tab == .emergency)  { tab = .emergency }
-                TabBarItem(icon: "cross.case.fill", label: "Aid", isOn: tab == .aid)        { tab = .aid }
+                TabBarItem(icon: "person.fill",  label: "RedMed", isOn: tab == .redmed) {
+                    select(.redmed)
+                }
+                TabBarItem(icon: "phone.fill",   label: "911",    isOn: tab == .emergency) {
+                    select(.emergency)
+                }
+                TabBarItem(icon: "cross.case.fill", label: "Aid", isOn: tab == .aid) {
+                    select(.aid)
+                }
                 if showsNFC {
-                    TabBarItem(icon: "wave.3.right", label: "NFC", isOn: tab == .nfc)        { tab = .nfc }
+                    TabBarItem(icon: "wave.3.right", label: "NFC", isOn: tab == .nfc) {
+                        select(.nfc)
+                    }
                 }
             }
             .padding(.top, 2)
@@ -116,6 +127,17 @@ struct CustomTabBar: View {
                 .padding(.bottom, 4)
         }
         .background(Color.white)
+    }
+
+    private func select(_ next: AppTab) {
+        guard tab != next else {
+            RedMedHaptics.selection()
+            return
+        }
+        RedMedHaptics.selection()
+        withAnimation(RedMedMotion.snappy) {
+            tab = next
+        }
     }
 }
 
@@ -131,12 +153,14 @@ struct TabBarItem: View {
                 Image(systemName: icon)
                     .font(.system(size: 22))
                     .foregroundColor(isOn ? .redmedAccent : Color(red: 0.372, green: 0.388, blue: 0.408))
+                    .symbolEffect(.bounce, value: isOn)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 4)
                     .background(
                         RoundedRectangle(cornerRadius: 14)
                             .fill(isOn ? Color.redmedAccent.opacity(0.10) : Color.clear)
                     )
+                    .scaleEffect(isOn ? 1.04 : 1)
                 Text(label)
                     .font(.system(size: 10, weight: isOn ? .semibold : .medium))
                     .foregroundColor(isOn ? .redmedAccent : Color(red: 0.372, green: 0.388, blue: 0.408))
@@ -144,7 +168,8 @@ struct TabBarItem: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.bottom, 3)
+            .animation(RedMedMotion.snappy, value: isOn)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(RedMedPressStyle(scale: 0.94, haptic: nil))
     }
 }

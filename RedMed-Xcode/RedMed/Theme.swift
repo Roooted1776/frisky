@@ -1,5 +1,33 @@
 import SwiftUI
 
+/// Shared springs / fades for owner + scanner chrome. Keep short — presence, not noise.
+enum RedMedMotion {
+    /// Tab highlight, Aid chevron, SOS chrome.
+    static let snappy = Animation.spring(response: 0.32, dampingFraction: 0.82)
+    /// Pane expand / collapse.
+    static let expand = Animation.spring(response: 0.38, dampingFraction: 0.86)
+    /// Opacity keep-alive tab crossfade.
+    static let tabFade = Animation.easeInOut(duration: 0.18)
+    /// Lock → unlocked / list value swaps.
+    static let soft = Animation.easeInOut(duration: 0.22)
+}
+
+/// Press scale for CTAs and chrome — reactive without fighting scroll.
+struct RedMedPressStyle: ButtonStyle {
+    var scale: CGFloat = 0.97
+    var haptic: (() -> Void)? = { RedMedHaptics.light() }
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? scale : 1)
+            .opacity(configuration.isPressed ? 0.92 : 1)
+            .animation(RedMedMotion.snappy, value: configuration.isPressed)
+            .onChange(of: configuration.isPressed) { _, pressed in
+                if pressed { haptic?() }
+            }
+    }
+}
+
 extension Color {
     static let redmedAccent   = Color(red: 0.882, green: 0.114, blue: 0.282) // #e11d48
     static let redmedBg       = Color(red: 1.000, green: 0.969, blue: 0.969) // #fff7f7
@@ -68,7 +96,10 @@ struct PrimaryButton: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
+        Button {
+            RedMedHaptics.medium()
+            action()
+        } label: {
             Text(title)
                 .font(.system(size: 15, weight: .bold))
                 .foregroundColor(.white)
@@ -81,6 +112,7 @@ struct PrimaryButton: View {
                 .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                 .shadow(color: Color.redmedAccent.opacity(0.28), radius: 7, y: 4)
         }
+        .buttonStyle(RedMedPressStyle(haptic: nil))
     }
 }
 
@@ -96,7 +128,10 @@ struct SecondaryButton: View {
     }
 
     var body: some View {
-        Button(action: action) {
+        Button {
+            RedMedHaptics.light()
+            action()
+        } label: {
             HStack(spacing: 8) {
                 if let icon { Image(systemName: icon).font(.system(size: 14)) }
                 Text(title).font(.system(size: 14, weight: .semibold))
@@ -112,6 +147,7 @@ struct SecondaryButton: View {
             )
             .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
         }
+        .buttonStyle(RedMedPressStyle(haptic: nil))
     }
 }
 
@@ -122,7 +158,10 @@ struct ChromeTextAction: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
+        Button {
+            RedMedHaptics.light()
+            action()
+        } label: {
             Text(title)
                 .font(.system(size: 18, weight: .regular))
                 .foregroundColor(.redmedAccent)
@@ -131,7 +170,7 @@ struct ChromeTextAction: View {
                 .padding(.vertical, 4)
                 .background(Color.redmedBg)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(RedMedPressStyle(scale: 0.96, haptic: nil))
         .tint(.redmedAccent)
     }
 }

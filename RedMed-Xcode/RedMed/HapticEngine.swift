@@ -1,6 +1,45 @@
 import AVFoundation
 import CoreHaptics
 import Foundation
+import UIKit
+
+/// Light UIKit taps shared by tabs / chrome / SOS / Aid. Respects Help → Settings.
+enum RedMedHaptics {
+    private static var enabled: Bool {
+        if UserDefaults.standard.object(forKey: HapticEngine.enabledKey) == nil { return true }
+        return UserDefaults.standard.bool(forKey: HapticEngine.enabledKey)
+    }
+
+    static func selection() {
+        guard enabled else { return }
+        UISelectionFeedbackGenerator().selectionChanged()
+    }
+
+    static func light() {
+        guard enabled else { return }
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+
+    static func medium() {
+        guard enabled else { return }
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+    }
+
+    static func heavy() {
+        guard enabled else { return }
+        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+    }
+
+    static func error() {
+        guard enabled else { return }
+        UINotificationFeedbackGenerator().notificationOccurred(.error)
+    }
+
+    static func success() {
+        guard enabled else { return }
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+    }
+}
 
 /// Owns a `CHHapticEngine` + short CPR metronome clicks for the SwiftUI view hierarchy.
 /// Prepare once when the hosting view appears; play calculated patterns on tap / beat.

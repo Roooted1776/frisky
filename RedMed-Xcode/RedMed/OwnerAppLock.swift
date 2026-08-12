@@ -121,6 +121,7 @@ struct OwnerAppLock<Content: View>: View {
                         .foregroundColor(.redmedAccent)
                 }
                 Button {
+                    RedMedHaptics.medium()
                     acceptThenUnlock()
                 } label: {
                     Group {
@@ -137,6 +138,7 @@ struct OwnerAppLock<Content: View>: View {
                     .background(Color.redmedAccent)
                     .clipShape(Capsule())
                 }
+                .buttonStyle(RedMedPressStyle(haptic: nil))
                 .disabled(isAuthenticating)
                 .padding(.horizontal, 24)
                 Spacer()
@@ -177,6 +179,7 @@ struct OwnerAppLock<Content: View>: View {
                 gate = .locked
             case .notVerified:
                 // Face ID / Touch ID (or passcode) did not match.
+                RedMedHaptics.error()
                 isAuthenticating = false
                 biometryFailed = true
                 gate = .locked
@@ -187,12 +190,16 @@ struct OwnerAppLock<Content: View>: View {
                     guard generation == authGeneration else { return }
                     isAuthenticating = false
                     if loaded {
-                        gate = .unlocked
+                        RedMedHaptics.success()
+                        withAnimation(RedMedMotion.soft) {
+                            gate = .unlocked
+                        }
                         biometryFailed = false
                         profileLoadFailed = false
                     } else {
                         // Corrupt / unreadable Keychain — stay locked; do not open empty Edit.
                         // Not a biometry failure — different copy.
+                        RedMedHaptics.error()
                         gate = .locked
                         biometryFailed = false
                         profileLoadFailed = true

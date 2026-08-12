@@ -50,6 +50,7 @@ struct EmergencyView: View {
                                 SecurePasteboard.copyEphemeral(
                                     "\(loc.coordinate.latitude), \(loc.coordinate.longitude)"
                                 )
+                                RedMedHaptics.light()
                             }
                         } label: {
                             Text(locationEnabled ? "Copy coordinates" : "Location off — enable in Settings")
@@ -60,9 +61,11 @@ struct EmergencyView: View {
                                 .background(Color.redmedDark)
                                 .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                         }
+                        .buttonStyle(RedMedPressStyle(haptic: nil))
                         .disabled(!locationEnabled || locationManager.location == nil)
 
                         Button {
+                            RedMedHaptics.medium()
                             PublicEmergencyAid.dial()
                         } label: {
                             HStack(spacing: 10) {
@@ -76,20 +79,30 @@ struct EmergencyView: View {
                             .background(Color.redmedDark)
                             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                         }
+                        .buttonStyle(RedMedPressStyle(haptic: nil))
 
                         // SOS — owner + tapper. Same survival hold as crash.
                         Button {
                             if survivalAlarm.isArmed {
-                                survivalAlarm.disarm()
+                                RedMedHaptics.medium()
+                                withAnimation(RedMedMotion.snappy) {
+                                    survivalAlarm.disarm()
+                                }
                             } else {
-                                survivalAlarm.armSOS()
+                                RedMedHaptics.heavy()
+                                withAnimation(RedMedMotion.snappy) {
+                                    survivalAlarm.armSOS()
+                                }
                             }
                         } label: {
                             HStack(spacing: 8) {
                                 Image(systemName: survivalAlarm.isArmed
                                       ? "speaker.slash.fill"
                                       : "sos.circle.fill")
+                                    .symbolEffect(.pulse, options: .repeating, isActive: survivalAlarm.isArmed)
+                                    .contentTransition(.symbolEffect(.replace))
                                 Text(survivalAlarm.isArmed ? "Stop SOS alarm" : "SOS · Locate me")
+                                    .contentTransition(.opacity)
                             }
                             .font(.system(size: 13, weight: .bold))
                             .foregroundColor(.white)
@@ -97,7 +110,10 @@ struct EmergencyView: View {
                             .padding(.vertical, 10)
                             .background(survivalAlarm.isArmed ? Color.redmedAccent : Color.redmedDark)
                             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                            .animation(RedMedMotion.snappy, value: survivalAlarm.isArmed)
                         }
+                        .buttonStyle(RedMedPressStyle(haptic: nil))
+                        .accessibilityLabel(survivalAlarm.isArmed ? "Stop SOS alarm" : "SOS Locate me")
 
                         Text(isScannerSession
                              ? "Siren + max volume + full brightness: local once tap — bracelet NFC, crash, or SOS on this device. Everyone and everything stays here. No servers · no online. Stop here or on Aid."
@@ -218,7 +234,13 @@ struct SeizureTimerStrip: View {
             Spacer(minLength: 4)
 
             Button(running ? "Stop" : "Start") {
-                if running { stop(reset: false) } else { start() }
+                if running {
+                    RedMedHaptics.light()
+                    stop(reset: false)
+                } else {
+                    RedMedHaptics.medium()
+                    start()
+                }
             }
             .font(.system(size: 11, weight: .bold))
             .foregroundColor(running ? .redmedDark : .white)
@@ -230,6 +252,8 @@ struct SeizureTimerStrip: View {
                 RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
                     .strokeBorder(Color.redmedDivider, lineWidth: running ? 1 : 0)
             )
+            .animation(RedMedMotion.snappy, value: running)
+            .buttonStyle(RedMedPressStyle(scale: 0.95, haptic: nil))
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
