@@ -71,7 +71,8 @@ final class NFCBandManager: ObservableObject {
     // MARK: - Verify / scan (same HTML shell a stranger gets on band tap)
 
     /// Hardware path: CoreNFC → strip NDEF → open bundled get.html#d= (?src=app, no SOS arm).
-    /// Simulate path: pack live RedMed → same HTML sheet.
+    /// Simulate path: pack live RedMed → same one-page HTML cover (tap card).
+    /// Hardware sessions stay gated by `AppConfig.nfcHardwareEnabled` (files present, disabled).
     func verifyBand(from profile: ProfileData) {
         if AppConfig.nfcHardwareEnabled {
             statusMessage = ""
@@ -85,7 +86,14 @@ final class NFCBandManager: ObservableObject {
             alertMessage = "Couldn't pack or decode the get.html#d= payload from RedMed."
             return
         }
-        presentHTMLCard(payloadOrURL: source)
+        isReading = true
+        statusMessage = "Opening tap card…"
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            guard let self else { return }
+            self.isReading = false
+            self.statusMessage = ""
+            self.presentHTMLCard(payloadOrURL: source)
+        }
     }
 
     func dismissScannedCard() {
