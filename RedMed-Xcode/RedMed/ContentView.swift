@@ -66,10 +66,9 @@ struct ContentView: View {
         .onChange(of: isScannerSession) { _, _ in clampScannerTab() }
         .onChange(of: survivalAlarm.isArmed) { _, armed in
             // Crash / SOS → jump to 911 so Call + Stop SOS sit on the GPS page.
+            // No withAnimation on the root tab tree — that rebuilt RedMed's WKWebView.
             guard armed else { return }
-            withAnimation(RedMedMotion.snappy) {
-                tab = .emergency
-            }
+            tab = .emergency
             mountedTabs.insert(.emergency)
         }
     }
@@ -82,7 +81,8 @@ struct ContentView: View {
         if mountedTabs.contains(tab) {
             content()
                 .opacity(activeTab == tab ? 1 : 0)
-                .animation(RedMedMotion.tabFade, value: activeTab)
+                // Discrete swap — spring/fade on a live WKWebView is visible jank.
+                .transaction { $0.animation = nil }
                 .allowsHitTesting(activeTab == tab)
                 .accessibilityHidden(activeTab != tab)
         }
