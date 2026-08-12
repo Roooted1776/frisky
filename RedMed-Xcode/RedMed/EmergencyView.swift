@@ -15,7 +15,7 @@ struct EmergencyView: View {
         // Fixed cream chrome (no NavigationView / system toolbar fill).
         // Scanner Back overlays like RedMed / Aid. Location nudge is Settings-only.
         VStack(spacing: 0) {
-            ZStack(alignment: .topTrailing) {
+            HStack(alignment: .center, spacing: 12) {
                 // Brand wordmark — same Asset Catalog BrandWordmark (@1x/@2x/@3x) as Aid.
                 Image("BrandWordmark")
                     .resizable()
@@ -23,11 +23,10 @@ struct EmergencyView: View {
                     .frame(height: 42)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityLabel("RedMed")
-                    .padding(.trailing, isScannerSession ? 56 : 0)
+                    .layoutPriority(1)
 
                 if isScannerSession {
                     ScannerBackButton()
-                        .padding(.top, 4)
                 }
             }
             .padding(.horizontal, 16)
@@ -191,13 +190,7 @@ struct EmergencyView: View {
                 locationManager.stop()
             }
         }
-        .onChange(of: isVisible) { _, visible in
-            if visible {
-                if locationEnabled { locationManager.start() }
-            } else {
-                locationManager.stop()
-            }
-        }
+        // Visibility start/stop is owned by `.task(id: isVisible)` above.
         .onDisappear {
             locationManager.stop()
         }

@@ -168,6 +168,26 @@
     min-height: calc(100vh - var(--safe-t) - var(--safe-b));
     min-height: calc(100dvh - var(--safe-t) - var(--safe-b));
   }
+  /* Owner embed: BrandWordmark replaces the Face ID lock line — left, no bubble. */
+  html.app-embed .rm-lock,
+  body.app-embed .rm-lock {
+    margin: 0 0 10px;
+    max-width: none;
+    padding: 0;
+    text-align: left;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  html.app-embed .rm-embed-wordmark,
+  body.app-embed .rm-embed-wordmark {
+    display: block;
+    height: clamp(36px, 8vw, 42px);
+    width: auto;
+    max-width: min(220px, 72vw);
+    object-fit: contain;
+  }
   .rm-lock a {
     color: inherit;
     font-weight: inherit;
@@ -1146,7 +1166,10 @@
     resolveAsset('helpWordmark', ['BrandWordmark.png', 'assets/BrandWordmark.png']);
   }
 
-  resolveLogo();
+  // Bundle / app-embed already has BrandLogo.png — probing doubles decode on cold open.
+  if (!isAppPreview()) {
+    resolveLogo();
+  }
 
   // Aid accordion — one pane open at a time (matches owner AidView).
   (function aidAccordion() {
@@ -1596,7 +1619,16 @@
     try { document.body.classList.add('app-embed'); } catch (e) {}
     var lock = document.querySelector('.rm-lock');
     if (lock) {
-      lock.textContent = 'Face ID for Edit · no cloud. Same card a helper sees on tap.';
+      lock.textContent = '';
+      var img = document.createElement('img');
+      img.className = 'rm-embed-wordmark';
+      img.id = 'rmEmbedWordmark';
+      img.alt = 'RedMed';
+      img.width = 168;
+      img.height = 42;
+      img.src = 'BrandWordmark.png';
+      lock.appendChild(img);
+      resolveAsset('rmEmbedWordmark', ['BrandWordmark.png', 'assets/BrandWordmark.png']);
     }
   })();
 
@@ -1751,12 +1783,24 @@
 <script>
 // Register SW ASAP (not on window.load) so the next bracelet tap is controlled
 // and paints almost instantly from Cache Storage. Payload stays in #d= only —
-// the service worker never stores medical fields.
+// the service worker never stores medical fields. Skip in app-embed (file: WKWebView).
 (function () {
+  function appPreview() {
+    try {
+      if (window.__REDMED_APP_PREVIEW) return true;
+      return new URLSearchParams(location.search || '').get('src') === 'app';
+    } catch (e) { return !!window.__REDMED_APP_PREVIEW; }
+  }
+  if (appPreview()) return;
   if (!('serviceWorker' in navigator)) return;
   navigator.serviceWorker
     .register('sw.js', { scope: './', updateViaCache: 'none' })
-    .then(function (reg) { return reg.update(); })
+    .then(function (reg) {
+      // Defer update check so first paint / decrypt is not fighting network.
+      var run = function () { try { reg.update(); } catch (e) {} };
+      if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 4000 });
+      else setTimeout(run, 2500);
+    })
     .catch(function () {});
 })();
 </script>
@@ -1767,9 +1811,17 @@
 // Crash path ignores sex, masturbation, walking, eating, daily rhythm (same
 // gates as native CrashMotionGuard). Web Audio + wake lock only.
 (function () {
+  function appPreview() {
+    try {
+      if (window.__REDMED_APP_PREVIEW) return true;
+      return new URLSearchParams(location.search || '').get('src') === 'app';
+    } catch (e) { return !!window.__REDMED_APP_PREVIEW; }
+  }
   var sosBtn = document.getElementById('sosBtn');
   var aidStop = document.getElementById('aidStopAlarm');
   if (!sosBtn) return;
+  // Native CrashMotionGuard owns crash + SOS in the app embed.
+  if (appPreview()) return;
 
   // Match CrashMotionThresholds (g, rad/s). DeviceMotion accel is m/s².
   // Ignore walking, sex, masturbation, eating, phone handling, daily rhythm.
@@ -2229,7 +2281,7 @@
   // Real HF NFC band tap brings #d= — arm local SOS on this phone only.
   // No auto-arm for bare /get/ or in-app Preview/Scan (?src=app). No server / no online.
   function hasBandPayload() {
-    return /^#d=/.test(location.hash || '') && !isAppPreview();
+    return /^#d=/.test(location.hash || '') && !appPreview();
   }
   if (hasBandPayload()) {
     arm();

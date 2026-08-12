@@ -16,8 +16,7 @@ struct PasserbyHTMLCardView: View {
     }
 
     var body: some View {
-        // Same chrome as owner Help/Edit / Aid topic Back — accent red text, no fill
-        // (NavigationView bar paints black fill/text).
+        // Same chrome as owner Help/Edit / Aid topic Back — accent red in page-bg bubble.
         VStack(spacing: 0) {
             HStack(alignment: .center, spacing: 12) {
                 ChromeTextAction(title: "Back") { dismiss() }
@@ -27,6 +26,7 @@ struct PasserbyHTMLCardView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .layoutPriority(1)
             }
             .padding(.horizontal, 16)
             .padding(.top, 14)
@@ -63,9 +63,15 @@ struct PasserbyHTMLCardView: View {
         return trimmed
     }
 
-    /// Pack live owner profile into the same `#d=` a band write would use.
+    /// Band write / capacity / NFC Scan — stamps a fresh `updated` time.
     static func payload(from profile: ProfileData) -> String? {
         guard let url = ProfileNFCCodec.buildURLString(profile: profile) else { return nil }
+        return extractPayload(url)
+    }
+
+    /// Owner RedMed tab embed — stable pack; caller must cache across `body` passes.
+    static func previewPayload(from profile: ProfileData) -> String? {
+        guard let url = ProfileNFCCodec.buildPreviewURLString(profile: profile) else { return nil }
         return extractPayload(url)
     }
 }
@@ -82,8 +88,8 @@ struct PasserbyHTMLShell: View {
             encodedPayload: encodedPayload,
             braceletLinked: braceletLinked
         )
-        // Force remount when packed profile or Linked flips.
-        .id("\(encodedPayload.count)-\(encodedPayload.prefix(24))-\(braceletLinked)")
+        // No `.id` remount — `updateUIView` reloads only when loadKey changes.
+        // Ciphertext-based `.id` used to destroy WKWebView on every AES re-seal.
     }
 }
 

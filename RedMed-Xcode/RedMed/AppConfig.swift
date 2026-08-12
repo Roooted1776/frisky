@@ -92,7 +92,7 @@ enum AppConfig {
         }
 
         static var passerbyTapSummary: String {
-            "Tap opens get.html in the phone’s browser — HTML only, no app for helpers"
+            "Tap opens the card in the phone’s browser — HTML only, no app for helpers"
         }
 
         /// How It Works / setup prose for intentional tap vs walk-by.

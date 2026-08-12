@@ -58,18 +58,17 @@ struct AidView: View {
         GeometryReader { geo in
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
-                    ZStack(alignment: .topTrailing) {
+                    HStack(alignment: .center, spacing: 12) {
                         Image("BrandWordmark")
                             .resizable()
                             .scaledToFit()
                             .frame(height: 42)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .accessibilityLabel("RedMed")
-                            .padding(.trailing, isScannerSession ? 56 : 0)
+                            .layoutPriority(1)
 
                         if isScannerSession {
                             ScannerBackButton()
-                                .padding(.top, 4)
                         }
                     }
 
