@@ -68,12 +68,12 @@ struct RedMedView: View {
                                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                                         Text(c.name.isEmpty ? "Emergency contact" : c.name)
                                             .font(.system(size: 11, weight: .semibold))
-                                            .foregroundColor(.redmedDark)
+                                            .foregroundColor(.black)
                                             .frame(maxWidth: .infinity, alignment: .leading)
                                         if !c.phone.isEmpty {
                                             Text(c.phone)
                                                 .font(.system(size: 12, weight: .medium))
-                                                .foregroundColor(.redmedAccent)
+                                                .foregroundColor(.redmedDark)
                                                 .multilineTextAlignment(.trailing)
                                         }
                                     }
@@ -347,7 +347,7 @@ struct RedMedView: View {
                 if !hasImportedName {
                     Text("Name")
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.redmedDark)
+                        .foregroundColor(.redmedMuted)
                     Text(isScannerSession ? "—" : "Add name")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(isScannerSession ? Color.redmedDark.opacity(0.55) : .redmedAccent)
@@ -377,7 +377,7 @@ struct RedMedView: View {
             HStack {
                 Text(label)
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.redmedDark)
+                    .foregroundColor(.redmedMuted)
                 Spacer()
                 if value.isEmpty {
                     Text(isScannerSession ? "—" : emptyPrompt)
