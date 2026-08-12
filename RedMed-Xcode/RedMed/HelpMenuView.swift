@@ -84,7 +84,7 @@ struct LocalWebView: UIViewRepresentable {
 // MARK: - Help menu
 struct HelpMenuView: View {
     @Environment(\.dismiss) var dismiss
-    @AppStorage(HapticEngine.enabledKey) private var hapticsEnabled = true
+    @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
     var onOpenNFC: (() -> Void)? = nil

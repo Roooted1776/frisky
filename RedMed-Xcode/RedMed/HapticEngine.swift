@@ -5,9 +5,13 @@ import UIKit
 
 /// Light UIKit taps shared by tabs / chrome / SOS / Aid. Respects Help → Settings.
 enum RedMedHaptics {
+    /// `@AppStorage` / Help → Settings toggle. Default on when unset.
+    /// Lives here (not on `@MainActor` `HapticEngine`) so nonisolated callers stay clean under Swift 6.
+    static let enabledKey = "redmed.hapticsEnabled"
+
     private static var enabled: Bool {
-        if UserDefaults.standard.object(forKey: HapticEngine.enabledKey) == nil { return true }
-        return UserDefaults.standard.bool(forKey: HapticEngine.enabledKey)
+        if UserDefaults.standard.object(forKey: enabledKey) == nil { return true }
+        return UserDefaults.standard.bool(forKey: enabledKey)
     }
 
     static func selection() {
@@ -47,9 +51,6 @@ enum RedMedHaptics {
 /// without stealing the crash / SOS locator siren session.
 @MainActor
 final class HapticEngine: ObservableObject {
-    /// `@AppStorage` / Help → Settings toggle. Default on when unset.
-    static let enabledKey = "redmed.hapticsEnabled"
-
     private var engine: CHHapticEngine?
     private(set) var isReady = false
     private var audioPlayer: AVAudioPlayer?
@@ -68,8 +69,8 @@ final class HapticEngine: ObservableObject {
 
     /// In-app preference (Help → Settings). iOS System Haptics also suppress playback.
     var isEnabled: Bool {
-        if UserDefaults.standard.object(forKey: Self.enabledKey) == nil { return true }
-        return UserDefaults.standard.bool(forKey: Self.enabledKey)
+        if UserDefaults.standard.object(forKey: RedMedHaptics.enabledKey) == nil { return true }
+        return UserDefaults.standard.bool(forKey: RedMedHaptics.enabledKey)
     }
 
     /// Instantiate and start the engine. Safe to call repeatedly.
