@@ -52,9 +52,12 @@ struct PillTag: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(
-                Capsule()
+                RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
                     .fill(accent ? Color.redmedAccent.opacity(0.1) : Color.white.opacity(0.7))
-                    .overlay(Capsule().stroke(accent ? Color.clear : Color.redmedDivider, lineWidth: 1))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
+                            .stroke(accent ? Color.clear : Color.redmedDivider, lineWidth: 1)
+                    )
             )
     }
 }
@@ -74,7 +77,7 @@ struct PrimaryButton: View {
                     LinearGradient(colors: [Color(red:1, green:0.447, blue:0.537), .redmedAccent],
                                    startPoint: .top, endPoint: .bottom)
                 )
-                .clipShape(Capsule())
+                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                 .shadow(color: Color.redmedAccent.opacity(0.28), radius: 7, y: 4)
         }
     }
@@ -101,8 +104,11 @@ struct SecondaryButton: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .background(Color.white.opacity(0.82))
-            .clipShape(Capsule())
-            .overlay(Capsule().stroke(Color.redmedDivider, lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
+                    .stroke(Color.redmedDivider, lineWidth: 1)
+            )
             .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
         }
     }
@@ -126,8 +132,25 @@ struct ChromeTextAction: View {
 }
 
 /// Inline nav titles (Find Help, NFC, topic). Semibold 17 accent — pairs with ChromeTextAction.
+/// Box radius is shared by owner + scanner cards / CTAs (square-ish, not capsules).
 enum RedMedChrome {
     static let navTitleFont: Font = .system(size: 17, weight: .semibold)
+    static let boxRadius: CGFloat = 8
+    static let chipRadius: CGFloat = 6
+    static let logoRadius: CGFloat = 10
+}
+
+extension View {
+    /// Surface card chrome used on RedMed / 911 / Aid / NFC (owner + scanner).
+    func redmedBox(strokeOpacity: Double = 1) -> some View {
+        self
+            .background(Color.redmedSurface)
+            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
+                    .stroke(Color.redmedDivider.opacity(strokeOpacity), lineWidth: 1)
+            )
+    }
 }
 
 /// Wraps subviews onto new lines; each child keeps its intrinsic width

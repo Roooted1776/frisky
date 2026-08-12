@@ -96,7 +96,7 @@ struct TopicDetailView: View {
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
                                     .background(Color.redmedDark)
-                                    .clipShape(Capsule())
+                                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                             } else {
                                 PrimaryButton(title: "Start beat") { startCPR() }
                             }
@@ -104,7 +104,11 @@ struct TopicDetailView: View {
                         .padding(20)
                         .frame(maxWidth: .infinity)
                         .background(Color.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
+                                .stroke(Color.redmedDivider, lineWidth: 1)
+                        )
                         .padding(.bottom, 22)
                     }
 
@@ -132,7 +136,11 @@ struct TopicDetailView: View {
                         }
                     }
                     .background(Color.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
+                            .stroke(Color.redmedDivider, lineWidth: 1)
+                    )
                     .padding(.bottom, 22)
 
                     // WHAT TO DO
@@ -164,7 +172,11 @@ struct TopicDetailView: View {
                         }
                     }
                     .background(Color.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
+                            .stroke(Color.redmedDivider, lineWidth: 1)
+                    )
                     .padding(.bottom, 24)
 
                     if isTraumaHospitals {
@@ -187,24 +199,16 @@ struct TopicDetailView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.redmedBg, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
+            .tint(.redmedAccent)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 17, weight: .semibold))
-                            Text("Aid")
-                                .font(.system(size: 18, weight: .regular))
-                                .kerning(-0.2)
-                        }
-                        .foregroundColor(.redmedAccent)
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 2)
+                    // Same chrome as owner Edit / scanner Back: accent red text,
+                    // opaque page-bg fill (kills system bar-button gray capsule).
+                    ChromeTextAction(title: "Back") { dismiss() }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
                         .background(Color.redmedBg)
-                    }
-                    .buttonStyle(.plain)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
                 ToolbarItem(placement: .principal) {
                     Text(topic.title)
@@ -262,7 +266,7 @@ private struct LiveNearbyHospitalsSection: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(Color.redmedDark)
-                    .clipShape(Capsule())
+                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
             } else {
                 VStack(spacing: 0) {
                     ForEach(Array(hospitalFinder.hospitals.enumerated()), id: \.element.id) { i, hosp in
@@ -296,7 +300,11 @@ private struct LiveNearbyHospitalsSection: View {
                     }
                 }
                 .background(Color.white)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                .overlay(
+                    RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
+                        .stroke(Color.redmedDivider, lineWidth: 1)
+                )
             }
         }
         .task {

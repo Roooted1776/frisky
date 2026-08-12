@@ -32,9 +32,7 @@ struct VaultHistoryView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             HIPAAOfflineVault.prepare()
-            if !unlocked && !authenticating {
-                requestUnlock()
-            }
+            // No auto Face ID — same rule as OwnerAppLock: biometrics only after an explicit tap.
         }
         .onChange(of: scenePhase) { _, phase in
             // LAContext auth sheets put the scene in `.inactive`.
@@ -68,7 +66,7 @@ struct VaultHistoryView: View {
             Text("Local History is locked")
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(.redmedDark)
-            Text("History stays in the on-device vault (complete file protection, excluded from iCloud backup). Unlock with Face ID, Touch ID, or passcode.")
+            Text("Tap Accept, then confirm with Face ID, Touch ID, or passcode. History stays in the on-device vault (complete file protection, excluded from iCloud backup).")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.redmedMuted)
                 .multilineTextAlignment(.center)
@@ -82,7 +80,7 @@ struct VaultHistoryView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                 } else {
-                    Text("Unlock with Face ID")
+                    Text("Accept")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -172,14 +170,14 @@ struct VaultHistoryView: View {
         let generation = authGeneration
         BiometricAuth.authenticate(
             reason: "Unlock local history stored in the on-device vault."
-        ) { success in
+        ) { outcome in
             guard generation == authGeneration else { return }
             authenticating = false
-            if success {
+            if outcome == .success {
                 store.reload()
                 unlocked = true
                 authFailed = false
-            } else {
+            } else if outcome == .notVerified {
                 authFailed = true
             }
         }

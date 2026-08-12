@@ -22,7 +22,10 @@ struct OwnerAppLock<Content: View>: View {
 
     @State private var gate: Gate = .painting
     @State private var isAuthenticating = false
-    @State private var failed = false
+    /// True only after Face ID / Touch ID (or passcode) mismatch — never on cancel
+    /// or cold launch, and never for Keychain decode failure.
+    @State private var biometryFailed = false
+    @State private var profileLoadFailed = false
     @State private var hasEverHadSensitiveData = false
     /// Bumps on lock so a late Face ID success cannot unlock after background.
     @State private var authGeneration = 0
@@ -46,6 +49,9 @@ struct OwnerAppLock<Content: View>: View {
             }.value
             hasEverHadSensitiveData = hasProfile
             if hasProfile {
+                // Fresh lock UI every cold load — no stale “couldn't verify” banner.
+                biometryFailed = false
+                profileLoadFailed = false
                 gate = .locked
             } else {
                 gate = .unlocked
@@ -105,14 +111,18 @@ struct OwnerAppLock<Content: View>: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 28)
                 }
-                if failed {
+                if biometryFailed {
                     Text("Couldn't verify it's you. Try again.")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.redmedAccent)
+                } else if profileLoadFailed {
+                    Text("Couldn't load your profile. Try again.")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.redmedAccent)
                 }
                 Spacer()
                 Button {
-                    unlock()
+                    acceptThenUnlock()
                 } label: {
                     Group {
                         if isAuthenticating {
@@ -133,48 +143,61 @@ struct OwnerAppLock<Content: View>: View {
                 .padding(.bottom, 28)
             }
         }
-        // Face ID only after Accept — never auto-prompt on appear (cold launch felt stuck).
+        // Biometrics never run until Accept — no onAppear / scenePhase auto-prompt.
     }
 
     private func lock(purge: Bool) {
         authGeneration &+= 1
         gate = .locked
         isAuthenticating = false
-        failed = false
+        biometryFailed = false
+        profileLoadFailed = false
         if purge {
             profile.purgeFromMemory()
         }
         SecurePasteboard.clear()
     }
 
-    private func unlock() {
-        guard !isAuthenticating else { return }
+    /// Accept is the only entry into LocalAuthentication for app unlock.
+    private func acceptThenUnlock() {
+        guard gate == .locked, !isAuthenticating else { return }
         isAuthenticating = true
-        failed = false
+        biometryFailed = false
+        profileLoadFailed = false
         authGeneration &+= 1
         let generation = authGeneration
         BiometricAuth.authenticate(
             reason: "Confirm with Face ID, Touch ID, or passcode after Accept to unlock your RedMed profile."
-        ) { success in
+        ) { outcome in
             guard generation == authGeneration else { return }
-            if !success {
+            switch outcome {
+            case .declined:
+                // Cancel / dismiss — stay locked, no “couldn't verify” banner.
                 isAuthenticating = false
-                failed = true
+                biometryFailed = false
                 gate = .locked
-                return
-            }
-            // Decode off the main thread — unlock UI stays on cream lock until apply.
-            Task {
-                let loaded = await profile.reloadFromKeychainAsync()
-                guard generation == authGeneration else { return }
+            case .notVerified:
+                // Face ID / Touch ID (or passcode) did not match.
                 isAuthenticating = false
-                if loaded {
-                    gate = .unlocked
-                    failed = false
-                } else {
-                    // Corrupt / unreadable Keychain — stay locked; do not open empty Edit.
-                    gate = .locked
-                    failed = true
+                biometryFailed = true
+                gate = .locked
+            case .success:
+                // Decode off the main thread — unlock UI stays on cream lock until apply.
+                Task {
+                    let loaded = await profile.reloadFromKeychainAsync()
+                    guard generation == authGeneration else { return }
+                    isAuthenticating = false
+                    if loaded {
+                        gate = .unlocked
+                        biometryFailed = false
+                        profileLoadFailed = false
+                    } else {
+                        // Corrupt / unreadable Keychain — stay locked; do not open empty Edit.
+                        // Not a biometry failure — different copy.
+                        gate = .locked
+                        biometryFailed = false
+                        profileLoadFailed = true
+                    }
                 }
             }
         }

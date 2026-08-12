@@ -4,7 +4,6 @@ struct AidPane: Identifiable {
     let id: String
     let emoji: String
     let title: String
-    let subtitle: String
     let iconFilled: Bool
     let topics: [(label: String, key: String)]
 }
@@ -12,23 +11,23 @@ struct AidPane: Identifiable {
 /// Pane chrome only — topic bodies stay in AidTopicCatalog until a topic opens.
 enum AidPaneCatalog {
     static let panes: [AidPane] = [
-        AidPane(id: "crash", emoji: "🚗", title: "Crash & Head", subtitle: "Impact · neck · spinal", iconFilled: false,
+        AidPane(id: "crash", emoji: "🚗", title: "Crash & Head", iconFilled: false,
                 topics: [("Car Crash", "car-crash"), ("Head & Pupils", "head-pupils"), ("Spinal", "spinal")]),
-        AidPane(id: "bleed", emoji: "🩸", title: "Bleeding", subtitle: "Pressure · tourniquet", iconFilled: true,
+        AidPane(id: "bleed", emoji: "🩸", title: "Bleeding", iconFilled: true,
                 topics: [("Find Bleeding", "find-bleeding"), ("Bad Bleeding", "bad-bleeding"),
                          ("Belt Tourniquet", "belt-tourniquet"), ("Gunshot / Stab", "gunshot-stab")]),
-        AidPane(id: "breathing", emoji: "🫁", title: "Not Breathing", subtitle: "CPR · airway", iconFilled: true,
+        AidPane(id: "breathing", emoji: "🫁", title: "Not Breathing", iconFilled: true,
                 topics: [("CPR", "cpr")]),
-        AidPane(id: "heart", emoji: "❤️", title: "Choking", subtitle: "Back blows · Heimlich", iconFilled: true,
+        AidPane(id: "heart", emoji: "❤️", title: "Choking", iconFilled: true,
                 topics: [("Choking", "choking")]),
-        AidPane(id: "shock", emoji: "⚡", title: "Shock", subtitle: "Pale · cold · clammy", iconFilled: false,
+        AidPane(id: "shock", emoji: "⚡", title: "Shock", iconFilled: false,
                 topics: [("Shock", "shock")]),
-        AidPane(id: "temp", emoji: "🌡️", title: "Burns · Cold · Heat", subtitle: "Cool · warm · cover", iconFilled: false,
+        AidPane(id: "temp", emoji: "🌡️", title: "Burns · Cold · Heat", iconFilled: false,
                 topics: [("Burn Care", "burn-care"), ("Electrical & Chemical", "electrical-chemical-burns"),
                          ("Cold (Hypothermia)", "cold-hypothermia"), ("Heat (Exhaustion & Stroke)", "heat-stroke")]),
-        AidPane(id: "seizure", emoji: "🧠", title: "Seizure", subtitle: "Don't restrain · time it", iconFilled: false,
+        AidPane(id: "seizure", emoji: "🧠", title: "Seizure", iconFilled: false,
                 topics: [("Seizure", "seizure")]),
-        AidPane(id: "hospitals", emoji: "🏥", title: "Nearby Hospitals", subtitle: "MapKit emergency POIs", iconFilled: false,
+        AidPane(id: "hospitals", emoji: "🏥", title: "Nearby Hospitals", iconFilled: false,
                 topics: [("Find Nearby Hospitals", "trauma-hospitals")]),
     ]
 
@@ -53,15 +52,12 @@ struct AidView: View {
     @State private var openPane: String? = nil
     @State private var activeTopic: AidTopic? = nil
 
-    let columns = [GridItem(.flexible()), GridItem(.flexible())]
-
     var body: some View {
-        // No NavigationView chrome — empty nav bar was parking BrandWordmark too low.
-        // Scanner Back mirrors RedMedView (overlay), not a trailing toolbar item.
+        // Full-width accordion — life-saving: big targets, text always fits, no
+        // 2-col reflow when a pane opens. Same pattern as passerby get.html Aid.
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 12) {
+            LazyVStack(alignment: .leading, spacing: 10) {
                 ZStack(alignment: .topTrailing) {
-                    // Brand wordmark in place of the old "Roadside Aid" hero title
                     Image("BrandWordmark")
                         .resizable()
                         .scaledToFit()
@@ -76,46 +72,32 @@ struct AidView: View {
                     }
                 }
 
-                Text("expand pane - tap a pane")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.redmedMuted)
-
-                HStack(spacing: 8) {
-                    PillTag(text: "expand pane - tap a pane", accent: true)
-                }
-                .padding(.bottom, 2)
-
-                // Panes + cancel + quote share one stack so LazyVStack spacing
-                // does not pad the 5pt gap under the lowest pane.
-                VStack(alignment: .leading, spacing: 0) {
-                    LazyVGrid(columns: columns, spacing: 14) {
-                        ForEach(AidPaneCatalog.panes) { pane in
-                            let isOpen = openPane == pane.id
-                            PaneCard(pane: pane, isOpen: isOpen) { key in
-                                if key == nil {
-                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                                        openPane = isOpen ? nil : pane.id
-                                    }
-                                } else if let k = key, let topic = AidTopicCatalog.topics[k] {
-                                    activeTopic = topic
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(AidPaneCatalog.panes) { pane in
+                        let isOpen = openPane == pane.id
+                        PaneCard(pane: pane, isOpen: isOpen) { key in
+                            if key == nil {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    openPane = isOpen ? nil : pane.id
                                 }
+                            } else if let k = key, let topic = AidTopicCatalog.topics[k] {
+                                activeTopic = topic
                             }
-                            .gridCellColumns(isOpen ? 2 : 1)
                         }
                     }
 
-                    // 5pt under lowest pane; not a grid cell (pane dropdown undisturbed).
                     CrashSurvivalCancelCard()
 
                     Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.redmedDark)
                         .multilineTextAlignment(.center)
                         .lineSpacing(4)
                         .frame(maxWidth: .infinity)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 20)
-                        .padding(.bottom, 8)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                        .redmedBox()
+                        .padding(.top, 8)
                 }
             }
             .padding(.horizontal, 16)
@@ -145,70 +127,78 @@ struct PaneCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Button { onTap(nil) } label: {
-                HStack(alignment: .top, spacing: 8) {
+                HStack(alignment: .center, spacing: 12) {
                     Text(pane.emoji)
-                        .font(.system(size: 20))
-                        .frame(width: 38, height: 38)
+                        .font(.system(size: 22))
+                        .frame(width: 44, height: 44)
                         .background(isOpen ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
-                        .clipShape(RoundedRectangle(cornerRadius: 11))
+                        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+                        .accessibilityHidden(true)
 
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(pane.title)
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(.redmedAccent)
-                            .lineLimit(2)
-                        if !isOpen {
-                            Text(pane.subtitle)
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundColor(.redmedMuted)
-                                .lineLimit(1)
-                        }
-                    }
-                    Spacer()
-                    Image(systemName: isOpen ? "chevron.down" : "chevron.right")
-                        .font(.system(size: 11, weight: .semibold))
+                    // Title + emoji only — no muted subtitle (shorter field chrome).
+                    Text(pane.title)
+                        .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.redmedAccent)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Image(systemName: isOpen ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.redmedAccent)
+                        .frame(width: 28, height: 28)
                 }
-                .padding(13)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .frame(minHeight: 96, alignment: .top)
+            .accessibilityLabel(pane.title)
+            .accessibilityHint(isOpen ? "Collapse" : "Expand topics")
 
             if isOpen {
-                VStack(spacing: 7) {
+                VStack(spacing: 8) {
                     ForEach(pane.topics, id: \.key) { topic in
                         Button { onTap(topic.key) } label: {
-                            HStack {
+                            HStack(spacing: 10) {
                                 Text(topic.label)
-                                    .font(.system(size: 14, weight: .semibold))
+                                    .font(.system(size: 16, weight: .semibold))
                                     .foregroundColor(.redmedDark)
-                                Spacer()
+                                    .multilineTextAlignment(.leading)
+                                    .lineLimit(2)
+                                    .minimumScaleFactor(0.9)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                                 Image(systemName: "chevron.right")
-                                    .font(.system(size: 11))
+                                    .font(.system(size: 13, weight: .semibold))
                                     .foregroundColor(.redmedMuted)
                             }
-                            .padding(.horizontal, 12).padding(.vertical, 10)
-                            .background(Color.white.opacity(0.8))
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.redmedDivider, lineWidth: 1))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 14)
+                            .background(Color.white.opacity(0.9))
+                            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
+                                    .stroke(Color.redmedDivider, lineWidth: 1)
+                            )
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel(topic.label)
                     }
                 }
                 .padding(.horizontal, 10)
-                .padding(.bottom, 14)
+                .padding(.bottom, 12)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.redmedSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
                 .stroke(
-                    isOpen ? Color.redmedAccent.opacity(0.28) : Color.redmedDark.opacity(0.08),
+                    isOpen ? Color.redmedAccent.opacity(0.35) : Color.redmedDivider,
                     lineWidth: 1
                 )
         )
-        .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
     }
 }
