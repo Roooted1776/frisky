@@ -99,7 +99,7 @@ struct EmergencyView: View {
                             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                         }
 
-                        Text("Siren + max volume + full brightness only on crash / severe impact or SOS. Stop here or on Aid.")
+                        Text("Siren + max volume + full brightness only on crash / severe impact or SOS. Local only — no servers · no online. Stop here or on Aid.")
                             .font(.system(size: 10, weight: .medium))
                             .foregroundColor(.redmedMuted)
                             .multilineTextAlignment(.center)

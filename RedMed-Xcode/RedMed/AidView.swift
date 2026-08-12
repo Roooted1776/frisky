@@ -98,6 +98,13 @@ struct AidView: View {
                         .padding(.horizontal, 24)
                         .padding(.top, 14)
                         .padding(.bottom, 2)
+
+                    Text(AppConfig.Satellite.localOnlyLine)
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundColor(.redmedMuted)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 8)
                 }
             }
             .padding(.horizontal, 16)
