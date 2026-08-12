@@ -1870,8 +1870,9 @@
   // No auto-arm for bare /get/ or in-app Preview/Scan (?src=app). No server / no online.
   function isAppPreview() {
     try {
+      if (window.__REDMED_APP_PREVIEW) return true;
       return new URLSearchParams(location.search || '').get('src') === 'app';
-    } catch (e) { return false; }
+    } catch (e) { return !!window.__REDMED_APP_PREVIEW; }
   }
   function hasBandPayload() {
     return /^#d=/.test(location.hash || '') && !isAppPreview();

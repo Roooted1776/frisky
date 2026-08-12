@@ -80,22 +80,40 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
               var html = try? String(contentsOf: fileURL, encoding: .utf8),
               let lit = Self.jsStringLiteral(encodedPayload) else { return }
         context.coordinator.didLoad = true
-        // Inject before any get.html script so decrypt sees #d= and SOS sees ?src=app.
-        let boot = "<script>try{history.replaceState(null,'','?src=app#d='+\(lit));}catch(e){}</script>\n"
+        // Inject before any get.html script so decrypt sees #d= and SOS sees app preview.
+        // Flag + hash fallback: loadHTMLString can leave location as about:blank where
+        // replaceState alone would leave decrypt empty and wrongly auto-arm SOS.
+        let boot = """
+        <script>
+        window.__REDMED_APP_PREVIEW=1;
+        (function(){
+          var d=\(lit);
+          try{
+            var base=(location.pathname&&location.pathname!=='blank'&&location.pathname!=='/')
+              ?location.pathname:'get.html';
+            history.replaceState(null,'',base+'?src=app#d='+d);
+          }catch(e){}
+          try{ if(!/^#d=/.test(location.hash||'')) location.hash='d='+d; }catch(e2){}
+        })();
+        </script>
+
+        """
         if let range = html.range(of: "<head>") {
             html.replaceSubrange(range, with: "<head>\n" + boot)
         } else {
             html = boot + html
         }
-        let dir = fileURL.deletingLastPathComponent()
-        webView.loadHTMLString(html, baseURL: dir)
+        // baseURL = the get.html file so relative BrandLogo / sw.js resolve like a real open.
+        webView.loadHTMLString(html, baseURL: fileURL)
     }
 
+    /// JSON string literal for safe JS concatenation (bare String is not a valid
+    /// `JSONSerialization` top-level object — wrap in an array, then strip `[` `]`).
     private static func jsStringLiteral(_ value: String) -> String? {
-        guard JSONSerialization.isValidJSONObject([value]),
-              let data = try? JSONSerialization.data(withJSONObject: value, options: []),
-              let lit = String(data: data, encoding: .utf8) else { return nil }
-        return lit
+        guard let data = try? JSONSerialization.data(withJSONObject: [value]),
+              let wrapped = String(data: data, encoding: .utf8),
+              wrapped.count >= 2 else { return nil }
+        return String(wrapped.dropFirst().dropLast())
     }
 
     final class Coordinator: NSObject, WKNavigationDelegate {
@@ -122,6 +140,19 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
             default:
                 decisionHandler(.cancel)
             }
+        }
+
+        func webView(
+            _ webView: WKWebView,
+            createWebViewWith configuration: WKWebViewConfiguration,
+            for navigationAction: WKNavigationAction,
+            windowFeatures: WKWindowFeatures
+        ) -> WKWebView? {
+            // Deny target=_blank / window.open — same posture as LocalWebView.
+            if let url = navigationAction.request.url, !url.isFileURL {
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+            }
+            return nil
         }
     }
 }
