@@ -16,8 +16,8 @@ struct PasserbyHTMLCardView: View {
     }
 
     var body: some View {
-        // Same chrome as owner Edit / Aid topic Back — accent red text, no system
-        // toolbar fill (NavigationView bar paints black fill/text).
+        // Same chrome as owner Help/Edit / Aid topic Back — accent red text, no fill
+        // (NavigationView bar paints black fill/text).
         VStack(spacing: 0) {
             HStack(alignment: .center, spacing: 12) {
                 ChromeTextAction(title: "Back") { dismiss() }
