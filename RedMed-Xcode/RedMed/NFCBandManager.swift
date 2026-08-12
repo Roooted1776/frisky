@@ -7,7 +7,7 @@ import SwiftUI
 /// ```
 /// [Silicone NFC Band] ──(Tap)──> [iPhone Antenna]
 ///        ──> [CoreNFC] ──> strip NDEF URI ──> [CryptoKit AES-GCM]
-///        ──> [get.html#d= HTML shell]
+///        ──> [tap card HTML shell]
 /// ```
 ///
 /// Owns hardware write/read sessions (`NFCWriter` / `NFCReader`), NDEF URI
@@ -70,7 +70,7 @@ final class NFCBandManager: ObservableObject {
 
     // MARK: - Verify / scan (same HTML shell a stranger gets on band tap)
 
-    /// Hardware path: CoreNFC → strip NDEF → open bundled get.html#d= (?src=app, no SOS arm).
+    /// Hardware path: CoreNFC → strip NDEF → open bundled tap card (?src=app, no SOS arm).
     /// Simulate path: pack live RedMed → same one-page HTML cover (tap card).
     /// Hardware sessions stay gated by `AppConfig.nfcHardwareEnabled` (files present, disabled).
     func verifyBand(from profile: ProfileData) {
