@@ -89,7 +89,7 @@ struct RedMedView: View {
                     }
 
                     if !isScannerSession {
-                        // QUICK ACTIONS (owner only) — full app: Bracelet / How it works / Preview scanner
+                        // QUICK ACTIONS (owner only) — Bracelet / Help / Preview
                         HStack(spacing: 10) {
                             Button { tab = .nfc } label: {
                                 HStack(spacing: 6) {
@@ -116,7 +116,7 @@ struct RedMedView: View {
                                     Image(systemName: "questionmark.circle")
                                         .font(.system(size: 15, weight: .regular))
                                         .foregroundColor(.redmedMuted)
-                                    Text("How it works")
+                                    Text("Help")
                                         .font(.system(size: 12, weight: .semibold))
                                         .foregroundColor(.redmedMuted)
                                 }
@@ -176,7 +176,6 @@ struct RedMedView: View {
             set: { showHelp = $0 && !isScannerSession }
         )) {
             HelpMenuView(onOpenNFC: { tab = .nfc })
-                .environmentObject(profile)
         }
         .fullScreenCover(isPresented: Binding(
             get: { showScannerPreview && !isScannerSession && profile.hasData },

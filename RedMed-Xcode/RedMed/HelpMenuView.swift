@@ -30,6 +30,7 @@ struct LocalWebView: UIViewRepresentable {
         "PrivacyPolicy.html",
         "TOS.html",
         "security.html",
+        // Redirect-only → redmed://main (linked from policy footers).
         "HowItWorks.html",
         "legal-doc.css"
     ]
@@ -82,7 +83,6 @@ struct LocalWebView: UIViewRepresentable {
 
 // MARK: - Help menu
 struct HelpMenuView: View {
-    @EnvironmentObject var profile: ProfileData
     @Environment(\.dismiss) var dismiss
     @AppStorage(HapticEngine.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
@@ -121,10 +121,6 @@ struct HelpMenuView: View {
                 } footer: {
                     Text("Only haptic and location are adjustable. Siren, max volume, and full brightness arm on crash / severe impact or SOS — not from opening Find Help.")
                 }
-                NavigationLink("How It Works") {
-                    // Owner info lives in Main.swift — not HowItWorks.html
-                    MainInfoView(onOpenNFC: onOpenNFC)
-                }
                 NavigationLink("Privacy Policy") {
                     LocalWebView(filename: "PrivacyPolicy")
                         .navigationTitle("Privacy Policy")
@@ -140,19 +136,8 @@ struct HelpMenuView: View {
                         .navigationTitle("Security")
                         .navigationBarTitleDisplayMode(.inline)
                 }
-                // Owner-only vault dashboard — Face ID gated inside the view.
-                NavigationLink("Local History") {
-                    VaultHistoryView()
-                }
-                if profile.braceletLinked {
-                    NavigationLink("NFC tap card (local)") {
-                        LocalWebView(filename: "get")
-                            .navigationTitle("NFC tap card")
-                            .navigationBarTitleDisplayMode(.inline)
-                    }
-                }
             }
-            .navigationTitle("Policies")
+            .navigationTitle("Help")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
