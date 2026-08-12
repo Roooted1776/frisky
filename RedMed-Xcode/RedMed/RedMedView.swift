@@ -433,7 +433,7 @@ struct RedMedView: View {
     func listDropdown(title: String, items: [String], emptyPrompt: String, open: Binding<Bool>) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Button {
-                withAnimation(.easeInOut(duration: 0.2)) { open.wrappedValue.toggle() }
+                withAnimation(RedMedMotion.expand) { open.wrappedValue.toggle() }
             } label: {
                 HStack(alignment: .center, spacing: 10) {
                     Text(title)
