@@ -1,9 +1,9 @@
 import SwiftUI
 import WebKit
 
-/// Owner RedMed tab / Preview / NFC Scan — same bundled `get.html#d=` shell a
+/// Owner RedMed tab / Preview / NFC Scan — same bundled `tapper.html#d=` shell a
 /// stranger gets on band tap. Loads with `?src=app` so SOS does **not** auto-arm
-/// (real bracelet opens hosted `/get/#d=…` without that flag).
+/// (real bracelet opens hosted `/tapper/#d=…` without that flag).
 struct PasserbyHTMLCardView: View {
     @Environment(\.dismiss) private var dismiss
     /// Raw `#d=` payload (no prefix), or full band URL containing `#d=`.
@@ -39,7 +39,7 @@ struct PasserbyHTMLCardView: View {
                         braceletLinked: braceletLinked
                     )
                 } else {
-                    Text("Couldn't pack get.html#d= from RedMed.")
+                    Text("Couldn't pack tapper.html#d= from RedMed.")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
@@ -78,7 +78,7 @@ struct PasserbyHTMLCardView: View {
 
 // MARK: - Embedded shell (owner RedMed tab — no Back chrome)
 
-/// Bundled get.html medical panel only (HTML tab bar hidden via `app-embed`).
+/// Bundled tapper.html medical panel only (HTML tab bar hidden via `app-embed`).
 struct PasserbyHTMLShell: View {
     let encodedPayload: String
     var braceletLinked: Bool = false
@@ -99,7 +99,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
     let encodedPayload: String
     var braceletLinked: Bool = false
 
-    /// Disk read once per process — remounts must not re-slurp get.html on main.
+    /// Disk read once per process — remounts must not re-slurp tapper.html on main.
     private static var cachedShellHTML: String?
     private static var cachedShellFileURL: URL?
 
@@ -134,7 +134,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
               var html = Self.shellHTML(),
               let lit = Self.jsStringLiteral(encodedPayload) else { return }
         context.coordinator.loadedKey = loadKey
-        // Inject before any get.html script so decrypt sees #d= and SOS sees app preview.
+        // Inject before any tapper.html script so decrypt sees #d= and SOS sees app preview.
         // Flag + hash fallback: loadHTMLString can leave location as about:blank where
         // replaceState alone would leave decrypt empty and wrongly auto-arm SOS.
         // `html.app-embed` lands before first paint — body class alone waits on the big IIFE.
@@ -148,7 +148,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
           var d=\(lit);
           try{
             var base=(location.pathname&&location.pathname!=='blank'&&location.pathname!=='/')
-              ?location.pathname:'get.html';
+              ?location.pathname:'tapper.html';
             history.replaceState(null,'',base+'?src=app#d='+d);
           }catch(e){}
           try{ if(!/^#d=/.test(location.hash||'')) location.hash='d='+d; }catch(e2){}
@@ -161,13 +161,13 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         } else {
             html = boot + html
         }
-        // baseURL = the get.html file so relative BrandLogo / sw.js resolve like a real open.
+        // baseURL = the tapper.html file so relative BrandLogo / sw.js resolve like a real open.
         webView.loadHTMLString(html, baseURL: fileURL)
     }
 
     private static func shellFileURL() -> URL? {
         if let cachedShellFileURL { return cachedShellFileURL }
-        let url = Bundle.main.url(forResource: "get", withExtension: "html")
+        let url = Bundle.main.url(forResource: "tapper", withExtension: "html")
         cachedShellFileURL = url
         return url
     }

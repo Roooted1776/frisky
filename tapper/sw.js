@@ -1,18 +1,18 @@
 /* RedMed passerby layout cache — zero servers, zero profile DB.
  *
- * Served under /get/ (see get/index.html). After a responder opens the card
+ * Served under /tapper/ (see tapper/index.html). After a responder opens the card
  * once online, these static assets stay in Cache Storage. A later bracelet
  * tap (EMT / helper, no app) must paint almost instantly from cache — even
  * with no signal. Medical fields live only in the URL #d= fragment (never
  * cached here — fragments are not part of the HTTP request).
  *
- * Shell strategy: cache-first with multi-key fallback (/get/ ↔ index.html);
+ * Shell strategy: cache-first with multi-key fallback (/tapper/ ↔ index.html);
  * never wait on network when any shell copy exists. Background networkReload
  * refreshes the bucket. Activate deletes prior CACHE names so deploys clear
  * stale decrypt/layout. Bump CACHE in lockstep with root + bundled sw.js on
  * every decrypt/layout deploy.
  */
-var CACHE = 'redmed-get-v66';
+var CACHE = 'redmed-tapper-v66';
 var ASSETS = [
   './',
   './index.html',
@@ -28,9 +28,9 @@ var REQUIRED_SHELLS = ['./index.html', './'];
 var SHELL_KEYS = [
   './',
   './index.html',
-  '/get/',
-  '/get/index.html',
-  '/get'
+  '/tapper/',
+  '/tapper/index.html',
+  '/tapper'
 ];
 
 function networkReload(reqOrUrl) {
@@ -69,7 +69,7 @@ function precache(cache) {
   });
 }
 
-/** Store under the request URL plus canonical shell keys so /get/ always hits. */
+/** Store under the request URL plus canonical shell keys so /tapper/ always hits. */
 function putShell(cache, reqOrUrl, res) {
   if (!res || !res.ok || (res.type !== 'basic' && res.type !== 'cors')) return Promise.resolve();
   var writes = [cache.put(reqOrUrl, res.clone())];
@@ -111,10 +111,10 @@ function isShellRequest(req) {
     if (url.origin !== self.location.origin) return false;
     var path = url.pathname;
     return (
-      path === '/get' ||
-      path === '/get/' ||
-      path.endsWith('/get/index.html') ||
-      path.endsWith('/get/sw.js') ||
+      path === '/tapper' ||
+      path === '/tapper/' ||
+      path.endsWith('/tapper/index.html') ||
+      path.endsWith('/tapper/sw.js') ||
       path.endsWith('/card.html')
     );
   } catch (e) {
