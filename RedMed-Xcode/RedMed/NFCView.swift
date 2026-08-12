@@ -51,7 +51,7 @@ struct NFCView: View {
             }
         }
         .background { RedMedPageBackground() }
-        // Same one-page tap card as RedMed Preview / a real band tap (get.html#d=).
+        // Same one-page tap card as RedMed Preview / a real band tap.
         .fullScreenCover(isPresented: $band.showScannedCard) {
             if let payload = band.scannedHTMLPayload {
                 PasserbyHTMLCardView(
