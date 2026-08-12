@@ -204,7 +204,7 @@
   }
   /* Quiet prayer under Aid panes — matches owner AidView. Whisper, not focus. */
   .quote {
-    margin: 12px 28px 2px;
+    margin: 0 28px 2px;
     padding: 0;
     max-width: none;
     font-size: 8px;
@@ -215,6 +215,18 @@
     line-height: 1.35;
     background: none;
     border: none;
+  }
+  /* Aid column fills the viewport so .quote can sit toward the bottom. */
+  #panel-aid .page-pad {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100dvh - 72px - env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+    padding-bottom: 8px;
+  }
+  #panel-aid .quote {
+    margin-top: auto;
+    padding-top: 28px;
   }
 
   /* —— Help tab —— */
