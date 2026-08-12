@@ -107,7 +107,7 @@ struct TopicDetailView: View {
                         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                         .overlay(
                             RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                                .stroke(Color.redmedDivider, lineWidth: 1)
+                                .strokeBorder(Color.redmedDivider, lineWidth: 1)
                         )
                         .padding(.bottom, 22)
                     }
@@ -139,7 +139,7 @@ struct TopicDetailView: View {
                     .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                     .overlay(
                         RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                            .stroke(Color.redmedDivider, lineWidth: 1)
+                            .strokeBorder(Color.redmedDivider, lineWidth: 1)
                     )
                     .padding(.bottom, 22)
 
@@ -175,7 +175,7 @@ struct TopicDetailView: View {
                     .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                     .overlay(
                         RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                            .stroke(Color.redmedDivider, lineWidth: 1)
+                            .strokeBorder(Color.redmedDivider, lineWidth: 1)
                     )
                     .padding(.bottom, 24)
 
@@ -303,7 +303,7 @@ private struct LiveNearbyHospitalsSection: View {
                 .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                 .overlay(
                     RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                        .stroke(Color.redmedDivider, lineWidth: 1)
+                        .strokeBorder(Color.redmedDivider, lineWidth: 1)
                 )
             }
         }

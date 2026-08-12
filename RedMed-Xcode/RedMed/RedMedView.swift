@@ -103,7 +103,7 @@ struct RedMedView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
-                                        .stroke(Color.redmedDivider, lineWidth: 1)
+                                        .strokeBorder(Color.redmedDivider, lineWidth: 1)
                                 )
                             }
                             .buttonStyle(.plain)
@@ -123,7 +123,7 @@ struct RedMedView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
-                                        .stroke(Color.redmedDivider, lineWidth: 1)
+                                        .strokeBorder(Color.redmedDivider, lineWidth: 1)
                                 )
                             }
                             .buttonStyle(.plain)
@@ -144,7 +144,7 @@ struct RedMedView: View {
                                     .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
-                                            .stroke(Color.redmedDivider, lineWidth: 1)
+                                            .strokeBorder(Color.redmedDivider, lineWidth: 1)
                                     )
                                 }
                                 .buttonStyle(.plain)
@@ -356,12 +356,7 @@ struct RedMedView: View {
     @ViewBuilder
     func cardGroup<C: View>(@ViewBuilder content: () -> C) -> some View {
         VStack(spacing: 0) { content() }
-            .background(Color.redmedSurface)
-            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-            .overlay(
-                RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                    .stroke(Color.redmedDark.opacity(0.08), lineWidth: 1)
-            )
+            .redmedBox()
             .padding(.horizontal, 16)
     }
 
