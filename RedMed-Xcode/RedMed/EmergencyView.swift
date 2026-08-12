@@ -190,13 +190,7 @@ struct EmergencyView: View {
                 locationManager.stop()
             }
         }
-        .onChange(of: isVisible) { _, visible in
-            if visible {
-                if locationEnabled { locationManager.start() }
-            } else {
-                locationManager.stop()
-            }
-        }
+        // Visibility start/stop is owned by `.task(id: isVisible)` above.
         .onDisappear {
             locationManager.stop()
         }
