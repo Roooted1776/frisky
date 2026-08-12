@@ -1,13 +1,15 @@
 import SwiftUI
 import WebKit
 
-/// Owner Preview / NFC Scan — same `get.html#d=` shell a stranger gets on band tap.
-/// Loads the **bundled** passerby page with `?src=app` so SOS does **not** auto-arm
-/// (real bracelet opens `https://redmed.pages.dev/get/#d=…` without that flag).
+/// Owner RedMed tab / Preview / NFC Scan — same bundled `get.html#d=` shell a
+/// stranger gets on band tap. Loads with `?src=app` so SOS does **not** auto-arm
+/// (real bracelet opens hosted `/get/#d=…` without that flag).
 struct PasserbyHTMLCardView: View {
     @Environment(\.dismiss) private var dismiss
     /// Raw `#d=` payload (no prefix), or full band URL containing `#d=`.
     let payloadOrURL: String
+    /// Owner Linked state — passed into the shell so app embed matches native rules.
+    var braceletLinked: Bool = false
 
     private var encodedPayload: String? {
         Self.extractPayload(payloadOrURL)
@@ -32,7 +34,10 @@ struct PasserbyHTMLCardView: View {
 
             Group {
                 if let encodedPayload {
-                    PasserbyHTMLWebView(encodedPayload: encodedPayload)
+                    PasserbyHTMLShell(
+                        encodedPayload: encodedPayload,
+                        braceletLinked: braceletLinked
+                    )
                 } else {
                     Text("Couldn't pack get.html#d= from RedMed.")
                         .font(.system(size: 14, weight: .medium))
@@ -65,10 +70,28 @@ struct PasserbyHTMLCardView: View {
     }
 }
 
+// MARK: - Embedded shell (owner RedMed tab — no Back chrome)
+
+/// Bundled get.html medical panel only (HTML tab bar hidden via `app-embed`).
+struct PasserbyHTMLShell: View {
+    let encodedPayload: String
+    var braceletLinked: Bool = false
+
+    var body: some View {
+        PasserbyHTMLWebView(
+            encodedPayload: encodedPayload,
+            braceletLinked: braceletLinked
+        )
+        // Force remount when packed profile or Linked flips.
+        .id("\(encodedPayload.count)-\(encodedPayload.prefix(24))-\(braceletLinked)")
+    }
+}
+
 // MARK: - WKWebView
 
 private struct PasserbyHTMLWebView: UIViewRepresentable {
     let encodedPayload: String
+    var braceletLinked: Bool = false
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
@@ -85,17 +108,20 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
-        guard !context.coordinator.didLoad else { return }
+        let loadKey = "\(encodedPayload)|\(braceletLinked)"
+        guard context.coordinator.loadedKey != loadKey else { return }
         guard let fileURL = Bundle.main.url(forResource: "get", withExtension: "html"),
               var html = try? String(contentsOf: fileURL, encoding: .utf8),
               let lit = Self.jsStringLiteral(encodedPayload) else { return }
-        context.coordinator.didLoad = true
+        context.coordinator.loadedKey = loadKey
         // Inject before any get.html script so decrypt sees #d= and SOS sees app preview.
         // Flag + hash fallback: loadHTMLString can leave location as about:blank where
         // replaceState alone would leave decrypt empty and wrongly auto-arm SOS.
+        let linkedJS = braceletLinked ? "true" : "false"
         let boot = """
         <script>
         window.__REDMED_APP_PREVIEW=1;
+        window.__REDMED_BRACELET_LINKED=\(linkedJS);
         (function(){
           var d=\(lit);
           try{
@@ -127,7 +153,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
     }
 
     final class Coordinator: NSObject, WKNavigationDelegate {
-        var didLoad = false
+        var loadedKey: String?
 
         func webView(
             _ webView: WKWebView,

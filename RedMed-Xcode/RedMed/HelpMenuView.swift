@@ -30,9 +30,14 @@ struct LocalWebView: UIViewRepresentable {
         "PrivacyPolicy.html",
         "TOS.html",
         "security.html",
-        // Redirect-only → redmed://main (linked from policy footers).
+        // Redirect-only → redmed://main (iPhone) or get.html (any device).
         "HowItWorks.html",
-        "legal-doc.css"
+        "legal-doc.css",
+        // Passerby card — policy “Emergency card (any phone)” CTA.
+        "get.html",
+        "BrandLogo.png",
+        "BrandWordmark.png",
+        "sw.js"
     ]
 
     /// Blocks in-webview navigation to untrusted schemes; opens http(s)/tel/mailto/redmed externally.

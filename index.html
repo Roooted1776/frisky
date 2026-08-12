@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RedMed</title>
+<!-- Site root → passerby shell. Any phone / tablet / desktop. Preserve #d=. -->
+<script>
+(function () {
+  var q = location.search || "";
+  var h = location.hash || "";
+  location.replace("get/" + q + h);
+})();
+</script>
+<meta http-equiv="refresh" content="0;url=get/">
+</head>
+<body>
+  <p><a id="go" href="get/">Open RedMed card</a></p>
+  <script>
+    document.getElementById("go").href = "get/" + (location.search || "") + (location.hash || "");
+  </script>
+</body>
+</html>

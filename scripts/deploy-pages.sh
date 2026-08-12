@@ -1,24 +1,21 @@
 #!/usr/bin/env bash
-# Deploy the passerby shell to Cloudflare Pages (redmed.pages.dev).
+# Local-only passerby shell. Serves the repo root so / and /get/ work on any
+# browser (RedMed · 911 · Aid, no auth). Root index.html redirects to /get/.
 #
-# Live /get/ MUST be get/index.html (RedMed · 911 · Aid, no auth). If the site
-# still shows "Set up your RedMed band" / "Checking your phone…", Pages is not
-# serving this repo — reconnect Git to Roooted1776/frisky main, or Direct Upload.
+# AES-GCM decrypt needs a secure context: use http://127.0.0.1 (or https).
+# Binding 0.0.0.0 for LAN phones will load the shell but #d= decrypt fails
+# unless you terminate TLS in front — crypto.subtle is blocked on plain LAN IPs.
 #
-# Requires: CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID, and npx wrangler.
-# Project name defaults to "redmed" (override with PAGES_PROJECT=…).
+# Usage:
+#   ./scripts/deploy-pages.sh          # http://127.0.0.1:8787/get/
+#   PORT=9000 ./scripts/deploy-pages.sh
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-PROJECT="${PAGES_PROJECT:-redmed}"
+PORT="${PORT:-8787}"
+HOST="${HOST:-127.0.0.1}"
 
-if [[ -z "${CLOUDFLARE_API_TOKEN:-}" || -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]]; then
-  echo "Set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID, then re-run." >&2
-  echo "Cloudflare dashboard → My Profile → API Tokens (Edit Cloudflare Pages)." >&2
-  exit 1
-fi
-
-# Sanity: refuse to deploy if the tapper shell is missing tabs.
+# Sanity: refuse to serve if the tapper shell is missing tabs.
 if ! grep -q 'data-tab="medical"' get/index.html \
   || ! grep -q 'data-tab="911"' get/index.html \
   || ! grep -q 'data-tab="aid"' get/index.html; then
@@ -31,9 +28,24 @@ if grep -q 'Checking your phone' get/index.html \
   exit 1
 fi
 
-echo "Deploying repo root → Cloudflare Pages project: $PROJECT"
-npx --yes wrangler@4 pages deploy "$ROOT" \
-  --project-name "$PROJECT" \
-  --commit-dirty=true
+URL="http://${HOST}:${PORT}/get/"
+ROOT_URL="http://${HOST}:${PORT}/"
+echo "Local tapper shell → ${URL}"
+echo "  Site root ${ROOT_URL} redirects to /get/ (any device browser)."
+echo "  Use 127.0.0.1 (not a LAN IP) so #d= AES decrypt works."
+echo "Ctrl-C to stop."
 
-echo "Done. Verify: https://redmed.pages.dev/get/ shows RedMed · 911 · Aid (no setup landing)."
+# Open once the port accepts connections (best-effort).
+(
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    if curl -sf -o /dev/null "$URL"; then
+      if command -v open >/dev/null 2>&1; then
+        open "$URL"
+      fi
+      exit 0
+    fi
+    sleep 0.2
+  done
+) >/dev/null 2>&1 &
+
+exec python3 -m http.server "$PORT" --bind "$HOST"

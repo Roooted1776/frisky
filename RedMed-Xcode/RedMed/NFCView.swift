@@ -54,7 +54,10 @@ struct NFCView: View {
         // Same one-page tap card as RedMed Preview / a real band tap (get.html#d=).
         .fullScreenCover(isPresented: $band.showScannedCard) {
             if let payload = band.scannedHTMLPayload {
-                PasserbyHTMLCardView(payloadOrURL: payload)
+                PasserbyHTMLCardView(
+                    payloadOrURL: payload,
+                    braceletLinked: profile.showsBraceletAsLinked
+                )
             }
         }
         .alert("Authentication Failed", isPresented: $band.authFailed) {

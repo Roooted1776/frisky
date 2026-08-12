@@ -75,7 +75,7 @@ struct PrivacySnapshotGuard<Content: View>: View {
                 Image("BrandLogo")
                     .resizable()
                     .frame(width: 56, height: 56)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .clipShape(Circle())
                 Text("RedMed")
                     .font(.system(size: 22, weight: .bold))
                     .foregroundColor(.redmedDark)

@@ -203,7 +203,8 @@ enum RedMedChrome {
     static let navTitleFont: Font = .system(size: 17, weight: .semibold)
     static let boxRadius: CGFloat = 10
     static let chipRadius: CGFloat = 7
-    static let logoRadius: CGFloat = 12
+    /// Brand mark is a circular disc — always `Circle()`, never a rounded rect.
+    static let logoRadius: CGFloat = 0
     static let cardShadow = Color.black.opacity(0.045)
     static let accentShadow = Color.redmedAccent.opacity(0.18)
 }

@@ -85,7 +85,7 @@ struct OwnerAppLock<Content: View>: View {
             Image("BrandLogo")
                 .resizable()
                 .frame(width: 72, height: 72)
-                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.logoRadius + 4))
+                .clipShape(Circle())
                 .shadow(color: RedMedChrome.accentShadow, radius: 14, y: 6)
         }
         .accessibilityHidden(true)
@@ -99,7 +99,7 @@ struct OwnerAppLock<Content: View>: View {
                 Image("BrandLogo")
                     .resizable()
                     .frame(width: 72, height: 72)
-                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.logoRadius + 4))
+                    .clipShape(Circle())
                     .shadow(color: RedMedChrome.accentShadow, radius: 14, y: 6)
                 Text("RedMed")
                     .font(.system(size: 22, weight: .bold))

@@ -9,7 +9,9 @@ enum AppConfig {
     /// CACHE buckets). Owner edit / treatments live in `Main.swift`, not here.
     /// Source page: `get.html` / `get/index.html` (identical at `get/`, repo root,
     /// and `RedMed-Xcode/RedMed/get.html`). Legacy `card/` URLs redirect to `/get/`
-    /// (preserve `#d=`).
+    /// (preserve `#d=`). Owner Preview / Scan always use the **bundled** get.html
+    /// (local-only). Hosted Pages is optional; `./scripts/deploy-pages.sh` serves
+    /// `/get/` locally — it does not push to Cloudflare.
     static let medicalCardBaseURL = "https://redmed.pages.dev/get/"
 
     /// Deep link target for policy / card HTML “open owner app” redirects.
