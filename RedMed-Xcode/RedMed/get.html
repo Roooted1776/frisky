@@ -115,6 +115,7 @@
     letter-spacing: -0.4px;
     margin: 0;
     line-height: 1.15;
+    color: var(--dark);
   }
   .rm-updated {
     font-size: 10px;
@@ -158,17 +159,6 @@
     text-align: right;
   }
   .row .v.empty { font-weight: 400; color: rgba(120,113,108,0.4); }
-  /* Name: bold value on the left (same 11px system stack as other YOU fields). */
-  .row.row-name {
-    justify-content: flex-start;
-    gap: 8px;
-  }
-  .row.row-name .v {
-    font-weight: 700;
-    text-align: left;
-    flex: 1;
-    min-width: 0;
-  }
   .list-item {
     padding: 11px 16px;
     border-bottom: 1px solid var(--divider);
@@ -561,7 +551,7 @@
       </div>
 
       <div class="card" style="margin-top:2px">
-        <div class="row row-name"><span class="k">Name</span><span class="v" id="rowName">—</span></div>
+        <div class="row"><span class="k">Name</span><span class="v" id="rowName">—</span></div>
         <div class="row"><span class="k">Birth date</span><span class="v" id="rowDob">—</span></div>
         <div class="row"><span class="k">Blood type</span><span class="v" id="rowBlood">—</span></div>
       </div>
