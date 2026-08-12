@@ -1362,13 +1362,15 @@
 // Survival alarm — hardware-local only (this phone).
 // Real bracelet NFC open with #d= → arm local SOS (no server). Explicit SOS
 // toggle and DeviceMotion crash share the same on-device alarm.
-// Web Audio + wake lock (no system volume / brightness APIs in the browser).
+// Crash path ignores sex, masturbation, walking, eating, daily rhythm (same
+// gates as native CrashMotionGuard). Web Audio + wake lock only.
 (function () {
   var sosBtn = document.getElementById('sosBtn');
   var aidStop = document.getElementById('aidStopAlarm');
   if (!sosBtn) return;
 
   // Match CrashMotionThresholds (g, rad/s). DeviceMotion accel is m/s².
+  // Ignore walking, sex, masturbation, eating, phone handling, daily rhythm.
   var G = 9.80665;
   var CRASH_PEAK_G = 16.0;
   var POST_FREEFALL_PEAK_G = 13.0;
@@ -1376,13 +1378,17 @@
   var FREEFALL_MAX_G = 0.20;
   var FREEFALL_MIN_S = 0.22;
   var FREEFALL_IMPACT_WINDOW_S = 0.40;
-  var HUMAN_MIN_G = 0.7;
-  var HUMAN_MAX_G = 9.0;
+  var HUMAN_MIN_G = 0.45;
+  var HUMAN_MAX_G = 10.0;
   var HUMAN_SPIKE_COUNT = 2;
-  var HUMAN_WINDOW_S = 8.0;
-  var BUSY_HOLD_S = 4.0;
-  var HAND_SPIN_RAD = 3.5;
-  var MIN_JERK_G_S = 120.0;
+  var HUMAN_WINDOW_S = 12.0;
+  var BUSY_HOLD_S = 14.0;
+  var HAND_SPIN_RAD = 2.0;
+  var RHYTHM_MIN_S = 0.12;
+  var RHYTHM_MAX_S = 2.0;
+  var RHYTHM_HIT_COUNT = 3;
+  var SUSTAINED_HUMAN_S = 1.2;
+  var MIN_JERK_G_S = 140.0;
   var SAMPLE_HZ = 50.0;
   var COOLDOWN_S = 90.0;
   var DT = 1.0 / SAMPLE_HZ;
@@ -1402,6 +1408,7 @@
   var freefallEndedAt = 0;
   var recentHumanPeaks = [];
   var recentHandSpins = [];
+  var humanBurstStart = 0;
   var busyUntil = 0;
 
   function paint() {
@@ -1473,6 +1480,7 @@
     freefallEndedAt = 0;
     recentHumanPeaks = [];
     recentHandSpins = [];
+    humanBurstStart = 0;
     busyUntil = 0;
   }
 
@@ -1497,12 +1505,29 @@
     busyUntil = Math.max(busyUntil, now + BUSY_HOLD_S);
     freefallSince = 0;
     freefallEndedAt = 0;
+    humanBurstStart = 0;
   }
 
   function prune(list, now, windowS) {
     var i = 0;
     while (i < list.length && now - list[i] > windowS) i++;
     if (i) list.splice(0, i);
+  }
+
+  function isRhythmicHumanActivity(now) {
+    var peaks = recentHumanPeaks.filter(function (t) {
+      return now - t <= HUMAN_WINDOW_S;
+    });
+    if (peaks.length < RHYTHM_HIT_COUNT + 1) return false;
+    var hits = 0;
+    for (var i = 1; i < peaks.length; i++) {
+      var dt = peaks[i] - peaks[i - 1];
+      if (dt >= RHYTHM_MIN_S && dt <= RHYTHM_MAX_S) {
+        hits++;
+        if (hits >= RHYTHM_HIT_COUNT) return true;
+      }
+    }
+    return false;
   }
 
   function evaluate(ax, ay, az, spinRad, now, usingGravity) {
@@ -1513,16 +1538,45 @@
     var jerk = Math.abs(magnitude - lastMagnitude) / DT;
     lastMagnitude = magnitude;
 
-    // including-gravity rests near 1g — skip human-activity busy marking there.
-    if (!usingGravity) {
-      if (magnitude >= HUMAN_MIN_G && magnitude <= HUMAN_MAX_G) {
-        recentHumanPeaks.push(now);
+    // No user-accel (gravity-only): treat as busy unless freefall — sex/daily
+    // motion must not arm on moderate including-gravity spikes.
+    if (usingGravity) {
+      if (magnitude <= FREEFALL_MAX_G) {
+        if (!freefallSince) freefallSince = now;
+      } else if (freefallSince) {
+        if (now - freefallSince >= FREEFALL_MIN_S) freefallEndedAt = now;
+        freefallSince = 0;
       }
-      prune(recentHumanPeaks, now, HUMAN_WINDOW_S);
-      if (recentHumanPeaks.length >= HUMAN_SPIKE_COUNT) {
-        markBusy(now);
-        return;
+      var inPostFreefallG = false;
+      if (freefallEndedAt) {
+        if (now - freefallEndedAt > FREEFALL_IMPACT_WINDOW_S) freefallEndedAt = 0;
+        else inPostFreefallG = true;
       }
+      if (jerk < MIN_JERK_G_S) return;
+      if (magnitude >= OVERRIDE_BUSY_PEAK_G) { arm(); return; }
+      if (inPostFreefallG && magnitude >= POST_FREEFALL_PEAK_G) arm();
+      return;
+    }
+
+    if (magnitude >= HUMAN_MIN_G && magnitude <= HUMAN_MAX_G) {
+      recentHumanPeaks.push(now);
+      if (!humanBurstStart) humanBurstStart = now;
+    } else if (humanBurstStart && now - humanBurstStart > HUMAN_WINDOW_S) {
+      humanBurstStart = 0;
+    }
+    prune(recentHumanPeaks, now, HUMAN_WINDOW_S);
+
+    if (humanBurstStart && now - humanBurstStart >= SUSTAINED_HUMAN_S && recentHumanPeaks.length) {
+      markBusy(now);
+      return;
+    }
+    if (isRhythmicHumanActivity(now)) {
+      markBusy(now);
+      return;
+    }
+    if (recentHumanPeaks.length >= HUMAN_SPIKE_COUNT) {
+      markBusy(now);
+      return;
     }
 
     if (spinRad >= HAND_SPIN_RAD) {
@@ -1538,7 +1592,8 @@
 
     var isBusy = now < busyUntil
       || recentHandSpins.length > 0
-      || (!usingGravity && recentHumanPeaks.length >= HUMAN_SPIKE_COUNT);
+      || recentHumanPeaks.length >= HUMAN_SPIKE_COUNT
+      || isRhythmicHumanActivity(now);
 
     if (magnitude <= FREEFALL_MAX_G) {
       if (!freefallSince) freefallSince = now;
@@ -1650,8 +1705,7 @@
   // Real HF NFC band tap brings #d= — arm local SOS on this phone only.
   // No auto-arm for bare /get/ (no hardware payload). No server / no online.
   function hasBandPayload() {
-    var h = location.hash || '';
-    return /[#&]d=/.test(h) || h.indexOf('#d=') === 0 || h.indexOf('d=') === 1;
+    return /^#d=/.test(location.hash || '');
   }
   if (hasBandPayload()) {
     arm();
