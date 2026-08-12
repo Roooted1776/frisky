@@ -102,13 +102,23 @@ enum LocatorBeacon {
 
     private static func fire() {
         guard survivalHold, sessionReady else { return }
+        // Fresh player each burst — reusing one AVAudioPlayer only sounded on the
+        // first Start; later timer fires (and Stop → SOS again) were silent.
+        guard let wav = alarmWAV() else { return }
         let box = siren
         let epoch = sessionEpoch
         let epochBox = publishedEpoch
         AudioSessionGate.queue.async {
-            guard epochBox.value == epoch, let player = box.player else { return }
-            player.currentTime = 0
+            guard epochBox.value == epoch else { return }
+            try? AVAudioSession.sharedInstance().setActive(true)
+            box.player?.stop()
+            guard let player = try? AVAudioPlayer(data: wav) else {
+                box.player = nil
+                return
+            }
             player.volume = 1.0
+            player.prepareToPlay()
+            box.player = player
             _ = player.play()
         }
     }
