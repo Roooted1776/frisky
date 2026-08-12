@@ -28,6 +28,7 @@ struct NFCView: View {
                     introBlock
                     factsCard
                     setupCard
+                    scanCard
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 4)
@@ -200,11 +201,74 @@ struct NFCView: View {
             VStack(alignment: .leading, spacing: 8) {
                 tipRow("Write once after RedMed is filled.")
                 tipRow("Cancel the NFC prompt and the band stays stale until you write again.")
-                tipRow("Preview scanner on RedMed shows the passerby card.")
+                tipRow("Scan below to verify the same card a stranger sees on tap.")
             }
             .padding(.top, 2)
         }
         .padding(16)
+        .background(Color.redmedSurface)
+        .clipShape(RoundedRectangle(cornerRadius: boxRadius))
+        .overlay(RoundedRectangle(cornerRadius: boxRadius).stroke(Color.redmedDivider, lineWidth: 1))
+    }
+
+    // MARK: - Scan (bottom of page)
+
+    private var scanCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("SCAN")
+                .font(.system(size: 11, weight: .semibold))
+                .kerning(0.6)
+                .foregroundColor(.redmedMuted)
+
+            if profile.braceletLinked {
+                Text(AppConfig.nfcHardwareEnabled
+                      ? "Hold near the band to open the same emergency card a stranger gets."
+                      : "Simulate scan to preview the passerby shell (same as get.html after a tap).")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.redmedMuted)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Button {
+                    band.verifyBand(from: profile)
+                } label: {
+                    HStack(spacing: 8) {
+                        if band.isReading {
+                            ProgressView().tint(.redmedAccent)
+                        } else {
+                            Image(systemName: "wave.3.right.circle")
+                        }
+                        Text(scanButtonTitle)
+                    }
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.redmedAccent)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(Color.white.opacity(0.9))
+                    .clipShape(RoundedRectangle(cornerRadius: boxRadius))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: boxRadius)
+                            .stroke(Color.redmedAccent.opacity(0.45), lineWidth: 1.5)
+                    )
+                }
+                .disabled(band.isBusy)
+                .buttonStyle(.plain)
+
+                if band.isReading, !band.statusMessage.isEmpty {
+                    Text(band.statusMessage)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.redmedMuted)
+                }
+            } else {
+                Text("Write the band once above — then scan here to verify the tap card.")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.redmedMuted)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.redmedSurface)
         .clipShape(RoundedRectangle(cornerRadius: boxRadius))
         .overlay(RoundedRectangle(cornerRadius: boxRadius).stroke(Color.redmedDivider, lineWidth: 1))
@@ -217,6 +281,13 @@ struct NFCView: View {
             return AppConfig.nfcHardwareEnabled ? "Hold near tag…" : "Packing…"
         }
         return AppConfig.nfcHardwareEnabled ? "Write to NFC tag" : "Setup"
+    }
+
+    private var scanButtonTitle: String {
+        if band.isReading {
+            return AppConfig.nfcHardwareEnabled ? "Hold near tag…" : "Opening…"
+        }
+        return AppConfig.nfcHardwareEnabled ? "Scan your bracelet" : "Simulate scan"
     }
 
     private var statusIsError: Bool {
