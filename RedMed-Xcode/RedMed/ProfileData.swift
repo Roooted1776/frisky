@@ -427,7 +427,7 @@ enum AidTopicCatalog {
     "trauma-hospitals": AidTopic(
         id: "trauma-hospitals", title: "Find Nearby Hospitals",
         symptoms: ["Major trauma: crash, gunshot/stab, severe bleeding, head injury", "Patient unstable or deteriorating", "Need the closest ER / hospital POI on the map"],
-        care: ["Call \(EmergencyNumber.current) — dispatch will route to the right facility automatically", "Do NOT self-transport a major trauma patient if EMS is available — ambulances can stabilize en route", "The in-app list is a MapKit search for nearby hospital / ER points of interest — it is not a verified Level I/II trauma directory", "If you must drive: tell the ER ahead by phone so the trauma team is ready", "Note time of injury and mechanism (e.g. speed, fall height, weapon) to report on arrival"]
+        care: ["Call \(EmergencyNumber.current) — dispatch will route to the right facility automatically", "Do NOT self-transport a major trauma patient if EMS is available — ambulances can stabilize en route", "If you must drive: tell the ER ahead by phone so the trauma team is ready", "Note time of injury and mechanism (e.g. speed, fall height, weapon) to report on arrival"]
     ),
         ]
     }
