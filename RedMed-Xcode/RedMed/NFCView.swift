@@ -84,8 +84,8 @@ struct NFCView: View {
                 .accessibilityHidden(true)
 
             Text(AppConfig.nfcHardwareEnabled
-                  ? "Fill RedMed, then write the band once. Face ID, hold to pair. Passive HF — no Bluetooth."
-                  : "Simulate band setup while learning. Same compact get.html#d= URL a real NTAG213 would hold.")
+                  ? "Fill RedMed, then write the band once. Face ID, hold to pair. Helpers who tap get HTML only — no app."
+                  : "Simulate band setup while learning. Same compact get.html#d= URL a real NTAG213 would hold — helpers still need no app.")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.redmedMuted)
                 .multilineTextAlignment(.center)
@@ -206,7 +206,7 @@ struct NFCView: View {
             VStack(alignment: .leading, spacing: 8) {
                 tipRow("Write once after RedMed is filled.")
                 tipRow("Cancel the NFC prompt and the band stays stale until you write again.")
-                tipRow("Scan below to verify the same card a stranger sees on tap.")
+                tipRow("A real tap opens get.html in their browser — no RedMed app.")
             }
             .padding(.top, 2)
         }
@@ -227,8 +227,8 @@ struct NFCView: View {
 
             if profile.braceletLinked {
                 Text(AppConfig.nfcHardwareEnabled
-                      ? "Hold near the band to open the same emergency card a stranger gets."
-                      : "Simulate scan to preview the passerby shell (same as get.html after a tap).")
+                      ? "Owner verify only. Helpers who tap the band open get.html in their browser — no app."
+                      : "Owner simulate only. Real taps still open get.html in the helper’s browser — no app.")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.redmedMuted)
                     .lineSpacing(3)
