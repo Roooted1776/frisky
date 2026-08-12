@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="BrandLogo.png">
 <link rel="icon" href="BrandLogo.png">
 <title>RedMed</title>
-<!-- ONE scanner file: get.html (Pages + app bundle).
+<!-- ONE scanner file: tapper.html (Pages + app bundle).
      Specs (permanent):
      - Tabs: RedMed · 911 · Aid only — no Edit, no NFC
      - Tapper / EMT / helper: passive HF NFC opens this HTML page — no RedMed
@@ -28,10 +28,10 @@
        conditions, contacts, updated?]
      - Offline: sw.js Cache Storage — cache-first multi-key shell for almost-instant
        EMT open after first online load; activate clears prior CACHE buckets
-       (bump redmed-get-vN). Never wait on network when a shell copy exists.
-     - Real bracelet NFC tap (`get.html#d=…`) → everything stays on that phone
+       (bump redmed-tapper-vN). Never wait on network when a shell copy exists.
+     - Real bracelet NFC tap (`tapper.html#d=…`) → everything stays on that phone
        (profile, 911, Aid, SOS siren). Local only once tap — everyone and
-       everything. No server / no online. Bare /get/ without `#d=` and in-app
+       everything. No server / no online. Bare /tapper/ without `#d=` and in-app
        Preview/Scan (`?src=app`) do not auto-arm SOS. Stop on Find Help or Aid.
        Explicit SOS toggle + DeviceMotion crash share the same local alarm.
      - Layout: any phone + iPad, iOS 15+ (and Android). Fluid width, safe-area
@@ -41,10 +41,10 @@
      - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
        walk-by ~6–8″ does not fire, reliable coupling dies past ~4″,
        passive 13.56 MHz HF NFC (not Bluetooth) → opens this page
-     - Logo: BrandLogo.png + BrandWordmark.png (bundle /get/) or assets/ (Pages)
-     - Legacy card.html / card/ redirects to /get/ and keeps #d=
-     Keep identical: get/index.html, repo-root get.html, RedMed-Xcode/RedMed/get.html.
-     Cloudflare Pages serves AppConfig URL https://redmed.pages.dev/get/ from get/. -->
+     - Logo: BrandLogo.png + BrandWordmark.png (bundle /tapper/) or assets/ (Pages)
+     - Legacy card.html / get.html /get/ redirect to /tapper/ and keep #d=
+     Keep identical: tapper/index.html, repo-root tapper.html, RedMed-Xcode/RedMed/tapper.html.
+     Cloudflare Pages serves AppConfig URL https://redmed.pages.dev/tapper/ from tapper/. -->
 <style>
   :root {
     --accent: #e11d48;
@@ -1156,7 +1156,7 @@
     tapMaxIn: 2,
     reliableMaxIn: 4,
     tabs: ['RedMed', '911', 'Aid'],
-    page: 'get.html'
+    page: 'tapper.html'
   };
 
   // In-app RedMed tab / Preview / Scan — ?src=app or injected flag. No SOS auto-arm.
@@ -2323,7 +2323,7 @@
   });
 
   // Real HF NFC band tap brings #d= — arm local SOS on this phone only.
-  // No auto-arm for bare /get/ or in-app Preview/Scan (?src=app). No server / no online.
+  // No auto-arm for bare /tapper/ or in-app Preview/Scan (?src=app). No server / no online.
   function hasBandPayload() {
     return /^#d=/.test(location.hash || '') && !appPreview();
   }

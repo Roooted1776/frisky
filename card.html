@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#fff7f7">
 <meta name="referrer" content="no-referrer">
 <title>RedMed</title>
-<!-- Legacy bracelet URL. Canonical scanner shell is /get/ — preserve #d=. -->
+<!-- Legacy bracelet URL. Canonical scanner shell is /tapper/ — preserve #d=. -->
 <script>
 (function () {
-  location.replace("/get/" + (location.search || "") + (location.hash || ""));
+  location.replace("/tapper/" + (location.search || "") + (location.hash || ""));
 })();
 </script>
 <style>
@@ -27,10 +27,10 @@
 </style>
 </head>
 <body>
-  <p><a id="fallback" href="/get/">Open emergency card</a></p>
+  <p><a id="fallback" href="/tapper/">Open emergency card</a></p>
   <script>
     document.getElementById("fallback").href =
-      "/get/" + (location.search || "") + (location.hash || "");
+      "/tapper/" + (location.search || "") + (location.hash || "");
   </script>
 </body>
 </html>

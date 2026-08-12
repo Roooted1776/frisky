@@ -1,0 +1,2338 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=yes">
+<meta name="theme-color" content="#fff7f7">
+<meta name="color-scheme" content="light">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; worker-src 'self'; connect-src 'self'">
+<meta name="referrer" content="no-referrer">
+<link rel="apple-touch-icon" href="BrandLogo.png">
+<link rel="icon" href="BrandLogo.png">
+<title>RedMed</title>
+<!-- ONE scanner file: tapper.html (Pages + app bundle).
+     Specs (permanent):
+     - Tabs: RedMed · 911 · Aid only — no Edit, no NFC
+     - Tapper / EMT / helper: passive HF NFC opens this HTML page — no RedMed
+       app required to view. Owner edit / NFC write live only in the native app.
+     - Data: #d= only — no server DB. New writes: flat array → AES-GCM
+       (public client key) → base64url. Legacy still works: named JSON,
+       pre-AES compact arrays, optional 0x01 zlib.
+       New array: [blood, allergies, meds, emergencyPhone, name, dob,
+       conditions, contacts, donor, updated?]
+       Legacy array: [name, dob, blood, donor, allergies, meds,
+       conditions, contacts, updated?]
+     - Offline: sw.js Cache Storage — cache-first multi-key shell for almost-instant
+       EMT open after first online load; activate clears prior CACHE buckets
+       (bump redmed-tapper-vN). Never wait on network when a shell copy exists.
+     - Real bracelet NFC tap (`tapper.html#d=…`) → everything stays on that phone
+       (profile, 911, Aid, SOS siren). Local only once tap — everyone and
+       everything. No server / no online. Bare /tapper/ without `#d=` and in-app
+       Preview/Scan (`?src=app`) do not auto-arm SOS. Stop on Find Help or Aid.
+       Explicit SOS toggle + DeviceMotion crash share the same local alarm.
+     - Layout: any phone + iPad, iOS 15+ (and Android). Fluid width, safe-area
+       insets, no horizontal scroll. No account / login on this page (tap-to-view).
+       iOS may need a gesture to unmute AudioContext; motion permission only
+       when the helper taps SOS.
+     - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
+       walk-by ~6–8″ does not fire, reliable coupling dies past ~4″,
+       passive 13.56 MHz HF NFC (not Bluetooth) → opens this page
+     - Logo: BrandLogo.png + BrandWordmark.png (bundle /tapper/) or assets/ (Pages)
+     - Legacy card.html / get.html /get/ redirect to /tapper/ and keep #d=
+     Keep identical: tapper/index.html, repo-root tapper.html, RedMed-Xcode/RedMed/tapper.html.
+     Cloudflare Pages serves AppConfig URL https://redmed.pages.dev/tapper/ from tapper/. -->
+<style>
+  :root {
+    --accent: #e11d48;
+    --accent-soft: #ff7289;
+    --bg: #fff7f7;
+    --wash: #ffe8eb;
+    --dark: #1c1917;
+    --muted: #78716c;
+    --divider: rgba(28,25,23,0.08);
+    --tab-off: #5f6369;
+    --surface: rgba(255,255,255,0.94);
+    --box: 10px;
+    --chip: 7px;
+    --logo: 12px;
+    --shadow: 0 1px 2px rgba(28,25,23,0.04), 0 6px 16px rgba(225,29,72,0.05);
+    --shadow-accent: 0 6px 16px rgba(225,29,72,0.22);
+    /* Fluid shell — SE → Pro Max → iPad / landscape. */
+    --page-max: 480px;
+    --page-pad-x: clamp(12px, 4.2vw, 28px);
+    --tabbar-h: 74px;
+    --fs-name: clamp(22px, 5.8vw, 28px);
+    --fs-row: clamp(13px, 3.2vw, 15px);
+    --fs-title: clamp(15px, 3.6vw, 17px);
+    --fs-body: clamp(13px, 3.2vw, 16px);
+    --fs-btn: clamp(15px, 3.8vw, 18px);
+    --safe-t: env(safe-area-inset-top, 0px);
+    --safe-r: env(safe-area-inset-right, 0px);
+    --safe-b: env(safe-area-inset-bottom, 0px);
+    --safe-l: env(safe-area-inset-left, 0px);
+  }
+  @media (min-width: 600px) {
+    :root { --page-max: 560px; --tabbar-h: 76px; }
+  }
+  @media (min-width: 768px) {
+    :root { --page-max: 680px; --tabbar-h: 80px; --box: 10px; }
+  }
+  @media (min-width: 1024px) {
+    :root { --page-max: 760px; }
+  }
+  @media (min-width: 900px) and (orientation: landscape) {
+    :root { --page-max: min(820px, 92vw); }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html {
+    /* Document grows with content so WKWebView / iOS can scroll the page. */
+    height: auto;
+    min-height: 100%;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scrollbar-gutter: stable;
+  }
+  html, body { min-height: 100%; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", sans-serif;
+    background:
+      radial-gradient(120% 60% at 50% -10%, var(--wash) 0%, transparent 58%),
+      var(--bg);
+    color: var(--dark);
+    /* 100vh for iOS 15.0–15.3; 100dvh when available (15.4+). */
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: var(--safe-t) var(--safe-r) calc(var(--tabbar-h) + var(--safe-b)) var(--safe-l);
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
+  }
+  /* Responsive scrollbar (desktop / Mac Catalyst; iOS uses UIScrollView indicators). */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(28, 25, 23, 0.28) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: clamp(6px, 1.2vw, 10px);
+    height: clamp(6px, 1.2vw, 10px);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(28, 25, 23, 0.28);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  .app {
+    width: 100%;
+    max-width: var(--page-max);
+    margin: 0 auto;
+    min-height: calc(100vh - var(--safe-t) - var(--tabbar-h) - var(--safe-b));
+    min-height: calc(100dvh - var(--safe-t) - var(--tabbar-h) - var(--safe-b));
+  }
+  .panel { display: none; padding: 10px 0 28px; }
+  /* First paint stays visible — opacity:0 here read as a long white flash on load. */
+  .panel.active { display: block; }
+  .panel.active.anim-in {
+    animation: panelIn 0.22s ease-out;
+  }
+  @keyframes panelIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .panel.active.anim-in { animation: none; }
+  }
+
+  /* —— RedMed tab (My ID look) —— */
+  .rm-header {
+    padding: 10px var(--page-pad-x) 8px;
+  }
+  .rm-lock {
+    font-size: clamp(12px, 3.2vw, 14px);
+    font-weight: 600;
+    color: var(--muted);
+    line-height: 1.4;
+    margin: 0 auto 12px;
+    max-width: min(360px, 100%);
+    text-align: center;
+    padding: 11px 14px;
+    background: var(--surface);
+    border: none;
+    border-radius: var(--box);
+    box-shadow: var(--shadow);
+  }
+  /* In-app RedMed tab embeds this shell — hide passerby tab chrome (native tabs own 911/Aid).
+     `html.app-embed` is set from the native boot script before first paint; body class follows. */
+  html.app-embed body,
+  body.app-embed {
+    padding-top: calc(var(--safe-t) + 48px);
+    padding-bottom: var(--safe-b);
+  }
+  html.app-embed .tabbar,
+  body.app-embed .tabbar { display: none !important; }
+  html.app-embed #panel-911,
+  html.app-embed #panel-aid,
+  body.app-embed #panel-911,
+  body.app-embed #panel-aid { display: none !important; }
+  html.app-embed,
+  html.app-embed body,
+  body.app-embed {
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  html.app-embed #panel-medical,
+  body.app-embed #panel-medical {
+    display: flex !important;
+    flex-direction: column;
+    min-height: calc(100vh - var(--safe-t) - 48px - var(--safe-b));
+    min-height: calc(100dvh - var(--safe-t) - 48px - var(--safe-b));
+  }
+  /* Owner embed: no lock line / BrandWordmark above the medical card. */
+  html.app-embed .rm-lock,
+  body.app-embed .rm-lock {
+    display: none;
+  }
+  .rm-lock a {
+    color: inherit;
+    font-weight: inherit;
+    text-decoration: none;
+    pointer-events: none;
+  }
+  .rm-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+  }
+  .rm-logo {
+    width: clamp(44px, 12vw, 56px);
+    height: clamp(44px, 12vw, 56px);
+    border-radius: 50%;
+    overflow: hidden;
+    border: none;
+    box-shadow: 0 4px 10px rgba(225,29,72,0.2);
+    flex-shrink: 0;
+    display: block;
+    object-fit: cover;
+    background: transparent;
+    opacity: 1;
+  }
+  .rm-logo.has-name { display: none; }
+  .rm-name {
+    font-size: var(--fs-name);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin: 0;
+    line-height: 1.15;
+    color: #000;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  /* Same as owner braceletStatusLabel under the name. */
+  .rm-status {
+    font-size: clamp(11px, 2.6vw, 12px);
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 4px 0 0;
+  }
+  .rm-status.linked {
+    color: rgba(225,29,72,0.9);
+  }
+  .sec {
+    font-size: clamp(11px, 2.8vw, 13px);
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 12px var(--page-pad-x) 5px;
+  }
+  .card {
+    margin: 0 var(--page-pad-x);
+    background: var(--surface);
+    border: none;
+    border-radius: var(--box);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .card.you-card { margin-top: 2px; }
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--divider);
+  }
+  .row:last-child { border-bottom: none; }
+  .row .k {
+    font-size: var(--fs-row);
+    font-weight: 500;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .row .v {
+    font-size: var(--fs-row);
+    font-weight: 600;
+    color: var(--dark);
+    text-align: right;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    min-width: 0;
+  }
+  .row .v.empty { font-weight: 500; color: rgba(28,25,23,0.55); }
+  /* Empty: Name + dash left (owner nameProfileRow). Filled: label drops. */
+  .row.row-name:not(.has-name) {
+    justify-content: flex-start;
+    gap: 8px;
+  }
+  .row.row-name:not(.has-name) .v {
+    text-align: left;
+    flex: 1;
+    min-width: 0;
+  }
+  .row.row-name.has-name {
+    justify-content: flex-start;
+    gap: 8px;
+  }
+  .row.row-name.has-name .k { display: none; }
+  .row.row-name.has-name .v {
+    font-weight: 700;
+    font-size: clamp(14px, 3.4vw, 16px);
+    text-align: left;
+    color: #000;
+    flex: 1;
+    min-width: 0;
+  }
+  /* Blood type — EMT glance chip when filled. */
+  .row.row-blood.has-blood .v {
+    display: inline-block;
+    font-size: clamp(14px, 3.5vw, 16px);
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(225,29,72,0.1);
+    border-radius: var(--chip);
+    padding: 4px 10px;
+    text-align: center;
+  }
+  .list-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--divider);
+    font-size: var(--fs-row);
+    font-weight: 500;
+    color: var(--dark);
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .list-item:last-child { border-bottom: none; }
+  /* Allergies / Meds / Conditions — dropdowns like owner RedMedView. */
+  .list-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 12px var(--page-pad-x) 0;
+  }
+  details.list-drop {
+    background: var(--surface);
+    border: none;
+    border-radius: var(--box);
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  details.list-drop[open] {
+    background: rgba(225,29,72,0.03);
+  }
+  details.list-drop summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 14px;
+    min-width: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  details.list-drop summary::-webkit-details-marker { display: none; }
+  .list-drop-title {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--fs-title);
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1.2;
+  }
+  .list-drop-count {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(225,29,72,0.1);
+    border-radius: var(--chip);
+    padding: 3px 7px;
+  }
+  .list-drop-chevron {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .list-drop-chevron::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 7px;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--accent);
+    border-bottom: 2px solid var(--accent);
+    transform: rotate(-45deg);
+  }
+  details.list-drop[open] .list-drop-chevron::before {
+    top: 6px;
+    transform: rotate(45deg);
+  }
+  .list-drop-body {
+    border-top: 1px solid var(--divider);
+  }
+  .list-drop-body:empty::after {
+    content: '—';
+    display: block;
+    padding: 11px 16px;
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(120,113,108,0.4);
+  }
+  .list-item.empty-slot {
+    color: rgba(120,113,108,0.4);
+  }
+  .contact-block {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--divider);
+  }
+  .contact-block:last-child { border-bottom: none; }
+  .contact-block .cn-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .contact-block .cn {
+    font-size: var(--fs-row);
+    font-weight: 600;
+    color: #000;
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .contact-block a.cp {
+    font-size: clamp(12px, 3vw, 15px);
+    font-weight: 500;
+    color: var(--dark);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .contact-block .cd {
+    font-size: clamp(12px, 3vw, 14px);
+    font-weight: 500;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  #panel-medical {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - var(--tabbar-h) - var(--safe-t) - var(--safe-b));
+    min-height: calc(100dvh - var(--tabbar-h) - var(--safe-t) - var(--safe-b));
+    padding-bottom: 8px;
+    box-sizing: border-box;
+  }
+  /* Quiet prayer — main RedMed + Aid. Whisper, not focus. Pins low when short. */
+  .quote {
+    margin: 0 clamp(16px, 6vw, 36px) 8px;
+    padding: 0;
+    max-width: none;
+    font-size: clamp(8px, 2.2vw, 11px);
+    font-weight: 400;
+    font-style: italic;
+    color: rgba(120,113,108,0.55);
+    text-align: center;
+    line-height: 1.35;
+    background: none;
+    border: none;
+  }
+  #panel-medical .quote {
+    margin-top: auto;
+    padding-top: 28px;
+  }
+  /* Aid column fills the viewport so .quote can sit toward the bottom. */
+  #panel-aid .page-pad {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - var(--tabbar-h) - var(--safe-t) - var(--safe-b));
+    min-height: calc(100dvh - var(--tabbar-h) - var(--safe-t) - var(--safe-b));
+    box-sizing: border-box;
+    padding-bottom: 8px;
+  }
+  #panel-aid .quote {
+    margin-top: auto;
+    margin-bottom: 2px;
+    padding-top: 28px;
+  }
+
+  /* —— Help tab —— */
+  .page-pad { padding: 4px var(--page-pad-x) 0; }
+  .page-title {
+    font-size: var(--fs-title);
+    font-weight: 600;
+    color: var(--accent);
+    margin: 0 0 6px;
+    text-align: center;
+  }
+  .btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    border-radius: var(--box);
+    padding: 14px;
+    margin: 8px 0;
+    border: none;
+    font-size: var(--fs-body);
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    touch-action: manipulation;
+    transition: transform 0.16s ease, opacity 0.16s ease;
+  }
+  .btn:active { transform: scale(0.98); opacity: 0.92; }
+  .btn:focus-visible,
+  .seizure-btn:focus-visible,
+  .tab:focus-visible,
+  .aid-stop-alarm:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn, .tab, .tab .icon-wrap { transition: none; }
+    .btn:active, .tab:active { transform: none; }
+  }
+  .btn-primary {
+    background: linear-gradient(180deg, var(--accent-soft), var(--accent));
+    color: #fff;
+    font-weight: 700;
+    font-size: var(--fs-btn);
+    padding: 16px;
+    box-shadow: var(--shadow-accent);
+  }
+  .btn-secondary {
+    background: rgba(255,255,255,0.88);
+    border: 1px solid var(--divider);
+    color: var(--dark);
+    box-shadow: var(--shadow);
+  }
+  .btn-ink {
+    background: var(--dark);
+    color: #fff;
+    font-weight: 700;
+    font-size: clamp(12px, 3vw, 15px);
+    padding: clamp(8px, 2vw, 12px);
+  }
+  .btn-call {
+    background: linear-gradient(180deg, var(--accent-soft), var(--accent));
+    color: #fff;
+    font-weight: 700;
+    font-size: var(--fs-btn);
+    padding: 17px;
+    box-shadow: var(--shadow-accent);
+  }
+  .btn-sos {
+    background: var(--dark);
+    color: #fff;
+    font-weight: 700;
+    font-size: clamp(13px, 3.2vw, 16px);
+    padding: clamp(10px, 2.4vw, 14px);
+  }
+  .btn-sos.armed {
+    background: var(--accent);
+    box-shadow: var(--shadow-accent);
+  }
+  .hint {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--muted);
+    text-align: center;
+    margin: 0 0 8px;
+  }
+  .gps-card {
+    background: var(--surface);
+    border: none;
+    border-radius: var(--box);
+    padding: 12px 14px;
+    text-align: center;
+    margin: 6px 0 8px;
+    box-shadow: var(--shadow);
+  }
+  .gps-pill {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.1px;
+    color: var(--accent);
+    background: rgba(225,29,72,0.1);
+    border-radius: var(--chip);
+    padding: 3px 8px;
+    margin-bottom: 4px;
+  }
+  .coords {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: clamp(14px, 3.8vw, 18px);
+    font-weight: 700;
+    color: var(--dark);
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .gps-acc {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .gps-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin: 0 0 6px;
+  }
+  .gps-actions .btn {
+    margin: 0;
+  }
+  .seizure-strip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: none;
+    border-radius: var(--box);
+    padding: 10px 12px;
+    margin: 6px 0;
+    min-width: 0;
+    box-shadow: var(--shadow);
+  }
+  .seizure-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+  }
+  .seizure-time {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: clamp(16px, 4vw, 20px);
+    font-weight: 700;
+    color: var(--dark);
+    min-width: 56px;
+  }
+  .seizure-time.hot {
+    color: var(--accent);
+  }
+  .seizure-hint {
+    flex: 1;
+    font-size: clamp(10px, 2.6vw, 13px);
+    font-weight: 600;
+    color: var(--muted);
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .seizure-hint.hot {
+    color: var(--accent);
+  }
+  .seizure-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .seizure-btn {
+    border: none;
+    border-radius: var(--chip);
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    background: var(--accent);
+    color: #fff;
+  }
+  .seizure-btn.on {
+    background: rgba(255,255,255,0.9);
+    color: var(--dark);
+    border: 1px solid var(--divider);
+  }
+  .seizure-btn-reset {
+    background: rgba(255,255,255,0.9);
+    color: var(--dark);
+    border: 1px solid var(--divider);
+  }
+  .seizure-btn-reset:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+  .info {
+    background: var(--surface);
+    border: none;
+    border-radius: var(--box);
+    padding: 12px 14px;
+    margin: 6px 0;
+    box-shadow: var(--shadow);
+  }
+  .info-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .info-icon {
+    width: 24px; height: 24px;
+    border-radius: var(--chip);
+    background: rgba(225,29,72,0.1);
+    color: var(--accent);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .info h2 {
+    margin: 0;
+    font-size: clamp(12px, 3vw, 15px);
+    font-weight: 700;
+    color: var(--dark);
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .info-lead {
+    margin: 0;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--muted);
+  }
+  .info ol, .info ul {
+    margin: 0;
+    padding-left: 16px;
+    font-size: clamp(11px, 2.8vw, 14px);
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--dark);
+  }
+  .info ol li + li, .info ul li + li { margin-top: 3px; }
+  .foot-note {
+    font-size: clamp(9px, 2.4vw, 12px);
+    font-weight: 500;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.4;
+    margin: 12px 4px 0;
+  }
+  .survival-note {
+    margin: 4px 0 8px;
+    font-size: clamp(10px, 2.6vw, 13px);
+    font-weight: 500;
+    color: var(--muted);
+    line-height: 1.35;
+    text-align: center;
+  }
+  .aid-stop-alarm {
+    display: none;
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dark);
+    background: var(--surface);
+    border: none;
+    border-radius: var(--box);
+    text-align: left;
+    cursor: pointer;
+  }
+  .aid-stop-alarm.show { display: block; }
+  .aid-stop-alarm .x {
+    float: right;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* Aid / 911 — BrandWordmark metrics match owner BrandWordmarkHeader. */
+  .aid-wordmark,
+  .help-wordmark {
+    display: block;
+    height: 42px;
+    width: auto;
+    max-width: min(240px, 70vw);
+    margin: 6px 0 4px;
+    object-fit: contain;
+  }
+  /* Full-width accordion — same life-saving pattern as owner AidView. */
+  .aid-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  @media (min-width: 700px) {
+    .aid-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      align-items: start;
+    }
+  }
+  @media (min-width: 1024px) and (orientation: landscape) {
+    .aid-grid {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+  }
+  details.aid {
+    background: var(--surface);
+    border: none;
+    border-radius: var(--box);
+    padding: 0 12px;
+    width: 100%;
+    min-width: 0;
+    box-shadow: var(--shadow);
+  }
+  details.aid[open] {
+    background: rgba(225,29,72,0.03);
+  }
+  details.aid summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 0;
+    min-width: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  details.aid summary::-webkit-details-marker { display: none; }
+  .aid-emoji {
+    width: clamp(40px, 10vw, 48px);
+    height: clamp(40px, 10vw, 48px);
+    border-radius: var(--chip);
+    background: rgba(225,29,72,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(20px, 5vw, 26px);
+    flex-shrink: 0;
+  }
+  details.aid[open] .aid-emoji { background: var(--accent); }
+  .aid-title {
+    display: block;
+    font-size: clamp(15px, 3.6vw, 18px);
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1.2;
+    flex: 1;
+    min-width: 0;
+    /* Match owner PaneCard — wrap/scale to fit, no ellipsis clip. */
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  details.aid ol {
+    margin: 0 0 12px;
+    padding-left: 18px;
+    font-size: var(--fs-body);
+    font-weight: 500;
+    line-height: 1.45;
+  }
+  details.aid ol li + li { margin-top: 8px; }
+
+  /* —— Tab bar (matches CustomTabBar; larger hit targets for EMT / gloves) —— */
+  .tabbar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.96);
+    border-top: 1px solid var(--divider);
+    box-shadow: 0 -4px 18px rgba(28,25,23,0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px var(--safe-r) calc(6px + var(--safe-b)) var(--safe-l);
+    z-index: 30;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+  .tabs {
+    display: flex;
+    width: 100%;
+    max-width: var(--page-max);
+  }
+  .tab {
+    flex: 1;
+    border: 0;
+    background: transparent;
+    padding: 8px 0 6px;
+    min-height: 56px;
+    color: var(--tab-off);
+    font-size: clamp(11px, 2.8vw, 13px);
+    font-weight: 600;
+    letter-spacing: -0.1px;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: color 0.18s ease, transform 0.16s ease;
+  }
+  .tab:active { transform: scale(0.96); }
+  .tab .icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 34px;
+    border-radius: 14px;
+    margin: 0 0 3px;
+    line-height: 1;
+    transition: background 0.18s ease, transform 0.18s ease;
+  }
+  /* Match owner CustomTabBar SF Symbols (person.fill / phone.fill / cross.case.fill). */
+  .tab .icon-wrap svg {
+    width: 24px;
+    height: 24px;
+    display: block;
+    fill: currentColor;
+  }
+  .tab.active { color: var(--accent); font-weight: 700; }
+  .tab.active .icon-wrap {
+    background: rgba(225,29,72,0.12);
+    transform: scale(1.05);
+  }
+  .home-pill {
+    width: 134px;
+    height: 5px;
+    border-radius: 999px;
+    background: rgba(28,25,23,0.16);
+    margin-top: 4px;
+  }
+
+  /* Narrow phones (SE / mini) — keep Call / SOS usable, no horizontal clip. */
+  @media (max-width: 360px) {
+    :root {
+      --page-pad-x: 10px;
+      --tabbar-h: 68px;
+    }
+    .seizure-strip { flex-wrap: wrap; }
+    .tab { min-height: 52px; padding: 6px 0 4px; }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <!-- RedMed — same header + YOU card as owner RedMedView (no Edit). -->
+    <div class="panel active" id="panel-medical" data-panel="medical">
+      <div class="rm-header">
+        <p class="rm-lock">No login · no app. Card opens on tap.</p>
+        <div class="rm-title-row">
+          <img class="rm-logo" id="rmLogo" src="BrandLogo.png" width="48" height="48" alt="RedMed">
+          <div>
+            <h1 class="rm-name" id="name">RedMed</h1>
+            <p class="rm-status" id="statusLine">Not linked</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card you-card">
+        <div class="row row-name" id="rowNameRow"><span class="k">Name</span><span class="v empty" id="rowName">—</span></div>
+        <div class="row"><span class="k">Birth date</span><span class="v empty" id="rowDob">—</span></div>
+        <div class="row row-blood" id="rowBloodRow"><span class="k">Blood type</span><span class="v empty" id="rowBlood">—</span></div>
+      </div>
+
+      <div class="list-grid">
+        <details class="list-drop" id="dropAllergies" open>
+          <summary>
+            <span class="list-drop-title">Allergies</span>
+            <span class="list-drop-count" id="countAllergies" hidden></span>
+            <span class="list-drop-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="list-drop-body" id="allergies"></div>
+        </details>
+        <details class="list-drop" id="dropMedications" open>
+          <summary>
+            <span class="list-drop-title">Medications</span>
+            <span class="list-drop-count" id="countMedications" hidden></span>
+            <span class="list-drop-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="list-drop-body" id="meds"></div>
+        </details>
+        <details class="list-drop" id="dropConditions" open>
+          <summary>
+            <span class="list-drop-title">Conditions</span>
+            <span class="list-drop-count" id="countConditions" hidden></span>
+            <span class="list-drop-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="list-drop-body" id="conditions"></div>
+        </details>
+      </div>
+
+      <div class="sec">Contacts</div>
+      <div class="card" id="contacts"></div>
+
+      <p class="quote">“Control your fear. Control the moment.<br>You have what it takes to save a life.”</p>
+    </div>
+
+    <!-- Help — mirrors owner EmergencyView (BrandWordmark + SOS). -->
+    <div class="panel" id="panel-911" data-panel="911">
+      <div class="page-pad">
+        <img class="help-wordmark" id="helpWordmark" src="BrandWordmark.png" width="168" height="42" alt="RedMed">
+
+        <div class="info">
+          <div class="info-head">
+            <div class="info-icon" aria-hidden="true">📡</div>
+            <h2>No cell signal?</h2>
+          </div>
+          <p class="info-lead">
+            T-Mobile (US) + Starlink Direct-to-Cell partners — plan/region required; not a coverage promise.
+          </p>
+        </div>
+
+        <div class="gps-card">
+          <div class="gps-pill">LIVE GPS</div>
+          <div class="coords" id="coords">Getting GPS…</div>
+          <div class="gps-acc" id="gpsAcc"></div>
+        </div>
+        <div class="gps-actions">
+          <button class="btn btn-ink" type="button" id="copyCoordsBtn">Copy coordinates</button>
+          <a class="btn btn-call" id="callEmergency911" href="tel:112">Call <span class="emg">112</span></a>
+          <button class="btn btn-sos" type="button" id="sosBtn">SOS · Locate me</button>
+        </div>
+
+        <div class="seizure-strip" id="seizureStrip">
+          <div>
+            <div class="seizure-label">SEIZURE</div>
+            <div class="seizure-time" id="seizureTime">0:00</div>
+          </div>
+          <div class="seizure-hint" id="seizureHint">→ <span class="emg">112</span> at 5:00</div>
+          <div class="seizure-actions">
+            <button class="seizure-btn seizure-btn-reset" type="button" id="seizureResetBtn">Reset</button>
+            <button class="seizure-btn" type="button" id="seizureBtn">Start</button>
+          </div>
+        </div>
+
+        <div class="info">
+          <div class="info-head">
+            <div class="info-icon" aria-hidden="true">✚</div>
+            <h2>Roadside First Response</h2>
+          </div>
+          <ol>
+            <li>Turn on hazards. Don’t move injured — unless fire or traffic danger.</li>
+            <li>Check breathing. Tilt head, lift chin. If no pulse — start CPR.</li>
+            <li>Press hard on bleeding. Don’t lift to check. Add cloth on top.</li>
+            <li>Keep them warm and still. Talk to them. Note time of injury.</li>
+          </ol>
+        </div>
+
+        <div class="info">
+          <div class="info-head">
+            <div class="info-icon" aria-hidden="true">ℹ</div>
+            <h2>What to Tell <span class="emg">112</span></h2>
+          </div>
+          <ul>
+            <li>Your exact location — read the GPS coordinates above.</li>
+            <li>Number of people injured and visible injuries.</li>
+            <li>If anyone is unconscious or not breathing.</li>
+            <li>Stay on the line — let the dispatcher guide you.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Aid — same BrandWordmark chrome as owner AidView (no title/hint text). -->
+    <div class="panel" id="panel-aid" data-panel="aid">
+      <div class="page-pad">
+        <img class="aid-wordmark" id="aidWordmark" src="BrandWordmark.png" width="168" height="42" alt="RedMed">
+
+        <div class="aid-grid">
+          <details class="aid"><summary><span class="aid-emoji">🚗</span><span class="aid-title">Crash &amp; Head</span></summary>
+            <ol>
+              <li>Call <span class="emg">112</span> — give exact location and number of people</li>
+              <li>Hazards on. Do not move them unless fire or traffic danger</li>
+              <li>Keep head/neck still. Control bleeding with firm pressure</li>
+            </ol>
+          </details>
+          <details class="aid"><summary><span class="aid-emoji">🩸</span><span class="aid-title">Bleeding</span></summary>
+            <ol>
+              <li>Press hard with both hands — do not lift to check</li>
+              <li>Add cloth on top if soaked. Limb: tourniquet 2–3 in above</li>
+              <li>Note the time. Stay on the line with <span class="emg">112</span></li>
+            </ol>
+          </details>
+          <details class="aid"><summary><span class="aid-emoji">❤️</span><span class="aid-title">Heart &amp; Airway</span></summary>
+            <ol>
+              <li>No breathing/pulse: hard compressions 100–120/min, 2 inches deep</li>
+              <li>Choking, cannot cough: 5 back blows, then 5 abdominal thrusts</li>
+              <li>Alternate until clear or unresponsive — then CPR</li>
+            </ol>
+          </details>
+          <details class="aid"><summary><span class="aid-emoji">⚡</span><span class="aid-title">Shock</span></summary>
+            <ol>
+              <li>Call <span class="emg">112</span>. Lay flat — do not let them walk</li>
+              <li>Elevate legs 12 inches unless head/neck/spine injury</li>
+              <li>Keep warm. No food, water, or medication</li>
+            </ol>
+          </details>
+          <details class="aid"><summary><span class="aid-emoji">🧠</span><span class="aid-title">Seizure</span></summary>
+            <ol>
+              <li>Time it. Clear sharp objects. Do not restrain</li>
+              <li>Nothing in the mouth. Cushion the head</li>
+              <li>Call <span class="emg">112</span> if first seizure, over 5 minutes, injury, or in water</li>
+            </ol>
+          </details>
+          <details class="aid"><summary><span class="aid-emoji">🥶</span><span class="aid-title">Hypothermia</span></summary>
+            <ol>
+              <li>Move to shelter. Remove wet clothes gently</li>
+              <li>Warm chest/neck/armpits/groin — not the limbs</li>
+              <li>No rubbing or massage. Warm drinks only if fully conscious</li>
+            </ol>
+          </details>
+          <details class="aid"><summary><span class="aid-emoji">🥵</span><span class="aid-title">Heat</span></summary>
+            <ol>
+              <li>Heat stroke: call <span class="emg">112</span> — cool neck/armpits/groin fast</li>
+              <li>Move to shade. Remove extra clothing. Fan while cooling</li>
+              <li>Sip cool water only if fully conscious</li>
+            </ol>
+          </details>
+          <details class="aid"><summary><span class="aid-emoji">🏥</span><span class="aid-title">Trauma Hospitals</span></summary>
+            <ol>
+              <li>Call <span class="emg">112</span> — dispatch routes to the right trauma level</li>
+              <li>Do not self-transport major trauma if EMS is available</li>
+              <li>Note time of injury and mechanism for the team</li>
+            </ol>
+          </details>
+        </div>
+
+        <button class="aid-stop-alarm" type="button" id="aidStopAlarm">Stop the alarm <span class="x" aria-hidden="true">✕</span></button>
+
+        <p class="quote">“Control your fear. Control the moment.<br>You have what it takes to save a life.”</p>
+        <p class="foot-note">Local only once tap — everyone and everything. No servers · no online. No Bluetooth · passive HF NFC. No PII or PHI leaves this device through RedMed.</p>
+      </div>
+    </div>
+  </div>
+
+  <nav class="tabbar" aria-label="RedMed">
+    <div class="tabs">
+      <button class="tab active" type="button" data-tab="medical"><div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v1.5c0 .83.67 1.5 1.5 1.5h17c.83 0 1.5-.67 1.5-1.5V19c0-3.33-6.67-5-10-5z"/></svg></div>RedMed</button>
+      <button class="tab" type="button" data-tab="911"><div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M6.62 10.79a15.15 15.15 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 011 1V20a1 1 0 01-1 1C10.07 21 3 13.93 3 5a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.45.57 3.57a1 1 0 01-.25 1.02l-2.2 2.2z"/></svg></div>911</button>
+      <button class="tab" type="button" data-tab="aid"><div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M17 6h-2.2l-.6-1.2A2 2 0 0012.4 4h-.8a2 2 0 00-1.8.8L9.2 6H7a3 3 0 00-3 3v8a3 3 0 003 3h10a3 3 0 003-3V9a3 3 0 00-3-3zm-1.25 7.75h-3v3h-1.5v-3h-3v-1.5h3v-3h1.5v3h3v1.5z"/></svg></div>Aid</button>
+    </div>
+    <div class="home-pill" aria-hidden="true"></div>
+  </nav>
+
+  <script>
+(function () {
+  // Must match AppConfig.BraceletRF — single scanner product contract.
+  var SPECS = {
+    carrierMHz: 13.56,
+    walkByMinIn: 6,
+    walkByMaxIn: 8,
+    tapMinIn: 1,
+    tapMaxIn: 2,
+    reliableMaxIn: 4,
+    tabs: ['RedMed', '911', 'Aid'],
+    page: 'tapper.html'
+  };
+
+  // In-app RedMed tab / Preview / Scan — ?src=app or injected flag. No SOS auto-arm.
+  function isAppPreview() {
+    try {
+      if (window.__REDMED_APP_PREVIEW) return true;
+      return new URLSearchParams(location.search || '').get('src') === 'app';
+    } catch (e) { return !!window.__REDMED_APP_PREVIEW; }
+  }
+
+  // AES-GCM needs a secure context (https: or http://localhost). Plain LAN IPs fail.
+  function secureCryptoOk() {
+    return !!(window.crypto && window.crypto.subtle);
+  }
+  (function warnInsecureContext() {
+    if (secureCryptoOk() || isAppPreview()) return;
+    var lock = document.querySelector('.rm-lock');
+    if (!lock) return;
+    lock.textContent = 'Open this card over HTTPS (or localhost) so any phone can decrypt the band payload.';
+    lock.style.color = 'var(--accent)';
+  })();
+
+  function resolveAsset(elId, candidates) {
+    var img = document.getElementById(elId);
+    if (!img) return;
+    var i = 0;
+    function tryNext() {
+      if (i >= candidates.length) return;
+      var src = candidates[i++];
+      var probe = new Image();
+      probe.onload = function () { img.src = src; };
+      probe.onerror = tryNext;
+      probe.src = src;
+    }
+    tryNext();
+  }
+
+  function resolveLogo() {
+    var candidates = ['BrandLogo.png', 'assets/BrandLogo.png'];
+    var img = document.getElementById('rmLogo');
+    var icons = document.querySelectorAll('link[rel="apple-touch-icon"], link[rel="icon"]');
+    var i = 0;
+    function tryNext() {
+      if (i >= candidates.length) return;
+      var src = candidates[i++];
+      var probe = new Image();
+      probe.onload = function () {
+        if (img) img.src = src;
+        icons.forEach(function (el) { el.setAttribute('href', src); });
+      };
+      probe.onerror = tryNext;
+      probe.src = src;
+    }
+    tryNext();
+    resolveAsset('aidWordmark', ['BrandWordmark.png', 'assets/BrandWordmark.png']);
+    resolveAsset('helpWordmark', ['BrandWordmark.png', 'assets/BrandWordmark.png']);
+  }
+
+  // Bundle / app-embed already has BrandLogo.png — probing doubles decode on cold open.
+  if (!isAppPreview()) {
+    resolveLogo();
+  }
+
+  // Aid accordion — one pane open at a time (matches owner AidView).
+  (function aidAccordion() {
+    var root = document.getElementById('panel-aid');
+    if (!root) return;
+    root.addEventListener('toggle', function (e) {
+      var t = e.target;
+      if (!t || t.tagName !== 'DETAILS' || !t.open) return;
+      root.querySelectorAll('details.aid[open]').forEach(function (d) {
+        if (d !== t) d.open = false;
+      });
+    }, true);
+  })();
+
+
+  var MAX_PAYLOAD = 50000;
+  var MAX_INFLATED = 65536;
+  var MAX_LIST = 40;
+  var MAX_STR = 200;
+  var BLOOD = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
+  var ZLIB_VERSION = 0x01;
+  var AES_VERSION = 0x02;
+  var KEY_LABEL = 'RedMed-NFC-AES-GCM-v1';
+  var aesKeyPromise = null;
+
+  function asString(v, fallback) {
+    if (typeof v !== 'string') return fallback || '';
+    return v.slice(0, MAX_STR);
+  }
+
+  function asStringArray(v) {
+    if (!Array.isArray(v)) return [];
+    return v
+      .filter(function (x) { return typeof x === 'string'; })
+      .slice(0, MAX_LIST)
+      .map(function (s) { return s.slice(0, MAX_STR); });
+  }
+
+  function sanitizePhone(v) {
+    return String(v || '').replace(/[^\d+]/g, '').slice(0, 20);
+  }
+
+  /** Reject donor-flag residue ("0"/"1") mistaken for emergencyPhone. */
+  function usableEmergencyPhone(v) {
+    var digits = sanitizePhone(v);
+    var nums = digits.replace(/\D/g, '');
+    return nums.length >= 3 ? digits : '';
+  }
+
+  function splitList(v) {
+    if (Array.isArray(v)) return asStringArray(v);
+    if (typeof v !== 'string' || !v) return [];
+    return v.split(',').map(function (s) { return s.trim().slice(0, MAX_STR); }).filter(Boolean).slice(0, MAX_LIST);
+  }
+
+  function expandDob(dob) {
+    var digits = String(dob || '').replace(/\D/g, '');
+    if (digits.length === 6) {
+      var yy = parseInt(digits.slice(0, 2), 10);
+      var century = yy >= 70 ? '19' : '20';
+      return century + digits.slice(0, 2) + '-' + digits.slice(2, 4) + '-' + digits.slice(4, 6);
+    }
+    if (digits.length === 8) {
+      return digits.slice(0, 4) + '-' + digits.slice(4, 6) + '-' + digits.slice(6, 8);
+    }
+    return asString(dob);
+  }
+
+  function expandBlood(v) {
+    if (typeof v === 'number' && BLOOD[v]) return BLOOD[v];
+    return asString(v);
+  }
+
+  function expandUpdated(v) {
+    var digits = String(v || '').replace(/\D/g, '');
+    if (digits.length === 6) {
+      var yy = parseInt(digits.slice(0, 2), 10);
+      var century = yy >= 70 ? '19' : '20';
+      return century + digits.slice(0, 2) + '-' + digits.slice(2, 4) + '-' + digits.slice(4, 6);
+    }
+    return asString(v);
+  }
+
+  function isDonorFlag(v) {
+    return v === true || v === false || v === 0 || v === 1 || v === '0' || v === '1';
+  }
+
+  function looksLikeDob(v) {
+    if (typeof v === 'number') return true;
+    if (typeof v !== 'string') return false;
+    var digits = v.replace(/\D/g, '');
+    return digits.length === 6 || digits.length === 8 || v.indexOf('-') >= 0;
+  }
+
+  /** Pre-AES: [name, dob, blood, donor, allergies, meds, conditions, contacts, updated?] */
+  function isLegacyCompactArray(arr) {
+    if (!Array.isArray(arr) || arr.length < 4) return false;
+    if (arr.length >= 9 && isDonorFlag(arr[8])) return false;
+    var donorLike = isDonorFlag(arr[3]);
+    if (donorLike && Array.isArray(arr[4])) return true;
+    if (donorLike && typeof arr[2] === 'number' && arr[2] >= 0 && arr[2] <= 7) return true;
+    if (
+      donorLike &&
+      typeof arr[0] === 'string' &&
+      BLOOD.indexOf(arr[0]) < 0 &&
+      looksLikeDob(arr[1]) &&
+      arr.length <= 9
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  function contactsFromRows(rows) {
+    if (!Array.isArray(rows)) return [];
+    return rows.slice(0, MAX_LIST).map(function (row) {
+      if (!Array.isArray(row)) return null;
+      return {
+        name: asString(row[0], 'Contact'),
+        rel: asString(row[1]),
+        phone: sanitizePhone(row[2]),
+        detail: ''
+      };
+    }).filter(Boolean);
+  }
+
+  function profileFromLegacyArray(arr) {
+    return {
+      name: asString(arr[0]),
+      dob: expandDob(arr[1]),
+      blood: expandBlood(arr[2]),
+      allergies: asStringArray(arr[4]),
+      meds: asStringArray(arr[5]),
+      conditions: asStringArray(arr[6]),
+      contacts: contactsFromRows(arr[7]),
+      updated: expandUpdated(arr[8])
+    };
+  }
+
+  function profileFromCurrentArray(arr) {
+    function str(i) {
+      if (i >= arr.length || arr[i] == null) return '';
+      if (typeof arr[i] === 'string') return arr[i];
+      if (typeof arr[i] === 'number' || typeof arr[i] === 'boolean') return String(arr[i]);
+      return '';
+    }
+    var contacts = contactsFromRows(arr[7]);
+    var emergency = usableEmergencyPhone(str(3));
+    if (emergency) {
+      if (!contacts.length) {
+        contacts = [{ name: 'Emergency', rel: '', phone: emergency, detail: '' }];
+      } else if (!contacts[0].phone) {
+        contacts[0].phone = emergency;
+      }
+    }
+    return {
+      blood: expandBlood(arr[0]),
+      allergies: splitList(arr[1]),
+      meds: splitList(arr[2]),
+      name: asString(str(4)),
+      dob: asString(str(5)),
+      conditions: splitList(arr[6]),
+      contacts: contacts,
+      updated: asString(str(9))
+    };
+  }
+
+  function profileFromArray(arr) {
+    if (!Array.isArray(arr)) return {};
+    return isLegacyCompactArray(arr) ? profileFromLegacyArray(arr) : profileFromCurrentArray(arr);
+  }
+
+  function sanitizeProfile(raw) {
+    if (Array.isArray(raw)) return sanitizeProfile(profileFromArray(raw));
+    if (!raw || typeof raw !== 'object') return {};
+    var contacts = Array.isArray(raw.contacts) ? raw.contacts.slice(0, MAX_LIST).map(function (c) {
+      if (!c || typeof c !== 'object') return null;
+      return {
+        name: asString(c.name, 'Contact'),
+        rel: asString(c.rel),
+        phone: sanitizePhone(c.phone),
+        detail: asString(c.detail)
+      };
+    }).filter(Boolean) : [];
+    return {
+      name: asString(raw.name),
+      dob: asString(raw.dob),
+      blood: asString(raw.blood),
+      updated: asString(raw.updated),
+      allergies: splitList(raw.allergies),
+      meds: splitList(raw.meds),
+      conditions: splitList(raw.conditions),
+      contacts: contacts
+    };
+  }
+
+  function getAesKey() {
+    if (!aesKeyPromise) {
+      aesKeyPromise = crypto.subtle.digest('SHA-256', new TextEncoder().encode(KEY_LABEL)).then(function (hash) {
+        return crypto.subtle.importKey('raw', hash, { name: 'AES-GCM' }, false, ['decrypt']);
+      });
+    }
+    return aesKeyPromise;
+  }
+
+  function b64urlToBytes(raw) {
+    var b64 = raw.replace(/-/g, '+').replace(/_/g, '/');
+    while (b64.length % 4) b64 += '=';
+    var bin = atob(b64);
+    if (bin.length > MAX_PAYLOAD) return null;
+    return Uint8Array.from(bin, function (c) { return c.charCodeAt(0); });
+  }
+
+  function tryParseJSON(bytes) {
+    if (!bytes || !bytes.length) return null;
+    var c = bytes[0];
+    if (c !== 0x7b && c !== 0x5b) return null;
+    var json = new TextDecoder('utf-8').decode(bytes);
+    return JSON.parse(json);
+  }
+
+  function parseJSONBytes(bytes) {
+    return sanitizeProfile(tryParseJSON(bytes));
+  }
+
+  function inflateZlib(bytes) {
+    if (typeof DecompressionStream === 'undefined') {
+      return Promise.reject(new Error('no DecompressionStream'));
+    }
+    var ds = new DecompressionStream('deflate');
+    var stream = new Blob([bytes]).stream().pipeThrough(ds);
+    var reader = stream.getReader();
+    var chunks = [];
+    var total = 0;
+    function pump() {
+      return reader.read().then(function (result) {
+        if (result.done) {
+          var out = new Uint8Array(total);
+          var offset = 0;
+          for (var i = 0; i < chunks.length; i++) {
+            out.set(chunks[i], offset);
+            offset += chunks[i].byteLength;
+          }
+          return out;
+        }
+        total += result.value.byteLength;
+        if (total > MAX_INFLATED) {
+          reader.cancel();
+          return Promise.reject(new Error('inflated too large'));
+        }
+        chunks.push(result.value);
+        return pump();
+      });
+    }
+    return pump();
+  }
+
+  function setRow(id, value) {
+    var el = document.getElementById(id);
+    if (!value) {
+      el.textContent = '—';
+      el.classList.add('empty');
+    } else {
+      el.textContent = value;
+      el.classList.remove('empty');
+    }
+  }
+
+  function list(el, items, countId) {
+    el.textContent = '';
+    var countEl = countId ? document.getElementById(countId) : null;
+    if (!items || !items.length) {
+      var empty = document.createElement('div');
+      empty.className = 'list-item empty-slot';
+      empty.textContent = '—';
+      el.appendChild(empty);
+      if (countEl) {
+        countEl.textContent = '';
+        countEl.hidden = true;
+      }
+      return;
+    }
+    if (countEl) {
+      countEl.textContent = String(items.length);
+      countEl.hidden = false;
+    }
+    items.forEach(function (t) {
+      var d = document.createElement('div');
+      d.className = 'list-item';
+      d.textContent = t;
+      el.appendChild(d);
+    });
+  }
+
+  var tabAnimReady = false;
+  function showTab(id) {
+    document.querySelectorAll('.panel').forEach(function (p) {
+      var on = p.getAttribute('data-panel') === id;
+      p.classList.toggle('active', on);
+      // Animate tab switches only — cold open must not start at opacity 0.
+      p.classList.toggle('anim-in', on && tabAnimReady);
+    });
+    document.querySelectorAll('.tab').forEach(function (t) {
+      t.classList.toggle('active', t.getAttribute('data-tab') === id);
+    });
+    window.scrollTo(0, 0);
+    // GPS only when 911 is open — medical open must not trigger a location popup.
+    if (id === '911') ensureGeo();
+  }
+
+  document.querySelectorAll('.tab').forEach(function (t) {
+    t.addEventListener('click', function () { showTab(t.getAttribute('data-tab')); });
+  });
+  showTab('medical');
+  tabAnimReady = true;
+
+  function decodeProfile() {
+    try {
+      var hash = location.hash || '';
+      var idx = hash.indexOf('d=');
+      if (idx < 0) return Promise.resolve(null);
+      var raw = decodeURIComponent(hash.slice(idx + 2).split('&')[0] || '');
+      var bytes = b64urlToBytes(raw);
+      if (!bytes || !bytes.length) return Promise.resolve(null);
+      if (bytes[0] === AES_VERSION) {
+        if (bytes.length < 1 + 12 + 16) return Promise.resolve(null);
+        var iv = bytes.subarray(1, 13);
+        var cipher = bytes.subarray(13);
+        return getAesKey().then(function (key) {
+          return crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, key, cipher);
+        }).then(function (plain) {
+          return parseJSONBytes(new Uint8Array(plain));
+        }).catch(function () { return null; });
+      }
+      try {
+        var direct = tryParseJSON(bytes);
+        if (direct != null) return Promise.resolve(sanitizeProfile(direct));
+      } catch (e) { /* fall through to zlib */ }
+      var body = bytes[0] === ZLIB_VERSION ? bytes.subarray(1) : bytes;
+      return inflateZlib(body).then(function (inflated) {
+        var parsed = tryParseJSON(inflated);
+        if (parsed == null) return null;
+        return sanitizeProfile(parsed);
+      }).catch(function () { return null; });
+    } catch (e) { return Promise.resolve(null); }
+  }
+
+  var firstPhone = '';
+
+  function renderProfile(p, fromBand) {
+    p = p || {};
+    var rawName = (p.name || '').trim();
+    var rawDob = (p.dob || '').trim();
+    var rawBlood = (p.blood || '').trim();
+    var displayName = rawName || 'RedMed';
+    var nameEl = document.getElementById('name');
+    var logo = document.getElementById('rmLogo');
+    var statusEl = document.getElementById('statusLine');
+    nameEl.textContent = displayName;
+    // Empty: grey logo on the left. Filled: logo drops; imported name takes the row.
+    if (logo) {
+      if (rawName) logo.classList.add('has-name');
+      else logo.classList.remove('has-name');
+    }
+    // Real band tap: decode ⇒ fromBand. In-app embed: Swift sets __REDMED_BRACELET_LINKED
+    // so Linked still requires a verified write + YOU card (name, birth, blood).
+    if (statusEl) {
+      var youComplete = !!rawName && !!rawDob && !!rawBlood;
+      var linked = isAppPreview()
+        ? (!!window.__REDMED_BRACELET_LINKED && youComplete)
+        : (!!fromBand && youComplete);
+      statusEl.textContent = linked ? 'Linked bracelet' : 'Not linked';
+      statusEl.classList.toggle('linked', linked);
+    }
+    setRow('rowName', p.name);
+    var nameRow = document.getElementById('rowNameRow');
+    if (nameRow) {
+      if (rawName) nameRow.classList.add('has-name');
+      else nameRow.classList.remove('has-name');
+    }
+    setRow('rowDob', p.dob);
+    setRow('rowBlood', p.blood);
+    var bloodRow = document.getElementById('rowBloodRow');
+    if (bloodRow) {
+      if (rawBlood) bloodRow.classList.add('has-blood');
+      else bloodRow.classList.remove('has-blood');
+    }
+    list(document.getElementById('allergies'), p.allergies, 'countAllergies');
+    list(document.getElementById('meds'), p.meds, 'countMedications');
+    list(document.getElementById('conditions'), p.conditions, 'countConditions');
+
+    var contactsEl = document.getElementById('contacts');
+    contactsEl.textContent = '';
+    var contacts = p.contacts || [];
+    firstPhone = '';
+    if (!contacts.length) {
+      var emptyC = document.createElement('div');
+      emptyC.className = 'list-item empty-slot';
+      emptyC.textContent = '—';
+      contactsEl.appendChild(emptyC);
+    } else {
+      contacts.forEach(function (c, i) {
+        var row = document.createElement('div');
+        row.className = 'contact-block';
+        var phone = sanitizePhone(c.phone);
+        if (!phone && c.detail) phone = sanitizePhone(c.detail);
+        if (i === 0 && phone) firstPhone = phone;
+
+        var nameRow = document.createElement('div');
+        nameRow.className = 'cn-row';
+        var name = document.createElement('div');
+        name.className = 'cn';
+        name.textContent = c.name || 'Emergency contact';
+        nameRow.appendChild(name);
+        if (phone) {
+          var a = document.createElement('a');
+          a.className = 'cp';
+          a.href = 'tel:' + phone;
+          a.textContent = c.phone || phone;
+          nameRow.appendChild(a);
+        }
+        row.appendChild(nameRow);
+
+        var rel = asString(c.rel);
+        if (!rel && c.detail && phone) {
+          var parts = String(c.detail).split('·').map(function (s) { return s.trim(); });
+          if (parts.length > 1) rel = parts[0];
+        } else if (!rel && c.detail && !phone) {
+          rel = asString(c.detail);
+        }
+        if (rel) {
+          var relEl = document.createElement('div');
+          relEl.className = 'cd';
+          relEl.textContent = rel;
+          row.appendChild(relEl);
+        }
+        contactsEl.appendChild(row);
+      });
+    }
+  }
+
+  (function applyAppEmbedChrome() {
+    if (!isAppPreview()) return;
+    try { document.documentElement.classList.add('app-embed'); } catch (e0) {}
+    try { document.body.classList.add('app-embed'); } catch (e) {}
+  })();
+
+  decodeProfile().then(function (p) {
+    renderProfile(p, p != null);
+  });
+
+  function setCoords(lat, lon, acc) {
+    if (!isFinite(lat) || !isFinite(lon)) return;
+    document.getElementById('coords').textContent = lat.toFixed(6) + ', ' + lon.toFixed(6);
+    document.getElementById('gpsAcc').textContent = acc > 0 ? ('Accuracy ±' + Math.round(acc) + ' m') : '';
+    window.__redmedLoc = { latitude: lat, longitude: lon, accuracy: acc };
+  }
+
+  // Lazy GPS — do not call getCurrentPosition on medical-tab load (browser location popup).
+  // App-embed: native Find Help owns location. Passerby: start only from 911 tab.
+  var geoStarted = false;
+  function ensureGeo() {
+    if (geoStarted) return;
+    try {
+      if (window.__REDMED_APP_PREVIEW) return;
+      if (new URLSearchParams(location.search || '').get('src') === 'app') return;
+    } catch (e) {
+      if (window.__REDMED_APP_PREVIEW) return;
+    }
+    geoStarted = true;
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        setCoords(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+      }, function () {
+        document.getElementById('coords').textContent = 'GPS unavailable';
+        document.getElementById('gpsAcc').textContent = 'Tell dispatcher landmarks';
+      }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 });
+    } else {
+      document.getElementById('coords').textContent = 'GPS unavailable';
+    }
+  }
+
+  document.getElementById('copyCoordsBtn').addEventListener('click', function () {
+    var loc = window.__redmedLoc;
+    if (!loc) { alert('Location not available yet.'); return; }
+    var text = loc.latitude.toFixed(6) + ', ' + loc.longitude.toFixed(6);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    } else {
+      prompt('Copy coordinates', text);
+    }
+  });
+
+  // Seizure stopwatch — mirrors owner Find Help; auto-dials at 5:00.
+  (function () {
+    var CALL_AT = 5 * 60;
+    var running = false;
+    var elapsed = 0;
+    var startedAt = 0;
+    var timerId = null;
+    var timeEl = document.getElementById('seizureTime');
+    var hintEl = document.getElementById('seizureHint');
+    var btn = document.getElementById('seizureBtn');
+    var resetBtn = document.getElementById('seizureResetBtn');
+    if (!timeEl || !hintEl || !btn) return;
+
+    function format(t) {
+      var total = Math.max(0, Math.floor(t));
+      return Math.floor(total / 60) + ':' + String(total % 60).padStart(2, '0');
+    }
+
+    function emergencyTel() {
+      var n = (document.querySelector('.emg') || {}).textContent || '112';
+      return 'tel:' + n;
+    }
+
+    function paint() {
+      var past = elapsed >= CALL_AT;
+      timeEl.textContent = format(elapsed);
+      timeEl.classList.toggle('hot', past);
+      hintEl.classList.toggle('hot', past);
+      if (past) {
+        hintEl.textContent = '5:00 — call';
+      } else {
+        hintEl.textContent = '';
+        hintEl.appendChild(document.createTextNode('→ '));
+        var emg = document.createElement('span');
+        emg.className = 'emg';
+        emg.textContent = ((document.querySelector('.emg') || {}).textContent || '112');
+        hintEl.appendChild(emg);
+        hintEl.appendChild(document.createTextNode(' at 5:00'));
+      }
+      btn.textContent = running ? 'Stop' : 'Start';
+      btn.classList.toggle('on', running);
+      if (resetBtn) {
+        resetBtn.disabled = !running && elapsed === 0;
+      }
+    }
+
+    function stop(reset) {
+      if (timerId) { clearInterval(timerId); timerId = null; }
+      running = false;
+      if (reset) elapsed = 0;
+      paint();
+    }
+
+    function tick() {
+      elapsed = (Date.now() - startedAt) / 1000;
+      if (elapsed >= CALL_AT) {
+        stop(false);
+        location.href = emergencyTel();
+        return;
+      }
+      paint();
+    }
+
+    btn.addEventListener('click', function () {
+      if (running) {
+        stop(false);
+        return;
+      }
+      stop(true);
+      running = true;
+      startedAt = Date.now();
+      paint();
+      timerId = setInterval(tick, 1000);
+    });
+
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function () {
+        stop(true);
+      });
+    }
+
+    paint();
+  })();
+})();
+  </script>
+<script>
+// Local emergency number for the visitor's region. The band is tapped by
+// whoever is standing over the casualty, so the card must show the number that
+// works where they are, not where the profile owner set the app up.
+// Markup ships 112 (GSM standard, routed almost everywhere) and this refines it.
+(function () {
+  var byRegion = {
+    GB: '999', IE: '999', US: '911', CA: '911', MX: '911',
+    AU: '000', NZ: '111', JP: '119', IN: '112', BR: '192',
+    AR: '107', ZA: '10177'
+  };
+  var region = '';
+  try {
+    region = new Intl.Locale(navigator.language).region || '';
+  } catch (e) {
+    var m = /[-_]([A-Za-z]{2})\b/.exec(navigator.language || '');
+    region = m ? m[1].toUpperCase() : '';
+  }
+  var num = byRegion[region] || '112';
+  var spans = document.querySelectorAll('.emg');
+  for (var i = 0; i < spans.length; i++) { spans[i].textContent = num; }
+  var call = document.getElementById('callEmergency');
+  if (call) { call.setAttribute('href', 'tel:' + num); }
+  var call911 = document.getElementById('callEmergency911');
+  if (call911) { call911.setAttribute('href', 'tel:' + num); }
+})();
+</script>
+<script>
+// Register SW ASAP (not on window.load) so the next bracelet tap is controlled
+// and paints almost instantly from Cache Storage. Payload stays in #d= only —
+// the service worker never stores medical fields. Skip in app-embed (file: WKWebView).
+(function () {
+  function appPreview() {
+    try {
+      if (window.__REDMED_APP_PREVIEW) return true;
+      return new URLSearchParams(location.search || '').get('src') === 'app';
+    } catch (e) { return !!window.__REDMED_APP_PREVIEW; }
+  }
+  if (appPreview()) return;
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker
+    .register('sw.js', { scope: './', updateViaCache: 'none' })
+    .then(function (reg) {
+      // Defer update check so first paint / decrypt is not fighting network.
+      var run = function () { try { reg.update(); } catch (e) {} };
+      if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 4000 });
+      else setTimeout(run, 2500);
+    })
+    .catch(function () {});
+})();
+</script>
+<script>
+// Survival alarm — hardware-local only (this phone).
+// Real bracelet NFC open with #d= → arm + PLAY local siren (no server).
+// Explicit SOS toggle and DeviceMotion crash share the same on-device alarm.
+// Crash path ignores sex, masturbation, walking, eating, daily rhythm (same
+// gates as native CrashMotionGuard). Web Audio + wake lock only.
+(function () {
+  function appPreview() {
+    try {
+      if (window.__REDMED_APP_PREVIEW) return true;
+      return new URLSearchParams(location.search || '').get('src') === 'app';
+    } catch (e) { return !!window.__REDMED_APP_PREVIEW; }
+  }
+  var sosBtn = document.getElementById('sosBtn');
+  var aidStop = document.getElementById('aidStopAlarm');
+  if (!sosBtn) return;
+  // Native CrashMotionGuard owns crash + SOS in the app embed.
+  if (appPreview()) return;
+
+  // Match CrashMotionThresholds (g, rad/s). DeviceMotion accel is m/s².
+  // Ignore walking, sex, masturbation, eating, phone handling, daily rhythm.
+  var G = 9.80665;
+  var CRASH_PEAK_G = 16.0;
+  var POST_FREEFALL_PEAK_G = 13.0;
+  var OVERRIDE_BUSY_PEAK_G = 24.0;
+  var FREEFALL_MAX_G = 0.20;
+  var FREEFALL_MIN_S = 0.22;
+  var FREEFALL_IMPACT_WINDOW_S = 0.40;
+  var HUMAN_MIN_G = 0.45;
+  var HUMAN_MAX_G = 10.0;
+  var HUMAN_SPIKE_COUNT = 2;
+  var HUMAN_WINDOW_S = 12.0;
+  var BUSY_HOLD_S = 14.0;
+  var HAND_SPIN_RAD = 2.0;
+  var RHYTHM_MIN_S = 0.12;
+  var RHYTHM_MAX_S = 2.0;
+  var RHYTHM_HIT_COUNT = 3;
+  var SUSTAINED_HUMAN_S = 1.2;
+  var MIN_JERK_G_S = 140.0;
+  var SAMPLE_HZ = 50.0;
+  var COOLDOWN_S = 90.0;
+  var DT = 1.0 / SAMPLE_HZ;
+
+  var armed = false;
+  var ctx = null;
+  var osc = null;
+  var gain = null;
+  var lfo = null;
+  var wake = null;
+  var beepTimer = null;
+
+  var motionListening = false;
+  var lastArmAt = 0;
+  var lastMagnitude = 0;
+  var freefallSince = 0;
+  var freefallEndedAt = 0;
+  var recentHumanPeaks = [];
+  var recentHandSpins = [];
+  var humanBurstStart = 0;
+  var busyUntil = 0;
+
+  var sirenUrl = null;
+  var htmlAudio = null;
+  var fireTimer = null;
+  var keepAliveTimer = null;
+  var audioNeedsGesture = false;
+
+  function paint() {
+    var label = armed ? 'Stop SOS alarm' : 'SOS · Locate me';
+    if (armed && audioNeedsGesture) label = 'Tap to play siren · Stop';
+    sosBtn.textContent = label;
+    sosBtn.classList.toggle('armed', armed);
+    if (aidStop) aidStop.classList.toggle('show', armed);
+  }
+
+  function writeU16(view, offset, v) { view.setUint16(offset, v, true); }
+  function writeU32(view, offset, v) { view.setUint32(offset, v, true); }
+
+  // Same three-beep pattern as native LocatorBeacon.alarmWAV (880 / 1175 / 880).
+  function buildSirenWavUrl() {
+    var sampleRate = 22050;
+    var beepDuration = 0.22;
+    var gapDuration = 0.10;
+    var freqs = [880, 1174.7, 880];
+    var samples = [];
+    function tone(freq, seconds) {
+      var count = Math.floor(sampleRate * seconds);
+      var out = new Array(count);
+      var twoPiF = 2 * Math.PI * freq;
+      for (var n = 0; n < count; n++) {
+        var t = n / sampleRate;
+        var attack = 0.015, release = 0.03, env = 1;
+        if (t < attack) env = t / attack;
+        else if (t > seconds - release) env = Math.max(0, (seconds - t) / release);
+        out[n] = Math.sin(twoPiF * t) * env * 0.95;
+      }
+      return out;
+    }
+    for (var i = 0; i < freqs.length; i++) {
+      samples = samples.concat(tone(freqs[i], beepDuration));
+      if (i < freqs.length - 1) {
+        var gap = Math.floor(sampleRate * gapDuration);
+        for (var g = 0; g < gap; g++) samples.push(0);
+      }
+    }
+    var dataSize = samples.length * 2;
+    var buf = new ArrayBuffer(44 + dataSize);
+    var view = new DataView(buf);
+    var u8 = new Uint8Array(buf);
+    u8.set([0x52,0x49,0x46,0x46], 0); // RIFF
+    writeU32(view, 4, 36 + dataSize);
+    u8.set([0x57,0x41,0x56,0x45], 8); // WAVE
+    u8.set([0x66,0x6D,0x74,0x20], 12); // fmt
+    writeU32(view, 16, 16);
+    writeU16(view, 20, 1);
+    writeU16(view, 22, 1);
+    writeU32(view, 24, sampleRate);
+    writeU32(view, 28, sampleRate * 2);
+    writeU16(view, 32, 2);
+    writeU16(view, 34, 16);
+    u8.set([0x64,0x61,0x74,0x61], 36); // data
+    writeU32(view, 40, dataSize);
+    for (var s = 0; s < samples.length; s++) {
+      var v = Math.max(-1, Math.min(1, samples[s]));
+      view.setInt16(44 + s * 2, (v * 32767) | 0, true);
+    }
+    var blob = new Blob([buf], { type: 'audio/wav' });
+    return URL.createObjectURL(blob);
+  }
+
+  function vibrateBurst() {
+    try {
+      if (navigator.vibrate) navigator.vibrate([220, 100, 220, 100, 220]);
+    } catch (e) {}
+  }
+
+  function fireSirenBurst() {
+    if (!armed) return;
+    if (!sirenUrl) sirenUrl = buildSirenWavUrl();
+    try {
+      if (!htmlAudio) {
+        htmlAudio = new Audio(sirenUrl);
+        htmlAudio.setAttribute('playsinline', 'true');
+        htmlAudio.playsInline = true;
+        htmlAudio.preload = 'auto';
+        htmlAudio.volume = 1;
+      }
+      htmlAudio.currentTime = 0;
+      var p = htmlAudio.play();
+      if (p && typeof p.then === 'function') {
+        p.then(function () { audioNeedsGesture = false; paint(); })
+         .catch(function () { audioNeedsGesture = true; paint(); });
+      } else {
+        audioNeedsGesture = false;
+      }
+    } catch (e) {
+      audioNeedsGesture = true;
+      paint();
+    }
+    vibrateBurst();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().then(function () { audioNeedsGesture = false; paint(); }).catch(function () {});
+    }
+  }
+
+  function ensurePlaying() {
+    if (!armed) return;
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(function () {});
+    }
+    if (htmlAudio && htmlAudio.paused) {
+      var p = htmlAudio.play();
+      if (p && p.catch) p.catch(function () { audioNeedsGesture = true; paint(); });
+    }
+  }
+
+  function stopAudio() {
+    if (beepTimer) { clearInterval(beepTimer); beepTimer = null; }
+    if (fireTimer) { clearInterval(fireTimer); fireTimer = null; }
+    if (keepAliveTimer) { clearInterval(keepAliveTimer); keepAliveTimer = null; }
+    try { if (osc) osc.stop(); } catch (e) {}
+    try { if (lfo) lfo.stop(); } catch (e) {}
+    osc = null;
+    lfo = null;
+    gain = null;
+    if (ctx) {
+      try { ctx.close(); } catch (e) {}
+      ctx = null;
+    }
+    if (htmlAudio) {
+      try { htmlAudio.pause(); htmlAudio.currentTime = 0; } catch (e) {}
+      htmlAudio = null;
+    }
+    if (wake) {
+      try { wake.release(); } catch (e) {}
+      wake = null;
+    }
+    audioNeedsGesture = false;
+  }
+
+  function startAudio() {
+    stopAudio();
+    if (!sirenUrl) sirenUrl = buildSirenWavUrl();
+
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) {
+      ctx = new AC();
+      gain = ctx.createGain();
+      gain.gain.value = 0.55;
+      gain.connect(ctx.destination);
+
+      osc = ctx.createOscillator();
+      osc.type = 'square';
+      osc.frequency.value = 880;
+      osc.connect(gain);
+
+      lfo = ctx.createOscillator();
+      lfo.type = 'sine';
+      lfo.frequency.value = 2;
+      var lfoGain = ctx.createGain();
+      lfoGain.gain.value = 220;
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc.frequency);
+
+      osc.start();
+      lfo.start();
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(function () { audioNeedsGesture = true; });
+      }
+    }
+
+    // Play immediately — HTMLAudio + Web Audio + vibrate (mirrors LocatorBeacon).
+    fireSirenBurst();
+    fireTimer = setInterval(fireSirenBurst, 5000);
+    keepAliveTimer = setInterval(ensurePlaying, 1000);
+
+    if (navigator.wakeLock && navigator.wakeLock.request) {
+      navigator.wakeLock.request('screen').then(function (lock) {
+        wake = lock;
+      }).catch(function () {});
+    }
+  }
+
+  function resetMotionTransient() {
+    lastMagnitude = 0;
+    freefallSince = 0;
+    freefallEndedAt = 0;
+    recentHumanPeaks = [];
+    recentHandSpins = [];
+    humanBurstStart = 0;
+    busyUntil = 0;
+  }
+
+  function arm() {
+    if (armed) return;
+    armed = true;
+    lastArmAt = Date.now() / 1000;
+    resetMotionTransient();
+    startAudio(); // must play — not armed-only UI
+    paint();
+  }
+
+  function disarm() {
+    if (!armed) return;
+    armed = false;
+    stopAudio();
+    resetMotionTransient();
+    paint();
+  }
+
+  function markBusy(now) {
+    busyUntil = Math.max(busyUntil, now + BUSY_HOLD_S);
+    freefallSince = 0;
+    freefallEndedAt = 0;
+    humanBurstStart = 0;
+  }
+
+  function prune(list, now, windowS) {
+    var i = 0;
+    while (i < list.length && now - list[i] > windowS) i++;
+    if (i) list.splice(0, i);
+  }
+
+  function isRhythmicHumanActivity(now) {
+    var peaks = recentHumanPeaks.filter(function (t) {
+      return now - t <= HUMAN_WINDOW_S;
+    });
+    if (peaks.length < RHYTHM_HIT_COUNT + 1) return false;
+    var hits = 0;
+    for (var i = 1; i < peaks.length; i++) {
+      var dt = peaks[i] - peaks[i - 1];
+      if (dt >= RHYTHM_MIN_S && dt <= RHYTHM_MAX_S) {
+        hits++;
+        if (hits >= RHYTHM_HIT_COUNT) return true;
+      }
+    }
+    return false;
+  }
+
+  function evaluate(ax, ay, az, spinRad, now, usingGravity) {
+    if (armed) return;
+    if (lastArmAt && now - lastArmAt < COOLDOWN_S) return;
+
+    var magnitude = Math.sqrt(ax * ax + ay * ay + az * az) / G;
+    var jerk = Math.abs(magnitude - lastMagnitude) / DT;
+    lastMagnitude = magnitude;
+
+    // No user-accel (gravity-only): treat as busy unless freefall — sex/daily
+    // motion must not arm on moderate including-gravity spikes.
+    if (usingGravity) {
+      if (magnitude <= FREEFALL_MAX_G) {
+        if (!freefallSince) freefallSince = now;
+      } else if (freefallSince) {
+        if (now - freefallSince >= FREEFALL_MIN_S) freefallEndedAt = now;
+        freefallSince = 0;
+      }
+      var inPostFreefallG = false;
+      if (freefallEndedAt) {
+        if (now - freefallEndedAt > FREEFALL_IMPACT_WINDOW_S) freefallEndedAt = 0;
+        else inPostFreefallG = true;
+      }
+      if (jerk < MIN_JERK_G_S) return;
+      if (magnitude >= OVERRIDE_BUSY_PEAK_G) { arm(); return; }
+      if (inPostFreefallG && magnitude >= POST_FREEFALL_PEAK_G) arm();
+      return;
+    }
+
+    if (magnitude >= HUMAN_MIN_G && magnitude <= HUMAN_MAX_G) {
+      recentHumanPeaks.push(now);
+      if (!humanBurstStart) humanBurstStart = now;
+    } else if (humanBurstStart && now - humanBurstStart > HUMAN_WINDOW_S) {
+      humanBurstStart = 0;
+    }
+    prune(recentHumanPeaks, now, HUMAN_WINDOW_S);
+
+    if (humanBurstStart && now - humanBurstStart >= SUSTAINED_HUMAN_S && recentHumanPeaks.length) {
+      markBusy(now);
+      return;
+    }
+    if (isRhythmicHumanActivity(now)) {
+      markBusy(now);
+      return;
+    }
+    if (recentHumanPeaks.length >= HUMAN_SPIKE_COUNT) {
+      markBusy(now);
+      return;
+    }
+
+    if (spinRad >= HAND_SPIN_RAD) {
+      recentHandSpins.push(now);
+      prune(recentHandSpins, now, HUMAN_WINDOW_S);
+      if (magnitude < OVERRIDE_BUSY_PEAK_G) {
+        markBusy(now);
+        return;
+      }
+    } else {
+      prune(recentHandSpins, now, HUMAN_WINDOW_S);
+    }
+
+    var isBusy = now < busyUntil
+      || recentHandSpins.length > 0
+      || recentHumanPeaks.length >= HUMAN_SPIKE_COUNT
+      || isRhythmicHumanActivity(now);
+
+    if (magnitude <= FREEFALL_MAX_G) {
+      if (!freefallSince) freefallSince = now;
+    } else if (freefallSince) {
+      if (now - freefallSince >= FREEFALL_MIN_S) freefallEndedAt = now;
+      freefallSince = 0;
+    }
+
+    var inPostFreefall = false;
+    if (freefallEndedAt) {
+      if (now - freefallEndedAt > FREEFALL_IMPACT_WINDOW_S) {
+        freefallEndedAt = 0;
+      } else {
+        inPostFreefall = true;
+      }
+    }
+
+    if (jerk < MIN_JERK_G_S) return;
+
+    var requiredPeak = isBusy ? OVERRIDE_BUSY_PEAK_G : CRASH_PEAK_G;
+    if (magnitude >= requiredPeak) {
+      arm();
+      return;
+    }
+    if (!isBusy && inPostFreefall && magnitude >= POST_FREEFALL_PEAK_G) {
+      arm();
+    }
+  }
+
+  function onDeviceMotion(e) {
+    var a = e.acceleration;
+    var ag = e.accelerationIncludingGravity;
+    var ax = 0, ay = 0, az = 0;
+    var usingGravity = false;
+    if (a && a.x != null && a.y != null && a.z != null) {
+      ax = a.x; ay = a.y; az = a.z;
+    } else if (ag && ag.x != null && ag.y != null && ag.z != null) {
+      // No user-accel — use including-gravity (impact peaks still dominate).
+      ax = ag.x; ay = ag.y; az = ag.z;
+      usingGravity = true;
+    } else {
+      return;
+    }
+    var rr = e.rotationRate || {};
+    // Spec: degrees/sec. Native CrashMotionGuard uses rad/sec.
+    var sx = rr.alpha || 0, sy = rr.beta || 0, sz = rr.gamma || 0;
+    var spinRad = Math.sqrt(sx * sx + sy * sy + sz * sz) * Math.PI / 180;
+    evaluate(ax, ay, az, spinRad, Date.now() / 1000, usingGravity);
+  }
+
+  function startCrashMonitor() {
+    if (motionListening || typeof window.DeviceMotionEvent === 'undefined') return;
+    window.addEventListener('devicemotion', onDeviceMotion, { passive: true });
+    motionListening = true;
+  }
+
+  function requestMotionThenStart() {
+    if (motionListening) return;
+    var DME = window.DeviceMotionEvent;
+    if (DME && typeof DME.requestPermission === 'function') {
+      DME.requestPermission().then(function (state) {
+        if (state === 'granted') startCrashMonitor();
+      }).catch(function () {});
+    } else {
+      startCrashMonitor();
+    }
+  }
+
+  // Unmute SOS audio on first gesture only — do NOT request DeviceMotion here.
+  // iOS motion permission looks like an auth gate and interrupts RedMed · 911 · Aid
+  // taps. Motion is requested only from the SOS button (explicit).
+  function onFirstGesture() {
+    document.removeEventListener('touchstart', onFirstGesture, true);
+    document.removeEventListener('click', onFirstGesture, true);
+    if (armed) {
+      // NFC open often blocks autoplay until a gesture — unlock and play now.
+      if (!ctx && !htmlAudio) startAudio();
+      else {
+        if (ctx && ctx.state === 'suspended') ctx.resume();
+        fireSirenBurst();
+        ensurePlaying();
+      }
+    }
+  }
+  document.addEventListener('touchstart', onFirstGesture, true);
+  document.addEventListener('click', onFirstGesture, true);
+  // Non-iOS: crash monitor needs no permission prompt.
+  if (!(window.DeviceMotionEvent && typeof window.DeviceMotionEvent.requestPermission === 'function')) {
+    startCrashMonitor();
+  }
+
+  sosBtn.addEventListener('click', function (e) {
+    e.preventDefault();
+    // Explicit SOS tap is the only iOS path that may show a motion prompt.
+    requestMotionThenStart();
+    if (armed) disarm(); else arm();
+  });
+  if (aidStop) {
+    aidStop.addEventListener('click', function (e) {
+      e.preventDefault();
+      disarm();
+    });
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    if (!armed || !ctx) return;
+    if (document.visibilityState === 'visible' && ctx.state === 'suspended') {
+      ctx.resume();
+    }
+  });
+
+  // Real HF NFC band tap brings #d= — arm local SOS on this phone only.
+  // No auto-arm for bare /tapper/ or in-app Preview/Scan (?src=app). No server / no online.
+  function hasBandPayload() {
+    return /^#d=/.test(location.hash || '') && !appPreview();
+  }
+  if (hasBandPayload()) {
+    arm();
+  } else {
+    paint();
+  }
+})();
+</script>
+</body>
+</html>
