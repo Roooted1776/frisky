@@ -12,7 +12,8 @@ import UIKit
 struct PrivacySnapshotGuard<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
-    @State private var screenCaptured = UIScreen.main.isCaptured
+    /// Default false — read `UIScreen.isCaptured` after first paint (see onAppear).
+    @State private var screenCaptured = false
     /// Cold launch reports `.inactive` before first `.active`. Covering then paints
     /// a blank shell over the real UI and reads as a long hang after the launch screen.
     @State private var hasBeenActive = false
@@ -45,6 +46,7 @@ struct PrivacySnapshotGuard<Content: View>: View {
             }
         }
         .onAppear {
+            screenCaptured = UIScreen.main.isCaptured
             if scenePhase == .active {
                 hasBeenActive = true
             }

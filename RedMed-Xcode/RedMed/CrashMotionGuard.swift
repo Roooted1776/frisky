@@ -6,7 +6,9 @@ import SwiftUI
 /// Arms full brightness + max system volume + locator siren. Cancel on Aid.
 /// Motion path ignores running, walking, eating, sex/intimate motion, and hand/wrist handling.
 /// Not Apple Crash Detection — no GPS/barometer fusion, no cloud.
-@MainActor
+///
+/// Motion samples run on a private serial queue (not the main thread) so Accept /
+/// Face ID / first tabs stay responsive. UI + brightness/volume/siren hop to main.
 final class CrashMotionGuard: ObservableObject {
     static let shared = CrashMotionGuard()
 
@@ -37,6 +39,15 @@ final class CrashMotionGuard: ObservableObject {
 
     /// Created in `startMonitoring()` — never at shared init / cold launch.
     private var manager: CMMotionManager?
+    private let motionQueue: OperationQueue = {
+        let q = OperationQueue()
+        q.name = "RedMed.CrashMotion"
+        q.maxConcurrentOperationCount = 1
+        q.qualityOfService = .userInitiated
+        return q
+    }()
+    /// Motion-queue mirror of `isArmed` so evaluate never hops to main just to check.
+    private var motionArmed = false
     private var freefallSince: Date?
     private var freefallEndedAt: Date?
     private var lastMagnitude: Double = 0
@@ -50,52 +61,66 @@ final class CrashMotionGuard: ObservableObject {
 
     /// Start after first paint so cold launch stays light.
     func startMonitoring() {
-        guard !isMonitoring else { return }
-        let motion = manager ?? CMMotionManager()
-        manager = motion
-        guard motion.isDeviceMotionAvailable else { return }
-        isMonitoring = true
-        resetTransientState()
-        motion.deviceMotionUpdateInterval = 1.0 / Self.sampleHz
-        motion.startDeviceMotionUpdates(using: .xArbitraryZVertical, to: .main) { [weak self] sample, _ in
-            guard let self, let sample else { return }
-            self.evaluate(sample)
+        motionQueue.addOperation { [weak self] in
+            guard let self else { return }
+            guard !self.isMonitoring else { return }
+            let motion = self.manager ?? CMMotionManager()
+            self.manager = motion
+            guard motion.isDeviceMotionAvailable else { return }
+            self.isMonitoring = true
+            self.resetTransientState()
+            motion.deviceMotionUpdateInterval = 1.0 / Self.sampleHz
+            motion.startDeviceMotionUpdates(using: .xArbitraryZVertical, to: self.motionQueue) { [weak self] sample, _ in
+                guard let self, let sample else { return }
+                self.evaluate(sample)
+            }
         }
     }
 
     func stopMonitoring() {
-        guard isMonitoring else { return }
-        isMonitoring = false
-        manager?.stopDeviceMotionUpdates()
-        resetTransientState()
+        motionQueue.addOperation { [weak self] in
+            guard let self else { return }
+            guard self.isMonitoring else { return }
+            self.isMonitoring = false
+            self.manager?.stopDeviceMotionUpdates()
+            self.resetTransientState()
+        }
     }
 
     /// False-positive / SOS cancel — restores brightness/volume/siren holds.
     func disarm() {
-        guard isArmed else { return }
-        isArmed = false
-        BrightnessBoost.endSurvival()
-        VolumeBoost.endSurvival()
-        LocatorBeacon.endSurvival()
+        motionQueue.addOperation { [weak self] in
+            self?.motionArmed = false
+            self?.resetTransientState()
+        }
+        Task { @MainActor [weak self] in
+            guard let self, self.isArmed else { return }
+            self.isArmed = false
+            BrightnessBoost.endSurvival()
+            VolumeBoost.endSurvival()
+            LocatorBeacon.endSurvival()
+        }
     }
 
     /// Owner Find Help SOS — same survival hold as crash (siren + max volume + full brightness).
     func armSOS() {
-        armSurvival()
+        motionQueue.addOperation { [weak self] in
+            self?.armSurvivalFromMotionQueue()
+        }
     }
 
-    private func arm() {
-        armSurvival()
-    }
-
-    private func armSurvival() {
-        guard !isArmed else { return }
-        isArmed = true
+    private func armSurvivalFromMotionQueue() {
+        guard !motionArmed else { return }
+        motionArmed = true
         lastArmAt = Date()
         resetTransientState()
-        BrightnessBoost.beginSurvival()
-        VolumeBoost.beginSurvival()
-        LocatorBeacon.beginSurvival()
+        Task { @MainActor [weak self] in
+            guard let self, !self.isArmed else { return }
+            self.isArmed = true
+            BrightnessBoost.beginSurvival()
+            VolumeBoost.beginSurvival()
+            LocatorBeacon.beginSurvival()
+        }
     }
 
     private func resetTransientState() {
@@ -119,7 +144,7 @@ final class CrashMotionGuard: ObservableObject {
     }
 
     private func evaluate(_ motion: CMDeviceMotion) {
-        if isArmed { return }
+        if motionArmed { return }
         if let last = lastArmAt, Date().timeIntervalSince(last) < Self.cooldownSeconds {
             return
         }
@@ -183,12 +208,12 @@ final class CrashMotionGuard: ObservableObject {
         // During recent sex / eating / hand motion, only an extreme smash can arm.
         let requiredPeak = isBusy ? Self.overrideBusyPeakG : Self.crashPeakG
         if magnitude >= requiredPeak {
-            arm()
+            armSurvivalFromMotionQueue()
             return
         }
 
         if !isBusy, inPostFreefallWindow, magnitude >= Self.postFreefallPeakG {
-            arm()
+            armSurvivalFromMotionQueue()
         }
     }
 }
