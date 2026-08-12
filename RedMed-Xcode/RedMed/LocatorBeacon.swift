@@ -5,17 +5,21 @@ import AVFoundation
 /// System volume is forced to max by `VolumeBoost` for the same survival hold.
 @MainActor
 enum LocatorBeacon {
+    private static let sessionClient = "locator-beacon"
+
     private static var survivalHold = false
     private static var timer: Timer?
-    private static var player: AVAudioPlayer?
     /// Synth once — re-building PCM every 5s hitch on the main thread while SOS is armed.
     private static var cachedAlarmWAV: Data?
     private static let interval: TimeInterval = 5
-    /// Serial queue for blocking AVAudioSession work — never run setCategory/setActive on MainActor.
-    private static let sessionQueue = DispatchQueue(label: "redmed.locator-beacon.session")
     /// Bumped on prepare / end so late activate callbacks cannot arm after cancel.
-    private static var sessionEpoch = 0
+    private static var sessionEpoch: UInt64 = 0
     private static var sessionReady = false
+
+    /// Published for gate-queue stale checks (same value as `sessionEpoch`).
+    private static let publishedEpoch = EpochBox()
+    /// Player is confined to `AudioSessionGate.queue` — never touch from MainActor.
+    private static let siren = SirenPlayerBox()
 
     /// Survival arm — siren continues while backgrounded until cancelled.
     static func beginSurvival() {
@@ -31,8 +35,9 @@ enum LocatorBeacon {
         survivalHold = false
         sessionReady = false
         sessionEpoch &+= 1
+        publishedEpoch.value = sessionEpoch
         stopRepeating()
-        deactivateSession()
+        AudioSessionGate.release(client: sessionClient)
     }
 
     private static func startRepeating() {
@@ -42,34 +47,43 @@ enum LocatorBeacon {
     private static func stopRepeating() {
         timer?.invalidate()
         timer = nil
-        player?.stop()
-        player = nil
+        let box = siren
+        AudioSessionGate.queue.async {
+            box.player?.stop()
+            box.player = nil
+        }
     }
 
     private static func prepareSessionThenArm() {
         sessionEpoch &+= 1
         let epoch = sessionEpoch
+        publishedEpoch.value = epoch
         sessionReady = false
         timer?.invalidate()
         timer = nil
 
-        // setCategory / setActive must stay off MainActor (Main Thread Checker).
-        // Do not use activate(options:completionHandler:) — that API is iOS 27+ only;
-        // deployment target is 17.0.
-        sessionQueue.async {
-            let session = AVAudioSession.sharedInstance()
-            do {
-                try session.setCategory(.playback, mode: .default, options: [.duckOthers])
-                try session.setActive(true)
-            } catch {
-                // Session failures stay silent — brightness boost still runs.
-                return
+        let wav = alarmWAV()
+        let box = siren
+        let epochBox = publishedEpoch
+
+        AudioSessionGate.retain(client: sessionClient, options: [.duckOthers]) {
+            // Stale prepare — newer arm/end owns the session. Do not release or nil
+            // the player (that was wiping sound after Stop → SOS again).
+            guard epochBox.value == epoch else { return }
+
+            box.player?.stop()
+            box.player = nil
+            if let wav {
+                let prepared = try? AVAudioPlayer(data: wav)
+                prepared?.volume = 1.0
+                prepared?.numberOfLoops = 0
+                prepared?.prepareToPlay()
+                box.player = prepared
             }
+
             Task { @MainActor in
-                guard Self.survivalHold, epoch == Self.sessionEpoch else {
-                    Self.deactivateSession()
-                    return
-                }
+                // Epoch mismatch / disarmed: endSurvival already released. Do nothing.
+                guard Self.survivalHold, epoch == Self.sessionEpoch else { return }
                 Self.sessionReady = true
                 Self.fire()
                 Self.armTimer()
@@ -86,29 +100,26 @@ enum LocatorBeacon {
         timer = t
     }
 
-    private static func deactivateSession() {
-        sessionQueue.async {
-            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        }
-    }
-
     private static func fire() {
         guard survivalHold, sessionReady else { return }
-        guard let data = alarmWAV() else { return }
-        do {
-            if let existing = player {
-                existing.currentTime = 0
-                existing.volume = 1.0
-                existing.play()
+        // Fresh player each burst — reusing one AVAudioPlayer only sounded on the
+        // first Start; later timer fires (and Stop → SOS again) were silent.
+        guard let wav = alarmWAV() else { return }
+        let box = siren
+        let epoch = sessionEpoch
+        let epochBox = publishedEpoch
+        AudioSessionGate.queue.async {
+            guard epochBox.value == epoch else { return }
+            try? AVAudioSession.sharedInstance().setActive(true)
+            box.player?.stop()
+            guard let player = try? AVAudioPlayer(data: wav) else {
+                box.player = nil
                 return
             }
-            let p = try AVAudioPlayer(data: data)
-            p.volume = 1.0
-            p.prepareToPlay()
-            p.play()
-            player = p
-        } catch {
-            player = nil
+            player.volume = 1.0
+            player.prepareToPlay()
+            box.player = player
+            _ = player.play()
         }
     }
 
@@ -187,4 +198,13 @@ enum LocatorBeacon {
         }
         return data
     }
+}
+
+/// Queue-confined `AVAudioPlayer` holder — only touch from `AudioSessionGate.queue`.
+private final class SirenPlayerBox: @unchecked Sendable {
+    var player: AVAudioPlayer?
+}
+
+private final class EpochBox: @unchecked Sendable {
+    var value: UInt64 = 0
 }

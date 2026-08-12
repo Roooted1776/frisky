@@ -21,11 +21,17 @@ enum VolumeBoost {
     /// Survival arm — keeps max volume even while backgrounded.
     static func beginSurvival() {
         if !survivalHold {
-            savedVolume = AVAudioSession.sharedInstance().outputVolume
             survivalHold = true
             installVolumeControls()
             installLifecycleObservers()
             installVolumeObservation()
+            // outputVolume can block — read off main, then stash if still armed.
+            AudioSessionGate.readOutputVolume { vol in
+                Task { @MainActor in
+                    guard survivalHold, savedVolume == nil else { return }
+                    savedVolume = vol
+                }
+            }
         }
         applyBoost()
     }
@@ -85,16 +91,21 @@ enum VolumeBoost {
 
     private static func installVolumeObservation() {
         removeVolumeObservation()
-        volumeObservation = AVAudioSession.sharedInstance().observe(
-            \.outputVolume,
-            options: [.new]
-        ) { _, change in
+        AudioSessionGate.observeOutputVolume({ value in
             Task { @MainActor in
                 guard survivalHold, !suppressingObservation else { return }
-                guard let value = change.newValue, value < 0.99 else { return }
+                guard value < 0.99 else { return }
                 applyBoost()
             }
-        }
+        }, ready: { observation in
+            Task { @MainActor in
+                guard survivalHold else {
+                    observation.invalidate()
+                    return
+                }
+                volumeObservation = observation
+            }
+        })
     }
 
     private static func removeVolumeObservation() {

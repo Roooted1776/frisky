@@ -56,6 +56,7 @@
 		AABB00000000000000000034 /* SecurePasteboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000034 /* SecurePasteboard.swift */; };
 		AABB00000000000000000035 /* VolumeBoost.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000035 /* VolumeBoost.swift */; };
 		AABB00000000000000000036 /* BrandWordmark.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000036 /* BrandWordmark.png */; };
+		AABB0000000000000000004D /* AudioSessionGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000004D /* AudioSessionGate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -78,6 +79,7 @@
 		AAAA00000000000000000011 /* MedicationData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationData.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000012 /* PublicCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicCardView.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000004C /* PasserbyHTMLCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasserbyHTMLCardView.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000004D /* AudioSessionGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSessionGate.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000013 /* LocationAccessSuggester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationAccessSuggester.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000014 /* BiometricAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuth.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000016 /* PrivacyPolicy.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = PrivacyPolicy.html; sourceTree = "<group>"; };
@@ -236,6 +238,7 @@
 			children = (
 				AAAA00000000000000000030 /* CrashMotionGuard.swift */,
 				AAAA0000000000000000002B /* BrightnessBoost.swift */,
+				AAAA0000000000000000004D /* AudioSessionGate.swift */,
 				AAAA00000000000000000035 /* VolumeBoost.swift */,
 				AAAA0000000000000000002C /* LocatorBeacon.swift */,
 				AAAA0000000000000000002A /* HapticEngine.swift */,
@@ -389,6 +392,7 @@
 				AABB0000000000000000004C /* PasserbyHTMLCardView.swift in Sources */,
 				AABB00000000000000000013 /* LocationAccessSuggester.swift in Sources */,
 				AABB00000000000000000014 /* BiometricAuth.swift in Sources */,
+				AABB0000000000000000004D /* AudioSessionGate.swift in Sources */,
 				AABB0000000000000000002A /* HapticEngine.swift in Sources */,
 				AABB0000000000000000002B /* BrightnessBoost.swift in Sources */,
 				AABB00000000000000000035 /* VolumeBoost.swift in Sources */,
