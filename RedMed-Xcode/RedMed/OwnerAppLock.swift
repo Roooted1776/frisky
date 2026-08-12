@@ -103,14 +103,7 @@ struct OwnerAppLock<Content: View>: View {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 36, weight: .semibold))
                     .foregroundColor(.redmedAccent)
-                Text("RedMed is locked")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(.redmedDark)
-                Text("Tap Accept, then confirm with Face ID. Passcode if Face ID fails or is locked out. Profile stays wiped from RAM until you unlock — Keychain stays on-device.")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.redmedMuted)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 28)
+                    .accessibilityLabel("RedMed is locked")
                 if screenCaptured {
                     Text("Screen sharing is on — unlock with passcode. Profile stays hidden on the share until you stop sharing.")
                         .font(.system(size: 13, weight: .semibold))
@@ -127,7 +120,6 @@ struct OwnerAppLock<Content: View>: View {
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.redmedAccent)
                 }
-                Spacer()
                 Button {
                     acceptThenUnlock()
                 } label: {
@@ -147,7 +139,7 @@ struct OwnerAppLock<Content: View>: View {
                 }
                 .disabled(isAuthenticating)
                 .padding(.horizontal, 24)
-                .padding(.bottom, 28)
+                Spacer()
             }
         }
         // Biometrics never run until Accept — no onAppear / scenePhase auto-prompt.
