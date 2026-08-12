@@ -64,7 +64,8 @@ The app has no backend, database, or web service.
   (or Stop SOS alarm on Find Help).
 
 **Vault / privacy (permanent):**
-- `VaultHistoryView` Face ID unlock: relock on `.background` only. Do **not**
+- `VaultHistoryView` Face ID unlock: explicit **Accept** tap first (no auto
+  prompt on appear); relock on `.background` only. Do **not**
   lock on `.inactive` — LAContext / system auth sheets put the scene inactive
   and would discard a successful unlock via `authGeneration`.
 - `PrivacySnapshotGuard` cover must appear opaque with **no** opacity fade;

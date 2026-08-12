@@ -58,6 +58,7 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Cold launch: cream shell first (no Keychain in `@State`); Accept then Face ID
   (no auto Face ID on appear); off-main profile decode; lazy `CMMotionManager`;
   LaunchBackground dark=cream. Unlock fail-closed if Keychain decode fails.
+- Vault Local History: Accept tap before Face ID (no auto-prompt on appear).
 - Opacity keep-alive tabs: Find Help GPS + seizure autodial tear down via
   `isVisible` (not `onDisappear` — opacity hide never fires it).
 - Custom tab bar spacing; Aid chrome/wordmark/headings; RedMed fonts; Preview scanner Back = Edit chrome (`ChromeTextAction`: accent red, plain page-bg fill, 18 regular) on all tabs. Find Help title + Back pinned above scroll.
