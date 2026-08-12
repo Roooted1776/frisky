@@ -148,6 +148,19 @@
     border-radius: var(--box);
     box-shadow: var(--shadow);
   }
+  /* In-app RedMed tab embeds this shell — hide passerby tab chrome (native tabs own 911/Aid). */
+  body.app-embed {
+    padding-top: calc(var(--safe-t) + 48px);
+    padding-bottom: var(--safe-b);
+  }
+  body.app-embed .tabbar { display: none !important; }
+  body.app-embed #panel-911,
+  body.app-embed #panel-aid { display: none !important; }
+  body.app-embed #panel-medical {
+    display: flex !important;
+    min-height: calc(100vh - var(--safe-t) - var(--safe-b));
+    min-height: calc(100dvh - var(--safe-t) - var(--safe-b));
+  }
   .rm-lock a {
     color: inherit;
     font-weight: inherit;
@@ -163,13 +176,15 @@
   .rm-logo {
     width: clamp(44px, 12vw, 56px);
     height: clamp(44px, 12vw, 56px);
-    border-radius: var(--logo);
+    border-radius: 50%;
+    overflow: hidden;
+    border: none;
     box-shadow: 0 4px 10px rgba(225,29,72,0.2);
     flex-shrink: 0;
     display: block;
     object-fit: cover;
     background: transparent;
-    opacity: 0.88;
+    opacity: 1;
   }
   .rm-logo.has-name { display: none; }
   .rm-name {
@@ -1068,6 +1083,26 @@
     page: 'get.html'
   };
 
+  // In-app RedMed tab / Preview / Scan — ?src=app or injected flag. No SOS auto-arm.
+  function isAppPreview() {
+    try {
+      if (window.__REDMED_APP_PREVIEW) return true;
+      return new URLSearchParams(location.search || '').get('src') === 'app';
+    } catch (e) { return !!window.__REDMED_APP_PREVIEW; }
+  }
+
+  // AES-GCM needs a secure context (https: or http://localhost). Plain LAN IPs fail.
+  function secureCryptoOk() {
+    return !!(window.crypto && window.crypto.subtle);
+  }
+  (function warnInsecureContext() {
+    if (secureCryptoOk() || isAppPreview()) return;
+    var lock = document.querySelector('.rm-lock');
+    if (!lock) return;
+    lock.textContent = 'Open this card over HTTPS (or localhost) so any phone can decrypt the band payload.';
+    lock.style.color = 'var(--accent)';
+  })();
+
   function resolveAsset(elId, candidates) {
     var img = document.getElementById(elId);
     if (!img) return;
@@ -1463,10 +1498,13 @@
       if (rawName) logo.classList.add('has-name');
       else logo.classList.remove('has-name');
     }
-    // Owner: Linked only after band write + YOU card (name, birth, blood).
-    // Tap `#d=` decode ≈ write; YOU complete → Linked bracelet.
+    // Real band tap: decode ⇒ fromBand. In-app embed: Swift sets __REDMED_BRACELET_LINKED
+    // so Linked still requires a verified write + YOU card (name, birth, blood).
     if (statusEl) {
-      var linked = !!fromBand && !!rawName && !!rawDob && !!rawBlood;
+      var youComplete = !!rawName && !!rawDob && !!rawBlood;
+      var linked = isAppPreview()
+        ? (!!window.__REDMED_BRACELET_LINKED && youComplete)
+        : (!!fromBand && youComplete);
       statusEl.textContent = linked ? 'Linked bracelet' : 'Not linked';
       statusEl.classList.toggle('linked', linked);
     }
@@ -1537,6 +1575,15 @@
       });
     }
   }
+
+  (function applyAppEmbedChrome() {
+    if (!isAppPreview()) return;
+    try { document.body.classList.add('app-embed'); } catch (e) {}
+    var lock = document.querySelector('.rm-lock');
+    if (lock) {
+      lock.textContent = 'Face ID for Edit · no cloud. Same card a helper sees on tap.';
+    }
+  })();
 
   decodeProfile().then(function (p) {
     renderProfile(p, p != null);
@@ -2153,12 +2200,6 @@
 
   // Real HF NFC band tap brings #d= — arm local SOS on this phone only.
   // No auto-arm for bare /get/ or in-app Preview/Scan (?src=app). No server / no online.
-  function isAppPreview() {
-    try {
-      if (window.__REDMED_APP_PREVIEW) return true;
-      return new URLSearchParams(location.search || '').get('src') === 'app';
-    } catch (e) { return !!window.__REDMED_APP_PREVIEW; }
-  }
   function hasBandPayload() {
     return /^#d=/.test(location.hash || '') && !isAppPreview();
   }
