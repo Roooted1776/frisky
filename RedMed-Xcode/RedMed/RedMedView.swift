@@ -309,7 +309,7 @@ struct RedMedView: View {
                     .kerning(0.7)
                     .textCase(.uppercase)
                     .id(profile.showsBraceletAsLinked)
-                    .animation(.easeInOut(duration: 0.2), value: profile.showsBraceletAsLinked)
+                    .animation(RedMedMotion.soft, value: profile.showsBraceletAsLinked)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }

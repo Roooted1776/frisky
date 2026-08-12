@@ -78,10 +78,12 @@ struct AidView: View {
                             let isOpen = openPane == pane.id
                             PaneCard(pane: pane, isOpen: isOpen) { key in
                                 if key == nil {
-                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                    RedMedHaptics.selection()
+                                    withAnimation(RedMedMotion.expand) {
                                         openPane = isOpen ? nil : pane.id
                                     }
                                 } else if let k = key, let topic = AidTopicCatalog.topics[k] {
+                                    RedMedHaptics.light()
                                     activeTopic = topic
                                 }
                             }
@@ -145,6 +147,7 @@ struct PaneCard: View {
                         .frame(width: 44, height: 44)
                         .background(isOpen ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
                         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+                        .animation(RedMedMotion.snappy, value: isOpen)
                         .accessibilityHidden(true)
 
                     // Title + emoji only — red chrome, scales to fit the pane.
@@ -158,16 +161,18 @@ struct PaneCard: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .layoutPriority(1)
 
-                    Image(systemName: isOpen ? "chevron.down" : "chevron.right")
+                    Image(systemName: "chevron.right")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.redmedAccent)
+                        .rotationEffect(.degrees(isOpen ? 90 : 0))
                         .frame(width: 28, height: 28)
+                        .animation(RedMedMotion.snappy, value: isOpen)
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(RedMedPressStyle(scale: 0.985, haptic: nil))
             .accessibilityLabel(pane.title)
             .accessibilityHint(isOpen ? "Collapse" : "Expand topics")
 
@@ -198,12 +203,13 @@ struct PaneCard: View {
                                     .strokeBorder(Color.redmedDivider, lineWidth: 1)
                             )
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(RedMedPressStyle(scale: 0.98, haptic: nil))
                         .accessibilityLabel(topic.label)
                     }
                 }
                 .padding(.horizontal, 10)
                 .padding(.bottom, 12)
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -215,6 +221,7 @@ struct PaneCard: View {
                     isOpen ? Color.redmedAccent.opacity(0.35) : Color.redmedDivider,
                     lineWidth: 1
                 )
+                .animation(RedMedMotion.snappy, value: isOpen)
         )
     }
 }

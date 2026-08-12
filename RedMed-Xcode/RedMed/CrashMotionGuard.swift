@@ -347,7 +347,10 @@ struct CrashSurvivalCancelCard: View {
     var body: some View {
         if monitor.isArmed {
             Button {
-                monitor.disarm()
+                RedMedHaptics.medium()
+                withAnimation(RedMedMotion.snappy) {
+                    monitor.disarm()
+                }
             } label: {
                 HStack {
                     Text("Stop the alarm")
@@ -357,6 +360,7 @@ struct CrashSurvivalCancelCard: View {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 14))
                         .foregroundColor(.redmedAccent)
+                        .symbolEffect(.bounce, value: monitor.isArmed)
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
@@ -367,8 +371,9 @@ struct CrashSurvivalCancelCard: View {
                         .strokeBorder(Color.redmedDivider, lineWidth: 1)
                 )
             }
-            .buttonStyle(.plain)
+            .buttonStyle(RedMedPressStyle(haptic: nil))
             .padding(.top, 5)
+            .transition(.opacity.combined(with: .move(edge: .bottom)))
         }
     }
 }
