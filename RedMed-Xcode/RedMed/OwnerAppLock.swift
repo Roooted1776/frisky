@@ -120,7 +120,6 @@ struct OwnerAppLock<Content: View>: View {
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.redmedAccent)
                 }
-                Spacer()
                 Button {
                     acceptThenUnlock()
                 } label: {
@@ -140,7 +139,7 @@ struct OwnerAppLock<Content: View>: View {
                 }
                 .disabled(isAuthenticating)
                 .padding(.horizontal, 24)
-                .padding(.bottom, 28)
+                Spacer()
             }
         }
         // Biometrics never run until Accept — no onAppear / scenePhase auto-prompt.
