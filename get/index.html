@@ -2,9 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=yes">
 <meta name="theme-color" content="#fff7f7">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; worker-src 'self'; connect-src 'self'">
 <meta name="referrer" content="no-referrer">
@@ -31,7 +33,10 @@
        everything. No server / no online. Bare /get/ without `#d=` and in-app
        Preview/Scan (`?src=app`) do not auto-arm SOS. Stop on Find Help or Aid.
        Explicit SOS toggle + DeviceMotion crash share the same local alarm.
-       iOS may need a gesture to unmute AudioContext / grant motion.
+     - Layout: any phone + iPad, iOS 15+ (and Android). Fluid width, safe-area
+       insets, no horizontal scroll. No Face ID / passcode / account on this page.
+       iOS may need a gesture to unmute AudioContext; motion permission only
+       when the helper taps SOS.
      - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
        walk-by ~6–8″ does not fire, reliable coupling dies past ~4″,
        passive 13.56 MHz HF NFC (not Bluetooth) → opens this page
@@ -51,39 +56,75 @@
     --box: 8px;
     --chip: 6px;
     --logo: 10px;
+    /* Fluid shell — SE → Pro Max → iPad / landscape. */
+    --page-max: 480px;
+    --page-pad-x: clamp(12px, 4.2vw, 28px);
+    --tabbar-h: 72px;
+    --fs-name: clamp(20px, 5.6vw, 26px);
+    --fs-row: clamp(11px, 2.9vw, 15px);
+    --fs-title: clamp(14px, 3.4vw, 17px);
+    --fs-body: clamp(13px, 3.2vw, 16px);
+    --fs-btn: clamp(14px, 3.6vw, 18px);
+    --safe-t: env(safe-area-inset-top, 0px);
+    --safe-r: env(safe-area-inset-right, 0px);
+    --safe-b: env(safe-area-inset-bottom, 0px);
+    --safe-l: env(safe-area-inset-left, 0px);
+  }
+  @media (min-width: 600px) {
+    :root { --page-max: 560px; --tabbar-h: 76px; }
+  }
+  @media (min-width: 768px) {
+    :root { --page-max: 680px; --tabbar-h: 80px; --box: 10px; }
+  }
+  @media (min-width: 1024px) {
+    :root { --page-max: 760px; }
+  }
+  @media (min-width: 900px) and (orientation: landscape) {
+    :root { --page-max: min(820px, 92vw); }
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html {
+    height: 100%;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
   html, body { height: 100%; }
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", sans-serif;
     background: var(--bg);
     color: var(--dark);
+    /* 100vh for iOS 15.0–15.3; 100dvh when available (15.4+). */
     min-height: 100vh;
-    padding: 0 0 calc(72px + env(safe-area-inset-bottom));
+    min-height: 100dvh;
+    padding: var(--safe-t) var(--safe-r) calc(var(--tabbar-h) + var(--safe-b)) var(--safe-l);
+    overflow-x: hidden;
     overflow-y: scroll;
     -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
   }
   a { color: var(--accent); text-decoration: none; }
   .app {
-    max-width: 480px;
+    width: 100%;
+    max-width: var(--page-max);
     margin: 0 auto;
-    min-height: 100vh;
+    min-height: calc(100vh - var(--safe-t) - var(--tabbar-h) - var(--safe-b));
+    min-height: calc(100dvh - var(--safe-t) - var(--tabbar-h) - var(--safe-b));
   }
   .panel { display: none; padding: 10px 0 28px; }
   .panel.active { display: block; }
 
   /* —— RedMed tab (My ID look) —— */
   .rm-header {
-    padding: 10px 20px 8px;
+    padding: 10px var(--page-pad-x) 8px;
   }
   .rm-lock {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--muted);
+    font-size: clamp(12px, 3.2vw, 14px);
+    font-weight: 600;
+    color: var(--dark);
     line-height: 1.4;
     margin: 0 auto 10px;
-    max-width: 275px;
+    max-width: min(360px, 100%);
     text-align: center;
     padding: 10px 14px;
     background: var(--surface);
@@ -103,8 +144,8 @@
     padding: 4px 0;
   }
   .rm-logo {
-    width: 48px;
-    height: 48px;
+    width: clamp(44px, 12vw, 56px);
+    height: clamp(44px, 12vw, 56px);
     border-radius: var(--logo);
     box-shadow: 0 3px 5px rgba(225,29,72,0.15);
     flex-shrink: 0;
@@ -115,16 +156,18 @@
   }
   .rm-logo.has-name { display: none; }
   .rm-name {
-    font-size: 22px;
+    font-size: var(--fs-name);
     font-weight: 700;
     letter-spacing: -0.4px;
     margin: 0;
     line-height: 1.15;
     color: #000;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
   /* Same as owner braceletStatusLabel under the name. */
   .rm-status {
-    font-size: 10px;
+    font-size: clamp(10px, 2.5vw, 12px);
     font-weight: 700;
     letter-spacing: 0.7px;
     text-transform: uppercase;
@@ -135,15 +178,15 @@
     color: rgba(225,29,72,0.85);
   }
   .sec {
-    font-size: 12px;
+    font-size: clamp(11px, 2.8vw, 13px);
     font-weight: 600;
     letter-spacing: 0.6px;
     text-transform: uppercase;
     color: var(--muted);
-    padding: 12px 20px 5px;
+    padding: 12px var(--page-pad-x) 5px;
   }
   .card {
-    margin: 0 16px;
+    margin: 0 var(--page-pad-x);
     background: var(--surface);
     border: 1px solid var(--divider);
     border-radius: var(--box);
@@ -159,15 +202,19 @@
   }
   .row:last-child { border-bottom: none; }
   .row .k {
-    font-size: 11px;
+    font-size: var(--fs-row);
     font-weight: 500;
     color: var(--muted);
+    flex-shrink: 0;
   }
   .row .v {
-    font-size: 11px;
+    font-size: var(--fs-row);
     font-weight: 600;
     color: #000;
     text-align: right;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    min-width: 0;
   }
   .row .v.empty { font-weight: 500; color: rgba(28,25,23,0.55); }
   /* Empty: Name + dash left (owner nameProfileRow). Filled: label drops. */
@@ -195,9 +242,11 @@
   .list-item {
     padding: 11px 16px;
     border-bottom: 1px solid var(--divider);
-    font-size: 11px;
+    font-size: var(--fs-row);
     font-weight: 400;
     color: var(--dark);
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
   .list-item:last-child { border-bottom: none; }
   /* Allergies / Meds / Conditions — dropdowns like owner RedMedView. */
@@ -205,7 +254,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    margin: 12px 16px 0;
+    margin: 12px var(--page-pad-x) 0;
   }
   details.list-drop {
     background: var(--surface);
@@ -230,7 +279,7 @@
   .list-drop-title {
     flex: 1;
     min-width: 0;
-    font-size: 14px;
+    font-size: var(--fs-title);
     font-weight: 700;
     color: var(--accent);
     line-height: 1.2;
@@ -287,21 +336,23 @@
     gap: 8px;
   }
   .contact-block .cn {
-    font-size: 11px;
+    font-size: var(--fs-row);
     font-weight: 600;
     color: #000;
     flex: 1;
     min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
   .contact-block a.cp {
-    font-size: 12px;
+    font-size: clamp(12px, 3vw, 15px);
     font-weight: 500;
     color: var(--dark);
     text-decoration: none;
     white-space: nowrap;
   }
   .contact-block .cd {
-    font-size: 12px;
+    font-size: clamp(12px, 3vw, 14px);
     font-weight: 500;
     color: var(--muted);
     margin-top: 2px;
@@ -309,16 +360,17 @@
   #panel-medical {
     display: flex;
     flex-direction: column;
-    min-height: calc(100dvh - 72px - env(safe-area-inset-bottom, 0px));
+    min-height: calc(100vh - var(--tabbar-h) - var(--safe-t) - var(--safe-b));
+    min-height: calc(100dvh - var(--tabbar-h) - var(--safe-t) - var(--safe-b));
     padding-bottom: 8px;
     box-sizing: border-box;
   }
   /* Quiet prayer — main RedMed + Aid. Whisper, not focus. Pins low when short. */
   .quote {
-    margin: 0 28px 8px;
+    margin: 0 clamp(16px, 6vw, 36px) 8px;
     padding: 0;
     max-width: none;
-    font-size: 8px;
+    font-size: clamp(8px, 2.2vw, 11px);
     font-weight: 400;
     font-style: italic;
     color: rgba(120,113,108,0.55);
@@ -335,7 +387,8 @@
   #panel-aid .page-pad {
     display: flex;
     flex-direction: column;
-    min-height: calc(100dvh - 72px - env(safe-area-inset-bottom, 0px));
+    min-height: calc(100vh - var(--tabbar-h) - var(--safe-t) - var(--safe-b));
+    min-height: calc(100dvh - var(--tabbar-h) - var(--safe-t) - var(--safe-b));
     box-sizing: border-box;
     padding-bottom: 8px;
   }
@@ -346,9 +399,9 @@
   }
 
   /* —— Help tab —— */
-  .page-pad { padding: 4px 16px 0; }
+  .page-pad { padding: 4px var(--page-pad-x) 0; }
   .page-title {
-    font-size: 17px;
+    font-size: var(--fs-title);
     font-weight: 600;
     color: var(--accent);
     margin: 0 0 6px;
@@ -362,16 +415,17 @@
     padding: 14px;
     margin: 8px 0;
     border: none;
-    font-size: 14px;
+    font-size: var(--fs-body);
     font-weight: 600;
     cursor: pointer;
     font-family: inherit;
+    touch-action: manipulation;
   }
   .btn-primary {
     background: linear-gradient(180deg, #ff7289, var(--accent));
     color: #fff;
     font-weight: 700;
-    font-size: 17px;
+    font-size: var(--fs-btn);
     padding: 16px;
     box-shadow: 0 4px 7px rgba(225,29,72,0.28);
   }
@@ -385,22 +439,22 @@
     background: var(--dark);
     color: #fff;
     font-weight: 700;
-    font-size: 12px;
-    padding: 8px;
+    font-size: clamp(12px, 3vw, 15px);
+    padding: clamp(8px, 2vw, 12px);
   }
   .btn-call {
     background: var(--dark);
     color: #fff;
     font-weight: 700;
-    font-size: 17px;
+    font-size: var(--fs-btn);
     padding: 16px;
   }
   .btn-sos {
     background: var(--dark);
     color: #fff;
     font-weight: 700;
-    font-size: 13px;
-    padding: 10px;
+    font-size: clamp(13px, 3.2vw, 16px);
+    padding: clamp(10px, 2.4vw, 14px);
   }
   .btn-sos.armed {
     background: var(--accent);
@@ -433,9 +487,11 @@
   }
   .coords {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 15px;
+    font-size: clamp(14px, 3.8vw, 18px);
     font-weight: 700;
     color: var(--dark);
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
   .gps-acc {
     font-size: 10px;
@@ -461,6 +517,7 @@
     border-radius: var(--box);
     padding: 8px 10px;
     margin: 5px 0;
+    min-width: 0;
   }
   .seizure-label {
     font-size: 9px;
@@ -470,7 +527,7 @@
   }
   .seizure-time {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 17px;
+    font-size: clamp(16px, 4vw, 20px);
     font-weight: 700;
     color: var(--dark);
     min-width: 56px;
@@ -480,12 +537,12 @@
   }
   .seizure-hint {
     flex: 1;
-    font-size: 10px;
+    font-size: clamp(10px, 2.6vw, 13px);
     font-weight: 600;
     color: var(--muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
   .seizure-hint.hot {
     color: var(--accent);
@@ -528,38 +585,40 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
   }
   .info h2 {
     margin: 0;
-    font-size: 12px;
+    font-size: clamp(12px, 3vw, 15px);
     font-weight: 700;
     color: var(--dark);
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
   .info ol, .info ul {
     margin: 0;
     padding-left: 16px;
-    font-size: 11px;
+    font-size: clamp(11px, 2.8vw, 14px);
     font-weight: 600;
-    line-height: 1.35;
+    line-height: 1.4;
     color: var(--dark);
   }
   .info ol li + li, .info ul li + li { margin-top: 3px; }
   .foot-note {
-    font-size: 9px;
+    font-size: clamp(9px, 2.4vw, 12px);
     font-weight: 500;
     color: var(--muted);
     text-align: center;
-    margin: 8px 0 6px;
+    line-height: 1.4;
+    margin: 12px 4px 0;
   }
-  /* Under SOS on Find Help — mirrors owner EmergencyView. */
   .survival-note {
-    margin: 6px 4px 0;
-    padding: 0;
-    font-size: 10px;
+    margin: 4px 0 8px;
+    font-size: clamp(10px, 2.6vw, 13px);
     font-weight: 500;
     color: var(--muted);
-    text-align: center;
     line-height: 1.35;
+    text-align: center;
   }
   .aid-stop-alarm {
     display: none;
@@ -586,9 +645,9 @@
   .aid-wordmark,
   .help-wordmark {
     display: block;
-    height: 42px;
+    height: clamp(36px, 8vw, 48px);
     width: auto;
-    max-width: 200px;
+    max-width: min(240px, 70vw);
     margin: 2px 0 10px;
     object-fit: contain;
   }
@@ -598,6 +657,19 @@
     flex-direction: column;
     gap: 8px;
     margin-top: 8px;
+  }
+  @media (min-width: 700px) {
+    .aid-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      align-items: start;
+    }
+  }
+  @media (min-width: 1024px) and (orientation: landscape) {
+    .aid-grid {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
   }
   details.aid {
     background: var(--surface);
@@ -620,19 +692,20 @@
   }
   details.aid summary::-webkit-details-marker { display: none; }
   .aid-emoji {
-    width: 44px; height: 44px;
+    width: clamp(40px, 10vw, 48px);
+    height: clamp(40px, 10vw, 48px);
     border-radius: var(--chip);
     background: rgba(225,29,72,0.1);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 22px;
+    font-size: clamp(20px, 5vw, 26px);
     flex-shrink: 0;
   }
   details.aid[open] .aid-emoji { background: var(--accent); }
   .aid-title {
     display: block;
-    font-size: 16px;
+    font-size: clamp(15px, 3.6vw, 18px);
     font-weight: 700;
     color: var(--accent);
     line-height: 1.2;
@@ -645,13 +718,13 @@
   details.aid ol {
     margin: 0 0 12px;
     padding-left: 18px;
-    font-size: 15px;
+    font-size: var(--fs-body);
     font-weight: 500;
     line-height: 1.45;
   }
   details.aid ol li + li { margin-top: 8px; }
 
-  /* —— Tab bar (matches CustomTabBar) —— */
+  /* —— Tab bar (matches CustomTabBar; larger hit targets for EMT / gloves) —— */
   .tabbar {
     position: fixed;
     left: 0; right: 0; bottom: 0;
@@ -660,22 +733,23 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 2px 0 calc(4px + env(safe-area-inset-bottom));
+    padding: 4px var(--safe-r) calc(6px + var(--safe-b)) var(--safe-l);
     z-index: 30;
   }
   .tabs {
     display: flex;
     width: 100%;
-    max-width: 480px;
+    max-width: var(--page-max);
   }
   .tab {
     flex: 1;
     border: 0;
     background: transparent;
-    padding: 4px 0 3px;
+    padding: 8px 0 6px;
+    min-height: 56px;
     color: var(--tab-off);
-    font-size: 10px;
-    font-weight: 500;
+    font-size: clamp(11px, 2.8vw, 13px);
+    font-weight: 600;
     letter-spacing: -0.1px;
     cursor: pointer;
     font-family: inherit;
@@ -683,32 +757,45 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
   }
   .tab .icon-wrap {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 54px;
-    height: 30px;
+    width: 58px;
+    height: 32px;
     border-radius: 14px;
-    margin: 0 0 2px;
+    margin: 0 0 3px;
     line-height: 1;
   }
   /* Match owner CustomTabBar SF Symbols (person.fill / phone.fill / cross.case.fill). */
   .tab .icon-wrap svg {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     display: block;
     fill: currentColor;
   }
-  .tab.active { color: var(--accent); font-weight: 600; }
-  .tab.active .icon-wrap { background: rgba(225,29,72,0.10); }
+  .tab.active { color: var(--accent); font-weight: 700; }
+  .tab.active .icon-wrap { background: rgba(225,29,72,0.12); }
   .home-pill {
     width: 134px;
     height: 5px;
     border-radius: 999px;
     background: rgba(28,25,23,0.18);
     margin-top: 2px;
+  }
+
+  /* Narrow phones (SE / mini) — keep Call / SOS usable, no horizontal clip. */
+  @media (max-width: 360px) {
+    :root {
+      --page-pad-x: 10px;
+      --tabbar-h: 68px;
+    }
+    .seizure-strip { flex-wrap: wrap; }
+    .tab { min-height: 52px; padding: 6px 0 4px; }
   }
 </style>
 </head>
@@ -717,7 +804,7 @@
     <!-- RedMed — same header + YOU card as owner RedMedView (no Edit). -->
     <div class="panel active" id="panel-medical" data-panel="medical">
       <div class="rm-header">
-        <p class="rm-lock">Read only — editing needs the owner’s RedMed app.</p>
+        <p class="rm-lock">No Face ID · no login · no app. Card opens on tap.</p>
         <div class="rm-title-row">
           <img class="rm-logo" id="rmLogo" src="BrandLogo.png" width="48" height="48" alt="RedMed">
           <div>
@@ -1962,12 +2049,12 @@
     }
   }
 
-  // iOS requires a user gesture for DeviceMotion permission + often for audio.
-  // Bracelet tap already opened the page — arm local SOS now; unmute on gesture.
+  // Unmute SOS audio on first gesture only — do NOT request DeviceMotion here.
+  // iOS motion permission looks like an auth gate and interrupts RedMed · 911 · Aid
+  // taps. Motion is requested only from the SOS button (explicit).
   function onFirstGesture() {
     document.removeEventListener('touchstart', onFirstGesture, true);
     document.removeEventListener('click', onFirstGesture, true);
-    requestMotionThenStart();
     if (armed) {
       // NFC open often blocks autoplay until a gesture — unlock and play now.
       if (!ctx && !htmlAudio) startAudio();
@@ -1980,13 +2067,14 @@
   }
   document.addEventListener('touchstart', onFirstGesture, true);
   document.addEventListener('click', onFirstGesture, true);
-  // Non-iOS: start crash monitor without a gesture when the API needs no permission.
+  // Non-iOS: crash monitor needs no permission prompt.
   if (!(window.DeviceMotionEvent && typeof window.DeviceMotionEvent.requestPermission === 'function')) {
     startCrashMonitor();
   }
 
   sosBtn.addEventListener('click', function (e) {
     e.preventDefault();
+    // Explicit SOS tap is the only iOS path that may show a motion prompt.
     requestMotionThenStart();
     if (armed) disarm(); else arm();
   });
