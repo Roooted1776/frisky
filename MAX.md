@@ -37,7 +37,7 @@ Native iOS medical ID + emergency aid. Passive **13.56 MHz HF NFC** bracelet (no
 See also `AGENTS.md`. High-signal recap:
 
 1. Owner vs scanner shells are permanent product law.
-2. Settings = **haptic + Location only**. Brightness 100% + system volume 100% + locator siren arm on crash / severe-impact (`CrashMotionGuard`), owner **SOS · Locate me**, or **bracelet tap / scanner open** (local SOS on that device). Owner Find Help open alone does **not** auto-arm.
+2. Settings = **haptic + Location only**. Brightness 100% + system volume 100% + locator siren arm on crash / severe-impact (`CrashMotionGuard`), owner **SOS · Locate me**, or **real bracelet NFC** open of `get.html#d=…` (hardware-local SOS on that phone). Owner Find Help open, bare `/get/`, and in-app scanner preview do **not** auto-arm.
 3. Survival hold may keep siren + max volume + brightness through background until cancel on Aid (or Stop SOS on Find Help).
 4. Vault Face ID: relock on **`.background` only** (not `.inactive` — Face ID sheets).
 5. Privacy cover: opaque, no fade.
@@ -45,7 +45,7 @@ See also `AGENTS.md`. High-signal recap:
 7. Unique `project.pbxproj` IDs (duplicate IDs drop sources).
 8. Passerby SW: cache-first multi-key shell for almost-instant EMT open; clear prior CACHE on activate; bump `redmed-get-vN` in lockstep. Tap-to-view = HTML; no biometric copy in any passerby / policy HTML.
 9. `AppConfig.BraceletRF` owns tap-distance copy (no hardcoded inches).
-10. Crash / high-speed **vehicle impact** detection is **local** — CoreMotion in the native app (owner + in-app scanner), DeviceMotion in passerby `get.html` (same g thresholds). Not Apple Crash Detection, no cloud. Must ignore running, sex/intimate motion, eating, and hand/wrist handling. Bracelet tap opens `get.html` → local SOS arms immediately (no server). Owner Find Help does not auto-arm. Passerby HTML alarm is Web Audio + wake lock (no system volume/brightness APIs).
+10. Crash / high-speed **vehicle impact** detection is **local** — CoreMotion in the native app (owner + in-app scanner), DeviceMotion in passerby `get.html` (same g thresholds). Not Apple Crash Detection, no cloud. Must ignore running, sex/intimate motion, eating, and hand/wrist handling. Real bracelet NFC (`#d=`) → local SOS on that phone only (no server). Owner Find Help does not auto-arm. Passerby HTML alarm is Web Audio + wake lock (no system volume/brightness APIs).
 
 ## What he has already done (shipped history)
 
@@ -86,7 +86,7 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Local emergency number dial (not hard-coded 911); GPS card; satellite/no-cell path.
 - Aid topics + trauma/hospital panes; CPR `CHHapticEngine` beat/breath.
 - Haptic preference in Help → Settings; CPR card toggle removed (Settings-only).
-- On-device CoreMotion guard arms siren + max system volume + full brightness on **vehicle crash / high-speed impact only** (filters running / daily motion; background hold until cancel). Same thresholds on passerby `get.html` via DeviceMotion. Bracelet tap / scanner open arms local SOS immediately; owner Find Help **SOS · Locate me** is explicit. Owner Find Help open alone does **not** auto-arm.
+- On-device CoreMotion guard arms siren + max system volume + full brightness on **vehicle crash / high-speed impact only** (filters running / daily motion; background hold until cancel). Same thresholds on passerby `get.html` via DeviceMotion. Real bracelet NFC (`get.html#d=`) arms hardware-local SOS on that phone; owner Find Help **SOS · Locate me** is explicit. Owner Find Help open, bare `/get/`, and in-app preview do **not** auto-arm.
 - Location toggle in Settings; Find Help GPS respects it; no Find Help location banner chrome.
 
 ### Privacy / HIPAA offline vault
@@ -120,7 +120,7 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 ## Do not reopen without explicit ask
 
 - Re-adding Settings toggles for brightness, locator, or crash survival alarm.
-- Auto-arming brightness or locate-me siren just from opening **owner** Find Help (crash + explicit owner SOS; bracelet tap / scanner open may arm local SOS).
+- Auto-arming brightness or locate-me siren just from opening **owner** Find Help, bare `/get/`, or in-app scanner preview (crash + explicit owner SOS; real bracelet `#d=` tap may arm hardware-local SOS).
 - Requiring Face ID / biometrics for passerby tap-to-view (`get.html` / scanner shell).
 - Relocking vault on `.inactive`.
 - Mutating owner `@AppStorage` from scanner UI.

@@ -52,12 +52,13 @@ The app has no backend, database, or web service.
 **Settings vs automatic (permanent):**
 - Help → Settings exposes **only** haptic feedback + Location (`AppSettings` /
   `HapticEngine.enabledKey`). No other toggles there.
-- **Brightness + sound are survival-alarm only (not Settings, not auto on owner Find Help):**
+- **Brightness + sound are survival-alarm only (not Settings):**
   arm `BrightnessBoost` + `VolumeBoost` + `LocatorBeacon` only when (1) on-device crash /
   hard-impact detection (`CrashMotionGuard`) fires for **vehicle crash /
   high-speed impact only** (not running or daily activity), (2) owner taps
-  **SOS · Locate me** on Find Help, or (3) bracelet tap opens passerby
-  `get.html` / in-app scanner shell (local SOS on that device immediately).
+  **SOS · Locate me** on Find Help, or (3) a **real bracelet NFC tap** opens
+  passerby `get.html#d=…` (hardware-local SOS on that phone — no server; bare
+  `/get/` without `#d=` and in-app scanner preview do **not** auto-arm).
   Opening owner Find Help must not force brightness, max volume, or play the
   siren by itself. Do not add Settings off switches for the survival alarm.
 - **LocatorBeacon** / **BrightnessBoost** / **VolumeBoost** survival hold may keep sounding /
@@ -116,11 +117,11 @@ delete every prior `CACHE` name so deploys clear stale decrypt/layout. Bump
 `CACHE` (`redmed-get-vN`) in lockstep across `sw.js`, `get/sw.js`, and the
 bundled copy on every SW / decrypt deploy. Register the SW ASAP in `get.html`
 (not on `window.load`). Legacy zlib inflate is bounded (64 KiB) in Swift +
-streaming bound in `get.html`. Passerby HTML **arms local SOS when the tap page
-opens** (this device only; no server). Explicit Stop / SOS toggle and DeviceMotion
-crash (same g thresholds as `CrashMotionGuard`) share that alarm. iOS may need a
-gesture to unmute AudioContext / grant motion. Native still owns system volume /
-brightness boost.
+streaming bound in `get.html`. Passerby HTML **arms local SOS only on a real
+bracelet NFC open with `#d=`** (hardware-local on that phone; no server). Bare
+`/get/` and in-app preview do not auto-arm. Explicit Stop / SOS toggle and
+DeviceMotion crash share that on-device alarm. iOS may need a gesture to unmute
+AudioContext / grant motion. Native still owns system volume / brightness boost.
 
 **Repo hygiene:** `main` is the only long-lived branch. After merges, delete
 feature branches on the remote; do not leave parallel “brainchild” branches.

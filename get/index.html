@@ -26,9 +26,10 @@
      - Offline: sw.js Cache Storage — cache-first multi-key shell for almost-instant
        EMT open after first online load; activate clears prior CACHE buckets
        (bump redmed-get-vN). Never wait on network when a shell copy exists.
-     - Bracelet tap opens this page → arms local SOS siren immediately
-       (this device only; no server). Stop on Find Help or Aid.
-       Explicit SOS toggle + DeviceMotion crash use the same local alarm.
+     - Real bracelet NFC tap (`get.html#d=…`) → arms local SOS on this phone
+       only (hardware + on-device audio; no server / no online). Bare /get/
+       without `#d=` does not auto-arm. Stop on Find Help or Aid.
+       Explicit SOS toggle + DeviceMotion crash share the same local alarm.
        iOS may need a gesture to unmute AudioContext / grant motion.
      - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
        walk-by ~6–8″ does not fire, reliable coupling dies past ~4″,
@@ -635,7 +636,7 @@
           <a class="btn btn-call" id="callEmergency911" href="tel:112">Call <span class="emg">112</span></a>
           <button class="btn btn-sos" type="button" id="sosBtn">SOS · Locate me</button>
         </div>
-        <p class="survival-note">Siren arms when this page opens — local only, no servers · no online. Also on crash. Stop here or on Aid.</p>
+        <p class="survival-note">Siren arms on real bracelet NFC tap (`#d=`) — hardware local only, no servers · no online. Also on crash / SOS. Stop here or on Aid.</p>
 
         <div class="seizure-strip" id="seizureStrip">
           <div>
@@ -1358,10 +1359,10 @@
 })();
 </script>
 <script>
-// Survival alarm for tapper Find Help — mirrors native CrashMotionGuard + SOS.
-// Bracelet tap opens this page → arm local SOS immediately (this device only;
-// no server). Explicit SOS toggle and DeviceMotion crash share the same alarm.
-// Web Audio + wake lock (browsers cannot force system volume / brightness).
+// Survival alarm — hardware-local only (this phone).
+// Real bracelet NFC open with #d= → arm local SOS (no server). Explicit SOS
+// toggle and DeviceMotion crash share the same on-device alarm.
+// Web Audio + wake lock (no system volume / brightness APIs in the browser).
 (function () {
   var sosBtn = document.getElementById('sosBtn');
   var aidStop = document.getElementById('aidStopAlarm');
@@ -1646,8 +1647,17 @@
     }
   });
 
-  // Bracelet tap → this page: arm local SOS immediately (no server / no online).
-  arm();
+  // Real HF NFC band tap brings #d= — arm local SOS on this phone only.
+  // No auto-arm for bare /get/ (no hardware payload). No server / no online.
+  function hasBandPayload() {
+    var h = location.hash || '';
+    return /[#&]d=/.test(h) || h.indexOf('#d=') === 0 || h.indexOf('d=') === 1;
+  }
+  if (hasBandPayload()) {
+    arm();
+  } else {
+    paint();
+  }
 })();
 </script>
 </body>
