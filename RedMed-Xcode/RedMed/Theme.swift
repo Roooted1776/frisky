@@ -34,7 +34,7 @@ extension Color {
     static let redmedDark     = Color(red: 0.110, green: 0.098, blue: 0.086) // #1c1917
     static let redmedMuted    = Color(red: 0.471, green: 0.443, blue: 0.424) // #78716c
     static let redmedSurface  = Color.white.opacity(0.94)
-    /// Card + hairline stroke — same 8% ink as passerby `.card` / legal `--border`.
+    /// Row / chip hairline — same 8% ink as passerby dividers / legal `--border`.
     static let redmedDivider  = Color(red: 0.110, green: 0.098, blue: 0.086).opacity(0.08)
     /// Soft top wash — pairs with passerby body gradient.
     static let redmedWash     = Color(red: 1.000, green: 0.910, blue: 0.922) // #ffe8eb
@@ -220,15 +220,11 @@ enum RedMedChrome {
 
 extension View {
     /// Surface card chrome used on RedMed / 911 / Aid / NFC (owner + scanner).
-    /// `strokeBorder` keeps the full 1pt hairline inside the shape (`.stroke` half-clips).
-    func redmedBox(strokeOpacity: Double = 1, elevated: Bool = true) -> some View {
+    /// No outer stroke — fill + radius + optional shadow only.
+    func redmedBox(elevated: Bool = true) -> some View {
         self
             .background(Color.redmedSurface)
             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-            .overlay(
-                RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                    .strokeBorder(Color.redmedDivider.opacity(strokeOpacity), lineWidth: 1)
-            )
             .shadow(color: elevated ? RedMedChrome.cardShadow : .clear, radius: 8, y: 3)
     }
 }

@@ -133,10 +133,6 @@ struct TopicDetailView: View {
                         .frame(maxWidth: .infinity)
                         .background(Color.redmedSurface)
                         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                                .strokeBorder(Color.redmedDivider, lineWidth: 1)
-                        )
                         .padding(.bottom, 22)
                     }
 
@@ -166,10 +162,6 @@ struct TopicDetailView: View {
                     }
                     .background(Color.redmedSurface)
                     .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                            .strokeBorder(Color.redmedDivider, lineWidth: 1)
-                    )
                     .padding(.bottom, 22)
 
                     // WHAT TO DO
@@ -203,10 +195,6 @@ struct TopicDetailView: View {
                     }
                     .background(Color.redmedSurface)
                     .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                            .strokeBorder(Color.redmedDivider, lineWidth: 1)
-                    )
                     .padding(.bottom, 24)
 
                     if isTraumaHospitals {
@@ -312,10 +300,6 @@ private struct LiveNearbyHospitalsSection: View {
                 }
                 .background(Color.redmedSurface)
                 .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-                .overlay(
-                    RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                        .strokeBorder(Color.redmedDivider, lineWidth: 1)
-                )
             }
         }
         .task {

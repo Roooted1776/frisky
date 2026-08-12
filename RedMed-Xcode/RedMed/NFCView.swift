@@ -127,7 +127,6 @@ struct NFCView: View {
         }
         .background(Color.redmedSurface)
         .clipShape(RoundedRectangle(cornerRadius: boxRadius))
-        .overlay(RoundedRectangle(cornerRadius: boxRadius).strokeBorder(Color.redmedDivider, lineWidth: 1))
     }
 
     // MARK: - Setup
@@ -190,7 +189,6 @@ struct NFCView: View {
         .padding(16)
         .background(Color.redmedSurface)
         .clipShape(RoundedRectangle(cornerRadius: boxRadius))
-        .overlay(RoundedRectangle(cornerRadius: boxRadius).strokeBorder(Color.redmedDivider, lineWidth: 1))
     }
 
     // MARK: - Scan (bottom of page)
@@ -253,7 +251,6 @@ struct NFCView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.redmedSurface)
         .clipShape(RoundedRectangle(cornerRadius: boxRadius))
-        .overlay(RoundedRectangle(cornerRadius: boxRadius).strokeBorder(Color.redmedDivider, lineWidth: 1))
     }
 
     // MARK: - Pieces

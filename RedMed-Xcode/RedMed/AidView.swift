@@ -198,10 +198,6 @@ struct PaneCard: View {
                             .padding(.vertical, 14)
                             .background(Color.redmedSurface)
                             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                                    .strokeBorder(Color.redmedDivider, lineWidth: 1)
-                            )
                         }
                         .buttonStyle(RedMedPressStyle(scale: 0.98, haptic: nil))
                         .accessibilityLabel(topic.label)
@@ -217,14 +213,6 @@ struct PaneCard: View {
             isOpen ? Color.redmedAccent.opacity(0.03) : Color.redmedSurface
         )
         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-        .overlay(
-            RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                .strokeBorder(
-                    isOpen ? Color.redmedAccent.opacity(0.28) : Color.redmedDivider,
-                    lineWidth: 1
-                )
-                .animation(RedMedMotion.snappy, value: isOpen)
-        )
         .shadow(color: RedMedChrome.cardShadow, radius: 8, y: 3)
     }
 }

@@ -456,10 +456,6 @@ struct EditProfileView: View {
         VStack(spacing: 0) { content() }
             .background(Color.redmedSurface)
             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-            .overlay(
-                RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                    .strokeBorder(Color.redmedDivider, lineWidth: 1)
-            )
     }
 
     // MARK: - Persistence
