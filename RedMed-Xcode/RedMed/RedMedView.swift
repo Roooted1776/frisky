@@ -12,11 +12,16 @@ struct RedMedView: View {
     @State private var showAuthFailedAlert = false
 
     private var deviceName: String {
-        if isScannerSession {
-            return profile.name.isEmpty ? "RedMed" : profile.name
+        // Filled name replaces the grey logo on the left (owner + tap / Preview).
+        if !profile.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return profile.name
         }
-        if profile.name.isEmpty { return "Your iPhone" }
-        return "\(profile.name)'s iPhone"
+        if isScannerSession { return "RedMed" }
+        return "Your iPhone"
+    }
+
+    private var hasImportedName: Bool {
+        !profile.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private var braceletStatusLabel: String {
@@ -249,12 +254,16 @@ struct RedMedView: View {
 
     private var titleRow: some View {
         HStack(spacing: 8) {
-            Image("BrandLogo")
-                .resizable()
-                .frame(width: 48, height: 48)
-                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.logoRadius))
-                .shadow(color: Color.redmedAccent.opacity(0.15), radius: 5, y: 3)
-                .opacity(profile.hasData ? 1 : 0.5)
+            // Empty: grey logo on the left. Filled: logo drops; imported name takes the row.
+            if !hasImportedName {
+                Image("BrandLogo")
+                    .resizable()
+                    .frame(width: 48, height: 48)
+                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.logoRadius))
+                    .shadow(color: Color.redmedAccent.opacity(0.15), radius: 5, y: 3)
+                    .opacity(0.5)
+                    .accessibilityHidden(true)
+            }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(deviceName)
@@ -262,6 +271,7 @@ struct RedMedView: View {
                     .foregroundColor(.redmedDark)
                     .kerning(-0.4)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.75)
 
                 Text(braceletStatusLabel)
                     .font(.system(size: 10, weight: .bold))
@@ -275,6 +285,7 @@ struct RedMedView: View {
                     .id(profile.showsBraceletAsLinked)
                     .animation(.easeInOut(duration: 0.2), value: profile.showsBraceletAsLinked)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.vertical, 4)
     }

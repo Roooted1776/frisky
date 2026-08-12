@@ -112,7 +112,9 @@
     display: block;
     object-fit: cover;
     background: transparent;
+    opacity: 0.5;
   }
+  .rm-logo.has-name { display: none; }
   .rm-name {
     font-size: 22px;
     font-weight: 700;
@@ -1167,8 +1169,16 @@
 
   function renderProfile(p) {
     p = p || {};
-    var displayName = p.name || 'RedMed';
-    document.getElementById('name').textContent = displayName;
+    var rawName = (p.name || '').trim();
+    var displayName = rawName || 'RedMed';
+    var nameEl = document.getElementById('name');
+    var logo = document.getElementById('rmLogo');
+    nameEl.textContent = displayName;
+    // Empty: grey logo on the left. Filled: logo drops; imported name takes the row.
+    if (logo) {
+      if (rawName) logo.classList.add('has-name');
+      else logo.classList.remove('has-name');
+    }
     setRow('rowName', p.name);
     setRow('rowDob', p.dob);
     setRow('rowBlood', p.blood);
