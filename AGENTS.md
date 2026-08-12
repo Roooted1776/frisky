@@ -40,13 +40,16 @@ The app has no backend, database, or web service.
   (2) policy pages bundled solely under `RedMed-Xcode/RedMed/` (`PrivacyPolicy`,
   `TOS`, `security`, `HowItWorks`, `legal-doc.css`). `HowItWorks.html` redirects
   into `redmed://main`. Policies CTA to the owner app; they do not host owner
-  edit UI. Do not reintroduce repo-root copies of the policy HTML. Owner How It
-  Works / band setup lives in `Main.swift` (`MainInfoView`).
+  edit UI. Do not reintroduce repo-root copies of the policy HTML. Owner Help
+  is Settings + Privacy / TOS / Security only (no in-app How It Works /
+  MainInfoView, no Local History row, no local get.html WebView). Owner
+  Preview / NFC Scan open bundled `get.html#d=` (`?src=app`, no SOS auto-arm);
+  live band taps stay `https://redmed.pages.dev/get/#d=`.
 
 - **Bracelet tap (physics, not a setting):** `AppConfig.BraceletRF` is the single
   source of truth — intentional tap ~1–2″, walk-by ~6–8″ does not fire, reliable
   coupling dies past ~4″, passive 13.56 MHz HF NFC (not Bluetooth). NFC tab /
-  How It Works copy must use `BraceletRF` helpers, not hardcoded inches.
+  bracelet copy must use `BraceletRF` helpers, not hardcoded inches.
   Tap opens the HTML shell for EMT / helper — passive, no app install.
 
 **Settings vs automatic (permanent):**
