@@ -641,6 +641,12 @@
   .seizure-hint.hot {
     color: var(--accent);
   }
+  .seizure-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
   .seizure-btn {
     border: none;
     border-radius: var(--chip);
@@ -656,6 +662,15 @@
     background: rgba(255,255,255,0.9);
     color: var(--dark);
     border: 1px solid var(--divider);
+  }
+  .seizure-btn-reset {
+    background: rgba(255,255,255,0.9);
+    color: var(--dark);
+    border: 1px solid var(--divider);
+  }
+  .seizure-btn-reset:disabled {
+    opacity: 0.45;
+    cursor: default;
   }
   .info {
     background: var(--surface);
@@ -993,7 +1008,10 @@
             <div class="seizure-time" id="seizureTime">0:00</div>
           </div>
           <div class="seizure-hint" id="seizureHint">→ <span class="emg">112</span> at 5:00</div>
-          <button class="seizure-btn" type="button" id="seizureBtn">Start</button>
+          <div class="seizure-actions">
+            <button class="seizure-btn" type="button" id="seizureBtn">Start</button>
+            <button class="seizure-btn seizure-btn-reset" type="button" id="seizureResetBtn">Reset</button>
+          </div>
         </div>
 
         <div class="info">
@@ -1686,6 +1704,7 @@
     var timeEl = document.getElementById('seizureTime');
     var hintEl = document.getElementById('seizureHint');
     var btn = document.getElementById('seizureBtn');
+    var resetBtn = document.getElementById('seizureResetBtn');
     if (!timeEl || !hintEl || !btn) return;
 
     function format(t) {
@@ -1716,6 +1735,9 @@
       }
       btn.textContent = running ? 'Stop' : 'Start';
       btn.classList.toggle('on', running);
+      if (resetBtn) {
+        resetBtn.disabled = !running && elapsed === 0;
+      }
     }
 
     function stop(reset) {
@@ -1746,6 +1768,12 @@
       paint();
       timerId = setInterval(tick, 1000);
     });
+
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function () {
+        stop(true);
+      });
+    }
 
     paint();
   })();
