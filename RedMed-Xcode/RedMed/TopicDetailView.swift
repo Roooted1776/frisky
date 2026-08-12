@@ -66,15 +66,25 @@ struct TopicDetailView: View {
             // Pane-style chrome — not system toolbar (that paints black fill/text).
             HStack(alignment: .center, spacing: 12) {
                 ChromeTextAction(title: "Back") { dismiss() }
-                Text(topic.title)
-                    .font(RedMedChrome.navTitleFont)
-                    .foregroundColor(.redmedAccent)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.75)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .layoutPriority(1)
+                if isTraumaHospitals {
+                    // BrandWordmark (@3x in Assets) on the left — same mark as Aid / 911.
+                    Image("BrandWordmark")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 28)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityLabel("RedMed")
+                } else {
+                    Text(topic.title)
+                        .font(RedMedChrome.navTitleFont)
+                        .foregroundColor(.redmedAccent)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.75)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .layoutPriority(1)
+                }
             }
             .padding(.horizontal, 16)
             .padding(.top, 14)
@@ -226,14 +236,23 @@ private struct LiveNearbyHospitalsSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Nearest Hospitals — Live")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(.redmedAccent)
-                .kerning(0.5)
-                .textCase(.uppercase)
-                .padding(.horizontal, 4)
-                .padding(.bottom, 6)
-                .padding(.top, 24)
+            HStack(alignment: .center, spacing: 10) {
+                Image("BrandLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 28, height: 28)
+                    .clipShape(Circle())
+                    .accessibilityHidden(true)
+                Text("Find Nearby Hospitals")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.redmedAccent)
+                    .kerning(0.5)
+                    .textCase(.uppercase)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.horizontal, 4)
+            .padding(.bottom, 6)
+            .padding(.top, 24)
 
             if !locationEnabled {
                 Text("Location is off. Enable it in Help → Settings to find nearby hospitals.")
