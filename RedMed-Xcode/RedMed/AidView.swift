@@ -142,42 +142,25 @@ struct PaneCard: View {
         VStack(alignment: .leading, spacing: 0) {
             Button { onTap(nil) } label: {
                 HStack(alignment: .center, spacing: 12) {
-                    if pane.id == "hospitals" {
-                        // Full BrandWordmark lockup (logo + RedMed text) on the left.
-                        Image("BrandWordmark")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 28)
-                            .accessibilityHidden(true)
-                        Text(pane.title)
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.redmedAccent)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.75)
-                            .multilineTextAlignment(.leading)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .layoutPriority(1)
-                            .accessibilityLabel("RedMed \(pane.title)")
-                    } else {
-                        Text(pane.emoji)
-                            .font(.system(size: 22))
-                            .frame(width: 44, height: 44)
-                            .background(isOpen ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
-                            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
-                            .animation(RedMedMotion.snappy, value: isOpen)
-                            .accessibilityHidden(true)
+                    Text(pane.emoji)
+                        .font(.system(size: 22))
+                        .frame(width: 44, height: 44)
+                        .background(isOpen ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+                        .animation(RedMedMotion.snappy, value: isOpen)
+                        .accessibilityHidden(true)
 
-                        Text(pane.title)
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.redmedAccent)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.75)
-                            .multilineTextAlignment(.leading)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .layoutPriority(1)
-                    }
+                    // Title + emoji only — red chrome, scales to fit the pane.
+                    // Hospitals wordmark lives at top of TopicDetailView, not in this row.
+                    Text(pane.title)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.redmedAccent)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.75)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .layoutPriority(1)
 
                     Image(systemName: "chevron.right")
                         .font(.system(size: 14, weight: .semibold))

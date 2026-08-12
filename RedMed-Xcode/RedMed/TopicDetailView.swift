@@ -63,31 +63,34 @@ struct TopicDetailView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            if isTraumaHospitals {
+                // BrandWordmark lockup at top of page (not inline left of Back).
+                Image("BrandWordmark")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 42)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 2)
+                    .padding(.bottom, 4)
+                    .accessibilityLabel("RedMed")
+            }
+
             // Pane-style chrome — not system toolbar (that paints black fill/text).
             HStack(alignment: .center, spacing: 12) {
                 ChromeTextAction(title: "Back") { dismiss() }
-                if isTraumaHospitals {
-                    // BrandWordmark (@3x in Assets) on the left — same mark as Aid / 911.
-                    Image("BrandWordmark")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 28)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .accessibilityLabel("RedMed")
-                } else {
-                    Text(topic.title)
-                        .font(RedMedChrome.navTitleFont)
-                        .foregroundColor(.redmedAccent)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.75)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .layoutPriority(1)
-                }
+                Text(topic.title)
+                    .font(RedMedChrome.navTitleFont)
+                    .foregroundColor(.redmedAccent)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.75)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .layoutPriority(1)
             }
             .padding(.horizontal, 16)
-            .padding(.top, 14)
+            .padding(.top, isTraumaHospitals ? 6 : 14)
             .padding(.bottom, 8)
 
             ScrollView {
@@ -236,16 +239,14 @@ private struct LiveNearbyHospitalsSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Same BrandWordmark lockup the user sent (logo + RedMed) on the left.
-            Image("BrandWordmark")
-                .resizable()
-                .scaledToFit()
-                .frame(height: 32)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            Text("Nearest Hospitals — Live")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(.redmedAccent)
+                .kerning(0.5)
+                .textCase(.uppercase)
                 .padding(.horizontal, 4)
-                .padding(.bottom, 10)
+                .padding(.bottom, 6)
                 .padding(.top, 24)
-                .accessibilityLabel("RedMed Find Nearby Hospitals")
 
             if !locationEnabled {
                 Text("Location is off. Enable it in Help → Settings to find nearby hospitals.")
