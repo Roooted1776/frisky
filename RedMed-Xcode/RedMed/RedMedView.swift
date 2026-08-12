@@ -36,8 +36,10 @@ struct RedMedView: View {
 
                 LazyVStack(alignment: .leading, spacing: 0) {
                     // YOU card (no section label in Main design)
+                    // Name shares the same 11pt / #1c1917 row chrome as Birth date + Blood type
+                    // on owner and tap (Preview + get.html).
                     cardGroup {
-                        nameProfileRow
+                        profileRow(label: "Name", value: profile.name, emptyPrompt: "Add name")
                         thinDivider
                         profileRow(label: "Birth date", value: profile.birthDate, emptyPrompt: "Add birth date")
                         thinDivider
@@ -304,36 +306,6 @@ struct RedMedView: View {
 
     private var thinDivider: some View {
         Divider().overlay(Color.redmedDivider)
-    }
-
-    /// Name value sits left (after label), bold — same 11pt system as other YOU fields.
-    @ViewBuilder
-    private var nameProfileRow: some View {
-        Button {
-            if profile.name.isEmpty && !isScannerSession { requestEdit() }
-        } label: {
-            HStack(spacing: 8) {
-                Text("Name")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.redmedMuted)
-                if profile.name.isEmpty {
-                    Text(isScannerSession ? "—" : "Add name")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(isScannerSession ? Color.redmedMuted.opacity(0.4) : .redmedAccent)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    Text(profile.name)
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.redmedDark)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 11)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .disabled(!profile.name.isEmpty || isScannerSession)
     }
 
     @ViewBuilder
