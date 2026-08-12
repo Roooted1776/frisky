@@ -1,7 +1,7 @@
 # Band engraving + NFC / QR sourcing
 
 Product note for physical RedMed bracelets. Matches the shipping model:
-passive NTAG NDEF URI → `https://redmed.pages.dev/get/#d=…` (profile only in
+passive NTAG NDEF URI → `https://redmed.pages.dev/tapper/#d=…` (profile only in
 the fragment; no RedMed backend).
 
 ## Recommendation (short)
@@ -104,7 +104,7 @@ or `COND: T1 DIABETES` — one token, no essay.
 | Location | Encodes | Why |
 |----------|---------|-----|
 | Outer face, small | App Store URL (`AppConfig.appStoreURL`) | Owner setup path. Safe if scanned by a stranger — no health data. |
-| Chip (NDEF) | `https://redmed.pages.dev/get/#d=<base64url>` | Written by RedMed; flat array → AES-GCM → base64url; rescuer tap opens the card. |
+| Chip (NDEF) | `https://redmed.pages.dev/tapper/#d=<base64url>` | Written by RedMed; flat array → AES-GCM → base64url; rescuer tap opens the card. |
 
 If the plate only fits one mark, prioritise **engraved text** over QR. NFC is the
 primary rescue path; QR is a setup affordance, not a backup medical record.
@@ -127,5 +127,5 @@ primary rescue path; QR is a setup affordance, not a backup medical record.
 RedMed already owns the tap URL (`AppConfig.medicalCardBaseURL`). A redirect SaaS
 adds: another DPIA party, outage risk on the critical path, and a product story
 that no longer matches “we run no servers for your profile.” Hardware-only
-vendors + Cloudflare Pages static `get.html` (passerby scan; legacy `card.html`
+vendors + Cloudflare Pages static `tapper.html` (passerby scan; legacy `card.html`
 redirects) + policy HTML stay aligned.

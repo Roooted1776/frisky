@@ -9,15 +9,15 @@
 (function () {
   var q = location.search || "";
   var h = location.hash || "";
-  location.replace("get/" + q + h);
+  location.replace("tapper/" + q + h);
 })();
 </script>
-<meta http-equiv="refresh" content="0;url=get/">
+<meta http-equiv="refresh" content="0;url=tapper/">
 </head>
 <body>
-  <p><a id="go" href="get/">Open RedMed card</a></p>
+  <p><a id="go" href="tapper/">Open RedMed card</a></p>
   <script>
-    document.getElementById("go").href = "get/" + (location.search || "") + (location.hash || "");
+    document.getElementById("go").href = "tapper/" + (location.search || "") + (location.hash || "");
   </script>
 </body>
 </html>

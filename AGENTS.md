@@ -28,23 +28,23 @@ The app has no backend, database, or web service.
   visible for owners; `AppConfig.nfcHardwareEnabled` only gates CoreNFC
   write/read sessions, never tab chrome. Owner writes the passive HF NFC band
   from the NFC tab (Face ID gated).
-- **Scanner / passerby shell** (`PublicCardView` / bracelet tap → `get.html#d=…`,
+- **Scanner / passerby shell** (`PublicCardView` / bracelet tap → `tapper.html#d=…`,
   `isScannerSession == true`): tabs are **RedMed · 911 · Aid** only — **no Edit**,
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain or
   owner `@AppStorage` / UserDefaults prefs. Hosted at
-  `https://redmed.pages.dev/get/` from `get/index.html`.
+  `https://redmed.pages.dev/tapper/` from `tapper/index.html`.
   **Tap-to-view never requires Face ID / biometrics** — owner biometrics gate
   edit, NFC write, vault, and app unlock only. Passerby HTML never asks.
-- Product HTML is only (1) one passerby file `get.html` (identical in `get/index.html`,
-  repo root, and the app bundle; legacy `card.html` redirects to `/get/`, preserving `#d=`) and
+- Product HTML is only (1) one passerby file `tapper.html` (identical in `tapper/index.html`,
+  repo root, and the app bundle; legacy `card.html` / `get.html` / `/get/` redirect to `/tapper/`, preserving `#d=`) and
   (2) policy pages bundled solely under `RedMed-Xcode/RedMed/` (`PrivacyPolicy`,
   `TOS`, `security`, `HowItWorks`, `legal-doc.css`). `HowItWorks.html` redirects
   into `redmed://main`. Policies CTA to the owner app; they do not host owner
   edit UI. Do not reintroduce repo-root copies of the policy HTML. Owner Help
   is Settings + Privacy / TOS / Security only (no in-app How It Works /
-  MainInfoView, no Local History row, no local get.html WebView). Owner
-  Preview / NFC Scan open bundled `get.html#d=` (`?src=app`, no SOS auto-arm);
-  live band taps stay `https://redmed.pages.dev/get/#d=`.
+  MainInfoView, no Local History row, no local tapper.html WebView). Owner
+  Preview / NFC Scan open bundled `tapper.html#d=` (`?src=app`, no SOS auto-arm);
+  live band taps stay `https://redmed.pages.dev/tapper/#d=`.
 
 - **Bracelet tap (physics, not a setting):** `AppConfig.BraceletRF` is the single
   source of truth — intentional tap ~1–2″, walk-by ~6–8″ does not fire, reliable
@@ -60,8 +60,8 @@ The app has no backend, database, or web service.
   hard-impact detection (`CrashMotionGuard`) fires for **vehicle crash /
   high-speed impact only** (not running or daily activity), (2) owner taps
   **SOS · Locate me** on Find Help, or (3) a **real bracelet NFC tap** opens
-  passerby `get.html#d=…` (hardware-local SOS on that phone — no server; bare
-  `/get/` without `#d=` and in-app scanner preview do **not** auto-arm).
+  passerby `tapper.html#d=…` (hardware-local SOS on that phone — no server; bare
+  `/tapper/` without `#d=` and in-app scanner preview do **not** auto-arm).
   Opening owner Find Help must not force brightness, max volume, or play the
   siren by itself. Do not add Settings off switches for the survival alarm.
 - **LocatorBeacon** / **BrightnessBoost** / **VolumeBoost** survival hold may keep sounding /
@@ -95,7 +95,7 @@ Settings with **no RedMed location gate / banner / Allow popup** — Help must n
 call `requestWhenInUseAuthorization`. When-In-Use + GPS start on Find Help only
 when Location is enabled (`AppSettings.locationEnabled` + `LocationManager.start`);
 iOS may show its system Allow sheet once (cannot auto-accept). Passerby
-`get.html` must not call `geolocation` until the 911 tab opens. CoreMotion crash
+`tapper.html` must not call `geolocation` until the 911 tab opens. CoreMotion crash
 monitoring may start after first-frame yield (no Location); do not construct
 `CMMotionManager` at `CrashMotionGuard` shared init. `ContentView` lazy
 tab mounting mounts RedMed only on cold start (911 / Aid / NFC on first visit,
@@ -117,25 +117,26 @@ it in `init`.
 `AAAA`/`AABB` IDs silently drop sources from the target (seen when Haptic /
 Brightness collided with HIPAA vault files).
 
-**Passerby SW:** shell fetch is **cache-first** (multi-key: `/get/`,
+**Passerby SW:** shell fetch is **cache-first** (multi-key: `/tapper/`,
 `index.html`, etc.) for **almost-instant** EMT / helper open when Cache
 Storage has any shell copy — never wait on network in that case. Background
 `cache: 'reload'` refresh updates the bucket while online. First visit (empty
 cache) waits on network, then stores under every shell key. On activate,
 delete every prior `CACHE` name so deploys clear stale decrypt/layout. Bump
-`CACHE` (`redmed-get-vN`) in lockstep across `sw.js`, `get/sw.js`, and the
-bundled copy on every SW / decrypt deploy. Register the SW ASAP in `get.html`
+`CACHE` (`redmed-tapper-vN`) in lockstep across `sw.js`, `tapper/sw.js`, and the
+bundled copy on every SW / decrypt deploy. Register the SW ASAP in `tapper.html`
 (not on `window.load`). Legacy zlib inflate is bounded (64 KiB) in Swift +
-streaming bound in `get.html`. Passerby HTML **arms local SOS only on a real
+streaming bound in `tapper.html`. Passerby HTML **arms local SOS only on a real
 bracelet NFC open with `#d=`** (hardware-local on that phone; no server). Bare
-`/get/` and in-app preview do not auto-arm. Explicit Stop / SOS toggle and
+`/tapper/` and in-app preview do not auto-arm. Explicit Stop / SOS toggle and
 DeviceMotion crash share that on-device alarm. iOS may need a gesture to unmute
 AudioContext / grant motion. Native still owns system volume / brightness boost.
 
 **Repo hygiene:** `main` is the only long-lived branch. After merges, delete
 feature branches on the remote; do not leave parallel “brainchild” branches.
-Keep the tree product-only: `RedMed-Xcode/`, passerby `get*` / `sw.js` /
-`card.html` / `_headers`, `assets/` + root logo, `docs/` product notes,
+Keep the tree product-only: `RedMed-Xcode/`, passerby `tapper*` / legacy
+`get*` redirects / `sw.js` / `card.html` / `_headers`, `assets/` + root logo,
+`docs/` product notes,
 `scripts/`, `.github/`, and agent docs. Do not re-add staging `uploads/`,
 debug `screenshots/`, dead `support.js` / `ios-frame.jsx`, or UK
 `compliance/` paper packs.

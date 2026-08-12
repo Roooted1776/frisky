@@ -33,8 +33,8 @@ struct NFCChipContact: Codable, Equatable {
 /// 3. Bytes `0x02 || nonce(12) || ciphertext+tag` → base64url after `#d=`.
 ///
 /// The AES key is a public client constant (SHA-256 of a fixed label), also
-/// embedded in `get.html`. This is packing/obfuscation so the fragment is not
-/// casual plaintext JSON — any phone that loads get.html can decrypt. EMS must
+/// embedded in `tapper.html`. This is packing/obfuscation so the fragment is not
+/// casual plaintext JSON — any phone that loads tapper.html can decrypt. EMS must
 /// read the band with no account; a private key would defeat the product.
 ///
 /// Legacy still decodes:
@@ -47,11 +47,11 @@ enum ProfileNFCCodec {
     private static let zlibVersion: UInt8 = 0x01
     /// Version byte for AES-GCM sealed payloads.
     private static let aesVersion: UInt8 = 0x02
-    /// Shared with `get.html` — derive AES-256 key via SHA-256.
+    /// Shared with `tapper.html` — derive AES-256 key via SHA-256.
     private static let keyLabel = "RedMed-NFC-AES-GCM-v1"
     private static let bloodTypes = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
 
-    /// Compact array indexes for AES / current writes (must match get.html).
+    /// Compact array indexes for AES / current writes (must match tapper.html).
     private enum Idx {
         static let blood = 0
         static let allergies = 1
