@@ -441,7 +441,8 @@ struct EditProfileView: View {
 
     @ViewBuilder
     private func editSectionLabel(_ text: String) -> some View {
-        Text(text.uppercased())
+        // Keep "You" title-case; other section headers stay ALL CAPS.
+        Text(text == "You" ? text : text.uppercased())
             .font(.system(size: Metrics.font, weight: .semibold))
             .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
             .kerning(0.5)
