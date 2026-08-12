@@ -5,7 +5,7 @@
   --bg: #fff7f7;                          /* Color.redmedBg */
   --surface: rgba(255, 255, 255, 0.92);   /* Color.redmedSurface */
   --border: rgba(28, 25, 23, 0.08);
-  --divider: rgba(28, 25, 23, 0.07);      /* Color.redmedDivider */
+  --divider: rgba(28, 25, 23, 0.08);      /* Color.redmedDivider */
   --accent: #e11d48;                      /* Color.redmedAccent */
   --accent-soft: rgba(225, 29, 72, 0.10);
   --text: #1c1917;                        /* Color.redmedDark */

@@ -98,7 +98,7 @@ struct CustomTabBar: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Divider().overlay(Color(red: 0.9, green: 0.9, blue: 0.9))
+            Divider().overlay(Color.redmedDivider)
             HStack(spacing: -3) {
                 TabBarItem(icon: "person.fill",  label: "RedMed", isOn: tab == .redmed)      { tab = .redmed }
                 TabBarItem(icon: "phone.fill",   label: "911",    isOn: tab == .emergency)  { tab = .emergency }

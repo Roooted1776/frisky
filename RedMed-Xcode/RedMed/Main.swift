@@ -25,7 +25,7 @@ struct MainInfoView: View {
                     .padding(14)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color.redmedAccent.opacity(0.08))
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
 
                 section(num: "1", title: "Set up RedMed") {
                     Text("Open the RedMed tab and tap Edit. Unlock with Face ID, Touch ID, or your device passcode when asked. Add your name, birth date, and blood type, then list any allergies, medications, and conditions a first responder should know. Add emergency contacts with phone numbers. Tap Save when done.")
@@ -75,10 +75,10 @@ struct MainInfoView: View {
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.redmedSurface)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(Color.redmedDark.opacity(0.08), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
+                        .strokeBorder(Color.redmedDivider, lineWidth: 1)
                 )
             }
             .padding(16)

@@ -457,7 +457,7 @@ struct EditProfileView: View {
             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                    .stroke(Color.redmedDivider, lineWidth: 1)
+                    .strokeBorder(Color.redmedDivider, lineWidth: 1)
             )
     }
 
