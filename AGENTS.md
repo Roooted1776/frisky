@@ -84,10 +84,13 @@ The app has no backend, database, or web service.
 
 **Cold launch:** Do **not** create `CLLocationManager`, start GPS / MapKit /
 trauma JSON, or show a Location banner at `@main`. First launch opens a cream
-shell (`redmedBg` / `LaunchBackground`) with **zero Keychain** on the first
-frame — `OwnerAppLock` defers `hasStoredProfile` until after paint, then shows
-the lock UI; Face ID runs only after the owner taps **Accept** (never auto on
-appear). Do not call Keychain in `@State` defaults. Location defaults on in Help →
+shell (`redmedBg` / `LaunchBackground` + `BrandLogo` on `UILaunchScreen`) with
+**zero Keychain** on the first frame — `OwnerAppLock` uses a UserDefaults gate
+(`ProfileData.storedProfileGateKey`, set on persist / Keychain presence) so
+returning owners see Accept immediately and fresh installs open tabs; SecItem
+still confirms off-main and can correct a stale gate. Face ID runs only after
+the owner taps **Accept** (never auto on appear). Do not call Keychain in
+`@State` defaults. Location defaults on in Help →
 Settings with **no RedMed location gate / banner / Allow popup** — Help must not
 call `requestWhenInUseAuthorization`. When-In-Use + GPS start on Find Help only
 when Location is enabled (`AppSettings.locationEnabled` + `LocationManager.start`);

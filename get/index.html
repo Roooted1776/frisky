@@ -118,8 +118,9 @@
     min-height: calc(100dvh - var(--safe-t) - var(--tabbar-h) - var(--safe-b));
   }
   .panel { display: none; padding: 10px 0 28px; }
-  .panel.active {
-    display: block;
+  /* First paint stays visible — opacity:0 here read as a long white flash on load. */
+  .panel.active { display: block; }
+  .panel.active.anim-in {
     animation: panelIn 0.22s ease-out;
   }
   @keyframes panelIn {
@@ -127,7 +128,7 @@
     to { opacity: 1; transform: none; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .panel.active { animation: none; }
+    .panel.active.anim-in { animation: none; }
   }
 
   /* —— RedMed tab (My ID look) —— */
@@ -148,14 +149,20 @@
     border-radius: var(--box);
     box-shadow: var(--shadow);
   }
-  /* In-app RedMed tab embeds this shell — hide passerby tab chrome (native tabs own 911/Aid). */
+  /* In-app RedMed tab embeds this shell — hide passerby tab chrome (native tabs own 911/Aid).
+     `html.app-embed` is set from the native boot script before first paint; body class follows. */
+  html.app-embed body,
   body.app-embed {
     padding-top: calc(var(--safe-t) + 48px);
     padding-bottom: var(--safe-b);
   }
+  html.app-embed .tabbar,
   body.app-embed .tabbar { display: none !important; }
+  html.app-embed #panel-911,
+  html.app-embed #panel-aid,
   body.app-embed #panel-911,
   body.app-embed #panel-aid { display: none !important; }
+  html.app-embed #panel-medical,
   body.app-embed #panel-medical {
     display: flex !important;
     min-height: calc(100vh - var(--safe-t) - var(--safe-b));
@@ -1435,9 +1442,13 @@
     });
   }
 
+  var tabAnimReady = false;
   function showTab(id) {
     document.querySelectorAll('.panel').forEach(function (p) {
-      p.classList.toggle('active', p.getAttribute('data-panel') === id);
+      var on = p.getAttribute('data-panel') === id;
+      p.classList.toggle('active', on);
+      // Animate tab switches only — cold open must not start at opacity 0.
+      p.classList.toggle('anim-in', on && tabAnimReady);
     });
     document.querySelectorAll('.tab').forEach(function (t) {
       t.classList.toggle('active', t.getAttribute('data-tab') === id);
@@ -1451,6 +1462,7 @@
     t.addEventListener('click', function () { showTab(t.getAttribute('data-tab')); });
   });
   showTab('medical');
+  tabAnimReady = true;
 
   function decodeProfile() {
     try {
@@ -1580,6 +1592,7 @@
 
   (function applyAppEmbedChrome() {
     if (!isAppPreview()) return;
+    try { document.documentElement.classList.add('app-embed'); } catch (e0) {}
     try { document.body.classList.add('app-embed'); } catch (e) {}
     var lock = document.querySelector('.rm-lock');
     if (lock) {

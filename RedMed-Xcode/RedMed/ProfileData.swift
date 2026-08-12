@@ -64,6 +64,18 @@ class ProfileData: ObservableObject {
         KeychainStore.exists(account: keychainAccount)
     }
 
+    /// UserDefaults mirror of Keychain presence — first SwiftUI frame may lock
+    /// without waiting on SecItem. Keychain remains authoritative in OwnerAppLock.
+    static let storedProfileGateKey = "redmed.hasStoredProfileGate"
+
+    static var prefersLockOnLaunch: Bool {
+        UserDefaults.standard.bool(forKey: storedProfileGateKey)
+    }
+
+    static func setStoredProfileGate(_ on: Bool) {
+        UserDefaults.standard.set(on, forKey: storedProfileGateKey)
+    }
+
     /// Detached copy for scanner / preview — mutations never touch the owner profile or Keychain.
     func snapshot() -> ProfileData {
         let copy = ProfileData(persisting: false)
@@ -103,7 +115,9 @@ class ProfileData: ObservableObject {
             lastUpdated: lastUpdated
         )
         guard let data = try? JSONEncoder().encode(blob) else { return false }
-        return KeychainStore.save(data, account: Self.keychainAccount)
+        let ok = KeychainStore.save(data, account: Self.keychainAccount)
+        if ok { Self.setStoredProfileGate(true) }
+        return ok
     }
 
     /// Wipe PHI from RAM without touching Keychain (owner app lock).

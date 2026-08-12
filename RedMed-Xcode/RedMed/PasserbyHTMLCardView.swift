@@ -93,35 +93,45 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
     let encodedPayload: String
     var braceletLinked: Bool = false
 
+    /// Disk read once per process — remounts must not re-slurp get.html on main.
+    private static var cachedShellHTML: String?
+    private static var cachedShellFileURL: URL?
+
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.preferences.javaScriptCanOpenWindowsAutomatically = false
+        let cream = UIColor(Color.redmedBg)
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
         webView.allowsBackForwardNavigationGestures = false
-        webView.isOpaque = false
-        webView.backgroundColor = UIColor(Color.redmedBg)
-        webView.scrollView.backgroundColor = UIColor(Color.redmedBg)
+        // Opaque cream — translucent WKWebView often flashes system white before CSS.
+        webView.isOpaque = true
+        webView.backgroundColor = cream
+        webView.scrollView.isOpaque = true
+        webView.scrollView.backgroundColor = cream
+        webView.scrollView.contentInsetAdjustmentBehavior = .never
         return webView
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
         let loadKey = "\(encodedPayload)|\(braceletLinked)"
         guard context.coordinator.loadedKey != loadKey else { return }
-        guard let fileURL = Bundle.main.url(forResource: "get", withExtension: "html"),
-              var html = try? String(contentsOf: fileURL, encoding: .utf8),
+        guard let fileURL = Self.shellFileURL(),
+              var html = Self.shellHTML(),
               let lit = Self.jsStringLiteral(encodedPayload) else { return }
         context.coordinator.loadedKey = loadKey
         // Inject before any get.html script so decrypt sees #d= and SOS sees app preview.
         // Flag + hash fallback: loadHTMLString can leave location as about:blank where
         // replaceState alone would leave decrypt empty and wrongly auto-arm SOS.
+        // `html.app-embed` lands before first paint — body class alone waits on the big IIFE.
         let linkedJS = braceletLinked ? "true" : "false"
         let boot = """
         <script>
         window.__REDMED_APP_PREVIEW=1;
         window.__REDMED_BRACELET_LINKED=\(linkedJS);
+        try{document.documentElement.classList.add('app-embed');}catch(e0){}
         (function(){
           var d=\(lit);
           try{
@@ -141,6 +151,21 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         }
         // baseURL = the get.html file so relative BrandLogo / sw.js resolve like a real open.
         webView.loadHTMLString(html, baseURL: fileURL)
+    }
+
+    private static func shellFileURL() -> URL? {
+        if let cachedShellFileURL { return cachedShellFileURL }
+        let url = Bundle.main.url(forResource: "get", withExtension: "html")
+        cachedShellFileURL = url
+        return url
+    }
+
+    private static func shellHTML() -> String? {
+        if let cachedShellHTML { return cachedShellHTML }
+        guard let url = shellFileURL(),
+              let html = try? String(contentsOf: url, encoding: .utf8) else { return nil }
+        cachedShellHTML = html
+        return html
     }
 
     /// JSON string literal for safe JS concatenation (bare String is not a valid
