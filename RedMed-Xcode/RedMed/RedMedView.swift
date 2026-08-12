@@ -266,7 +266,7 @@ struct RedMedView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(deviceName)
                     .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(.redmedDark)
+                    .foregroundColor(.black)
                     .kerning(-0.4)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
@@ -327,15 +327,15 @@ struct RedMedView: View {
                 if !hasImportedName {
                     Text("Name")
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.redmedDark.opacity(0.55))
+                        .foregroundColor(.redmedDark)
                     Text(isScannerSession ? "—" : "Add name")
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(isScannerSession ? Color.redmedDark.opacity(0.45) : .redmedAccent)
+                        .foregroundColor(isScannerSession ? Color.redmedDark.opacity(0.55) : .redmedAccent)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
                     Text(profile.name)
                         .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.redmedDark)
+                        .foregroundColor(.black)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .lineLimit(2)
                         .minimumScaleFactor(0.85)
@@ -357,16 +357,16 @@ struct RedMedView: View {
             HStack {
                 Text(label)
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.redmedMuted)
+                    .foregroundColor(.redmedDark)
                 Spacer()
                 if value.isEmpty {
                     Text(isScannerSession ? "—" : emptyPrompt)
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(isScannerSession ? Color.redmedMuted.opacity(0.4) : .redmedAccent)
+                        .foregroundColor(isScannerSession ? Color.redmedDark.opacity(0.55) : .redmedAccent)
                 } else {
                     Text(value)
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(.redmedDark)
+                        .foregroundColor(.black)
                 }
             }
             .padding(.horizontal, 16)
