@@ -14,7 +14,22 @@ struct PasserbyHTMLCardView: View {
     }
 
     var body: some View {
-        NavigationView {
+        // Same chrome as owner Edit / Aid topic Back — accent red text, no system
+        // toolbar fill (NavigationView bar paints black fill/text).
+        VStack(spacing: 0) {
+            HStack(alignment: .center, spacing: 12) {
+                ChromeTextAction(title: "Back") { dismiss() }
+                Text("Tap card")
+                    .font(RedMedChrome.navTitleFont)
+                    .foregroundColor(.redmedAccent)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 14)
+            .padding(.bottom, 8)
+
             Group {
                 if let encodedPayload {
                     PasserbyHTMLWebView(encodedPayload: encodedPayload)
@@ -24,17 +39,12 @@ struct PasserbyHTMLCardView: View {
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
                         .padding(24)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
-            .background(Color.redmedBg.ignoresSafeArea())
-            .navigationTitle("Tap card")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    ChromeTextAction(title: "Back") { dismiss() }
-                }
-            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .background(Color.redmedBg.ignoresSafeArea())
     }
 
     static func extractPayload(_ raw: String) -> String? {

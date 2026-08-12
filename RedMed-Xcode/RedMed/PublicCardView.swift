@@ -45,7 +45,7 @@ struct PublicCardView: View {
 }
 
 /// Dismisses the Preview scanner / ped shell. Shown on RedMed, 911, and Aid.
-/// Same `ChromeTextAction` as owner Edit — accent red, page-bg fill, 18 regular.
+/// Same `ChromeTextAction` as owner Edit — accent red, no fill, 18 regular.
 struct ScannerBackButton: View {
     @Environment(\.scannerDismiss) private var scannerDismiss
 

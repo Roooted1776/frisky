@@ -536,9 +536,9 @@
     line-height: 1.2;
     flex: 1;
     min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    /* Match owner PaneCard — wrap/scale to fit, no ellipsis clip. */
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
   details.aid ol {
     margin: 0 0 12px;
