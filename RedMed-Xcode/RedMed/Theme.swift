@@ -40,8 +40,8 @@ extension Color {
     static let redmedWash     = Color(red: 1.000, green: 0.910, blue: 0.922) // #ffe8eb
 }
 
-/// Cream page with rose wash + BrandLogo watermark (same eye candy as lock /
-/// passerby tapper — 60% transparent, decorative only).
+/// Cream page with rose wash only (fill color — no BrandLogo watermark).
+/// Lock shell keeps its own watermark; passerby tapper matches this cream fill.
 struct RedMedPageBackground: View {
     var body: some View {
         ZStack {
@@ -54,16 +54,6 @@ struct RedMedPageBackground: View {
             )
             .frame(maxHeight: 520)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            Image("BrandLogo")
-                .resizable()
-                .scaledToFit()
-                .frame(
-                    width: RedMedChrome.lockWatermarkSize,
-                    height: RedMedChrome.lockWatermarkSize
-                )
-                .clipShape(Circle())
-                .opacity(RedMedChrome.lockWatermarkOpacity)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
@@ -308,9 +298,8 @@ enum RedMedChrome {
     /// Tapper / empty YOU-card BrandLogo diameter (`--logo` matches).
     static let logoSize: CGFloat = 72
     /// Owner lock decorative BrandLogo — atmosphere only, never a control.
-    /// Large centered mark is the open-screen eye candy (cream + Unlock).
     static let lockWatermarkSize: CGFloat = 280
-    /// 60% transparent (40% opaque) — readable as the brand logo, not a control.
+    /// 60% transparent (40% opaque) — lock shell only (not page / tapper backgrounds).
     static let lockWatermarkOpacity: Double = 0.40
     /// BrandWordmark lockup on NFC / topic pages (Aid + 911 are content-first).
     static let wordmarkHeight: CGFloat = 42
