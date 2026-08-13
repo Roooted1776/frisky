@@ -168,6 +168,10 @@ struct OwnerAppLock<Content: View>: View {
         profileLoadFailed = false
         authGeneration &+= 1
         let generation = authGeneration
+        // Warm tapper.html while Face ID is up — unlock must not wait on disk after success.
+        Task.detached(priority: .utility) {
+            PasserbyHTMLCardView.warmShellCache()
+        }
         BiometricAuth.authenticate(
             reason: "Confirm with Face ID, Touch ID, or passcode after Accept to unlock your RedMed profile."
         ) { outcome in
@@ -186,13 +190,10 @@ struct OwnerAppLock<Content: View>: View {
                 gate = .locked
                 VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock")
             case .success:
-                // Decode + warm shell off the main thread — unlock UI stays on cream lock until apply.
+                // Keychain off-main; shell warm already racing from Accept tap.
                 Task {
-                    async let warm: Void = Task.detached(priority: .utility) {
-                        PasserbyHTMLCardView.warmShellCache()
-                    }.value
                     let loaded = await profile.reloadFromKeychainAsync()
-                    _ = await warm
+                    PasserbyHTMLCardView.warmShellCache()
                     guard generation == authGeneration else { return }
                     isAuthenticating = false
                     if loaded {

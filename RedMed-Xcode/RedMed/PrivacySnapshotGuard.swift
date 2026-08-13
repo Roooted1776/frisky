@@ -24,14 +24,18 @@ struct PrivacySnapshotGuard<Content: View>: View {
     }
 
     private var mustCover: Bool {
+        let phiInRAM = profile.hasSensitiveProfileData || profile.holdsEditingSession
         // Capture cover only while PHI is resident — lock screen must stay tappable
         // during FaceTime screen share / Screen Recording.
         if screenCaptured {
-            return profile.hasSensitiveProfileData || profile.holdsEditingSession
+            return phiInRAM
         }
         // Stay uncovered until the first active frame so tabs paint immediately.
         guard hasBeenActive else { return false }
-        return scenePhase != .active
+        // App-switcher / true background only — Face ID / LAContext put the scene
+        // `.inactive` and would blank the UI mid-unlock (same rule as VaultHistoryView).
+        guard scenePhase == .background else { return false }
+        return phiInRAM
     }
 
     var body: some View {
