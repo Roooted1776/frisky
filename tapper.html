@@ -179,7 +179,8 @@
   html.app-embed body,
   body.app-embed {
     padding-top: calc(var(--safe-t) + 48px);
-    padding-bottom: var(--safe-b);
+    /* Clear owner Preview chrome pinned over the quiet prayer. */
+    padding-bottom: calc(var(--safe-b) + 48px);
   }
   html.app-embed .tabbar,
   body.app-embed .tabbar { display: none !important; }
@@ -199,8 +200,8 @@
   body.app-embed #panel-medical {
     display: flex !important;
     flex-direction: column;
-    min-height: calc(100vh - var(--safe-t) - 48px - var(--safe-b));
-    min-height: calc(100dvh - var(--safe-t) - 48px - var(--safe-b));
+    min-height: calc(100vh - var(--safe-t) - 48px - var(--safe-b) - 48px);
+    min-height: calc(100dvh - var(--safe-t) - 48px - var(--safe-b) - 48px);
   }
   /* Owner embed: no lock line / BrandWordmark above the medical card. */
   html.app-embed .rm-lock,
@@ -734,7 +735,7 @@
     font-weight: 600;
     color: var(--dark);
     background: var(--bg);
-    border: 1px solid var(--border);
+    border: 1px solid var(--divider);
     border-radius: var(--box);
     text-align: left;
     cursor: pointer;
@@ -931,6 +932,7 @@
         <div class="row" id="rowNameRow"><span class="k">Name</span><span class="v empty" id="rowName">—</span></div>
         <div class="row"><span class="k">Birth date</span><span class="v empty" id="rowDob">—</span></div>
         <div class="row row-blood" id="rowBloodRow"><span class="k">Blood type</span><span class="v empty" id="rowBlood">—</span></div>
+        <div class="row" id="rowDonorRow"><span class="k">Organ donor</span><span class="v empty" id="rowDonor">—</span></div>
       </div>
 
       <div class="list-grid">
@@ -986,8 +988,8 @@
 
         <div class="gps-card">
           <div class="gps-pill">LIVE GPS</div>
-          <div class="coords" id="coords">Getting GPS…</div>
-          <div class="gps-acc" id="gpsAcc"></div>
+          <div class="coords" id="coords">–––</div>
+          <div class="gps-acc" id="gpsAcc">Accuracy ––</div>
         </div>
         <div class="gps-actions">
           <button class="btn btn-ink" type="button" id="copyCoordsBtn">Copy coordinates</button>
@@ -1324,6 +1326,7 @@
       name: asString(arr[0]),
       dob: expandDob(arr[1]),
       blood: expandBlood(arr[2]),
+      donor: !!(arr[3] === true || arr[3] === 1 || arr[3] === '1'),
       allergies: asStringArray(arr[4]),
       meds: asStringArray(arr[5]),
       conditions: asStringArray(arr[6]),
@@ -1356,6 +1359,7 @@
       dob: asString(str(5)),
       conditions: splitList(arr[6]),
       contacts: contacts,
+      donor: !!(arr[8] === true || arr[8] === 1 || arr[8] === '1'),
       updated: asString(str(9))
     };
   }
@@ -1381,6 +1385,7 @@
       name: asString(raw.name),
       dob: asString(raw.dob),
       blood: asString(raw.blood),
+      donor: !!(raw.donor === true || raw.donor === 1 || raw.donor === '1'),
       updated: asString(raw.updated),
       allergies: splitList(raw.allergies),
       meds: splitList(raw.meds),
@@ -1570,6 +1575,7 @@
     setRow('rowName', p.name);
     setRow('rowDob', p.dob);
     setRow('rowBlood', p.blood);
+    setRow('rowDonor', p.donor ? 'Yes' : '');
     var bloodRow = document.getElementById('rowBloodRow');
     if (bloodRow) {
       if (rawBlood) bloodRow.classList.add('has-blood');
@@ -1652,7 +1658,9 @@
   function setCoords(lat, lon, acc) {
     if (!isFinite(lat) || !isFinite(lon)) return;
     document.getElementById('coords').textContent = lat.toFixed(6) + ', ' + lon.toFixed(6);
-    document.getElementById('gpsAcc').textContent = acc > 0 ? ('Accuracy ±' + Math.round(acc) + ' m') : '';
+    document.getElementById('gpsAcc').textContent = acc > 0
+      ? ('Accuracy ±' + Math.round(acc) + ' m')
+      : 'Accuracy ––';
     window.__redmedLoc = { latitude: lat, longitude: lon, accuracy: acc };
   }
 

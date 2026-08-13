@@ -22,13 +22,7 @@ struct PasserbyHTMLCardView: View {
         VStack(spacing: 0) {
             HStack(alignment: .center, spacing: 12) {
                 ChromeTextAction(title: "Back") { dismiss() }
-                Text("Tap card")
-                    .font(RedMedChrome.navTitleFont)
-                    .foregroundColor(.redmedAccent)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .layoutPriority(1)
+                Spacer(minLength: 0)
             }
             .padding(.horizontal, 16)
             .padding(.top, 14)

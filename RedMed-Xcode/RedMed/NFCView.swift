@@ -74,7 +74,7 @@ struct NFCView: View {
 
     private var linkStatus: (title: String, detail: String, linked: Bool) {
         if profile.showsBraceletAsLinked {
-            return ("Linked", "Re-write after you edit RedMed", true)
+            return ("Linked bracelet", "Re-write after you edit RedMed", true)
         }
         if profile.braceletLinked {
             return ("Band written", "Finish name, birth date, and blood type on RedMed", false)
@@ -246,7 +246,7 @@ struct NFCView: View {
         if band.isWriting {
             return AppConfig.nfcHardwareEnabled ? "Hold near tag…" : "Packing…"
         }
-        return AppConfig.nfcHardwareEnabled ? "Write to NFC tag" : "Setup"
+        return AppConfig.nfcHardwareEnabled ? "Write to NFC tag" : "Write (simulate)"
     }
 
     private var scanButtonTitle: String {
