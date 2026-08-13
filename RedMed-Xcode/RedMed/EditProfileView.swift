@@ -307,7 +307,7 @@ struct EditProfileView: View {
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: Metrics.icon))
-                        .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48).opacity(0.45))
+                        .foregroundColor(.redmedMuted.opacity(0.45))
                         .frame(width: 36, height: 36)
                         .contentShape(Rectangle())
                 }

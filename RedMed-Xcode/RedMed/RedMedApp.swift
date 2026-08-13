@@ -20,14 +20,12 @@ struct RedMedApp: App {
             // Main.dc / cream chrome is light-only — keep phone + Xcode/sim identical.
             .preferredColorScheme(.light)
             .task {
-                // Vault + tapper.html warm off the hot path; CoreMotion after one
-                // yield so watermark + Face ID own the first frames.
+                // Vault + tapper.html warm off the hot path. CoreMotion starts after
+                // unlock (OwnerAppLock) so Face ID / first tabs own the CPU.
                 Task.detached(priority: .utility) {
                     _ = HIPAAOfflineVault.prepare()
                     PasserbyHTMLCardView.warmShellCache()
                 }
-                await Task.yield()
-                CrashMotionGuard.shared.startMonitoring()
             }
             .onOpenURL { url in
                 // Policies / tapper.html redirect with redmed://main

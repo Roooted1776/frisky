@@ -100,6 +100,7 @@ final class CrashMotionGuard: ObservableObject {
         BrightnessBoost.beginSurvival()
         VolumeBoost.beginSurvival()
         LocatorBeacon.beginSurvival()
+        NotificationCenter.default.post(name: .redMedSurvivalArmed, object: nil)
     }
 
     /// Serial CoreMotion evaluator — motion fields stay on `queue`; arm flag under `lock`.
