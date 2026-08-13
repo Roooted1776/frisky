@@ -101,9 +101,11 @@ shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash)
 (`ProfileData.storedProfileGateKey`, set on persist / Keychain presence) so
 returning owners see the watermark lock immediately and fresh installs open
 tabs; SecItem still confirms off-main and can correct a stale gate. Owner lock
-is cream + BrandLogo watermark + Face ID (auto on appear / return from
-background; tap to retry) — no Accept button, no title splash. Do not call
-Keychain in `@State` defaults. Location defaults on in Help →
+  Owner lock is cream + BrandLogo watermark + Face ID (auto on appear / return from
+  background; tap to retry) — no Accept button, no title splash. Unlock overlaps
+  Keychain decode + tapper shell warm with Face ID and skips unlock animation so
+  tabs paint on the next frame after biometrics. Do not call
+  Keychain in `@State` defaults. Location defaults on in Help →
 Settings with **no RedMed location gate / banner / Allow popup** — Help must not
 call `requestWhenInUseAuthorization`. When-In-Use + GPS start on Find Help only
 when Location is enabled (`AppSettings.locationEnabled` + `LocationManager.start`);

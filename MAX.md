@@ -69,12 +69,13 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Cold launch: LaunchBackground only on UILaunchScreen (no system BrandLogo).
   Owner lock is one screen: cream + BrandLogo watermark + Face ID enter —
   no Accept. Auto Face ID on lock appear / return from background; tap to
-  retry. UserDefaults profile gate opens watermark (or tabs) on first frame —
-  no Keychain in `@State`; off-main profile decode; lazy `CMMotionManager`;
-  LaunchBackground dark=cream. Unlock fail-closed if Keychain decode fails.
-  PrivacySnapshotGuard never covers watermark lock (Face ID inactive) — only
-  while PHI is in RAM. tapper.html first panel paints opaque; in-app WKWebView
-  stays opaque cream.
+  retry. Keychain decode + tapper.html shell warm overlap Face ID; unlock
+  applies with no fade so tabs paint next frame. UserDefaults profile gate
+  opens watermark (or tabs) on first frame — no Keychain in `@State`; lazy
+  `CMMotionManager`; LaunchBackground dark=cream. Unlock fail-closed if
+  Keychain decode fails. PrivacySnapshotGuard never covers watermark lock
+  (Face ID inactive) — only while PHI is in RAM. tapper.html first panel
+  paints opaque; in-app WKWebView stays opaque cream.
 - Vault Local History: Accept tap before Face ID (no auto-prompt on appear).
 - Opacity keep-alive tabs: Find Help GPS + seizure autodial tear down via
   `isVisible` (not `onDisappear` — opacity hide never fires it).
