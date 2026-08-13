@@ -1,6 +1,7 @@
 // Owner-only NFC bracelet setup. Ped/EMS scanner shells never mount this tab —
 // see ContentView.showsNFC / scannerSafeTab.
-// One page: Write (passive rewritable Type 2 / NTAG) + Scan → full-page tap card.
+// One page: Write (passive rewritable Type 2 / NTAG) + Scan + Preview (under
+// Scan) → full-page tap card (what first responders see).
 // When `AppConfig.nfcHardwareEnabled` is true, Write/Scan start real CoreNFC
 // sessions. Simulate packing stays as the offline/dev fallback when the flag is off.
 // Pipeline (hardware): silicone band tap → CoreNFC → strip NDEF → CryptoKit → local card
@@ -11,6 +12,10 @@ struct NFCView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
     @StateObject private var band = NFCBandManager()
+    /// Full passerby shell from live RedMed — what first responders see on a band tap.
+    @State private var showFirstResponderPreview = false
+    @State private var previewPayload: String?
+    @State private var previewEmbedJSON: String?
 
     private let boxRadius = RedMedChrome.boxRadius
 
@@ -34,6 +39,8 @@ struct NFCView: View {
                     factsCard
                     setupCard
                     scanCard
+                    // Under the Scan box — same tap card first responders get.
+                    firstResponderPreviewLink
                 }
                 .padding(.horizontal, RedMedChrome.pagePadX)
                 .padding(.top, 4)
@@ -42,7 +49,7 @@ struct NFCView: View {
             .scrollIndicators(.visible)
         }
         .background { RedMedPageBackground() }
-        // Same one-page tap card as RedMed Preview / a real band tap.
+        // Band Scan → same one-page tap card a real band tap opens.
         .fullScreenCover(isPresented: $band.showScannedCard) {
             if let payload = band.scannedHTMLPayload {
                 PasserbyHTMLCardView(
@@ -50,6 +57,13 @@ struct NFCView: View {
                     braceletLinked: profile.showsBraceletAsLinked
                 )
             }
+        }
+        .fullScreenCover(isPresented: $showFirstResponderPreview) {
+            PasserbyHTMLCardView(
+                payloadOrURL: previewPayload ?? "",
+                braceletLinked: profile.showsBraceletAsLinked,
+                embedProfileJSON: previewEmbedJSON
+            )
         }
         .alert("Authentication Failed", isPresented: $band.authFailed) {
             Button("OK", role: .cancel) {}
@@ -238,6 +252,38 @@ struct NFCView: View {
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .redmedBox()
+    }
+
+    // MARK: - First-responder Preview (under Scan box)
+
+    private var firstResponderPreviewLink: some View {
+        VStack(spacing: 6) {
+            ChromeTextAction(title: "Preview") {
+                openFirstResponderPreview()
+            }
+            .disabled(!profile.hasData || band.isBusy)
+            .opacity(profile.hasData ? 1 : 0.45)
+
+            Text("What first responders see when they tap your band.")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.redmedMuted)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 4)
+    }
+
+    private func openFirstResponderPreview() {
+        guard !isScannerSession, profile.hasData else { return }
+        let payload = PasserbyHTMLCardView.previewPayload(from: profile)
+        guard let payload else {
+            band.alertMessage = "Couldn't pack tapper.html#d= from RedMed."
+            return
+        }
+        previewPayload = payload
+        previewEmbedJSON = ProfileNFCCodec.embedProfileJSON(from: profile)
+        showFirstResponderPreview = true
     }
 
     // MARK: - Pieces

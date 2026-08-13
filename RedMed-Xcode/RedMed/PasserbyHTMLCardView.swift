@@ -1,7 +1,7 @@
 import SwiftUI
 import WebKit
 
-/// Owner Preview / NFC Scan — same bundled `tapper.html#d=` shell a stranger
+/// NFC Preview / NFC Scan — same bundled `tapper.html#d=` shell a stranger
 /// gets on band tap (HTML RedMed · 911 · Aid tabs visible). Loads with
 /// `?src=app` so SOS does **not** auto-arm (real bracelet opens hosted
 /// `/tapper/#d=…` without that flag). Owner RedMed tab uses `PasserbyHTMLShell`

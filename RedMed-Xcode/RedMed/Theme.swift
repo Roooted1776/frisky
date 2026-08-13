@@ -173,7 +173,7 @@ struct SecondaryButton: View {
     }
 }
 
-/// Trailing chrome text — owner **Help** / **Edit** / **Preview**, scanner **Back**, Aid topic **Back**.
+/// Trailing chrome text — owner **Help** / **Edit** / NFC **Preview**, scanner **Back**, Aid topic **Back**.
 /// Accent red text only — no chip / box fill (plain link over the HTML shell).
 struct ChromeTextAction: View {
     let title: String
