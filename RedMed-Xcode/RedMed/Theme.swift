@@ -40,7 +40,8 @@ extension Color {
     static let redmedWash     = Color(red: 1.000, green: 0.910, blue: 0.922) // #ffe8eb
 }
 
-/// Cream page with a quiet rose wash behind chrome (owner + scanner).
+/// Cream page with rose wash + BrandLogo watermark (same eye candy as lock /
+/// passerby tapper — 60% transparent, decorative only).
 struct RedMedPageBackground: View {
     var body: some View {
         ZStack {
@@ -53,6 +54,16 @@ struct RedMedPageBackground: View {
             )
             .frame(maxHeight: 520)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            Image("BrandLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(
+                    width: RedMedChrome.lockWatermarkSize,
+                    height: RedMedChrome.lockWatermarkSize
+                )
+                .clipShape(Circle())
+                .opacity(RedMedChrome.lockWatermarkOpacity)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
@@ -68,7 +79,7 @@ struct SectionLabel: View {
             .foregroundColor(.redmedMuted)
             .kerning(0.6)
             .padding(.horizontal, 4)
-            .padding(.bottom, 5)
+            .padding(.bottom, 6)
     }
 }
 
@@ -173,7 +184,7 @@ struct SecondaryButton: View {
     }
 }
 
-/// Trailing chrome text — owner **Help** / **Edit** / **Preview**, scanner **Back**, Aid topic **Back**.
+/// Trailing chrome text — owner **Help** / **Edit** / NFC **Preview**, scanner **Back**, Aid topic **Back**.
 /// Accent red text only — no chip / box fill (plain link over the HTML shell).
 struct ChromeTextAction: View {
     let title: String
@@ -185,7 +196,7 @@ struct ChromeTextAction: View {
             action()
         } label: {
             Text(title)
-                .font(.system(size: 18, weight: .regular))
+                .font(.system(size: RedMedChrome.chromeActionSize, weight: .regular))
                 .foregroundColor(.redmedAccent)
                 .kerning(-0.2)
                 .lineLimit(1)
@@ -199,10 +210,93 @@ struct ChromeTextAction: View {
     }
 }
 
+/// Shared top bar for owner Help / Edit / Preview full-screen modals.
+/// Equal leading/trailing slots keep the title centered and the three pages even.
+struct OwnerModalChrome<Trailing: View>: View {
+    let title: String
+    let leadingTitle: String
+    var leadingWeight: Font.Weight = .regular
+    let leadingAction: () -> Void
+    @ViewBuilder var trailing: () -> Trailing
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Button(action: {
+                RedMedHaptics.light()
+                leadingAction()
+            }) {
+                Text(leadingTitle)
+                    .font(.system(size: RedMedChrome.modalActionSize, weight: leadingWeight))
+                    .foregroundColor(.redmedAccent)
+                    .frame(minWidth: RedMedChrome.modalSideMinWidth, alignment: .leading)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(RedMedPressStyle(scale: 0.96, haptic: nil))
+
+            Spacer(minLength: 8)
+
+            Text(title)
+                .font(RedMedChrome.navTitleFont)
+                .foregroundColor(.redmedDark)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+
+            Spacer(minLength: 8)
+
+            trailing()
+                .frame(minWidth: RedMedChrome.modalSideMinWidth, alignment: .trailing)
+        }
+        .padding(.horizontal, RedMedChrome.pagePadX)
+        .frame(height: RedMedChrome.modalBarHeight)
+        .background(Color.redmedBg)
+        .overlay(alignment: .bottom) {
+            Divider().overlay(Color.redmedDivider)
+        }
+    }
+}
+
+extension OwnerModalChrome where Trailing == Color {
+    /// Leading-only bar (Preview Back / Help Done) — invisible trailing keeps title centered.
+    init(title: String, leadingTitle: String, leadingWeight: Font.Weight = .regular, leadingAction: @escaping () -> Void) {
+        self.title = title
+        self.leadingTitle = leadingTitle
+        self.leadingWeight = leadingWeight
+        self.leadingAction = leadingAction
+        self.trailing = { Color.clear.frame(width: 1, height: 1) }
+    }
+}
+
+/// Accent text button for the trailing slot of `OwnerModalChrome` (Edit Save).
+struct OwnerModalTrailingAction: View {
+    let title: String
+    var weight: Font.Weight = .bold
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: {
+            RedMedHaptics.light()
+            action()
+        }) {
+            Text(title)
+                .font(.system(size: RedMedChrome.modalActionSize, weight: weight))
+                .foregroundColor(.redmedAccent)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(RedMedPressStyle(scale: 0.96, haptic: nil))
+    }
+}
+
 /// Inline nav titles (topic detail). Semibold 17 accent beside ChromeTextAction (18 regular).
 /// Box radius is shared by owner + scanner cards / CTAs (square-ish, not capsules).
 enum RedMedChrome {
     static let navTitleFont: Font = .system(size: 17, weight: .semibold)
+    /// Help · Edit · Preview chrome links over the shell.
+    static let chromeActionSize: CGFloat = 18
+    /// Cancel / Done / Back / Save inside owner modals — same size on all three.
+    static let modalActionSize: CGFloat = 17
+    static let modalBarHeight: CGFloat = 52
+    static let modalSideMinWidth: CGFloat = 64
     static let boxRadius: CGFloat = 10
     static let chipRadius: CGFloat = 7
     /// Brand mark is a circular disc — always `Circle()`, never a rounded rect.
@@ -210,9 +304,10 @@ enum RedMedChrome {
     /// Tapper / empty YOU-card BrandLogo diameter (`--logo` matches).
     static let logoSize: CGFloat = 72
     /// Owner lock decorative BrandLogo — atmosphere only, never a control.
-    static let lockWatermarkSize: CGFloat = 220
-    /// Soft enough to read as wash, not a faded tappable mark.
-    static let lockWatermarkOpacity: Double = 0.08
+    /// Large centered mark is the open-screen eye candy (cream + Unlock).
+    static let lockWatermarkSize: CGFloat = 280
+    /// 60% transparent (40% opaque) — readable as the brand logo, not a control.
+    static let lockWatermarkOpacity: Double = 0.40
     /// BrandWordmark lockup on NFC / topic pages (Aid + 911 are content-first).
     static let wordmarkHeight: CGFloat = 42
     static let pagePadX: CGFloat = 16

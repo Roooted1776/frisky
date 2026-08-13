@@ -129,7 +129,8 @@ struct OwnerAppLock<Content: View>: View {
             // Flat cream — matches UILaunchScreen; skip page gradient on the critical path.
             Color.redmedBg.ignoresSafeArea()
 
-            // Atmosphere only — not a control. Hit-testing off so Unlock owns the tap.
+            // Main open-screen eye candy — BrandLogo watermark (not a control).
+            // Hit-testing off so Unlock owns the tap.
             Image("BrandLogo")
                 .resizable()
                 .scaledToFit()

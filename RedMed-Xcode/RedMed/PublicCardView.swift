@@ -25,7 +25,7 @@ extension EnvironmentValues {
 /// Passerby / rescuer shell helpers (ped / EMS).
 ///
 /// Real bracelet tap opens hosted **HTML** `tapper.html#d=…` (no app). Owner
-/// Preview / NFC Scan use `PasserbyHTMLCardView` — same bundled `tapper.html` with
+/// NFC Preview / NFC Scan use `PasserbyHTMLCardView` — same bundled `tapper.html` with
 /// `?src=app` so SOS does not auto-arm. This file keeps `isScannerSession` /
 /// Back chrome for any remaining native scanner embedding.
 struct PublicCardView: View {

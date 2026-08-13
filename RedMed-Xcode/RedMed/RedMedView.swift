@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// Owner / scanner RedMed tab — same bundled `tapper.html` medical panel helpers see
-/// on a band tap. Owner keeps Help · Edit + Preview top chrome; scanners keep Back.
+/// on a band tap. Owner keeps Help · Edit top chrome; scanners keep Back.
+/// First-responder Preview lives on the NFC tab under Scan — not here.
 /// Native 911 / Aid / NFC tabs stay separate (HTML tab bar hidden in app-embed).
 struct RedMedView: View {
     @EnvironmentObject var profile: ProfileData
@@ -11,7 +12,6 @@ struct RedMedView: View {
     /// When true, Edit opened without Face ID (empty RedMed profile) — Save must authenticate.
     @State private var requireAuthOnSave = false
     @State private var showHelp = false
-    @State private var showPreview = false
     @State private var showAuthFailedAlert = false
     /// Cached `#d=` — never AES-pack inside `body` (random nonce remounted WKWebView).
     @State private var packedPayload: String?
@@ -80,8 +80,9 @@ struct RedMedView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            // One top chrome row — Help · Edit tight left; Preview trailing.
-            HStack(alignment: .center, spacing: 4) {
+            // Opaque cream chrome — Help · Edit must not sit transparent over YOU-card data.
+            // Same ChromeTextAction + even gap; Preview lives under NFC Scan.
+            HStack(alignment: .center, spacing: 12) {
                 if isScannerSession {
                     ScannerBackButton()
                     Spacer(minLength: 0)
@@ -89,12 +90,13 @@ struct RedMedView: View {
                     ChromeTextAction(title: "Help") { showHelp = true }
                     ChromeTextAction(title: "Edit") { requestEdit() }
                     Spacer(minLength: 0)
-                    ChromeTextAction(title: "Preview") { openPreview() }
                 }
             }
             .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
             .padding(.horizontal, 16)
             .padding(.top, 6)
+            .padding(.bottom, 8)
+            .background(Color.redmedBg)
         }
         // Owner profile only — never redact the passerby / EMS scanner card.
         .privacySensitive(!isScannerSession)
@@ -109,58 +111,16 @@ struct RedMedView: View {
                 .environmentObject(profile)
         }
         .fullScreenCover(isPresented: Binding(
-            get: { showPreview && !isScannerSession && shellPayload != nil },
-            set: { showPreview = $0 && !isScannerSession }
-        )) {
-            PasserbyHTMLCardView(
-                payloadOrURL: shellPayload ?? "",
-                braceletLinked: profile.showsBraceletAsLinked,
-                embedProfileJSON: shellEmbedJSON
-            )
-        }
-        .sheet(isPresented: Binding(
             get: { showHelp && !isScannerSession },
             set: { showHelp = $0 && !isScannerSession }
         )) {
             HelpMenuView(onOpenNFC: { tab = .nfc })
+                .environmentObject(profile)
         }
         .alert("Authentication Failed", isPresented: $showAuthFailedAlert) {
             Button("OK", role: .cancel) {}
         } message: {
             Text("Face ID or passcode is required to edit your RedMed profile.")
-        }
-    }
-
-    private func openPreview() {
-        guard !isScannerSession else { return }
-        // Prefer cached pack; if still packing, mint off-main then open.
-        if packedPayload != nil {
-            RedMedHaptics.light()
-            showPreview = true
-            return
-        }
-        if let pending = profile.takeUnlockPreviewPayload() {
-            packedPayload = pending
-            cachedEmbedJSON = profile.takeUnlockEmbedProfileJSON()
-                ?? ProfileNFCCodec.embedProfileJSON(from: profile)
-            RedMedHaptics.light()
-            showPreview = true
-            return
-        }
-        let scratch = profile.snapshot()
-        Task.detached(priority: .userInitiated) {
-            let artifacts = (
-                PasserbyHTMLCardView.previewPayload(from: scratch),
-                ProfileNFCCodec.embedProfileJSON(from: scratch)
-            )
-            await MainActor.run {
-                packedPayload = artifacts.0
-                cachedEmbedJSON = artifacts.1
-                packFinished = true
-                guard artifacts.0 != nil else { return }
-                RedMedHaptics.light()
-                showPreview = true
-            }
         }
     }
 

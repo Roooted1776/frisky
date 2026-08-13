@@ -158,6 +158,7 @@ enum ProfileNFCCodec {
             "name": chip.name,
             "dob": chip.dob,
             "blood": chip.blood,
+            "donor": chip.donor,
             "updated": chip.updated,
             "allergies": chip.allergies,
             "meds": chip.meds,
