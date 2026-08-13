@@ -68,9 +68,14 @@ Code-side enable is done. Device signing still needs the App ID capability:
 3. Developer portal → App ID `com.redmed.app` → enable **NFC Tag Reading**
 4. Xcode → Signing & Capabilities → **Near Field Communication Tag Reading**
 5. Confirm `Info.plist` has `NFCReaderUsageDescription`
-6. Device test: blank Type 2 band → Write → second phone Safari tap → emergency card
+6. Device test on **verified blank NTAG216** stock: Write → second phone Safari
+   tap → emergency card
 
 Free Apple Developer teams cannot ship the NFC entitlement — paid Program required.
+
+Hardware ship order (not app architecture): blank NTAG216 verified → entitlement
+live on device → factory MOQ. See `band-engraving-and-nfc-sourcing.md` and
+Linear RED-19.
 
 ## Park again (optional)
 
