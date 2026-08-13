@@ -91,6 +91,11 @@ struct PasserbyHTMLShell: View {
         // No `.id` remount — `updateUIView` reloads only when loadKey changes.
         // Ciphertext-based `.id` used to destroy WKWebView on every AES re-seal.
     }
+
+    /// Warm bundled tapper.html into memory during Face ID (no PHI).
+    static func warmShellCache() {
+        PasserbyHTMLWebView.warmShellCache()
+    }
 }
 
 // MARK: - WKWebView
@@ -102,6 +107,12 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
     /// Disk read once per process — remounts must not re-slurp tapper.html on main.
     private static var cachedShellHTML: String?
     private static var cachedShellFileURL: URL?
+
+    /// Touch shell file + HTML into memory while Face ID runs so unlock does not stall on disk.
+    static func warmShellCache() {
+        _ = shellFileURL()
+        _ = shellHTML()
+    }
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 

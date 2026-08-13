@@ -123,6 +123,7 @@ class ProfileData: ObservableObject {
     /// Wipe PHI from RAM without touching Keychain (owner app lock).
     func purgeFromMemory() {
         guard persists else { return }
+        discardUnlockPrefetch()
         name = ""
         birthDate = ""
         bloodType = ""
@@ -141,6 +142,47 @@ class ProfileData: ObservableObject {
     func reloadFromKeychain() -> Bool {
         guard persists else { return false }
         return loadFromKeychain()
+    }
+
+    // MARK: - Unlock prefetch (overlap Keychain with Face ID)
+
+    /// In-flight Keychain decode while Face ID runs — not applied to @Published fields.
+    private var unlockPrefetchTask: Task<PersistedProfile?, Never>?
+
+    /// Start (or restart) off-main Keychain load+decode while biometrics run.
+    /// Does not publish PHI — `applyUnlockPrefetchOrReload` applies only after Face ID success.
+    func beginUnlockPrefetch() {
+        guard persists else { return }
+        discardUnlockPrefetch()
+        let account = Self.keychainAccount
+        unlockPrefetchTask = Task.detached(priority: .userInitiated) {
+            guard let data = KeychainStore.load(account: account),
+                  let decoded = try? JSONDecoder().decode(PersistedProfile.self, from: data) else {
+                return nil
+            }
+            return decoded
+        }
+    }
+
+    /// Drop any in-flight / held prefetch (background, cancel, erase).
+    func discardUnlockPrefetch() {
+        unlockPrefetchTask?.cancel()
+        unlockPrefetchTask = nil
+    }
+
+    /// Prefer the Face ID–overlapped decode; fall back to a fresh Keychain read.
+    @MainActor
+    @discardableResult
+    func applyUnlockPrefetchOrReload() async -> Bool {
+        guard persists else { return false }
+        if let task = unlockPrefetchTask {
+            unlockPrefetchTask = nil
+            if let blob = await task.value {
+                apply(blob)
+                return true
+            }
+        }
+        return await reloadFromKeychainAsync()
     }
 
     /// Off-main Keychain + JSON decode, then apply on MainActor — keeps unlock UI responsive.
@@ -218,6 +260,7 @@ class ProfileData: ObservableObject {
     /// Call only after Face ID / passcode success.
     func eraseAllLocalData() {
         guard persists else { return }
+        discardUnlockPrefetch()
         KeychainStore.delete(account: Self.keychainAccount)
         Self.setStoredProfileGate(false)
         purgeFromMemory()

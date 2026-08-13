@@ -11,9 +11,13 @@ import SwiftUI
 /// SecItem still confirms off-main and can correct a stale gate.
 ///
 /// One lock screen: BrandLogo watermark + Face ID. No Accept step. Biometrics
-/// auto-prompt when the lock shell appears (and again when returning from
-/// `.background`). Cancel / mismatch stays on the same watermark; tap to retry.
-/// Face ID sheets put the scene `.inactive` — do not treat that as a fresh open.
+/// auto-prompt once per lock while `.active` (and again after `.background`).
+/// Cancel / mismatch stays on the watermark; tap to retry. Face ID sheets put
+/// the scene `.inactive` — that must not re-prompt.
+///
+/// Speed (minus Face ID wall time): Keychain decode + tapper.html shell warm
+/// overlap Face ID; unlock applies the prefetched blob with no transition
+/// animation so tabs paint on the next frame.
 struct OwnerAppLock<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
@@ -37,6 +41,8 @@ struct OwnerAppLock<Content: View>: View {
     @State private var authGeneration = 0
     /// Default false — read capture state after first paint (see onAppear).
     @State private var screenCaptured = false
+    /// One auto Face ID per lock session — blocks inactive→active re-entry loops.
+    @State private var didAutoPromptThisLock = false
 
     var body: some View {
         ZStack {
@@ -49,35 +55,48 @@ struct OwnerAppLock<Content: View>: View {
         }
         .onAppear {
             screenCaptured = UIScreen.main.isCaptured
+            tryAutoUnlockIfActive()
         }
         .task {
-            // First SwiftUI frame already committed — Keychain can wait.
+            // First SwiftUI frame already committed — Keychain presence can wait.
             let hasProfile = await Task.detached(priority: .userInitiated) {
                 ProfileData.hasStoredProfile()
             }.value
             ProfileData.setStoredProfileGate(hasProfile)
             hasEverHadSensitiveData = hasProfile
             if hasProfile {
-                // Fresh lock UI every cold load — no stale “couldn't verify” banner.
-                biometryFailed = false
-                profileLoadFailed = false
-                gate = .locked
+                if gate != .locked {
+                    // Stale gate said unlocked — lock now. Do not poke an in-flight Face ID.
+                    biometryFailed = false
+                    profileLoadFailed = false
+                    didAutoPromptThisLock = false
+                    gate = .locked
+                }
+                tryAutoUnlockIfActive()
             } else {
+                profile.discardUnlockPrefetch()
                 gate = .unlocked
             }
         }
-        .onChange(of: scenePhase) { prior, phase in
+        .onChange(of: gate) { _, newGate in
+            if newGate == .locked {
+                didAutoPromptThisLock = false
+                tryAutoUnlockIfActive()
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
             // LAContext / system auth sheets put the scene `.inactive`.
             // Only purge + lock on true background (same rule as VaultHistoryView).
             if phase == .background,
                profile.hasSensitiveProfileData
                 || hasEverHadSensitiveData
-                || profile.holdsEditingSession {
+                || profile.holdsEditingSession
+                || gate == .locked {
+                profile.discardUnlockPrefetch()
+                didAutoPromptThisLock = false
                 lock(purge: true)
-            } else if phase == .active, prior == .background, gate == .locked {
-                // Returning to the app — Face ID again. Do not re-prompt after
-                // `.inactive` (that is the Face ID sheet itself).
-                unlockWithFaceID()
+            } else if phase == .active {
+                tryAutoUnlockIfActive()
             }
         }
         .onChange(of: profile.hasSensitiveProfileData) { _, hasData in
@@ -91,13 +110,16 @@ struct OwnerAppLock<Content: View>: View {
             biometryFailed = false
             profileLoadFailed = false
             isAuthenticating = false
+            didAutoPromptThisLock = false
+            profile.discardUnlockPrefetch()
             gate = .unlocked
         }
     }
 
     private var lockScreen: some View {
         ZStack {
-            RedMedPageBackground()
+            // Flat cream — matches UILaunchScreen; skip page gradient on the critical path.
+            Color.redmedBg.ignoresSafeArea()
 
             // Single composition: watermark BrandLogo only — Face ID is the enter path.
             Image("BrandLogo")
@@ -110,11 +132,6 @@ struct OwnerAppLock<Content: View>: View {
 
             VStack(spacing: 14) {
                 Spacer(minLength: 48)
-                if isAuthenticating {
-                    ProgressView()
-                        .tint(.redmedAccent)
-                        .accessibilityLabel("Unlocking with Face ID")
-                }
                 if screenCaptured {
                     Text("Screen sharing is on — unlock with passcode. Profile stays hidden on the share until you stop sharing.")
                         .font(.system(size: 13, weight: .semibold))
@@ -130,10 +147,6 @@ struct OwnerAppLock<Content: View>: View {
                     Text("Couldn't load your profile. Tap to try again.")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.redmedAccent)
-                } else if !isAuthenticating {
-                    Text("Tap to unlock")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.redmedMuted)
                 }
                 Spacer()
             }
@@ -142,18 +155,21 @@ struct OwnerAppLock<Content: View>: View {
         .onTapGesture {
             guard !isAuthenticating else { return }
             RedMedHaptics.medium()
-            unlockWithFaceID()
+            startUnlockPipeline(isAuto: false)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("RedMed is locked")
         .accessibilityHint("Unlocks with Face ID, Touch ID, or passcode")
         .accessibilityAddTraits(.isButton)
         .accessibilityAction {
-            unlockWithFaceID()
+            startUnlockPipeline(isAuto: false)
         }
-        .onAppear {
-            unlockWithFaceID()
-        }
+    }
+
+    private func tryAutoUnlockIfActive() {
+        guard gate == .locked, scenePhase == .active, !didAutoPromptThisLock else { return }
+        didAutoPromptThisLock = true
+        startUnlockPipeline(isAuto: true)
     }
 
     private func lock(purge: Bool) {
@@ -168,7 +184,17 @@ struct OwnerAppLock<Content: View>: View {
         SecurePasteboard.clear()
     }
 
-    /// Face ID / passcode is the only enter path for a returning owner.
+    /// Face ID + overlapped Keychain decode + shell warm. Enter path for returning owners.
+    private func startUnlockPipeline(isAuto: Bool) {
+        guard gate == .locked else { return }
+        if isAuto {
+            didAutoPromptThisLock = true
+        }
+        profile.beginUnlockPrefetch()
+        PasserbyHTMLShell.warmShellCache()
+        unlockWithFaceID()
+    }
+
     private func unlockWithFaceID() {
         guard gate == .locked, !isAuthenticating else { return }
         isAuthenticating = true
@@ -186,29 +212,29 @@ struct OwnerAppLock<Content: View>: View {
                 isAuthenticating = false
                 biometryFailed = false
                 gate = .locked
+                profile.discardUnlockPrefetch()
             case .notVerified:
                 // Face ID / Touch ID (or passcode) did not match.
                 RedMedHaptics.error()
                 isAuthenticating = false
                 biometryFailed = true
                 gate = .locked
+                profile.discardUnlockPrefetch()
                 VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock")
             case .success:
-                // Decode off the main thread — unlock UI stays on watermark until apply.
-                Task {
-                    let loaded = await profile.reloadFromKeychainAsync()
+                // Prefetch usually finished during Face ID — apply and show tabs next frame.
+                Task { @MainActor in
+                    let loaded = await profile.applyUnlockPrefetchOrReload()
                     guard generation == authGeneration else { return }
                     isAuthenticating = false
                     if loaded {
                         RedMedHaptics.success()
-                        withAnimation(RedMedMotion.soft) {
-                            gate = .unlocked
-                        }
+                        // No soft animation — unlock must not spend frames on a fade.
+                        gate = .unlocked
                         biometryFailed = false
                         profileLoadFailed = false
                     } else {
                         // Corrupt / unreadable Keychain — stay locked; do not open empty Edit.
-                        // Not a biometry failure — different copy.
                         RedMedHaptics.error()
                         gate = .locked
                         biometryFailed = false
