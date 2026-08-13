@@ -10,18 +10,75 @@ class ProfileData: ObservableObject {
     private static let keychainAccount = "medicalProfile.v1"
     private let persists: Bool
 
-    @Published var name: String = ""
-    @Published var birthDate: String = ""
-    @Published var bloodType: String = ""
-    @Published var allergies: [String] = []
-    @Published var medications: [String] = []
-    @Published var conditions: [String] = []
-    @Published var contacts: [EmergencyContact] = []
-    @Published var braceletLinked: Bool = false
-    @Published var isOrganDonor: Bool = false
-    @Published var lastUpdated: String = ""
+    /// >0 while `apply` / purge batch field writes — one `objectWillChange` at the end.
+    private var bulkUpdateDepth = 0
+
+    private var _name: String = ""
+    private var _birthDate: String = ""
+    private var _bloodType: String = ""
+    private var _allergies: [String] = []
+    private var _medications: [String] = []
+    private var _conditions: [String] = []
+    private var _contacts: [EmergencyContact] = []
+    private var _braceletLinked: Bool = false
+    private var _isOrganDonor: Bool = false
+    private var _lastUpdated: String = ""
+
+    var name: String {
+        get { _name }
+        set { setField(&_name, newValue) }
+    }
+    var birthDate: String {
+        get { _birthDate }
+        set { setField(&_birthDate, newValue) }
+    }
+    var bloodType: String {
+        get { _bloodType }
+        set { setField(&_bloodType, newValue) }
+    }
+    var allergies: [String] {
+        get { _allergies }
+        set { setField(&_allergies, newValue) }
+    }
+    var medications: [String] {
+        get { _medications }
+        set { setField(&_medications, newValue) }
+    }
+    var conditions: [String] {
+        get { _conditions }
+        set { setField(&_conditions, newValue) }
+    }
+    var contacts: [EmergencyContact] {
+        get { _contacts }
+        set { setField(&_contacts, newValue) }
+    }
+    var braceletLinked: Bool {
+        get { _braceletLinked }
+        set { setField(&_braceletLinked, newValue) }
+    }
+    var isOrganDonor: Bool {
+        get { _isOrganDonor }
+        set { setField(&_isOrganDonor, newValue) }
+    }
+    var lastUpdated: String {
+        get { _lastUpdated }
+        set { setField(&_lastUpdated, newValue) }
+    }
     /// True while owner Edit holds draft PHI that may not yet be in Keychain.
     @Published var holdsEditingSession: Bool = false
+
+    private func setField<T: Equatable>(_ storage: inout T, _ newValue: T) {
+        guard storage != newValue else { return }
+        if bulkUpdateDepth == 0 { objectWillChange.send() }
+        storage = newValue
+    }
+
+    private func withBulkUpdate(_ body: () -> Void) {
+        bulkUpdateDepth += 1
+        body()
+        bulkUpdateDepth -= 1
+        objectWillChange.send()
+    }
 
     var hasData: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -124,16 +181,18 @@ class ProfileData: ObservableObject {
     func purgeFromMemory() {
         guard persists else { return }
         discardUnlockPrefetch()
-        name = ""
-        birthDate = ""
-        bloodType = ""
-        allergies = []
-        medications = []
-        conditions = []
-        contacts = []
-        braceletLinked = false
-        isOrganDonor = false
-        lastUpdated = ""
+        withBulkUpdate {
+            name = ""
+            birthDate = ""
+            bloodType = ""
+            allergies = []
+            medications = []
+            conditions = []
+            contacts = []
+            braceletLinked = false
+            isOrganDonor = false
+            lastUpdated = ""
+        }
         holdsEditingSession = false
     }
 
@@ -154,7 +213,7 @@ class ProfileData: ObservableObject {
         let embedProfileJSON: String?
     }
 
-    /// In-flight Keychain decode + `#d=` pack while Face ID runs — not applied to @Published fields.
+    /// In-flight Keychain decode + `#d=` pack while Face ID runs — not applied to profile fields until success.
     private var unlockPrefetchTask: Task<UnlockPrefetch?, Never>?
     /// Stable preview `#d=` from Face ID overlap — RedMedView consumes on first unlock paint.
     private(set) var unlockPreviewPayload: String?
@@ -284,36 +343,41 @@ class ProfileData: ObservableObject {
     }
 
     private func apply(_ blob: PersistedProfile) {
-        // Skip no-op assigns — unlock / reload must not fire 10× objectWillChange when
-        // fields already match (and fewer publishes when only some fields change).
-        if name != blob.name { name = blob.name }
-        if birthDate != blob.birthDate { birthDate = blob.birthDate }
-        if bloodType != blob.bloodType { bloodType = blob.bloodType }
-        if allergies != blob.allergies { allergies = blob.allergies }
-        if medications != blob.medications { medications = blob.medications }
-        if conditions != blob.conditions { conditions = blob.conditions }
-        let nextContacts = blob.contacts.map { $0.asEmergencyContact() }
-        // Compare fields only — EmergencyContact.id is a fresh UUID each map.
-        let contactsChanged = contacts.count != nextContacts.count
-            || zip(contacts, nextContacts).contains {
-                $0.name != $1.name || $0.relationship != $1.relationship || $0.phone != $1.phone
+        // One objectWillChange for the whole blob — unlock must not storm the tab tree.
+        var scrubbedDemo = false
+        withBulkUpdate {
+            if name != blob.name { name = blob.name }
+            if birthDate != blob.birthDate { birthDate = blob.birthDate }
+            if bloodType != blob.bloodType { bloodType = blob.bloodType }
+            if allergies != blob.allergies { allergies = blob.allergies }
+            if medications != blob.medications { medications = blob.medications }
+            if conditions != blob.conditions { conditions = blob.conditions }
+            let nextContacts = blob.contacts.map { $0.asEmergencyContact() }
+            // Compare fields only — EmergencyContact.id is a fresh UUID each map.
+            let contactsChanged = contacts.count != nextContacts.count
+                || zip(contacts, nextContacts).contains {
+                    $0.name != $1.name || $0.relationship != $1.relationship || $0.phone != $1.phone
+                }
+            if contactsChanged { contacts = nextContacts }
+            if braceletLinked != blob.braceletLinked { braceletLinked = blob.braceletLinked }
+            if isOrganDonor != blob.isOrganDonor { isOrganDonor = blob.isOrganDonor }
+            if lastUpdated != blob.lastUpdated { lastUpdated = blob.lastUpdated }
+            // Scrub any leftover Alex Rivera demo blob from older builds.
+            if name == "Alex Rivera" {
+                name = ""
+                birthDate = ""
+                bloodType = ""
+                allergies = []
+                medications = []
+                conditions = []
+                contacts = []
+                isOrganDonor = false
+                lastUpdated = ""
+                scrubbedDemo = true
             }
-        if contactsChanged { contacts = nextContacts }
-        if braceletLinked != blob.braceletLinked { braceletLinked = blob.braceletLinked }
-        if isOrganDonor != blob.isOrganDonor { isOrganDonor = blob.isOrganDonor }
-        if lastUpdated != blob.lastUpdated { lastUpdated = blob.lastUpdated }
-        // Scrub any leftover Alex Rivera demo blob from older builds.
-        if name == "Alex Rivera" {
-            name = ""
-            birthDate = ""
-            bloodType = ""
-            allergies = []
-            medications = []
-            conditions = []
-            contacts = []
-            isOrganDonor = false
-            lastUpdated = ""
-            persist()
+        }
+        if scrubbedDemo {
+            _ = persist()
         }
     }
 

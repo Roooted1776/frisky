@@ -1653,6 +1653,18 @@
     }
   }
 
+  // Native owner embed: push profile after Edit without loadHTMLString.
+  window.__redmedApplyProfile = function (raw, linkedFlag) {
+    try {
+      if (linkedFlag === true || linkedFlag === false) {
+        window.__REDMED_BRACELET_LINKED = linkedFlag;
+      }
+      var p = sanitizeProfile(raw);
+      window.__REDMED_PROFILE = p;
+      renderProfile(p, p != null);
+    } catch (e) { /* keep prior paint */ }
+  };
+
   (function applyAppEmbedChrome() {
     if (!isAppPreview()) return;
     try { document.documentElement.classList.add('app-embed'); } catch (e0) {}

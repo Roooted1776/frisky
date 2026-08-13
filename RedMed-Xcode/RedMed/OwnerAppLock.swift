@@ -245,6 +245,11 @@ struct OwnerAppLock<Content: View>: View {
         profile.beginUnlockPrefetch()
         // nonisolated cache — safe from any thread / Task.detached.
         PasserbyHTMLCardView.warmShellCache()
+        // MainActor: pre-create WKWebView + parse tapper.html while Face ID is up.
+        Task { @MainActor in
+            PasserbyHTMLCardView.warmShellCache()
+            PasserbyWebViewPool.warmEmbedShell()
+        }
         unlockWithFaceID()
     }
 
@@ -258,6 +263,9 @@ struct OwnerAppLock<Content: View>: View {
         // Warm tapper.html while Face ID is up — unlock must not wait on disk after success.
         Task.detached(priority: .utility) {
             PasserbyHTMLCardView.warmShellCache()
+        }
+        Task { @MainActor in
+            PasserbyWebViewPool.warmEmbedShell()
         }
         BiometricAuth.authenticate(
             reason: "Unlock RedMed with Face ID, Touch ID, or passcode."
@@ -284,6 +292,7 @@ struct OwnerAppLock<Content: View>: View {
                     let loaded = await profile.applyUnlockPrefetchOrReload()
                     // Belt-and-suspenders — usually already warm from startUnlockPipeline.
                     PasserbyHTMLCardView.warmShellCache()
+                    PasserbyWebViewPool.warmEmbedShell()
                     guard generation == authGeneration else { return }
                     isAuthenticating = false
                     if loaded {
