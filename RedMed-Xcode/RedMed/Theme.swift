@@ -250,8 +250,6 @@ struct OwnerModalChrome<Trailing: View>: View {
         .frame(height: RedMedChrome.modalBarHeight)
         .background(Color.redmedBg)
         .overlay(alignment: .bottom) {
-            // Hairline only — nested Divider().overlay(Color) trips SwiftUI overload
-            // inference ("some View" vs Color) inside this generic chrome.
             Rectangle()
                 .fill(Color.redmedDivider)
                 .frame(height: 1)
