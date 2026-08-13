@@ -40,12 +40,17 @@ struct RedMedView: View {
         ].joined(separator: "\u{1e}")
     }
 
+    /// Prefer live cache; else Face ID–overlapped pack so unlock's first frame is not cream-only.
+    private var shellPayload: String? {
+        packedPayload ?? profile.unlockPreviewPayload
+    }
+
     var body: some View {
         ZStack(alignment: .top) {
             Group {
-                if let packedPayload {
+                if let shellPayload {
                     PasserbyHTMLShell(
-                        encodedPayload: packedPayload,
+                        encodedPayload: shellPayload,
                         braceletLinked: profile.showsBraceletAsLinked
                     )
                     // Opacity tab swaps must not animate WKWebView (jank + flash).
@@ -61,7 +66,7 @@ struct RedMedView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     // Cream only while packing — no mid-screen Edit under the chrome row.
-                    Color.clear
+                    Color.redmedBg
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
@@ -96,7 +101,7 @@ struct RedMedView: View {
         // Owner profile only — never redact the passerby / EMS scanner card.
         .privacySensitive(!isScannerSession)
         .background { RedMedPageBackground() }
-        .onAppear { syncPackedPayload() }
+        .onAppear { adoptUnlockPreviewOrSync() }
         .onChange(of: profilePackFingerprint) { _, _ in syncPackedPayload() }
         .fullScreenCover(isPresented: Binding(
             get: { showEdit && !isScannerSession },
@@ -106,11 +111,11 @@ struct RedMedView: View {
                 .environmentObject(profile)
         }
         .fullScreenCover(isPresented: Binding(
-            get: { showPreview && !isScannerSession && packedPayload != nil },
+            get: { showPreview && !isScannerSession && shellPayload != nil },
             set: { showPreview = $0 && !isScannerSession }
         )) {
             PasserbyHTMLCardView(
-                payloadOrURL: packedPayload ?? "",
+                payloadOrURL: shellPayload ?? "",
                 braceletLinked: profile.showsBraceletAsLinked
             )
         }
@@ -131,11 +136,25 @@ struct RedMedView: View {
         guard !isScannerSession else { return }
         // Prefer cached pack; if still packing, mint once on the tap path.
         if packedPayload == nil {
-            packedPayload = PasserbyHTMLCardView.previewPayload(from: profile)
+            packedPayload = profile.takeUnlockPreviewPayload()
+                ?? PasserbyHTMLCardView.previewPayload(from: profile)
         }
-        guard packedPayload != nil else { return }
+        guard shellPayload != nil else { return }
         RedMedHaptics.light()
         showPreview = true
+    }
+
+    /// First unlock paint: adopt Face ID–overlapped `#d=` so WKWebView loads without an AES stall.
+    private func adoptUnlockPreviewOrSync() {
+        if packedPayload == nil, let pending = profile.unlockPreviewPayload {
+            // Assign @State before clearing the profile hold so shellPayload never gaps.
+            packedPayload = pending
+            packFingerprint = profilePackFingerprint
+            packFinished = true
+            _ = profile.takeUnlockPreviewPayload()
+            return
+        }
+        syncPackedPayload()
     }
 
     private func syncPackedPayload() {
