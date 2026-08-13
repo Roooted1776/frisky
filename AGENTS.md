@@ -27,7 +27,8 @@ The app has no backend, database, or web service.
   **RedMed · 911 · Aid · NFC**. Edit is available on RedMed. NFC tab is always
   visible for owners; `AppConfig.nfcHardwareEnabled` only gates CoreNFC
   write/read sessions, never tab chrome. Owner writes the passive HF NFC band
-  from the NFC tab (Face ID gated).
+  from the NFC tab (Face ID gated) as `medicalCardBaseURL#d=` only
+  (`AppConfig.OwnerBandURI`) — no vendor cloud, no social/short URL, no BLE.
 - **Scanner / passerby shell** (`PublicCardView` / bracelet tap → `tapper.html#d=…`,
   `isScannerSession == true`): tabs are **RedMed · 911 · Aid** only — **no Edit**,
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain or
@@ -51,6 +52,13 @@ The app has no backend, database, or web service.
   coupling dies past ~4″, passive 13.56 MHz HF NFC (not Bluetooth). NFC tab /
   bracelet copy must use `BraceletRF` helpers, not hardcoded inches.
   Tap opens the HTML shell for EMT / helper — passive, no app install.
+  **iOS Background Tag Reading** can still open `tapper.html#d=` later — phone
+  can be off or locked; a deliberate tap (phone top ~1–2″) still works for owner
+  or any passerby — wrist + pocket usually fine; clasp pressed can pop Safari;
+  write does not change likelihood. Band stays **passive — no battery** (not
+  AirTag / BLE / recurring cell). RedMed cannot disable that OS path; do not
+  claim “no background NFC” without the BTR caveat
+  (`BraceletRF.backgroundTagReadingSummary`).
 
 **Settings vs automatic (permanent):**
 - Help → Settings exposes **only** haptic feedback + Location (`AppSettings` /

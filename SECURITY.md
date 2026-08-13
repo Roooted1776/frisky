@@ -26,7 +26,7 @@ RedMed is a local-only iOS medical ID + emergency assist app. There is no RedMed
 
 In-scope: XSS or HTML injection via `#d=`, Keychain / vault bypass, Face ID gate bypass, service-worker cache poisoning of the shell, credential or secret leaks in the repo, privilege escalation from scanner shell into owner Keychain.
 
-Out of scope: cloning a passive NFC band (same as photocopying a wallet medical card), social engineering the owner, physical device access after unlock, third-party OS bugs.
+Out of scope: cloning a passive NFC band (same as photocopying a wallet medical card), social engineering the owner, physical device access after unlock, third-party OS bugs (including iOS Background Tag Reading opening a written NDEF URI on a deliberate ~1–2″ tap even when the phone is off or locked — Apple path, not RedMed).
 
 ## Hardening checklist (repo)
 

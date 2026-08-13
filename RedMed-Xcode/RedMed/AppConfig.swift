@@ -19,7 +19,40 @@ enum AppConfig {
     static let mainAppURL = "redmed://main"
 
     /// Update when the App Store listing is live (App Store Connect app ID).
+    /// Setup QR only — never written to the NFC band (band carries `#d=` only).
     static let appStoreURL = "https://apps.apple.com/app/redmed/id0000000000"
+
+    /// Owner band NDEF contract (permanent): write only
+    /// `medicalCardBaseURL + "#d=" + base64url`. Profile stays in the fragment —
+    /// no vendor tag-management cloud, no social/short-link redirect, no BLE.
+    /// Pages hosts the static shell; PHI never leaves the `#d=` fragment.
+    enum OwnerBandURI {
+        /// NFC tab fact line — single source for “data independence” copy.
+        static var dataIndependenceSummary: String {
+            "Owner writes #d= on-chip — no vendor cloud, no social/short URL, no BLE."
+        }
+
+        /// True only for live owner writes: exact tapper base + non-empty `#d=` payload.
+        static func isValidWriteURL(_ urlString: String) -> Bool {
+            let base = AppConfig.medicalCardBaseURL
+            guard urlString.hasPrefix(base) else { return false }
+            let rest = urlString.dropFirst(base.count)
+            guard rest.hasPrefix("#d=") else { return false }
+            let payload = rest.dropFirst(3)
+            guard !payload.isEmpty else { return false }
+            // Fragment only — reject query smuggling / second hashes / whitespace.
+            if payload.contains(where: { $0 == "#" || $0 == "?" || $0 == " " || $0 == "\n" || $0 == "\r" }) {
+                return false
+            }
+            // AES-GCM wire is base64url (A–Z a–z 0–9 - _).
+            return payload.unicodeScalars.allSatisfy { scalar in
+                switch scalar.value {
+                case 0x30...0x39, 0x41...0x5A, 0x61...0x7A, 0x2D, 0x5F: return true
+                default: return false
+                }
+            }
+        }
+    }
 
     /// Product kill switch for CoreNFC write/read sessions only.
     /// Owner still always sees the NFC tab (ContentView.showsNFC); scanners never do.
@@ -28,8 +61,12 @@ enum AppConfig {
     static let nfcHardwareEnabled = false
 
     /// Hardware RF contract for the RedMed bracelet.
-    /// - Band is **passive**: no battery, no BLE/Wi‑Fi radio; the paired phone
-    ///   only energises it during an intentional CoreNFC write/scan.
+    /// - Band is **passive**: no battery, no BLE/Wi‑Fi radio. RedMed only starts
+    ///   CoreNFC on explicit Write/Scan. Separately, iOS Background Tag Reading
+    ///   can energise a written NDEF URI tag on a deliberate tap even when the
+    ///   phone is off or locked (antenna ~top ~1–2″ from the band) — RedMed
+    ///   cannot disable that OS path. Write does not change BTR likelihood.
+    ///   Band stays passive — no battery (not AirTag / BLE).
     /// - Band RF is **HF NFC at 13.56 MHz** (ISO 14443 / NTAG NDEF) — a different
     ///   carrier from phone Bluetooth (~2.4 GHz). Do not source LF (~125 kHz)
     ///   or UHF (~860–960 MHz) chips; iPhone CoreNFC cannot program those.
@@ -84,8 +121,14 @@ enum AppConfig {
             "Passive band · \(carrierLabel) (NTAG) — not Bluetooth 2.4 GHz."
         }
 
+        /// RedMed session behaviour — not Apple Background Tag Reading.
         static var powerOnTapSummary: String {
-            "Phone only powers the chip on write/scan. No background pair radio."
+            "RedMed does not keep a background NFC pair. Chip is passive — no Bluetooth."
+        }
+
+        /// What can still open the URL later (Apple OS path; phone off / locked OK).
+        static var backgroundTagReadingSummary: String {
+            "iOS Background Tag Reading can still open the card later — phone can be off or locked; a deliberate tap (phone top \(intentionalTapRangeLabel) from the band) still works. Wrist + pocket is usually fine. Phone pressed to the clasp can pop Safari. Same for any passerby. Writing the chip does not change that. Band stays passive — no battery."
         }
 
         static var paymentPOSSummary: String {
@@ -100,6 +143,9 @@ enum AppConfig {
         static var writeBandDistanceBlurb: String {
             "Walk-by distance will not fire the band; only a deliberate \(intentionalTapRangeLabel) antenna tap opens the card."
         }
+
+        /// Alias for NFC / sourcing copy — band is never a BLE device.
+        static var noBluetoothSummary: String { carrierVsBluetoothSummary }
     }
 
     /// Carrier notes + local-only rule for Find Help.

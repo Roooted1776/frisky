@@ -8,6 +8,10 @@ the fragment; no RedMed backend).
 vendor preference, “also black,” metal-plate SKUs, or extra face copy without an
 explicit product change.
 
+The owner app enforces data independence: NDEF writes are
+`AppConfig.OwnerBandURI`-gated (`medicalCardBaseURL#d=` only — no vendor cloud,
+no social/short URL, no BLE).
+
 ---
 
 ## Locked mold + color
@@ -59,13 +63,14 @@ Do not substitute slogans, URLs, or vendor names.
 | Chip | **NXP NTAG216** (888 B user memory). NTAG215 OK for short profiles; NTAG213 fails most real cards (`ProfileNFCCodec` warns above ~140 B / ~480 B). |
 | RF | 13.56 MHz HF, ISO 14443 Type 2, NDEF writable, **not locked at factory** |
 | Avoid | LF 125 kHz, UHF, MIFARE Classic-only, pre-encoded vendor URLs, password-locked UID products you cannot overwrite from CoreNFC |
-| Factory NDEF | Leave **empty** (or a harmless stub). Owner overwrites on first Write in the NFC tab. |
+| Factory NDEF | Leave **empty** (or a harmless stub). Owner overwrites on first Write in the NFC tab (`OwnerBandURI` / `#d=` only). |
 | QR (optional, outer only) | App Store listing URL only (`AppConfig.appStoreURL`). **Do not** QR-encode `tapper/#d=…`. If the plate only fits one mark, **`MED ID` wins** — omit QR. |
-| Chip (NDEF) | `https://redmed.pages.dev/tapper/#d=<base64url>` — written by RedMed app only. |
+| Chip (NDEF) | `https://redmed.pages.dev/tapper/#d=<base64url>` — written by RedMed app only (`OwnerBandURI`). |
 
 **Do not** pair the band with a third-party QR/NFC “profile” SaaS (Seritag Linking,
 Tap NFC cloud, Linktree, bit.ly medical short-links, MedicAlert-style hosted
-records, etc.). Hardware vendor OK; their redirect platform is not.
+records, etc.). Hardware vendor OK; their redirect platform is not. The app
+refuses non-`#d=` owner writes.
 
 UK / EU blank wine/burgundy silicone sources: [Seritag](https://seritag.com/nfc-tags/wristbands),
 [Flexcard Print](https://flexcardprint.co.uk/product/silicone-rfid-wristbands/),
@@ -99,4 +104,5 @@ RedMed already owns the tap URL (`AppConfig.medicalCardBaseURL`). A redirect Saa
 adds: another DPIA party, outage risk on the critical path, and a product story
 that no longer matches “we run no servers for your profile.” Hardware-only
 vendors + Cloudflare Pages static `tapper.html` (passerby scan; legacy `card.html`
-redirects) + policy HTML stay aligned.
+redirects) + policy HTML stay aligned. Owner Write is
+`AppConfig.OwnerBandURI`-gated so the chip cannot carry a vendor/social URL.
