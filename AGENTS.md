@@ -51,6 +51,12 @@ The app has no backend, database, or web service.
   coupling dies past ~4″, passive 13.56 MHz HF NFC (not Bluetooth). NFC tab /
   bracelet copy must use `BraceletRF` helpers, not hardcoded inches.
   Tap opens the HTML shell for EMT / helper — passive, no app install.
+  **iOS Background Tag Reading** can still open `tapper.html#d=` later (screen
+  on, unlocked, phone top ~1–2″ from the band) for owner or any passerby —
+  wrist + pocket usually fine; clasp pressed while unlocked can pop Safari;
+  write does not change likelihood. RedMed cannot disable that OS path; do not
+  claim “no background NFC” without the BTR caveat
+  (`BraceletRF.backgroundTagReadingSummary`).
 
 **Settings vs automatic (permanent):**
 - Help → Settings exposes **only** haptic feedback + Location (`AppSettings` /

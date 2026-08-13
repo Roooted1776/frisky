@@ -125,7 +125,7 @@
       <li><strong>Hardware-encrypted storage:</strong> on iOS the profile is held in the Keychain, unlocked-only and excluded from iCloud and backups (section 6).</li>
       <li><strong>Nothing pre-filled:</strong> the profile is empty until you enter something.</li>
       <li><strong>You can clear it:</strong> Help → Erase all RedMed data, clearing fields and saving, or deleting the App removes it from the device.</li>
-      <li><strong>No background NFC scanning:</strong> the App does not continuously energize your band. Casual walk-by distance will not fire it; only a deliberate close antenna tap (~1–2 inches) reads the chip. Payment / POS terminals speak a different protocol (EMV) and do not open the RedMed card.</li>
+      <li><strong>No RedMed background NFC:</strong> the App does not continuously energize your band or keep a paired RF link. Casual walk-by distance will not fire it. <strong>iOS Background Tag Reading</strong> can still open the card if an unlocked phone (screen on) is held ~1–2 inches from the band — that is Apple’s OS path, not the App. Wrist + pocket is usually fine; phone pressed to the clasp while unlocked can pop Safari. Same for any passerby. Writing the chip does not change that likelihood. Payment / POS terminals speak a different protocol (EMV) and do not open the RedMed card.</li>
       <li><strong>Band readable by design:</strong> see section 7 — public-key AES packing, not a private medical vault. We would rather say so plainly than bury it. See also <a href="security.html">Security</a>.</li>
     </ul>
 
