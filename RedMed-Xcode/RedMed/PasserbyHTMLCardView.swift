@@ -57,8 +57,9 @@ struct PasserbyHTMLCardView: View {
     }
 
     /// Slurp bundled `tapper.html` off the hot path so first RedMed / Preview paint skips disk.
-    static func warmShellCache() {
-        PasserbyHTMLWebView.warmShellCache()
+    /// `nonisolated` — callers warm from `Task.detached` during Accept / unlock.
+    nonisolated static func warmShellCache() {
+        PasserbyShellCache.warm()
     }
 
     static func extractPayload(_ raw: String) -> String? {
@@ -105,19 +106,16 @@ struct PasserbyHTMLShell: View {
     }
 }
 
-// MARK: - WKWebView
+// MARK: - Shell HTML cache (nonisolated — View / UIViewRepresentable are MainActor)
 
-private struct PasserbyHTMLWebView: UIViewRepresentable {
-    let encodedPayload: String
-    var braceletLinked: Bool = false
-    var appEmbed: Bool = true
-
-    /// Disk read once per process — remounts must not re-slurp tapper.html on main.
+/// Process-wide bundled `tapper.html` cache. Lock-guarded so Accept / unlock
+/// can warm off the main thread without Swift concurrency isolation errors.
+private enum PasserbyShellCache {
     private static var cachedShellHTML: String?
     private static var cachedShellFileURL: URL?
     private static let cacheLock = NSLock()
 
-    static func warmShellCache() {
+    static func warm() {
         cacheLock.lock()
         defer { cacheLock.unlock() }
         if cachedShellHTML != nil { return }
@@ -126,6 +124,35 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         cachedShellFileURL = url
         cachedShellHTML = html
     }
+
+    static func shellFileURL() -> URL? {
+        cacheLock.lock()
+        defer { cacheLock.unlock() }
+        if let cachedShellFileURL { return cachedShellFileURL }
+        let url = Bundle.main.url(forResource: "tapper", withExtension: "html")
+        cachedShellFileURL = url
+        return url
+    }
+
+    static func shellHTML() -> String? {
+        cacheLock.lock()
+        defer { cacheLock.unlock() }
+        if let cachedShellHTML { return cachedShellHTML }
+        guard let url = Bundle.main.url(forResource: "tapper", withExtension: "html")
+                ?? cachedShellFileURL,
+              let html = try? String(contentsOf: url, encoding: .utf8) else { return nil }
+        cachedShellFileURL = url
+        cachedShellHTML = html
+        return html
+    }
+}
+
+// MARK: - WKWebView
+
+private struct PasserbyHTMLWebView: UIViewRepresentable {
+    let encodedPayload: String
+    var braceletLinked: Bool = false
+    var appEmbed: Bool = true
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
@@ -154,8 +181,8 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
     func updateUIView(_ webView: WKWebView, context: Context) {
         let loadKey = "\(encodedPayload)|\(braceletLinked)|\(appEmbed)"
         guard context.coordinator.loadedKey != loadKey else { return }
-        guard let fileURL = Self.shellFileURL(),
-              var html = Self.shellHTML(),
+        guard let fileURL = PasserbyShellCache.shellFileURL(),
+              var html = PasserbyShellCache.shellHTML(),
               let lit = Self.jsStringLiteral(encodedPayload) else { return }
         context.coordinator.loadedKey = loadKey
         // Inject before any tapper.html script so decrypt sees #d= and SOS sees app preview.
@@ -190,27 +217,6 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         }
         // baseURL = the tapper.html file so relative BrandLogo / sw.js resolve like a real open.
         webView.loadHTMLString(html, baseURL: fileURL)
-    }
-
-    private static func shellFileURL() -> URL? {
-        cacheLock.lock()
-        defer { cacheLock.unlock() }
-        if let cachedShellFileURL { return cachedShellFileURL }
-        let url = Bundle.main.url(forResource: "tapper", withExtension: "html")
-        cachedShellFileURL = url
-        return url
-    }
-
-    private static func shellHTML() -> String? {
-        cacheLock.lock()
-        defer { cacheLock.unlock() }
-        if let cachedShellHTML { return cachedShellHTML }
-        guard let url = Bundle.main.url(forResource: "tapper", withExtension: "html")
-                ?? cachedShellFileURL,
-              let html = try? String(contentsOf: url, encoding: .utf8) else { return nil }
-        cachedShellFileURL = url
-        cachedShellHTML = html
-        return html
     }
 
     /// JSON string literal for safe JS concatenation (bare String is not a valid
