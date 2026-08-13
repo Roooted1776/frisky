@@ -95,6 +95,9 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Offline service worker; HTTP cache bypass; stale-shell fixes; Pages `/tapper/` deploy path.
 - Simulate scan from current profile; fail closed when pack/decode breaks.
 - Band engraving copy + hardware sourcing notes.
+- Band mold/color locked: adult **wine/burgundy** silicone (`#6B1E2F`), flat
+  laser plate, NTAG216 blank; face engrave is **`MED ID` only** (no reverse
+  personalization) (`docs/band-engraving-and-nfc-sourcing.md`).
 
 ### Find Help / Aid / haptics / visibility
 - Local emergency number dial (not hard-coded 911); GPS card; satellite/no-cell path.
