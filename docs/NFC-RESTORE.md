@@ -3,30 +3,35 @@
 CoreNFC write/read is wired in production via `NFCBandManager` (owns
 `NFCWriter` / `NFCReader`) — real `NFCNDEFReaderSession` sessions with write +
 read-back verify, NDEF URI strip, and CryptoKit AES-GCM via `ProfileNFCCodec`.
-When hardware is off, `NFCBandManager` still simulates Write/Scan by packing the
-compact `tapper.html#d=` URL (flat array → AES-GCM → Base64url; legacy zlib still
-decodes). Real CoreNFC has **no** Simulator fake-success: if hardware is enabled
-and NFC is unavailable, write fails and the band is not marked linked.
 
-## Currently disabled (hardware sessions only)
+**Target band:** passive, rewritable, NFC Forum **Type 2** (NXP NTAG213+ /
+prefer NTAG216). Owner **Write** on the NFC tab programs the chip; locked or
+non-NDEF tags are rejected with a clear error.
 
-CoreNFC write/read sessions are off via `AppConfig.nfcHardwareEnabled = false`.
-**Do not hide the owner NFC tab** when flipping this — owners always get
+When hardware is off (`AppConfig.nfcHardwareEnabled = false`), `NFCBandManager`
+still simulates Write/Scan by packing the compact `tapper.html#d=` URL. Real
+CoreNFC has **no** Simulator fake-success: if hardware is enabled and NFC is
+unavailable, write fails and the band is not marked linked.
+
+## Currently enabled (code + entitlement)
+
+`AppConfig.nfcHardwareEnabled = true` and
+`com.apple.developer.nfc.readersession.formats` → `NDEF` are on in
+`RedMed.entitlements`.
+
+**Do not hide the owner NFC tab** if you park the flag again — owners always get
 RedMed · 911 · Aid · NFC; scanners never get NFC. The flag only blocks
 `NFCWriter` / `NFCReader` sessions (simulate path stays).
-Owner NFC page keeps **both** capabilities on one screen: user Setup/Write and
-tap Scan / Simulate scan (opens the same `tapper.html#d=` page helpers see).
-Files that make hardware work stay in the tree (`NFCWriter`, `NFCReader`,
-`NFCBandManager`, `ProfileNFCCodec`, `PasserbyHTMLCardView`, bundled `tapper.html`,
-`NFCReaderUsageDescription` in Info.plist) — entitlement stays commented.
-`RedMed.entitlements` keeps the NFC key commented so free/unsigned builds still
-sign. Flip both when you have a paid Apple Developer Program license and a
-physical iPhone to test.
+
+Owner NFC page keeps **both** capabilities on one screen: Write and Scan
+(opens the same `tapper.html#d=` page helpers see).
 
 ## RF / hardware contract
 
 - Bracelet is **passive** HF NFC at **13.56 MHz** (`AppConfig.BraceletRF`) —
-  ISO 14443 / NTAG213+ NDEF. No battery, no BLE.
+  ISO 14443 / NFC Forum Type 2 / NTAG213+ NDEF. No battery, no BLE.
+- Chip must be **rewritable** (NDEF not permanently locked). Factory-blank or
+  overwriteable stub only — see `docs/band-engraving-and-nfc-sourcing.md`.
 - **Owner data independence:** `NFCWriter` / `ProfileNFCCodec` write only
   `https://redmed.pages.dev/tapper/#d=…` (`AppConfig.OwnerBandURI.isValidWriteURL`).
   No vendor tag-management cloud, no social/short-link redirect, no App Store
@@ -53,10 +58,12 @@ physical iPhone to test.
   to walk-by and is not started by this app. Product copy lives in
   `AppConfig.BraceletRF.backgroundTagReadingSummary`.
 
-## Enable checklist
+## Portal checklist (device install)
 
-1. Set `AppConfig.nfcHardwareEnabled = true`
-2. Uncomment `com.apple.developer.nfc.readersession.formats` → `NDEF` in
+Code-side enable is done. Device signing still needs the App ID capability:
+
+1. Confirm `AppConfig.nfcHardwareEnabled = true`
+2. Confirm `com.apple.developer.nfc.readersession.formats` → `NDEF` in
    `RedMed.entitlements`
 3. Developer portal → App ID `com.redmed.app` → enable **NFC Tag Reading**
 4. Xcode → Signing & Capabilities → **Near Field Communication Tag Reading**
@@ -68,3 +75,9 @@ Free Apple Developer teams cannot ship the NFC entitlement — paid Program requ
 
 Hardware ship order (not app work): blank NTAG216 verified → entitlement live →
 factory MOQ. See `band-engraving-and-nfc-sourcing.md` and Linear RED-19.
+
+## Park again (optional)
+
+1. Set `AppConfig.nfcHardwareEnabled = false`
+2. Comment out the NFC key/array in `RedMed.entitlements` (leave the rest empty)
+3. Keep `NFCReaderUsageDescription` and the CoreNFC source files

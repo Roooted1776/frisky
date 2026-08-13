@@ -75,7 +75,7 @@ final class NFCBandManager: ObservableObject {
 
     /// Hardware path: CoreNFC → strip NDEF → open bundled tap card (?src=app, no SOS arm).
     /// Simulate path: pack live RedMed → same one-page HTML cover (tap card).
-    /// Hardware sessions stay gated by `AppConfig.nfcHardwareEnabled` (files present, disabled).
+    /// Hardware sessions gated by `AppConfig.nfcHardwareEnabled`.
     func verifyBand(from profile: ProfileData) {
         if AppConfig.nfcHardwareEnabled {
             statusMessage = ""

@@ -56,9 +56,10 @@ enum AppConfig {
 
     /// Product kill switch for CoreNFC write/read sessions only.
     /// Owner still always sees the NFC tab (ContentView.showsNFC); scanners never do.
-    /// Keep `false` until paid Apple Developer NFC entitlement is restored —
-    /// see `docs/NFC-RESTORE.md` and `RedMed.entitlements`.
-    static let nfcHardwareEnabled = false
+    /// `true` = owner Write/Scan start real `NFCNDEFReaderSession` against passive
+    /// rewritable Type 2 (NTAG) bands. Requires NFC Tag Reading on App ID
+    /// `com.redmed.app` + paid Apple Developer — see `docs/NFC-RESTORE.md`.
+    static let nfcHardwareEnabled = true
 
     /// Hardware RF contract for the RedMed bracelet.
     /// - Band is **passive**: no battery, no BLE/Wi‑Fi radio. RedMed only starts
@@ -67,9 +68,10 @@ enum AppConfig {
     ///   phone is off or locked (antenna ~top ~1–2″ from the band) — RedMed
     ///   cannot disable that OS path. Write does not change BTR likelihood.
     ///   Band stays passive — no battery (not AirTag / BLE).
-    /// - Band RF is **HF NFC at 13.56 MHz** (ISO 14443 / NTAG NDEF) — a different
-    ///   carrier from phone Bluetooth (~2.4 GHz). Do not source LF (~125 kHz)
-    ///   or UHF (~860–960 MHz) chips; iPhone CoreNFC cannot program those.
+    /// - Band RF is **HF NFC at 13.56 MHz** (ISO 14443 Type 2 / NTAG NDEF) — a
+    ///   different carrier from phone Bluetooth (~2.4 GHz). Do not source LF
+    ///   (~125 kHz) or UHF (~860–960 MHz) chips; iPhone CoreNFC cannot program those.
+    /// - Chip must stay **rewritable** (NDEF unlocked) so owner Write can overwrite.
     /// - Contactless payment POS also uses 13.56 MHz but speaks EMV, not NDEF
     ///   medical URLs — protocol separation, not a distance knob.
     /// - Distances below describe HF NFC physics, not a tunable app setting.
@@ -79,6 +81,8 @@ enum AppConfig {
         static let carrierMHz: Double = 13.56
         static let family = "ISO 14443 / NFC Forum Type 2 (NTAG213+)"
         static let isPassive = true
+        /// Blank / not permanently locked at factory — owner Write overwrites NDEF.
+        static let isRewritable = true
         static let usesBluetooth = false
         /// RedMed never starts NFC because a hand or band is merely nearby.
         static let requiresExplicitUserSession = true
@@ -118,7 +122,11 @@ enum AppConfig {
         }
 
         static var carrierVsBluetoothSummary: String {
-            "Passive band · \(carrierLabel) (NTAG) — not Bluetooth 2.4 GHz."
+            "Passive Type 2 · \(carrierLabel) (NTAG) — not Bluetooth 2.4 GHz."
+        }
+
+        static var rewritableBandSummary: String {
+            "Rewritable NDEF — owner Write in the NFC tab programs the band."
         }
 
         /// RedMed session behaviour — not Apple Background Tag Reading.

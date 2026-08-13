@@ -84,9 +84,10 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Keychain profile; no demo patient filler.
 
 ### NFC / bracelet / passerby web
-- Passive HF NFC physics + BraceletRF constants.
+- Passive HF NFC physics + BraceletRF constants (Type 2 / rewritable NTAG).
 - Owner Write gated to `OwnerBandURI` (`#d=` only — no vendor cloud / social / BLE).
-- NFC tab for owners; CoreNFC behind `nfcHardwareEnabled` (tab always visible).
+- NFC tab for owners; CoreNFC on via `nfcHardwareEnabled` + NDEF entitlement
+  (tab always visible; scanners never get NFC).
 - Main paired line reactive: write → Paired; profile edit → Not paired until rewrite.
 - Same RedMed header for owner + responder; Linked only after NFC write **and**
   YOU-card identity (name, birth, blood) is filled.
@@ -95,6 +96,9 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Offline service worker; HTTP cache bypass; stale-shell fixes; Pages `/tapper/` deploy path.
 - Simulate scan from current profile; fail closed when pack/decode breaks.
 - Band engraving copy + hardware sourcing notes.
+- Band mold/color locked: adult **wine/burgundy** silicone (`#6B1E2F`), flat
+  laser plate, NTAG216 blank; face engrave is **`MED ID` only** (no reverse
+  personalization) (`docs/band-engraving-and-nfc-sourcing.md`).
 
 ### Find Help / Aid / haptics / visibility
 - Local emergency number dial (not hard-coded 911); GPS card; satellite/no-cell path.
@@ -130,7 +134,12 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 
 - Official **Cursor Bugbot usage limit** hit on this account — prefer manual Bugbot-style review + Autofix until spend limits raised.
 - GitHub Actions **macOS billing** previously blocked CI; workflow may be disabled/gated — confirm before relying on CI green.
-- **Hardware ship sequence (Linear RED-19):** (1) verified blank NTAG216 stock → (2) NFC entitlement live on device → (3) factory MOQ. No new app architecture for bands. Entitlement / paid Apple Developer still blocks real CoreNFC.
+- CoreNFC owner Write enabled in tree (`nfcHardwareEnabled` + NDEF entitlement) for
+  passive rewritable Type 2 / NTAG. Device install still needs App ID
+  **NFC Tag Reading** on paid Apple Developer (`docs/NFC-RESTORE.md`).
+- **Hardware ship sequence (Linear RED-19):** (1) verified blank NTAG216 stock →
+  (2) NFC entitlement live on device → (3) factory MOQ. No new app architecture
+  for bands. Portal/device entitlement still gates real CoreNFC on phone.
 - Linear workspace still has default onboarding issues (RED-1…4), not product backlog.
 
 ## Do not reopen without explicit ask
