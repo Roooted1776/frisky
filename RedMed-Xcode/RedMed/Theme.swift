@@ -214,7 +214,7 @@ enum RedMedChrome {
     static let chipRadius: CGFloat = 7
     /// Brand mark is a circular disc — always `Circle()`, never a rounded rect.
     static let logoRadius: CGFloat = 0
-    /// Accept / lock + empty YOU-card BrandLogo diameter (tapper `--logo` matches).
+    /// Tapper / empty YOU-card BrandLogo diameter (`--logo` matches). Not used on Accept / lock.
     static let logoSize: CGFloat = 72
     /// BrandWordmark lockup on NFC / topic pages (Aid + 911 are content-first).
     static let wordmarkHeight: CGFloat = 42

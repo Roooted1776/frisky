@@ -88,7 +88,8 @@ shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash)
 **zero Keychain** on the first frame — `OwnerAppLock` uses a UserDefaults gate
 (`ProfileData.storedProfileGateKey`, set on persist / Keychain presence) so
 returning owners see Accept immediately and fresh installs open tabs; SecItem
-still confirms off-main and can correct a stale gate. Face ID runs only after
+still confirms off-main and can correct a stale gate. Accept / lock is cream +
+lock icon + Accept only (no BrandLogo / title splash). Face ID runs only after
 the owner taps **Accept** (never auto on appear). Do not call Keychain in
 `@State` defaults. Location defaults on in Help →
 Settings with **no RedMed location gate / banner / Allow popup** — Help must not

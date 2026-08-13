@@ -91,19 +91,10 @@ struct OwnerAppLock<Content: View>: View {
             RedMedPageBackground()
             VStack(spacing: 18) {
                 Spacer(minLength: 48)
-                Image("BrandLogo")
-                    .resizable()
-                    .frame(width: RedMedChrome.logoSize, height: RedMedChrome.logoSize)
-                    .clipShape(Circle())
-                    .shadow(color: RedMedChrome.accentShadow, radius: 14, y: 6)
-                Text("RedMed")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(.redmedDark)
-                    .kerning(-0.4)
+                // No BrandLogo / title splash — cream + lock + Accept only.
                 Image(systemName: "lock.fill")
                     .font(.system(size: 28, weight: .semibold))
                     .foregroundColor(.redmedAccent)
-                    .padding(.top, 2)
                     .accessibilityLabel("RedMed is locked")
                 if screenCaptured {
                     Text("Screen sharing is on — unlock with passcode. Profile stays hidden on the share until you stop sharing.")
@@ -134,7 +125,6 @@ struct OwnerAppLock<Content: View>: View {
                         }
                     }
                     .foregroundColor(.white)
-                    // Compact — same visual weight as opening logo/title cluster, not a full-bleed bar.
                     .frame(minWidth: 120, minHeight: 36)
                     .padding(.horizontal, 22)
                     .padding(.vertical, 10)
