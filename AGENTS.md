@@ -87,6 +87,8 @@ The app has no backend, database, or web service.
   never over the lock / cold-launch shell (cover was blocking Accept and
   stuck owners on the lock screen). After unlock while still sharing, cover
   again; copy should say screen sharing, not a vague “Profile hidden”.
+  App-switcher / true **`.background`** only for the non-capture cover —
+  do **not** cover on `.inactive` (Face ID / LAContext blanks the UI mid-unlock).
 - `HIPAAOfflineVault`: complete file protection + backup exclusion; history
   events are timestamps/kind only (no field values).
 
