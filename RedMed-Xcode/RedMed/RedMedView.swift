@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Owner / scanner RedMed tab — same bundled `tapper.html` medical panel helpers see
-/// on a band tap. Owner keeps Edit + Help chrome; scanners keep Back. Native
+/// on a band tap. Owner keeps Help · Preview · Edit chrome; scanners keep Back. Native
 /// 911 / Aid / NFC tabs stay separate (HTML tab bar hidden in app-embed).
 struct RedMedView: View {
     @EnvironmentObject var profile: ProfileData
@@ -11,10 +11,14 @@ struct RedMedView: View {
     /// When true, Edit opened without Face ID (empty RedMed profile) — Save must authenticate.
     @State private var requireAuthOnSave = false
     @State private var showHelp = false
+    @State private var showPreview = false
     @State private var showAuthFailedAlert = false
     /// Cached `#d=` — never AES-pack inside `body` (random nonce remounted WKWebView).
     @State private var packedPayload: String?
     @State private var packFingerprint = ""
+    @State private var packGeneration = 0
+    /// True after the first pack attempt finishes — avoids a mid-screen Edit under chrome while packing.
+    @State private var packFinished = false
 
     /// Durable profile fields only — ignores `holdsEditingSession` so Edit open/close
     /// does not rebuild the shell.
@@ -46,34 +50,38 @@ struct RedMedView: View {
                     )
                     // Opacity tab swaps must not animate WKWebView (jank + flash).
                     .transaction { $0.animation = nil }
-                } else {
+                } else if packFinished {
                     VStack(spacing: 12) {
                         Text("Couldn't pack tapper.html#d= from RedMed.")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.redmedMuted)
                             .multilineTextAlignment(.center)
-                        if !isScannerSession {
-                            ChromeTextAction(title: "Edit") { requestEdit() }
-                        }
                     }
                     .padding(24)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    // Cream only while packing — no mid-screen Edit under the chrome row.
+                    Color.clear
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            HStack(alignment: .center, spacing: 12) {
+            // One top chrome row — Help · Preview · Edit share the same vertical center.
+            HStack(alignment: .center, spacing: 8) {
                 if isScannerSession {
                     ScannerBackButton()
                     Spacer(minLength: 0)
                 } else {
                     ChromeTextAction(title: "Help") { showHelp = true }
+                    ChromeTextAction(title: "Preview") { openPreview() }
                     Spacer(minLength: 0)
                     ChromeTextAction(title: "Edit") { requestEdit() }
                 }
             }
+            .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
             .padding(.horizontal, 16)
-            .padding(.top, 10)
+            .padding(.top, 6)
         }
         // Owner profile only — never redact the passerby / EMS scanner card.
         .privacySensitive(!isScannerSession)
@@ -86,6 +94,15 @@ struct RedMedView: View {
         )) {
             EditProfileView(requireAuthOnSave: requireAuthOnSave)
                 .environmentObject(profile)
+        }
+        .fullScreenCover(isPresented: Binding(
+            get: { showPreview && !isScannerSession && packedPayload != nil },
+            set: { showPreview = $0 && !isScannerSession }
+        )) {
+            PasserbyHTMLCardView(
+                payloadOrURL: packedPayload ?? "",
+                braceletLinked: profile.showsBraceletAsLinked
+            )
         }
         .sheet(isPresented: Binding(
             get: { showHelp && !isScannerSession },
@@ -100,11 +117,31 @@ struct RedMedView: View {
         }
     }
 
+    private func openPreview() {
+        guard !isScannerSession else { return }
+        // Prefer cached pack; if still packing, mint once on the tap path.
+        if packedPayload == nil {
+            packedPayload = PasserbyHTMLCardView.previewPayload(from: profile)
+        }
+        guard packedPayload != nil else { return }
+        RedMedHaptics.light()
+        showPreview = true
+    }
+
     private func syncPackedPayload() {
         let fp = profilePackFingerprint
         guard fp != packFingerprint || packedPayload == nil else { return }
         packFingerprint = fp
-        packedPayload = PasserbyHTMLCardView.previewPayload(from: profile)
+        packGeneration &+= 1
+        let generation = packGeneration
+        packFinished = false
+        // Yield first paint (cream shell), then pack on main — ProfileData is not concurrent.
+        Task { @MainActor in
+            await Task.yield()
+            guard generation == packGeneration else { return }
+            packedPayload = PasserbyHTMLCardView.previewPayload(from: profile)
+            packFinished = true
+        }
     }
 
     // MARK: - Edit gate
