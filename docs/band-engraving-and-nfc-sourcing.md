@@ -5,8 +5,8 @@ passive NTAG NDEF URI → `https://redmed.pages.dev/tapper/#d=…` (profile only
 the fragment; no RedMed backend).
 
 **Mold, color, and engraving below are locked product law.** Do not reopen for
-vendor preference, “also black,” metal-plate SKUs, or optional outer lines
-without an explicit product change.
+vendor preference, “also black,” metal-plate SKUs, or extra face copy without an
+explicit product change.
 
 ---
 
@@ -19,7 +19,7 @@ without an explicit product change.
 | Color | **Red** silicone only — match brand accent `#e11d48` (`Color.redmedAccent`) as close as the house stock allows (medical-alert red). **No black, navy, clear, or multi-color v1.** |
 | Chip seat | Embedded **NXP NTAG216**, 13.56 MHz HF, ISO 14443 **Type 2**, NDEF **unlocked / blank** at factory. |
 | Finish | Matte or satin silicone OK; no glitter, glow, or dual-tone. |
-| Logo print | Optional pad-print wordmark only if laser outer text already fits; logo never replaces engraving. |
+| Logo print | Optional pad-print wordmark only if laser `MED ID` already fits; logo never replaces engraving. |
 
 Prototype (1–10): Seritag (or equivalent) **red** NTAG216 silicone with a laserable plate.  
 Production (100+): Flexcard or equivalent UK silicone house — same mold/color/chip, MOQ quote.
@@ -30,56 +30,21 @@ Production (100+): Flexcard or equivalent UK silicone house — same mold/color/
 
 Laser only on the metal/hard plate face. Character budget is tight.
 
-### Outer face (every unit — fixed, rescuer sees first)
+### Face text (every unit — fixed)
 
 ```
-MEDICAL ID
-TAP PHONE → CARD
-REDMED
+MED ID
 ```
 
-All three lines are **required**. Do not drop `REDMED`. Do not substitute slogans,
-URLs, or vendor names.
+That is the **only** engraved copy. No second line, no `REDMED`, no tap
+instructions, no name / ICE / allergy / blood on the plate. Medical detail lives
+on-chip via owner Write in the NFC tab (`tapper.html#d=`).
 
-### Inner / reverse (per customer — variable)
-
-```
-[GIVEN SURNAME]
-ICE [PHONE]
-ALLERGY: [ONE LINE]
-BLOOD [TYPE]
-```
-
-Rules:
-
-- **Name** — given + surname, all caps, no DOB on the face (DOB lives on-chip).
-- **ICE** — one primary mobile, digits only or `+1…` / `+44…`. No “Mom / Dad” without a number.
-- **ALLERGY** — single worst line (`PENICILLIN`, `PEANUT ANAPHYLAXIS`). Extra allergies stay on-chip.
-- **BLOOD** — only if known (`O+`, `A-`). Else omit the line; do not engrave `UNKNOWN`.
-- If allergy is empty and one condition matters: replace allergy line with
-  `COND: EPILEPSY` or `COND: T1 DIABETES` — one token, no essay.
-
-### Example (filled)
-
-**Outer**
-
-```
-MEDICAL ID
-TAP PHONE → CARD
-REDMED
-```
-
-**Inner**
-
-```
-JANE DOE
-ICE +14475551212
-ALLERGY: PENICILLIN
-BLOOD O+
-```
+Do not substitute slogans, URLs, or vendor names.
 
 ### What not to engrave
 
+- Multi-line medical-ID essays, ICE phones, allergy lists, blood type
 - Full med list, address, email, password, “encrypted” claims
 - The live `#d=` URL or a QR of the medical card
 - Vendor short-links that 302 to a hosted profile
@@ -95,7 +60,7 @@ BLOOD O+
 | RF | 13.56 MHz HF, ISO 14443 Type 2, NDEF writable, **not locked at factory** |
 | Avoid | LF 125 kHz, UHF, MIFARE Classic-only, pre-encoded vendor URLs, password-locked UID products you cannot overwrite from CoreNFC |
 | Factory NDEF | Leave **empty** (or a harmless stub). Owner overwrites on first Write in the NFC tab. |
-| QR (optional, outer only) | App Store listing URL only (`AppConfig.appStoreURL`). **Do not** QR-encode `tapper/#d=…`. If the plate only fits one mark, **engraved text wins** — omit QR. |
+| QR (optional, outer only) | App Store listing URL only (`AppConfig.appStoreURL`). **Do not** QR-encode `tapper/#d=…`. If the plate only fits one mark, **`MED ID` wins** — omit QR. |
 | Chip (NDEF) | `https://redmed.pages.dev/tapper/#d=<base64url>` — written by RedMed app only. |
 
 **Do not** pair the band with a third-party QR/NFC “profile” SaaS (Seritag Linking,
@@ -118,15 +83,12 @@ UK / EU blank/red silicone sources: [Seritag](https://seritag.com/nfc-tags/wrist
 > ISO 14443A Type 2, **NDEF unlocked / blank**. No black/other colors. No
 > metal-only band SKU.
 >
-> Laser **outer** (every unit, all three lines):
-> `MEDICAL ID` / `TAP PHONE → CARD` / `REDMED`
+> Laser face (every unit, this text only):
+> `MED ID`
 >
-> Laser **reverse** (per unit): given+surname, `ICE` + phone, one
-> `ALLERGY:` or `COND:` line, `BLOOD` type if known.
->
-> Optional small QR to App Store listing only — omit if text does not fit.
-> Do **not** pre-program medical URLs or lock the chip.
-> Sample 10 before production MOQ.
+> No reverse personalization. Optional small QR to App Store listing only —
+> omit if `MED ID` does not fit with it. Do **not** pre-program medical URLs or
+> lock the chip. Sample 10 before production MOQ.
 
 ---
 
