@@ -242,6 +242,10 @@ struct OwnerAppLock<Content: View>: View {
         profileLoadFailed = false
         authGeneration &+= 1
         let generation = authGeneration
+        // Warm tapper.html while Face ID is up — unlock must not wait on disk after success.
+        Task.detached(priority: .utility) {
+            PasserbyHTMLCardView.warmShellCache()
+        }
         BiometricAuth.authenticate(
             reason: "Unlock RedMed with Face ID, Touch ID, or passcode."
         ) { outcome in
@@ -265,6 +269,8 @@ struct OwnerAppLock<Content: View>: View {
                 // Prefetch usually finished during Face ID — apply and show tabs next frame.
                 Task { @MainActor in
                     let loaded = await profile.applyUnlockPrefetchOrReload()
+                    // Belt-and-suspenders — usually already warm from startUnlockPipeline.
+                    PasserbyHTMLCardView.warmShellCache()
                     guard generation == authGeneration else { return }
                     isAuthenticating = false
                     if loaded {

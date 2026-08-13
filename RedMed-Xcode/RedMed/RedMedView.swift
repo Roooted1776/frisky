@@ -144,14 +144,12 @@ struct RedMedView: View {
         packFingerprint = fp
         packGeneration &+= 1
         let generation = packGeneration
-        packFinished = false
-        // Yield first paint (cream shell), then pack on main — ProfileData is not concurrent.
-        Task { @MainActor in
-            await Task.yield()
-            guard generation == packGeneration else { return }
-            packedPayload = PasserbyHTMLCardView.previewPayload(from: profile)
-            packFinished = true
-        }
+        // Pack immediately on the cream page bg — do not clear a live shell first
+        // (that blanked RedMed after unlock / Edit save until the next AES pack).
+        let next = PasserbyHTMLCardView.previewPayload(from: profile)
+        guard generation == packGeneration else { return }
+        packedPayload = next
+        packFinished = true
     }
 
     // MARK: - Edit gate

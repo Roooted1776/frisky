@@ -174,6 +174,8 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         webView.backgroundColor = cream
         webView.scrollView.isOpaque = true
         webView.scrollView.backgroundColor = cream
+        // Overscroll / bounce uses this — without it iOS flashes system white.
+        webView.underPageBackgroundColor = cream
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         // Document scroll + visible bar (same idea as Aid `.scrollIndicators(.visible)`).
         webView.scrollView.isScrollEnabled = true

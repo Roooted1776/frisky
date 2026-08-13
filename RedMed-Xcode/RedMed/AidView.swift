@@ -83,8 +83,8 @@ struct AidView: View {
                         // Prayer sits toward the bottom when panes leave spare height.
                         Spacer(minLength: 28)
 
-                        Text("\"Control your fear. Control the moment.\nYou have what it takes to save a life.\"")
-                            .font(.system(size: 8, weight: .regular))
+                        Text("\"\(AppConfig.QuietPrayer.text)\"")
+                            .font(.system(size: AppConfig.QuietPrayer.fontSize, weight: .regular))
                             .italic()
                             .foregroundColor(.redmedMuted.opacity(0.55))
                             .multilineTextAlignment(.center)

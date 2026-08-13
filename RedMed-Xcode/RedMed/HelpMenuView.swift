@@ -12,10 +12,17 @@ struct LocalWebView: UIViewRepresentable {
         let config = WKWebViewConfiguration()
         // Policies are static bundle HTML — no app ↔ page script bridge.
         config.preferences.javaScriptCanOpenWindowsAutomatically = false
+        let cream = UIColor(Color.redmedBg)
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
         webView.allowsBackForwardNavigationGestures = false
         webView.allowsLinkPreview = false
+        // Same opaque cream as passerby shell — avoid system white flash.
+        webView.isOpaque = true
+        webView.backgroundColor = cream
+        webView.scrollView.isOpaque = true
+        webView.scrollView.backgroundColor = cream
+        webView.underPageBackgroundColor = cream
         webView.scrollView.isScrollEnabled = true
         webView.scrollView.alwaysBounceVertical = true
         webView.scrollView.showsVerticalScrollIndicator = true
