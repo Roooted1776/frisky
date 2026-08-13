@@ -1,10 +1,14 @@
 import SwiftUI
 
-/// Owner app lock — Face ID / passcode before PHI is held in memory.
+/// Owner app lock — Face ID / passcode before PHI is published into profile fields.
 ///
 /// On background / lock: profile fields are purged from RAM (Keychain untouched).
 /// On unlock: reload from Keychain. Scanner / passerby shells never mount this —
 /// they use `ProfileData(persisting: false)` snapshots only.
+///
+/// Prefetch may decode Keychain + pack `#d=` off-main while Face ID runs; that
+/// work stays off `@Published` until auth succeeds (or is discarded on cancel /
+/// background). Late Face ID success after a generation bump must not apply.
 ///
 /// Cold launch never touches Keychain on the first frame. A UserDefaults gate
 /// (set on persist / Keychain presence check) picks lock vs tabs immediately;
@@ -64,6 +68,14 @@ struct OwnerAppLock<Content: View>: View {
             if gate == .unlocked {
                 CrashMotionGuard.shared.startMonitoring()
             }
+        }
+        .task(id: authGeneration) {
+            // Escape hatch: if LA never callbacks, Unlock must still appear.
+            guard gate == .locked else { return }
+            let generation = authGeneration
+            try? await Task.sleep(nanoseconds: 2_500_000_000)
+            guard gate == .locked, generation == authGeneration else { return }
+            showUnlockControl = true
         }
         .task {
             // First SwiftUI frame already committed — Keychain presence can wait.
@@ -312,13 +324,19 @@ struct OwnerAppLock<Content: View>: View {
                 profile.discardUnlockPrefetch()
                 VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock")
             case .success:
-                // Prefetch usually finished during Face ID — apply and show tabs next frame.
+                // Apply only if this generation is still current. Check again after
+                // await — background can bump authGeneration and purge mid-apply.
                 Task { @MainActor in
+                    guard generation == authGeneration else { return }
                     let loaded = await profile.applyUnlockPrefetchOrReload()
+                    guard generation == authGeneration else {
+                        // Late success after background lock — drop any applied PHI.
+                        profile.purgeFromMemory()
+                        return
+                    }
                     // Belt-and-suspenders — usually already warm from startUnlockPipeline.
                     PasserbyHTMLCardView.warmShellCache()
                     PasserbyWebViewPool.warmEmbedShell()
-                    guard generation == authGeneration else { return }
                     isAuthenticating = false
                     if loaded {
                         RedMedHaptics.success()
