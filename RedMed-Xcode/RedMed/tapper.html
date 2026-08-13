@@ -179,8 +179,7 @@
   html.app-embed body,
   body.app-embed {
     padding-top: calc(var(--safe-t) + 48px);
-    /* Clear owner Preview chrome pinned over the quiet prayer. */
-    padding-bottom: calc(var(--safe-b) + 48px);
+    padding-bottom: var(--safe-b);
   }
   html.app-embed .tabbar,
   body.app-embed .tabbar { display: none !important; }
@@ -200,8 +199,8 @@
   body.app-embed #panel-medical {
     display: flex !important;
     flex-direction: column;
-    min-height: calc(100vh - var(--safe-t) - 48px - var(--safe-b) - 48px);
-    min-height: calc(100dvh - var(--safe-t) - 48px - var(--safe-b) - 48px);
+    min-height: calc(100vh - var(--safe-t) - 48px - var(--safe-b));
+    min-height: calc(100dvh - var(--safe-t) - 48px - var(--safe-b));
   }
   /* Owner embed: no lock line / BrandWordmark above the medical card. */
   html.app-embed .rm-lock,
