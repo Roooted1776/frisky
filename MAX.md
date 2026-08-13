@@ -55,13 +55,13 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Locked owner vs passerby shells; four owner tabs (RedMed · 911 · Aid · NFC); scanners RedMed/911/Aid.
 - Owner app on first launch; `Main.swift` owner shell; HTML policies redirect `redmed://main`.
 - Deferred all Core Location until Find Help; fixed SIGTERM/launch confusion.
-- Cold launch: LaunchBackground only on UILaunchScreen (no BrandLogo splash);
-  Accept / lock keeps its own mark. UserDefaults profile gate opens Accept (or
-  tabs) on first SwiftUI frame — no Keychain in `@State`; Accept then Face ID
-  (no auto Face ID on appear); off-main profile decode; lazy `CMMotionManager`;
-  LaunchBackground dark=cream. Unlock fail-closed if Keychain decode fails.
-  tapper.html first panel paints opaque (tab switch may animate); in-app
-  WKWebView stays opaque cream.
+- Cold launch: LaunchBackground only on UILaunchScreen (no BrandLogo splash).
+  Accept / lock is cream + lock icon + Accept — no BrandLogo / title splash.
+  UserDefaults profile gate opens Accept (or tabs) on first SwiftUI frame —
+  no Keychain in `@State`; Accept then Face ID (no auto Face ID on appear);
+  off-main profile decode; lazy `CMMotionManager`; LaunchBackground dark=cream.
+  Unlock fail-closed if Keychain decode fails. tapper.html first panel paints
+  opaque (tab switch may animate); in-app WKWebView stays opaque cream.
 - Vault Local History: Accept tap before Face ID (no auto-prompt on appear).
 - Opacity keep-alive tabs: Find Help GPS + seizure autodial tear down via
   `isVisible` (not `onDisappear` — opacity hide never fires it).

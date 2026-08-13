@@ -44,7 +44,7 @@
 	</array>
 	<key>UILaunchScreen</key>
 	<dict>
-		<!-- Cream only — no BrandLogo splash. Accept / lock owns the mark after first SwiftUI frame. -->
+		<!-- Cream only — no BrandLogo splash. Accept / lock is cream + lock + Accept (no logo). -->
 		<key>UIColorName</key>
 		<string>LaunchBackground</string>
 	</dict>
