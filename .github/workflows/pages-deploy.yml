@@ -1,5 +1,6 @@
 # Deploy the tapper shell to Cloudflare Pages so bracelet taps hit
-# https://redmed.pages.dev/tapper/ (RedMed · 911 · Aid — no login, no server).
+# https://getredmed.com/tapper/ (RedMed · 911 · Aid — no login, no server).
+# Legacy https://redmed.pages.dev/tapper/ stays hosted — see docs/domain.md.
 # Requires repo secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID.
 # Optional secret CLOUDFLARE_PAGES_PROJECT (defaults to redmed).
 # Missing secrets → skip deploy (green) with a warning; shell checks still run.

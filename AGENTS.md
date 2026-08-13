@@ -33,7 +33,7 @@ The app has no backend, database, or web service.
   `isScannerSession == true`): tabs are **RedMed · 911 · Aid** only — **no Edit**,
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain or
   owner `@AppStorage` / UserDefaults prefs. Hosted at
-  `https://redmed.pages.dev/tapper/` from `tapper/index.html`.
+  `https://getredmed.com/tapper/` from `tapper/index.html` (legacy `https://redmed.pages.dev/tapper/` still hosted — see `docs/domain.md`).
   **Tap-to-view never requires Face ID / biometrics** — owner biometrics gate
   edit, NFC write, vault, and app unlock only. Passerby HTML never asks.
 - Product HTML is only (1) one passerby file `tapper.html` (identical in `tapper/index.html`,
@@ -45,7 +45,7 @@ The app has no backend, database, or web service.
   is Settings + Privacy / TOS / Security only (no in-app How It Works /
   MainInfoView, no Local History row, no local tapper.html WebView). Owner
   Preview / NFC Scan open bundled `tapper.html#d=` (`?src=app`, no SOS auto-arm);
-  live band taps stay `https://redmed.pages.dev/tapper/#d=`.
+  live band taps stay `https://getredmed.com/tapper/#d=` (legacy `pages.dev` bands still open).
 
 - **Bracelet tap (physics, not a setting):** `AppConfig.BraceletRF` is the single
   source of truth — intentional tap ~1–2″, walk-by ~6–8″ does not fire, reliable

@@ -29,7 +29,7 @@ Native iOS medical ID + emergency aid. Passive **13.56 MHz HF NFC** bracelet (no
 
 - **Owner app** (`Main` / `ContentView`): RedMed · 911 · Aid · NFC (+ Edit). Local Keychain profile, Face ID gates, write passive NFC band.
 - **Passerby / scanner**: `tapper.html#d=…` / `PublicCardView` — RedMed · 911 · Aid only. Snapshot profile. No Edit, no NFC, no owner pref mutation.
-- Hosted passerby path: `https://redmed.pages.dev/tapper/` (`tapper/index.html`).
+- Hosted passerby path: `https://getredmed.com/tapper/` (`tapper/index.html`; legacy `pages.dev` — `docs/domain.md`).
 - Positioning: local EMS assist / fast ID handoff — not a medical device, no outcome promises, call 911 first. HIPAA-aligned offline posture; no false certification claims.
 
 ## Permanent decisions he has locked (do not regress)
@@ -38,7 +38,7 @@ See also `AGENTS.md`. High-signal recap:
 
 1. Owner vs scanner shells are permanent product law.
 2. **Owner band data independence:** owner Write packs only
-   `https://redmed.pages.dev/tapper/#d=…` (`AppConfig.OwnerBandURI`). No vendor
+   `https://getredmed.com/tapper/#d=…` (`AppConfig.OwnerBandURI`). No vendor
    tag-management cloud, no social/short-link URL on the chip, no BLE. Pages
    hosts the static shell; PHI stays in the fragment.
 3. Settings = **haptic + Location only**. Brightness 100% + system volume 100% + locator siren arm on crash / severe-impact (`CrashMotionGuard`), owner **SOS · Locate me**, or **real bracelet NFC** open of `tapper.html#d=…` (hardware-local SOS on that phone). Owner Find Help open, bare `/tapper/`, and in-app scanner preview do **not** auto-arm.

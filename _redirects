@@ -1,0 +1,8 @@
+# Cloudflare Pages redirects.
+# Hash fragments (#d=) are client-only and survive these hops.
+#
+# Canonical passerby shell stays under /tapper/ (SW + AppConfig.medicalCardBaseURL).
+# Root → /tapper/ so getredmed.com/ and redmed.pages.dev/ both land on the shell.
+
+/ /tapper/ 302
+/index.html /tapper/ 302

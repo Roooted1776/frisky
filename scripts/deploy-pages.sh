@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Tapper shell deploy / local serve.
 #
-# Bracelet taps must open https://redmed.pages.dev/tapper/#d=… as RedMed · 911 · Aid
+# Bracelet taps must open https://getredmed.com/tapper/#d=… as RedMed · 911 · Aid
+# (legacy https://redmed.pages.dev/tapper/ still hosted — see docs/domain.md).
 # (quick, no login, no server, no app). Repo tapper/index.html is that shell.
 # Legacy /get/ redirects to /tapper/ and keeps #d=.
 #

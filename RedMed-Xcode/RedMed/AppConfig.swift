@@ -13,7 +13,10 @@ enum AppConfig {
     /// (local-only). Hosted Pages must serve the tapper shell (RedMed · 911 · Aid).
     /// Local: `./scripts/deploy-pages.sh`. Live: `DEPLOY=1` + CF tokens, or the
     /// `Pages tapper deploy` GitHub Action on `main`.
-    static let medicalCardBaseURL = "https://redmed.pages.dev/tapper/"
+    /// Custom domain: `getredmed.com` on the Cloudflare Pages `redmed` project
+    /// (see `docs/domain.md`). Legacy `https://redmed.pages.dev/tapper/` stays
+    /// hosted so bands already written keep opening.
+    static let medicalCardBaseURL = "https://getredmed.com/tapper/"
 
     /// Deep link target for policy / card HTML “open owner app” redirects.
     static let mainAppURL = "redmed://main"
@@ -154,6 +157,14 @@ enum AppConfig {
 
         /// Alias for NFC / sourcing copy — band is never a BLE device.
         static var noBluetoothSummary: String { carrierVsBluetoothSummary }
+    }
+
+    /// Quiet prayer under RedMed / Aid — one size for native Aid, owner WKWebView
+    /// embed, and bracelet-tap `tapper.html` (`.quote { font-size: 11px }`).
+    enum QuietPrayer {
+        static let fontSize: CGFloat = 11
+        static let text =
+            "Control your fear. Control the moment.\nYou have what it takes to save a life."
     }
 
     /// Carrier notes + local-only rule for Find Help.

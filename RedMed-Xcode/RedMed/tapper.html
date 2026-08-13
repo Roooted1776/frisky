@@ -45,7 +45,8 @@
      - Logo: BrandLogo.png (bundle /tapper/) or assets/BrandLogo.png (Pages)
      - Legacy card.html / get.html /get/ redirect to /tapper/ and keep #d=
      Keep identical: tapper/index.html, repo-root tapper.html, RedMed-Xcode/RedMed/tapper.html.
-     Cloudflare Pages serves AppConfig URL https://redmed.pages.dev/tapper/ from tapper/. -->
+     Cloudflare Pages serves AppConfig URL https://getredmed.com/tapper/ from tapper/
+     (legacy https://redmed.pages.dev/tapper/ still hosted — see docs/domain.md). -->
 <style>
   :root {
     --accent: #e11d48;
@@ -434,12 +435,14 @@
     padding-bottom: 8px;
     box-sizing: border-box;
   }
-  /* Quiet prayer — main RedMed + Aid. Whisper, not focus. Pins low when short. */
+  /* Quiet prayer — main RedMed + Aid. Whisper, not focus. Pins low when short.
+     Keep in lockstep with AppConfig.QuietPrayer.fontSize (11) — bracelet tap,
+     owner app-embed WKWebView, and native AidView. */
   .quote {
     margin: 0 clamp(16px, 6vw, 36px) 8px;
     padding: 0;
     max-width: none;
-    font-size: clamp(8px, 2.2vw, 11px);
+    font-size: 11px;
     font-weight: 400;
     font-style: italic;
     color: rgba(120,113,108,0.55);
