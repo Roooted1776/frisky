@@ -2,6 +2,7 @@
 # https://redmed.pages.dev/tapper/ (RedMed · 911 · Aid — no login, no server).
 # Requires repo secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID.
 # Optional secret CLOUDFLARE_PAGES_PROJECT (defaults to redmed).
+# Missing secrets → skip deploy (green) with a warning; shell checks still run.
 
 name: Pages tapper deploy
 
@@ -42,19 +43,23 @@ jobs:
           cmp -s tapper.html tapper/index.html
           cmp -s tapper.html RedMed-Xcode/RedMed/tapper.html
 
-      - name: Require Cloudflare secrets
+      - name: Check Cloudflare secrets
+        id: cf
         env:
           TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           if [ -z "$TOKEN" ] || [ -z "$ACCOUNT" ]; then
-            echo "::error::Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID repo secrets, then re-run. Live /tapper/ stays stale until this deploys."
-            exit 1
+            echo "::warning::CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID not set — skipping live Pages deploy. Add repo secrets, then re-run. Live /tapper/ stays stale until then."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Deploy to Cloudflare Pages
+        if: steps.cf.outputs.ready == 'true'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy . --project-name=redmed --commit-dirty=true
+          command: pages deploy . --project-name=${{ secrets.CLOUDFLARE_PAGES_PROJECT || 'redmed' }} --commit-dirty=true
