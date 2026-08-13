@@ -22,7 +22,6 @@
 		AABB00000000000000000010 /* NearbyHospitals.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000010 /* NearbyHospitals.swift */; };
 		AABB00000000000000000011 /* MedicationData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000011 /* MedicationData.swift */; };
 		AABB00000000000000000012 /* PublicCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000012 /* PublicCardView.swift */; };
-		AABB0000000000000000004C /* PasserbyHTMLCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000004C /* PasserbyHTMLCardView.swift */; };
 		AABB00000000000000000013 /* LocationAccessSuggester.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000013 /* LocationAccessSuggester.swift */; };
 		AABB00000000000000000014 /* BiometricAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000014 /* BiometricAuth.swift */; };
 		AABB00000000000000000016 /* PrivacyPolicy.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000016 /* PrivacyPolicy.html */; };
@@ -56,6 +55,7 @@
 		AABB00000000000000000034 /* SecurePasteboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000034 /* SecurePasteboard.swift */; };
 		AABB00000000000000000035 /* VolumeBoost.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000035 /* VolumeBoost.swift */; };
 		AABB00000000000000000036 /* BrandWordmark.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000036 /* BrandWordmark.png */; };
+		AABB0000000000000000004C /* PasserbyHTMLCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000004C /* PasserbyHTMLCardView.swift */; };
 		AABB0000000000000000004D /* AudioSessionGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000004D /* AudioSessionGate.swift */; };
 /* End PBXBuildFile section */
 
@@ -78,8 +78,6 @@
 		AAAA00000000000000000010 /* NearbyHospitals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyHospitals.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000011 /* MedicationData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationData.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000012 /* PublicCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicCardView.swift; sourceTree = "<group>"; };
-		AAAA0000000000000000004C /* PasserbyHTMLCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasserbyHTMLCardView.swift; sourceTree = "<group>"; };
-		AAAA0000000000000000004D /* AudioSessionGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSessionGate.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000013 /* LocationAccessSuggester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationAccessSuggester.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000014 /* BiometricAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuth.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000016 /* PrivacyPolicy.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = PrivacyPolicy.html; sourceTree = "<group>"; };
@@ -113,6 +111,8 @@
 		AAAA00000000000000000034 /* SecurePasteboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurePasteboard.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000035 /* VolumeBoost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeBoost.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000036 /* BrandWordmark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BrandWordmark.png; sourceTree = "<group>"; };
+		AAAA0000000000000000004C /* PasserbyHTMLCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasserbyHTMLCardView.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000004D /* AudioSessionGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSessionGate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -126,33 +126,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		AAAA000000000000000000AA = {
-			isa = PBXGroup;
-			children = (
-				AAAA000000000000000000BB /* RedMed */,
-				AAAA000000000000000000CC /* Products */,
-			);
-			sourceTree = "<group>";
-		};
-		AAAA000000000000000000BB /* RedMed */ = {
-			isa = PBXGroup;
-			children = (
-				AAAA00000000000000000040 /* App Shell */,
-				AAAA00000000000000000041 /* Tab · RedMed */,
-				AAAA00000000000000000042 /* Tab · 911 */,
-				AAAA00000000000000000043 /* Tab · Aid */,
-				AAAA00000000000000000044 /* Tab · NFC */,
-				AAAA00000000000000000045 /* Scanner */,
-				AAAA00000000000000000046 /* Vault & Privacy */,
-				AAAA00000000000000000047 /* Survival Alarm */,
-				AAAA00000000000000000048 /* Help & Settings */,
-				AAAA00000000000000000049 /* Policies */,
-				AAAA0000000000000000004A /* Passerby Bundle */,
-				AAAA0000000000000000004B /* Support */,
-			);
-			path = RedMed;
-			sourceTree = "<group>";
-		};
 		AAAA00000000000000000040 /* App Shell */ = {
 			isa = PBXGroup;
 			children = (
@@ -287,6 +260,33 @@
 				AAAA0000000000000000000F /* RedMed.entitlements */,
 			);
 			name = Support;
+			sourceTree = "<group>";
+		};
+		AAAA000000000000000000AA = {
+			isa = PBXGroup;
+			children = (
+				AAAA000000000000000000BB /* RedMed */,
+				AAAA000000000000000000CC /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AAAA000000000000000000BB /* RedMed */ = {
+			isa = PBXGroup;
+			children = (
+				AAAA00000000000000000040 /* App Shell */,
+				AAAA00000000000000000041 /* Tab · RedMed */,
+				AAAA00000000000000000042 /* Tab · 911 */,
+				AAAA00000000000000000043 /* Tab · Aid */,
+				AAAA00000000000000000044 /* Tab · NFC */,
+				AAAA00000000000000000045 /* Scanner */,
+				AAAA00000000000000000046 /* Vault & Privacy */,
+				AAAA00000000000000000047 /* Survival Alarm */,
+				AAAA00000000000000000048 /* Help & Settings */,
+				AAAA00000000000000000049 /* Policies */,
+				AAAA0000000000000000004A /* Passerby Bundle */,
+				AAAA0000000000000000004B /* Support */,
+			);
+			path = RedMed;
 			sourceTree = "<group>";
 		};
 		AAAA000000000000000000CC /* Products */ = {

@@ -16,17 +16,6 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
-	<key>CFBundleVersion</key>
-	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>NSFaceIDUsageDescription</key>
-	<string>RedMed uses Face ID, Touch ID, or your device passcode to unlock editing of your RedMed profile, authorize writing to your bracelet, and open the on-device local history vault. Scanned cards are read-only and cannot be changed without your app and authentication.</string>
-	<!-- Required for CoreNFC Write/Scan (passive Type 2 NTAG). -->
-	<key>NFCReaderUsageDescription</key>
-	<string>RedMed uses NFC so you can write your emergency card to your bracelet and scan it to verify the same HTML tap page helpers open. Passersby who tap the band open that page in a browser — they do not need this app.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>RedMed uses your location to give 911 your exact GPS coordinates in an emergency.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -38,22 +27,28 @@
 			</array>
 		</dict>
 	</array>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NFCReaderUsageDescription</key>
+	<string>RedMed uses NFC so you can write your emergency card to your bracelet and scan it to verify the same HTML tap page helpers open. Passersby who tap the band open that page in a browser — they do not need this app.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>RedMed uses Face ID, Touch ID, or your device passcode to unlock editing of your RedMed profile, authorize writing to your bracelet, and open the on-device local history vault. Scanned cards are read-only and cannot be changed without your app and authentication.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>RedMed uses your location to give 911 your exact GPS coordinates in an emergency.</string>
 	<key>UIBackgroundModes</key>
-	<array>
-		<string>audio</string>
-	</array>
+	<array/>
 	<key>UILaunchScreen</key>
 	<dict>
-		<!-- Cream only — system splash stays logo-free. Owner lock is watermark + Face ID. -->
 		<key>UIColorName</key>
 		<string>LaunchBackground</string>
 	</dict>
-	<!-- Cream Main chrome is light-only; Dark Mode made system sheets/Help diverge from Xcode/sim. -->
-	<key>UIUserInterfaceStyle</key>
-	<string>Light</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
+	<key>UIUserInterfaceStyle</key>
+	<string>Light</string>
 </dict>
 </plist>
