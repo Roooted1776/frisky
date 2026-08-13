@@ -61,8 +61,12 @@ enum AppConfig {
     static let nfcHardwareEnabled = false
 
     /// Hardware RF contract for the RedMed bracelet.
-    /// - Band is **passive**: no battery, no BLE/Wi‑Fi radio; the paired phone
-    ///   only energises it during an intentional CoreNFC write/scan.
+    /// - Band is **passive**: no battery, no BLE/Wi‑Fi radio. RedMed only starts
+    ///   CoreNFC on explicit Write/Scan. Separately, iOS Background Tag Reading
+    ///   can energise a written NDEF URI tag on a deliberate tap even when the
+    ///   phone is off or locked (antenna ~top ~1–2″ from the band) — RedMed
+    ///   cannot disable that OS path. Write does not change BTR likelihood.
+    ///   Band stays passive — no battery (not AirTag / BLE).
     /// - Band RF is **HF NFC at 13.56 MHz** (ISO 14443 / NTAG NDEF) — a different
     ///   carrier from phone Bluetooth (~2.4 GHz). Do not source LF (~125 kHz)
     ///   or UHF (~860–960 MHz) chips; iPhone CoreNFC cannot program those.
@@ -117,8 +121,14 @@ enum AppConfig {
             "Passive band · \(carrierLabel) (NTAG) — not Bluetooth 2.4 GHz."
         }
 
+        /// RedMed session behaviour — not Apple Background Tag Reading.
         static var powerOnTapSummary: String {
-            "Phone only powers the chip on write/scan. No background pair radio."
+            "RedMed does not keep a background NFC pair. Chip is passive — no Bluetooth."
+        }
+
+        /// What can still open the URL later (Apple OS path; phone off / locked OK).
+        static var backgroundTagReadingSummary: String {
+            "iOS Background Tag Reading can still open the card later — phone can be off or locked; a deliberate tap (phone top \(intentionalTapRangeLabel) from the band) still works. Wrist + pocket is usually fine. Phone pressed to the clasp can pop Safari. Same for any passerby. Writing the chip does not change that. Band stays passive — no battery."
         }
 
         static var paymentPOSSummary: String {
