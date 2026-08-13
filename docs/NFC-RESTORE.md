@@ -41,10 +41,11 @@ physical iPhone to test.
 - Payment POS may share 13.56 MHz but speaks EMV, not RedMed NDEF URLs
   (`ignoredByPaymentPOS`) — protocol, not distance.
 - **iOS Background Tag Reading (not RedMed):** what can still open the URL later
-  is Apple’s OS path — screen on (locked or unlocked), top of phone ~1–2″ from
-  the band. Wrist + pocket is usually fine. Phone pressed to the clasp can pop
-  Safari / `tapper.html`. Same for any passerby. Writing the chip does not make
-  that more or less likely. RedMed cannot disable that OS path; it is unrelated
+  is Apple’s OS path — phone can be off or locked; a deliberate tap (top of
+  phone ~1–2″ from the band) still works. Wrist + pocket is usually fine. Phone
+  pressed to the clasp can pop Safari / `tapper.html`. Same for any passerby.
+  Writing the chip does not make that more or less likely. Band stays passive
+  (no battery — not AirTag). RedMed cannot disable that OS path; it is unrelated
   to walk-by and is not started by this app. Product copy lives in
   `AppConfig.BraceletRF.backgroundTagReadingSummary`.
 

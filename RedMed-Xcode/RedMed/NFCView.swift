@@ -174,7 +174,7 @@ struct NFCView: View {
                 tipRow("User: write once after RedMed is filled.")
                 tipRow("Cancel the NFC prompt and the band stays stale until you write again.")
                 tipRow("Tap to scan: same HTML card helpers get — quick, no login, no server, no app.")
-                tipRow("Write does not change iOS Background Tag Reading — phone top \(AppConfig.BraceletRF.intentionalTapRangeLabel) from the clasp (screen on, locked or unlocked) can still open Safari.")
+                tipRow("Write does not change iOS Background Tag Reading — phone can be off or locked; tap phone top \(AppConfig.BraceletRF.intentionalTapRangeLabel) from the clasp can still open Safari.")
             }
             .padding(.top, 2)
         }

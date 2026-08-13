@@ -45,9 +45,10 @@ See also `AGENTS.md`. High-signal recap:
 7. Unique `project.pbxproj` IDs (duplicate IDs drop sources).
 8. Passerby SW: cache-first multi-key shell for almost-instant EMT open; clear prior CACHE on activate; bump `redmed-tapper-vN` in lockstep. Tap-to-view = HTML; no biometric copy in any passerby / policy HTML.
 9. `AppConfig.BraceletRF` owns tap-distance + iOS Background Tag Reading copy
-   (no hardcoded inches). BTR can still open `tapper.html` (screen on — locked
-   or unlocked — ~1–2″); write does not change likelihood; do not claim “no
-   background NFC” without the Apple OS caveat.
+   (no hardcoded inches). BTR can still open `tapper.html` on a deliberate tap
+   even if the phone is off or locked (~1–2″); write does not change likelihood;
+   band stays passive — **no battery** (reject AirTag-style cells / recurring
+   demand). Do not claim “no background NFC” without the Apple OS caveat.
 10. Crash / high-speed **vehicle impact** detection is **local** — CoreMotion in the native app (owner + in-app scanner), DeviceMotion in passerby `tapper.html` (same g thresholds). Not Apple Crash Detection, no cloud. Must ignore running, walking, sex, masturbation, eating, hand/wrist handling, and other rhythmic daily activity. Real bracelet NFC (`#d=`) → local SOS on that phone only (no server). Owner Find Help does not auto-arm. Passerby HTML alarm is Web Audio + wake lock (no system volume/brightness APIs).
 
 ## What he has already done (shipped history)
