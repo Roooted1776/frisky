@@ -66,8 +66,8 @@
     --page-max: 480px;
     --page-pad-x: clamp(12px, 4.2vw, 28px);
     --tabbar-h: 74px;
-    --fs-name: clamp(22px, 5.8vw, 28px);
-    --fs-row: clamp(13px, 3.2vw, 15px);
+    --fs-name: 22px; /* hero under logo — RED-9 / Main.dc */
+    --fs-row: 14px; /* YOU rows + lists — matches Theme CardRow */
     --fs-title: clamp(15px, 3.6vw, 17px);
     --fs-body: clamp(13px, 3.2vw, 16px);
     --fs-btn: clamp(15px, 3.8vw, 18px);
@@ -96,11 +96,14 @@
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     scrollbar-gutter: stable;
+    /* Same cream as Color.redmedBg / LaunchBackground — no system white overscroll. */
+    background: var(--bg);
   }
   html, body { min-height: 100%; }
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", sans-serif;
+    /* Page wash + cream — matches RedMedPageBackground / owner RedMed first page. */
     background:
       radial-gradient(120% 60% at 50% -10%, var(--wash) 0%, transparent 58%),
       var(--bg);
@@ -236,7 +239,7 @@
     letter-spacing: -0.5px;
     margin: 0;
     line-height: 1.15;
-    color: #000;
+    color: var(--dark); /* same ink as YOU rows / Color.redmedDark — not pure #000 */
     overflow-wrap: anywhere;
     word-break: break-word;
   }
@@ -286,33 +289,10 @@
     min-width: 0;
   }
   .row .v.empty { font-weight: 500; color: rgba(28,25,23,0.55); }
-  /* Empty: Name + dash left (owner nameProfileRow). Filled: label drops. */
-  .row.row-name:not(.has-name) {
-    justify-content: flex-start;
-    gap: 8px;
-  }
-  .row.row-name:not(.has-name) .v {
-    text-align: left;
-    flex: 1;
-    min-width: 0;
-  }
-  .row.row-name.has-name {
-    justify-content: flex-start;
-    gap: 8px;
-  }
-  .row.row-name.has-name .k { display: none; }
-  .row.row-name.has-name .v {
-    font-weight: 700;
-    font-size: clamp(14px, 3.4vw, 16px);
-    text-align: left;
-    color: #000;
-    flex: 1;
-    min-width: 0;
-  }
   /* Blood type — EMT glance chip when filled. */
   .row.row-blood.has-blood .v {
     display: inline-block;
-    font-size: clamp(14px, 3.5vw, 16px);
+    font-size: var(--fs-row);
     font-weight: 700;
     color: var(--accent);
     background: rgba(225,29,72,0.1);
@@ -427,21 +407,21 @@
   .contact-block .cn {
     font-size: var(--fs-row);
     font-weight: 600;
-    color: #000;
+    color: var(--dark);
     flex: 1;
     min-width: 0;
     overflow-wrap: anywhere;
     word-break: break-word;
   }
   .contact-block a.cp {
-    font-size: clamp(12px, 3vw, 15px);
+    font-size: var(--fs-row);
     font-weight: 500;
     color: var(--dark);
     text-decoration: none;
     white-space: nowrap;
   }
   .contact-block .cd {
-    font-size: clamp(12px, 3vw, 14px);
+    font-size: var(--fs-row);
     font-weight: 500;
     color: var(--muted);
     margin-top: 2px;
@@ -858,11 +838,12 @@
   }
   details.aid ol li + li { margin-top: 8px; }
 
-  /* —— Tab bar (matches CustomTabBar; larger hit targets for EMT / gloves) —— */
+  /* —— Tab bar (matches CustomTabBar cream; larger hit targets for EMT / gloves) —— */
   .tabbar {
     position: fixed;
     left: 0; right: 0; bottom: 0;
-    background: rgba(255,255,255,0.96);
+    /* Opaque page cream — same Color.redmedBg as owner CustomTabBar (not frosted white). */
+    background: var(--bg);
     border-top: 1px solid var(--divider);
     box-shadow: 0 -4px 18px rgba(28,25,23,0.06);
     display: flex;
@@ -870,8 +851,6 @@
     align-items: center;
     padding: 6px var(--safe-r) calc(6px + var(--safe-b)) var(--safe-l);
     z-index: 30;
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
   }
   .tabs {
     display: flex;
@@ -958,7 +937,7 @@
       </div>
 
       <div class="card you-card">
-        <div class="row row-name" id="rowNameRow"><span class="k">Name</span><span class="v empty" id="rowName">—</span></div>
+        <div class="row" id="rowNameRow"><span class="k">Name</span><span class="v empty" id="rowName">—</span></div>
         <div class="row"><span class="k">Birth date</span><span class="v empty" id="rowDob">—</span></div>
         <div class="row row-blood" id="rowBloodRow"><span class="k">Blood type</span><span class="v empty" id="rowBlood">—</span></div>
       </div>
@@ -1597,11 +1576,6 @@
       statusEl.classList.toggle('linked', linked);
     }
     setRow('rowName', p.name);
-    var nameRow = document.getElementById('rowNameRow');
-    if (nameRow) {
-      if (rawName) nameRow.classList.add('has-name');
-      else nameRow.classList.remove('has-name');
-    }
     setRow('rowDob', p.dob);
     setRow('rowBlood', p.blood);
     var bloodRow = document.getElementById('rowBloodRow');

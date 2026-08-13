@@ -1,14 +1,16 @@
 import SwiftUI
 import WebKit
 
-/// Owner RedMed tab / Preview / NFC Scan — same bundled `tapper.html#d=` shell a
-/// stranger gets on band tap. Loads with `?src=app` so SOS does **not** auto-arm
-/// (real bracelet opens hosted `/tapper/#d=…` without that flag).
+/// Owner Preview / NFC Scan — same bundled `tapper.html#d=` shell a stranger
+/// gets on band tap (HTML RedMed · 911 · Aid tabs visible). Loads with
+/// `?src=app` so SOS does **not** auto-arm (real bracelet opens hosted
+/// `/tapper/#d=…` without that flag). Owner RedMed tab uses `PasserbyHTMLShell`
+/// with `appEmbed: true` instead (native tabs; HTML tab bar hidden).
 struct PasserbyHTMLCardView: View {
     @Environment(\.dismiss) private var dismiss
     /// Raw `#d=` payload (no prefix), or full band URL containing `#d=`.
     let payloadOrURL: String
-    /// Owner Linked state — passed into the shell so app embed matches native rules.
+    /// Owner Linked state — passed into the shell so Preview matches native rules.
     var braceletLinked: Bool = false
 
     private var encodedPayload: String? {
@@ -16,7 +18,7 @@ struct PasserbyHTMLCardView: View {
     }
 
     var body: some View {
-        // Same chrome as owner Help/Edit / Aid topic Back — accent red in page-bg bubble.
+        // Same chrome as owner Help/Edit / Aid topic Back — accent red text, no chip box.
         VStack(spacing: 0) {
             HStack(alignment: .center, spacing: 12) {
                 ChromeTextAction(title: "Back") { dismiss() }
@@ -36,7 +38,9 @@ struct PasserbyHTMLCardView: View {
                 if let encodedPayload {
                     PasserbyHTMLShell(
                         encodedPayload: encodedPayload,
-                        braceletLinked: braceletLinked
+                        braceletLinked: braceletLinked,
+                        // Full passerby chrome — what a band tap opens (not owner embed).
+                        appEmbed: false
                     )
                 } else {
                     Text("Couldn't pack tapper.html#d= from RedMed.")
@@ -50,6 +54,12 @@ struct PasserbyHTMLCardView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background { RedMedPageBackground() }
+    }
+
+    /// Slurp bundled `tapper.html` off the hot path so first RedMed / Preview paint skips disk.
+    /// `nonisolated` — callers warm from `Task.detached` during unlock / cold start.
+    nonisolated static func warmShellCache() {
+        PasserbyShellCache.warm()
     }
 
     static func extractPayload(_ raw: String) -> String? {
@@ -78,23 +88,68 @@ struct PasserbyHTMLCardView: View {
 
 // MARK: - Embedded shell (owner RedMed tab — no Back chrome)
 
-/// Bundled tapper.html medical panel only (HTML tab bar hidden via `app-embed`).
+/// Bundled `tapper.html`. Owner RedMed tab sets `appEmbed` so the HTML tab bar
+/// hides (native tabs own 911 / Aid). Preview / Scan leave `appEmbed` false.
 struct PasserbyHTMLShell: View {
     let encodedPayload: String
     var braceletLinked: Bool = false
+    var appEmbed: Bool = true
 
     var body: some View {
         PasserbyHTMLWebView(
             encodedPayload: encodedPayload,
-            braceletLinked: braceletLinked
+            braceletLinked: braceletLinked,
+            appEmbed: appEmbed
         )
         // No `.id` remount — `updateUIView` reloads only when loadKey changes.
         // Ciphertext-based `.id` used to destroy WKWebView on every AES re-seal.
     }
 
     /// Warm bundled tapper.html into memory during Face ID (no PHI).
+    /// Routes to the nonisolated process cache (MainActor-safe from any caller).
     static func warmShellCache() {
-        PasserbyHTMLWebView.warmShellCache()
+        PasserbyHTMLCardView.warmShellCache()
+    }
+}
+
+// MARK: - Shell HTML cache (nonisolated — View / UIViewRepresentable are MainActor)
+
+/// Process-wide bundled `tapper.html` cache. Lock-guarded so unlock / cold start
+/// can warm off the main thread without Swift concurrency isolation errors.
+private enum PasserbyShellCache {
+    private static var cachedShellHTML: String?
+    private static var cachedShellFileURL: URL?
+    private static let cacheLock = NSLock()
+
+    static func warm() {
+        cacheLock.lock()
+        defer { cacheLock.unlock() }
+        if cachedShellHTML != nil { return }
+        guard let url = Bundle.main.url(forResource: "tapper", withExtension: "html"),
+              let html = try? String(contentsOf: url, encoding: .utf8) else { return }
+        cachedShellFileURL = url
+        cachedShellHTML = html
+    }
+
+    static func shellFileURL() -> URL? {
+        cacheLock.lock()
+        defer { cacheLock.unlock() }
+        if let cachedShellFileURL { return cachedShellFileURL }
+        let url = Bundle.main.url(forResource: "tapper", withExtension: "html")
+        cachedShellFileURL = url
+        return url
+    }
+
+    static func shellHTML() -> String? {
+        cacheLock.lock()
+        defer { cacheLock.unlock() }
+        if let cachedShellHTML { return cachedShellHTML }
+        guard let url = Bundle.main.url(forResource: "tapper", withExtension: "html")
+                ?? cachedShellFileURL,
+              let html = try? String(contentsOf: url, encoding: .utf8) else { return nil }
+        cachedShellFileURL = url
+        cachedShellHTML = html
+        return html
     }
 }
 
@@ -103,16 +158,7 @@ struct PasserbyHTMLShell: View {
 private struct PasserbyHTMLWebView: UIViewRepresentable {
     let encodedPayload: String
     var braceletLinked: Bool = false
-
-    /// Disk read once per process — remounts must not re-slurp tapper.html on main.
-    private static var cachedShellHTML: String?
-    private static var cachedShellFileURL: URL?
-
-    /// Touch shell file + HTML into memory while Face ID runs so unlock does not stall on disk.
-    static func warmShellCache() {
-        _ = shellFileURL()
-        _ = shellHTML()
-    }
+    var appEmbed: Bool = true
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
@@ -139,22 +185,25 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
-        let loadKey = "\(encodedPayload)|\(braceletLinked)"
+        let loadKey = "\(encodedPayload)|\(braceletLinked)|\(appEmbed)"
         guard context.coordinator.loadedKey != loadKey else { return }
-        guard let fileURL = Self.shellFileURL(),
-              var html = Self.shellHTML(),
+        guard let fileURL = PasserbyShellCache.shellFileURL(),
+              var html = PasserbyShellCache.shellHTML(),
               let lit = Self.jsStringLiteral(encodedPayload) else { return }
         context.coordinator.loadedKey = loadKey
         // Inject before any tapper.html script so decrypt sees #d= and SOS sees app preview.
         // Flag + hash fallback: loadHTMLString can leave location as about:blank where
         // replaceState alone would leave decrypt empty and wrongly auto-arm SOS.
-        // `html.app-embed` lands before first paint — body class alone waits on the big IIFE.
+        // Owner embed: `html.app-embed` before first paint. Preview/Scan: full HTML tabs.
         let linkedJS = braceletLinked ? "true" : "false"
+        let embedJS = appEmbed
+            ? "try{document.documentElement.classList.add('app-embed');}catch(e0){}"
+            : ""
         let boot = """
         <script>
         window.__REDMED_APP_PREVIEW=1;
         window.__REDMED_BRACELET_LINKED=\(linkedJS);
-        try{document.documentElement.classList.add('app-embed');}catch(e0){}
+        \(embedJS)
         (function(){
           var d=\(lit);
           try{
@@ -174,21 +223,6 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         }
         // baseURL = the tapper.html file so relative BrandLogo / sw.js resolve like a real open.
         webView.loadHTMLString(html, baseURL: fileURL)
-    }
-
-    private static func shellFileURL() -> URL? {
-        if let cachedShellFileURL { return cachedShellFileURL }
-        let url = Bundle.main.url(forResource: "tapper", withExtension: "html")
-        cachedShellFileURL = url
-        return url
-    }
-
-    private static func shellHTML() -> String? {
-        if let cachedShellHTML { return cachedShellHTML }
-        guard let url = shellFileURL(),
-              let html = try? String(contentsOf: url, encoding: .utf8) else { return nil }
-        cachedShellHTML = html
-        return html
     }
 
     /// JSON string literal for safe JS concatenation (bare String is not a valid

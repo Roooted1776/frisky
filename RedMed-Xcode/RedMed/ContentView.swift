@@ -40,6 +40,9 @@ struct ContentView: View {
     var body: some View {
         // No Location banner / CLLocationManager here — Find Help owns that.
         ZStack(alignment: .bottom) {
+            // Same cream as tapper body / RedMedPageBackground — no system white in tab gaps.
+            Color.redmedBg.ignoresSafeArea()
+
             ZStack {
                 mountedTab(.redmed) { RedMedView(tab: scannerSafeTab) }
                 mountedTab(.emergency) {

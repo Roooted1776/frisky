@@ -230,7 +230,8 @@ struct OwnerAppLock<Content: View>: View {
             didAutoPromptThisLock = true
         }
         profile.beginUnlockPrefetch()
-        PasserbyHTMLShell.warmShellCache()
+        // nonisolated cache — safe from any thread / Task.detached.
+        PasserbyHTMLCardView.warmShellCache()
         unlockWithFaceID()
     }
 
@@ -268,7 +269,7 @@ struct OwnerAppLock<Content: View>: View {
                     isAuthenticating = false
                     if loaded {
                         RedMedHaptics.success()
-                        // No soft animation — unlock must not spend frames on a fade.
+                        // No soft fade — tabs must appear immediately after Face ID.
                         gate = .unlocked
                         biometryFailed = false
                         profileLoadFailed = false
