@@ -293,9 +293,10 @@ enum RedMedChrome {
     /// Tapper / empty YOU-card BrandLogo diameter (`--logo` matches).
     static let logoSize: CGFloat = 72
     /// Owner lock decorative BrandLogo — atmosphere only, never a control.
-    static let lockWatermarkSize: CGFloat = 220
-    /// Soft enough to read as wash, not a faded tappable mark.
-    static let lockWatermarkOpacity: Double = 0.08
+    /// Large centered mark is the open-screen eye candy (cream + Unlock).
+    static let lockWatermarkSize: CGFloat = 280
+    /// 60% transparent (40% opaque) — readable as the brand logo, not a control.
+    static let lockWatermarkOpacity: Double = 0.40
     /// BrandWordmark lockup on NFC / topic pages (Aid + 911 are content-first).
     static let wordmarkHeight: CGFloat = 42
     static let pagePadX: CGFloat = 16
