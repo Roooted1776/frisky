@@ -9,7 +9,7 @@ enum AppConfig {
     /// CACHE buckets). Owner edit / treatments live in `Main.swift`, not here.
     /// Source page: `tapper.html` / `tapper/index.html` (identical at `tapper/`, repo root,
     /// and `RedMed-Xcode/RedMed/tapper.html`). Legacy `card/` / `get/` URLs redirect to `/tapper/`
-    /// (preserve `#d=`). Owner Preview / Scan always use the **bundled** tapper.html
+    /// (preserve `#d=`). NFC Preview / Scan always use the **bundled** tapper.html
     /// (local-only). Hosted Pages must serve the tapper shell (RedMed · 911 · Aid).
     /// Local: `./scripts/deploy-pages.sh`. Live: `DEPLOY=1` + CF tokens, or the
     /// `Pages tapper deploy` GitHub Action on `main`.

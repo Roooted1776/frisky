@@ -28,13 +28,13 @@ struct EditProfileView: View {
 
     private static let bloodTypeChoices = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
 
-    /// One body size across the edit form (labels, fields, prompts, section titles).
+    /// One body size across the edit form (labels, fields, prompts).
+    /// Nav bar metrics live in `RedMedChrome` so Help / Edit / Preview stay even.
     private enum Metrics {
         static let font: CGFloat = 15
-        static let navFont: CGFloat = 17
         static let icon: CGFloat = 18
         static let labelWidth: CGFloat = 100
-        static let rowHPad: CGFloat = 16
+        static let rowHPad: CGFloat = RedMedChrome.pagePadX
         static let rowVPad: CGFloat = 13
         static let sectionGap: CGFloat = 22
     }
@@ -78,24 +78,12 @@ struct EditProfileView: View {
 
     private var editorBody: some View {
         VStack(spacing: 0) {
-            HStack {
-                Button("Cancel") { dismiss() }
-                    .font(.system(size: Metrics.navFont))
-                    .foregroundColor(.redmedAccent)
-                Spacer()
-                Text("Edit RedMed")
-                    .font(.system(size: Metrics.navFont, weight: .semibold))
-                    .foregroundColor(.redmedDark)
-                Spacer()
-                Button("Save") { save() }
-                    .font(.system(size: Metrics.navFont, weight: .bold))
-                    .foregroundColor(.redmedAccent)
-            }
-            .padding(.horizontal, Metrics.rowHPad)
-            .frame(height: 52)
-            .background(Color.redmedBg.opacity(0.95))
-            .overlay(alignment: .bottom) {
-                Divider().overlay(Color.redmedDivider)
+            OwnerModalChrome(
+                title: "Edit",
+                leadingTitle: "Cancel",
+                leadingAction: { dismiss() }
+            ) {
+                OwnerModalTrailingAction(title: "Save", action: save)
             }
 
             ScrollView {
@@ -452,13 +440,8 @@ struct EditProfileView: View {
 
     @ViewBuilder
     private func editSectionLabel(_ text: String) -> some View {
-        // Keep "You" title-case; other section headers stay ALL CAPS.
-        Text(text == "You" ? text : text.uppercased())
-            .font(.system(size: Metrics.font, weight: .semibold))
-            .foregroundColor(.redmedMuted)
-            .kerning(0.5)
-            .padding(.horizontal, 4)
-            .padding(.bottom, 6)
+        // Same SectionLabel metrics as Help / NFC cards — even rhythm across modals.
+        SectionLabel(text: text == "You" ? "You" : text)
             .padding(.top, text == "You" ? 0 : Metrics.sectionGap)
     }
 

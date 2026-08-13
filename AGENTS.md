@@ -43,8 +43,8 @@ The app has no backend, database, or web service.
   into `redmed://main`. Policies CTA to the owner app; they do not host owner
   edit UI. Do not reintroduce repo-root copies of the policy HTML. Owner Help
   is Settings + Privacy / TOS / Security only (no in-app How It Works /
-  MainInfoView, no Local History row, no local tapper.html WebView). Owner
-  Preview / NFC Scan open bundled `tapper.html#d=` (`?src=app`, no SOS auto-arm);
+  MainInfoView, no Local History row, no local tapper.html WebView). NFC
+  Preview (under Scan) / NFC Scan open bundled `tapper.html#d=` (`?src=app`, no SOS auto-arm);
   live band taps stay `https://getredmed.com/tapper/#d=` (legacy `pages.dev` bands still open).
 
 - **Bracelet tap (physics, not a setting):** `AppConfig.BraceletRF` is the single

@@ -119,80 +119,124 @@ struct HelpMenuView: View {
     @State private var eraseAuthFailed = false
     @State private var eraseDone = false
 
+    /// Same metrics as Edit — even horizontal rhythm across Help / Edit / Preview.
+    private enum Metrics {
+        static let font: CGFloat = 15
+        static let rowHPad: CGFloat = RedMedChrome.pagePadX
+        static let rowVPad: CGFloat = 13
+        static let sectionGap: CGFloat = 22
+    }
+
     var body: some View {
-        NavigationView {
-            List {
-                if onOpenNFC != nil {
-                    Button("Write to NFC tag") {
-                        dismiss()
-                        DispatchQueue.main.async { onOpenNFC?() }
-                    }
-                    .foregroundColor(.redmedDark)
-                }
-                Section {
-                    Toggle("Haptic feedback", isOn: $hapticsEnabled)
-                        .tint(.redmedAccent)
-                    Toggle("Location", isOn: $locationEnabled)
-                        .tint(.redmedAccent)
-                        .onChange(of: locationEnabled) { _, on in
-                            // Pref only — never call requestWhenInUseAuthorization here.
-                            // Find Help prompts the system sheet once when GPS is actually needed.
-                            if on { locationSuggester.refresh() }
+        NavigationStack {
+            VStack(spacing: 0) {
+                OwnerModalChrome(
+                    title: "Help",
+                    leadingTitle: "Done",
+                    leadingAction: { dismiss() }
+                )
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        if onOpenNFC != nil {
+                            helpSectionLabel("Bracelet")
+                            helpCard {
+                                Button {
+                                    dismiss()
+                                    DispatchQueue.main.async { onOpenNFC?() }
+                                } label: {
+                                    Text("Write to NFC tag")
+                                        .font(.system(size: Metrics.font, weight: .medium))
+                                        .foregroundColor(.redmedDark)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(.horizontal, Metrics.rowHPad)
+                                        .padding(.vertical, Metrics.rowVPad)
+                                        .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
-                    if locationEnabled && locationSuggester.mustOpenSettings {
-                        Button("Open iOS Location Settings") {
-                            locationSuggester.openSettings()
+
+                        helpSectionLabel("Settings")
+                        helpCard {
+                            Toggle("Haptic feedback", isOn: $hapticsEnabled)
+                                .font(.system(size: Metrics.font))
+                                .tint(.redmedAccent)
+                                .padding(.horizontal, Metrics.rowHPad)
+                                .padding(.vertical, Metrics.rowVPad)
+                            Divider().padding(.leading, Metrics.rowHPad)
+                            Toggle("Location", isOn: $locationEnabled)
+                                .font(.system(size: Metrics.font))
+                                .tint(.redmedAccent)
+                                .padding(.horizontal, Metrics.rowHPad)
+                                .padding(.vertical, Metrics.rowVPad)
+                                .onChange(of: locationEnabled) { _, on in
+                                    // Pref only — never call requestWhenInUseAuthorization here.
+                                    // Find Help prompts the system sheet once when GPS is actually needed.
+                                    if on { locationSuggester.refresh() }
+                                }
+                            if locationEnabled && locationSuggester.mustOpenSettings {
+                                Divider().padding(.leading, Metrics.rowHPad)
+                                Button("Open iOS Location Settings") {
+                                    locationSuggester.openSettings()
+                                }
+                                .font(.system(size: Metrics.font, weight: .medium))
+                                .foregroundColor(.redmedAccent)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, Metrics.rowHPad)
+                                .padding(.vertical, Metrics.rowVPad)
+                            }
                         }
-                        .foregroundColor(.redmedAccent)
-                    }
-                } header: {
-                    Text("Settings")
-                } footer: {
-                    Text("Location defaults on. No RedMed popup — iOS may ask Allow once the first time Find Help needs GPS (Apple requires that tap). Siren / max volume / brightness arm on crash or SOS only.")
-                }
-                NavigationLink("Privacy Policy") {
-                    LocalWebView(filename: "PrivacyPolicy")
-                        .navigationTitle("Privacy Policy")
-                        .navigationBarTitleDisplayMode(.inline)
-                }
-                NavigationLink("Terms of Service") {
-                    LocalWebView(filename: "TOS")
-                        .navigationTitle("Terms of Service")
-                        .navigationBarTitleDisplayMode(.inline)
-                }
-                NavigationLink("Security") {
-                    LocalWebView(filename: "security")
-                        .navigationTitle("Security")
-                        .navigationBarTitleDisplayMode(.inline)
-                }
-                Section {
-                    Button(role: .destructive) {
-                        showEraseConfirm = true
-                    } label: {
-                        if isErasing {
-                            ProgressView()
-                        } else {
-                            Text("Erase all RedMed data")
+                        Text("Location defaults on. No RedMed popup — iOS may ask Allow once the first time Find Help needs GPS (Apple requires that tap). Siren / max volume / brightness arm on crash or SOS only.")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.redmedMuted)
+                            .padding(.horizontal, 4)
+                            .padding(.top, 8)
+
+                        helpSectionLabel("Policies")
+                        helpCard {
+                            policyLink("Privacy Policy", file: "PrivacyPolicy")
+                            Divider().padding(.leading, Metrics.rowHPad)
+                            policyLink("Terms of Service", file: "TOS")
+                            Divider().padding(.leading, Metrics.rowHPad)
+                            policyLink("Security", file: "security")
                         }
+
+                        helpSectionLabel("Data")
+                        helpCard {
+                            Button(role: .destructive) {
+                                showEraseConfirm = true
+                            } label: {
+                                Group {
+                                    if isErasing {
+                                        ProgressView()
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    } else {
+                                        Text("Erase all RedMed data")
+                                            .font(.system(size: Metrics.font, weight: .medium))
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+                                }
+                                .padding(.horizontal, Metrics.rowHPad)
+                                .padding(.vertical, Metrics.rowVPad)
+                                .contentShape(Rectangle())
+                            }
+                            .disabled(isErasing || (!profile.hasSensitiveProfileData && !ProfileData.prefersLockOnLaunch))
+                        }
+                        Text("Deletes the profile from this iPhone’s Keychain and clears local history. Settings prefs stay. The physical band is not wiped remotely — rewrite or discard it.")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.redmedMuted)
+                            .padding(.horizontal, 4)
+                            .padding(.top, 8)
                     }
-                    .disabled(isErasing || (!profile.hasSensitiveProfileData && !ProfileData.prefersLockOnLaunch))
-                } footer: {
-                    Text("Deletes the profile from this iPhone’s Keychain and clears local history. Settings prefs stay. The physical band is not wiped remotely — rewrite or discard it.")
+                    .padding(.top, 20)
+                    .padding(.horizontal, Metrics.rowHPad)
+                    .padding(.bottom, 48)
                 }
+                .scrollIndicators(.visible)
             }
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .scrollIndicators(.visible)
             .background { RedMedPageBackground() }
-            .navigationTitle("Help")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.redmedBg, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") { dismiss() }.foregroundColor(.redmedAccent)
-                }
-            }
+            .toolbar(.hidden, for: .navigationBar)
             .onAppear {
                 if locationEnabled {
                     locationSuggester.refresh()
@@ -221,7 +265,44 @@ struct HelpMenuView: View {
                 Text("This iPhone no longer holds your RedMed profile. Rewrite or discard the band if it still has a card.")
             }
         }
-        .navigationViewStyle(.stack)
+    }
+
+    @ViewBuilder
+    private func helpSectionLabel(_ text: String) -> some View {
+        SectionLabel(text: text)
+            .padding(.top, text == "Bracelet" || (text == "Settings" && onOpenNFC == nil) ? 0 : Metrics.sectionGap)
+    }
+
+    @ViewBuilder
+    private func helpCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        VStack(spacing: 0) { content() }
+            .redmedBox()
+    }
+
+    @ViewBuilder
+    private func policyLink(_ title: String, file: String) -> some View {
+        NavigationLink {
+            LocalWebView(filename: file)
+                .navigationTitle(title)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar(.visible, for: .navigationBar)
+                .toolbarBackground(Color.redmedBg, for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
+        } label: {
+            HStack {
+                Text(title)
+                    .font(.system(size: Metrics.font, weight: .medium))
+                    .foregroundColor(.redmedDark)
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.redmedMuted.opacity(0.55))
+            }
+            .padding(.horizontal, Metrics.rowHPad)
+            .padding(.vertical, Metrics.rowVPad)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     private func requestErase() {
