@@ -27,6 +27,10 @@ physical iPhone to test.
 
 - Bracelet is **passive** HF NFC at **13.56 MHz** (`AppConfig.BraceletRF`) —
   ISO 14443 / NTAG213+ NDEF. No battery, no BLE.
+- **Owner data independence:** `NFCWriter` / `ProfileNFCCodec` write only
+  `https://redmed.pages.dev/tapper/#d=…` (`AppConfig.OwnerBandURI.isValidWriteURL`).
+  No vendor tag-management cloud, no social/short-link redirect, no App Store
+  URL on the chip, no BLE. Profile lives in `#d=` only; Pages serves the shell.
 - “Paired phone” means this iPhone wrote + verified the chip and stored a local
   link flag. The phone does **not** keep an active RF session or background-scan
   the band (different from Bluetooth pairing on ~2.4 GHz).

@@ -13,7 +13,17 @@ final class NFCWriter: NSObject, ObservableObject {
 
     /// Starts a CoreNFC session only from an explicit Write tap — never on proximity.
     /// No Simulator fake-success path — failures stay failures.
+    /// Accepts only `medicalCardBaseURL#d=…` — never vendor clouds, social/short
+    /// links, App Store URLs, or any non-`#d=` NDEF.
     func writeURL(_ urlString: String) {
+        guard AppConfig.OwnerBandURI.isValidWriteURL(urlString) else {
+            DispatchQueue.main.async {
+                self.statusMessage = "Band write refused — only RedMed #d= URLs are allowed (no vendor cloud, social, or short links)."
+                self.success = false
+                self.isWriting = false
+            }
+            return
+        }
         guard AppConfig.nfcHardwareEnabled else {
             DispatchQueue.main.async {
                 self.statusMessage = "NFC writing is disabled in this build."

@@ -27,7 +27,8 @@ The app has no backend, database, or web service.
   **RedMed · 911 · Aid · NFC**. Edit is available on RedMed. NFC tab is always
   visible for owners; `AppConfig.nfcHardwareEnabled` only gates CoreNFC
   write/read sessions, never tab chrome. Owner writes the passive HF NFC band
-  from the NFC tab (Face ID gated).
+  from the NFC tab (Face ID gated) as `medicalCardBaseURL#d=` only
+  (`AppConfig.OwnerBandURI`) — no vendor cloud, no social/short URL, no BLE.
 - **Scanner / passerby shell** (`PublicCardView` / bracelet tap → `tapper.html#d=…`,
   `isScannerSession == true`): tabs are **RedMed · 911 · Aid** only — **no Edit**,
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain or

@@ -37,15 +37,19 @@ Native iOS medical ID + emergency aid. Passive **13.56 MHz HF NFC** bracelet (no
 See also `AGENTS.md`. High-signal recap:
 
 1. Owner vs scanner shells are permanent product law.
-2. Settings = **haptic + Location only**. Brightness 100% + system volume 100% + locator siren arm on crash / severe-impact (`CrashMotionGuard`), owner **SOS · Locate me**, or **real bracelet NFC** open of `tapper.html#d=…` (hardware-local SOS on that phone). Owner Find Help open, bare `/tapper/`, and in-app scanner preview do **not** auto-arm.
-3. Survival hold may keep siren + max volume + brightness through background until cancel on Aid (or Stop SOS on Find Help).
-4. Vault Face ID: relock on **`.background` only** (not `.inactive` — Face ID sheets).
-5. Privacy cover: opaque, no fade.
-6. Cold launch: zero Location / MapKit / trauma JSON at `@main`. CoreMotion crash monitor may start after first-frame yield.
-7. Unique `project.pbxproj` IDs (duplicate IDs drop sources).
-8. Passerby SW: cache-first multi-key shell for almost-instant EMT open; clear prior CACHE on activate; bump `redmed-tapper-vN` in lockstep. Tap-to-view = HTML; no biometric copy in any passerby / policy HTML.
-9. `AppConfig.BraceletRF` owns tap-distance copy (no hardcoded inches).
-10. Crash / high-speed **vehicle impact** detection is **local** — CoreMotion in the native app (owner + in-app scanner), DeviceMotion in passerby `tapper.html` (same g thresholds). Not Apple Crash Detection, no cloud. Must ignore running, walking, sex, masturbation, eating, hand/wrist handling, and other rhythmic daily activity. Real bracelet NFC (`#d=`) → local SOS on that phone only (no server). Owner Find Help does not auto-arm. Passerby HTML alarm is Web Audio + wake lock (no system volume/brightness APIs).
+2. **Owner band data independence:** owner Write packs only
+   `https://redmed.pages.dev/tapper/#d=…` (`AppConfig.OwnerBandURI`). No vendor
+   tag-management cloud, no social/short-link URL on the chip, no BLE. Pages
+   hosts the static shell; PHI stays in the fragment.
+3. Settings = **haptic + Location only**. Brightness 100% + system volume 100% + locator siren arm on crash / severe-impact (`CrashMotionGuard`), owner **SOS · Locate me**, or **real bracelet NFC** open of `tapper.html#d=…` (hardware-local SOS on that phone). Owner Find Help open, bare `/tapper/`, and in-app scanner preview do **not** auto-arm.
+4. Survival hold may keep siren + max volume + brightness through background until cancel on Aid (or Stop SOS on Find Help).
+5. Vault Face ID: relock on **`.background` only** (not `.inactive` — Face ID sheets).
+6. Privacy cover: opaque, no fade.
+7. Cold launch: zero Location / MapKit / trauma JSON at `@main`. CoreMotion crash monitor may start after first-frame yield.
+8. Unique `project.pbxproj` IDs (duplicate IDs drop sources).
+9. Passerby SW: cache-first multi-key shell for almost-instant EMT open; clear prior CACHE on activate; bump `redmed-tapper-vN` in lockstep. Tap-to-view = HTML; no biometric copy in any passerby / policy HTML.
+10. `AppConfig.BraceletRF` owns tap-distance copy (no hardcoded inches).
+11. Crash / high-speed **vehicle impact** detection is **local** — CoreMotion in the native app (owner + in-app scanner), DeviceMotion in passerby `tapper.html` (same g thresholds). Not Apple Crash Detection, no cloud. Must ignore running, walking, sex, masturbation, eating, hand/wrist handling, and other rhythmic daily activity. Real bracelet NFC (`#d=`) → local SOS on that phone only (no server). Owner Find Help does not auto-arm. Passerby HTML alarm is Web Audio + wake lock (no system volume/brightness APIs).
 
 ## What he has already done (shipped history)
 
@@ -76,6 +80,7 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 
 ### NFC / bracelet / passerby web
 - Passive HF NFC physics + BraceletRF constants.
+- Owner Write gated to `OwnerBandURI` (`#d=` only — no vendor cloud / social / BLE).
 - NFC tab for owners; CoreNFC behind `nfcHardwareEnabled` (tab always visible).
 - Main paired line reactive: write → Paired; profile edit → Not paired until rewrite.
 - Same RedMed header for owner + responder; Linked only after NFC write **and**
@@ -133,5 +138,7 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Repo-root policy HTML duplicates.
 - Parallel long-lived feature branches beside `main`.
 - Claiming Apple Crash Detection or cloud crash telemetry.
+- Writing vendor tag-management / social / short-link URLs (or BLE) to the band
+  instead of `medicalCardBaseURL#d=`.
 - Re-adding staging `uploads/`, debug `screenshots/`, dead `support.js` /
   `ios-frame.jsx`, or UK `compliance/` paper packs to the working tree.
