@@ -220,40 +220,41 @@ struct OwnerModalChrome<Trailing: View>: View {
     @ViewBuilder var trailing: () -> Trailing
 
     var body: some View {
-        HStack(spacing: 0) {
-            Button(action: {
-                RedMedHaptics.light()
-                leadingAction()
-            }) {
-                Text(leadingTitle)
-                    .font(.system(size: RedMedChrome.modalActionSize, weight: leadingWeight))
-                    .foregroundColor(.redmedAccent)
-                    .frame(minWidth: RedMedChrome.modalSideMinWidth, alignment: .leading)
-                    .contentShape(Rectangle())
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                Button(action: {
+                    RedMedHaptics.light()
+                    leadingAction()
+                }) {
+                    Text(leadingTitle)
+                        .font(.system(size: RedMedChrome.modalActionSize, weight: leadingWeight))
+                        .foregroundColor(.redmedAccent)
+                        .frame(minWidth: RedMedChrome.modalSideMinWidth, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(RedMedPressStyle(scale: 0.96, haptic: nil))
+
+                Spacer(minLength: 8)
+
+                Text(title)
+                    .font(RedMedChrome.navTitleFont)
+                    .foregroundColor(.redmedDark)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+
+                Spacer(minLength: 8)
+
+                trailing()
+                    .frame(minWidth: RedMedChrome.modalSideMinWidth, alignment: .trailing)
             }
-            .buttonStyle(RedMedPressStyle(scale: 0.96, haptic: nil))
+            .padding(.horizontal, RedMedChrome.pagePadX)
+            .frame(height: RedMedChrome.modalBarHeight)
 
-            Spacer(minLength: 8)
-
-            Text(title)
-                .font(RedMedChrome.navTitleFont)
-                .foregroundColor(.redmedDark)
-                .lineLimit(1)
-                .minimumScaleFactor(0.85)
-
-            Spacer(minLength: 8)
-
-            trailing()
-                .frame(minWidth: RedMedChrome.modalSideMinWidth, alignment: .trailing)
-        }
-        .padding(.horizontal, RedMedChrome.pagePadX)
-        .frame(height: RedMedChrome.modalBarHeight)
-        .background(Color.redmedBg)
-        .overlay(alignment: .bottom) {
             Rectangle()
                 .fill(Color.redmedDivider)
                 .frame(height: 1)
         }
+        .background(Color.redmedBg)
     }
 }
 
