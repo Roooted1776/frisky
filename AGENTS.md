@@ -123,7 +123,8 @@ tab (Find Help GPS, seizure autodial, etc.) needs an explicit `isVisible`
 profile decode runs off-main (prefetched during Face ID) and must **fail closed**
 (stay locked) if decode returns false — never unlock into an empty profile
 that can overwrite Keychain. Vault prep runs off the main thread after first
-paint. `UILaunchScreen` must use `LaunchBackground` (same as `redmedBg`,
+paint. CoreMotion crash monitoring starts after unlock (or immediately on a
+fresh install with no lock) — not during Face ID. `UILaunchScreen` must use `LaunchBackground` (same as `redmedBg`,
 including dark appearance) — never an empty dict (system black).
 `PrivacySnapshotGuard` must not cover until the scene has been `.active`
 once (cold start begins `.inactive` and would otherwise blank the first

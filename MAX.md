@@ -74,7 +74,8 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
   tapper.html shell warm overlap Face ID; unlock applies with no fade so tabs
   paint next frame with a ready RedMed shell.
   UserDefaults profile gate opens watermark (or tabs) on first frame — no
-  Keychain in `@State`; lazy `CMMotionManager`; LaunchBackground dark=cream.
+  Keychain in `@State`; CoreMotion after unlock (not during Face ID);
+  LaunchBackground dark=cream.
   Unlock fail-closed if Keychain decode fails. PrivacySnapshotGuard never
   covers watermark lock (Face ID inactive) — only while PHI is in RAM.
   tapper.html first panel paints opaque; in-app WKWebView stays opaque cream.

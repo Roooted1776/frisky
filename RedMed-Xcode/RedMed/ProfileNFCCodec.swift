@@ -147,6 +147,29 @@ enum ProfileNFCCodec {
         return urlString
     }
 
+    /// Plain object JSON for in-app `window.__REDMED_PROFILE` — skips WebCrypto decrypt.
+    /// Shape matches `tapper.html` `sanitizeProfile` (name/dob/blood/lists/contacts).
+    static func embedProfileJSON(from profile: ProfileData) -> String? {
+        let chip = chipProfile(from: profile)
+        let contacts: [[String: String]] = chip.contacts.map {
+            ["name": $0.name, "rel": $0.rel, "phone": $0.phone, "detail": ""]
+        }
+        let obj: [String: Any] = [
+            "name": chip.name,
+            "dob": chip.dob,
+            "blood": chip.blood,
+            "updated": chip.updated,
+            "allergies": chip.allergies,
+            "meds": chip.meds,
+            "conditions": chip.conditions,
+            "contacts": contacts
+        ]
+        guard JSONSerialization.isValidJSONObject(obj),
+              let data = try? JSONSerialization.data(withJSONObject: obj, options: []),
+              let json = String(data: data, encoding: .utf8) else { return nil }
+        return json
+    }
+
     static func buildURL(profile: ProfileData, baseURL: String = AppConfig.medicalCardBaseURL) -> URL? {
         guard let s = buildURLString(profile: profile, baseURL: baseURL) else { return nil }
         return URL(string: s)

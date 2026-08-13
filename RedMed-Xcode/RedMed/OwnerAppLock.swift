@@ -57,6 +57,9 @@ struct OwnerAppLock<Content: View>: View {
         .onAppear {
             screenCaptured = UIScreen.main.isCaptured
             tryAutoUnlockIfActive()
+            if gate == .unlocked {
+                CrashMotionGuard.shared.startMonitoring()
+            }
         }
         .task {
             // First SwiftUI frame already committed — Keychain presence can wait.
@@ -77,12 +80,16 @@ struct OwnerAppLock<Content: View>: View {
             } else {
                 profile.discardUnlockPrefetch()
                 gate = .unlocked
+                CrashMotionGuard.shared.startMonitoring()
             }
         }
         .onChange(of: gate) { _, newGate in
             if newGate == .locked {
                 didAutoPromptThisLock = false
                 tryAutoUnlockIfActive()
+            } else {
+                // Fresh install / Face ID success — motion after PHI tabs own the CPU.
+                CrashMotionGuard.shared.startMonitoring()
             }
         }
         .onChange(of: scenePhase) { _, phase in

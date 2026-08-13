@@ -15,6 +15,8 @@ struct RedMedView: View {
     @State private var showAuthFailedAlert = false
     /// Cached `#d=` — never AES-pack inside `body` (random nonce remounted WKWebView).
     @State private var packedPayload: String?
+    /// Plaintext JSON paired with `packedPayload` — avoids remount when profile publishes mid-apply.
+    @State private var cachedEmbedJSON: String?
     @State private var packFingerprint = ""
     @State private var packGeneration = 0
     /// True after the first pack attempt finishes — avoids a mid-screen Edit under chrome while packing.
@@ -45,13 +47,19 @@ struct RedMedView: View {
         packedPayload ?? profile.unlockPreviewPayload
     }
 
+    /// Prefer live cache; else Face ID–overlapped plaintext JSON.
+    private var shellEmbedJSON: String? {
+        cachedEmbedJSON ?? profile.unlockEmbedProfileJSON
+    }
+
     var body: some View {
         ZStack(alignment: .top) {
             Group {
                 if let shellPayload {
                     PasserbyHTMLShell(
                         encodedPayload: shellPayload,
-                        braceletLinked: profile.showsBraceletAsLinked
+                        braceletLinked: profile.showsBraceletAsLinked,
+                        embedProfileJSON: shellEmbedJSON
                     )
                     // Opacity tab swaps must not animate WKWebView (jank + flash).
                     .transaction { $0.animation = nil }
@@ -116,7 +124,8 @@ struct RedMedView: View {
         )) {
             PasserbyHTMLCardView(
                 payloadOrURL: shellPayload ?? "",
-                braceletLinked: profile.showsBraceletAsLinked
+                braceletLinked: profile.showsBraceletAsLinked,
+                embedProfileJSON: shellEmbedJSON
             )
         }
         .sheet(isPresented: Binding(
@@ -138,6 +147,7 @@ struct RedMedView: View {
         if packedPayload == nil {
             packedPayload = profile.takeUnlockPreviewPayload()
                 ?? PasserbyHTMLCardView.previewPayload(from: profile)
+            cachedEmbedJSON = ProfileNFCCodec.embedProfileJSON(from: profile)
         }
         guard shellPayload != nil else { return }
         RedMedHaptics.light()
@@ -149,6 +159,8 @@ struct RedMedView: View {
         if packedPayload == nil, let pending = profile.unlockPreviewPayload {
             // Assign @State before clearing the profile hold so shellPayload never gaps.
             packedPayload = pending
+            cachedEmbedJSON = profile.takeUnlockEmbedProfileJSON()
+                ?? ProfileNFCCodec.embedProfileJSON(from: profile)
             packFingerprint = profilePackFingerprint
             packFinished = true
             _ = profile.takeUnlockPreviewPayload()
@@ -163,12 +175,20 @@ struct RedMedView: View {
         packFingerprint = fp
         packGeneration &+= 1
         let generation = packGeneration
-        // Pack immediately on the cream page bg — do not clear a live shell first
-        // (that blanked RedMed after unlock / Edit save until the next AES pack).
-        let next = PasserbyHTMLCardView.previewPayload(from: profile)
-        guard generation == packGeneration else { return }
-        packedPayload = next
-        packFinished = true
+        // Keep any live shell while packing off-main — clearing blanked RedMed until AES finished.
+        let scratch = profile.snapshot()
+        Task.detached(priority: .userInitiated) {
+            let artifacts = (
+                PasserbyHTMLCardView.previewPayload(from: scratch),
+                ProfileNFCCodec.embedProfileJSON(from: scratch)
+            )
+            await MainActor.run {
+                guard generation == packGeneration else { return }
+                packedPayload = artifacts.0
+                cachedEmbedJSON = artifacts.1
+                packFinished = true
+            }
+        }
     }
 
     // MARK: - Edit gate

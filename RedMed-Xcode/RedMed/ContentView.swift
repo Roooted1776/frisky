@@ -11,7 +11,6 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
-    @ObservedObject private var survivalAlarm = CrashMotionGuard.shared
     @State private var tab: AppTab = .redmed
     /// Only mount a tab's heavy subtree after first visit; keep it alive after.
     @State private var mountedTabs: Set<AppTab> = [.redmed]
@@ -67,10 +66,9 @@ struct ContentView: View {
             mountedTabs.insert(newTab)
         }
         .onChange(of: isScannerSession) { _, _ in clampScannerTab() }
-        .onChange(of: survivalAlarm.isArmed) { _, armed in
-            // Crash / SOS → jump to 911 so Call + Stop SOS sit on the GPS page.
-            // No withAnimation on the root tab tree — that rebuilt RedMed's WKWebView.
-            guard armed else { return }
+        // Crash / SOS → 911. Notification avoids @ObservedObject on the root tab tree
+        // (that rebuilt RedMed's WKWebView on every arm/disarm).
+        .onReceive(NotificationCenter.default.publisher(for: .redMedSurvivalArmed)) { _ in
             tab = .emergency
             mountedTabs.insert(.emergency)
         }
@@ -143,9 +141,9 @@ struct CustomTabBar: View {
             return
         }
         RedMedHaptics.selection()
-        withAnimation(RedMedMotion.snappy) {
-            tab = next
-        }
+        // No withAnimation on AppTab — that marks the content ZStack transaction even
+        // when mounted tabs suppress animation, and fights opacity keep-alive.
+        tab = next
     }
 }
 
