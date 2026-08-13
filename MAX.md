@@ -70,10 +70,12 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Cold launch: LaunchBackground only on UILaunchScreen (no system BrandLogo).
   Owner lock is one screen: cream + decorative BrandLogo watermark + Unlock →
   Face ID (watermark is not a control; no Accept). Auto Face ID on lock appear /
-  return from background; Unlock retries. Keychain decode + tapper.html shell
-  warm overlap Face ID; unlock applies with no fade so tabs paint next frame.
+  return from background; Unlock retries. Keychain decode + AES `#d=` pack +
+  tapper.html shell warm overlap Face ID; unlock applies with no fade so tabs
+  paint next frame with a ready RedMed shell.
   UserDefaults profile gate opens watermark (or tabs) on first frame — no
-  Keychain in `@State`; lazy `CMMotionManager`; LaunchBackground dark=cream.
+  Keychain in `@State`; CoreMotion after unlock (not during Face ID);
+  LaunchBackground dark=cream.
   Unlock fail-closed if Keychain decode fails. PrivacySnapshotGuard never
   covers watermark lock (Face ID inactive) — only while PHI is in RAM.
   tapper.html first panel paints opaque; in-app WKWebView stays opaque cream.

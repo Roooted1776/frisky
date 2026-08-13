@@ -1522,6 +1522,10 @@
 
   function decodeProfile() {
     try {
+      // In-app embed / Preview: Swift injects plaintext so first paint skips WebCrypto.
+      if (window.__REDMED_PROFILE) {
+        return Promise.resolve(sanitizeProfile(window.__REDMED_PROFILE));
+      }
       var hash = location.hash || '';
       var idx = hash.indexOf('d=');
       if (idx < 0) return Promise.resolve(null);

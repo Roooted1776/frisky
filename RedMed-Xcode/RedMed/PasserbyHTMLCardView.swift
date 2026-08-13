@@ -12,6 +12,8 @@ struct PasserbyHTMLCardView: View {
     let payloadOrURL: String
     /// Owner Linked state — passed into the shell so Preview matches native rules.
     var braceletLinked: Bool = false
+    /// Plaintext profile JSON for in-app Preview (skips WebCrypto). Nil for band-style opens.
+    var embedProfileJSON: String? = nil
 
     private var encodedPayload: String? {
         Self.extractPayload(payloadOrURL)
@@ -40,7 +42,8 @@ struct PasserbyHTMLCardView: View {
                         encodedPayload: encodedPayload,
                         braceletLinked: braceletLinked,
                         // Full passerby chrome — what a band tap opens (not owner embed).
-                        appEmbed: false
+                        appEmbed: false,
+                        embedProfileJSON: embedProfileJSON
                     )
                 } else {
                     Text("Couldn't pack tapper.html#d= from RedMed.")
@@ -94,12 +97,15 @@ struct PasserbyHTMLShell: View {
     let encodedPayload: String
     var braceletLinked: Bool = false
     var appEmbed: Bool = true
+    /// Optional plaintext JSON for `window.__REDMED_PROFILE` (skips in-app WebCrypto).
+    var embedProfileJSON: String? = nil
 
     var body: some View {
         PasserbyHTMLWebView(
             encodedPayload: encodedPayload,
             braceletLinked: braceletLinked,
-            appEmbed: appEmbed
+            appEmbed: appEmbed,
+            embedProfileJSON: embedProfileJSON
         )
         // No `.id` remount — `updateUIView` reloads only when loadKey changes.
         // Ciphertext-based `.id` used to destroy WKWebView on every AES re-seal.
@@ -159,6 +165,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
     let encodedPayload: String
     var braceletLinked: Bool = false
     var appEmbed: Bool = true
+    var embedProfileJSON: String? = nil
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
@@ -187,7 +194,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
-        let loadKey = "\(encodedPayload)|\(braceletLinked)|\(appEmbed)"
+        let loadKey = "\(encodedPayload)|\(braceletLinked)|\(appEmbed)|\(embedProfileJSON ?? "")"
         guard context.coordinator.loadedKey != loadKey else { return }
         guard let fileURL = PasserbyShellCache.shellFileURL(),
               var html = PasserbyShellCache.shellHTML(),
@@ -197,14 +204,22 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         // Flag + hash fallback: loadHTMLString can leave location as about:blank where
         // replaceState alone would leave decrypt empty and wrongly auto-arm SOS.
         // Owner embed: `html.app-embed` before first paint. Preview/Scan: full HTML tabs.
+        // `__REDMED_PROFILE` skips WebCrypto when native already has plaintext.
         let linkedJS = braceletLinked ? "true" : "false"
         let embedJS = appEmbed
             ? "try{document.documentElement.classList.add('app-embed');}catch(e0){}"
             : ""
+        let profileJS: String
+        if let embedProfileJSON, !embedProfileJSON.isEmpty {
+            profileJS = "window.__REDMED_PROFILE=\(embedProfileJSON);"
+        } else {
+            profileJS = ""
+        }
         let boot = """
         <script>
         window.__REDMED_APP_PREVIEW=1;
         window.__REDMED_BRACELET_LINKED=\(linkedJS);
+        \(profileJS)
         \(embedJS)
         (function(){
           var d=\(lit);

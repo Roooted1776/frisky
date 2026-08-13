@@ -16,9 +16,9 @@ import SwiftUI
 /// Unlock retries. Face ID sheets put the scene `.inactive` — that must not
 /// re-prompt. The watermark is never a control.
 ///
-/// Speed (minus Face ID wall time): Keychain decode + tapper.html shell warm
-/// overlap Face ID; unlock applies the prefetched blob with no transition
-/// animation so tabs paint on the next frame.
+/// Speed (minus Face ID wall time): Keychain decode + AES `#d=` pack + tapper.html
+/// shell warm overlap Face ID; unlock applies the prefetched blob/payload with no
+/// transition animation so tabs paint on the next frame with a ready shell.
 struct OwnerAppLock<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
@@ -57,6 +57,9 @@ struct OwnerAppLock<Content: View>: View {
         .onAppear {
             screenCaptured = UIScreen.main.isCaptured
             tryAutoUnlockIfActive()
+            if gate == .unlocked {
+                CrashMotionGuard.shared.startMonitoring()
+            }
         }
         .task {
             // First SwiftUI frame already committed — Keychain presence can wait.
@@ -77,12 +80,16 @@ struct OwnerAppLock<Content: View>: View {
             } else {
                 profile.discardUnlockPrefetch()
                 gate = .unlocked
+                CrashMotionGuard.shared.startMonitoring()
             }
         }
         .onChange(of: gate) { _, newGate in
             if newGate == .locked {
                 didAutoPromptThisLock = false
                 tryAutoUnlockIfActive()
+            } else {
+                // Fresh install / Face ID success — motion after PHI tabs own the CPU.
+                CrashMotionGuard.shared.startMonitoring()
             }
         }
         .onChange(of: scenePhase) { _, phase in
@@ -163,9 +170,13 @@ struct OwnerAppLock<Content: View>: View {
                     } label: {
                         Group {
                             if isAuthenticating {
-                                ProgressView()
-                                    .tint(.white)
-                                    .accessibilityLabel("Unlocking with Face ID")
+                                HStack(spacing: 8) {
+                                    ProgressView()
+                                        .tint(.white)
+                                    Text("Unlocking")
+                                        .font(.system(size: 15, weight: .bold))
+                                }
+                                .accessibilityLabel("Unlocking with Face ID")
                             } else {
                                 HStack(spacing: 8) {
                                     Image(systemName: "faceid")
@@ -223,7 +234,8 @@ struct OwnerAppLock<Content: View>: View {
         SecurePasteboard.clear()
     }
 
-    /// Face ID + overlapped Keychain decode + shell warm. Enter path for returning owners.
+    /// Face ID + overlapped Keychain decode + AES `#d=` pack + shell warm.
+    /// Enter path for returning owners.
     private func startUnlockPipeline(isAuto: Bool) {
         guard gate == .locked else { return }
         if isAuto {

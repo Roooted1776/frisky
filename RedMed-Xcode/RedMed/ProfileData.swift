@@ -146,10 +146,22 @@ class ProfileData: ObservableObject {
 
     // MARK: - Unlock prefetch (overlap Keychain with Face ID)
 
-    /// In-flight Keychain decode while Face ID runs — not applied to @Published fields.
-    private var unlockPrefetchTask: Task<PersistedProfile?, Never>?
+    private struct UnlockPrefetch {
+        let blob: PersistedProfile
+        /// `#d=` packed during Face ID so RedMed's first unlocked frame skips AES.
+        let previewPayload: String?
+        /// Plaintext JSON for `window.__REDMED_PROFILE` (skips WebCrypto on first paint).
+        let embedProfileJSON: String?
+    }
 
-    /// Start (or restart) off-main Keychain load+decode while biometrics run.
+    /// In-flight Keychain decode + `#d=` pack while Face ID runs — not applied to @Published fields.
+    private var unlockPrefetchTask: Task<UnlockPrefetch?, Never>?
+    /// Stable preview `#d=` from Face ID overlap — RedMedView consumes on first unlock paint.
+    private(set) var unlockPreviewPayload: String?
+    /// Plaintext profile JSON from Face ID overlap — pairs with `unlockPreviewPayload`.
+    private(set) var unlockEmbedProfileJSON: String?
+
+    /// Start (or restart) off-main Keychain load+decode+AES pack while biometrics run.
     /// Does not publish PHI — `applyUnlockPrefetchOrReload` applies only after Face ID success.
     func beginUnlockPrefetch() {
         guard persists else { return }
@@ -160,7 +172,13 @@ class ProfileData: ObservableObject {
                   let decoded = try? JSONDecoder().decode(PersistedProfile.self, from: data) else {
                 return nil
             }
-            return decoded
+            // AES pack + embed JSON overlap Face ID — post-unlock must not stall on cream / WebCrypto.
+            let artifacts = Self.previewArtifacts(from: decoded)
+            return UnlockPrefetch(
+                blob: decoded,
+                previewPayload: artifacts.payload,
+                embedProfileJSON: artifacts.json
+            )
         }
     }
 
@@ -168,6 +186,8 @@ class ProfileData: ObservableObject {
     func discardUnlockPrefetch() {
         unlockPrefetchTask?.cancel()
         unlockPrefetchTask = nil
+        unlockPreviewPayload = nil
+        unlockEmbedProfileJSON = nil
     }
 
     /// Prefer the Face ID–overlapped decode; fall back to a fresh Keychain read.
@@ -177,12 +197,63 @@ class ProfileData: ObservableObject {
         guard persists else { return false }
         if let task = unlockPrefetchTask {
             unlockPrefetchTask = nil
-            if let blob = await task.value {
-                apply(blob)
+            if let pref = await task.value {
+                apply(pref.blob)
+                unlockPreviewPayload = pref.previewPayload
+                unlockEmbedProfileJSON = pref.embedProfileJSON
                 return true
             }
         }
-        return await reloadFromKeychainAsync()
+        let ok = await reloadFromKeychainAsync()
+        if ok {
+            // Face ID returned before prefetch finished — pack off-main before tabs paint.
+            let scratch = snapshot()
+            let artifacts = await Task.detached(priority: .userInitiated) {
+                Self.previewArtifacts(fromProfile: scratch)
+            }.value
+            unlockPreviewPayload = artifacts.payload
+            unlockEmbedProfileJSON = artifacts.json
+        }
+        return ok
+    }
+
+    /// RedMed tab takes the Face ID–overlapped `#d=` once (nil after).
+    @discardableResult
+    func takeUnlockPreviewPayload() -> String? {
+        let payload = unlockPreviewPayload
+        unlockPreviewPayload = nil
+        return payload
+    }
+
+    /// RedMed tab takes the Face ID–overlapped embed JSON once (nil after).
+    @discardableResult
+    func takeUnlockEmbedProfileJSON() -> String? {
+        let json = unlockEmbedProfileJSON
+        unlockEmbedProfileJSON = nil
+        return json
+    }
+
+    /// Off-main AES preview pack + embed JSON from a Keychain blob (no @Published writes).
+    private static func previewArtifacts(from blob: PersistedProfile) -> (payload: String?, json: String?) {
+        let scratch = ProfileData(persisting: false)
+        scratch.name = blob.name
+        scratch.birthDate = blob.birthDate
+        scratch.bloodType = blob.bloodType
+        scratch.allergies = blob.allergies
+        scratch.medications = blob.medications
+        scratch.conditions = blob.conditions
+        scratch.contacts = blob.contacts.map { $0.asEmergencyContact() }
+        scratch.braceletLinked = blob.braceletLinked
+        scratch.isOrganDonor = blob.isOrganDonor
+        scratch.lastUpdated = blob.lastUpdated
+        return previewArtifacts(fromProfile: scratch)
+    }
+
+    private static func previewArtifacts(fromProfile profile: ProfileData) -> (payload: String?, json: String?) {
+        (
+            PasserbyHTMLCardView.previewPayload(from: profile),
+            ProfileNFCCodec.embedProfileJSON(from: profile)
+        )
     }
 
     /// Off-main Keychain + JSON decode, then apply on MainActor — keeps unlock UI responsive.
@@ -213,16 +284,24 @@ class ProfileData: ObservableObject {
     }
 
     private func apply(_ blob: PersistedProfile) {
-        name = blob.name
-        birthDate = blob.birthDate
-        bloodType = blob.bloodType
-        allergies = blob.allergies
-        medications = blob.medications
-        conditions = blob.conditions
-        contacts = blob.contacts.map { $0.asEmergencyContact() }
-        braceletLinked = blob.braceletLinked
-        isOrganDonor = blob.isOrganDonor
-        lastUpdated = blob.lastUpdated
+        // Skip no-op assigns — unlock / reload must not fire 10× objectWillChange when
+        // fields already match (and fewer publishes when only some fields change).
+        if name != blob.name { name = blob.name }
+        if birthDate != blob.birthDate { birthDate = blob.birthDate }
+        if bloodType != blob.bloodType { bloodType = blob.bloodType }
+        if allergies != blob.allergies { allergies = blob.allergies }
+        if medications != blob.medications { medications = blob.medications }
+        if conditions != blob.conditions { conditions = blob.conditions }
+        let nextContacts = blob.contacts.map { $0.asEmergencyContact() }
+        // Compare fields only — EmergencyContact.id is a fresh UUID each map.
+        let contactsChanged = contacts.count != nextContacts.count
+            || zip(contacts, nextContacts).contains {
+                $0.name != $1.name || $0.relationship != $1.relationship || $0.phone != $1.phone
+            }
+        if contactsChanged { contacts = nextContacts }
+        if braceletLinked != blob.braceletLinked { braceletLinked = blob.braceletLinked }
+        if isOrganDonor != blob.isOrganDonor { isOrganDonor = blob.isOrganDonor }
+        if lastUpdated != blob.lastUpdated { lastUpdated = blob.lastUpdated }
         // Scrub any leftover Alex Rivera demo blob from older builds.
         if name == "Alex Rivera" {
             name = ""
@@ -274,6 +353,8 @@ class ProfileData: ObservableObject {
 extension Notification.Name {
     /// Posted after owner Help erase clears Keychain + vault. OwnerAppLock resets lock memory.
     static let redMedDidEraseLocalData = Notification.Name("redMedDidEraseLocalData")
+    /// Crash / SOS armed — ContentView jumps to 911 without observing CrashMotionGuard.
+    static let redMedSurvivalArmed = Notification.Name("redMedSurvivalArmed")
 }
 
 struct EmergencyContact: Identifiable, Equatable {
