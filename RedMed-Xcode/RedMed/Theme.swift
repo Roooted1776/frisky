@@ -215,9 +215,23 @@ struct ChromeTextAction: View {
 struct OwnerModalChrome<Trailing: View>: View {
     let title: String
     let leadingTitle: String
-    var leadingWeight: Font.Weight = .regular
+    let leadingWeight: Font.Weight
     let leadingAction: () -> Void
-    @ViewBuilder var trailing: () -> Trailing
+    let trailing: Trailing
+
+    init(
+        title: String,
+        leadingTitle: String,
+        leadingWeight: Font.Weight = .regular,
+        leadingAction: @escaping () -> Void,
+        @ViewBuilder trailing: () -> Trailing
+    ) {
+        self.title = title
+        self.leadingTitle = leadingTitle
+        self.leadingWeight = leadingWeight
+        self.leadingAction = leadingAction
+        self.trailing = trailing()
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -244,7 +258,7 @@ struct OwnerModalChrome<Trailing: View>: View {
 
                 Spacer(minLength: 8)
 
-                trailing()
+                trailing
                     .frame(minWidth: RedMedChrome.modalSideMinWidth, alignment: .trailing)
             }
             .padding(.horizontal, RedMedChrome.pagePadX)
@@ -262,11 +276,13 @@ extension OwnerModalChrome where Trailing == EmptyView {
     /// Leading-only bar (Preview Back / Help Done) — empty trailing keeps title centered
     /// via the shared `modalSideMinWidth` frame on the trailing slot.
     init(title: String, leadingTitle: String, leadingWeight: Font.Weight = .regular, leadingAction: @escaping () -> Void) {
-        self.title = title
-        self.leadingTitle = leadingTitle
-        self.leadingWeight = leadingWeight
-        self.leadingAction = leadingAction
-        self.trailing = { EmptyView() }
+        self.init(
+            title: title,
+            leadingTitle: leadingTitle,
+            leadingWeight: leadingWeight,
+            leadingAction: leadingAction,
+            trailing: { EmptyView() }
+        )
     }
 }
 
