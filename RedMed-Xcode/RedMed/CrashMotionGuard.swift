@@ -44,7 +44,7 @@ private enum CrashMotionThresholds {
 /// motion, rhythmic daily activity, and hand/wrist handling.
 /// Not Apple Crash Detection — no GPS/barometer fusion, no cloud.
 ///
-/// Motion samples run on a private serial queue (not the main thread) so Accept /
+/// Motion samples run on a private serial queue (not the main thread) so Face ID /
 /// Face ID / first tabs stay responsive. UI + brightness/volume/siren hop to main.
 /// Arm/disarm uses a generation token so a late arm Task cannot restart the alarm
 /// after Stop / disarm.

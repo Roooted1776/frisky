@@ -11,7 +11,7 @@ import UIKit
 /// re-scans instead of opening the passcode pad.
 enum BiometricAuth {
     /// Distinguishes a failed scan from cancel / dismiss so lock UI does not
-    /// claim “couldn't verify” on every Accept that the owner backs out of.
+    /// claim “couldn't verify” on every unlock the owner backs out of.
     enum Outcome: Equatable {
         case success
         /// Face ID / Touch ID (or passcode after fallback) did not match.
@@ -29,23 +29,39 @@ enum BiometricAuth {
         // share often disables Face ID — same policy still reaches passcode.
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
             #if targetEnvironment(simulator)
-            DispatchQueue.main.async {
+            let present = {
                 presentSimulatorPrompt(reason: reason, completion: completion)
             }
+            if Thread.isMainThread {
+                present()
+            } else {
+                DispatchQueue.main.async(execute: present)
+            }
             #else
-            DispatchQueue.main.async { completion(.declined) }
+            let decline = { completion(.declined) }
+            if Thread.isMainThread {
+                decline()
+            } else {
+                DispatchQueue.main.async(execute: decline)
+            }
             #endif
             return
         }
 
         context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { success, evalError in
-            DispatchQueue.main.async {
+            let finish = {
                 context.invalidate()
                 if success {
                     completion(.success)
                 } else {
                     completion(outcome(for: evalError))
                 }
+            }
+            // LA callbacks are off-main; hop only when needed.
+            if Thread.isMainThread {
+                finish()
+            } else {
+                DispatchQueue.main.async(execute: finish)
             }
         }
     }
