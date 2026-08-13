@@ -34,7 +34,7 @@ struct EmergencyView: View {
                                 RedMedHaptics.light()
                             }
                         } label: {
-                            Text(locationEnabled ? "Copy coordinates" : "Location off — enable in Settings")
+                            Text(locationEnabled ? "Copy coordinates" : "Location off — enable in Help → Settings")
                                 .font(.system(size: 12, weight: .bold))
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)

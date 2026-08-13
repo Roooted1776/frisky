@@ -185,7 +185,7 @@ struct ChromeTextAction: View {
             action()
         } label: {
             Text(title)
-                .font(.system(size: 17, weight: .semibold))
+                .font(.system(size: 18, weight: .regular))
                 .foregroundColor(.redmedAccent)
                 .kerning(-0.2)
                 .lineLimit(1)
@@ -199,7 +199,7 @@ struct ChromeTextAction: View {
     }
 }
 
-/// Inline nav titles (topic detail). Semibold 17 accent — pairs with ChromeTextAction.
+/// Inline nav titles (topic detail). Semibold 17 accent beside ChromeTextAction (18 regular).
 /// Box radius is shared by owner + scanner cards / CTAs (square-ish, not capsules).
 enum RedMedChrome {
     static let navTitleFont: Font = .system(size: 17, weight: .semibold)

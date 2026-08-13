@@ -11,6 +11,7 @@ struct EditProfileView: View {
     @State private var name = ""
     @State private var birthDate = ""
     @State private var bloodType = ""
+    @State private var isOrganDonor = false
     @State private var allergies: [DraftLine] = []
     @State private var medications: [DraftLine] = []
     @State private var conditions: [DraftLine] = []
@@ -111,6 +112,15 @@ struct EditProfileView: View {
                         birthDateRow
                         Divider().padding(.leading, Metrics.labelWidth + 12 + Metrics.rowHPad)
                         bloodTypeRow
+                        Divider().padding(.leading, Metrics.labelWidth + 12 + Metrics.rowHPad)
+                        Toggle(isOn: $isOrganDonor) {
+                            Text("Organ donor")
+                                .font(.system(size: Metrics.font, weight: .medium))
+                                .foregroundColor(.redmedMuted)
+                        }
+                        .tint(.redmedAccent)
+                        .padding(.horizontal, Metrics.rowHPad)
+                        .padding(.vertical, Metrics.rowVPad)
                     }
 
                     editSectionLabel("Allergies")
@@ -262,7 +272,7 @@ struct EditProfileView: View {
         HStack(spacing: 0) {
             Text(label)
                 .font(.system(size: Metrics.font, weight: .medium))
-                .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
+                .foregroundColor(.redmedMuted)
                 .frame(width: Metrics.labelWidth, alignment: .leading)
                 .padding(.trailing, 12)
             content()
@@ -275,7 +285,7 @@ struct EditProfileView: View {
         HStack(spacing: 0) {
             Text("Birth date")
                 .font(.system(size: Metrics.font, weight: .medium))
-                .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
+                .foregroundColor(.redmedMuted)
                 .frame(width: Metrics.labelWidth, alignment: .leading)
                 .padding(.trailing, 12)
 
@@ -297,7 +307,7 @@ struct EditProfileView: View {
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: Metrics.icon))
-                        .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48).opacity(0.45))
+                        .foregroundColor(.redmedMuted.opacity(0.45))
                         .frame(width: 36, height: 36)
                         .contentShape(Rectangle())
                 }
@@ -350,7 +360,7 @@ struct EditProfileView: View {
         HStack(spacing: 0) {
             Text("Blood type")
                 .font(.system(size: Metrics.font, weight: .medium))
-                .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
+                .foregroundColor(.redmedMuted)
                 .frame(width: Metrics.labelWidth, alignment: .leading)
                 .padding(.trailing, 12)
 
@@ -445,7 +455,7 @@ struct EditProfileView: View {
         // Keep "You" title-case; other section headers stay ALL CAPS.
         Text(text == "You" ? text : text.uppercased())
             .font(.system(size: Metrics.font, weight: .semibold))
-            .foregroundColor(Color(red: 0.42, green: 0.43, blue: 0.48))
+            .foregroundColor(.redmedMuted)
             .kerning(0.5)
             .padding(.horizontal, 4)
             .padding(.bottom, 6)
@@ -479,6 +489,7 @@ struct EditProfileView: View {
         name = profile.name
         birthDate = profile.birthDate
         bloodType = profile.bloodType
+        isOrganDonor = profile.isOrganDonor
         // Empty profile → empty sections (Add rows only). Never seed blank entries.
         allergies = profile.allergies.map { DraftLine(text: $0) }
         medications = profile.medications.map { DraftLine(text: $0) }
@@ -535,6 +546,7 @@ struct EditProfileView: View {
             nextName != profile.name
             || nextBirth != profile.birthDate
             || nextBlood != profile.bloodType
+            || isOrganDonor != profile.isOrganDonor
             || nextAllergies != profile.allergies
             || nextMeds != profile.medications
             || nextConditions != profile.conditions
@@ -544,6 +556,7 @@ struct EditProfileView: View {
         profile.name = nextName
         profile.birthDate = nextBirth
         profile.bloodType = nextBlood
+        profile.isOrganDonor = isOrganDonor
         profile.allergies = nextAllergies
         profile.medications = nextMeds
         profile.conditions = nextConditions

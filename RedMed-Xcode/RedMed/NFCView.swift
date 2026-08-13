@@ -23,8 +23,9 @@ struct NFCView: View {
     }
 
     private var ownerBody: some View {
-        // Fixed cream chrome (no NavigationView / system toolbar) — BrandWordmark
-        // top-left like 911 / Aid. Owner-only tab; scanners never mount this.
+        // Fixed cream chrome (no NavigationView / system toolbar) — page
+        // BrandWordmark (911 / Aid are content-first; pane wordmarks only).
+        // Owner-only tab; scanners never mount this.
         VStack(spacing: 0) {
             BrandWordmarkHeader()
 
@@ -73,7 +74,7 @@ struct NFCView: View {
 
     private var linkStatus: (title: String, detail: String, linked: Bool) {
         if profile.showsBraceletAsLinked {
-            return ("Linked", "Re-write after you edit RedMed", true)
+            return ("Linked bracelet", "Re-write after you edit RedMed", true)
         }
         if profile.braceletLinked {
             return ("Band written", "Finish name, birth date, and blood type on RedMed", false)
@@ -245,7 +246,7 @@ struct NFCView: View {
         if band.isWriting {
             return AppConfig.nfcHardwareEnabled ? "Hold near tag…" : "Packing…"
         }
-        return AppConfig.nfcHardwareEnabled ? "Write to NFC tag" : "Setup"
+        return AppConfig.nfcHardwareEnabled ? "Write to NFC tag" : "Write (simulate)"
     }
 
     private var scanButtonTitle: String {

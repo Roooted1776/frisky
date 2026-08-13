@@ -123,7 +123,7 @@ struct HelpMenuView: View {
         NavigationView {
             List {
                 if onOpenNFC != nil {
-                    Button("Write your band") {
+                    Button("Write to NFC tag") {
                         dismiss()
                         DispatchQueue.main.async { onOpenNFC?() }
                     }
