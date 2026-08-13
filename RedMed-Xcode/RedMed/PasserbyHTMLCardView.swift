@@ -57,7 +57,7 @@ struct PasserbyHTMLCardView: View {
     }
 
     /// Slurp bundled `tapper.html` off the hot path so first RedMed / Preview paint skips disk.
-    /// `nonisolated` — callers warm from `Task.detached` during Accept / unlock.
+    /// `nonisolated` — callers warm from `Task.detached` during unlock / cold start.
     nonisolated static func warmShellCache() {
         PasserbyShellCache.warm()
     }
@@ -106,14 +106,15 @@ struct PasserbyHTMLShell: View {
     }
 
     /// Warm bundled tapper.html into memory during Face ID (no PHI).
+    /// Routes to the nonisolated process cache (MainActor-safe from any caller).
     static func warmShellCache() {
-        PasserbyHTMLWebView.warmShellCache()
+        PasserbyHTMLCardView.warmShellCache()
     }
 }
 
 // MARK: - Shell HTML cache (nonisolated — View / UIViewRepresentable are MainActor)
 
-/// Process-wide bundled `tapper.html` cache. Lock-guarded so Accept / unlock
+/// Process-wide bundled `tapper.html` cache. Lock-guarded so unlock / cold start
 /// can warm off the main thread without Swift concurrency isolation errors.
 private enum PasserbyShellCache {
     private static var cachedShellHTML: String?
@@ -158,12 +159,6 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
     let encodedPayload: String
     var braceletLinked: Bool = false
     var appEmbed: Bool = true
-
-    /// Touch shell file + HTML into memory while Face ID runs so unlock does not stall on disk.
-    static func warmShellCache() {
-        _ = shellFileURL()
-        _ = shellHTML()
-    }
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 

@@ -10,10 +10,11 @@ import SwiftUI
 /// (set on persist / Keychain presence check) picks lock vs tabs immediately;
 /// SecItem still confirms off-main and can correct a stale gate.
 ///
-/// One lock screen: BrandLogo watermark + Face ID. No Accept step. Biometrics
-/// auto-prompt once per lock while `.active` (and again after `.background`).
-/// Cancel / mismatch stays on the watermark; tap to retry. Face ID sheets put
-/// the scene `.inactive` — that must not re-prompt.
+/// One lock screen: BrandLogo watermark (decorative) + Unlock → Face ID.
+/// No Accept step. Biometrics auto-prompt once per lock while `.active` (and
+/// again after `.background`). Cancel / mismatch stays on the same screen;
+/// Unlock retries. Face ID sheets put the scene `.inactive` — that must not
+/// re-prompt. The watermark is never a control.
 ///
 /// Speed (minus Face ID wall time): Keychain decode + tapper.html shell warm
 /// overlap Face ID; unlock applies the prefetched blob with no transition
@@ -121,49 +122,87 @@ struct OwnerAppLock<Content: View>: View {
             // Flat cream — matches UILaunchScreen; skip page gradient on the critical path.
             Color.redmedBg.ignoresSafeArea()
 
-            // Single composition: watermark BrandLogo only — Face ID is the enter path.
+            // Atmosphere only — not a control. Hit-testing off so Unlock owns the tap.
             Image("BrandLogo")
                 .resizable()
                 .scaledToFit()
                 .frame(width: RedMedChrome.lockWatermarkSize, height: RedMedChrome.lockWatermarkSize)
                 .clipShape(Circle())
                 .opacity(RedMedChrome.lockWatermarkOpacity)
+                .allowsHitTesting(false)
                 .accessibilityHidden(true)
 
-            VStack(spacing: 14) {
-                Spacer(minLength: 48)
-                if screenCaptured {
-                    Text("Screen sharing is on — unlock with passcode. Profile stays hidden on the share until you stop sharing.")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.redmedMuted)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 28)
+            VStack(spacing: 0) {
+                Spacer(minLength: 0)
+
+                VStack(spacing: 16) {
+                    if screenCaptured {
+                        Text("Screen sharing is on — unlock with passcode. Profile stays hidden on the share until you stop sharing.")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.redmedMuted)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 28)
+                    }
+                    if biometryFailed {
+                        Text("Couldn't verify it's you. Try again.")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.redmedAccent)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 28)
+                    } else if profileLoadFailed {
+                        Text("Couldn't load your profile. Try again.")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.redmedAccent)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 28)
+                    }
+
+                    Button {
+                        RedMedHaptics.medium()
+                        startUnlockPipeline(isAuto: false)
+                    } label: {
+                        Group {
+                            if isAuthenticating {
+                                ProgressView()
+                                    .tint(.white)
+                                    .accessibilityLabel("Unlocking with Face ID")
+                            } else {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "faceid")
+                                        .font(.system(size: 17, weight: .semibold))
+                                    Text("Unlock")
+                                        .font(.system(size: 15, weight: .bold))
+                                }
+                            }
+                        }
+                        .foregroundColor(.white)
+                        .frame(minWidth: 148, minHeight: 44)
+                        .padding(.horizontal, 22)
+                        .padding(.vertical, 10)
+                        .background(
+                            LinearGradient(
+                                colors: [Color(red: 1, green: 0.447, blue: 0.537), .redmedAccent],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                        .shadow(color: RedMedChrome.accentShadow, radius: 8, y: 4)
+                    }
+                    .buttonStyle(RedMedPressStyle(haptic: nil))
+                    .disabled(isAuthenticating)
+                    .fixedSize()
+                    .accessibilityHint("Face ID, Touch ID, or passcode")
                 }
-                if biometryFailed {
-                    Text("Couldn't verify it's you. Tap to try again.")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.redmedAccent)
-                } else if profileLoadFailed {
-                    Text("Couldn't load your profile. Tap to try again.")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.redmedAccent)
-                }
-                Spacer()
+
+                Spacer(minLength: 0)
+                    .frame(maxHeight: 120)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.bottom, 48)
         }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            guard !isAuthenticating else { return }
-            RedMedHaptics.medium()
-            startUnlockPipeline(isAuto: false)
-        }
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
         .accessibilityLabel("RedMed is locked")
-        .accessibilityHint("Unlocks with Face ID, Touch ID, or passcode")
-        .accessibilityAddTraits(.isButton)
-        .accessibilityAction {
-            startUnlockPipeline(isAuto: false)
-        }
     }
 
     private func tryAutoUnlockIfActive() {
@@ -191,7 +230,8 @@ struct OwnerAppLock<Content: View>: View {
             didAutoPromptThisLock = true
         }
         profile.beginUnlockPrefetch()
-        PasserbyHTMLShell.warmShellCache()
+        // nonisolated cache — safe from any thread / Task.detached.
+        PasserbyHTMLCardView.warmShellCache()
         unlockWithFaceID()
     }
 
@@ -234,7 +274,7 @@ struct OwnerAppLock<Content: View>: View {
                     isAuthenticating = false
                     if loaded {
                         RedMedHaptics.success()
-                        // No soft animation — unlock must not spend frames on a fade.
+                        // No soft fade — tabs must appear immediately after Face ID.
                         gate = .unlocked
                         biometryFailed = false
                         profileLoadFailed = false

@@ -81,10 +81,11 @@ The app has no backend, database, or web service.
   prompt on appear); relock on `.background` only. Do **not**
   lock on `.inactive` — LAContext / system auth sheets put the scene inactive
   and would discard a successful unlock via `authGeneration`.
-- Owner app lock is **one screen**: cream + BrandLogo watermark + Face ID
-  (no Accept step). Auto-prompt on lock appear and when returning from
-  `.background`; tap watermark to retry after cancel / mismatch. Do **not**
-  re-prompt on `.inactive` (that is the Face ID sheet).
+- Owner app lock is **one screen**: cream + decorative BrandLogo watermark +
+  **Unlock** → Face ID (no Accept step). Watermark is atmosphere only — never
+  a control. Auto-prompt on lock appear and when returning from `.background`;
+  Unlock retries after cancel / mismatch. Do **not** re-prompt on `.inactive`
+  (that is the Face ID sheet).
 - `PrivacySnapshotGuard` cover must appear opaque with **no** opacity fade;
   app-switcher snapshots can capture mid-transition PHI. Cover (capture **and**
   `.inactive` / `.background`) **only while PHI is in RAM** — never over the
@@ -102,9 +103,11 @@ shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash)
 (`ProfileData.storedProfileGateKey`, set on persist / Keychain presence) so
 returning owners see the watermark lock immediately and fresh installs open
 tabs; SecItem still confirms off-main and can correct a stale gate. Owner lock
-is cream + BrandLogo watermark + Face ID (auto on appear / return from
-background; tap to retry) — no Accept button, no title splash. Do not call
-Keychain in `@State` defaults. Location defaults on in Help →
+is cream + decorative BrandLogo watermark + Unlock → Face ID (auto on appear /
+return from background; Unlock retries) — watermark is not a control, no Accept
+step, no title splash. Unlock overlaps Keychain decode + tapper shell warm with
+Face ID and skips unlock animation so tabs paint on the next frame after
+biometrics. Do not call Keychain in `@State` defaults. Location defaults on in Help →
 Settings with **no RedMed location gate / banner / Allow popup** — Help must not
 call `requestWhenInUseAuthorization`. When-In-Use + GPS start on Find Help only
 when Location is enabled (`AppSettings.locationEnabled` + `LocationManager.start`);
@@ -117,7 +120,7 @@ kept alive after with opacity). Opacity keep-alive **does not** fire
 `onDisappear` on tab switch — any side effect that must stop when leaving a
 tab (Find Help GPS, seizure autodial, etc.) needs an explicit `isVisible`
 (or equivalent) hook from `ContentView`, not `onDisappear` alone. Keychain
-profile decode runs off-main after Face ID unlock and must **fail closed**
+profile decode runs off-main (prefetched during Face ID) and must **fail closed**
 (stay locked) if decode returns false — never unlock into an empty profile
 that can overwrite Keychain. Vault prep runs off the main thread after first
 paint. `UILaunchScreen` must use `LaunchBackground` (same as `redmedBg`,
