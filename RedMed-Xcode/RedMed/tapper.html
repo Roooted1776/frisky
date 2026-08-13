@@ -96,11 +96,14 @@
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     scrollbar-gutter: stable;
+    /* Same cream as Color.redmedBg / LaunchBackground — no system white overscroll. */
+    background: var(--bg);
   }
   html, body { min-height: 100%; }
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", sans-serif;
+    /* Page wash + cream — matches RedMedPageBackground / owner RedMed first page. */
     background:
       radial-gradient(120% 60% at 50% -10%, var(--wash) 0%, transparent 58%),
       var(--bg);
@@ -858,11 +861,12 @@
   }
   details.aid ol li + li { margin-top: 8px; }
 
-  /* —— Tab bar (matches CustomTabBar; larger hit targets for EMT / gloves) —— */
+  /* —— Tab bar (matches CustomTabBar cream; larger hit targets for EMT / gloves) —— */
   .tabbar {
     position: fixed;
     left: 0; right: 0; bottom: 0;
-    background: rgba(255,255,255,0.96);
+    /* Opaque page cream — same Color.redmedBg as owner CustomTabBar (not frosted white). */
+    background: var(--bg);
     border-top: 1px solid var(--divider);
     box-shadow: 0 -4px 18px rgba(28,25,23,0.06);
     display: flex;
@@ -870,8 +874,6 @@
     align-items: center;
     padding: 6px var(--safe-r) calc(6px + var(--safe-b)) var(--safe-l);
     z-index: 30;
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
   }
   .tabs {
     display: flex;
