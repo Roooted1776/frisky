@@ -123,12 +123,14 @@ struct OwnerAppLock<Content: View>: View {
                             ProgressView().tint(.white)
                         } else {
                             Text("Accept")
-                                .font(.system(size: 16, weight: .bold))
+                                .font(.system(size: 15, weight: .bold))
                         }
                     }
                     .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 15)
+                    // Compact — same visual weight as opening logo/title cluster, not a full-bleed bar.
+                    .frame(minWidth: 120, minHeight: 36)
+                    .padding(.horizontal, 22)
+                    .padding(.vertical, 10)
                     .background(
                         LinearGradient(
                             colors: [Color(red: 1, green: 0.447, blue: 0.537), .redmedAccent],
@@ -137,11 +139,11 @@ struct OwnerAppLock<Content: View>: View {
                         )
                     )
                     .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-                    .shadow(color: RedMedChrome.accentShadow, radius: 10, y: 5)
+                    .shadow(color: RedMedChrome.accentShadow, radius: 8, y: 4)
                 }
                 .buttonStyle(RedMedPressStyle(haptic: nil))
                 .disabled(isAuthenticating)
-                .padding(.horizontal, 28)
+                .fixedSize()
                 .padding(.top, 8)
                 Spacer()
             }
