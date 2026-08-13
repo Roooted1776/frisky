@@ -40,7 +40,8 @@ extension Color {
     static let redmedWash     = Color(red: 1.000, green: 0.910, blue: 0.922) // #ffe8eb
 }
 
-/// Cream page with a quiet rose wash behind chrome (owner + scanner).
+/// Cream page with rose wash + BrandLogo watermark (same eye candy as lock /
+/// passerby tapper — 60% transparent, decorative only).
 struct RedMedPageBackground: View {
     var body: some View {
         ZStack {
@@ -53,6 +54,16 @@ struct RedMedPageBackground: View {
             )
             .frame(maxHeight: 520)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            Image("BrandLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(
+                    width: RedMedChrome.lockWatermarkSize,
+                    height: RedMedChrome.lockWatermarkSize
+                )
+                .clipShape(Circle())
+                .opacity(RedMedChrome.lockWatermarkOpacity)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
