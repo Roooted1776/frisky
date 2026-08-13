@@ -1,0 +1,24 @@
+Handle,Title,Body (HTML),Vendor,Product Category,Type,Tags,Published,Option1 Name,Option1 Value,Option2 Name,Option2 Value,Variant SKU,Variant Grams,Variant Inventory Tracker,Variant Inventory Qty,Variant Inventory Policy,Variant Fulfillment Service,Variant Price,Variant Compare At Price,Variant Requires Shipping,Variant Taxable,Gift Card,SEO Title,SEO Description,Status
+redmed-band,RedMed Band,"<p><strong>Blank medical-ID wristband.</strong> Passive 13.56&nbsp;MHz HF NFC with a genuine <strong>NXP NTAG216</strong> chip (888&nbsp;bytes). Ships empty and unlocked — the RedMed iOS app writes your card. No Bluetooth. No RedMed cloud for your profile.</p>
+<p><strong>How it works</strong></p>
+<ol>
+<li>Put the band on.</li>
+<li>In RedMed, open the NFC tab and Write (Face ID).</li>
+<li>A stranger or EMT taps a phone to the band (~1–2″). The card opens in the browser. No app install. No login.</li>
+</ol>
+<p>Walk-by distance (~6–8″) does not fire the band. Only a deliberate antenna tap opens the card.</p>
+<p><strong>What’s included</strong></p>
+<ul>
+<li>Adult silicone wristband</li>
+<li>NXP NTAG216, ISO 14443 Type 2, NDEF blank</li>
+<li>Outer face ready for medical-ID engraving on production runs</li>
+</ul>
+<p><strong>What’s not included / not this product</strong></p>
+<ul>
+<li>No pre-written URL or social-media link</li>
+<li>No payment / access-control card reader mode</li>
+<li>Not a Bluetooth tracker</li>
+<li>Not a medical device and not a substitute for calling emergency services</li>
+</ul>
+<p>Requires iPhone with NFC and the RedMed app to program. Passerby view works on any modern NFC phone via the browser.</p>",RedMed,"Health & Beauty > Personal Care",Wristband,"nfc,ntag216,medical-id,blank,passive",TRUE,Color,Black,,,RM-BAND-BLK-216,25,shopify,0,deny,manual,24.00,,TRUE,TRUE,FALSE,RedMed Band — blank NTAG216 NFC medical ID wristband,Blank silicone NFC wristband with NXP NTAG216. App writes your medical ID. Passive HF — no Bluetooth no cloud.,active
+redmed-band,RedMed Band,,RedMed,"Health & Beauty > Personal Care",Wristband,"nfc,ntag216,medical-id,blank,passive",TRUE,Color,Red,,,RM-BAND-RED-216,25,shopify,0,deny,manual,24.00,,TRUE,TRUE,FALSE,,,active

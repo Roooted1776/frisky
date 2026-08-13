@@ -21,16 +21,18 @@ plus a **setup** QR — never the `#d=` medical payload.
 | Chip | **NXP NTAG216** (888 B user memory). NTAG215 is OK for short profiles; NTAG213 fails most real cards (`ProfileNFCCodec` warns above ~140 B / ~480 B). |
 | RF | 13.56 MHz HF, ISO 14443 Type 2, NDEF writable, **not locked at factory** |
 | Avoid | LF 125 kHz, UHF, MIFARE Classic-only, pre-encoded vendor URLs, password-locked UID products you cannot overwrite from CoreNFC |
-| UK / EU sourcing (blank or custom print, chip empty) | [Seritag](https://seritag.com/nfc-tags/wristbands) (UK), [Flexcard Print](https://flexcardprint.co.uk/product/silicone-rfid-wristbands/) (UK quote), [Shop NFC](https://shopnfc.com/en/nfc-wristbands/54-nfc-silicone-wristbands-premium.html), [NFC Tag Shop](https://www.nfc-tag-shop.de/en/NFC-Wristbands/NFC-silicone-bands/) |
+| Asia prototype (10 blank) | [CXJ NTAG216 silicone](https://www.cxjrfidfactory.com/product/ntag-216-chip-nfc-rfid-silicone-wristband/) (Shenzhen) — free stock sample, you pay freight. Confirm **NXP NTAG216 + NDEF empty + unlocked** in writing. |
+| UK / EU sourcing (blank or custom print, chip empty) | [Seritag](https://seritag.com/nfc-tags/wristbands) (UK — often 213/215 on silicone, check chip), [Flexcard Print](https://flexcardprint.co.uk/product/silicone-rfid-wristbands/) (UK quote), [Shop NFC](https://shopnfc.com/en/nfc-wristbands/54-nfc-silicone-wristbands-premium.html), [NFC Tag Shop](https://www.nfc-tag-shop.de/en/NFC-Wristbands/NFC-silicone-bands/) |
 | Factory NDEF | Leave **empty** (or a harmless stub). Owner overwrites on first Write in the NFC tab. |
 | QR encode | App Store listing URL only (`AppConfig.appStoreURL`). **Do not** QR-encode `card/#d=…`. |
+| Storefront | Shopify sells **blank hardware only** — see [`docs/shopify/SETUP.md`](./shopify/SETUP.md). No health fields at checkout. |
 
 Seritag is fine as a **hardware** vendor. Skip their tag-management / redirect
 platform for RedMed medical payloads.
 
-Prototype (1–10): Seritag stock NTAG216 silicone. Production (100+): Flexcard or
-equivalent UK silicone house — NTAG216, laser + optional pad-print logo, chip
-blank, MOQ quote.
+Prototype (1–10): Asia blank NTAG216 silicone (CXJ). Production (100+): same
+factory or Flexcard / equivalent — NTAG216, laser + optional pad-print logo,
+chip blank, MOQ quote.
 
 ---
 
