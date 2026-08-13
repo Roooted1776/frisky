@@ -51,6 +51,10 @@ physical iPhone to test.
 3. Developer portal → App ID `com.redmed.app` → enable **NFC Tag Reading**
 4. Xcode → Signing & Capabilities → **Near Field Communication Tag Reading**
 5. Confirm `Info.plist` has `NFCReaderUsageDescription`
-6. Device test: write band → second phone Safari tap → emergency card
+6. Device test on **verified blank NTAG216** stock: write band → second phone
+   Safari tap → emergency card
 
 Free Apple Developer teams cannot ship the NFC entitlement — paid Program required.
+
+Hardware ship order (not app work): blank NTAG216 verified → entitlement live →
+factory MOQ. See `band-engraving-and-nfc-sourcing.md` and Linear RED-19.

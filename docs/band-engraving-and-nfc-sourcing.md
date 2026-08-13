@@ -4,6 +4,21 @@ Product note for physical RedMed bracelets. Matches the shipping model:
 passive NTAG NDEF URI → `https://redmed.pages.dev/tapper/#d=…` (profile only in
 the fragment; no RedMed backend).
 
+## Ship sequence (locked)
+
+**No new app architecture for hardware.** The owner NFC tab already writes
+passive Type 2 NDEF. Hardware work is procurement + Apple portal + factory:
+
+1. **Verified blank NTAG216 stock** — sample 1–10 (Seritag or equivalent).
+   Prove unlocked NDEF, CoreNFC Write, second-phone Safari → `tapper.html#d=`.
+2. **NFC entitlement live** — paid Apple Developer; App ID NFC Tag Reading;
+   `AppConfig.nfcHardwareEnabled` + `RedMed.entitlements` (see `NFC-RESTORE.md`).
+3. **Factory MOQ** — only after 1 and 2. Red adult silicone + blank NTAG216 +
+   laser brief below. Sample 10 before production MOQ.
+
+Do not substitute Shopify / storefront / custom firmware for that sequence.
+Do not MOQ before blank stock and entitlement are proven on a physical iPhone.
+
 ## Recommendation (short)
 
 **Do not pair the band with a third-party QR/NFC “profile” SaaS** (Seritag
