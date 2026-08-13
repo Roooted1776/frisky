@@ -113,8 +113,8 @@ call `requestWhenInUseAuthorization`. When-In-Use + GPS start on Find Help only
 when Location is enabled (`AppSettings.locationEnabled` + `LocationManager.start`);
 iOS may show its system Allow sheet once (cannot auto-accept). Passerby
 `tapper.html` must not call `geolocation` until the 911 tab opens. CoreMotion crash
-monitoring may start after first-frame yield (no Location); do not construct
-`CMMotionManager` at `CrashMotionGuard` shared init. `ContentView` lazy
+monitoring starts after unlock (fresh install: when tabs open); do not construct
+`CMMotionManager` at `CrashMotionGuard` shared init or during Face ID. `ContentView` lazy
 tab mounting mounts RedMed only on cold start (911 / Aid / NFC on first visit,
 kept alive after with opacity). Opacity keep-alive **does not** fire
 `onDisappear` on tab switch — any side effect that must stop when leaving a
