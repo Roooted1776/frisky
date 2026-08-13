@@ -12,6 +12,22 @@ The owner app enforces data independence: NDEF writes are
 `AppConfig.OwnerBandURI`-gated (`medicalCardBaseURL#d=` only — no vendor cloud,
 no social/short URL, no BLE).
 
+## Ship sequence (locked)
+
+**No new app architecture for hardware.** The owner NFC tab already writes
+passive Type 2 NDEF. Hardware work is procurement + Apple portal + factory:
+
+1. **Verified blank NTAG216 stock** — sample 1–10 wine/burgundy silicone
+   (Seritag or equivalent). Prove unlocked NDEF, CoreNFC Write, second-phone
+   Safari → `tapper.html#d=`.
+2. **NFC entitlement live** — paid Apple Developer; App ID NFC Tag Reading;
+   `AppConfig.nfcHardwareEnabled` + `RedMed.entitlements` (see `NFC-RESTORE.md`).
+3. **Factory MOQ** — only after 1 and 2. Same mold/color/chip + laser brief
+   below. Sample 10 before production MOQ.
+
+Do not substitute Shopify / storefront / custom firmware for that sequence.
+Do not MOQ before blank stock and entitlement are proven on a physical iPhone.
+
 ---
 
 ## Locked mold + color

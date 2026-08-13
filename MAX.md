@@ -54,6 +54,7 @@ See also `AGENTS.md`. High-signal recap:
    band stays passive — **no battery** (reject AirTag-style cells / recurring
    demand). Do not claim “no background NFC” without the Apple OS caveat.
 11. Crash / high-speed **vehicle impact** detection is **local** — CoreMotion in the native app (owner + in-app scanner), DeviceMotion in passerby `tapper.html` (same g thresholds). Not Apple Crash Detection, no cloud. Must ignore running, walking, sex, masturbation, eating, hand/wrist handling, and other rhythmic daily activity. Real bracelet NFC (`#d=`) → local SOS on that phone only (no server). Owner Find Help does not auto-arm. Passerby HTML alarm is Web Audio + wake lock (no system volume/brightness APIs).
+12. **Hardware ship is not app architecture.** Blank NXP NTAG216 (Type 2, NDEF unlocked) → NFC entitlement live on device → factory MOQ. Band mold: adult wine/burgundy silicone (`#6B1E2F`) + flat laser plate; face engrave `MED ID` only. No Shopify / custom-chip / storefront stacks as the hardware path.
 
 ## What he has already done (shipped history)
 
@@ -133,13 +134,12 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 
 - Official **Cursor Bugbot usage limit** hit on this account — prefer manual Bugbot-style review + Autofix until spend limits raised.
 - GitHub Actions **macOS billing** previously blocked CI; workflow may be disabled/gated — confirm before relying on CI green.
-- CoreNFC owner Write enabled in tree (`nfcHardwareEnabled` + NDEF entitlement) for
-  passive rewritable Type 2 / NTAG. Device install still needs App ID
-  **NFC Tag Reading** on paid Apple Developer (`docs/NFC-RESTORE.md`).
+- **Hardware ship (RED-19):** code has `nfcHardwareEnabled` + NDEF entitlement; still need verified blank NTAG216 stock, App ID NFC Tag Reading on paid Apple Developer, then factory MOQ.
 - Linear workspace still has default onboarding issues (RED-1…4), not product backlog.
 
 ## Do not reopen without explicit ask
 
+- Shopify / e-commerce / storefront packs, custom chip firmware, or other “hardware architecture” as a substitute for blank NTAG216 + entitlement + factory MOQ.
 - Re-adding Settings toggles for brightness, locator, or crash survival alarm.
 - Auto-arming brightness or locate-me siren just from opening **owner** Find Help, bare `/tapper/`, or in-app scanner preview (crash + explicit owner SOS; real bracelet `#d=` tap may arm hardware-local SOS).
 - Requiring Face ID / biometrics for passerby tap-to-view (`tapper.html` / scanner shell).
