@@ -10,7 +10,9 @@ the fragment; no RedMed backend).
 Linking, Tap NFC cloud, Linktree, bit.ly / branded short-links that hold medical
 data, MedicAlert-style hosted records, etc.). Those put emergency health data
 (or a live dependency) on someone else’s servers and contradict the no-server
-Privacy/ToS claim.
+Privacy/ToS claim. The owner app enforces this: NDEF writes are
+`AppConfig.OwnerBandURI`-gated (`medicalCardBaseURL#d=` only — no vendor cloud,
+no social/short URL, no BLE).
 
 **Buy blank, rewritable NXP NTAG216 silicone (or metal-plate) wristbands** and
 program them only through the RedMed app. Laser-engrave static medical-ID text

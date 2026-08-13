@@ -19,7 +19,40 @@ enum AppConfig {
     static let mainAppURL = "redmed://main"
 
     /// Update when the App Store listing is live (App Store Connect app ID).
+    /// Setup QR only — never written to the NFC band (band carries `#d=` only).
     static let appStoreURL = "https://apps.apple.com/app/redmed/id0000000000"
+
+    /// Owner band NDEF contract (permanent): write only
+    /// `medicalCardBaseURL + "#d=" + base64url`. Profile stays in the fragment —
+    /// no vendor tag-management cloud, no social/short-link redirect, no BLE.
+    /// Pages hosts the static shell; PHI never leaves the `#d=` fragment.
+    enum OwnerBandURI {
+        /// NFC tab fact line — single source for “data independence” copy.
+        static var dataIndependenceSummary: String {
+            "Owner writes #d= on-chip — no vendor cloud, no social/short URL, no BLE."
+        }
+
+        /// True only for live owner writes: exact tapper base + non-empty `#d=` payload.
+        static func isValidWriteURL(_ urlString: String) -> Bool {
+            let base = AppConfig.medicalCardBaseURL
+            guard urlString.hasPrefix(base) else { return false }
+            let rest = urlString.dropFirst(base.count)
+            guard rest.hasPrefix("#d=") else { return false }
+            let payload = rest.dropFirst(3)
+            guard !payload.isEmpty else { return false }
+            // Fragment only — reject query smuggling / second hashes / whitespace.
+            if payload.contains(where: { $0 == "#" || $0 == "?" || $0 == " " || $0 == "\n" || $0 == "\r" }) {
+                return false
+            }
+            // AES-GCM wire is base64url (A–Z a–z 0–9 - _).
+            return payload.unicodeScalars.allSatisfy { scalar in
+                switch scalar.value {
+                case 0x30...0x39, 0x41...0x5A, 0x61...0x7A, 0x2D, 0x5F: return true
+                default: return false
+                }
+            }
+        }
+    }
 
     /// Product kill switch for CoreNFC write/read sessions only.
     /// Owner still always sees the NFC tab (ContentView.showsNFC); scanners never do.
@@ -110,6 +143,9 @@ enum AppConfig {
         static var writeBandDistanceBlurb: String {
             "Walk-by distance will not fire the band; only a deliberate \(intentionalTapRangeLabel) antenna tap opens the card."
         }
+
+        /// Alias for NFC / sourcing copy — band is never a BLE device.
+        static var noBluetoothSummary: String { carrierVsBluetoothSummary }
     }
 
     /// Carrier notes + local-only rule for Find Help.

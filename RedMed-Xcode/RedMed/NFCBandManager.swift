@@ -14,7 +14,8 @@ import SwiftUI
 /// envelope handling (`NFCURICodec`), and CryptoKit pack/unpack
 /// (`ProfileNFCCodec`). No network — chip bytes stay on device. Owner NFC tab
 /// only; scanners never mount this manager for setup.
-/// Band writes use live `AppConfig.medicalCardBaseURL#d=` so strangers open HTML.
+/// Band writes use live `AppConfig.medicalCardBaseURL#d=` only (owner data
+/// independence: no vendor cloud, no social/short URL, no BLE).
 final class NFCBandManager: ObservableObject {
     @Published var statusMessage: String = ""
     @Published var isWriting = false
@@ -44,8 +45,9 @@ final class NFCBandManager: ObservableObject {
     func writeBand(from profile: ProfileData, isScannerSession: Bool) {
         guard !isScannerSession else { return }
         guard profile.hasData else { return }
-        guard let urlString = ProfileNFCCodec.buildURLString(profile: profile) else {
-            alertMessage = "Couldn't build tag payload from RedMed."
+        guard let urlString = ProfileNFCCodec.buildURLString(profile: profile),
+              AppConfig.OwnerBandURI.isValidWriteURL(urlString) else {
+            alertMessage = "Couldn't build a RedMed #d= tag payload (vendor/social URLs are blocked)."
             return
         }
 

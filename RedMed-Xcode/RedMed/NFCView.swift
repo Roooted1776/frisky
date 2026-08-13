@@ -109,6 +109,8 @@ struct NFCView: View {
 
             factRow(icon: "antenna.radiowaves.left.and.right", text: rf.carrierVsBluetoothSummary)
             thinRule
+            factRow(icon: "lock.shield.fill", text: AppConfig.OwnerBandURI.dataIndependenceSummary)
+            thinRule
             factRow(icon: "hand.point.up.left.fill", text: rf.tapDistanceSummary)
             thinRule
             factRow(icon: "iphone.radiowaves.left.and.right", text: rf.powerOnTapSummary)
@@ -172,6 +174,7 @@ struct NFCView: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 tipRow("User: write once after RedMed is filled.")
+                tipRow("Write packs #d= onto the chip only — never a vendor cloud or social/short link.")
                 tipRow("Cancel the NFC prompt and the band stays stale until you write again.")
                 tipRow("Tap to scan: same HTML card helpers get — quick, no login, no server, no app.")
                 tipRow("Write does not change iOS Background Tag Reading — phone can be off or locked; tap phone top \(AppConfig.BraceletRF.intentionalTapRangeLabel) from the clasp can still open Safari.")

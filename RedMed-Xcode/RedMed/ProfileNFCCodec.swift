@@ -3,7 +3,7 @@ import CryptoKit
 import Foundation
 
 /// On-chip profile after decode — must stay compatible with the hosted card page
-/// and the uploads RedMed profile encoder.
+/// (`tapper.html` `#d=` decrypt).
 struct NFCChipProfile: Codable, Equatable {
     var name: String = ""
     var dob: String = ""
@@ -121,22 +121,30 @@ enum ProfileNFCCodec {
     /// so the fragment is never dropped by URL parsing.
     /// Stamps a fresh `updated` time (band write / capacity). In-app preview must use
     /// `buildPreviewURLString` so SwiftUI body re-evals do not mint a new AES ciphertext.
+    /// Owner writes always use `AppConfig.medicalCardBaseURL` + `#d=` (fail closed
+    /// if a caller passes a vendor / social / short-link base).
     static func buildURLString(profile: ProfileData, baseURL: String = AppConfig.medicalCardBaseURL) -> String? {
+        guard baseURL == AppConfig.medicalCardBaseURL else { return nil }
         var chip = chipProfile(from: profile)
         chip.updated = ISO8601DateFormatter().string(from: Date())
         guard let encoded = encodePayload(chip) else { return nil }
-        return baseURL + "#d=" + encoded
+        let urlString = baseURL + "#d=" + encoded
+        guard AppConfig.OwnerBandURI.isValidWriteURL(urlString) else { return nil }
+        return urlString
     }
 
     /// Stable `#d=` for WKWebView embed — keeps `profile.lastUpdated` (or one stamp if empty)
     /// and must only be called when durable fields change, not every `body` pass.
     static func buildPreviewURLString(profile: ProfileData, baseURL: String = AppConfig.medicalCardBaseURL) -> String? {
+        guard baseURL == AppConfig.medicalCardBaseURL else { return nil }
         var chip = chipProfile(from: profile)
         if chip.updated.isEmpty {
             chip.updated = ISO8601DateFormatter().string(from: Date())
         }
         guard let encoded = encodePayload(chip) else { return nil }
-        return baseURL + "#d=" + encoded
+        let urlString = baseURL + "#d=" + encoded
+        guard AppConfig.OwnerBandURI.isValidWriteURL(urlString) else { return nil }
+        return urlString
     }
 
     static func buildURL(profile: ProfileData, baseURL: String = AppConfig.medicalCardBaseURL) -> URL? {
