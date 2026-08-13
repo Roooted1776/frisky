@@ -250,7 +250,9 @@ struct OwnerModalChrome<Trailing: View>: View {
         .frame(height: RedMedChrome.modalBarHeight)
         .background(Color.redmedBg)
         .overlay(alignment: .bottom) {
-            Divider().overlay(Color.redmedDivider)
+            Rectangle()
+                .fill(Color.redmedDivider)
+                .frame(height: 1)
         }
     }
 }
