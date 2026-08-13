@@ -126,9 +126,13 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
 
                 switch status {
                 case .notSupported:
-                    session.invalidate(errorMessage: "Not a passive 13.56 MHz NDEF tag. Use an NTAG213+ HF bracelet chip.")
+                    session.invalidate(
+                        errorMessage: "Not a passive 13.56 MHz Type 2 NDEF tag. Use a blank rewritable NTAG213+ HF bracelet chip."
+                    )
                 case .readOnly:
-                    session.invalidate(errorMessage: "This tag is locked/read-only and can't be written.")
+                    session.invalidate(
+                        errorMessage: "This tag is locked/read-only. RedMed needs a rewritable Type 2 (NTAG) band — not factory-locked."
+                    )
                 case .readWrite:
                     guard let payload = NFCURICodec.payload(for: urlString) else {
                         session.invalidate(errorMessage: "Couldn't build the tag data.")
@@ -137,7 +141,7 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                     let message = NFCNDEFMessage(records: [payload])
                     if capacity > 0, message.length > capacity {
                         session.invalidate(
-                            errorMessage: "Profile is \(message.length) bytes; this tag only holds \(capacity). Shorten RedMed or use NTAG216."
+                            errorMessage: "Profile is \(message.length) bytes; this Type 2 tag only holds \(capacity). Shorten RedMed or use NTAG216."
                         )
                         return
                     }

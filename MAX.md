@@ -75,8 +75,9 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Keychain profile; no demo patient filler.
 
 ### NFC / bracelet / passerby web
-- Passive HF NFC physics + BraceletRF constants.
-- NFC tab for owners; CoreNFC behind `nfcHardwareEnabled` (tab always visible).
+- Passive HF NFC physics + BraceletRF constants (Type 2 / rewritable NTAG).
+- NFC tab for owners; CoreNFC on via `nfcHardwareEnabled` + NDEF entitlement
+  (tab always visible; scanners never get NFC).
 - Main paired line reactive: write → Paired; profile edit → Not paired until rewrite.
 - Same RedMed header for owner + responder; Linked only after NFC write **and**
   YOU-card identity (name, birth, blood) is filled.
@@ -120,7 +121,9 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 
 - Official **Cursor Bugbot usage limit** hit on this account — prefer manual Bugbot-style review + Autofix until spend limits raised.
 - GitHub Actions **macOS billing** previously blocked CI; workflow may be disabled/gated — confirm before relying on CI green.
-- NFC hardware entitlement / paid Apple Developer still a ship gate for real CoreNFC on device.
+- CoreNFC owner Write enabled in tree (`nfcHardwareEnabled` + NDEF entitlement) for
+  passive rewritable Type 2 / NTAG. Device install still needs App ID
+  **NFC Tag Reading** on paid Apple Developer (`docs/NFC-RESTORE.md`).
 - Linear workspace still has default onboarding issues (RED-1…4), not product backlog.
 
 ## Do not reopen without explicit ask

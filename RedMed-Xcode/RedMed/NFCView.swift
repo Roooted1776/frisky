@@ -1,9 +1,8 @@
 // Owner-only NFC bracelet setup. Ped/EMS scanner shells never mount this tab —
 // see ContentView.showsNFC / scannerSafeTab.
-// One page: user Setup/Write + tap Scan / Simulate scan → full-page tap card.
-// When `AppConfig.nfcHardwareEnabled` is false, Write/Scan simulate packing the
-// compact band URL so the UX works without an Apple NFC entitlement.
-// Hardware files stay in the tree; CoreNFC sessions stay gated off.
+// One page: Write (passive rewritable Type 2 / NTAG) + Scan → full-page tap card.
+// When `AppConfig.nfcHardwareEnabled` is true, Write/Scan start real CoreNFC
+// sessions. Simulate packing stays as the offline/dev fallback when the flag is off.
 // Pipeline (hardware): silicone band tap → CoreNFC → strip NDEF → CryptoKit → local card
 // via `NFCBandManager`.
 import SwiftUI
@@ -109,6 +108,8 @@ struct NFCView: View {
 
             factRow(icon: "antenna.radiowaves.left.and.right", text: rf.carrierVsBluetoothSummary)
             thinRule
+            factRow(icon: "arrow.triangle.2.circlepath", text: rf.rewritableBandSummary)
+            thinRule
             factRow(icon: "hand.point.up.left.fill", text: rf.tapDistanceSummary)
             if AppConfig.nfcHardwareEnabled {
                 thinRule
@@ -171,7 +172,7 @@ struct NFCView: View {
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                tipRow("User: write once after RedMed is filled.")
+                tipRow("Write once after RedMed is filled — blank rewritable Type 2 (NTAG) band.")
                 tipRow("Cancel the NFC prompt and the band stays stale until you write again.")
                 tipRow("Tap to scan: same HTML card helpers get — quick, no login, no server, no app.")
             }
@@ -230,7 +231,9 @@ struct NFCView: View {
                         .foregroundColor(.redmedMuted)
                 }
             } else {
-                Text("User write above first — then Simulate scan here for the tap card helpers see.")
+                Text(AppConfig.nfcHardwareEnabled
+                      ? "Write above first — then Scan here for the same tap card helpers see."
+                      : "Write above first — then Simulate scan here for the tap card helpers see.")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.redmedMuted)
                     .lineSpacing(3)
