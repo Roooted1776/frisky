@@ -13,8 +13,9 @@ passive Type 2 NDEF. Hardware work is procurement + Apple portal + factory:
    Prove unlocked NDEF, CoreNFC Write, second-phone Safari → `tapper.html#d=`.
 2. **NFC entitlement live** — paid Apple Developer; App ID NFC Tag Reading;
    `AppConfig.nfcHardwareEnabled` + `RedMed.entitlements` (see `NFC-RESTORE.md`).
-3. **Factory MOQ** — only after 1 and 2. Red adult silicone + blank NTAG216 +
-   laser brief below. Sample 10 before production MOQ.
+3. **Factory MOQ** — only after 1 and 2. Wine/burgundy adult silicone + blank
+   NTAG216 + `MED ID` face (see mold/color lock / PR #186). Sample 10 before
+   production MOQ.
 
 Do not substitute Shopify / storefront / custom firmware for that sequence.
 Do not MOQ before blank stock and entitlement are proven on a physical iPhone.
@@ -25,7 +26,9 @@ Do not MOQ before blank stock and entitlement are proven on a physical iPhone.
 Linking, Tap NFC cloud, Linktree, bit.ly / branded short-links that hold medical
 data, MedicAlert-style hosted records, etc.). Those put emergency health data
 (or a live dependency) on someone else’s servers and contradict the no-server
-Privacy/ToS claim.
+Privacy/ToS claim. The owner app enforces this: NDEF writes are
+`AppConfig.OwnerBandURI`-gated (`medicalCardBaseURL#d=` only — no vendor cloud,
+no social/short URL, no BLE).
 
 **Buy blank, rewritable NXP NTAG216 silicone (or metal-plate) wristbands** and
 program them only through the RedMed app. Laser-engrave static medical-ID text
