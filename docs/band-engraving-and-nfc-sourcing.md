@@ -16,12 +16,12 @@ explicit product change.
 |-------|----------------|
 | Form | **Adult silicone wristband** with a **flat laser face** (clasp plate or tag plate, ~15–20 mm readable width). Soft silicone emboss alone is **not** the face. |
 | Size | Adult (adjustable / standard adult circumference). No child SKU in v1. |
-| Color | **Darker red** silicone only — target `#9f1239` (deep medical-alert crimson). Darker than app accent `#e11d48`; pick closest house stock, not pink or bright cherry. **No black, navy, clear, or multi-color v1.** |
+| Color | **Wine / burgundy** silicone only — target `#6B1E2F` (fashionable deep wine; practical dirt/hide). Not bright app accent `#e11d48`, not pink, not cherry, not purple plum. Closest house stock to wine-burgundy. **No black, navy, clear, or multi-color v1.** |
 | Chip seat | Embedded **NXP NTAG216**, 13.56 MHz HF, ISO 14443 **Type 2**, NDEF **unlocked / blank** at factory. |
 | Finish | Matte or satin silicone OK; no glitter, glow, or dual-tone. |
 | Logo print | Optional pad-print wordmark only if laser `MED ID` already fits; logo never replaces engraving. |
 
-Prototype (1–10): Seritag (or equivalent) **darker red** NTAG216 silicone with a laserable plate.  
+Prototype (1–10): Seritag (or equivalent) **wine/burgundy** NTAG216 silicone with a laserable plate.  
 Production (100+): Flexcard or equivalent UK silicone house — same mold/color/chip, MOQ quote.
 
 ---
@@ -78,8 +78,8 @@ UK / EU blank/red silicone sources: [Seritag](https://seritag.com/nfc-tags/wrist
 
 > **RedMed band — locked v1**
 >
-> Adult **darker red** silicone wristband (closest stock to `#9f1239`, not bright
-> `#e11d48`), adjustable.
+> Adult **wine / burgundy** silicone wristband (closest stock to `#6B1E2F` —
+> fashionable deep wine, not bright `#e11d48`), adjustable.
 > Flat laser clasp/tag plate (~15–20 mm). Embed **NXP NTAG216**, 13.56 MHz,
 > ISO 14443A Type 2, **NDEF unlocked / blank**. No black/other colors. No
 > metal-only band SKU.
