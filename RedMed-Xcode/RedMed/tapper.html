@@ -59,7 +59,7 @@
     --surface: rgba(255,255,255,0.94);
     --box: 10px;
     --chip: 7px;
-    --logo: 12px;
+    --logo: 72px;
     --shadow: 0 1px 2px rgba(28,25,23,0.04), 0 6px 16px rgba(225,29,72,0.05);
     --shadow-accent: 0 6px 16px rgba(225,29,72,0.22);
     /* Fluid shell — SE → Pro Max → iPad / landscape. */
@@ -216,8 +216,9 @@
     padding: 4px 0;
   }
   .rm-logo {
-    width: clamp(44px, 12vw, 56px);
-    height: clamp(44px, 12vw, 56px);
+    /* Match owner Accept / lock BrandLogo (RedMedChrome.logoSize = 72). */
+    width: var(--logo);
+    height: var(--logo);
     border-radius: 50%;
     overflow: hidden;
     border: none;
@@ -948,7 +949,7 @@
       <div class="rm-header">
         <p class="rm-lock">Tap to scan · no login · no server · no app</p>
         <div class="rm-title-row">
-          <img class="rm-logo" id="rmLogo" src="BrandLogo.png" width="48" height="48" alt="RedMed">
+          <img class="rm-logo" id="rmLogo" src="BrandLogo.png" width="72" height="72" alt="RedMed">
           <div>
             <h1 class="rm-name" id="name">RedMed</h1>
             <p class="rm-status" id="statusLine">Not linked</p>
