@@ -18,7 +18,7 @@ struct PasserbyHTMLCardView: View {
     }
 
     var body: some View {
-        // Same chrome as owner Help/Edit / Aid topic Back — accent red in page-bg bubble.
+        // Same chrome as owner Help/Edit / Aid topic Back — accent red text, no chip box.
         VStack(spacing: 0) {
             HStack(alignment: .center, spacing: 12) {
                 ChromeTextAction(title: "Back") { dismiss() }

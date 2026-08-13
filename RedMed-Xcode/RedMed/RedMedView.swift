@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// Owner / scanner RedMed tab — same bundled `tapper.html` medical panel helpers see
-/// on a band tap. Owner keeps Help · Preview · Edit chrome; scanners keep Back. Native
-/// 911 / Aid / NFC tabs stay separate (HTML tab bar hidden in app-embed).
+/// on a band tap. Owner keeps Help · Edit top chrome + Preview at the bottom; scanners
+/// keep Back. Native 911 / Aid / NFC tabs stay separate (HTML tab bar hidden in app-embed).
 struct RedMedView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
@@ -67,21 +67,31 @@ struct RedMedView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            // One top chrome row — Help · Preview · Edit share the same vertical center.
-            HStack(alignment: .center, spacing: 8) {
-                if isScannerSession {
-                    ScannerBackButton()
-                    Spacer(minLength: 0)
-                } else {
-                    ChromeTextAction(title: "Help") { showHelp = true }
+            // Top chrome — Help · Edit tight (same accent text). Preview sits at the bottom.
+            VStack(spacing: 0) {
+                HStack(alignment: .center, spacing: 4) {
+                    if isScannerSession {
+                        ScannerBackButton()
+                        Spacer(minLength: 0)
+                    } else {
+                        // Help · Edit tight, same accent text — Preview is bottom.
+                        ChromeTextAction(title: "Help") { showHelp = true }
+                        ChromeTextAction(title: "Edit") { requestEdit() }
+                        Spacer(minLength: 0)
+                    }
+                }
+                .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
+                .padding(.horizontal, 16)
+                .padding(.top, 6)
+
+                Spacer(minLength: 0)
+
+                if !isScannerSession {
                     ChromeTextAction(title: "Preview") { openPreview() }
-                    Spacer(minLength: 0)
-                    ChromeTextAction(title: "Edit") { requestEdit() }
+                        .frame(maxWidth: .infinity)
+                        .padding(.bottom, 10)
                 }
             }
-            .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
-            .padding(.horizontal, 16)
-            .padding(.top, 6)
         }
         // Owner profile only — never redact the passerby / EMS scanner card.
         .privacySensitive(!isScannerSession)
