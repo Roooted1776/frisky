@@ -1,19 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<!--
-  NFC Tag Reading entitlement for owner Write/Scan against passive rewritable
-  Type 2 (NTAG) bands. AppConfig.nfcHardwareEnabled must stay true in lockstep.
-
-  Portal (one-time if not already on App ID com.redmed.app):
-  Developer → Identifiers → enable Near Field Communication Tag Reading.
-  Xcode → Signing & Capabilities should show the same capability.
-  See docs/NFC-RESTORE.md.
--->
-<dict>
-	<key>com.apple.developer.nfc.readersession.formats</key>
-	<array>
-		<string>NDEF</string>
-	</array>
-</dict>
+<dict/>
 </plist>
