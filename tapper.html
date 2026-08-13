@@ -252,14 +252,6 @@
   .rm-status.linked {
     color: rgba(225,29,72,0.9);
   }
-  .sec {
-    font-size: clamp(11px, 2.8vw, 13px);
-    font-weight: 600;
-    letter-spacing: 0.6px;
-    text-transform: uppercase;
-    color: var(--muted);
-    padding: 12px var(--page-pad-x) 5px;
-  }
   .card {
     margin: 0 var(--page-pad-x);
     background: var(--surface);
@@ -375,6 +367,8 @@
     font-weight: 700;
     color: var(--accent);
     line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
   }
   .list-drop-count {
     font-size: 11px;
@@ -994,10 +988,15 @@
           </summary>
           <div class="list-drop-body" id="conditions"></div>
         </details>
+        <details class="list-drop" id="dropContacts" open>
+          <summary>
+            <span class="list-drop-title">Contacts</span>
+            <span class="list-drop-count" id="countContacts" hidden></span>
+            <span class="list-drop-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="list-drop-body" id="contacts"></div>
+        </details>
       </div>
-
-      <div class="sec">Contacts</div>
-      <div class="card" id="contacts"></div>
 
       <p class="quote">“Control your fear. Control the moment.<br>You have what it takes to save a life.”</p>
     </div>
@@ -1618,6 +1617,16 @@
     contactsEl.textContent = '';
     var contacts = p.contacts || [];
     firstPhone = '';
+    var countContacts = document.getElementById('countContacts');
+    if (countContacts) {
+      if (contacts.length) {
+        countContacts.textContent = String(contacts.length);
+        countContacts.hidden = false;
+      } else {
+        countContacts.textContent = '';
+        countContacts.hidden = true;
+      }
+    }
     if (!contacts.length) {
       var emptyC = document.createElement('div');
       emptyC.className = 'list-item empty-slot';
