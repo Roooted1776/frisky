@@ -17,6 +17,8 @@ struct RedMedView: View {
     @State private var packedPayload: String?
     @State private var packFingerprint = ""
     @State private var packGeneration = 0
+    /// True after the first pack attempt finishes — avoids a mid-screen Edit under chrome while packing.
+    @State private var packFinished = false
 
     /// Durable profile fields only — ignores `holdsEditingSession` so Edit open/close
     /// does not rebuild the shell.
@@ -48,23 +50,25 @@ struct RedMedView: View {
                     )
                     // Opacity tab swaps must not animate WKWebView (jank + flash).
                     .transaction { $0.animation = nil }
-                } else {
+                } else if packFinished {
                     VStack(spacing: 12) {
                         Text("Couldn't pack tapper.html#d= from RedMed.")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.redmedMuted)
                             .multilineTextAlignment(.center)
-                        if !isScannerSession {
-                            ChromeTextAction(title: "Edit") { requestEdit() }
-                        }
                     }
                     .padding(24)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    // Cream only while packing — no mid-screen Edit under the chrome row.
+                    Color.clear
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            HStack(alignment: .center, spacing: 10) {
+            // One top chrome row — Help · Preview · Edit share the same vertical center.
+            HStack(alignment: .center, spacing: 8) {
                 if isScannerSession {
                     ScannerBackButton()
                     Spacer(minLength: 0)
@@ -75,8 +79,9 @@ struct RedMedView: View {
                     ChromeTextAction(title: "Edit") { requestEdit() }
                 }
             }
+            .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
             .padding(.horizontal, 16)
-            .padding(.top, 10)
+            .padding(.top, 6)
         }
         // Owner profile only — never redact the passerby / EMS scanner card.
         .privacySensitive(!isScannerSession)
@@ -129,11 +134,13 @@ struct RedMedView: View {
         packFingerprint = fp
         packGeneration &+= 1
         let generation = packGeneration
+        packFinished = false
         // Yield first paint (cream shell), then pack on main — ProfileData is not concurrent.
         Task { @MainActor in
             await Task.yield()
             guard generation == packGeneration else { return }
             packedPayload = PasserbyHTMLCardView.previewPayload(from: profile)
+            packFinished = true
         }
     }
 
