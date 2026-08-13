@@ -80,7 +80,7 @@ struct RedMedView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            // One top chrome row — Help · Edit tight. First-responder Preview is on NFC.
+            // Opaque cream chrome — Help · Edit must not sit transparent over YOU-card data.
             HStack(alignment: .center, spacing: 4) {
                 if isScannerSession {
                     ScannerBackButton()
@@ -94,6 +94,8 @@ struct RedMedView: View {
             .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
             .padding(.horizontal, 16)
             .padding(.top, 6)
+            .padding(.bottom, 8)
+            .background(Color.redmedBg)
         }
         // Owner profile only — never redact the passerby / EMS scanner card.
         .privacySensitive(!isScannerSession)
