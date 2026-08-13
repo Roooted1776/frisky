@@ -255,14 +255,15 @@ struct OwnerModalChrome<Trailing: View>: View {
     }
 }
 
-extension OwnerModalChrome where Trailing == Color {
-    /// Leading-only bar (Preview Back / Help Done) — invisible trailing keeps title centered.
+extension OwnerModalChrome where Trailing == EmptyView {
+    /// Leading-only bar (Preview Back / Help Done) — empty trailing keeps title centered
+    /// via the shared `modalSideMinWidth` frame on the trailing slot.
     init(title: String, leadingTitle: String, leadingWeight: Font.Weight = .regular, leadingAction: @escaping () -> Void) {
         self.title = title
         self.leadingTitle = leadingTitle
         self.leadingWeight = leadingWeight
         self.leadingAction = leadingAction
-        self.trailing = { Color.clear.frame(width: 1, height: 1) }
+        self.trailing = { EmptyView() }
     }
 }
 
