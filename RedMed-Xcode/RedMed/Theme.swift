@@ -68,7 +68,7 @@ struct SectionLabel: View {
             .foregroundColor(.redmedMuted)
             .kerning(0.6)
             .padding(.horizontal, 4)
-            .padding(.bottom, 5)
+            .padding(.bottom, 6)
     }
 }
 
@@ -185,7 +185,7 @@ struct ChromeTextAction: View {
             action()
         } label: {
             Text(title)
-                .font(.system(size: 18, weight: .regular))
+                .font(.system(size: RedMedChrome.chromeActionSize, weight: .regular))
                 .foregroundColor(.redmedAccent)
                 .kerning(-0.2)
                 .lineLimit(1)
@@ -199,10 +199,93 @@ struct ChromeTextAction: View {
     }
 }
 
+/// Shared top bar for owner Help / Edit / Preview full-screen modals.
+/// Equal leading/trailing slots keep the title centered and the three pages even.
+struct OwnerModalChrome<Trailing: View>: View {
+    let title: String
+    let leadingTitle: String
+    var leadingWeight: Font.Weight = .regular
+    let leadingAction: () -> Void
+    @ViewBuilder var trailing: () -> Trailing
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Button(action: {
+                RedMedHaptics.light()
+                leadingAction()
+            }) {
+                Text(leadingTitle)
+                    .font(.system(size: RedMedChrome.modalActionSize, weight: leadingWeight))
+                    .foregroundColor(.redmedAccent)
+                    .frame(minWidth: RedMedChrome.modalSideMinWidth, alignment: .leading)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(RedMedPressStyle(scale: 0.96, haptic: nil))
+
+            Spacer(minLength: 8)
+
+            Text(title)
+                .font(RedMedChrome.navTitleFont)
+                .foregroundColor(.redmedDark)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+
+            Spacer(minLength: 8)
+
+            trailing()
+                .frame(minWidth: RedMedChrome.modalSideMinWidth, alignment: .trailing)
+        }
+        .padding(.horizontal, RedMedChrome.pagePadX)
+        .frame(height: RedMedChrome.modalBarHeight)
+        .background(Color.redmedBg)
+        .overlay(alignment: .bottom) {
+            Divider().overlay(Color.redmedDivider)
+        }
+    }
+}
+
+extension OwnerModalChrome where Trailing == Color {
+    /// Leading-only bar (Preview Back / Help Done) — invisible trailing keeps title centered.
+    init(title: String, leadingTitle: String, leadingWeight: Font.Weight = .regular, leadingAction: @escaping () -> Void) {
+        self.title = title
+        self.leadingTitle = leadingTitle
+        self.leadingWeight = leadingWeight
+        self.leadingAction = leadingAction
+        self.trailing = { Color.clear.frame(width: 1, height: 1) }
+    }
+}
+
+/// Accent text button for the trailing slot of `OwnerModalChrome` (Edit Save).
+struct OwnerModalTrailingAction: View {
+    let title: String
+    var weight: Font.Weight = .bold
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: {
+            RedMedHaptics.light()
+            action()
+        }) {
+            Text(title)
+                .font(.system(size: RedMedChrome.modalActionSize, weight: weight))
+                .foregroundColor(.redmedAccent)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(RedMedPressStyle(scale: 0.96, haptic: nil))
+    }
+}
+
 /// Inline nav titles (topic detail). Semibold 17 accent beside ChromeTextAction (18 regular).
 /// Box radius is shared by owner + scanner cards / CTAs (square-ish, not capsules).
 enum RedMedChrome {
     static let navTitleFont: Font = .system(size: 17, weight: .semibold)
+    /// Help · Edit · Preview chrome links over the shell.
+    static let chromeActionSize: CGFloat = 18
+    /// Cancel / Done / Back / Save inside owner modals — same size on all three.
+    static let modalActionSize: CGFloat = 17
+    static let modalBarHeight: CGFloat = 52
+    static let modalSideMinWidth: CGFloat = 64
     static let boxRadius: CGFloat = 10
     static let chipRadius: CGFloat = 7
     /// Brand mark is a circular disc — always `Circle()`, never a rounded rect.

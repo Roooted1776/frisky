@@ -81,7 +81,8 @@ struct RedMedView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             // Opaque cream chrome — Help · Edit must not sit transparent over YOU-card data.
-            HStack(alignment: .center, spacing: 4) {
+            // Same ChromeTextAction + even gap; Preview lives under NFC Scan.
+            HStack(alignment: .center, spacing: 12) {
                 if isScannerSession {
                     ScannerBackButton()
                     Spacer(minLength: 0)
@@ -109,11 +110,12 @@ struct RedMedView: View {
             EditProfileView(requireAuthOnSave: requireAuthOnSave)
                 .environmentObject(profile)
         }
-        .sheet(isPresented: Binding(
+        .fullScreenCover(isPresented: Binding(
             get: { showHelp && !isScannerSession },
             set: { showHelp = $0 && !isScannerSession }
         )) {
             HelpMenuView(onOpenNFC: { tab = .nfc })
+                .environmentObject(profile)
         }
         .alert("Authentication Failed", isPresented: $showAuthFailedAlert) {
             Button("OK", role: .cancel) {}

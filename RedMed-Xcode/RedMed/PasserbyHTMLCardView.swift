@@ -20,15 +20,13 @@ struct PasserbyHTMLCardView: View {
     }
 
     var body: some View {
-        // Same chrome as owner Help/Edit / Aid topic Back — accent red text, no chip box.
+        // Same OwnerModalChrome as Help / Edit — even title + side slots.
         VStack(spacing: 0) {
-            HStack(alignment: .center, spacing: 12) {
-                ChromeTextAction(title: "Back") { dismiss() }
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 14)
-            .padding(.bottom, 8)
+            OwnerModalChrome(
+                title: "Preview",
+                leadingTitle: "Back",
+                leadingAction: { dismiss() }
+            )
 
             Group {
                 if let encodedPayload {

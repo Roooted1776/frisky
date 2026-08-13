@@ -256,22 +256,42 @@ struct NFCView: View {
 
     // MARK: - First-responder Preview (under Scan box)
 
+    /// Same card chrome as SET UP / SCAN — Preview sits even with the rest of the page.
     private var firstResponderPreviewLink: some View {
-        VStack(spacing: 6) {
-            ChromeTextAction(title: "Preview") {
-                openFirstResponderPreview()
-            }
-            .disabled(!profile.hasData || band.isBusy)
-            .opacity(profile.hasData ? 1 : 0.45)
+        VStack(alignment: .leading, spacing: 12) {
+            Text("PREVIEW")
+                .font(.system(size: 11, weight: .semibold))
+                .kerning(0.6)
+                .foregroundColor(.redmedMuted)
 
             Text("What first responders see when they tap your band.")
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 13, weight: .medium))
                 .foregroundColor(.redmedMuted)
-                .multilineTextAlignment(.center)
+                .lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
+
+            Button {
+                openFirstResponderPreview()
+            } label: {
+                Text("Preview")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.redmedAccent)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(Color.redmedBg)
+                    .clipShape(RoundedRectangle(cornerRadius: boxRadius))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: boxRadius)
+                            .strokeBorder(Color.redmedAccent.opacity(0.45), lineWidth: 1.5)
+                    )
+            }
+            .disabled(!profile.hasData || band.isBusy)
+            .opacity(profile.hasData ? 1 : 0.55)
+            .buttonStyle(.plain)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.top, 4)
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .redmedBox()
     }
 
     private func openFirstResponderPreview() {
