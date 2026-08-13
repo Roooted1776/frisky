@@ -340,7 +340,7 @@ final class CrashMotionGuard: ObservableObject {
     }
 }
 
-/// Cancel on Aid — under the pane grid, above the prayer.
+/// Cancel on Aid — under the pane grid (above owner quiet prayer when present).
 /// Outside LazyVGrid so pane expand/collapse is undisturbed.
 struct CrashSurvivalCancelCard: View {
     @ObservedObject private var monitor = CrashMotionGuard.shared

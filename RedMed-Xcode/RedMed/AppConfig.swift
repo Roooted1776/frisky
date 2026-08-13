@@ -159,8 +159,7 @@ enum AppConfig {
         static var noBluetoothSummary: String { carrierVsBluetoothSummary }
     }
 
-    /// Quiet prayer under RedMed / Aid — one size for native Aid, owner WKWebView
-    /// embed, and bracelet-tap `tapper.html` (`.quote { font-size: 11px }`).
+    /// Quiet prayer on owner Aid only (`AidView`, not scanner / tapper shells).
     enum QuietPrayer {
         static let fontSize: CGFloat = 11
         static let text =

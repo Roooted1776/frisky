@@ -80,17 +80,19 @@ struct AidView: View {
                             CrashSurvivalCancelCard()
                         }
 
-                        // Prayer sits toward the bottom when panes leave spare height.
+                        // Quiet prayer — owner Aid only (not scanner / passerby shells).
                         Spacer(minLength: 28)
 
-                        Text("\"\(AppConfig.QuietPrayer.text)\"")
-                            .font(.system(size: AppConfig.QuietPrayer.fontSize, weight: .regular))
-                            .italic()
-                            .foregroundColor(.redmedMuted.opacity(0.55))
-                            .multilineTextAlignment(.center)
-                            .lineSpacing(1)
-                            .frame(maxWidth: .infinity)
-                            .padding(.horizontal, 28)
+                        if !isScannerSession {
+                            Text("\"\(AppConfig.QuietPrayer.text)\"")
+                                .font(.system(size: AppConfig.QuietPrayer.fontSize, weight: .regular))
+                                .italic()
+                                .foregroundColor(.redmedMuted.opacity(0.55))
+                                .multilineTextAlignment(.center)
+                                .lineSpacing(1)
+                                .frame(maxWidth: .infinity)
+                                .padding(.horizontal, 28)
+                        }
 
                         Text(AppConfig.Satellite.localOnlyLine)
                             .font(.system(size: 9, weight: .medium))
