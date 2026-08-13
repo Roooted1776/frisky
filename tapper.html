@@ -459,27 +459,8 @@
     padding-bottom: 8px;
     box-sizing: border-box;
   }
-  /* Quiet prayer — main RedMed + Aid. Whisper, not focus. Pins low when short.
-     Keep in lockstep with AppConfig.QuietPrayer.fontSize (11) — bracelet tap,
-     owner app-embed WKWebView, and native AidView. */
-  .quote {
-    margin: 0 clamp(16px, 6vw, 36px) 8px;
-    padding: 0;
-    max-width: none;
-    font-size: 11px;
-    font-weight: 400;
-    font-style: italic;
-    color: rgba(120,113,108,0.55);
-    text-align: center;
-    line-height: 1.35;
-    background: none;
-    border: none;
-  }
-  #panel-medical .quote {
-    margin-top: auto;
-    padding-top: 28px;
-  }
-  /* Aid column fills the viewport so .quote can sit toward the bottom. */
+  /* Quiet prayer lives on owner native Aid only — not passerby / Preview shells. */
+  /* Aid column fills the viewport so .foot-note can sit toward the bottom. */
   #panel-aid .page-pad {
     display: flex;
     flex-direction: column;
@@ -488,9 +469,8 @@
     box-sizing: border-box;
     padding-bottom: 8px;
   }
-  #panel-aid .quote {
+  #panel-aid .foot-note {
     margin-top: auto;
-    margin-bottom: 2px;
     padding-top: 28px;
   }
 
@@ -994,7 +974,6 @@
         </details>
       </div>
 
-      <p class="quote">“Control your fear. Control the moment.<br>You have what it takes to save a life.”</p>
     </div>
 
     <!-- 911 — mirrors owner EmergencyView (content-first, no page header). -->
@@ -1126,7 +1105,6 @@
 
         <button class="aid-stop-alarm" type="button" id="aidStopAlarm">Stop the alarm <span class="x" aria-hidden="true">✕</span></button>
 
-        <p class="quote">“Control your fear. Control the moment.<br>You have what it takes to save a life.”</p>
         <p class="foot-note">Local only once tap — everyone and everything. No servers · no online. No Bluetooth · passive HF NFC. No PII or PHI leaves this device through RedMed.</p>
       </div>
     </div>
