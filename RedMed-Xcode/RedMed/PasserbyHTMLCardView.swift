@@ -1,7 +1,7 @@
 import SwiftUI
 import WebKit
 
-/// Owner Preview / NFC Scan — same bundled `tapper.html#d=` shell a stranger
+/// NFC Preview / NFC Scan — same bundled `tapper.html#d=` shell a stranger
 /// gets on band tap (HTML RedMed · 911 · Aid tabs visible). Loads with
 /// `?src=app` so SOS does **not** auto-arm (real bracelet opens hosted
 /// `/tapper/#d=…` without that flag). Owner RedMed tab uses `PasserbyHTMLShell`
@@ -20,15 +20,13 @@ struct PasserbyHTMLCardView: View {
     }
 
     var body: some View {
-        // Same chrome as owner Help/Edit / Aid topic Back — accent red text, no chip box.
+        // Same OwnerModalChrome as Help / Edit — even title + side slots.
         VStack(spacing: 0) {
-            HStack(alignment: .center, spacing: 12) {
-                ChromeTextAction(title: "Back") { dismiss() }
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 14)
-            .padding(.bottom, 8)
+            OwnerModalChrome(
+                title: "Preview",
+                leadingTitle: "Back",
+                leadingAction: { dismiss() }
+            )
 
             Group {
                 if let encodedPayload {
