@@ -269,6 +269,7 @@ struct OwnerAppLock<Content: View>: View {
                 // Prefetch usually finished during Face ID — apply and show tabs next frame.
                 Task { @MainActor in
                     let loaded = await profile.applyUnlockPrefetchOrReload()
+                    // Belt-and-suspenders — usually already warm from startUnlockPipeline.
                     PasserbyHTMLCardView.warmShellCache()
                     guard generation == authGeneration else { return }
                     isAuthenticating = false

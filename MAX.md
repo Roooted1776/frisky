@@ -46,8 +46,8 @@ See also `AGENTS.md`. High-signal recap:
 5. Vault Face ID: relock on **`.background` only** (not `.inactive` — Face ID sheets).
 6. Owner lock: cream + decorative BrandLogo watermark + Unlock → Face ID
    (watermark is not a control; no Accept). Privacy cover: opaque, no fade;
-   only while PHI in RAM (capture **and** inactive/background) — never over
-   watermark lock / Face ID sheets.
+   capture only while PHI in RAM; non-capture cover **`.background` only**
+   (never `.inactive` / Face ID sheets) — never over watermark lock.
 7. Cold launch: zero Location / MapKit / trauma JSON at `@main`. CoreMotion crash monitor may start after first-frame yield.
 8. Unique `project.pbxproj` IDs (duplicate IDs drop sources).
 9. Passerby SW: cache-first multi-key shell for almost-instant EMT open; clear prior CACHE on activate; bump `redmed-tapper-vN` in lockstep. Tap-to-view = HTML; no biometric copy in any passerby / policy HTML.

@@ -6,15 +6,14 @@ import UIKit
 /// only while active; when backgrounded or recorded, cover everything.
 ///
 /// FaceTime / Screen Recording sets `UIScreen.isCaptured`. Do **not** cover the
-/// lock / watermark shell — RAM is purged then, and a cover blocks Face ID
-/// retry taps so the owner cannot unlock. Cover only when PHI is actually in
-/// memory.
+/// lock / watermark shell — RAM is purged then, and a cover blocks Face ID /
+/// Unlock so the owner cannot enter. Cover only when PHI is actually in memory.
 ///
-/// Same rule for `.inactive` / `.background`: Face ID / passcode sheets put the
-/// scene `.inactive`. Covering then painted a second BrandLogo over the
-/// watermark lock ("stuck at beginning screen") and ate taps. App-switcher
-/// snapshots still get a cover while PHI is in RAM (unlocked); after
-/// `OwnerAppLock` purges on background, the lock shell itself has no PHI to leak.
+/// Non-capture cover is **`.background` only** (with PHI). Face ID / LAContext
+/// put the scene `.inactive` — covering then blanks the UI mid-unlock and
+/// painted a second BrandLogo over the watermark lock. App-switcher snapshots
+/// still get a cover on true background while PHI is in RAM; after
+/// `OwnerAppLock` purges, the lock shell itself has no PHI to leak.
 struct PrivacySnapshotGuard<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
@@ -34,14 +33,16 @@ struct PrivacySnapshotGuard<Content: View>: View {
     }
 
     private var mustCover: Bool {
-        // Capture, app switcher, and Face ID inactive: cover only while PHI is
-        // resident — watermark lock / Face ID / cold-launch must stay tappable.
+        // Capture cover only while PHI is resident — lock / Unlock must stay tappable.
         if screenCaptured {
             return phiInMemory
         }
         // Stay uncovered until the first active frame so tabs paint immediately.
         guard hasBeenActive else { return false }
-        return scenePhase != .active && phiInMemory
+        // App-switcher / true background only — Face ID / LAContext put the scene
+        // `.inactive` and would blank the UI mid-unlock (same rule as VaultHistoryView).
+        guard scenePhase == .background else { return false }
+        return phiInMemory
     }
 
     var body: some View {

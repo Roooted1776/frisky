@@ -87,11 +87,11 @@ The app has no backend, database, or web service.
   Unlock retries after cancel / mismatch. Do **not** re-prompt on `.inactive`
   (that is the Face ID sheet).
 - `PrivacySnapshotGuard` cover must appear opaque with **no** opacity fade;
-  app-switcher snapshots can capture mid-transition PHI. Cover (capture **and**
-  `.inactive` / `.background`) **only while PHI is in RAM** — never over the
-  lock / watermark / Face ID shell (RAM is purged then). Covering lock while
-  Face ID ran painted a second BrandLogo and stuck owners. After unlock while
-  still sharing, cover again; copy should say screen sharing, not a vague
+  app-switcher snapshots can capture mid-transition PHI. Capture cover **only
+  while PHI is in RAM**. Non-capture cover is true **`.background` only** (with
+  PHI) — never on `.inactive` (Face ID / LAContext blanks the UI mid-unlock),
+  and never over the lock / watermark / Unlock shell. After unlock while still
+  sharing, cover again; copy should say screen sharing, not a vague
   “Profile hidden”.
 - `HIPAAOfflineVault`: complete file protection + backup exclusion; history
   events are timestamps/kind only (no field values).
