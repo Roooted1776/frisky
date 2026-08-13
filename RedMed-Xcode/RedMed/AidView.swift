@@ -18,7 +18,7 @@ enum AidPaneCatalog {
                          ("Belt Tourniquet", "belt-tourniquet"), ("Gunshot / Stab", "gunshot-stab")]),
         AidPane(id: "breathing", emoji: "🫁", title: "Not Breathing", iconFilled: true,
                 topics: [("CPR", "cpr")]),
-        AidPane(id: "heart", emoji: "❤️", title: "Choking", iconFilled: true,
+        AidPane(id: "choking", emoji: "❤️", title: "Choking", iconFilled: true,
                 topics: [("Choking", "choking")]),
         AidPane(id: "shock", emoji: "⚡", title: "Shock", iconFilled: false,
                 topics: [("Shock", "shock")]),

@@ -23,8 +23,9 @@ struct NFCView: View {
     }
 
     private var ownerBody: some View {
-        // Fixed cream chrome (no NavigationView / system toolbar) — BrandWordmark
-        // top-left like 911 / Aid. Owner-only tab; scanners never mount this.
+        // Fixed cream chrome (no NavigationView / system toolbar) — page
+        // BrandWordmark (911 / Aid are content-first; pane wordmarks only).
+        // Owner-only tab; scanners never mount this.
         VStack(spacing: 0) {
             BrandWordmarkHeader()
 

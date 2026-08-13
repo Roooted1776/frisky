@@ -364,8 +364,12 @@ struct CrashSurvivalCancelCard: View {
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
-                .background(Color.redmedSurface)
+                .background(Color.redmedBg)
                 .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                .overlay(
+                    RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
+                        .strokeBorder(Color.redmedDivider, lineWidth: 1)
+                )
             }
             .buttonStyle(RedMedPressStyle(haptic: nil))
             .padding(.top, 5)

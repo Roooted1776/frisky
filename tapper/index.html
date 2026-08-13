@@ -470,7 +470,7 @@
     padding-top: 28px;
   }
 
-  /* —— Help tab —— */
+  /* —— 911 / Find Help —— */
   .page-pad { padding: 4px var(--page-pad-x) 0; }
   .btn {
     display: block;
@@ -733,8 +733,8 @@
     font-size: 14px;
     font-weight: 600;
     color: var(--dark);
-    background: var(--surface);
-    border: none;
+    background: var(--bg);
+    border: 1px solid var(--border);
     border-radius: var(--box);
     text-align: left;
     cursor: pointer;
@@ -747,25 +747,13 @@
   }
 
   /* Aid / 911 — no page header wordmark/title (content-first like owner). */
-  /* Full-width accordion — same life-saving pattern as owner AidView. */
+  /* Full-width accordion — same life-saving pattern as owner AidView
+     (big targets, no 2-col / 3-col reflow when a pane opens). */
   .aid-grid {
     display: flex;
     flex-direction: column;
     gap: 8px;
     margin-top: 8px;
-  }
-  @media (min-width: 700px) {
-    .aid-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      align-items: start;
-    }
-  }
-  @media (min-width: 1024px) and (orientation: landscape) {
-    .aid-grid {
-      grid-template-columns: 1fr 1fr 1fr;
-    }
   }
   details.aid {
     background: var(--surface);
@@ -983,7 +971,7 @@
       <p class="quote">“Control your fear. Control the moment.<br>You have what it takes to save a life.”</p>
     </div>
 
-    <!-- Help — mirrors owner EmergencyView (content-first, no page header). -->
+    <!-- 911 — mirrors owner EmergencyView (content-first, no page header). -->
     <div class="panel" id="panel-911" data-panel="911">
       <div class="page-pad">
         <div class="info">
@@ -1050,6 +1038,7 @@
     <!-- Aid — same content-first chrome as owner AidView (no page header). -->
     <div class="panel" id="panel-aid" data-panel="aid">
       <div class="page-pad">
+        <!-- Pane titles / order / emoji lockstep with AidPaneCatalog (owner AidView). -->
         <div class="aid-grid">
           <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🚗</span><span class="aid-title">Crash &amp; Head</span></span></summary>
             <ol>
@@ -1065,11 +1054,18 @@
               <li>Note the time. Stay on the line with <span class="emg">112</span></li>
             </ol>
           </details>
-          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">❤️</span><span class="aid-title">Heart &amp; Airway</span></span></summary>
+          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🫁</span><span class="aid-title">Not Breathing</span></span></summary>
             <ol>
-              <li>No breathing/pulse: hard compressions 100–120/min, 2 inches deep</li>
-              <li>Choking, cannot cough: 5 back blows, then 5 abdominal thrusts</li>
-              <li>Alternate until clear or unresponsive — then CPR</li>
+              <li>Call <span class="emg">112</span> — or have someone else call while you start</li>
+              <li>Hard compressions 100–120/min, 2 inches deep, full recoil</li>
+              <li>Keep going until EMS arrives or normal breathing returns</li>
+            </ol>
+          </details>
+          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">❤️</span><span class="aid-title">Choking</span></span></summary>
+            <ol>
+              <li>If they can cough, encourage coughing — do not slap yet</li>
+              <li>Cannot cough: 5 back blows, then 5 abdominal thrusts</li>
+              <li>Alternate until clear — if unresponsive, start CPR</li>
             </ol>
           </details>
           <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">⚡</span><span class="aid-title">Shock</span></span></summary>
@@ -1079,6 +1075,13 @@
               <li>Keep warm. No food, water, or medication</li>
             </ol>
           </details>
+          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🌡️</span><span class="aid-title">Burns · Cold · Heat</span></span></summary>
+            <ol>
+              <li>Burn: cool running water 10–20 min — never ice or butter</li>
+              <li>Cold: warm chest/neck/armpits/groin — no rubbing limbs</li>
+              <li>Heat stroke: call <span class="emg">112</span> — cool neck/armpits/groin fast</li>
+            </ol>
+          </details>
           <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🧠</span><span class="aid-title">Seizure</span></span></summary>
             <ol>
               <li>Time it. Clear sharp objects. Do not restrain</li>
@@ -1086,21 +1089,7 @@
               <li>Call <span class="emg">112</span> if first seizure, over 5 minutes, injury, or in water</li>
             </ol>
           </details>
-          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🥶</span><span class="aid-title">Hypothermia</span></span></summary>
-            <ol>
-              <li>Move to shelter. Remove wet clothes gently</li>
-              <li>Warm chest/neck/armpits/groin — not the limbs</li>
-              <li>No rubbing or massage. Warm drinks only if fully conscious</li>
-            </ol>
-          </details>
-          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🥵</span><span class="aid-title">Heat</span></span></summary>
-            <ol>
-              <li>Heat stroke: call <span class="emg">112</span> — cool neck/armpits/groin fast</li>
-              <li>Move to shade. Remove extra clothing. Fan while cooling</li>
-              <li>Sip cool water only if fully conscious</li>
-            </ol>
-          </details>
-          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🏥</span><span class="aid-title">Trauma Hospitals</span></span></summary>
+          <details class="aid"><summary><img class="aid-pane-wordmark" src="BrandWordmark.png" width="120" height="18" alt="" aria-hidden="true"><span class="aid-summary-row"><span class="aid-emoji">🏥</span><span class="aid-title">Nearby Hospitals</span></span></summary>
             <ol>
               <li>Call <span class="emg">112</span> — dispatch routes to the right trauma level</li>
               <li>Do not self-transport major trauma if EMS is available</li>
@@ -1112,7 +1101,7 @@
         <button class="aid-stop-alarm" type="button" id="aidStopAlarm">Stop the alarm <span class="x" aria-hidden="true">✕</span></button>
 
         <p class="quote">“Control your fear. Control the moment.<br>You have what it takes to save a life.”</p>
-        <p class="foot-note">Tap to scan · stays on this phone. No login · no server · no app. Passive HF NFC only.</p>
+        <p class="foot-note">Local only once tap — everyone and everything. No servers · no online. No Bluetooth · passive HF NFC. No PII or PHI leaves this device through RedMed.</p>
       </div>
     </div>
   </div>
