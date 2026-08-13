@@ -1,24 +1,32 @@
 Handle,Title,Body (HTML),Vendor,Product Category,Type,Tags,Published,Option1 Name,Option1 Value,Option2 Name,Option2 Value,Variant SKU,Variant Grams,Variant Inventory Tracker,Variant Inventory Qty,Variant Inventory Policy,Variant Fulfillment Service,Variant Price,Variant Compare At Price,Variant Requires Shipping,Variant Taxable,Gift Card,SEO Title,SEO Description,Status
 redmed-band,RedMed Band,"<p><strong>Blank medical-ID wristband.</strong> Passive 13.56&nbsp;MHz HF NFC with a genuine <strong>NXP NTAG216</strong> chip (888&nbsp;bytes). Ships empty and unlocked — the RedMed iOS app writes your card. No Bluetooth. No RedMed cloud for your profile.</p>
+<p>Outer face ships with standard laser: <code>MEDICAL ID</code> / <code>TAP PHONE → CARD</code> / <code>REDMED</code> (or blank stock until production engraving is online). Chip is never pre-written.</p>
 <p><strong>How it works</strong></p>
 <ol>
 <li>Put the band on.</li>
 <li>In RedMed, open the NFC tab and Write (Face ID).</li>
 <li>A stranger or EMT taps a phone to the band (~1–2″). The card opens in the browser. No app install. No login.</li>
 </ol>
-<p>Walk-by distance (~6–8″) does not fire the band. Only a deliberate antenna tap opens the card.</p>
-<p><strong>What’s included</strong></p>
-<ul>
-<li>Adult silicone wristband</li>
-<li>NXP NTAG216, ISO 14443 Type 2, NDEF blank</li>
-<li>Outer face ready for medical-ID engraving on production runs</li>
-</ul>
-<p><strong>What’s not included / not this product</strong></p>
+<p>Walk-by (~6–8″) does not fire. Want name / ICE / allergy lasered on the reverse? See <strong>RedMed Band — Custom</strong>.</p>
+<p><strong>Not included</strong></p>
 <ul>
 <li>No pre-written URL or social-media link</li>
-<li>No payment / access-control card reader mode</li>
-<li>Not a Bluetooth tracker</li>
-<li>Not a medical device and not a substitute for calling emergency services</li>
-</ul>
-<p>Requires iPhone with NFC and the RedMed app to program. Passerby view works on any modern NFC phone via the browser.</p>",RedMed,"Health & Beauty > Personal Care",Wristband,"nfc,ntag216,medical-id,blank,passive",TRUE,Color,Black,,,RM-BAND-BLK-216,25,shopify,0,deny,manual,24.00,,TRUE,TRUE,FALSE,RedMed Band — blank NTAG216 NFC medical ID wristband,Blank silicone NFC wristband with NXP NTAG216. App writes your medical ID. Passive HF — no Bluetooth no cloud.,active
+<li>No payment / access-control mode</li>
+<li>Not Bluetooth. Not a medical device.</li>
+</ul>",RedMed,"Health & Beauty > Personal Care",Wristband,"nfc,ntag216,medical-id,blank,passive",TRUE,Color,Black,,,RM-BAND-BLK-216,25,shopify,0,deny,manual,24.00,,TRUE,TRUE,FALSE,RedMed Band — blank NTAG216 NFC medical ID wristband,Blank silicone NFC wristband with NXP NTAG216. App writes your medical ID. Passive HF — no Bluetooth no cloud.,active
 redmed-band,RedMed Band,,RedMed,"Health & Beauty > Personal Care",Wristband,"nfc,ntag216,medical-id,blank,passive",TRUE,Color,Red,,,RM-BAND-RED-216,25,shopify,0,deny,manual,24.00,,TRUE,TRUE,FALSE,,,active
+redmed-band-custom,RedMed Band — Custom,"<p><strong>Custom laser-engraved medical-ID wristband.</strong> Same blank <strong>NXP NTAG216</strong> chip (13.56&nbsp;MHz HF NFC) — the RedMed app still writes the card. We only laser the silicone / plate. No cloud medical record. No social URL on the chip.</p>
+<p><strong>Outer face (fixed)</strong></p>
+<pre>MEDICAL ID
+TAP PHONE → CARD
+REDMED</pre>
+<p><strong>Reverse (your text — fill at checkout)</strong></p>
+<pre>[NAME]
+ICE [PHONE]
+ALLERGY: [ONE LINE]
+BLOOD [TYPE]</pre>
+<p>Rules: all caps. Name = given + surname (no DOB on the face). ICE = one phone number. Allergy = single worst line. Blood only if known — omit if unknown. Optional: if no allergy, one <code>COND:</code> token instead.</p>
+<p><strong>Chip</strong> ships empty / unlocked. You Write in the RedMed NFC tab after delivery. Engraving is backup for when nobody has an NFC phone — it is not the full card.</p>
+<p><strong>Lead time</strong> — made to order after engraving fields are confirmed. Custom / engraved bands are final sale once lasered.</p>
+<p>Not a medical device. Call emergency services first.</p>",RedMed,"Health & Beauty > Personal Care",Wristband,"nfc,ntag216,medical-id,custom,engraved,passive",TRUE,Color,Black,,,RM-BAND-CUS-BLK-216,25,shopify,0,deny,manual,39.00,,TRUE,TRUE,FALSE,RedMed Band Custom — laser engraved NTAG216 NFC wristband,Custom laser medical-ID NFC band. Blank NTAG216 — app writes the chip. Passive HF NFC.,active
+redmed-band-custom,RedMed Band — Custom,,RedMed,"Health & Beauty > Personal Care",Wristband,"nfc,ntag216,medical-id,custom,engraved,passive",TRUE,Color,Red,,,RM-BAND-CUS-RED-216,25,shopify,0,deny,manual,39.00,,TRUE,TRUE,FALSE,,,active

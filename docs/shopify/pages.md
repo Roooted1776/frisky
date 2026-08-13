@@ -11,9 +11,22 @@ fast ID handoff — not a device, no outcome promises.
 **Headline:** Medical ID on your wrist. Written by your phone.  
 **Support:** Passive NFC band. No Bluetooth. No server for your profile.  
 **Primary CTA:** Buy the band  
-**Secondary CTA:** Get the app  
+**Secondary CTAs:** Custom engrave · Get the app  
 
 Do not put stats, feature grids, or health quizzes in the first viewport.
+
+---
+
+## Home — Blank vs Custom
+
+| | Blank ($24) | Custom ($39) |
+|--|-------------|--------------|
+| Chip | Blank NTAG216 | Blank NTAG216 |
+| Outer laser | Standard MEDICAL ID copy | Same |
+| Reverse | None | Name, ICE, allergy/cond, blood |
+| Who writes NFC | You, in the app | You, in the app |
+
+Engraving is backup for no-NFC moments. Full card lives on-chip after Write.
 
 ---
 
@@ -77,6 +90,15 @@ No. We do not pre-encode Instagram or vendor short-links. The app owns the write
 **Android?**  
 Owner write is iPhone / CoreNFC. Passerby tap works on modern NFC phones in the
 browser.
+
+**Custom engraving — is that my medical record in Shopify?**  
+No. Those fields are laser instructions for the physical band (world-visible
+text). The chip stays blank until you Write in the app. We do not host a
+medical profile or encode your card URL at the factory.
+
+**Can I change engraving later?**  
+Laser is permanent. Order a new Custom band (or wear Blank and keep detail
+on-chip only).
 
 **Medical device?**  
 No. Call emergency services first. RedMed is a local ID / assist handoff.

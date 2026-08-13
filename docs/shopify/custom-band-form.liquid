@@ -1,0 +1,84 @@
+{% comment %}
+  Dawn (or Online Store 2.0) — paste inside the custom product's main
+  product form, above the Buy button. Only add this snippet on the
+  `redmed-band-custom` product (or a template assigned to it).
+
+  Line item properties show on the order for laser ops. Chip stays blank.
+  Do not sync these fields to any medical-profile SaaS.
+{% endcomment %}
+
+<div class="redmed-engrave" style="display:grid;gap:0.75rem;margin:1.25rem 0;">
+  <p style="margin:0;font-size:0.9rem;opacity:0.85;">
+    Laser reverse only. Chip stays blank — you write it in the RedMed app.
+    All caps. Keep each line short.
+  </p>
+
+  <label>
+    Name (given + surname)
+    <input
+      required
+      maxlength="28"
+      name="properties[Name]"
+      form="{{ product_form_id }}"
+      autocomplete="name"
+      placeholder="JANE DOE"
+      style="width:100%;"
+    >
+  </label>
+
+  <label>
+    ICE phone
+    <input
+      required
+      maxlength="20"
+      name="properties[ICE]"
+      form="{{ product_form_id }}"
+      inputmode="tel"
+      autocomplete="tel"
+      placeholder="+15551234567"
+      style="width:100%;"
+    >
+  </label>
+
+  <label>
+    Allergy (one line) — or leave blank and use Condition
+    <input
+      maxlength="32"
+      name="properties[Allergy]"
+      form="{{ product_form_id }}"
+      placeholder="PENICILLIN"
+      style="width:100%;"
+    >
+  </label>
+
+  <label>
+    Condition (only if no allergy)
+    <input
+      maxlength="28"
+      name="properties[Condition]"
+      form="{{ product_form_id }}"
+      placeholder="EPILEPSY"
+      style="width:100%;"
+    >
+  </label>
+
+  <label>
+    Blood type (omit if unknown)
+    <select name="properties[Blood]" form="{{ product_form_id }}" style="width:100%;">
+      <option value="">— omit —</option>
+      <option>O+</option>
+      <option>O-</option>
+      <option>A+</option>
+      <option>A-</option>
+      <option>B+</option>
+      <option>B-</option>
+      <option>AB+</option>
+      <option>AB-</option>
+    </select>
+  </label>
+
+  <p style="margin:0;font-size:0.8rem;opacity:0.75;">
+    Do not put full med lists, address, or the live NFC card URL on the band.
+    Optional App Store QR only — never a QR of your medical card.
+  </p>
+</div>
