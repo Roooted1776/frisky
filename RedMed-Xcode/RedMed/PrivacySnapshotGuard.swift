@@ -6,15 +6,15 @@ import UIKit
 /// only while active; when backgrounded or recorded, cover everything.
 ///
 /// FaceTime / Screen Recording sets `UIScreen.isCaptured`. Do **not** cover the
-/// lock / cold-launch shell — RAM is purged then, and a cover blocks Accept so
-/// the owner cannot unlock (stuck on "RedMed is locked"). Cover only when PHI
-/// is actually in memory.
+/// lock / watermark shell — RAM is purged then, and a cover blocks Face ID
+/// retry taps so the owner cannot unlock. Cover only when PHI is actually in
+/// memory.
 ///
 /// Same rule for `.inactive` / `.background`: Face ID / passcode sheets put the
-/// scene `.inactive`. Covering then paints BrandLogo over Accept ("stuck at
-/// beginning screen") and eats taps. App-switcher snapshots still get a cover
-/// while PHI is in RAM (unlocked); after `OwnerAppLock` purges on background,
-/// the lock shell itself has no PHI to leak.
+/// scene `.inactive`. Covering then painted a second BrandLogo over the
+/// watermark lock ("stuck at beginning screen") and ate taps. App-switcher
+/// snapshots still get a cover while PHI is in RAM (unlocked); after
+/// `OwnerAppLock` purges on background, the lock shell itself has no PHI to leak.
 struct PrivacySnapshotGuard<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
@@ -35,7 +35,7 @@ struct PrivacySnapshotGuard<Content: View>: View {
 
     private var mustCover: Bool {
         // Capture, app switcher, and Face ID inactive: cover only while PHI is
-        // resident — lock / Accept / cold-launch must stay tappable.
+        // resident — watermark lock / Face ID / cold-launch must stay tappable.
         if screenCaptured {
             return phiInMemory
         }
