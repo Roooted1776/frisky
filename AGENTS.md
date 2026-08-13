@@ -84,7 +84,7 @@ The app has no backend, database, or web service.
 
 **Cold launch:** Do **not** create `CLLocationManager`, start GPS / MapKit /
 trauma JSON, or show a Location banner at `@main`. First launch opens a cream
-shell (`redmedBg` / `LaunchBackground` + `BrandLogo` on `UILaunchScreen`) with
+shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash) with
 **zero Keychain** on the first frame — `OwnerAppLock` uses a UserDefaults gate
 (`ProfileData.storedProfileGateKey`, set on persist / Keychain presence) so
 returning owners see Accept immediately and fresh installs open tabs; SecItem

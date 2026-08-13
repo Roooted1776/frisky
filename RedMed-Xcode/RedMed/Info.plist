@@ -44,11 +44,9 @@
 	</array>
 	<key>UILaunchScreen</key>
 	<dict>
+		<!-- Cream only — no BrandLogo splash. Accept / lock owns the mark after first SwiftUI frame. -->
 		<key>UIColorName</key>
 		<string>LaunchBackground</string>
-		<!-- Same mark as OwnerAppLock cold shell — blank cream reads as a long white hang. -->
-		<key>UIImageName</key>
-		<string>BrandLogo</string>
 	</dict>
 	<!-- Cream Main chrome is light-only; Dark Mode made system sheets/Help diverge from Xcode/sim. -->
 	<key>UIUserInterfaceStyle</key>
