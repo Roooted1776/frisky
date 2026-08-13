@@ -9,7 +9,6 @@ struct EmergencyView: View {
     @Environment(\.isScannerSession) private var isScannerSession
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @StateObject private var locationManager = LocationManager()
-    @ObservedObject private var survivalAlarm = CrashMotionGuard.shared
 
     var body: some View {
         // Fixed cream chrome (no NavigationView / system toolbar fill).
@@ -69,39 +68,8 @@ struct EmergencyView: View {
                         }
                         .buttonStyle(RedMedPressStyle(haptic: nil))
 
-                        // SOS — owner + tapper. Same survival hold as crash.
-                        Button {
-                            if survivalAlarm.isArmed {
-                                RedMedHaptics.medium()
-                                withAnimation(RedMedMotion.snappy) {
-                                    survivalAlarm.disarm()
-                                }
-                            } else {
-                                RedMedHaptics.heavy()
-                                withAnimation(RedMedMotion.snappy) {
-                                    survivalAlarm.armSOS()
-                                }
-                            }
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: survivalAlarm.isArmed
-                                      ? "speaker.slash.fill"
-                                      : "sos.circle.fill")
-                                    .symbolEffect(.pulse, options: .repeating, isActive: survivalAlarm.isArmed)
-                                    .contentTransition(.symbolEffect(.replace))
-                                Text(survivalAlarm.isArmed ? "Stop SOS alarm" : "SOS · Locate me")
-                                    .contentTransition(.opacity)
-                            }
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .background(survivalAlarm.isArmed ? Color.redmedAccent : Color.redmedDark)
-                            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-                            .animation(RedMedMotion.snappy, value: survivalAlarm.isArmed)
-                        }
-                        .buttonStyle(RedMedPressStyle(haptic: nil))
-                        .accessibilityLabel(survivalAlarm.isArmed ? "Stop SOS alarm" : "SOS Locate me")
+                        // Isolated observer — SOS arm must not rebuild the whole 911 scroll.
+                        FindHelpSOSButton()
                     }
 
                     SeizureTimerStrip(isVisible: isVisible)
@@ -167,6 +135,46 @@ struct EmergencyView: View {
         .onDisappear {
             locationManager.stop()
         }
+    }
+}
+
+/// SOS control observes crash guard alone — keeps the rest of Find Help from rebuilding on arm ticks.
+private struct FindHelpSOSButton: View {
+    @ObservedObject private var survivalAlarm = CrashMotionGuard.shared
+
+    var body: some View {
+        Button {
+            if survivalAlarm.isArmed {
+                RedMedHaptics.medium()
+                withAnimation(RedMedMotion.snappy) {
+                    survivalAlarm.disarm()
+                }
+            } else {
+                RedMedHaptics.heavy()
+                withAnimation(RedMedMotion.snappy) {
+                    survivalAlarm.armSOS()
+                }
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: survivalAlarm.isArmed
+                      ? "speaker.slash.fill"
+                      : "sos.circle.fill")
+                    .symbolEffect(.pulse, options: .repeating, isActive: survivalAlarm.isArmed)
+                    .contentTransition(.symbolEffect(.replace))
+                Text(survivalAlarm.isArmed ? "Stop SOS alarm" : "SOS · Locate me")
+                    .contentTransition(.opacity)
+            }
+            .font(.system(size: 13, weight: .bold))
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(survivalAlarm.isArmed ? Color.redmedAccent : Color.redmedDark)
+            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+            .animation(RedMedMotion.snappy, value: survivalAlarm.isArmed)
+        }
+        .buttonStyle(RedMedPressStyle(haptic: nil))
+        .accessibilityLabel(survivalAlarm.isArmed ? "Stop SOS alarm" : "SOS Locate me")
     }
 }
 
@@ -464,11 +472,8 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         } else {
             DispatchQueue.main.async { self.location = latest }
         }
-        // Tighten once we have a fix so the card stays accurate while the tab is open.
-        if manager.desiredAccuracy != kCLLocationAccuracyBest {
-            manager.desiredAccuracy = kCLLocationAccuracyBest
-            manager.distanceFilter = 5
-        }
+        // Keep the relaxed start settings — Best+5m used to rebuild Find Help constantly.
+        // HundredMeters + 25m (set in start) is enough for EMS coordinate copy.
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {

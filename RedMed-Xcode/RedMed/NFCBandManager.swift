@@ -41,28 +41,34 @@ final class NFCBandManager: ObservableObject {
 
     // MARK: - Write (owner band setup)
 
-    /// Face ID → AES-GCM pack → CoreNFC write (or simulate when hardware is parked).
+    /// Face ID → AES-GCM pack (off-main) → CoreNFC write (or simulate when hardware is parked).
     func writeBand(from profile: ProfileData, isScannerSession: Bool) {
         guard !isScannerSession else { return }
         guard profile.hasData else { return }
-        guard let urlString = ProfileNFCCodec.buildURLString(profile: profile),
-              AppConfig.OwnerBandURI.isValidWriteURL(urlString) else {
-            alertMessage = "Couldn't build a RedMed #d= tag payload (vendor/social URLs are blocked)."
-            return
-        }
+        let scratch = profile.snapshot()
 
         BiometricAuth.authenticate(
             reason: "Confirm with Face ID, Touch ID, or passcode to write your RedMed card to the bracelet."
         ) { [weak self] outcome in
             guard let self else { return }
             if outcome == .success {
-                if AppConfig.nfcHardwareEnabled {
-                    self.statusMessage = ""
-                    self.writeSucceeded = false
-                    self.writeVerified = false
-                    self.writer.writeURL(urlString)
-                } else {
-                    self.simulateWrite(urlString, profile: profile)
+                Task.detached(priority: .userInitiated) {
+                    let urlString = ProfileNFCCodec.buildURLString(profile: scratch)
+                    await MainActor.run {
+                        guard let urlString,
+                              AppConfig.OwnerBandURI.isValidWriteURL(urlString) else {
+                            self.alertMessage = "Couldn't build a RedMed #d= tag payload (vendor/social URLs are blocked)."
+                            return
+                        }
+                        if AppConfig.nfcHardwareEnabled {
+                            self.statusMessage = ""
+                            self.writeSucceeded = false
+                            self.writeVerified = false
+                            self.writer.writeURL(urlString)
+                        } else {
+                            self.simulateWrite(urlString, profile: scratch)
+                        }
+                    }
                 }
             } else if outcome == .notVerified {
                 self.authFailed = true
@@ -85,17 +91,22 @@ final class NFCBandManager: ObservableObject {
             return
         }
 
-        guard let source = ProfileNFCCodec.buildURLString(profile: profile) else {
-            alertMessage = "Couldn't pack or decode the tap card from RedMed."
-            return
-        }
+        let scratch = profile.snapshot()
         isReading = true
         statusMessage = "Opening tap card…"
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
-            guard let self else { return }
-            self.isReading = false
-            self.statusMessage = ""
-            self.presentHTMLCard(payloadOrURL: source)
+        Task.detached(priority: .userInitiated) {
+            let source = ProfileNFCCodec.buildURLString(profile: scratch)
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            await MainActor.run { [weak self] in
+                guard let self else { return }
+                self.isReading = false
+                self.statusMessage = ""
+                guard let source else {
+                    self.alertMessage = "Couldn't pack or decode the tap card from RedMed."
+                    return
+                }
+                self.presentHTMLCard(payloadOrURL: source)
+            }
         }
     }
 

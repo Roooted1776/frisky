@@ -153,6 +153,75 @@ private enum PasserbyShellCache {
     }
 }
 
+// MARK: - WKWebView process warm (Face ID overlap)
+
+/// Pre-creates a cream `WKWebView` and loads bundled `tapper.html` while Face ID
+/// runs so unlock's first RedMed paint skips cold WebKit process + first parse.
+/// MainActor only — WKWebView is not thread-safe.
+@MainActor
+enum PasserbyWebViewPool {
+    private static var warmedEmbed: WKWebView?
+    private static var warming = false
+
+    /// Call during Face ID. Safe to call repeatedly — one warm view at a time.
+    static func warmEmbedShell() {
+        guard warmedEmbed == nil, !warming else { return }
+        warming = true
+        let webView = makeConfiguredWebView(navigationDelegate: nil)
+        guard let fileURL = PasserbyShellCache.shellFileURL(),
+              var html = PasserbyShellCache.shellHTML() else {
+            warming = false
+            return
+        }
+        // App-embed chrome only — no PHI. Real profile arrives via JS push or full load.
+        let boot = """
+        <script>
+        window.__REDMED_APP_PREVIEW=1;
+        window.__REDMED_BRACELET_LINKED=false;
+        try{document.documentElement.classList.add('app-embed');}catch(e0){}
+        </script>
+
+        """
+        if let range = html.range(of: "<head>") {
+            html.replaceSubrange(range, with: "<head>\n" + boot)
+        } else {
+            html = boot + html
+        }
+        webView.loadHTMLString(html, baseURL: fileURL)
+        warmedEmbed = webView
+        warming = false
+    }
+
+    /// Owner RedMed tab takes the warmed view once (nil after).
+    static func takeEmbed() -> WKWebView? {
+        let view = warmedEmbed
+        warmedEmbed = nil
+        warming = false
+        return view
+    }
+
+    static func makeConfiguredWebView(navigationDelegate: WKNavigationDelegate?) -> WKWebView {
+        let config = WKWebViewConfiguration()
+        config.preferences.javaScriptCanOpenWindowsAutomatically = false
+        let cream = UIColor(Color.redmedBg)
+        let webView = WKWebView(frame: .zero, configuration: config)
+        webView.navigationDelegate = navigationDelegate
+        webView.allowsBackForwardNavigationGestures = false
+        webView.isOpaque = true
+        webView.backgroundColor = cream
+        webView.scrollView.isOpaque = true
+        webView.scrollView.backgroundColor = cream
+        webView.underPageBackgroundColor = cream
+        webView.scrollView.contentInsetAdjustmentBehavior = .never
+        webView.scrollView.isScrollEnabled = true
+        webView.scrollView.alwaysBounceVertical = true
+        webView.scrollView.showsVerticalScrollIndicator = true
+        webView.scrollView.showsHorizontalScrollIndicator = false
+        webView.scrollView.indicatorStyle = .default
+        return webView
+    }
+}
+
 // MARK: - WKWebView
 
 private struct PasserbyHTMLWebView: UIViewRepresentable {
@@ -164,36 +233,73 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeUIView(context: Context) -> WKWebView {
-        let config = WKWebViewConfiguration()
-        config.preferences.javaScriptCanOpenWindowsAutomatically = false
-        let cream = UIColor(Color.redmedBg)
-        let webView = WKWebView(frame: .zero, configuration: config)
-        webView.navigationDelegate = context.coordinator
-        webView.allowsBackForwardNavigationGestures = false
-        // Opaque cream — translucent WKWebView often flashes system white before CSS.
-        webView.isOpaque = true
-        webView.backgroundColor = cream
-        webView.scrollView.isOpaque = true
-        webView.scrollView.backgroundColor = cream
-        // Overscroll / bounce uses this — without it iOS flashes system white.
-        webView.underPageBackgroundColor = cream
-        webView.scrollView.contentInsetAdjustmentBehavior = .never
-        // Document scroll + visible bar (same idea as Aid `.scrollIndicators(.visible)`).
-        webView.scrollView.isScrollEnabled = true
-        webView.scrollView.alwaysBounceVertical = true
-        webView.scrollView.showsVerticalScrollIndicator = true
-        webView.scrollView.showsHorizontalScrollIndicator = false
-        webView.scrollView.indicatorStyle = .default
-        return webView
+        // Prefer Face ID–warmed embed view — process + HTML parse already done.
+        if appEmbed, let pooled = PasserbyWebViewPool.takeEmbed() {
+            pooled.navigationDelegate = context.coordinator
+            context.coordinator.shellLoaded = true
+            context.coordinator.loadedShellKind = "embed"
+            // Empty payload → first updateUIView pushes PHI via JS (no second parse).
+            context.coordinator.loadedPayload = ""
+            context.coordinator.loadedContentKey = ""
+            return pooled
+        }
+        return PasserbyWebViewPool.makeConfiguredWebView(navigationDelegate: context.coordinator)
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
-        let loadKey = "\(encodedPayload)|\(braceletLinked)|\(appEmbed)|\(embedProfileJSON ?? "")"
+        let shellKind = appEmbed ? "embed" : "full"
+        let contentKey = "\(braceletLinked)|\(embedProfileJSON ?? "")"
+        let payloadKey = encodedPayload
+
+        // Owner embed: keep the document. AES `#d=` changes every pack (random nonce) —
+        // pushing `__REDMED_PROFILE` avoids a full loadHTMLString after Edit / link flips.
+        if appEmbed,
+           context.coordinator.shellLoaded,
+           context.coordinator.loadedShellKind == shellKind,
+           let embedProfileJSON, !embedProfileJSON.isEmpty,
+           (context.coordinator.loadedContentKey != contentKey
+            || context.coordinator.loadedPayload != payloadKey) {
+            context.coordinator.loadedContentKey = contentKey
+            context.coordinator.loadedPayload = payloadKey
+            context.coordinator.loadedKey = "\(payloadKey)|\(contentKey)|\(shellKind)"
+            let linkedJS = braceletLinked ? "true" : "false"
+            let payloadLit = Self.jsStringLiteral(encodedPayload) ?? "''"
+            let js = """
+            (function(){
+              try {
+                window.__REDMED_BRACELET_LINKED=\(linkedJS);
+                window.__REDMED_PROFILE=\(embedProfileJSON);
+                var d=\(payloadLit);
+                try{
+                  var base=(location.pathname&&location.pathname!=='blank'&&location.pathname!=='/')
+                    ?location.pathname:'tapper.html';
+                  history.replaceState(null,'',base+'?src=app#d='+d);
+                }catch(e0){}
+                if (typeof window.__redmedApplyProfile === 'function') {
+                  window.__redmedApplyProfile(window.__REDMED_PROFILE, \(linkedJS));
+                }
+              } catch (e) {}
+            })();
+            """
+            // Warmed shell may still be parsing — queue until didFinish.
+            if webView.isLoading {
+                context.coordinator.pendingProfileJS = js
+            } else {
+                webView.evaluateJavaScript(js, completionHandler: nil)
+            }
+            return
+        }
+
+        let loadKey = "\(payloadKey)|\(contentKey)|\(shellKind)"
         guard context.coordinator.loadedKey != loadKey else { return }
         guard let fileURL = PasserbyShellCache.shellFileURL(),
               var html = PasserbyShellCache.shellHTML(),
               let lit = Self.jsStringLiteral(encodedPayload) else { return }
         context.coordinator.loadedKey = loadKey
+        context.coordinator.loadedPayload = payloadKey
+        context.coordinator.loadedContentKey = contentKey
+        context.coordinator.loadedShellKind = shellKind
+        context.coordinator.shellLoaded = true
         // Inject before any tapper.html script so decrypt sees #d= and SOS sees app preview.
         // Flag + hash fallback: loadHTMLString can leave location as about:blank where
         // replaceState alone would leave decrypt empty and wrongly auto-arm SOS.
@@ -247,8 +353,18 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
 
     final class Coordinator: NSObject, WKNavigationDelegate {
         var loadedKey: String?
+        var loadedPayload: String?
+        var loadedContentKey: String?
+        var loadedShellKind: String?
+        var shellLoaded = false
+        /// Profile push that arrived before `didFinish` — replay once the document is ready.
+        var pendingProfileJS: String?
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            if let pending = pendingProfileJS {
+                pendingProfileJS = nil
+                webView.evaluateJavaScript(pending, completionHandler: nil)
+            }
             webView.scrollView.flashScrollIndicators()
         }
 

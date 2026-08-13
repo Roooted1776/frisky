@@ -133,15 +133,35 @@ struct RedMedView: View {
 
     private func openPreview() {
         guard !isScannerSession else { return }
-        // Prefer cached pack; if still packing, mint once on the tap path.
-        if packedPayload == nil {
-            packedPayload = profile.takeUnlockPreviewPayload()
-                ?? PasserbyHTMLCardView.previewPayload(from: profile)
-            cachedEmbedJSON = ProfileNFCCodec.embedProfileJSON(from: profile)
+        // Prefer cached pack; if still packing, mint off-main then open.
+        if packedPayload != nil {
+            RedMedHaptics.light()
+            showPreview = true
+            return
         }
-        guard shellPayload != nil else { return }
-        RedMedHaptics.light()
-        showPreview = true
+        if let pending = profile.takeUnlockPreviewPayload() {
+            packedPayload = pending
+            cachedEmbedJSON = profile.takeUnlockEmbedProfileJSON()
+                ?? ProfileNFCCodec.embedProfileJSON(from: profile)
+            RedMedHaptics.light()
+            showPreview = true
+            return
+        }
+        let scratch = profile.snapshot()
+        Task.detached(priority: .userInitiated) {
+            let artifacts = (
+                PasserbyHTMLCardView.previewPayload(from: scratch),
+                ProfileNFCCodec.embedProfileJSON(from: scratch)
+            )
+            await MainActor.run {
+                packedPayload = artifacts.0
+                cachedEmbedJSON = artifacts.1
+                packFinished = true
+                guard artifacts.0 != nil else { return }
+                RedMedHaptics.light()
+                showPreview = true
+            }
+        }
     }
 
     /// First unlock paint: adopt Face ID–overlapped `#d=` so WKWebView loads without an AES stall.
