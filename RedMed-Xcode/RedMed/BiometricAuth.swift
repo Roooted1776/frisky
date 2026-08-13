@@ -11,7 +11,7 @@ import UIKit
 /// re-scans instead of opening the passcode pad.
 enum BiometricAuth {
     /// Distinguishes a failed scan from cancel / dismiss so lock UI does not
-    /// claim “couldn't verify” on every Accept that the owner backs out of.
+    /// claim “couldn't verify” on every unlock the owner backs out of.
     enum Outcome: Equatable {
         case success
         /// Face ID / Touch ID (or passcode after fallback) did not match.

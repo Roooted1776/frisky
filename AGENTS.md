@@ -81,11 +81,15 @@ The app has no backend, database, or web service.
   prompt on appear); relock on `.background` only. Do **not**
   lock on `.inactive` — LAContext / system auth sheets put the scene inactive
   and would discard a successful unlock via `authGeneration`.
+- Owner app lock is **one screen**: cream + BrandLogo watermark + Face ID
+  (no Accept step). Auto-prompt on lock appear and when returning from
+  `.background`; tap watermark to retry after cancel / mismatch. Do **not**
+  re-prompt on `.inactive` (that is the Face ID sheet).
 - `PrivacySnapshotGuard` cover must appear opaque with **no** opacity fade;
-  app-switcher snapshots can capture mid-transition PHI. FaceTime / Screen
-  Recording (`UIScreen.isCaptured`) covers **only while PHI is in RAM** —
-  never over the lock / cold-launch shell (cover was blocking Accept and
-  stuck owners on the lock screen). After unlock while still sharing, cover
+  app-switcher snapshots can capture mid-transition PHI. Cover (capture **and**
+  `.inactive` / `.background`) **only while PHI is in RAM** — never over the
+  lock / watermark / Face ID shell. Covering lock while Face ID ran painted a
+  second BrandLogo and stuck owners. After unlock while still sharing, cover
   again; copy should say screen sharing, not a vague “Profile hidden”.
 - `HIPAAOfflineVault`: complete file protection + backup exclusion; history
   events are timestamps/kind only (no field values).
@@ -95,11 +99,11 @@ trauma JSON, or show a Location banner at `@main`. First launch opens a cream
 shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash) with
 **zero Keychain** on the first frame — `OwnerAppLock` uses a UserDefaults gate
 (`ProfileData.storedProfileGateKey`, set on persist / Keychain presence) so
-returning owners see Accept immediately and fresh installs open tabs; SecItem
-still confirms off-main and can correct a stale gate. Accept / lock is cream +
-lock icon + Accept only (no BrandLogo / title splash). Face ID runs only after
-the owner taps **Accept** (never auto on appear). Do not call Keychain in
-`@State` defaults. Location defaults on in Help →
+returning owners see the watermark lock immediately and fresh installs open
+tabs; SecItem still confirms off-main and can correct a stale gate. Owner lock
+is cream + BrandLogo watermark + Face ID (auto on appear / return from
+background; tap to retry) — no Accept button, no title splash. Do not call
+Keychain in `@State` defaults. Location defaults on in Help →
 Settings with **no RedMed location gate / banner / Allow popup** — Help must not
 call `requestWhenInUseAuthorization`. When-In-Use + GPS start on Find Help only
 when Location is enabled (`AppSettings.locationEnabled` + `LocationManager.start`);

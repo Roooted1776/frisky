@@ -44,7 +44,9 @@ See also `AGENTS.md`. High-signal recap:
 3. Settings = **haptic + Location only**. Brightness 100% + system volume 100% + locator siren arm on crash / severe-impact (`CrashMotionGuard`), owner **SOS · Locate me**, or **real bracelet NFC** open of `tapper.html#d=…` (hardware-local SOS on that phone). Owner Find Help open, bare `/tapper/`, and in-app scanner preview do **not** auto-arm.
 4. Survival hold may keep siren + max volume + brightness through background until cancel on Aid (or Stop SOS on Find Help).
 5. Vault Face ID: relock on **`.background` only** (not `.inactive` — Face ID sheets).
-6. Privacy cover: opaque, no fade.
+6. Owner lock: one watermark screen + Face ID enter (no Accept). Privacy cover:
+   opaque, no fade; only while PHI in RAM (capture **and** inactive/background)
+   — never over watermark lock / Face ID sheets.
 7. Cold launch: zero Location / MapKit / trauma JSON at `@main`. CoreMotion crash monitor may start after first-frame yield.
 8. Unique `project.pbxproj` IDs (duplicate IDs drop sources).
 9. Passerby SW: cache-first multi-key shell for almost-instant EMT open; clear prior CACHE on activate; bump `redmed-tapper-vN` in lockstep. Tap-to-view = HTML; no biometric copy in any passerby / policy HTML.
@@ -64,13 +66,15 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Locked owner vs passerby shells; four owner tabs (RedMed · 911 · Aid · NFC); scanners RedMed/911/Aid.
 - Owner app on first launch; `Main.swift` owner shell; HTML policies redirect `redmed://main`.
 - Deferred all Core Location until Find Help; fixed SIGTERM/launch confusion.
-- Cold launch: LaunchBackground only on UILaunchScreen (no BrandLogo splash).
-  Accept / lock is cream + lock icon + Accept — no BrandLogo / title splash.
-  UserDefaults profile gate opens Accept (or tabs) on first SwiftUI frame —
-  no Keychain in `@State`; Accept then Face ID (no auto Face ID on appear);
-  off-main profile decode; lazy `CMMotionManager`; LaunchBackground dark=cream.
-  Unlock fail-closed if Keychain decode fails. tapper.html first panel paints
-  opaque (tab switch may animate); in-app WKWebView stays opaque cream.
+- Cold launch: LaunchBackground only on UILaunchScreen (no system BrandLogo).
+  Owner lock is one screen: cream + BrandLogo watermark + Face ID enter —
+  no Accept. Auto Face ID on lock appear / return from background; tap to
+  retry. UserDefaults profile gate opens watermark (or tabs) on first frame —
+  no Keychain in `@State`; off-main profile decode; lazy `CMMotionManager`;
+  LaunchBackground dark=cream. Unlock fail-closed if Keychain decode fails.
+  PrivacySnapshotGuard never covers watermark lock (Face ID inactive) — only
+  while PHI is in RAM. tapper.html first panel paints opaque; in-app WKWebView
+  stays opaque cream.
 - Vault Local History: Accept tap before Face ID (no auto-prompt on appear).
 - Opacity keep-alive tabs: Find Help GPS + seizure autodial tear down via
   `isVisible` (not `onDisappear` — opacity hide never fires it).

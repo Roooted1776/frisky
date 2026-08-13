@@ -44,7 +44,7 @@
 	</array>
 	<key>UILaunchScreen</key>
 	<dict>
-		<!-- Cream only — no BrandLogo splash. Accept / lock is cream + lock + Accept (no logo). -->
+		<!-- Cream only — system splash stays logo-free. Owner lock is watermark + Face ID. -->
 		<key>UIColorName</key>
 		<string>LaunchBackground</string>
 	</dict>

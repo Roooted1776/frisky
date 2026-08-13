@@ -9,6 +9,12 @@ import UIKit
 /// lock / cold-launch shell — RAM is purged then, and a cover blocks Accept so
 /// the owner cannot unlock (stuck on "RedMed is locked"). Cover only when PHI
 /// is actually in memory.
+///
+/// Same rule for `.inactive` / `.background`: Face ID / passcode sheets put the
+/// scene `.inactive`. Covering then paints BrandLogo over Accept ("stuck at
+/// beginning screen") and eats taps. App-switcher snapshots still get a cover
+/// while PHI is in RAM (unlocked); after `OwnerAppLock` purges on background,
+/// the lock shell itself has no PHI to leak.
 struct PrivacySnapshotGuard<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
@@ -23,15 +29,19 @@ struct PrivacySnapshotGuard<Content: View>: View {
         self.content = content
     }
 
+    private var phiInMemory: Bool {
+        profile.hasSensitiveProfileData || profile.holdsEditingSession
+    }
+
     private var mustCover: Bool {
-        // Capture cover only while PHI is resident — lock screen must stay tappable
-        // during FaceTime screen share / Screen Recording.
+        // Capture, app switcher, and Face ID inactive: cover only while PHI is
+        // resident — lock / Accept / cold-launch must stay tappable.
         if screenCaptured {
-            return profile.hasSensitiveProfileData || profile.holdsEditingSession
+            return phiInMemory
         }
         // Stay uncovered until the first active frame so tabs paint immediately.
         guard hasBeenActive else { return false }
-        return scenePhase != .active
+        return scenePhase != .active && phiInMemory
     }
 
     var body: some View {
@@ -65,7 +75,7 @@ struct PrivacySnapshotGuard<Content: View>: View {
             screenCaptured = nowCaptured
             if nowCaptured {
                 SecurePasteboard.clear()
-                if profile.hasSensitiveProfileData || profile.holdsEditingSession {
+                if phiInMemory {
                     VaultHistoryStore.shared.record(.screenCaptureCovered, detail: "share")
                 }
             }

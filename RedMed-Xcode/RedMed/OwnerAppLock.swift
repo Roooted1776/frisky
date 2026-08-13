@@ -9,6 +9,11 @@ import SwiftUI
 /// Cold launch never touches Keychain on the first frame. A UserDefaults gate
 /// (set on persist / Keychain presence check) picks lock vs tabs immediately;
 /// SecItem still confirms off-main and can correct a stale gate.
+///
+/// One lock screen: BrandLogo watermark + Face ID. No Accept step. Biometrics
+/// auto-prompt when the lock shell appears (and again when returning from
+/// `.background`). Cancel / mismatch stays on the same watermark; tap to retry.
+/// Face ID sheets put the scene `.inactive` — do not treat that as a fresh open.
 struct OwnerAppLock<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
@@ -61,7 +66,7 @@ struct OwnerAppLock<Content: View>: View {
                 gate = .unlocked
             }
         }
-        .onChange(of: scenePhase) { _, phase in
+        .onChange(of: scenePhase) { prior, phase in
             // LAContext / system auth sheets put the scene `.inactive`.
             // Only purge + lock on true background (same rule as VaultHistoryView).
             if phase == .background,
@@ -69,6 +74,10 @@ struct OwnerAppLock<Content: View>: View {
                 || hasEverHadSensitiveData
                 || profile.holdsEditingSession {
                 lock(purge: true)
+            } else if phase == .active, prior == .background, gate == .locked {
+                // Returning to the app — Face ID again. Do not re-prompt after
+                // `.inactive` (that is the Face ID sheet itself).
+                unlockWithFaceID()
             }
         }
         .onChange(of: profile.hasSensitiveProfileData) { _, hasData in
@@ -89,13 +98,23 @@ struct OwnerAppLock<Content: View>: View {
     private var lockScreen: some View {
         ZStack {
             RedMedPageBackground()
-            VStack(spacing: 18) {
+
+            // Single composition: watermark BrandLogo only — Face ID is the enter path.
+            Image("BrandLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: RedMedChrome.lockWatermarkSize, height: RedMedChrome.lockWatermarkSize)
+                .clipShape(Circle())
+                .opacity(RedMedChrome.lockWatermarkOpacity)
+                .accessibilityHidden(true)
+
+            VStack(spacing: 14) {
                 Spacer(minLength: 48)
-                // No BrandLogo / title splash — cream + lock + Accept only.
-                Image(systemName: "lock.fill")
-                    .font(.system(size: 28, weight: .semibold))
-                    .foregroundColor(.redmedAccent)
-                    .accessibilityLabel("RedMed is locked")
+                if isAuthenticating {
+                    ProgressView()
+                        .tint(.redmedAccent)
+                        .accessibilityLabel("Unlocking with Face ID")
+                }
                 if screenCaptured {
                     Text("Screen sharing is on — unlock with passcode. Profile stays hidden on the share until you stop sharing.")
                         .font(.system(size: 13, weight: .semibold))
@@ -104,48 +123,37 @@ struct OwnerAppLock<Content: View>: View {
                         .padding(.horizontal, 28)
                 }
                 if biometryFailed {
-                    Text("Couldn't verify it's you. Try again.")
+                    Text("Couldn't verify it's you. Tap to try again.")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.redmedAccent)
                 } else if profileLoadFailed {
-                    Text("Couldn't load your profile. Try again.")
+                    Text("Couldn't load your profile. Tap to try again.")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.redmedAccent)
+                } else if !isAuthenticating {
+                    Text("Tap to unlock")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.redmedMuted)
                 }
-                Button {
-                    RedMedHaptics.medium()
-                    acceptThenUnlock()
-                } label: {
-                    Group {
-                        if isAuthenticating {
-                            ProgressView().tint(.white)
-                        } else {
-                            Text("Accept")
-                                .font(.system(size: 15, weight: .bold))
-                        }
-                    }
-                    .foregroundColor(.white)
-                    .frame(minWidth: 120, minHeight: 36)
-                    .padding(.horizontal, 22)
-                    .padding(.vertical, 10)
-                    .background(
-                        LinearGradient(
-                            colors: [Color(red: 1, green: 0.447, blue: 0.537), .redmedAccent],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-                    .shadow(color: RedMedChrome.accentShadow, radius: 8, y: 4)
-                }
-                .buttonStyle(RedMedPressStyle(haptic: nil))
-                .disabled(isAuthenticating)
-                .fixedSize()
-                .padding(.top, 8)
                 Spacer()
             }
         }
-        // Biometrics never run until Accept — no onAppear / scenePhase auto-prompt.
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard !isAuthenticating else { return }
+            RedMedHaptics.medium()
+            unlockWithFaceID()
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("RedMed is locked")
+        .accessibilityHint("Unlocks with Face ID, Touch ID, or passcode")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction {
+            unlockWithFaceID()
+        }
+        .onAppear {
+            unlockWithFaceID()
+        }
     }
 
     private func lock(purge: Bool) {
@@ -160,8 +168,8 @@ struct OwnerAppLock<Content: View>: View {
         SecurePasteboard.clear()
     }
 
-    /// Accept is the only entry into LocalAuthentication for app unlock.
-    private func acceptThenUnlock() {
+    /// Face ID / passcode is the only enter path for a returning owner.
+    private func unlockWithFaceID() {
         guard gate == .locked, !isAuthenticating else { return }
         isAuthenticating = true
         biometryFailed = false
@@ -169,7 +177,7 @@ struct OwnerAppLock<Content: View>: View {
         authGeneration &+= 1
         let generation = authGeneration
         BiometricAuth.authenticate(
-            reason: "Confirm with Face ID, Touch ID, or passcode after Accept to unlock your RedMed profile."
+            reason: "Unlock RedMed with Face ID, Touch ID, or passcode."
         ) { outcome in
             guard generation == authGeneration else { return }
             switch outcome {
@@ -186,7 +194,7 @@ struct OwnerAppLock<Content: View>: View {
                 gate = .locked
                 VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock")
             case .success:
-                // Decode off the main thread — unlock UI stays on cream lock until apply.
+                // Decode off the main thread — unlock UI stays on watermark until apply.
                 Task {
                     let loaded = await profile.reloadFromKeychainAsync()
                     guard generation == authGeneration else { return }
