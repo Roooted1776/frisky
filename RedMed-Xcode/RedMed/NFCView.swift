@@ -110,11 +110,13 @@ struct NFCView: View {
             thinRule
             factRow(icon: "arrow.triangle.2.circlepath", text: rf.rewritableBandSummary)
             thinRule
+            factRow(icon: "lock.shield.fill", text: AppConfig.OwnerBandURI.dataIndependenceSummary)
+            thinRule
             factRow(icon: "hand.point.up.left.fill", text: rf.tapDistanceSummary)
-            if AppConfig.nfcHardwareEnabled {
-                thinRule
-                factRow(icon: "iphone.radiowaves.left.and.right", text: rf.powerOnTapSummary)
-            }
+            thinRule
+            factRow(icon: "iphone.radiowaves.left.and.right", text: rf.powerOnTapSummary)
+            thinRule
+            factRow(icon: "safari", text: rf.backgroundTagReadingSummary)
             thinRule
             factRow(icon: "person.2.fill", text: rf.passerbyTapSummary)
         }
@@ -173,8 +175,10 @@ struct NFCView: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 tipRow("Write once after RedMed is filled — blank rewritable Type 2 (NTAG) band.")
+                tipRow("Write packs #d= onto the chip only — never a vendor cloud or social/short link.")
                 tipRow("Cancel the NFC prompt and the band stays stale until you write again.")
                 tipRow("Tap to scan: same HTML card helpers get — quick, no login, no server, no app.")
+                tipRow("Write does not change iOS Background Tag Reading — phone can be off or locked; tap phone top \(AppConfig.BraceletRF.intentionalTapRangeLabel) from the clasp can still open Safari.")
             }
             .padding(.top, 2)
         }

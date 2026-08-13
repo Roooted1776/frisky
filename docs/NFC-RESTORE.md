@@ -32,9 +32,14 @@ Owner NFC page keeps **both** capabilities on one screen: Write and Scan
   ISO 14443 / NFC Forum Type 2 / NTAG213+ NDEF. No battery, no BLE.
 - Chip must be **rewritable** (NDEF not permanently locked). Factory-blank or
   overwriteable stub only — see `docs/band-engraving-and-nfc-sourcing.md`.
+- **Owner data independence:** `NFCWriter` / `ProfileNFCCodec` write only
+  `https://redmed.pages.dev/tapper/#d=…` (`AppConfig.OwnerBandURI.isValidWriteURL`).
+  No vendor tag-management cloud, no social/short-link redirect, no App Store
+  URL on the chip, no BLE. Profile lives in `#d=` only; Pages serves the shell.
 - “Paired phone” means this iPhone wrote + verified the chip and stored a local
-  link flag. The phone does **not** keep an active RF session or background-scan
-  the band (different from Bluetooth pairing on ~2.4 GHz).
+  link flag. RedMed does **not** keep an active RF session or background-scan
+  the band (different from Bluetooth pairing on ~2.4 GHz). iOS Background Tag
+  Reading is a separate Apple OS path — see below.
 - **Distance is physics, not a setting** (`AppConfig.BraceletRF`):
   - Intentional tap: ~1–2″ to the phone antenna
   - Walk-by / no-fire margin: ~6–8″ (already dead past ~4″ of reliable ISO 14443)
@@ -44,9 +49,14 @@ Owner NFC page keeps **both** capabilities on one screen: Write and Scan
 - Do **not** source LF (~125 kHz) or UHF chips — CoreNFC cannot program them.
 - Payment POS may share 13.56 MHz but speaks EMV, not RedMed NDEF URLs
   (`ignoredByPaymentPOS`) — protocol, not distance.
-- Note: unlocked iPhones can still run Apple’s own Background Tag Reading if the
-  antenna is pressed against an NDEF tag (~1–2″). RedMed cannot disable that OS
-  path; it is unrelated to walk-by and is not started by this app.
+- **iOS Background Tag Reading (not RedMed):** what can still open the URL later
+  is Apple’s OS path — phone can be off or locked; a deliberate tap (top of
+  phone ~1–2″ from the band) still works. Wrist + pocket is usually fine. Phone
+  pressed to the clasp can pop Safari / `tapper.html`. Same for any passerby.
+  Writing the chip does not make that more or less likely. Band stays passive
+  (no battery — not AirTag). RedMed cannot disable that OS path; it is unrelated
+  to walk-by and is not started by this app. Product copy lives in
+  `AppConfig.BraceletRF.backgroundTagReadingSummary`.
 
 ## Portal checklist (device install)
 
