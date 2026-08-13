@@ -21,7 +21,11 @@ struct RedMedApp: App {
             .preferredColorScheme(.light)
             .task {
                 // First paint with zero Location / vault / Keychain / CoreMotion.
+                // Warm tapper.html during Accept / cream shell so unlock skips disk.
                 await Task.yield()
+                await Task.detached(priority: .utility) {
+                    PasserbyHTMLCardView.warmShellCache()
+                }.value
                 await Task.yield()
                 CrashMotionGuard.shared.startMonitoring()
                 Task.detached(priority: .utility) {

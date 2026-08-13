@@ -186,16 +186,19 @@ struct OwnerAppLock<Content: View>: View {
                 gate = .locked
                 VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock")
             case .success:
-                // Decode off the main thread — unlock UI stays on cream lock until apply.
+                // Decode + warm shell off the main thread — unlock UI stays on cream lock until apply.
                 Task {
+                    async let warm: Void = Task.detached(priority: .utility) {
+                        PasserbyHTMLCardView.warmShellCache()
+                    }.value
                     let loaded = await profile.reloadFromKeychainAsync()
+                    _ = await warm
                     guard generation == authGeneration else { return }
                     isAuthenticating = false
                     if loaded {
                         RedMedHaptics.success()
-                        withAnimation(RedMedMotion.soft) {
-                            gate = .unlocked
-                        }
+                        // No soft fade — tabs must appear immediately after Face ID.
+                        gate = .unlocked
                         biometryFailed = false
                         profileLoadFailed = false
                     } else {
