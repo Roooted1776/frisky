@@ -67,7 +67,7 @@ Do not substitute slogans, URLs, or vendor names.
 Tap NFC cloud, Linktree, bit.ly medical short-links, MedicAlert-style hosted
 records, etc.). Hardware vendor OK; their redirect platform is not.
 
-UK / EU blank/red silicone sources: [Seritag](https://seritag.com/nfc-tags/wristbands),
+UK / EU blank wine/burgundy silicone sources: [Seritag](https://seritag.com/nfc-tags/wristbands),
 [Flexcard Print](https://flexcardprint.co.uk/product/silicone-rfid-wristbands/),
 [Shop NFC](https://shopnfc.com/en/nfc-wristbands/54-nfc-silicone-wristbands-premium.html),
 [NFC Tag Shop](https://www.nfc-tag-shop.de/en/NFC-Wristbands/NFC-silicone-bands/).
