@@ -73,12 +73,21 @@ struct VaultHistoryEvent: Identifiable, Codable, Equatable {
         case profileSaved
         case braceletWritten
         case vaultCleared
+        /// Face ID / passcode mismatch (not cancel). `detail` = gate id only.
+        case unlockFailed
+        /// NFC write ended without success (not cancel). Status strings only in `detail`.
+        case nfcWriteFailed
+        /// Screen capture / mirroring while PHI was in RAM.
+        case screenCaptureCovered
 
         var title: String {
             switch self {
             case .profileSaved: return "Profile saved"
             case .braceletWritten: return "Bracelet written"
             case .vaultCleared: return "History cleared"
+            case .unlockFailed: return "Unlock failed"
+            case .nfcWriteFailed: return "NFC write failed"
+            case .screenCaptureCovered: return "Screen capture covered"
             }
         }
 
@@ -87,6 +96,9 @@ struct VaultHistoryEvent: Identifiable, Codable, Equatable {
             case .profileSaved: return "person.text.rectangle"
             case .braceletWritten: return "wave.3.right"
             case .vaultCleared: return "trash"
+            case .unlockFailed: return "lock.slash"
+            case .nfcWriteFailed: return "wave.3.right.circle"
+            case .screenCaptureCovered: return "eye.slash"
             }
         }
     }

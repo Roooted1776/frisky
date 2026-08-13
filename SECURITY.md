@@ -30,7 +30,8 @@ Out of scope: cloning a passive NFC band (same as photocopying a wallet medical 
 
 ## Hardening checklist (repo)
 
-- Passerby HTML: `textContent` for PHI fields; no `eval`; zlib inflate capped; CSP + `nosniff` / `frame-ancestors` / referrer policy via `_headers`.
+- Passerby HTML: `textContent` for PHI fields; no `eval`; zlib inflate capped; CSP + `nosniff` / `frame-ancestors` / referrer policy via `_headers` (live on Pages paths) + matching meta CSP (`upgrade-insecure-requests`).
 - Owner: `OwnerAppLock` + `BiometricAuth` (reuse duration 0); scanner snapshots use `ProfileData(persisting: false)`.
-- Vault: `HIPAAOfflineVault` complete protection + backup exclusion; basename-only file paths.
+- Vault: `HIPAAOfflineVault` complete protection + backup exclusion; basename-only file paths; history timestamps/kind only (unlock fail / NFC fail / capture cover — no field values).
+- Help → Erase all RedMed data (Face ID): deletes Keychain profile + vault; does not remote-wipe the band.
 - No analytics / crash SDKs that phone home PHI.

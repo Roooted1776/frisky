@@ -61,9 +61,13 @@ struct PrivacySnapshotGuard<Content: View>: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)) { _ in
-            screenCaptured = UIScreen.main.isCaptured
-            if screenCaptured {
+            let nowCaptured = UIScreen.main.isCaptured
+            screenCaptured = nowCaptured
+            if nowCaptured {
                 SecurePasteboard.clear()
+                if profile.hasSensitiveProfileData || profile.holdsEditingSession {
+                    VaultHistoryStore.shared.record(.screenCaptureCovered, detail: "share")
+                }
             }
         }
     }

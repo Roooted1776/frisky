@@ -64,6 +64,7 @@ final class NFCBandManager: ObservableObject {
                 }
             } else if outcome == .notVerified {
                 self.authFailed = true
+                VaultHistoryStore.shared.record(.unlockFailed, detail: "nfcWrite")
             }
         }
     }
@@ -133,6 +134,8 @@ final class NFCBandManager: ObservableObject {
                 }
                 if !self.writer.isWriting, !self.writer.success, !msg.isEmpty, msg != "Cancelled." {
                     self.alertMessage = msg
+                    // Status string only — never pack URL / profile fields into the vault.
+                    VaultHistoryStore.shared.record(.nfcWriteFailed, detail: String(msg.prefix(120)))
                 }
             }
             .store(in: &cancellables)

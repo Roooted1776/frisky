@@ -101,10 +101,16 @@ struct LocalWebView: UIViewRepresentable {
 // MARK: - Help menu
 struct HelpMenuView: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject private var profile: ProfileData
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
     var onOpenNFC: (() -> Void)? = nil
+
+    @State private var showEraseConfirm = false
+    @State private var isErasing = false
+    @State private var eraseAuthFailed = false
+    @State private var eraseDone = false
 
     var body: some View {
         NavigationView {
@@ -152,6 +158,20 @@ struct HelpMenuView: View {
                         .navigationTitle("Security")
                         .navigationBarTitleDisplayMode(.inline)
                 }
+                Section {
+                    Button(role: .destructive) {
+                        showEraseConfirm = true
+                    } label: {
+                        if isErasing {
+                            ProgressView()
+                        } else {
+                            Text("Erase all RedMed data")
+                        }
+                    }
+                    .disabled(isErasing || (!profile.hasSensitiveProfileData && !ProfileData.prefersLockOnLaunch))
+                } footer: {
+                    Text("Deletes the profile from this iPhone’s Keychain and clears local history. Settings prefs stay. The physical band is not wiped remotely — rewrite or discard it.")
+                }
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
@@ -171,7 +191,52 @@ struct HelpMenuView: View {
                     locationSuggester.refresh()
                 }
             }
+            .confirmationDialog(
+                "Erase all RedMed data on this iPhone?",
+                isPresented: $showEraseConfirm,
+                titleVisibility: .visible
+            ) {
+                Button("Erase everything", role: .destructive) {
+                    requestErase()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Face ID or passcode is required. Profile and local history are removed from this phone. The bracelet still holds its last write until you overwrite or discard it.")
+            }
+            .alert("Couldn't verify it's you", isPresented: $eraseAuthFailed) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Face ID, Touch ID, or passcode is required to erase RedMed data.")
+            }
+            .alert("RedMed data erased", isPresented: $eraseDone) {
+                Button("OK", role: .cancel) { dismiss() }
+            } message: {
+                Text("This iPhone no longer holds your RedMed profile. Rewrite or discard the band if it still has a card.")
+            }
         }
         .navigationViewStyle(.stack)
+    }
+
+    private func requestErase() {
+        guard !isErasing else { return }
+        isErasing = true
+        BiometricAuth.authenticate(
+            reason: "Confirm with Face ID, Touch ID, or passcode to erase all RedMed data on this iPhone."
+        ) { outcome in
+            switch outcome {
+            case .success:
+                profile.eraseAllLocalData()
+                RedMedHaptics.success()
+                isErasing = false
+                eraseDone = true
+            case .notVerified:
+                RedMedHaptics.error()
+                isErasing = false
+                eraseAuthFailed = true
+                VaultHistoryStore.shared.record(.unlockFailed, detail: "erase")
+            case .declined:
+                isErasing = false
+            }
+        }
     }
 }

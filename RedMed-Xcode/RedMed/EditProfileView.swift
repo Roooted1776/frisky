@@ -499,6 +499,7 @@ struct EditProfileView: View {
                     commitSave()
                 } else if outcome == .notVerified {
                     showAuthFailedAlert = true
+                    VaultHistoryStore.shared.record(.unlockFailed, detail: "editSave")
                 }
             }
             return

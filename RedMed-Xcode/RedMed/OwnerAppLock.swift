@@ -77,6 +77,13 @@ struct OwnerAppLock<Content: View>: View {
         .onReceive(NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)) { _ in
             screenCaptured = UIScreen.main.isCaptured
         }
+        .onReceive(NotificationCenter.default.publisher(for: .redMedDidEraseLocalData)) { _ in
+            hasEverHadSensitiveData = false
+            biometryFailed = false
+            profileLoadFailed = false
+            isAuthenticating = false
+            gate = .unlocked
+        }
     }
 
     private var lockScreen: some View {
@@ -187,6 +194,7 @@ struct OwnerAppLock<Content: View>: View {
                 isAuthenticating = false
                 biometryFailed = true
                 gate = .locked
+                VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock")
             case .success:
                 // Decode off the main thread — unlock UI stays on cream lock until apply.
                 Task {

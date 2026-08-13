@@ -180,6 +180,7 @@ struct VaultHistoryView: View {
                 authFailed = false
             } else if outcome == .notVerified {
                 authFailed = true
+                VaultHistoryStore.shared.record(.unlockFailed, detail: "vault")
             }
         }
     }

@@ -126,6 +126,7 @@ struct RedMedView: View {
                 showEdit = true
             } else if outcome == .notVerified {
                 showAuthFailedAlert = true
+                VaultHistoryStore.shared.record(.unlockFailed, detail: "edit")
             }
         }
     }
