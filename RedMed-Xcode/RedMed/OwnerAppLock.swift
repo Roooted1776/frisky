@@ -86,7 +86,7 @@ struct OwnerAppLock<Content: View>: View {
                 Spacer(minLength: 48)
                 Image("BrandLogo")
                     .resizable()
-                    .frame(width: 72, height: 72)
+                    .frame(width: RedMedChrome.logoSize, height: RedMedChrome.logoSize)
                     .clipShape(Circle())
                     .shadow(color: RedMedChrome.accentShadow, radius: 14, y: 6)
                 Text("RedMed")
