@@ -32,7 +32,7 @@ struct VaultHistoryView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             HIPAAOfflineVault.prepare()
-            // No auto Face ID — same rule as OwnerAppLock: biometrics only after an explicit tap.
+            // No auto Face ID — vault stays Accept-then-biometrics (owner app lock auto-prompts).
         }
         .onChange(of: scenePhase) { _, phase in
             // LAContext auth sheets put the scene in `.inactive`.

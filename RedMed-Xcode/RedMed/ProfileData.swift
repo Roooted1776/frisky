@@ -231,8 +231,10 @@ class ProfileData: ObservableObject {
                   let decoded = try? JSONDecoder().decode(PersistedProfile.self, from: data) else {
                 return nil
             }
+            guard !Task.isCancelled else { return nil }
             // AES pack + embed JSON overlap Face ID — post-unlock must not stall on cream / WebCrypto.
             let artifacts = Self.previewArtifacts(from: decoded)
+            guard !Task.isCancelled else { return nil }
             return UnlockPrefetch(
                 blob: decoded,
                 previewPayload: artifacts.payload,

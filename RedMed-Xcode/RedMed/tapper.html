@@ -61,9 +61,6 @@
     --box: 10px;
     --chip: 7px;
     --logo: 72px;
-    /* Lock / page eye candy — BrandLogo watermark (60% transparent). */
-    --watermark: 280px;
-    --watermark-opacity: 0.4;
     --shadow: 0 1px 2px rgba(28,25,23,0.04), 0 6px 16px rgba(225,29,72,0.05);
     --shadow-accent: 0 6px 16px rgba(225,29,72,0.22);
     /* Fluid shell — SE → Pro Max → iPad / landscape. */
@@ -107,7 +104,7 @@
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", sans-serif;
-    /* Page wash + cream — matches RedMedPageBackground / owner RedMed first page. */
+    /* Cream + wash — matches RedMedPageBackground. */
     background:
       radial-gradient(120% 60% at 50% -10%, var(--wash) 0%, transparent 58%),
       var(--bg);
@@ -122,25 +119,7 @@
     touch-action: manipulation;
     position: relative;
   }
-  /* BrandLogo watermark — same eye candy as owner lock / RedMedPageBackground. */
-  .rm-watermark {
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    width: var(--watermark);
-    height: var(--watermark);
-    margin: calc(var(--watermark) / -2) 0 0 calc(var(--watermark) / -2);
-    border-radius: 50%;
-    object-fit: contain;
-    opacity: var(--watermark-opacity);
-    pointer-events: none;
-    z-index: 0;
-    user-select: none;
-    -webkit-user-drag: none;
-  }
   .app {
-    position: relative;
-    z-index: 1;
     width: 100%;
     max-width: var(--page-max);
     margin: 0 auto;
@@ -917,7 +896,6 @@
 </style>
 </head>
 <body>
-  <img class="rm-watermark" id="rmWatermark" src="BrandLogo.png" width="280" height="280" alt="" aria-hidden="true">
   <div class="app">
     <!-- RedMed — same header + YOU card as owner RedMedView (no Edit). -->
     <div class="panel active" id="panel-medical" data-panel="medical">
@@ -1157,7 +1135,6 @@
   function resolveLogo() {
     var candidates = ['BrandLogo.png', 'assets/BrandLogo.png'];
     var img = document.getElementById('rmLogo');
-    var watermark = document.getElementById('rmWatermark');
     var icons = document.querySelectorAll('link[rel="apple-touch-icon"], link[rel="icon"]');
     var i = 0;
     function tryNext() {
@@ -1166,7 +1143,6 @@
       var probe = new Image();
       probe.onload = function () {
         if (img) img.src = src;
-        if (watermark) watermark.src = src;
         icons.forEach(function (el) { el.setAttribute('href', src); });
       };
       probe.onerror = tryNext;
