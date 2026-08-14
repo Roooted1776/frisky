@@ -57,7 +57,8 @@ struct PasserbyHTMLCardView: View {
         PasserbyShellCache.warm()
     }
 
-    static func extractPayload(_ raw: String) -> String? {
+    /// `nonisolated` — strip `#d=` from any thread (NFC callbacks / Task.detached).
+    nonisolated static func extractPayload(_ raw: String) -> String? {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
         if let range = trimmed.range(of: "#d=") {
@@ -69,13 +70,15 @@ struct PasserbyHTMLCardView: View {
     }
 
     /// Band write / capacity / NFC Scan — stamps a fresh `updated` time.
-    static func payload(from profile: ProfileData) -> String? {
+    /// `nonisolated` — packs from `Task.detached` (NFC write / verify).
+    nonisolated static func payload(from profile: ProfileData) -> String? {
         guard let url = ProfileNFCCodec.buildURLString(profile: profile) else { return nil }
         return extractPayload(url)
     }
 
     /// Owner RedMed tab embed — stable pack; caller must cache across `body` passes.
-    static func previewPayload(from profile: ProfileData) -> String? {
+    /// `nonisolated` — callers pack from `Task.detached` (unlock prefetch / syncPackedPayload).
+    nonisolated static func previewPayload(from profile: ProfileData) -> String? {
         guard let url = ProfileNFCCodec.buildPreviewURLString(profile: profile) else { return nil }
         return extractPayload(url)
     }
