@@ -176,7 +176,8 @@
     box-shadow: var(--shadow);
   }
   /* In-app RedMed tab embeds this shell — hide passerby tab chrome (native tabs own 911/Aid).
-     `html.app-embed` is set from the native boot script before first paint; body class follows. */
+     Owner embed only: native boot sets `html.app-embed` before first paint; body class
+     mirrors it. Preview/Scan (?src=app) must NOT get app-embed — full HTML tabs stay. */
   html.app-embed body,
   body.app-embed {
     /* Clear opaque Help · Edit cream chrome (6 + 44 + 8). */
@@ -1641,10 +1642,14 @@
     } catch (e) { /* keep prior paint */ }
   };
 
+  // Owner RedMed embed only — native boot sets html.app-embed before first paint.
+  // Preview / Scan use ?src=app / __REDMED_APP_PREVIEW (no SOS) but keep full
+  // passerby HTML tabs (RedMed · 911 · Aid) — same tap-card shell as a band tap.
   (function applyAppEmbedChrome() {
-    if (!isAppPreview()) return;
-    try { document.documentElement.classList.add('app-embed'); } catch (e0) {}
-    try { document.body.classList.add('app-embed'); } catch (e) {}
+    try {
+      if (!document.documentElement.classList.contains('app-embed')) return;
+      document.body.classList.add('app-embed');
+    } catch (e) {}
   })();
 
   decodeProfile().then(function (p) {
