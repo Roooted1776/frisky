@@ -17,9 +17,6 @@ struct EmergencyView: View {
         ZStack(alignment: .topTrailing) {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 10) {
-                    // NO CELL SIGNAL — carriers only (no satellite coach UI)
-                    NoCellSignalCard()
-
                     // GPS + Call: dial is the big action; copy / SOS stay compact.
                     VStack(alignment: .leading, spacing: 8) {
                         GPSCard(location: locationEnabled ? locationManager.location : nil)
@@ -73,6 +70,9 @@ struct EmergencyView: View {
                     }
 
                     SeizureTimerStrip(isVisible: isVisible)
+
+                    // NO CELL SIGNAL — carriers only (no satellite coach UI)
+                    NoCellSignalCard()
 
                     // ROADSIDE FIRST RESPONSE
                     InfoCard(
