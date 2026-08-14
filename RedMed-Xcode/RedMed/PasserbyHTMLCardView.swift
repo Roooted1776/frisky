@@ -3,9 +3,10 @@ import WebKit
 
 /// NFC Preview / NFC Scan — same bundled `tapper.html#d=` shell a stranger
 /// gets on band tap (HTML RedMed · 911 · Aid tabs visible). Loads with
-/// `?src=app` so SOS does **not** auto-arm (real bracelet opens hosted
-/// `/tapper/#d=…` without that flag). Owner RedMed tab uses `PasserbyHTMLShell`
-/// with `appEmbed: true` instead (native tabs; HTML tab bar hidden).
+/// `?src=app` / `__REDMED_APP_PREVIEW` so SOS does **not** auto-arm (real
+/// bracelet opens hosted `/tapper/#d=…` without that flag). Does **not** set
+/// `html.app-embed` — that hides the HTML tab bar and is owner RedMed embed
+/// only (`PasserbyHTMLShell` with `appEmbed: true`).
 struct PasserbyHTMLCardView: View {
     @Environment(\.dismiss) private var dismiss
     /// Raw `#d=` payload (no prefix), or full band URL containing `#d=`.
