@@ -81,10 +81,11 @@ The app has no backend, database, or web service.
   prompt on appear); relock on `.background` only. Do **not**
   lock on `.inactive` — LAContext / system auth sheets put the scene inactive
   and would discard a successful unlock via `authGeneration`.
-- Owner app lock first load is **biometrics only**: cream + BrandLogo watermark
-  under system Face ID (no Accept; no Unlock on first prompt). Unlock appears
-  after cancel / mismatch. Do **not** re-prompt on `.inactive`. Owner pages +
-  passerby tapper: cream fill only (no page watermark).
+- Owner app lock is **biometrics only before Main**: cream + BrandLogo watermark
+  under system Face ID on every launch (no Accept; no Unlock on first prompt).
+  Unlock appears after cancel / mismatch. Fresh install unlocks into empty tabs
+  after auth. Do **not** re-prompt on `.inactive`. Owner pages + passerby tapper:
+  cream fill only (no page watermark).
 - `PrivacySnapshotGuard` cover must appear opaque with **no** opacity fade;
   app-switcher snapshots can capture mid-transition PHI. Capture cover **only
   while PHI is in RAM**. Non-capture cover is true **`.background` only** (with
