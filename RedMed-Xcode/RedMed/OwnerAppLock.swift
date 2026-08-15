@@ -23,8 +23,11 @@ import SwiftUI
 /// `.inactive` — that must not re-prompt. The watermark is never a control.
 ///
 /// Speed (minus Face ID wall time): Keychain decode + AES `#d=` pack + tapper.html
-/// shell warm overlap Face ID; unlock applies the prefetched blob/payload with no
-/// transition animation so tabs paint on the next frame with a ready shell.
+/// shell / WKWebView warm start on lock appear and overlap Face ID. Unlock awaits
+/// the pooled embed WebView (single-flight) in parallel with Keychain apply so a
+/// fast Face ID cannot miss a mid-warm and cold-load 83KB tapper.html. Prefetch
+/// applies with no transition animation so tabs paint on the next frame with a
+/// ready shell.
 struct OwnerAppLock<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
@@ -66,6 +69,16 @@ struct OwnerAppLock<Content: View>: View {
         }
         .onAppear {
             screenCaptured = UIScreen.main.isCaptured
+            // Start Keychain + shell warm before Face ID sheet — do not touch MainActor disk I/O.
+            if ProfileData.prefersLockOnLaunch {
+                profile.beginUnlockPrefetch()
+            }
+            Task.detached(priority: .userInitiated) {
+                PasserbyHTMLCardView.warmShellCache()
+                await MainActor.run {
+                    PasserbyWebViewPool.warmEmbedShell()
+                }
+            }
             tryAutoUnlockIfActive()
         }
         .task(id: authGeneration) {
@@ -270,12 +283,12 @@ struct OwnerAppLock<Content: View>: View {
             showUnlockControl = false
         }
         profile.beginUnlockPrefetch()
-        // nonisolated cache — safe from any thread / Task.detached.
-        PasserbyHTMLCardView.warmShellCache()
-        // MainActor: pre-create WKWebView + parse tapper.html while Face ID is up.
-        Task { @MainActor in
+        // Detached shell warm only — never sync-read tapper.html on MainActor before LA.
+        Task.detached(priority: .userInitiated) {
             PasserbyHTMLCardView.warmShellCache()
-            PasserbyWebViewPool.warmEmbedShell()
+            await MainActor.run {
+                PasserbyWebViewPool.warmEmbedShell()
+            }
         }
         unlockWithFaceID()
     }
@@ -287,13 +300,6 @@ struct OwnerAppLock<Content: View>: View {
         profileLoadFailed = false
         authGeneration &+= 1
         let generation = authGeneration
-        // Warm tapper.html while Face ID is up — unlock must not wait on disk after success.
-        Task.detached(priority: .utility) {
-            PasserbyHTMLCardView.warmShellCache()
-        }
-        Task { @MainActor in
-            PasserbyWebViewPool.warmEmbedShell()
-        }
         BiometricAuth.authenticate(
             reason: "Unlock RedMed with Face ID, Touch ID, or passcode."
         ) { outcome in
@@ -320,18 +326,27 @@ struct OwnerAppLock<Content: View>: View {
                 // await — background can bump authGeneration and purge mid-apply.
                 Task { @MainActor in
                     guard generation == authGeneration else { return }
-                    let expectsProfile = keychainHasProfile || ProfileData.hasStoredProfile()
-                    let loaded = await profile.applyUnlockPrefetchOrReload()
+                    // Off-main SecItem only when the gate / presence check still says empty.
+                    let expectsProfile: Bool
+                    if keychainHasProfile {
+                        expectsProfile = true
+                    } else {
+                        expectsProfile = await Task.detached(priority: .userInitiated) {
+                            ProfileData.hasStoredProfile()
+                        }.value
+                    }
+                    // Overlap Keychain apply with finishing the WKWebView warm.
+                    async let loaded = profile.applyUnlockPrefetchOrReload()
+                    async let warm: Void = PasserbyWebViewPool.ensureWarmEmbedShell()
+                    let didLoad = await loaded
+                    await warm
                     guard generation == authGeneration else {
                         // Late success after background lock — drop any applied PHI.
                         profile.purgeFromMemory()
                         return
                     }
-                    // Belt-and-suspenders — usually already warm from startUnlockPipeline.
-                    PasserbyHTMLCardView.warmShellCache()
-                    PasserbyWebViewPool.warmEmbedShell()
                     isAuthenticating = false
-                    if loaded {
+                    if didLoad {
                         keychainHasProfile = true
                         RedMedHaptics.success()
                         // No soft fade — tabs must appear immediately after Face ID.

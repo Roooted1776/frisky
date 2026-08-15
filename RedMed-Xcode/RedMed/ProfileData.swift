@@ -206,69 +206,72 @@ class ProfileData: ObservableObject {
 
     // MARK: - Unlock prefetch (overlap Keychain with Face ID)
 
-    private struct UnlockPrefetch: Sendable {
-        let blob: PersistedProfile
-        /// `#d=` packed during Face ID so RedMed's first unlocked frame skips AES.
-        let previewPayload: String?
-        /// Plaintext JSON for `window.__REDMED_PROFILE` (skips WebCrypto on first paint).
-        let embedProfileJSON: String?
-    }
-
-    /// In-flight Keychain decode + `#d=` pack while Face ID runs — not applied to profile fields until success.
-    private var unlockPrefetchTask: Task<UnlockPrefetch?, Never>?
+    /// In-flight Keychain decode while Face ID runs — applied only after auth success.
+    private var unlockBlobTask: Task<PersistedProfile?, Never>?
+    /// AES `#d=` + embed JSON; started after blob decode; may finish after Face ID.
+    private var unlockPackTask: Task<(String?, String?)?, Never>?
     /// Stable preview `#d=` from Face ID overlap — RedMedView consumes on first unlock paint.
     private(set) var unlockPreviewPayload: String?
     /// Plaintext profile JSON from Face ID overlap — pairs with `unlockPreviewPayload`.
     private(set) var unlockEmbedProfileJSON: String?
 
-    /// Start (or restart) off-main Keychain load+decode+AES pack while biometrics run.
+    /// Start (or restart) off-main Keychain load+decode, then AES pack while biometrics run.
     /// Does not publish PHI — `applyUnlockPrefetchOrReload` applies only after Face ID success.
     func beginUnlockPrefetch() {
         guard persists else { return }
         discardUnlockPrefetch()
         let account = Self.keychainAccount
-        unlockPrefetchTask = Task.detached(priority: .userInitiated) {
+        let blobTask = Task.detached(priority: .userInitiated) { () -> PersistedProfile? in
             guard let data = KeychainStore.load(account: account),
                   let decoded = try? JSONDecoder().decode(PersistedProfile.self, from: data) else {
                 return nil
             }
+            return decoded
+        }
+        unlockBlobTask = blobTask
+        // Pack after decode — unlock awaits blob first, then takes pack if ready.
+        unlockPackTask = Task.detached(priority: .userInitiated) { () -> (String?, String?)? in
+            guard let decoded = await blobTask.value else { return nil }
             guard !Task.isCancelled else { return nil }
-            // AES pack + embed JSON overlap Face ID — post-unlock must not stall on cream / WebCrypto.
             let artifacts = Self.previewArtifacts(from: decoded)
             guard !Task.isCancelled else { return nil }
-            return UnlockPrefetch(
-                blob: decoded,
-                previewPayload: artifacts.payload,
-                embedProfileJSON: artifacts.json
-            )
+            return (artifacts.payload, artifacts.json)
         }
     }
 
     /// Drop any in-flight / held prefetch (background, cancel, erase).
     func discardUnlockPrefetch() {
-        unlockPrefetchTask?.cancel()
-        unlockPrefetchTask = nil
+        unlockBlobTask?.cancel()
+        unlockBlobTask = nil
+        unlockPackTask?.cancel()
+        unlockPackTask = nil
         unlockPreviewPayload = nil
         unlockEmbedProfileJSON = nil
     }
 
     /// Prefer the Face ID–overlapped decode; fall back to a fresh Keychain read.
+    /// Blob apply is first; pack is awaited when already in flight (usually done
+    /// during Face ID). Fallback rebuilds pack off-main from the Keychain blob.
     @MainActor
     @discardableResult
     func applyUnlockPrefetchOrReload() async -> Bool {
         guard persists else { return false }
-        if let task = unlockPrefetchTask {
-            unlockPrefetchTask = nil
-            if let pref = await task.value {
-                apply(pref.blob)
-                unlockPreviewPayload = pref.previewPayload
-                unlockEmbedProfileJSON = pref.embedProfileJSON
+
+        if let blobTask = unlockBlobTask {
+            unlockBlobTask = nil
+            if let blob = await blobTask.value {
+                apply(blob)
+                await adoptUnlockPack(for: blob)
                 return true
             }
         }
+
+        unlockPackTask?.cancel()
+        unlockPackTask = nil
+
         let ok = await reloadFromKeychainAsync()
         if ok {
-            // Face ID returned before prefetch finished — pack off-main before tabs paint.
+            // No prefetched blob handle — rebuild pack from the applied fields.
             let chip = ProfileNFCCodec.chipProfile(from: snapshot())
             let artifacts = await Task.detached(priority: .userInitiated) {
                 (
@@ -280,6 +283,24 @@ class ProfileData: ObservableObject {
             unlockEmbedProfileJSON = artifacts.1
         }
         return ok
+    }
+
+    /// Take Face ID–overlapped pack when ready; otherwise pack from the Keychain blob.
+    @MainActor
+    private func adoptUnlockPack(for blob: PersistedProfile) async {
+        if let packTask = unlockPackTask {
+            unlockPackTask = nil
+            if let art = await packTask.value {
+                unlockPreviewPayload = art.0
+                unlockEmbedProfileJSON = art.1
+                return
+            }
+        }
+        let artifacts = await Task.detached(priority: .userInitiated) {
+            Self.previewArtifacts(from: blob)
+        }.value
+        unlockPreviewPayload = artifacts.payload
+        unlockEmbedProfileJSON = artifacts.json
     }
 
     /// RedMed tab takes the Face ID–overlapped `#d=` once (nil after).
