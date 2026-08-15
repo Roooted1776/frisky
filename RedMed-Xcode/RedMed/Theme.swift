@@ -33,7 +33,8 @@ extension Color {
     static let redmedBg       = Color(red: 1.000, green: 0.969, blue: 0.969) // #fff7f7
     static let redmedDark     = Color(red: 0.110, green: 0.098, blue: 0.086) // #1c1917
     static let redmedMuted    = Color(red: 0.471, green: 0.443, blue: 0.424) // #78716c
-    static let redmedSurface  = Color.white.opacity(0.94)
+    /// Cream-lift panel fill — not pure white (white boxes on `redmedBg`).
+    static let redmedSurface  = Color(red: 1.000, green: 0.953, blue: 0.957) // #fff3f4
     /// Row / chip hairline — same 8% ink as passerby dividers / legal `--border`.
     static let redmedDivider  = Color(red: 0.110, green: 0.098, blue: 0.086).opacity(0.08)
     /// Soft top wash — pairs with passerby body gradient.
