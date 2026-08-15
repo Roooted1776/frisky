@@ -71,22 +71,22 @@ struct OwnerAppLock<Content: View>: View {
             screenCaptured = UIScreen.main.isCaptured
             // Face ID first — cream hang waiting for `.active` or shell warm is wasted time.
             tryAutoUnlockIfActive()
-            if ProfileData.prefersLockOnLaunch {
-                profile.beginUnlockPrefetch()
-            }
+            // Always prefetch (single-flight). Do not gate on UserDefaults — stale/false
+            // gate left Face ID overlapping nothing.
+            profile.beginUnlockPrefetch()
             Task.detached(priority: .userInitiated) {
                 PasserbyHTMLCardView.warmShellCache()
             }
         }
         .task(id: authGeneration) {
             // Escape hatch: if LA never callbacks, Unlock must still be tappable.
-            // Do not flash Unlock under a live Face ID sheet (common at ~1–2s).
+            // Short grace so a live Face ID sheet is not undercut; then force Unlock.
             guard gate == .locked else { return }
             let generation = authGeneration
-            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            try? await Task.sleep(nanoseconds: 800_000_000)
             guard gate == .locked, generation == authGeneration else { return }
             if isAuthenticating {
-                try? await Task.sleep(nanoseconds: 3_500_000_000)
+                try? await Task.sleep(nanoseconds: 2_200_000_000)
                 guard gate == .locked, generation == authGeneration else { return }
             }
             // Hung LA: invalidate this generation so a late callback cannot unlock,
@@ -304,9 +304,13 @@ struct OwnerAppLock<Content: View>: View {
             showUnlockControl = false
         }
         profile.beginUnlockPrefetch()
-        // HTML string only during Face ID — WKWebView warm starts after unlock paint.
+        // HTML string during Face ID; WKWebView warm after a short delay so LA presents first.
         Task.detached(priority: .userInitiated) {
             PasserbyHTMLCardView.warmShellCache()
+            try? await Task.sleep(nanoseconds: 280_000_000)
+            await MainActor.run {
+                PasserbyWebViewPool.warmEmbedShell()
+            }
         }
         unlockWithFaceID()
     }
@@ -363,6 +367,9 @@ struct OwnerAppLock<Content: View>: View {
                 // await — background can bump authGeneration and purge mid-apply.
                 Task { @MainActor in
                     guard generation == authGeneration else { return }
+                    // Kick WKWebView warm NOW — overlaps Keychain/JSON await so RedMed
+                    // can takeEmbed() instead of a cold 84KB parse after unlock.
+                    PasserbyWebViewPool.warmEmbedShell()
                     // Off-main SecItem overlaps Keychain apply when the gate still says empty.
                     async let expectsProfileTask = keychainHasProfile
                         ? true
@@ -371,7 +378,7 @@ struct OwnerAppLock<Content: View>: View {
                         }.value
                     // Keychain + embed JSON only — do not await WKWebView warm or AES.
                     let didLoad = await profile.applyUnlockPrefetchOrReload()
-                    let expectsProfile = await expectsProfileTask
+                    let expectsProfile = didLoad ? true : await expectsProfileTask
                     guard generation == authGeneration else {
                         // Late success after background lock — drop any applied PHI.
                         profile.purgeFromMemory()
@@ -386,11 +393,6 @@ struct OwnerAppLock<Content: View>: View {
                         biometryFailed = false
                         profileLoadFailed = false
                         showUnlockControl = false
-                        // Warm WKWebView after first unlock frame — not during Face ID.
-                        Task { @MainActor in
-                            await Task.yield()
-                            PasserbyWebViewPool.warmEmbedShell()
-                        }
                     } else if !expectsProfile {
                         // Fresh install — auth passed; open empty Main (Edit gates Save).
                         keychainHasProfile = false
@@ -400,10 +402,6 @@ struct OwnerAppLock<Content: View>: View {
                         biometryFailed = false
                         profileLoadFailed = false
                         showUnlockControl = false
-                        Task { @MainActor in
-                            await Task.yield()
-                            PasserbyWebViewPool.warmEmbedShell()
-                        }
                     } else {
                         // Corrupt / unreadable Keychain — stay locked; do not open empty Edit.
                         RedMedHaptics.error()

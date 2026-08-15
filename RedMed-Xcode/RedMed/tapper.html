@@ -1245,8 +1245,9 @@
     tryNext();
   }
 
-  // Bundle / app-embed already has BrandLogo + BrandWordmark — probing doubles decode.
-  if (!isAppPreview()) {
+  // Defer logo/wordmark probe until after bootProfile kicks decrypt (see end of paint path).
+  function resolveBrandAssets() {
+    if (isAppPreview()) return;
     resolveLogo();
     resolvePaneWordmarks(['BrandWordmark.png', 'assets/BrandWordmark.png']);
   }
@@ -1767,14 +1768,20 @@
   // Sync path when native injected __REDMED_PROFILE; band taps decrypt now
   // (AES key already prefetched when #d= is present).
   (function bootProfile() {
+    function afterPaint() {
+      try { resolveBrandAssets(); } catch (e1) {}
+      try { document.dispatchEvent(new Event('redmed-profile-painted')); } catch (e2) {}
+    }
     try {
       if (window.__REDMED_PROFILE) {
         renderProfile(sanitizeProfile(window.__REDMED_PROFILE), true);
+        afterPaint();
         return;
       }
     } catch (e0) {}
     decodeProfile().then(function (p) {
       renderProfile(p, p != null);
+      afterPaint();
     });
   })();
 
@@ -2475,17 +2482,16 @@
   function hasBandPayload() {
     return /^#d=/.test(location.hash || '') && !appPreview();
   }
-  // Prefetch siren PCM while profile decrypts / first paints.
-  if (typeof requestIdleCallback === 'function') {
-    requestIdleCallback(function () { if (!sirenUrl) sirenUrl = buildSirenWavUrl(); }, { timeout: 1200 });
-  } else {
-    setTimeout(function () { if (!sirenUrl) sirenUrl = buildSirenWavUrl(); }, 0);
-  }
-  if (hasBandPayload()) {
-    arm();
-  } else {
-    paint();
-  }
+  // Band tap: wait for profile paint before arm/siren so decrypt is not fighting PCM.
+  // Crash / explicit SOS still call arm() directly (post-paint). Fallback if paint never fires.
+  document.addEventListener('redmed-profile-painted', function () {
+    if (hasBandPayload()) arm();
+    else paint();
+  }, { once: true });
+  setTimeout(function () {
+    if (hasBandPayload() && !armed) arm();
+    else if (!hasBandPayload()) paint();
+  }, 900);
 })();
 </script>
 </body>

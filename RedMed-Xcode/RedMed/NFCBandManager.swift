@@ -25,6 +25,8 @@ final class NFCBandManager: ObservableObject {
     @Published var lastPackedURL: String?
     /// `#d=` payload or full band URL for `PasserbyHTMLCardView` (HTML shell).
     @Published var scannedHTMLPayload: String?
+    /// Plaintext profile JSON for Scan Preview — skips WebCrypto decrypt hang.
+    @Published var scannedEmbedJSON: String?
     @Published var showScannedCard = false
     @Published var authFailed = false
     @Published var alertMessage: String?
@@ -95,17 +97,23 @@ final class NFCBandManager: ObservableObject {
         let chip = ProfileNFCCodec.chipProfile(from: profile)
         isReading = true
         statusMessage = "Opening tap card…"
+        // Open immediately with embed JSON + placeholder — AES seal fills durable `#d=` after.
+        let json = ProfileNFCCodec.embedProfileJSON(from: chip)
+        presentHTMLCard(
+            payloadOrURL: ProfileNFCCodec.placeholderPreviewPayload,
+            embedJSON: json
+        )
+        isReading = false
+        statusMessage = ""
         Task.detached(priority: .userInitiated) {
             let source = ProfileNFCCodec.buildURLString(chip: chip)
             await MainActor.run { [weak self] in
-                guard let self else { return }
-                self.isReading = false
-                self.statusMessage = ""
+                guard let self, self.showScannedCard else { return }
                 guard let source else {
                     self.alertMessage = "Couldn't pack or decode the tap card from RedMed."
                     return
                 }
-                self.presentHTMLCard(payloadOrURL: source)
+                self.scannedHTMLPayload = source
             }
         }
     }
@@ -113,6 +121,7 @@ final class NFCBandManager: ObservableObject {
     func dismissScannedCard() {
         showScannedCard = false
         scannedHTMLPayload = nil
+        scannedEmbedJSON = nil
     }
 
     /// Mark owner bracelet paired after a verified (or simulated) write.
@@ -203,11 +212,12 @@ final class NFCBandManager: ObservableObject {
         }
     }
 
-    private func presentHTMLCard(payloadOrURL: String) {
+    private func presentHTMLCard(payloadOrURL: String, embedJSON: String? = nil) {
         guard PasserbyHTMLCardView.extractPayload(payloadOrURL) != nil else {
             alertMessage = "Couldn't read a RedMed tap card from this tag."
             return
         }
+        scannedEmbedJSON = embedJSON
         scannedHTMLPayload = payloadOrURL
         showScannedCard = true
     }
