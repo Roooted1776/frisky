@@ -179,11 +179,11 @@
   }
   /* In-app RedMed tab embeds this shell — hide passerby tab chrome (native tabs own 911/Aid).
      Owner embed only: native boot sets `html.app-embed` before first paint; body class
-     mirrors it. Preview/Scan (?src=app) must NOT get app-embed — full HTML tabs stay. */
+     mirrors it. Preview/Scan (?src=app) must NOT get app-embed — full HTML tabs stay.
+     Native Help · Edit chrome sits *above* the WKWebView (sibling), so no top inset here. */
   html.app-embed body,
   body.app-embed {
-    /* Clear opaque Help · Edit cream chrome (6 + 44 + 8). */
-    padding-top: calc(var(--safe-t) + 60px);
+    padding-top: var(--safe-t);
     padding-bottom: var(--safe-b);
   }
   html.app-embed .tabbar,
@@ -204,8 +204,8 @@
   body.app-embed #panel-medical {
     display: flex !important;
     flex-direction: column;
-    min-height: calc(100vh - var(--safe-t) - 60px - var(--safe-b));
-    min-height: calc(100dvh - var(--safe-t) - 60px - var(--safe-b));
+    min-height: calc(100vh - var(--safe-t) - var(--safe-b));
+    min-height: calc(100dvh - var(--safe-t) - var(--safe-b));
   }
   /* Owner embed: no lock line / BrandWordmark above the medical card. */
   html.app-embed .rm-lock,
@@ -1568,6 +1568,8 @@
 
   var tabAnimReady = false;
   function showTab(id) {
+    // Bracelet / passerby / Preview shell: RedMed · 911 · Aid only — never NFC or Edit.
+    if (id !== 'medical' && id !== '911' && id !== 'aid') return;
     document.querySelectorAll('.panel').forEach(function (p) {
       var on = p.getAttribute('data-panel') === id;
       p.classList.toggle('active', on);
@@ -1802,6 +1804,8 @@
     if (!statusEl || statusEl.__redmedNfcWired) return;
     statusEl.__redmedNfcWired = true;
     function openNFC() {
+      // Fail closed: only owner RedMed embed may jump to native NFC. Bracelet tap
+      // and Preview/Scan keep RedMed · 911 · Aid only — no NFC · no Edit.
       if (!isAppEmbed()) return;
       try { location.href = 'redmed://nfc'; } catch (e) {}
     }
