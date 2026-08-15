@@ -4,7 +4,7 @@ import Foundation
 
 /// On-chip profile after decode — must stay compatible with the hosted card page
 /// (`tapper.html` `#d=` decrypt).
-struct NFCChipProfile: Codable, Equatable {
+struct NFCChipProfile: Codable, Equatable, Sendable {
     var name: String = ""
     var dob: String = ""
     var blood: String = ""
@@ -16,7 +16,7 @@ struct NFCChipProfile: Codable, Equatable {
     var updated: String = ""
 }
 
-struct NFCChipContact: Codable, Equatable {
+struct NFCChipContact: Codable, Equatable, Sendable {
     var name: String = ""
     var rel: String = ""
     var phone: String = ""
@@ -123,9 +123,9 @@ enum ProfileNFCCodec {
     /// `buildPreviewURLString` so SwiftUI body re-evals do not mint a new AES ciphertext.
     /// Owner writes always use `AppConfig.medicalCardBaseURL` + `#d=` (fail closed
     /// if a caller passes a vendor / social / short-link base).
-    static func buildURLString(profile: ProfileData, baseURL: String = AppConfig.medicalCardBaseURL) -> String? {
+    static func buildURLString(chip: NFCChipProfile, baseURL: String = AppConfig.medicalCardBaseURL) -> String? {
         guard baseURL == AppConfig.medicalCardBaseURL else { return nil }
-        var chip = chipProfile(from: profile)
+        var chip = chip
         chip.updated = ISO8601DateFormatter().string(from: Date())
         guard let encoded = encodePayload(chip) else { return nil }
         let urlString = baseURL + "#d=" + encoded
@@ -133,11 +133,15 @@ enum ProfileNFCCodec {
         return urlString
     }
 
-    /// Stable `#d=` for WKWebView embed — keeps `profile.lastUpdated` (or one stamp if empty)
+    static func buildURLString(profile: ProfileData, baseURL: String = AppConfig.medicalCardBaseURL) -> String? {
+        buildURLString(chip: chipProfile(from: profile), baseURL: baseURL)
+    }
+
+    /// Stable `#d=` for WKWebView embed — keeps `chip.updated` (or one stamp if empty)
     /// and must only be called when durable fields change, not every `body` pass.
-    static func buildPreviewURLString(profile: ProfileData, baseURL: String = AppConfig.medicalCardBaseURL) -> String? {
+    static func buildPreviewURLString(chip: NFCChipProfile, baseURL: String = AppConfig.medicalCardBaseURL) -> String? {
         guard baseURL == AppConfig.medicalCardBaseURL else { return nil }
-        var chip = chipProfile(from: profile)
+        var chip = chip
         if chip.updated.isEmpty {
             chip.updated = ISO8601DateFormatter().string(from: Date())
         }
@@ -147,10 +151,13 @@ enum ProfileNFCCodec {
         return urlString
     }
 
+    static func buildPreviewURLString(profile: ProfileData, baseURL: String = AppConfig.medicalCardBaseURL) -> String? {
+        buildPreviewURLString(chip: chipProfile(from: profile), baseURL: baseURL)
+    }
+
     /// Plain object JSON for in-app `window.__REDMED_PROFILE` — skips WebCrypto decrypt.
     /// Shape matches `tapper.html` `sanitizeProfile` (name/dob/blood/lists/contacts).
-    static func embedProfileJSON(from profile: ProfileData) -> String? {
-        let chip = chipProfile(from: profile)
+    static func embedProfileJSON(from chip: NFCChipProfile) -> String? {
         let contacts: [[String: String]] = chip.contacts.map {
             ["name": $0.name, "rel": $0.rel, "phone": $0.phone, "detail": ""]
         }
@@ -169,6 +176,10 @@ enum ProfileNFCCodec {
               let data = try? JSONSerialization.data(withJSONObject: obj, options: []),
               let json = String(data: data, encoding: .utf8) else { return nil }
         return json
+    }
+
+    static func embedProfileJSON(from profile: ProfileData) -> String? {
+        embedProfileJSON(from: chipProfile(from: profile))
     }
 
     static func buildURL(profile: ProfileData, baseURL: String = AppConfig.medicalCardBaseURL) -> URL? {

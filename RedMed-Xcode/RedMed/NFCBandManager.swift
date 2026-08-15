@@ -45,29 +45,30 @@ final class NFCBandManager: ObservableObject {
     func writeBand(from profile: ProfileData, isScannerSession: Bool) {
         guard !isScannerSession else { return }
         guard profile.hasData else { return }
-        let scratch = profile.snapshot()
 
         BiometricAuth.authenticate(
             reason: "Confirm with Face ID, Touch ID, or passcode to write your RedMed card to the bracelet."
         ) { [weak self] outcome in
             guard let self else { return }
             if outcome == .success {
-                Task.detached(priority: .userInitiated) {
-                    let urlString = ProfileNFCCodec.buildURLString(profile: scratch)
-                    await MainActor.run {
-                        guard let urlString,
-                              AppConfig.OwnerBandURI.isValidWriteURL(urlString) else {
-                            self.alertMessage = "Couldn't build a RedMed #d= tag payload (vendor/social URLs are blocked)."
-                            return
-                        }
-                        if AppConfig.nfcHardwareEnabled {
-                            self.statusMessage = ""
-                            self.writeSucceeded = false
-                            self.writeVerified = false
-                            self.writer.writeURL(urlString)
-                        } else {
-                            self.simulateWrite(urlString, profile: scratch)
-                        }
+                let chip = ProfileNFCCodec.chipProfile(from: profile)
+                Task { @MainActor [weak self] in
+                    let urlString = await Task.detached(priority: .userInitiated) {
+                        ProfileNFCCodec.buildURLString(chip: chip)
+                    }.value
+                    guard let self else { return }
+                    guard let urlString,
+                          AppConfig.OwnerBandURI.isValidWriteURL(urlString) else {
+                        self.alertMessage = "Couldn't build a RedMed #d= tag payload (vendor/social URLs are blocked)."
+                        return
+                    }
+                    if AppConfig.nfcHardwareEnabled {
+                        self.statusMessage = ""
+                        self.writeSucceeded = false
+                        self.writeVerified = false
+                        self.writer.writeURL(urlString)
+                    } else {
+                        self.simulateWrite(urlString, profile: profile)
                     }
                 }
             } else if outcome == .notVerified {
@@ -91,11 +92,11 @@ final class NFCBandManager: ObservableObject {
             return
         }
 
-        let scratch = profile.snapshot()
+        let chip = ProfileNFCCodec.chipProfile(from: profile)
         isReading = true
         statusMessage = "Opening tap card…"
         Task.detached(priority: .userInitiated) {
-            let source = ProfileNFCCodec.buildURLString(profile: scratch)
+            let source = ProfileNFCCodec.buildURLString(chip: chip)
             try? await Task.sleep(nanoseconds: 350_000_000)
             await MainActor.run { [weak self] in
                 guard let self else { return }

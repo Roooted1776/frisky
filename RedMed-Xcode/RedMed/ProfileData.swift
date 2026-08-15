@@ -205,7 +205,7 @@ class ProfileData: ObservableObject {
 
     // MARK: - Unlock prefetch (overlap Keychain with Face ID)
 
-    private struct UnlockPrefetch {
+    private struct UnlockPrefetch: Sendable {
         let blob: PersistedProfile
         /// `#d=` packed during Face ID so RedMed's first unlocked frame skips AES.
         let previewPayload: String?
@@ -268,12 +268,15 @@ class ProfileData: ObservableObject {
         let ok = await reloadFromKeychainAsync()
         if ok {
             // Face ID returned before prefetch finished — pack off-main before tabs paint.
-            let scratch = snapshot()
+            let chip = ProfileNFCCodec.chipProfile(from: snapshot())
             let artifacts = await Task.detached(priority: .userInitiated) {
-                Self.previewArtifacts(fromProfile: scratch)
+                (
+                    PasserbyHTMLCardView.previewPayload(from: chip),
+                    ProfileNFCCodec.embedProfileJSON(from: chip)
+                )
             }.value
-            unlockPreviewPayload = artifacts.payload
-            unlockEmbedProfileJSON = artifacts.json
+            unlockPreviewPayload = artifacts.0
+            unlockEmbedProfileJSON = artifacts.1
         }
         return ok
     }
@@ -296,24 +299,22 @@ class ProfileData: ObservableObject {
 
     /// Off-main AES preview pack + embed JSON from a Keychain blob (no @Published writes).
     private static func previewArtifacts(from blob: PersistedProfile) -> (payload: String?, json: String?) {
-        let scratch = ProfileData(persisting: false)
-        scratch.name = blob.name
-        scratch.birthDate = blob.birthDate
-        scratch.bloodType = blob.bloodType
-        scratch.allergies = blob.allergies
-        scratch.medications = blob.medications
-        scratch.conditions = blob.conditions
-        scratch.contacts = blob.contacts.map { $0.asEmergencyContact() }
-        scratch.braceletLinked = blob.braceletLinked
-        scratch.isOrganDonor = blob.isOrganDonor
-        scratch.lastUpdated = blob.lastUpdated
-        return previewArtifacts(fromProfile: scratch)
-    }
-
-    private static func previewArtifacts(fromProfile profile: ProfileData) -> (payload: String?, json: String?) {
-        (
-            PasserbyHTMLCardView.previewPayload(from: profile),
-            ProfileNFCCodec.embedProfileJSON(from: profile)
+        let chip = NFCChipProfile(
+            name: blob.name,
+            dob: blob.birthDate,
+            blood: blob.bloodType,
+            donor: blob.isOrganDonor,
+            allergies: blob.allergies,
+            meds: blob.medications,
+            conditions: blob.conditions,
+            contacts: blob.contacts.map {
+                NFCChipContact(name: $0.name, rel: $0.relationship, phone: $0.phone)
+            },
+            updated: blob.lastUpdated
+        )
+        return (
+            PasserbyHTMLCardView.previewPayload(from: chip),
+            ProfileNFCCodec.embedProfileJSON(from: chip)
         )
     }
 
@@ -487,7 +488,7 @@ struct EmergencyContact: Identifiable, Equatable {
     }
 }
 
-private struct PersistedProfile: Codable {
+private struct PersistedProfile: Codable, Sendable {
     var name: String
     var birthDate: String
     var bloodType: String
@@ -501,7 +502,7 @@ private struct PersistedProfile: Codable {
 }
 
 /// Keychain contact blob. Prefers `relationship` + `phone`; still reads legacy `detail`.
-private struct PersistedContact: Codable {
+private struct PersistedContact: Codable, Sendable {
     var name: String
     var relationship: String
     var phone: String
