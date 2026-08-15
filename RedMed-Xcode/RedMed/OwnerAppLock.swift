@@ -343,7 +343,7 @@ struct OwnerAppLock<Content: View>: View {
                 // Unlock chrome up; clear auto-prompt so `.active` retries once.
                 // User cancel is `.declined` (Unlock stays); this is not cancel.
                 // Never auto-kick inline when already `.active` — LA can still return
-                // appNotInteractive briefly and that looped Face ID forever.
+                // notInteractive briefly and that looped Face ID forever.
                 isAuthenticating = false
                 biometryFailed = false
                 profileLoadFailed = false
