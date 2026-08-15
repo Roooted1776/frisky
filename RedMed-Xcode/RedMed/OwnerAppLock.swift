@@ -18,9 +18,11 @@ import SwiftUI
 /// BrandLogo watermark under the system biometrics sheet. No Accept step.
 /// Unlock is retry chrome after cancel / mismatch — not part of the first-load
 /// surface. Fresh install unlocks into empty tabs after auth; returning owners
-/// load Keychain (fail closed on corrupt blob). Auto-prompt once per lock while
-/// `.active` (and again after `.background`). Face ID sheets put the scene
-/// `.inactive` — that must not re-prompt. The watermark is never a control.
+/// load Keychain (fail closed on corrupt blob). Auto-prompt once per lock —
+/// including cold launch while still `.inactive` (do not wait for `.active` or
+/// the cream shell hangs with no sheet). Face ID sheets put the scene
+/// `.inactive` — `didAutoPromptThisLock` blocks re-prompt (do not re-prompt on
+/// inactive). The watermark is never a control.
 ///
 /// Speed (minus Face ID wall time): Keychain decode + embed JSON + tapper.html
 /// string warm overlap Face ID. Unlock does **not** wait on AES `#d=` or
@@ -67,20 +69,20 @@ struct OwnerAppLock<Content: View>: View {
         }
         .onAppear {
             screenCaptured = UIScreen.main.isCaptured
-            // Keychain + HTML string warm before Face ID — no WKWebView yet (fights LA).
+            // Face ID first — cream hang waiting for `.active` or shell warm is wasted time.
+            tryAutoUnlockIfActive()
             if ProfileData.prefersLockOnLaunch {
                 profile.beginUnlockPrefetch()
             }
             Task.detached(priority: .userInitiated) {
                 PasserbyHTMLCardView.warmShellCache()
             }
-            tryAutoUnlockIfActive()
         }
         .task(id: authGeneration) {
             // Escape hatch: if LA never callbacks, Unlock must still appear.
             guard gate == .locked else { return }
             let generation = authGeneration
-            try? await Task.sleep(nanoseconds: 2_500_000_000)
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
             guard gate == .locked, generation == authGeneration else { return }
             showUnlockControl = true
         }
@@ -253,7 +255,12 @@ struct OwnerAppLock<Content: View>: View {
     }
 
     private func tryAutoUnlockIfActive() {
-        guard gate == .locked, scenePhase == .active, !didAutoPromptThisLock else { return }
+        guard gate == .locked, !didAutoPromptThisLock else { return }
+        // Cold launch often starts `.inactive` before first `.active`. Waiting for
+        // `.active` left a cream watermark hang with no Face ID. Kick LA unless
+        // truly backgrounded — `didAutoPromptThisLock` blocks re-prompt while the
+        // Face ID sheet holds the scene `.inactive` (AGENTS: no re-prompt on inactive).
+        guard scenePhase != .background else { return }
         didAutoPromptThisLock = true
         startUnlockPipeline(isAuto: true)
     }

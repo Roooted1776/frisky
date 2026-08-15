@@ -1458,6 +1458,18 @@
     return aesKeyPromise;
   }
 
+  // Prefetch AES key as soon as a band #d= is present — overlaps tab wiring / HTML.
+  // In-app __REDMED_PROFILE skips WebCrypto; no key work needed.
+  (function prefetchAesKeyEarly() {
+    try {
+      if (window.__REDMED_PROFILE) return;
+      if (!secureCryptoOk()) return;
+      var hash = location.hash || '';
+      if (hash.indexOf('d=') < 0) return;
+      getAesKey();
+    } catch (e) {}
+  })();
+
   function b64urlToBytes(raw) {
     var b64 = raw.replace(/-/g, '+').replace(/_/g, '/');
     while (b64.length % 4) b64 += '=';
@@ -1783,9 +1795,19 @@
     });
   })();
 
-  decodeProfile().then(function (p) {
-    renderProfile(p, p != null);
-  });
+  // Sync first paint when native already injected plaintext — no Promise tick hang.
+  // Band taps: AES key was prefetched above; decrypt runs immediately.
+  (function bootProfile() {
+    try {
+      if (window.__REDMED_PROFILE) {
+        renderProfile(sanitizeProfile(window.__REDMED_PROFILE), true);
+        return;
+      }
+    } catch (e0) {}
+    decodeProfile().then(function (p) {
+      renderProfile(p, p != null);
+    });
+  })();
 
   function setCoords(lat, lon, acc) {
     if (!isFinite(lat) || !isFinite(lon)) return;
