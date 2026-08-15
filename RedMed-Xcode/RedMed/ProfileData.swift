@@ -121,8 +121,9 @@ class ProfileData: ObservableObject {
         KeychainStore.exists(account: keychainAccount)
     }
 
-    /// UserDefaults mirror of Keychain presence — first SwiftUI frame may lock
-    /// without waiting on SecItem. Keychain remains authoritative in OwnerAppLock.
+    /// UserDefaults mirror of Keychain presence — hints whether unlock should
+    /// expect a blob (prefetch / fail-closed). Lock always paints first; Main
+    /// never mounts before Face ID. Keychain remains authoritative in OwnerAppLock.
     static let storedProfileGateKey = "redmed.hasStoredProfileGate"
 
     static var prefersLockOnLaunch: Bool {

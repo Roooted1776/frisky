@@ -98,21 +98,23 @@ The app has no backend, database, or web service.
 **Cold launch:** Do **not** create `CLLocationManager`, start GPS / MapKit /
 trauma JSON, or show a Location banner at `@main`. First launch opens a cream
 shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash) with
-**zero Keychain** on the first frame — `OwnerAppLock` uses a UserDefaults gate
-(`ProfileData.storedProfileGateKey`, set on persist / Keychain presence) so
-returning owners see the watermark lock immediately and fresh installs open
-tabs; SecItem still confirms off-main and can correct a stale gate. First load
-for returning owners is auto Face ID over cream + watermark (Unlock is retry
-only). Owner pages + tapper: cream fill, no page watermark. Unlock overlaps
-Keychain decode + AES `#d=` pack + tapper shell warm with Face ID and skips
-unlock animation so tabs paint on the next frame after biometrics with a ready
-shell. Do not call Keychain in `@State` defaults. Location defaults on in Help →
+**zero Keychain** on the first frame — `OwnerAppLock` always starts locked
+(cream + BrandLogo watermark) so Main never mounts before Face ID / passcode.
+A UserDefaults gate (`ProfileData.storedProfileGateKey`, set on persist /
+Keychain presence) hints whether a blob is expected for prefetch / fail-closed
+load; SecItem confirms off-main. Auto Face ID on every owner launch (Unlock is
+retry after cancel / mismatch). Fresh install unlocks into empty tabs after
+auth; returning owners load Keychain. Owner pages + tapper: cream fill, no page
+watermark. Unlock overlaps Keychain decode + AES `#d=` pack + tapper shell warm
+with Face ID and skips unlock animation so tabs paint on the next frame after
+biometrics with a ready shell. Do not call Keychain in `@State` defaults.
+Location defaults on in Help →
 Settings with **no RedMed location gate / banner / Allow popup** — Help must not
 call `requestWhenInUseAuthorization`. When-In-Use + GPS start on Find Help only
 when Location is enabled (`AppSettings.locationEnabled` + `LocationManager.start`);
 iOS may show its system Allow sheet once (cannot auto-accept). Passerby
 `tapper.html` must not call `geolocation` until the 911 tab opens. CoreMotion crash
-monitoring starts after unlock (fresh install: when tabs open); do not construct
+monitoring starts after unlock; do not construct
 `CMMotionManager` at `CrashMotionGuard` shared init or during Face ID. `ContentView` lazy
 tab mounting mounts RedMed only on cold start (911 / Aid / NFC on first visit,
 kept alive after with opacity). Opacity keep-alive **does not** fire
@@ -120,10 +122,11 @@ kept alive after with opacity). Opacity keep-alive **does not** fire
 tab (Find Help GPS, seizure autodial, etc.) needs an explicit `isVisible`
 (or equivalent) hook from `ContentView`, not `onDisappear` alone. Keychain
 profile decode runs off-main (prefetched during Face ID) and must **fail closed**
-(stay locked) if decode returns false — never unlock into an empty profile
-that can overwrite Keychain. Vault prep runs off the main thread after first
-paint. CoreMotion crash monitoring starts after unlock (or immediately on a
-fresh install with no lock) — not during Face ID. `UILaunchScreen` must use `LaunchBackground` (same as `redmedBg`,
+(stay locked) if a stored blob was expected but decode returns false — never
+unlock into an empty profile that can overwrite Keychain. Empty Keychain after
+auth (fresh install) may open empty Main. Vault prep runs off the main thread
+after first paint. CoreMotion crash monitoring starts after unlock — not during
+Face ID. `UILaunchScreen` must use `LaunchBackground` (same as `redmedBg`,
 including dark appearance) — never an empty dict (system black).
 `PrivacySnapshotGuard` must not cover until the scene has been `.active`
 once (cold start begins `.inactive` and would otherwise blank the first

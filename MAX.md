@@ -44,11 +44,12 @@ See also `AGENTS.md`. High-signal recap:
 3. Settings = **haptic + Location only**. Brightness 100% + system volume 100% + locator siren arm on crash / severe-impact (`CrashMotionGuard`), owner **SOS · Locate me**, or **real bracelet NFC** open of `tapper.html#d=…` (hardware-local SOS on that phone). Owner Find Help open, bare `/tapper/`, and in-app scanner preview do **not** auto-arm.
 4. Survival hold may keep siren + max volume + brightness through background until cancel on Aid (or Stop SOS on Find Help).
 5. Vault Face ID: relock on **`.background` only** (not `.inactive` — Face ID sheets).
-6. Owner lock first load: cream + BrandLogo watermark under auto Face ID
-   (Unlock = retry after cancel / mismatch). Owner pages + tapper: cream fill
-   only — no page watermark. Privacy cover: opaque, no fade; capture only while
-   PHI in RAM; non-capture cover **`.background` only** (never `.inactive` /
-   Face ID sheets) — never over watermark lock.
+6. Owner lock: every launch is cream + BrandLogo watermark under auto Face ID
+   before Main (Unlock = retry after cancel / mismatch). Fresh install unlocks
+   into empty tabs after auth. Owner pages + tapper: cream fill only — no page
+   watermark. Privacy cover: opaque, no fade; capture only while PHI in RAM;
+   non-capture cover **`.background` only** (never `.inactive` / Face ID
+   sheets) — never over watermark lock.
 7. Cold launch: zero Location / MapKit / trauma JSON at `@main`. CoreMotion crash monitor may start after first-frame yield.
 8. Unique `project.pbxproj` IDs (duplicate IDs drop sources).
 9. Passerby SW: cache-first multi-key shell for almost-instant EMT open; clear prior CACHE on activate; bump `redmed-tapper-vN` in lockstep. Tap-to-view = HTML; no biometric copy in any passerby / policy HTML.
@@ -69,13 +70,13 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Owner app on first launch; `Main.swift` owner shell; HTML policies redirect `redmed://main`.
 - Deferred all Core Location until Find Help; fixed SIGTERM/launch confusion.
 - Cold launch: LaunchBackground only on UILaunchScreen (no system BrandLogo).
-  Returning-owner first load: auto Face ID over cream + watermark (Unlock after
-  cancel / mismatch). Keychain decode + AES `#d=` pack + tapper shell warm
-  overlap Face ID; no unlock fade. Profile gate opens watermark lock (or tabs)
-  on first frame — no Keychain in `@State`; CoreMotion after unlock.
-  PrivacySnapshotGuard never covers watermark lock — only while PHI is in RAM.
-  Owner pages + tapper: cream fill only (no page watermark). SW `redmed-tapper-v80`.
-  Unlock fail-closed if Keychain decode fails.
+  Every owner launch: auto Face ID over cream + watermark before Main (Unlock
+  after cancel / mismatch). Fresh install unlocks into empty tabs after auth.
+  Keychain decode + AES `#d=` pack + tapper shell warm overlap Face ID; no
+  unlock fade. Lock shell on first frame — no Keychain in `@State`; CoreMotion
+  after unlock. PrivacySnapshotGuard never covers watermark lock — only while
+  PHI is in RAM. Owner pages + tapper: cream fill only (no page watermark).
+  Unlock fail-closed if an expected Keychain blob fails to decode.
 - Vault Local History: Accept tap before Face ID (no auto-prompt on appear).
 - Opacity keep-alive tabs: Find Help GPS + seizure autodial tear down via
   `isVisible` (not `onDisappear` — opacity hide never fires it).
