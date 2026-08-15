@@ -29,7 +29,7 @@ struct NFCView: View {
 
     private var ownerBody: some View {
         // Fixed cream chrome (no NavigationView / system toolbar) — page
-        // BrandWordmark (911 / Aid are content-first; pane wordmarks only).
+        // BrandWordmark (911 / Aid are content-first; no hanging pane marks).
         // Owner-only tab; scanners never mount this.
         VStack(spacing: 0) {
             BrandWordmarkHeader()

@@ -55,7 +55,7 @@ struct AidView: View {
     var body: some View {
         // Full-width accordion — life-saving: big targets, text always fits, no
         // 2-col reflow when a pane opens. Same pattern as passerby tapper.html Aid.
-        // No page header text / BrandWordmark — content-first like RedMed.
+        // No page header / pane BrandWordmark — content-first, nothing hanging.
         // Scanner Back overlays top-trailing.
         ZStack(alignment: .topTrailing) {
             GeometryReader { geo in
@@ -137,39 +137,29 @@ struct PaneCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Button { onTap(nil) } label: {
-                VStack(alignment: .leading, spacing: 6) {
-                    // Compact BrandWordmark top-left — title row follows underneath.
-                    Image("BrandWordmark")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 18)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                HStack(alignment: .center, spacing: 12) {
+                    Text(pane.emoji)
+                        .font(.system(size: 22))
+                        .frame(width: 44, height: 44)
+                        .background(isOpen ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
                         .accessibilityHidden(true)
 
-                    HStack(alignment: .center, spacing: 12) {
-                        Text(pane.emoji)
-                            .font(.system(size: 22))
-                            .frame(width: 44, height: 44)
-                            .background(isOpen ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
-                            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
-                            .accessibilityHidden(true)
+                    Text(pane.title)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.redmedAccent)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.75)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .layoutPriority(1)
 
-                        Text(pane.title)
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.redmedAccent)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.75)
-                            .multilineTextAlignment(.leading)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .layoutPriority(1)
-
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(.redmedAccent)
-                            .rotationEffect(.degrees(isOpen ? 90 : 0))
-                            .frame(width: 28, height: 28)
-                    }
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.redmedAccent)
+                        .rotationEffect(.degrees(isOpen ? 90 : 0))
+                        .frame(width: 28, height: 28)
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)

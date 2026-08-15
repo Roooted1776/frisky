@@ -47,9 +47,12 @@ See also `AGENTS.md`. High-signal recap:
 6. Owner lock: every launch is flat cream under auto Face ID before Main (no
    decorative BrandLogo; Unlock = retry after cancel / mismatch). Fresh install
    unlocks into empty tabs after auth. Owner pages + tapper: cream fill only —
-   no page BrandLogo. Privacy cover: opaque, no fade; capture only while PHI in
-   RAM; non-capture cover **`.background` only** (never `.inactive` / Face ID
-   sheets) — never over the lock / Unlock shell.
+   no page BrandLogo. **No hanging decorative brand marks** (lock watermark, Aid
+   pane wordmarks, privacy-cover logo gone). NFC / topic sheets keep one page
+   BrandWordmark header; tapper YOU-card BrandLogo stays as the medical header.
+   Privacy cover: opaque, no fade; capture only while PHI in RAM; non-capture
+   cover **`.background` only** (never `.inactive` / Face ID sheets) — never over
+   the lock / Unlock shell.
 7. Cold launch: zero Location / MapKit / trauma JSON at `@main`. CoreMotion crash monitor may start after first-frame yield.
 8. Unique `project.pbxproj` IDs (duplicate IDs drop sources).
 9. Passerby SW: cache-first multi-key shell for almost-instant EMT open; clear prior CACHE on activate; bump `redmed-tapper-vN` in lockstep. Tap-to-view = HTML; no biometric copy in any passerby / policy HTML.
@@ -83,7 +86,10 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Vault Local History: Accept tap before Face ID (no auto-prompt on appear).
 - Opacity keep-alive tabs: Find Help GPS + seizure autodial tear down via
   `isVisible` (not `onDisappear` — opacity hide never fires it).
-- Custom tab bar spacing; Aid chrome/wordmark/headings; RedMed fonts; Preview scanner Back = Edit chrome (`ChromeTextAction`: accent red, plain page-bg fill, 18 regular) on all tabs. Find Help title + Back pinned above scroll.
+- Custom tab bar spacing; Aid content-first (no hanging pane wordmarks); RedMed
+  fonts; Preview scanner Back = Edit chrome (`ChromeTextAction`: accent red,
+  plain page-bg fill, 18 regular) on all tabs. Find Help title + Back pinned
+  above scroll.
 - Version 1.1 driven from build settings; simulator default iOS 27.0; CI iOS compile workflow (later gated when Actions billing blocked macOS).
 
 ### Edit / profile / Face ID

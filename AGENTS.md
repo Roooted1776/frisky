@@ -85,7 +85,10 @@ The app has no backend, database, or web service.
   Face ID on every launch (no Accept; no Unlock on first prompt; **no** decorative
   BrandLogo on the lock shell). Unlock appears after cancel / mismatch. Fresh
   install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
-  Owner pages + passerby tapper: cream fill only (no page BrandLogo).
+  Owner pages + passerby tapper: cream fill only (no page BrandLogo). **No hanging
+  decorative brand marks** anywhere (no lock watermark, no Aid pane wordmarks, no
+  privacy-cover logo) — page BrandWordmark headers on NFC / topic sheets only;
+  YOU-card BrandLogo in tapper stays as the medical header mark.
 - `PrivacySnapshotGuard` cover must appear opaque with **no** opacity fade;
   app-switcher snapshots can capture mid-transition PHI. Capture cover **only
   while PHI is in RAM**. Non-capture cover is true **`.background` only** (with

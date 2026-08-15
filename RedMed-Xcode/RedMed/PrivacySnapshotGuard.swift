@@ -13,7 +13,7 @@ import UIKit
 ///
 /// Non-capture cover is **`.background` only** (with PHI). Face ID / LAContext
 /// put the scene `.inactive` — covering then blanks the UI mid-unlock and
-/// painted a second BrandLogo over the cream lock. App-switcher snapshots
+/// painted a second cover over the cream lock. App-switcher snapshots
 /// still get a cover on true background while PHI is in RAM; after
 /// `OwnerAppLock` purges, the lock shell itself has no PHI to leak.
 struct PrivacySnapshotGuard<Content: View>: View {
@@ -89,10 +89,6 @@ struct PrivacySnapshotGuard<Content: View>: View {
         ZStack {
             Color.redmedBg.ignoresSafeArea()
             VStack(spacing: 12) {
-                Image("BrandLogo")
-                    .resizable()
-                    .frame(width: 56, height: 56)
-                    .clipShape(Circle())
                 Text("RedMed")
                     .font(.system(size: 22, weight: .bold))
                     .foregroundColor(.redmedDark)
