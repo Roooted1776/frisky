@@ -18,14 +18,18 @@ import SwiftUI
 /// BrandLogo watermark under the system biometrics sheet. No Accept step.
 /// Unlock is retry chrome after cancel / mismatch — not part of the first-load
 /// surface. Fresh install unlocks into empty tabs after auth; returning owners
-/// load Keychain (fail closed on corrupt blob). Auto-prompt once per lock while
-/// `.active` (and again after `.background`). Face ID sheets put the scene
-/// `.inactive` — that must not re-prompt. The watermark is never a control.
+/// load Keychain (fail closed on corrupt blob). Auto-prompt once per lock —
+/// including cold launch while still `.inactive` (waiting for `.active` was the
+/// cream hang: watermark with no sheet). Face ID sheets put the scene
+/// `.inactive` — `didAutoPromptThisLock` blocks re-prompt. The watermark is
+/// never a control.
 ///
-/// Speed (minus Face ID wall time): Keychain decode + embed JSON + tapper.html
-/// string warm overlap Face ID. Unlock does **not** wait on AES `#d=` or
-/// WKWebView create — placeholder `#d=` + `__REDMED_PROFILE` paints RedMed
-/// immediately; durable AES and WebView warm start after the first unlock frame.
+/// Speed (minus Face ID wall time): Face ID kicks first; Keychain prefetch +
+/// tapper.html string warm still start in the same `onAppear` tick and again
+/// inside the unlock pipeline (single-flight overlap). Unlock does **not** wait
+/// on AES `#d=` or WKWebView create — placeholder `#d=` + `__REDMED_PROFILE`
+/// paints RedMed immediately; durable AES and WebView warm start after the
+/// first unlock frame.
 struct OwnerAppLock<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
@@ -67,21 +71,34 @@ struct OwnerAppLock<Content: View>: View {
         }
         .onAppear {
             screenCaptured = UIScreen.main.isCaptured
-            // Keychain + HTML string warm before Face ID — no WKWebView yet (fights LA).
+            // Face ID first — cream hang was waiting for `.active` / delaying LA.
+            // Prefetch + shell string still start in this same tick (and again in
+            // the pipeline). No WKWebView yet (fights LA).
+            tryAutoUnlockIfActive()
             if ProfileData.prefersLockOnLaunch {
                 profile.beginUnlockPrefetch()
             }
             Task.detached(priority: .userInitiated) {
                 PasserbyHTMLCardView.warmShellCache()
             }
-            tryAutoUnlockIfActive()
         }
         .task(id: authGeneration) {
-            // Escape hatch: if LA never callbacks, Unlock must still appear.
+            // Escape hatch: if LA never callbacks, Unlock must still be tappable.
+            // Do not flash Unlock under a live Face ID sheet (common at ~1–2s).
             guard gate == .locked else { return }
             let generation = authGeneration
-            try? await Task.sleep(nanoseconds: 2_500_000_000)
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
             guard gate == .locked, generation == authGeneration else { return }
+            if isAuthenticating {
+                try? await Task.sleep(nanoseconds: 3_500_000_000)
+                guard gate == .locked, generation == authGeneration else { return }
+            }
+            // Hung LA: invalidate this generation so a late callback cannot unlock,
+            // clear isAuthenticating so Unlock is not stuck disabled.
+            if isAuthenticating {
+                authGeneration &+= 1
+                isAuthenticating = false
+            }
             showUnlockControl = true
         }
         .task {
@@ -94,6 +111,11 @@ struct OwnerAppLock<Content: View>: View {
             keychainHasProfile = hasProfile
             if hasProfile {
                 hasEverHadSensitiveData = true
+                // Face ID may already be running (onAppear kicked LA first) — still
+                // start single-flight prefetch so unlock overlaps SecItem.
+                if gate == .locked {
+                    profile.beginUnlockPrefetch()
+                }
             } else {
                 profile.discardUnlockPrefetch()
             }
@@ -253,7 +275,12 @@ struct OwnerAppLock<Content: View>: View {
     }
 
     private func tryAutoUnlockIfActive() {
-        guard gate == .locked, scenePhase == .active, !didAutoPromptThisLock else { return }
+        guard gate == .locked, !didAutoPromptThisLock else { return }
+        // Cold launch often starts `.inactive` before first `.active`. Waiting for
+        // `.active` left a cream watermark hang with no Face ID. Kick LA unless
+        // truly backgrounded — `didAutoPromptThisLock` blocks re-prompt while the
+        // Face ID sheet holds the scene `.inactive` (AGENTS: no re-prompt on inactive).
+        guard scenePhase != .background else { return }
         didAutoPromptThisLock = true
         startUnlockPipeline(isAuto: true)
     }
@@ -271,8 +298,9 @@ struct OwnerAppLock<Content: View>: View {
         SecurePasteboard.clear()
     }
 
-    /// Face ID + overlapped Keychain decode + AES `#d=` pack + shell warm.
-    /// Enter path for returning owners — first attempt is auto Face ID only.
+    /// Face ID first, then Keychain prefetch + shell string in the same turn
+    /// (overlap while LA sheet is up). Enter path for returning owners — first
+    /// attempt is auto Face ID only.
     private func startUnlockPipeline(isAuto: Bool) {
         guard gate == .locked else { return }
         if isAuto {
@@ -280,12 +308,13 @@ struct OwnerAppLock<Content: View>: View {
             // First-load surface stays biometrics-only until this attempt ends.
             showUnlockControl = false
         }
+        // Face ID first; prefetch still starts inside this pipeline (same turn).
+        unlockWithFaceID()
         profile.beginUnlockPrefetch()
         // HTML string only during Face ID — WKWebView warm starts after unlock paint.
         Task.detached(priority: .userInitiated) {
             PasserbyHTMLCardView.warmShellCache()
         }
-        unlockWithFaceID()
     }
 
     private func unlockWithFaceID() {
@@ -307,6 +336,25 @@ struct OwnerAppLock<Content: View>: View {
                 showUnlockControl = true
                 gate = .locked
                 profile.discardUnlockPrefetch()
+            case .notInteractive:
+                // Cold-start evaluate before the window can present — do not leave
+                // Unlock chrome up; clear auto-prompt so `.active` retries once.
+                // User cancel is `.declined` (Unlock stays); this is not cancel.
+                // Never auto-kick inline when already `.active` — LA can still return
+                // appNotInteractive briefly and that looped Face ID forever.
+                isAuthenticating = false
+                biometryFailed = false
+                profileLoadFailed = false
+                gate = .locked
+                didAutoPromptThisLock = false
+                if scenePhase == .active {
+                    // Already active but LA refused — Unlock, no retry storm.
+                    showUnlockControl = true
+                } else {
+                    // Typical cold `.inactive` — `.onChange(.active)` retries once.
+                    showUnlockControl = false
+                }
+                // Keep prefetch — Face ID will overlap on the active retry / Unlock tap.
             case .notVerified:
                 // Face ID / Touch ID (or passcode) did not match.
                 RedMedHaptics.error()

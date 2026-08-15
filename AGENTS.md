@@ -103,8 +103,13 @@ shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash)
 (cream + BrandLogo watermark) so Main never mounts before Face ID / passcode.
 A UserDefaults gate (`ProfileData.storedProfileGateKey`, set on persist /
 Keychain presence) hints whether a blob is expected for prefetch / fail-closed
-load; SecItem confirms off-main. Auto Face ID on every owner launch (Unlock is
-retry after cancel / mismatch). Fresh install unlocks into empty tabs after
+load; SecItem confirms off-main. Auto Face ID on every owner launch **immediately**
+(including cold-start `.inactive` — do **not** wait for `.active` or the cream
+watermark hangs with no sheet; that wait was the cream hang.
+`didAutoPromptThisLock` blocks re-prompt while the Face ID sheet holds
+`.inactive`). Prefetch still starts in the same `onAppear` tick and inside the
+unlock pipeline (single-flight overlap with Face ID). Unlock is retry after
+cancel / mismatch. Fresh install unlocks into empty tabs after
 auth; returning owners load Keychain. Owner pages + tapper: cream fill, no page
 watermark. Unlock overlaps Keychain decode + AES `#d=` pack + tapper shell warm
 with Face ID and skips unlock animation so tabs paint on the next frame after
