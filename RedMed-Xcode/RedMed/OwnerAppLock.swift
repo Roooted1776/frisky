@@ -328,12 +328,11 @@ struct OwnerAppLock<Content: View>: View {
                 Task { @MainActor in
                     guard generation == authGeneration else { return }
                     // Off-main SecItem overlaps Keychain apply when the gate still says empty.
-                    async let expectsProfileTask: Bool = {
-                        if keychainHasProfile { return true }
-                        return await Task.detached(priority: .userInitiated) {
+                    async let expectsProfileTask = keychainHasProfile
+                        ? true
+                        : await Task.detached(priority: .userInitiated) {
                             ProfileData.hasStoredProfile()
                         }.value
-                    }()
                     // Keychain + embed JSON only — do not await WKWebView warm or AES.
                     // Warm stays best-effort; pool hit skips cold load, miss still unlocks.
                     let didLoad = await profile.applyUnlockPrefetchOrReload()
