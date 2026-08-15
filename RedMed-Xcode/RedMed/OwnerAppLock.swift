@@ -22,10 +22,10 @@ import SwiftUI
 /// `.active` (and again after `.background`). Face ID sheets put the scene
 /// `.inactive` — that must not re-prompt. The watermark is never a control.
 ///
-/// Speed (minus Face ID wall time): Keychain decode + embed JSON + tapper.html /
-/// WKWebView warm overlap Face ID. Unlock does **not** wait on AES `#d=` or a
-/// finished WebView warm — placeholder `#d=` + `__REDMED_PROFILE` paints RedMed
-/// immediately; durable AES and pool miss load happen after tabs are up.
+/// Speed (minus Face ID wall time): Keychain decode + embed JSON + tapper.html
+/// string warm overlap Face ID. Unlock does **not** wait on AES `#d=` or
+/// WKWebView create — placeholder `#d=` + `__REDMED_PROFILE` paints RedMed
+/// immediately; durable AES and WebView warm start after the first unlock frame.
 struct OwnerAppLock<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
@@ -67,15 +67,12 @@ struct OwnerAppLock<Content: View>: View {
         }
         .onAppear {
             screenCaptured = UIScreen.main.isCaptured
-            // Start Keychain + shell warm before Face ID sheet — do not touch MainActor disk I/O.
+            // Keychain + HTML string warm before Face ID — no WKWebView yet (fights LA).
             if ProfileData.prefersLockOnLaunch {
                 profile.beginUnlockPrefetch()
             }
             Task.detached(priority: .userInitiated) {
                 PasserbyHTMLCardView.warmShellCache()
-                await MainActor.run {
-                    PasserbyWebViewPool.warmEmbedShell()
-                }
             }
             tryAutoUnlockIfActive()
         }
@@ -284,12 +281,9 @@ struct OwnerAppLock<Content: View>: View {
             showUnlockControl = false
         }
         profile.beginUnlockPrefetch()
-        // Detached shell warm only — never sync-read tapper.html on MainActor before LA.
+        // HTML string only during Face ID — WKWebView warm starts after unlock paint.
         Task.detached(priority: .userInitiated) {
             PasserbyHTMLCardView.warmShellCache()
-            await MainActor.run {
-                PasserbyWebViewPool.warmEmbedShell()
-            }
         }
         unlockWithFaceID()
     }
@@ -334,10 +328,8 @@ struct OwnerAppLock<Content: View>: View {
                             ProfileData.hasStoredProfile()
                         }.value
                     // Keychain + embed JSON only — do not await WKWebView warm or AES.
-                    // Warm stays best-effort; pool hit skips cold load, miss still unlocks.
                     let didLoad = await profile.applyUnlockPrefetchOrReload()
                     let expectsProfile = await expectsProfileTask
-                    PasserbyWebViewPool.warmEmbedShell()
                     guard generation == authGeneration else {
                         // Late success after background lock — drop any applied PHI.
                         profile.purgeFromMemory()
@@ -352,6 +344,11 @@ struct OwnerAppLock<Content: View>: View {
                         biometryFailed = false
                         profileLoadFailed = false
                         showUnlockControl = false
+                        // Warm WKWebView after first unlock frame — not during Face ID.
+                        Task { @MainActor in
+                            await Task.yield()
+                            PasserbyWebViewPool.warmEmbedShell()
+                        }
                     } else if !expectsProfile {
                         // Fresh install — auth passed; open empty Main (Edit gates Save).
                         keychainHasProfile = false
@@ -361,6 +358,10 @@ struct OwnerAppLock<Content: View>: View {
                         biometryFailed = false
                         profileLoadFailed = false
                         showUnlockControl = false
+                        Task { @MainActor in
+                            await Task.yield()
+                            PasserbyWebViewPool.warmEmbedShell()
+                        }
                     } else {
                         // Corrupt / unreadable Keychain — stay locked; do not open empty Edit.
                         RedMedHaptics.error()

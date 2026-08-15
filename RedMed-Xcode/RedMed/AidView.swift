@@ -67,9 +67,8 @@ struct AidView: View {
                                 PaneCard(pane: pane, isOpen: isOpen) { key in
                                     if key == nil {
                                         RedMedHaptics.selection()
-                                        withAnimation(RedMedMotion.expand) {
-                                            openPane = isOpen ? nil : pane.id
-                                        }
+                                        // Instant expand — spring accordion fights first Aid paint.
+                                        openPane = isOpen ? nil : pane.id
                                     } else if let k = key, let topic = AidTopicCatalog.topics[k] {
                                         RedMedHaptics.light()
                                         activeTopic = topic
@@ -153,7 +152,6 @@ struct PaneCard: View {
                             .frame(width: 44, height: 44)
                             .background(isOpen ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
                             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
-                            .animation(RedMedMotion.snappy, value: isOpen)
                             .accessibilityHidden(true)
 
                         Text(pane.title)
@@ -171,7 +169,6 @@ struct PaneCard: View {
                             .foregroundColor(.redmedAccent)
                             .rotationEffect(.degrees(isOpen ? 90 : 0))
                             .frame(width: 28, height: 28)
-                            .animation(RedMedMotion.snappy, value: isOpen)
                     }
                 }
                 .padding(.horizontal, 12)

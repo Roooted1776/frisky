@@ -451,8 +451,9 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             // Prompt only — wait for authorization callback before GPS.
             m.requestWhenInUseAuthorization()
         case .authorizedAlways, .authorizedWhenInUse:
+            // One-shot fix is enough for EMS coordinate copy — continuous GPS
+            // stays for accuracy callbacks only if the first fix is stale/nil.
             m.requestLocation()
-            m.startUpdatingLocation()
         case .denied, .restricted:
             break
         @unknown default:
@@ -468,7 +469,6 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         switch manager.authorizationStatus {
         case .authorizedAlways, .authorizedWhenInUse:
             manager.requestLocation()
-            manager.startUpdatingLocation()
         default:
             break
         }
