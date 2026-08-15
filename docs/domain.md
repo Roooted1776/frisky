@@ -11,6 +11,9 @@ Locked pick for the hosted passerby shell (replacing `redmed.pages.dev` as the
 3. Skip **`redmed.com`** until Afternic quotes a BIN (premium, quote-only).
 
 Do not merge or ship NFC writes to the custom host until steps below show green.
+`AppConfig.medicalCardBaseURL` must stay on `https://redmed.pages.dev/tapper/`
+until step 3 (HTTPS Active + `/tapper/` smoke) is green — a premature flip
+writes dead URLs onto bands while DNS is still NXDOMAIN.
 
 ## Attach to Pages (cutover)
 
@@ -25,6 +28,7 @@ Do not merge or ship NFC writes to the custom host until steps below show green.
    bands already written with `pages.dev` still open.
 5. Ship the app build that sets
    `AppConfig.medicalCardBaseURL = "https://getredmed.com/tapper/"`.
+   Until then, leave it on `https://redmed.pages.dev/tapper/`.
 6. New NFC writes use the custom host. Old `pages.dev` bands keep working.
 
 ## URL contract
