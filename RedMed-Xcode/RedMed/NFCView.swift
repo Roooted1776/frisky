@@ -126,6 +126,8 @@ struct NFCView: View {
             thinRule
             factRow(icon: "iphone.radiowaves.left.and.right", text: rf.powerOnTapSummary)
             thinRule
+            factRow(icon: "lock.open.fill", text: rf.backgroundTagReadingSummary)
+            thinRule
             factRow(icon: "person.2.fill", text: rf.passerbyTapSummary)
         }
         .redmedBox()

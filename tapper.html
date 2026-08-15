@@ -1266,7 +1266,8 @@
   })();
 
 
-  var MAX_PAYLOAD = 50000;
+  // Match Swift ProfileNFCCodec.maxEncodedLength (NTAG-scale; fail closed above).
+  var MAX_PAYLOAD = 8192;
   var MAX_INFLATED = 65536;
   var MAX_LIST = 40;
   var MAX_STR = 200;
@@ -2480,7 +2481,9 @@
   // Real HF NFC band tap brings #d= — arm local SOS on this phone only.
   // No auto-arm for bare /tapper/ or in-app Preview/Scan (?src=app). No server / no online.
   function hasBandPayload() {
-    return /^#d=/.test(location.hash || '') && !appPreview();
+    // Require non-empty fragment after #d= — bare "#d=" is not a real band tap.
+    var h = location.hash || '';
+    return /^#d=.+/.test(h) && !appPreview();
   }
   // Band tap: wait for profile paint before arm/siren so decrypt is not fighting PCM.
   // Crash / explicit SOS still call arm() directly (post-paint). Fallback if paint never fires.

@@ -8,7 +8,7 @@
  * copy on every decrypt/layout deploy. Payload stays in #d= only — never
  * cached.
  */
-var CACHE = 'redmed-tapper-v89';
+var CACHE = 'redmed-tapper-v90';
 var ASSETS = [
   './',
   './tapper.html',
