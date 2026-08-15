@@ -41,8 +41,8 @@ extension Color {
     static let redmedWash     = Color(red: 1.000, green: 0.910, blue: 0.922) // #ffe8eb
 }
 
-/// Cream page with rose wash only (fill color — no BrandLogo watermark).
-/// Lock shell keeps its own watermark; passerby tapper matches this cream fill.
+/// Cream page with rose wash only (fill color — no BrandLogo).
+/// Lock shell is the same flat cream; passerby tapper matches this fill.
 struct RedMedPageBackground: View {
     var body: some View {
         ZStack {
@@ -314,10 +314,6 @@ enum RedMedChrome {
     static let logoRadius: CGFloat = 0
     /// Tapper / empty YOU-card BrandLogo diameter (`--logo` matches).
     static let logoSize: CGFloat = 72
-    /// Owner lock decorative BrandLogo — home-screen app-icon size (60pt), never a control.
-    static let lockWatermarkSize: CGFloat = 60
-    /// 60% transparent (40% opaque) — lock shell only (not page / tapper backgrounds).
-    static let lockWatermarkOpacity: Double = 0.40
     /// BrandWordmark lockup on NFC / topic pages (Aid + 911 are content-first).
     static let wordmarkHeight: CGFloat = 42
     static let pagePadX: CGFloat = 16

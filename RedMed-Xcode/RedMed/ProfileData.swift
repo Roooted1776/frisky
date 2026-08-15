@@ -272,7 +272,7 @@ class ProfileData: ObservableObject {
 
     /// Prefer the Face ID–overlapped decode; fall back to a fresh Keychain read.
     /// Loads embed JSON staging only — does **not** publish PHI fields (so the
-    /// lock / watermark shell stays uncoverable under screen capture). Does not
+    /// lock / Unlock shell stays uncoverable under screen capture). Does not
     /// wait on AES `#d=` (placeholder payload + `__REDMED_PROFILE` paints later).
     /// Call `commitUnlockProfile` only after `OwnerAppLock` sets `gate = .unlocked`.
     @MainActor

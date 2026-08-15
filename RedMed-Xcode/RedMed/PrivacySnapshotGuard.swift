@@ -6,14 +6,14 @@ import UIKit
 /// only while active; when backgrounded or recorded, cover everything.
 ///
 /// FaceTime / Screen Recording sets `UIScreen.isCaptured`. Do **not** cover the
-/// lock / watermark shell — RAM is purged then, and a cover blocks Face ID /
+/// lock / Unlock shell — RAM is purged then, and a cover blocks Face ID /
 /// Unlock so the owner cannot enter. Cover only when PHI is actually in memory.
 /// `OwnerAppLock` stages Keychain decode without publishing fields until after
-/// `gate = .unlocked`, so capture never paints a cover over the watermark.
+/// `gate = .unlocked`, so capture never paints a cover over the lock shell.
 ///
 /// Non-capture cover is **`.background` only** (with PHI). Face ID / LAContext
 /// put the scene `.inactive` — covering then blanks the UI mid-unlock and
-/// painted a second BrandLogo over the watermark lock. App-switcher snapshots
+/// painted a second BrandLogo over the cream lock. App-switcher snapshots
 /// still get a cover on true background while PHI is in RAM; after
 /// `OwnerAppLock` purges, the lock shell itself has no PHI to leak.
 struct PrivacySnapshotGuard<Content: View>: View {
