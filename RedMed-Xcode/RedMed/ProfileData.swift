@@ -212,6 +212,8 @@ class ProfileData: ObservableObject {
     private var unlockJSONTask: Task<String?, Never>?
     /// AES `#d=` after JSON; finishes in background — never blocks unlock.
     private var unlockAESTask: Task<String?, Never>?
+    /// Staged Keychain blob after Face ID — published only via `commitUnlockProfile`.
+    private var pendingUnlockBlob: PersistedProfile?
     /// Stable preview `#d=` from Face ID overlap — RedMedView consumes on first unlock paint.
     private(set) var unlockPreviewPayload: String?
     /// Plaintext profile JSON from Face ID overlap — pairs with `unlockPreviewPayload`.
@@ -227,7 +229,7 @@ class ProfileData: ObservableObject {
     }
 
     /// Single-flight off-main Keychain decode + JSON + AES while biometrics run.
-    /// Does not publish PHI — `applyUnlockPrefetchOrReload` applies only after Face ID success.
+    /// Does not publish PHI — `commitUnlockProfile` applies only after Face ID + gate unlock.
     /// Re-calling while in flight is a no-op (keeps the Face ID overlap intact).
     func beginUnlockPrefetch() {
         guard persists else { return }
@@ -263,23 +265,27 @@ class ProfileData: ObservableObject {
         unlockJSONTask = nil
         unlockAESTask?.cancel()
         unlockAESTask = nil
+        pendingUnlockBlob = nil
         unlockPreviewPayload = nil
         unlockEmbedProfileJSON = nil
     }
 
     /// Prefer the Face ID–overlapped decode; fall back to a fresh Keychain read.
-    /// Unlocks as soon as the blob + embed JSON are ready — does **not** wait on
-    /// AES `#d=` (placeholder payload + `__REDMED_PROFILE` paints the shell).
+    /// Loads embed JSON staging only — does **not** publish PHI fields (so the
+    /// lock / watermark shell stays uncoverable under screen capture). Does not
+    /// wait on AES `#d=` (placeholder payload + `__REDMED_PROFILE` paints later).
+    /// Call `commitUnlockProfile` only after `OwnerAppLock` sets `gate = .unlocked`.
     @MainActor
     @discardableResult
-    func applyUnlockPrefetchOrReload() async -> Bool {
+    func prepareUnlockPrefetchOrReload() async -> Bool {
         guard persists else { return false }
+        pendingUnlockBlob = nil
 
         if let blobTask = unlockBlobTask {
             unlockBlobTask = nil
             if let blob = await blobTask.value {
-                apply(blob)
                 await adoptUnlockArtifactsFast(for: blob)
+                pendingUnlockBlob = blob
                 return true
             }
         }
@@ -289,16 +295,30 @@ class ProfileData: ObservableObject {
         unlockAESTask?.cancel()
         unlockAESTask = nil
 
-        let ok = await reloadFromKeychainAsync()
-        if ok {
-            let chip = ProfileNFCCodec.chipProfile(from: snapshot())
-            let json = await Task.detached(priority: .userInitiated) {
-                ProfileNFCCodec.embedProfileJSON(from: chip)
-            }.value
-            unlockEmbedProfileJSON = json
-            unlockPreviewPayload = ProfileNFCCodec.placeholderPreviewPayload
-        }
-        return ok
+        let account = Self.keychainAccount
+        let blob: PersistedProfile? = await Task.detached(priority: .userInitiated) {
+            guard let data = KeychainStore.load(account: account),
+                  let decoded = try? JSONDecoder().decode(PersistedProfile.self, from: data) else {
+                return nil
+            }
+            return decoded
+        }.value
+        guard let blob else { return false }
+        let json = await Task.detached(priority: .userInitiated) {
+            Self.previewArtifactsJSONOnly(from: blob)
+        }.value
+        unlockEmbedProfileJSON = json
+        unlockPreviewPayload = ProfileNFCCodec.placeholderPreviewPayload
+        pendingUnlockBlob = blob
+        return true
+    }
+
+    /// Publish staged Keychain PHI into `@Published` fields — only after the lock shell is gone.
+    @MainActor
+    func commitUnlockProfile() {
+        guard let blob = pendingUnlockBlob else { return }
+        pendingUnlockBlob = nil
+        apply(blob)
     }
 
     /// Await Face ID–overlapped embed JSON only; placeholder `#d=` — never await AES.
