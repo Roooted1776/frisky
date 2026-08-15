@@ -7,8 +7,6 @@ struct EmergencyView: View {
     var isVisible: Bool = true
 
     @Environment(\.isScannerSession) private var isScannerSession
-    @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
-    @StateObject private var locationManager = LocationManager()
 
     var body: some View {
         // Fixed cream chrome (no NavigationView / system toolbar fill).
@@ -17,57 +15,36 @@ struct EmergencyView: View {
         ZStack(alignment: .topTrailing) {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 10) {
-                    // GPS + Call: dial is the big action; copy / SOS stay compact.
-                    VStack(alignment: .leading, spacing: 8) {
-                        GPSCard(location: locationEnabled ? locationManager.location : nil)
-                            .opacity(locationEnabled ? 1 : 0.45)
+                    // GPS observes LocationManager alone — SOS / cards must not
+                    // rebuild on every coordinate tick.
+                    FindHelpLocationBlock(isVisible: isVisible)
 
-                        Button {
-                            if locationEnabled, let loc = locationManager.location {
-                                SecurePasteboard.copyEphemeral(
-                                    "\(loc.coordinate.latitude), \(loc.coordinate.longitude)"
-                                )
-                                RedMedHaptics.light()
-                            }
-                        } label: {
-                            Text(locationEnabled ? "Copy coordinates" : "Location off — enable in Help → Settings")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 10)
-                                .background(Color.redmedDark)
-                                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                    Button {
+                        RedMedHaptics.medium()
+                        PublicEmergencyAid.dial()
+                    } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: "phone.fill")
+                            Text("Call \(EmergencyNumber.current)")
                         }
-                        .buttonStyle(RedMedPressStyle(haptic: nil))
-                        .disabled(!locationEnabled || locationManager.location == nil)
-
-                        Button {
-                            RedMedHaptics.medium()
-                            PublicEmergencyAid.dial()
-                        } label: {
-                            HStack(spacing: 10) {
-                                Image(systemName: "phone.fill")
-                                Text("Call \(EmergencyNumber.current)")
-                            }
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 17)
-                            .background(
-                                LinearGradient(
-                                    colors: [Color(red: 1, green: 0.447, blue: 0.537), .redmedAccent],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 17)
+                        .background(
+                            LinearGradient(
+                                colors: [Color(red: 1, green: 0.447, blue: 0.537), .redmedAccent],
+                                startPoint: .top,
+                                endPoint: .bottom
                             )
-                            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-                            .shadow(color: RedMedChrome.accentShadow, radius: 12, y: 5)
-                        }
-                        .buttonStyle(RedMedPressStyle(haptic: nil))
-
-                        // Isolated observer — SOS arm must not rebuild the whole 911 scroll.
-                        FindHelpSOSButton()
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                        .shadow(color: RedMedChrome.accentShadow, radius: 12, y: 5)
                     }
+                    .buttonStyle(RedMedPressStyle(haptic: nil))
+
+                    // Isolated observer — SOS arm must not rebuild the whole 911 scroll.
+                    FindHelpSOSButton()
 
                     SeizureTimerStrip(isVisible: isVisible)
 
@@ -112,6 +89,40 @@ struct EmergencyView: View {
             }
         }
         .background { RedMedPageBackground() }
+    }
+}
+
+/// GPS + copy — owns `LocationManager` so coordinate publishes stay local.
+private struct FindHelpLocationBlock: View {
+    var isVisible: Bool = true
+
+    @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
+    @StateObject private var locationManager = LocationManager()
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            GPSCard(location: locationEnabled ? locationManager.location : nil)
+                .opacity(locationEnabled ? 1 : 0.45)
+
+            Button {
+                if locationEnabled, let loc = locationManager.location {
+                    SecurePasteboard.copyEphemeral(
+                        "\(loc.coordinate.latitude), \(loc.coordinate.longitude)"
+                    )
+                    RedMedHaptics.light()
+                }
+            } label: {
+                Text(locationEnabled ? "Copy coordinates" : "Location off — enable in Help → Settings")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(Color.redmedDark)
+                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+            }
+            .buttonStyle(RedMedPressStyle(haptic: nil))
+            .disabled(!locationEnabled || locationManager.location == nil)
+        }
         .task(id: isVisible) {
             // First paint of Find Help before Core Location work.
             guard isVisible else {
@@ -146,14 +157,12 @@ private struct FindHelpSOSButton: View {
         Button {
             if survivalAlarm.isArmed {
                 RedMedHaptics.medium()
-                withAnimation(RedMedMotion.snappy) {
-                    survivalAlarm.disarm()
-                }
+                survivalAlarm.disarm()
             } else {
                 RedMedHaptics.heavy()
-                withAnimation(RedMedMotion.snappy) {
-                    survivalAlarm.armSOS()
-                }
+                // No withAnimation around arm — brightness/volume/siren must not
+                // run inside a spring transaction (that hitch is the SOS lag).
+                survivalAlarm.armSOS()
             }
         } label: {
             HStack(spacing: 8) {
@@ -465,7 +474,13 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        let latest = locations.last
+        guard let latest = locations.last else { return }
+        // Skip near-identical fixes — every @Published tick used to rebuild Find Help.
+        if let prev = location,
+           prev.distance(from: latest) < 8,
+           abs(prev.horizontalAccuracy - latest.horizontalAccuracy) < 15 {
+            return
+        }
         // Delegate runs on the thread that created the manager (main here).
         if Thread.isMainThread {
             location = latest

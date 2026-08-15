@@ -30,6 +30,19 @@ enum LocatorBeacon {
         }
     }
 
+    /// Synth the WAV off the SOS hot path (unlock / crash monitor start).
+    static func warmAlarmCache() {
+        if cachedAlarmWAV != nil { return }
+        Task.detached(priority: .utility) {
+            let data = Self.synthesizeAlarmWAV()
+            await MainActor.run {
+                if cachedAlarmWAV == nil {
+                    cachedAlarmWAV = data
+                }
+            }
+        }
+    }
+
     static func endSurvival() {
         guard survivalHold else { return }
         survivalHold = false
@@ -126,6 +139,13 @@ enum LocatorBeacon {
     /// Three piercing beeps (~880 / 1175 / 880 Hz). No bundled asset required.
     private static func alarmWAV() -> Data? {
         if let cachedAlarmWAV { return cachedAlarmWAV }
+        let data = synthesizeAlarmWAV()
+        cachedAlarmWAV = data
+        return data
+    }
+
+    /// Pure synth — safe off MainActor for `warmAlarmCache`.
+    nonisolated private static func synthesizeAlarmWAV() -> Data {
         let sampleRate = 22050
         let beepDuration = 0.22
         let gapDuration = 0.10
@@ -139,12 +159,10 @@ enum LocatorBeacon {
             }
         }
 
-        let data = pcm16MonoWAV(samples: samples, sampleRate: sampleRate)
-        cachedAlarmWAV = data
-        return data
+        return pcm16MonoWAV(samples: samples, sampleRate: sampleRate)
     }
 
-    private static func tone(frequency: Double, seconds: Double, sampleRate: Int) -> [Int16] {
+    nonisolated private static func tone(frequency: Double, seconds: Double, sampleRate: Int) -> [Int16] {
         let count = Int(Double(sampleRate) * seconds)
         var out = [Int16]()
         out.reserveCapacity(count)
@@ -167,7 +185,7 @@ enum LocatorBeacon {
         return out
     }
 
-    private static func pcm16MonoWAV(samples: [Int16], sampleRate: Int) -> Data {
+    nonisolated private static func pcm16MonoWAV(samples: [Int16], sampleRate: Int) -> Data {
         let dataSize = samples.count * 2
         var data = Data()
         func appendUInt32(_ v: UInt32) {
