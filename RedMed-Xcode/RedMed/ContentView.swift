@@ -2,9 +2,10 @@ import SwiftUI
 
 /// Root tab shell.
 ///
-/// Permanent product rule:
+/// Permanent product rule (bracelet tap / scanner):
 /// - Owner (`isScannerSession == false`): RedMed · 911 · Aid · NFC (+ Edit on RedMed)
-/// - Scanner (`isScannerSession == true`): RedMed · 911 · Aid only (no Edit, no NFC)
+/// - Scanner / tap (`isScannerSession == true` or HTML `tapper.html#d=`): RedMed · 911 · Aid
+///   only — **no Edit**, **no NFC**
 ///
 /// Never gate the NFC tab on `AppConfig.nfcHardwareEnabled` — that flag only
 /// disables CoreNFC sessions inside `NFCBandManager` (`NFCWriter` / `NFCReader`).

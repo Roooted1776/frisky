@@ -57,7 +57,26 @@ struct RedMedView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .top) {
+        // Chrome is a sibling above the WKWebView — never an overlay. Overlaying
+        // Help · Edit on UIKit WebView lets the web view steal taps (Edit looks dead).
+        // Scanner / passerby shells never show Help · Edit (no NFC either — ContentView).
+        VStack(spacing: 0) {
+            HStack(alignment: .center, spacing: 12) {
+                if isScannerSession {
+                    ScannerBackButton()
+                    Spacer(minLength: 0)
+                } else {
+                    ChromeTextAction(title: "Help") { showHelp = true }
+                    ChromeTextAction(title: "Edit") { requestEdit() }
+                    Spacer(minLength: 0)
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
+            .padding(.horizontal, 16)
+            .padding(.top, 6)
+            .padding(.bottom, 8)
+            .background(Color.redmedBg)
+
             Group {
                 if let shellPayload {
                     PasserbyHTMLShell(
@@ -77,30 +96,11 @@ struct RedMedView: View {
                     .padding(24)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    // Cream only while packing — no mid-screen Edit under the chrome row.
                     Color.redmedBg
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-            // Opaque cream chrome — Help · Edit must not sit transparent over YOU-card data.
-            // Same ChromeTextAction + even gap; Preview lives under NFC Scan.
-            HStack(alignment: .center, spacing: 12) {
-                if isScannerSession {
-                    ScannerBackButton()
-                    Spacer(minLength: 0)
-                } else {
-                    ChromeTextAction(title: "Help") { showHelp = true }
-                    ChromeTextAction(title: "Edit") { requestEdit() }
-                    Spacer(minLength: 0)
-                }
-            }
-            .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
-            .padding(.horizontal, 16)
-            .padding(.top, 6)
-            .padding(.bottom, 8)
-            .background(Color.redmedBg)
         }
         // Owner profile only — never redact the passerby / EMS scanner card.
         .privacySensitive(!isScannerSession)

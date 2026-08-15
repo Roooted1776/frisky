@@ -272,6 +272,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeUIView(context: Context) -> WKWebView {
+        context.coordinator.appEmbed = appEmbed
         // Prefer Face ID–warmed embed view — process + HTML parse already done.
         if appEmbed, let pooled = PasserbyWebViewPool.takeEmbed() {
             pooled.navigationDelegate = context.coordinator
@@ -286,6 +287,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
+        context.coordinator.appEmbed = appEmbed
         let shellKind = appEmbed ? "embed" : "full"
         let contentKey = "\(braceletLinked)|\(embedProfileJSON ?? "")"
         let payloadKey = encodedPayload
@@ -396,6 +398,8 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         var loadedContentKey: String?
         var loadedShellKind: String?
         var shellLoaded = false
+        /// Owner RedMed embed only — Preview / Scan / passerby never open the NFC tab.
+        var appEmbed = false
         /// Profile push that arrived before `didFinish` — replay once the document is ready.
         var pendingProfileJS: String?
 
@@ -425,9 +429,12 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
                 UIApplication.shared.open(url, options: [:], completionHandler: nil)
                 decisionHandler(.cancel)
             case "redmed":
-                // Owner embed status → NFC tab. Other redmed:// (e.g. main) open normally.
+                // Owner embed status → NFC tab. Preview / Scan / passerby: drop NFC URLs
+                // (bracelet tap shell = RedMed · 911 · Aid only — no NFC · no Edit).
                 if Self.isNFCTabURL(url) {
-                    NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
+                    if appEmbed {
+                        NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
+                    }
                 } else {
                     UIApplication.shared.open(url, options: [:], completionHandler: nil)
                 }
@@ -446,7 +453,9 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
             // Deny target=_blank / window.open — same posture as LocalWebView.
             if let url = navigationAction.request.url, !url.isFileURL {
                 if (url.scheme ?? "").lowercased() == "redmed", Self.isNFCTabURL(url) {
-                    NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
+                    if appEmbed {
+                        NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
+                    }
                 } else {
                     UIApplication.shared.open(url, options: [:], completionHandler: nil)
                 }
