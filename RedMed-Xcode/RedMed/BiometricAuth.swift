@@ -41,7 +41,7 @@ enum BiometricAuth {
             }
             #else
             let failOutcome: Outcome = {
-                if let la = error as? LAError, la.code == .appNotInteractive {
+                if let la = error as? LAError, la.code == .notInteractive {
                     return .notInteractive
                 }
                 return .declined
@@ -92,7 +92,7 @@ enum BiometricAuth {
         case .authenticationFailed:
             // Face ID / Touch ID / passcode did not match.
             return .notVerified
-        case .appNotInteractive:
+        case .notInteractive:
             // evaluatePolicy before the window can present — retry when `.active`.
             return .notInteractive
         default:
