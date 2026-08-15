@@ -1763,6 +1763,21 @@
     } catch (e) { /* keep prior paint */ }
   };
 
+  // Kick profile paint ASAP — overlaps embed chrome + status wiring below.
+  // Sync path when native injected __REDMED_PROFILE; band taps decrypt now
+  // (AES key already prefetched when #d= is present).
+  (function bootProfile() {
+    try {
+      if (window.__REDMED_PROFILE) {
+        renderProfile(sanitizeProfile(window.__REDMED_PROFILE), true);
+        return;
+      }
+    } catch (e0) {}
+    decodeProfile().then(function (p) {
+      renderProfile(p, p != null);
+    });
+  })();
+
   // Owner RedMed embed only — native boot sets html.app-embed before first paint.
   // Preview / Scan use ?src=app / __REDMED_APP_PREVIEW (no SOS) but keep full
   // passerby HTML tabs (RedMed · 911 · Aid) — same tap-card shell as a band tap.
@@ -1792,20 +1807,6 @@
         ev.preventDefault();
         openNFC();
       }
-    });
-  })();
-
-  // Sync first paint when native already injected plaintext — no Promise tick hang.
-  // Band taps: AES key was prefetched above; decrypt runs immediately.
-  (function bootProfile() {
-    try {
-      if (window.__REDMED_PROFILE) {
-        renderProfile(sanitizeProfile(window.__REDMED_PROFILE), true);
-        return;
-      }
-    } catch (e0) {}
-    decodeProfile().then(function (p) {
-      renderProfile(p, p != null);
     });
   })();
 
