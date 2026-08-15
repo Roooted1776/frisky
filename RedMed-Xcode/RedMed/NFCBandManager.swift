@@ -208,9 +208,7 @@ final class NFCBandManager: ObservableObject {
             self.isWriting = false
             self.writeSucceeded = false
             self.writeVerified = false
-            self.statusMessage = note.warn
-                ? "Packed only (no band) — \(note.text). Linked needs a real NFC write."
-                : "Packed only (no band) — \(note.text). Linked needs a real NFC write."
+            self.statusMessage = "Packed only (no band) — \(note.text). Linked needs a real NFC write."
         }
     }
 
