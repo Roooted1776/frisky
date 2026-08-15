@@ -130,11 +130,16 @@ private enum PasserbyShellCache {
     static func warm() {
         cacheLock.lock()
         defer { cacheLock.unlock() }
-        if cachedShellHTML != nil { return }
+        if cachedShellHTML != nil {
+            _ = ProfileNFCCodec.placeholderPreviewPayload
+            return
+        }
         guard let url = Bundle.main.url(forResource: "tapper", withExtension: "html"),
               let html = try? String(contentsOf: url, encoding: .utf8) else { return }
         cachedShellFileURL = url
         cachedShellHTML = html
+        // Seal empty `#d=` off the unlock path (first access otherwise hits MainActor).
+        _ = ProfileNFCCodec.placeholderPreviewPayload
     }
 
     static func shellFileURL() -> URL? {
@@ -165,9 +170,9 @@ private enum PasserbyShellCache {
 /// runs so unlock's first RedMed paint skips cold WebKit process + first parse.
 /// MainActor only — WKWebView is not thread-safe.
 ///
-/// One shared warm task — callers must `await ensureWarmEmbedShell()` before
-/// unlock so a fast Face ID cannot miss a mid-flight warm (`warming == true`
-/// used to no-op and leave RedMed on a cold WKWebView).
+/// Single-flight warm. Unlock does **not** await this — tabs paint with a
+/// placeholder `#d=` + embed JSON; `takeEmbed()` is best-effort on first RedMed
+/// mount. `ensureWarmEmbedShell()` remains for callers that need a hard wait.
 @MainActor
 enum PasserbyWebViewPool {
     private static var warmedEmbed: WKWebView?

@@ -43,8 +43,12 @@ struct RedMedView: View {
     }
 
     /// Prefer live cache; else Face ID–overlapped pack so unlock's first frame is not cream-only.
+    /// Placeholder `#d=` is enough when embed JSON is present (app-embed skips WebCrypto).
     private var shellPayload: String? {
-        packedPayload ?? profile.unlockPreviewPayload
+        if let packedPayload { return packedPayload }
+        if let pending = profile.unlockPreviewPayload { return pending }
+        if shellEmbedJSON != nil { return ProfileNFCCodec.placeholderPreviewPayload }
+        return nil
     }
 
     /// Prefer live cache; else Face ID–overlapped plaintext JSON.
@@ -124,19 +128,49 @@ struct RedMedView: View {
         }
     }
 
-    /// First unlock paint: adopt Face ID–overlapped `#d=` so WKWebView loads without an AES stall.
+    /// First unlock paint: adopt Face ID embed JSON + `#d=` (placeholder OK).
+    /// Durable AES refreshes in the background via JS push — no cream stall.
     private func adoptUnlockPreviewOrSync() {
-        if packedPayload == nil, let pending = profile.unlockPreviewPayload {
-            // Assign @State before clearing the profile hold so shellPayload never gaps.
-            packedPayload = pending
+        let pendingPayload = profile.unlockPreviewPayload
+        let pendingJSON = profile.unlockEmbedProfileJSON
+        if packedPayload == nil, pendingPayload != nil || pendingJSON != nil {
+            packedPayload = pendingPayload ?? ProfileNFCCodec.placeholderPreviewPayload
             cachedEmbedJSON = profile.takeUnlockEmbedProfileJSON()
+                ?? pendingJSON
                 ?? ProfileNFCCodec.embedProfileJSON(from: profile)
             packFingerprint = profilePackFingerprint
             packFinished = true
             _ = profile.takeUnlockPreviewPayload()
+            // Replace placeholder with a durable seal off the first-paint path.
+            if packedPayload == ProfileNFCCodec.placeholderPreviewPayload {
+                refreshDurablePayload()
+            }
+            return
+        }
+        if packedPayload == nil {
+            // No prefetch (edge) — still paint with placeholder + live embed JSON.
+            cachedEmbedJSON = ProfileNFCCodec.embedProfileJSON(from: profile)
+            packedPayload = ProfileNFCCodec.placeholderPreviewPayload
+            packFingerprint = profilePackFingerprint
+            packFinished = true
+            refreshDurablePayload()
             return
         }
         syncPackedPayload()
+    }
+
+    /// AES `#d=` after first paint — `updateUIView` JS-pushes without remounting.
+    private func refreshDurablePayload() {
+        packGeneration &+= 1
+        let generation = packGeneration
+        let chip = ProfileNFCCodec.chipProfile(from: profile)
+        Task.detached(priority: .utility) {
+            let payload = ProfileNFCCodec.previewPayload(from: chip)
+            await MainActor.run {
+                guard generation == packGeneration, let payload else { return }
+                packedPayload = payload
+            }
+        }
     }
 
     private func syncPackedPayload() {
@@ -147,6 +181,12 @@ struct RedMedView: View {
         let generation = packGeneration
         // Keep any live shell while packing off-main — clearing blanked RedMed until AES finished.
         let chip = ProfileNFCCodec.chipProfile(from: profile)
+        // Paint immediately with embed JSON if the shell is empty.
+        if packedPayload == nil {
+            packedPayload = ProfileNFCCodec.placeholderPreviewPayload
+            cachedEmbedJSON = ProfileNFCCodec.embedProfileJSON(from: chip)
+            packFinished = true
+        }
         Task.detached(priority: .userInitiated) {
             let artifacts = (
                 ProfileNFCCodec.previewPayload(from: chip),

@@ -22,12 +22,10 @@ import SwiftUI
 /// `.active` (and again after `.background`). Face ID sheets put the scene
 /// `.inactive` — that must not re-prompt. The watermark is never a control.
 ///
-/// Speed (minus Face ID wall time): Keychain decode + AES `#d=` pack + tapper.html
-/// shell / WKWebView warm start on lock appear and overlap Face ID. Unlock awaits
-/// the pooled embed WebView (single-flight) in parallel with Keychain apply so a
-/// fast Face ID cannot miss a mid-warm and cold-load 83KB tapper.html. Prefetch
-/// applies with no transition animation so tabs paint on the next frame with a
-/// ready shell.
+/// Speed (minus Face ID wall time): Keychain decode + embed JSON + tapper.html /
+/// WKWebView warm overlap Face ID. Unlock does **not** wait on AES `#d=` or a
+/// finished WebView warm — placeholder `#d=` + `__REDMED_PROFILE` paints RedMed
+/// immediately; durable AES and pool miss load happen after tabs are up.
 struct OwnerAppLock<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
@@ -110,8 +108,11 @@ struct OwnerAppLock<Content: View>: View {
                 showUnlockControl = false
                 tryAutoUnlockIfActive()
             } else {
-                // Face ID success — motion after tabs own the CPU.
-                CrashMotionGuard.shared.startMonitoring()
+                // Face ID success — yield so tabs paint before CoreMotion steals the CPU.
+                Task { @MainActor in
+                    await Task.yield()
+                    CrashMotionGuard.shared.startMonitoring()
+                }
             }
         }
         .onChange(of: scenePhase) { _, phase in
@@ -326,20 +327,17 @@ struct OwnerAppLock<Content: View>: View {
                 // await — background can bump authGeneration and purge mid-apply.
                 Task { @MainActor in
                     guard generation == authGeneration else { return }
-                    // Off-main SecItem only when the gate / presence check still says empty.
-                    let expectsProfile: Bool
-                    if keychainHasProfile {
-                        expectsProfile = true
-                    } else {
-                        expectsProfile = await Task.detached(priority: .userInitiated) {
+                    // Off-main SecItem overlaps Keychain apply when the gate still says empty.
+                    async let expectsProfileTask = keychainHasProfile
+                        ? true
+                        : await Task.detached(priority: .userInitiated) {
                             ProfileData.hasStoredProfile()
                         }.value
-                    }
-                    // Overlap Keychain apply with finishing the WKWebView warm.
-                    async let loaded = profile.applyUnlockPrefetchOrReload()
-                    async let warm: Void = PasserbyWebViewPool.ensureWarmEmbedShell()
-                    let didLoad = await loaded
-                    await warm
+                    // Keychain + embed JSON only — do not await WKWebView warm or AES.
+                    // Warm stays best-effort; pool hit skips cold load, miss still unlocks.
+                    let didLoad = await profile.applyUnlockPrefetchOrReload()
+                    let expectsProfile = await expectsProfileTask
+                    PasserbyWebViewPool.warmEmbedShell()
                     guard generation == authGeneration else {
                         // Late success after background lock — drop any applied PHI.
                         profile.purgeFromMemory()
@@ -357,6 +355,7 @@ struct OwnerAppLock<Content: View>: View {
                     } else if !expectsProfile {
                         // Fresh install — auth passed; open empty Main (Edit gates Save).
                         keychainHasProfile = false
+                        profile.prepareEmptyUnlockShell()
                         RedMedHaptics.success()
                         gate = .unlocked
                         biometryFailed = false
