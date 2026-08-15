@@ -54,7 +54,8 @@ struct NFCView: View {
             if let payload = band.scannedHTMLPayload {
                 PasserbyHTMLCardView(
                     payloadOrURL: payload,
-                    braceletLinked: profile.showsBraceletAsLinked
+                    braceletLinked: profile.showsBraceletAsLinked,
+                    embedProfileJSON: band.scannedEmbedJSON
                 )
             }
         }
@@ -297,17 +298,15 @@ struct NFCView: View {
     private func openFirstResponderPreview() {
         guard !isScannerSession, profile.hasData else { return }
         let chip = ProfileNFCCodec.chipProfile(from: profile)
+        // Open immediately — JSON is cheap; AES `#d=` fills in background (no button hang).
+        previewEmbedJSON = ProfileNFCCodec.embedProfileJSON(from: chip)
+        previewPayload = ProfileNFCCodec.placeholderPreviewPayload
+        showFirstResponderPreview = true
         Task.detached(priority: .userInitiated) {
             let payload = PasserbyHTMLCardView.previewPayload(from: chip)
-            let json = ProfileNFCCodec.embedProfileJSON(from: chip)
             await MainActor.run {
-                guard let payload else {
-                    band.alertMessage = "Couldn't pack tapper.html#d= from RedMed."
-                    return
-                }
+                guard showFirstResponderPreview, let payload else { return }
                 previewPayload = payload
-                previewEmbedJSON = json
-                showFirstResponderPreview = true
             }
         }
     }

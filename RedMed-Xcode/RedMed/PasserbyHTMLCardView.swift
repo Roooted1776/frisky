@@ -231,8 +231,9 @@ enum PasserbyWebViewPool {
     }
 
     /// Owner RedMed tab takes the warmed view once (nil after).
+    /// Miss leaves `warmTask` running so a late warm is not discarded mid-flight.
     static func takeEmbed() -> WKWebView? {
-        let view = warmedEmbed
+        guard let view = warmedEmbed else { return nil }
         warmedEmbed = nil
         warmTask = nil
         return view

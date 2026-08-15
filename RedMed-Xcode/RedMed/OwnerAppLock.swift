@@ -71,13 +71,11 @@ struct OwnerAppLock<Content: View>: View {
         }
         .onAppear {
             screenCaptured = UIScreen.main.isCaptured
-            // Face ID first — cream hang was waiting for `.active` / delaying LA.
-            // Prefetch + shell string still start in this same tick (and again in
-            // the pipeline). No WKWebView yet (fights LA).
+            // Face ID first — cream hang waiting for `.active` or shell warm is wasted time.
             tryAutoUnlockIfActive()
-            if ProfileData.prefersLockOnLaunch {
-                profile.beginUnlockPrefetch()
-            }
+            // Always prefetch (single-flight). Do not gate on UserDefaults — stale/false
+            // gate left Face ID overlapping nothing.
+            profile.beginUnlockPrefetch()
             Task.detached(priority: .userInitiated) {
                 PasserbyHTMLCardView.warmShellCache()
             }
@@ -311,9 +309,13 @@ struct OwnerAppLock<Content: View>: View {
         // Face ID first; prefetch still starts inside this pipeline (same turn).
         unlockWithFaceID()
         profile.beginUnlockPrefetch()
-        // HTML string only during Face ID — WKWebView warm starts after unlock paint.
+        // HTML string during Face ID; WKWebView warm after a short delay so LA presents first.
         Task.detached(priority: .userInitiated) {
             PasserbyHTMLCardView.warmShellCache()
+            try? await Task.sleep(nanoseconds: 280_000_000)
+            await MainActor.run {
+                PasserbyWebViewPool.warmEmbedShell()
+            }
         }
     }
 
@@ -369,6 +371,9 @@ struct OwnerAppLock<Content: View>: View {
                 // await — background can bump authGeneration and purge mid-apply.
                 Task { @MainActor in
                     guard generation == authGeneration else { return }
+                    // Kick WKWebView warm NOW — overlaps Keychain/JSON await so RedMed
+                    // can takeEmbed() instead of a cold 84KB parse after unlock.
+                    PasserbyWebViewPool.warmEmbedShell()
                     // Off-main SecItem overlaps Keychain apply when the gate still says empty.
                     async let expectsProfileTask = keychainHasProfile
                         ? true
@@ -377,7 +382,7 @@ struct OwnerAppLock<Content: View>: View {
                         }.value
                     // Keychain + embed JSON only — do not await WKWebView warm or AES.
                     let didLoad = await profile.applyUnlockPrefetchOrReload()
-                    let expectsProfile = await expectsProfileTask
+                    let expectsProfile = didLoad ? true : await expectsProfileTask
                     guard generation == authGeneration else {
                         // Late success after background lock — drop any applied PHI.
                         profile.purgeFromMemory()
@@ -392,11 +397,6 @@ struct OwnerAppLock<Content: View>: View {
                         biometryFailed = false
                         profileLoadFailed = false
                         showUnlockControl = false
-                        // Warm WKWebView after first unlock frame — not during Face ID.
-                        Task { @MainActor in
-                            await Task.yield()
-                            PasserbyWebViewPool.warmEmbedShell()
-                        }
                     } else if !expectsProfile {
                         // Fresh install — auth passed; open empty Main (Edit gates Save).
                         keychainHasProfile = false
@@ -406,10 +406,6 @@ struct OwnerAppLock<Content: View>: View {
                         biometryFailed = false
                         profileLoadFailed = false
                         showUnlockControl = false
-                        Task { @MainActor in
-                            await Task.yield()
-                            PasserbyWebViewPool.warmEmbedShell()
-                        }
                     } else {
                         // Corrupt / unreadable Keychain — stay locked; do not open empty Edit.
                         RedMedHaptics.error()
