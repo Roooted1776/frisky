@@ -81,16 +81,16 @@ The app has no backend, database, or web service.
   prompt on appear); relock on `.background` only. Do **not**
   lock on `.inactive` — LAContext / system auth sheets put the scene inactive
   and would discard a successful unlock via `authGeneration`.
-- Owner app lock is **biometrics only before Main**: cream + BrandLogo watermark
-  under system Face ID on every launch (no Accept; no Unlock on first prompt).
-  Unlock appears after cancel / mismatch. Fresh install unlocks into empty tabs
-  after auth. Do **not** re-prompt on `.inactive`. Owner pages + passerby tapper:
-  cream fill only (no page watermark).
+- Owner app lock is **biometrics only before Main**: flat cream under system
+  Face ID on every launch (no Accept; no Unlock on first prompt; **no** decorative
+  BrandLogo on the lock shell). Unlock appears after cancel / mismatch. Fresh
+  install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
+  Owner pages + passerby tapper: cream fill only (no page BrandLogo).
 - `PrivacySnapshotGuard` cover must appear opaque with **no** opacity fade;
   app-switcher snapshots can capture mid-transition PHI. Capture cover **only
   while PHI is in RAM**. Non-capture cover is true **`.background` only** (with
   PHI) — never on `.inactive` (Face ID / LAContext blanks the UI mid-unlock),
-  and never over the lock / watermark / Unlock shell. After unlock while still
+  and never over the lock / Unlock shell. After unlock while still
   sharing, cover again; copy should say screen sharing, not a vague
   “Profile hidden”.
 - `HIPAAOfflineVault`: complete file protection + backup exclusion; history
@@ -100,18 +100,18 @@ The app has no backend, database, or web service.
 trauma JSON, or show a Location banner at `@main`. First launch opens a cream
 shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash) with
 **zero Keychain** on the first frame — `OwnerAppLock` always starts locked
-(cream + BrandLogo watermark) so Main never mounts before Face ID / passcode.
+(flat cream, no BrandLogo) so Main never mounts before Face ID / passcode.
 A UserDefaults gate (`ProfileData.storedProfileGateKey`, set on persist /
 Keychain presence) hints whether a blob is expected for prefetch / fail-closed
 load; SecItem confirms off-main. Auto Face ID on every owner launch **immediately**
 (including cold-start `.inactive` — do **not** wait for `.active` or the cream
-watermark hangs with no sheet; that wait was the cream hang.
+hangs with no sheet; that wait was the cream hang.
 `didAutoPromptThisLock` blocks re-prompt while the Face ID sheet holds
 `.inactive`). Prefetch still starts in the same `onAppear` tick and inside the
 unlock pipeline (single-flight overlap with Face ID). Unlock is retry after
 cancel / mismatch. Fresh install unlocks into empty tabs after
 auth; returning owners load Keychain. Owner pages + tapper: cream fill, no page
-watermark. Unlock overlaps Keychain decode + AES `#d=` pack + tapper shell warm
+BrandLogo. Unlock overlaps Keychain decode + AES `#d=` pack + tapper shell warm
 with Face ID and skips unlock animation so tabs paint on the next frame after
 biometrics with a ready shell. Do not call Keychain in `@State` defaults.
 Location defaults on in Help →

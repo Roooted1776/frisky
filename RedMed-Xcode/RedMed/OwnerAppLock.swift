@@ -14,15 +14,14 @@ import SwiftUI
 /// paints first; SecItem confirms off-main whether a profile blob exists (for
 /// prefetch / fail-closed load) but does **not** open Main without auth.
 ///
-/// Every owner launch is Face ID / passcode before Main: cream + decorative
-/// BrandLogo watermark under the system biometrics sheet. No Accept step.
-/// Unlock is retry chrome after cancel / mismatch — not part of the first-load
-/// surface. Fresh install unlocks into empty tabs after auth; returning owners
-/// load Keychain (fail closed on corrupt blob). Auto-prompt once per lock —
+/// Every owner launch is Face ID / passcode before Main: flat cream under the
+/// system biometrics sheet (no decorative BrandLogo). No Accept step. Unlock is
+/// retry chrome after cancel / mismatch — not part of the first-load surface.
+/// Fresh install unlocks into empty tabs after auth; returning owners load
+/// Keychain (fail closed on corrupt blob). Auto-prompt once per lock —
 /// including cold launch while still `.inactive` (waiting for `.active` was the
-/// cream hang: watermark with no sheet). Face ID sheets put the scene
-/// `.inactive` — `didAutoPromptThisLock` blocks re-prompt. The watermark is
-/// never a control.
+/// cream hang: empty cream with no sheet). Face ID sheets put the scene
+/// `.inactive` — `didAutoPromptThisLock` blocks re-prompt.
 ///
 /// Speed (minus Face ID wall time): Face ID kicks first; Keychain prefetch +
 /// tapper.html string warm still start in the same `onAppear` tick and again
@@ -172,25 +171,12 @@ struct OwnerAppLock<Content: View>: View {
     private var lockScreen: some View {
         ZStack {
             Color.redmedBg.ignoresSafeArea()
-            lockWatermark
             if showUnlockControl || screenCaptured {
                 lockRetryChrome
             }
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("RedMed is locked")
-    }
-
-    /// Decorative BrandLogo — atmosphere only, never a control.
-    private var lockWatermark: some View {
-        Image("BrandLogo")
-            .resizable()
-            .scaledToFit()
-            .frame(width: RedMedChrome.lockWatermarkSize, height: RedMedChrome.lockWatermarkSize)
-            .clipShape(Circle())
-            .opacity(RedMedChrome.lockWatermarkOpacity)
-            .allowsHitTesting(false)
-            .accessibilityHidden(true)
     }
 
     /// Status + Unlock after cancel / mismatch (hidden on first Face ID prompt).
@@ -275,9 +261,9 @@ struct OwnerAppLock<Content: View>: View {
     private func tryAutoUnlockIfActive() {
         guard gate == .locked, !didAutoPromptThisLock else { return }
         // Cold launch often starts `.inactive` before first `.active`. Waiting for
-        // `.active` left a cream watermark hang with no Face ID. Kick LA unless
-        // truly backgrounded — `didAutoPromptThisLock` blocks re-prompt while the
-        // Face ID sheet holds the scene `.inactive` (AGENTS: no re-prompt on inactive).
+        // `.active` left a cream hang with no Face ID. Kick LA unless truly
+        // backgrounded — `didAutoPromptThisLock` blocks re-prompt while the Face
+        // ID sheet holds the scene `.inactive` (AGENTS: no re-prompt on inactive).
         guard scenePhase != .background else { return }
         didAutoPromptThisLock = true
         startUnlockPipeline(isAuto: true)
@@ -382,7 +368,7 @@ struct OwnerAppLock<Content: View>: View {
                         }.value
                     // Keychain + embed JSON only — do not await WKWebView warm or AES.
                     // Staging only: PHI fields stay empty until gate unlocks so
-                    // PrivacySnapshotGuard never covers the watermark under capture.
+                    // PrivacySnapshotGuard never covers the lock shell under capture.
                     let didLoad = await profile.prepareUnlockPrefetchOrReload()
                     let expectsProfile = didLoad ? true : await expectsProfileTask
                     guard generation == authGeneration else {
