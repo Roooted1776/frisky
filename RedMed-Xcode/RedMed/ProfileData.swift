@@ -215,6 +215,15 @@ class ProfileData: ObservableObject {
     /// Plaintext profile JSON from Face ID overlap — pairs with `unlockPreviewPayload`.
     private(set) var unlockEmbedProfileJSON: String?
 
+    /// Fresh-install unlock — placeholder `#d=` so RedMed paints without an AES stall.
+    @MainActor
+    func prepareEmptyUnlockShell() {
+        unlockPreviewPayload = ProfileNFCCodec.placeholderPreviewPayload
+        unlockEmbedProfileJSON = ProfileNFCCodec.embedProfileJSON(
+            from: ProfileNFCCodec.chipProfile(from: self)
+        )
+    }
+
     /// Start (or restart) off-main Keychain load+decode, then AES pack while biometrics run.
     /// Does not publish PHI — `applyUnlockPrefetchOrReload` applies only after Face ID success.
     func beginUnlockPrefetch() {
@@ -229,7 +238,7 @@ class ProfileData: ObservableObject {
             return decoded
         }
         unlockBlobTask = blobTask
-        // Pack after decode — unlock awaits blob first, then takes pack if ready.
+        // Pack after decode — unlock takes embed JSON immediately; AES finishes in background.
         unlockPackTask = Task.detached(priority: .userInitiated) { () -> (String?, String?)? in
             guard let decoded = await blobTask.value else { return nil }
             guard !Task.isCancelled else { return nil }
@@ -250,8 +259,8 @@ class ProfileData: ObservableObject {
     }
 
     /// Prefer the Face ID–overlapped decode; fall back to a fresh Keychain read.
-    /// Blob apply is first; pack is awaited when already in flight (usually done
-    /// during Face ID). Fallback rebuilds pack off-main from the Keychain blob.
+    /// Unlocks as soon as the blob + embed JSON are ready — does **not** wait on
+    /// AES `#d=` (placeholder payload + `__REDMED_PROFILE` paints the shell).
     @MainActor
     @discardableResult
     func applyUnlockPrefetchOrReload() async -> Bool {
@@ -261,7 +270,7 @@ class ProfileData: ObservableObject {
             unlockBlobTask = nil
             if let blob = await blobTask.value {
                 apply(blob)
-                await adoptUnlockPack(for: blob)
+                await adoptUnlockArtifactsFast(for: blob)
                 return true
             }
         }
@@ -271,36 +280,58 @@ class ProfileData: ObservableObject {
 
         let ok = await reloadFromKeychainAsync()
         if ok {
-            // No prefetched blob handle — rebuild pack from the applied fields.
             let chip = ProfileNFCCodec.chipProfile(from: snapshot())
-            let artifacts = await Task.detached(priority: .userInitiated) {
-                (
-                    ProfileNFCCodec.previewPayload(from: chip),
-                    ProfileNFCCodec.embedProfileJSON(from: chip)
-                )
+            let json = await Task.detached(priority: .userInitiated) {
+                ProfileNFCCodec.embedProfileJSON(from: chip)
             }.value
-            unlockPreviewPayload = artifacts.0
-            unlockEmbedProfileJSON = artifacts.1
+            unlockEmbedProfileJSON = json
+            unlockPreviewPayload = ProfileNFCCodec.placeholderPreviewPayload
         }
         return ok
     }
 
-    /// Take Face ID–overlapped pack when ready; otherwise pack from the Keychain blob.
+    /// Embed JSON on the critical path; placeholder `#d=` — never await AES here.
+    /// In-flight Face ID pack finishes in the background (RedMed refreshes via JS).
     @MainActor
-    private func adoptUnlockPack(for blob: PersistedProfile) async {
-        if let packTask = unlockPackTask {
-            unlockPackTask = nil
-            if let art = await packTask.value {
+    private func adoptUnlockArtifactsFast(for blob: PersistedProfile) async {
+        let packTask = unlockPackTask
+        unlockPackTask = nil
+
+        let json = await Task.detached(priority: .userInitiated) {
+            Self.previewArtifactsJSONOnly(from: blob)
+        }.value
+        unlockEmbedProfileJSON = json
+        unlockPreviewPayload = ProfileNFCCodec.placeholderPreviewPayload
+
+        guard let packTask else { return }
+        Task { @MainActor in
+            guard let art = await packTask.value else { return }
+            // Only stash if RedMed has not taken the unlock hold yet.
+            if unlockPreviewPayload == ProfileNFCCodec.placeholderPreviewPayload {
                 unlockPreviewPayload = art.0
+            }
+            if unlockEmbedProfileJSON == nil {
                 unlockEmbedProfileJSON = art.1
-                return
             }
         }
-        let artifacts = await Task.detached(priority: .userInitiated) {
-            Self.previewArtifacts(from: blob)
-        }.value
-        unlockPreviewPayload = artifacts.payload
-        unlockEmbedProfileJSON = artifacts.json
+    }
+
+    /// Embed JSON only (no AES) — unlock critical path.
+    private static func previewArtifactsJSONOnly(from blob: PersistedProfile) -> String? {
+        let chip = NFCChipProfile(
+            name: blob.name,
+            dob: blob.birthDate,
+            blood: blob.bloodType,
+            donor: blob.isOrganDonor,
+            allergies: blob.allergies,
+            meds: blob.medications,
+            conditions: blob.conditions,
+            contacts: blob.contacts.map {
+                NFCChipContact(name: $0.name, rel: $0.relationship, phone: $0.phone)
+            },
+            updated: blob.lastUpdated
+        )
+        return ProfileNFCCodec.embedProfileJSON(from: chip)
     }
 
     /// RedMed tab takes the Face ID–overlapped `#d=` once (nil after).

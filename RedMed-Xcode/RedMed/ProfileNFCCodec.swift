@@ -176,6 +176,14 @@ enum ProfileNFCCodec {
         return extractPayload(fromURLString: url)
     }
 
+    /// Empty-chip AES `#d=` — app-embed first paint uses `__REDMED_PROFILE` and skips
+    /// WebCrypto, so unlock must not wait on a fresh seal. Warm during shell cache fill.
+    nonisolated static let placeholderPreviewPayload: String = {
+        var chip = NFCChipProfile()
+        chip.updated = "0"
+        return previewPayload(from: chip) ?? "0"
+    }()
+
     /// Plain object JSON for in-app `window.__REDMED_PROFILE` — skips WebCrypto decrypt.
     /// Shape matches `tapper.html` `sanitizeProfile` (name/dob/blood/lists/contacts).
     /// `nonisolated` — pairs with `previewPayload` off the main actor.

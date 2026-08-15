@@ -130,11 +130,16 @@ private enum PasserbyShellCache {
     static func warm() {
         cacheLock.lock()
         defer { cacheLock.unlock() }
-        if cachedShellHTML != nil { return }
+        if cachedShellHTML != nil {
+            _ = ProfileNFCCodec.placeholderPreviewPayload
+            return
+        }
         guard let url = Bundle.main.url(forResource: "tapper", withExtension: "html"),
               let html = try? String(contentsOf: url, encoding: .utf8) else { return }
         cachedShellFileURL = url
         cachedShellHTML = html
+        // Seal empty `#d=` off the unlock path (first access otherwise hits MainActor).
+        _ = ProfileNFCCodec.placeholderPreviewPayload
     }
 
     static func shellFileURL() -> URL? {
