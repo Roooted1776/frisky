@@ -422,6 +422,8 @@ extension Notification.Name {
     static let redMedDidEraseLocalData = Notification.Name("redMedDidEraseLocalData")
     /// Crash / SOS armed — ContentView jumps to 911 without observing CrashMotionGuard.
     static let redMedSurvivalArmed = Notification.Name("redMedSurvivalArmed")
+    /// Owner RedMed embed tapped Not linked / Linked bracelet — ContentView selects NFC.
+    static let redMedOpenNFCTab = Notification.Name("redMedOpenNFCTab")
 }
 
 struct EmergencyContact: Identifiable, Equatable {

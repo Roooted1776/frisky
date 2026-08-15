@@ -390,8 +390,16 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
             }
             let scheme = (url.scheme ?? "").lowercased()
             switch scheme {
-            case "http", "https", "mailto", "tel", "redmed":
+            case "http", "https", "mailto", "tel":
                 UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                decisionHandler(.cancel)
+            case "redmed":
+                // Owner embed status → NFC tab. Other redmed:// (e.g. main) open normally.
+                if Self.isNFCTabURL(url) {
+                    NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
+                } else {
+                    UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                }
                 decisionHandler(.cancel)
             default:
                 decisionHandler(.cancel)
@@ -406,9 +414,23 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         ) -> WKWebView? {
             // Deny target=_blank / window.open — same posture as LocalWebView.
             if let url = navigationAction.request.url, !url.isFileURL {
-                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                if (url.scheme ?? "").lowercased() == "redmed", Self.isNFCTabURL(url) {
+                    NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
+                } else {
+                    UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                }
             }
             return nil
+        }
+
+        /// `redmed://nfc` from owner embed status line (Not linked / Linked bracelet).
+        private static func isNFCTabURL(_ url: URL) -> Bool {
+            guard (url.scheme ?? "").lowercased() == "redmed" else { return false }
+            let host = (url.host ?? "").lowercased()
+            if host == "nfc" { return true }
+            // Tolerate redmed:///nfc or path-only forms.
+            let path = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/")).lowercased()
+            return path == "nfc"
         }
     }
 }

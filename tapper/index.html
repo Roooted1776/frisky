@@ -66,7 +66,7 @@
     --shadow-accent: 0 6px 16px rgba(225,29,72,0.22);
     /* Fluid shell — SE → Pro Max → iPad / landscape. */
     --page-max: 480px;
-    --page-pad-x: clamp(12px, 4.2vw, 28px);
+    --page-pad-x: clamp(16px, 4.2vw, 28px);
     --tabbar-h: 74px;
     --fs-name: 22px; /* hero under logo — RED-9 / Main.dc */
     --fs-row: 14px; /* YOU rows + lists — matches Theme CardRow */
@@ -160,17 +160,18 @@
 
   /* —— RedMed tab (My ID look) —— */
   .rm-header {
-    padding: 10px var(--page-pad-x) 8px;
+    padding: 8px var(--page-pad-x) 6px;
   }
   .rm-lock {
-    font-size: clamp(12px, 3.2vw, 14px);
+    font-size: clamp(12px, 3.2vw, 13px);
     font-weight: 600;
     color: var(--muted);
-    line-height: 1.4;
-    margin: 0 auto 12px;
+    line-height: 1.35;
+    letter-spacing: 0.1px;
+    margin: 0 auto 10px;
     max-width: min(360px, 100%);
     text-align: center;
-    padding: 11px 14px;
+    padding: 10px 14px;
     background: var(--surface);
     border: none;
     border-radius: var(--box);
@@ -220,8 +221,8 @@
   .rm-title-row {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 4px 0;
+    gap: 10px;
+    padding: 2px 0 4px;
   }
   .rm-logo {
     /* Match RedMedChrome.logoSize = 72 (YOU-card / shell mark). */
@@ -230,7 +231,7 @@
     border-radius: 50%;
     overflow: hidden;
     border: none;
-    box-shadow: 0 4px 10px rgba(225,29,72,0.2);
+    box-shadow: 0 3px 10px rgba(225,29,72,0.18);
     flex-shrink: 0;
     display: block;
     object-fit: cover;
@@ -260,6 +261,54 @@
   .rm-status.linked {
     color: rgba(225,29,72,0.9);
   }
+  /* Owner RedMed embed only — status opens native NFC tab (Write / Scan). */
+  html.app-embed .rm-status.rm-status-link,
+  body.app-embed .rm-status.rm-status-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    min-height: 28px;
+    margin: 2px 0 0;
+    padding: 2px 0;
+    cursor: pointer;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.14s ease;
+  }
+  html.app-embed .rm-status.rm-status-link:not(.linked),
+  body.app-embed .rm-status.rm-status-link:not(.linked) {
+    color: var(--accent);
+  }
+  html.app-embed .rm-status.rm-status-link::after,
+  body.app-embed .rm-status.rm-status-link::after {
+    content: '›';
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    line-height: 1;
+    margin-left: 1px;
+    opacity: 0.85;
+  }
+  html.app-embed .rm-status.rm-status-link:active,
+  body.app-embed .rm-status.rm-status-link:active {
+    opacity: 0.72;
+  }
+  html.app-embed .rm-status.rm-status-link:focus-visible,
+  body.app-embed .rm-status.rm-status-link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html.app-embed .rm-status.rm-status-link,
+    body.app-embed .rm-status.rm-status-link { transition: none; }
+  }
+  /* Owner embed: lock line gone — tighten header → YOU card. */
+  html.app-embed .rm-header,
+  body.app-embed .rm-header {
+    padding: 2px var(--page-pad-x) 4px;
+  }
   .card {
     margin: 0 var(--page-pad-x);
     background: var(--surface);
@@ -268,13 +317,22 @@
     overflow: hidden;
     box-shadow: var(--shadow);
   }
-  .card.you-card { margin-top: 2px; }
+  .card.you-card { margin-top: 6px; }
+  .rm-updated {
+    margin: 8px var(--page-pad-x) 0;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    color: rgba(120,113,108,0.72);
+    text-align: right;
+  }
+  .rm-updated[hidden] { display: none; }
   .row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 12px;
-    padding: 12px 16px;
+    padding: 11px 16px;
     border-bottom: 1px solid var(--divider);
   }
   .row:last-child { border-bottom: none; }
@@ -294,9 +352,10 @@
     word-break: break-word;
     min-width: 0;
   }
-  .row .v.empty { font-weight: 500; color: rgba(28,25,23,0.55); }
-  /* Blood type — EMT glance chip when filled. */
-  .row.row-blood.has-blood .v {
+  .row .v.empty { font-weight: 500; color: rgba(28,25,23,0.4); }
+  /* Blood type / organ donor — EMT glance chips when filled. */
+  .row.row-blood.has-blood .v,
+  .row.row-donor.has-donor .v {
     display: inline-block;
     font-size: var(--fs-row);
     font-weight: 700;
@@ -320,8 +379,8 @@
   .list-grid {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin: 12px var(--page-pad-x) 0;
+    gap: 10px;
+    margin: 14px var(--page-pad-x) 0;
   }
   details.list-drop {
     background: var(--surface);
@@ -344,6 +403,11 @@
     padding: 13px 14px;
     min-width: 0;
     -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.14s ease;
+  }
+  details.list-drop summary:active { opacity: 0.82; }
+  @media (prefers-reduced-motion: reduce) {
+    details.list-drop summary { transition: none; }
   }
   details.list-drop summary::-webkit-details-marker { display: none; }
   .list-drop-title {
@@ -421,11 +485,12 @@
   }
   .contact-block a.cp {
     font-size: var(--fs-row);
-    font-weight: 500;
-    color: var(--dark);
+    font-weight: 600;
+    color: var(--accent);
     text-decoration: none;
     white-space: nowrap;
   }
+  .contact-block a.cp:active { opacity: 0.75; }
   .contact-block .cd {
     font-size: var(--fs-row);
     font-weight: 500;
@@ -916,8 +981,9 @@
         <div class="row" id="rowNameRow"><span class="k">Name</span><span class="v empty" id="rowName">—</span></div>
         <div class="row"><span class="k">Birth date</span><span class="v empty" id="rowDob">—</span></div>
         <div class="row row-blood" id="rowBloodRow"><span class="k">Blood type</span><span class="v empty" id="rowBlood">—</span></div>
-        <div class="row" id="rowDonorRow"><span class="k">Organ donor</span><span class="v empty" id="rowDonor">—</span></div>
+        <div class="row row-donor" id="rowDonorRow"><span class="k">Organ donor</span><span class="v empty" id="rowDonor">—</span></div>
       </div>
+      <p class="rm-updated" id="updatedLine" hidden></p>
 
       <div class="list-grid">
         <details class="list-drop" id="dropAllergies">
@@ -1565,6 +1631,7 @@
     }
     // Real band tap: decode ⇒ fromBand. In-app embed: Swift sets __REDMED_BRACELET_LINKED
     // so Linked still requires a verified write + YOU card (name, birth, blood).
+    // Owner embed: status is a link to the native NFC tab (redmed://nfc).
     if (statusEl) {
       var youComplete = !!rawName && !!rawDob && !!rawBlood;
       var linked = isAppPreview()
@@ -1572,15 +1639,45 @@
         : (!!fromBand && youComplete);
       statusEl.textContent = linked ? 'Linked bracelet' : 'Not linked';
       statusEl.classList.toggle('linked', linked);
+      if (isAppEmbed()) {
+        statusEl.classList.add('rm-status-link');
+        statusEl.setAttribute('role', 'link');
+        statusEl.setAttribute('tabindex', '0');
+        statusEl.setAttribute('aria-label', (linked ? 'Linked bracelet' : 'Not linked') + ' — open NFC');
+      } else {
+        statusEl.classList.remove('rm-status-link');
+        statusEl.removeAttribute('role');
+        statusEl.removeAttribute('tabindex');
+        statusEl.removeAttribute('aria-label');
+      }
     }
     setRow('rowName', p.name);
     setRow('rowDob', p.dob);
     setRow('rowBlood', p.blood);
     setRow('rowDonor', p.donor ? 'Yes' : '');
+    // Hero already shows the name — drop the duplicate YOU row when filled.
+    var nameRow = document.getElementById('rowNameRow');
+    if (nameRow) nameRow.hidden = !!rawName;
     var bloodRow = document.getElementById('rowBloodRow');
     if (bloodRow) {
       if (rawBlood) bloodRow.classList.add('has-blood');
       else bloodRow.classList.remove('has-blood');
+    }
+    var donorRow = document.getElementById('rowDonorRow');
+    if (donorRow) {
+      if (p.donor) donorRow.classList.add('has-donor');
+      else donorRow.classList.remove('has-donor');
+    }
+    var updatedEl = document.getElementById('updatedLine');
+    if (updatedEl) {
+      var upd = (p.updated || '').trim();
+      if (upd) {
+        updatedEl.hidden = false;
+        updatedEl.textContent = 'Updated ' + upd;
+      } else {
+        updatedEl.hidden = true;
+        updatedEl.textContent = '';
+      }
     }
     list(document.getElementById('allergies'), p.allergies, 'countAllergies', 'dropAllergies');
     list(document.getElementById('meds'), p.meds, 'countMedications', 'dropMedications');
@@ -1664,6 +1761,28 @@
       if (!document.documentElement.classList.contains('app-embed')) return;
       document.body.classList.add('app-embed');
     } catch (e) {}
+  })();
+
+  // Owner embed: Not linked / Linked bracelet → native NFC tab (ContentView).
+  // Passerby / Preview / Scan: no-op (no NFC tab; status is display-only).
+  (function wireStatusNFCLink() {
+    var statusEl = document.getElementById('statusLine');
+    if (!statusEl || statusEl.__redmedNfcWired) return;
+    statusEl.__redmedNfcWired = true;
+    function openNFC() {
+      if (!isAppEmbed()) return;
+      try { location.href = 'redmed://nfc'; } catch (e) {}
+    }
+    statusEl.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      openNFC();
+    });
+    statusEl.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' || ev.key === ' ') {
+        ev.preventDefault();
+        openNFC();
+      }
+    });
   })();
 
   decodeProfile().then(function (p) {
