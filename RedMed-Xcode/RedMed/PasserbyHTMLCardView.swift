@@ -164,46 +164,71 @@ private enum PasserbyShellCache {
 /// Pre-creates a cream `WKWebView` and loads bundled `tapper.html` while Face ID
 /// runs so unlock's first RedMed paint skips cold WebKit process + first parse.
 /// MainActor only — WKWebView is not thread-safe.
+///
+/// One shared warm task — callers must `await ensureWarmEmbedShell()` before
+/// unlock so a fast Face ID cannot miss a mid-flight warm (`warming == true`
+/// used to no-op and leave RedMed on a cold WKWebView).
 @MainActor
 enum PasserbyWebViewPool {
     private static var warmedEmbed: WKWebView?
-    private static var warming = false
+    private static var warmTask: Task<WKWebView?, Never>?
 
-    /// Call during Face ID. Safe to call repeatedly — one warm view at a time.
+    /// Kick a warm without waiting — safe to call repeatedly (single flight).
     static func warmEmbedShell() {
-        guard warmedEmbed == nil, !warming else { return }
-        warming = true
-        let webView = makeConfiguredWebView(navigationDelegate: nil)
-        guard let fileURL = PasserbyShellCache.shellFileURL(),
-              var html = PasserbyShellCache.shellHTML() else {
-            warming = false
-            return
-        }
-        // App-embed chrome only — no PHI. Real profile arrives via JS push or full load.
-        let boot = """
-        <script>
-        window.__REDMED_APP_PREVIEW=1;
-        window.__REDMED_APP_EMBED=1;
-        window.__REDMED_BRACELET_LINKED=false;
-        try{document.documentElement.classList.add('app-embed');}catch(e0){}
-        </script>
+        _ = ensureWarmTask()
+    }
 
-        """
-        if let range = html.range(of: "<head>") {
-            html.replaceSubrange(range, with: "<head>\n" + boot)
-        } else {
-            html = boot + html
+    /// Wait until the pooled embed exists (or shell HTML is missing).
+    static func ensureWarmEmbedShell() async {
+        if warmedEmbed != nil { return }
+        _ = await ensureWarmTask().value
+    }
+
+    private static func ensureWarmTask() -> Task<WKWebView?, Never> {
+        if let warmedEmbed {
+            return Task { @MainActor in warmedEmbed }
         }
-        webView.loadHTMLString(html, baseURL: fileURL)
-        warmedEmbed = webView
-        warming = false
+        if let warmTask { return warmTask }
+        let task = Task { @MainActor in
+            // Shell HTML may still be filling from a detached warm — read through
+            // the lock (loads from bundle once if needed).
+            let webView = makeConfiguredWebView(navigationDelegate: nil)
+            guard let fileURL = PasserbyShellCache.shellFileURL(),
+                  var html = PasserbyShellCache.shellHTML() else {
+                return nil
+            }
+            // App-embed chrome only — no PHI. Real profile arrives via JS push or full load.
+            let boot = """
+            <script>
+            window.__REDMED_APP_PREVIEW=1;
+            window.__REDMED_APP_EMBED=1;
+            window.__REDMED_BRACELET_LINKED=false;
+            try{document.documentElement.classList.add('app-embed');}catch(e0){}
+            </script>
+
+            """
+            if let range = html.range(of: "<head>") {
+                html.replaceSubrange(range, with: "<head>\n" + boot)
+            } else {
+                html = boot + html
+            }
+            webView.loadHTMLString(html, baseURL: fileURL)
+            warmedEmbed = webView
+            return webView
+        }
+        warmTask = task
+        Task { @MainActor in
+            _ = await task.value
+            if warmTask == task { warmTask = nil }
+        }
+        return task
     }
 
     /// Owner RedMed tab takes the warmed view once (nil after).
     static func takeEmbed() -> WKWebView? {
         let view = warmedEmbed
         warmedEmbed = nil
-        warming = false
+        warmTask = nil
         return view
     }
 
