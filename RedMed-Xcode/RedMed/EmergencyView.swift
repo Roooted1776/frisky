@@ -77,7 +77,7 @@ struct EmergencyView: View {
                     )
                 }
                 .padding(.horizontal, RedMedChrome.pagePadX)
-                .padding(.top, isScannerSession ? 44 : RedMedChrome.wordmarkTop)
+                .padding(.top, isScannerSession ? 54 : RedMedChrome.wordmarkTop + 10)
                 .padding(.bottom, 24)
             }
             .scrollIndicators(.visible)
