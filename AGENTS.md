@@ -171,9 +171,30 @@ debug `screenshots/`, dead `support.js` / `ios-frame.jsx`, or UK
 Xcode Stop / Simulator killing the process — not a Swift crash. Look for
 `EXC_BAD_ACCESS` / fatalError / assertion if it is a real fault.
 
-**Consequence for cloud agents:** the update script is intentionally a no-op. Code review and static
-edits to the `.swift` files are possible, but do not attempt to build/run/test here. Any actual
-build, run, or manual testing must happen on macOS + Xcode:
+**Passerby web shell IS runnable on Linux / Cursor Cloud.** Only the native iOS app can't run
+here — the static passerby shell (`tapper.html` / `tapper/index.html`, `get*`/`card.html`
+redirects, `sw.js`, brand PNGs) can be served and smoke-tested on this Linux VM with the
+pre-installed `python3` (no npm, no wrangler, no build step):
+
+```
+python3 -m http.server 8787 --bind 127.0.0.1   # or ./scripts/deploy-pages.sh (same server)
+BASE=http://127.0.0.1:8787 ./scripts/smoke-pages.sh   # page-load + redirect smoke (11 checks)
+```
+
+Use `127.0.0.1` (not a LAN IP) so `#d=` decode works. The medical card renders from `#d=` with
+**no server**: `decodeProfile` in `tapper.html` accepts a base64url payload whose first byte is
+`{`/`[` as **plaintext JSON** (AES-GCM `0x02` and zlib `0x01` are the other two paths), so a quick
+`#d=<base64url(JSON)>` (fields: `name,dob,blood,donor,updated,allergies,meds,conditions,contacts`)
+renders a full RedMed · 911 · Aid card in Chrome without the owner app or any real encryption. This
+is the fastest way to eyeball tapper/SW/redirect changes here. Cloudflare `_headers` / `_redirects`
+are **not** honored by `http.server` (Pages-only), so the legacy `/get.html` etc. serve their
+in-file meta-refresh HTML rather than a 30x here. Note SOS auto-arm still needs a real `#d=` band
+tap on hardware, so the survival alarm is not exercised by this local render.
+
+**Consequence for cloud agents:** the update script is intentionally a no-op (both `python3` and
+`node` are already in the base image; the iOS app has no installable deps). Code review and static
+edits to the `.swift` files are possible, but do not attempt to build/run/test the iOS app here.
+Any actual iOS build, run, or manual testing must happen on macOS + Xcode:
 
 ```
 ./scripts/run.sh                       # fastest: boot iOS 27.0 sim, incremental build, launch
