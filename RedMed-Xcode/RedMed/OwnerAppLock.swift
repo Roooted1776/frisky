@@ -79,8 +79,8 @@ struct OwnerAppLock<Content: View>: View {
             }
         }
         .task(id: authGeneration) {
-            // Escape hatch: if LA never callbacks, Unlock must still appear.
-            // Do not flash Unlock under a live Face ID sheet (common at ~1s).
+            // Escape hatch: if LA never callbacks, Unlock must still be tappable.
+            // Do not flash Unlock under a live Face ID sheet (common at ~1–2s).
             guard gate == .locked else { return }
             let generation = authGeneration
             try? await Task.sleep(nanoseconds: 1_500_000_000)
@@ -88,6 +88,12 @@ struct OwnerAppLock<Content: View>: View {
             if isAuthenticating {
                 try? await Task.sleep(nanoseconds: 3_500_000_000)
                 guard gate == .locked, generation == authGeneration else { return }
+            }
+            // Hung LA: invalidate this generation so a late callback cannot unlock,
+            // clear isAuthenticating so Unlock is not stuck disabled.
+            if isAuthenticating {
+                authGeneration &+= 1
+                isAuthenticating = false
             }
             showUnlockControl = true
         }
@@ -328,16 +334,21 @@ struct OwnerAppLock<Content: View>: View {
                 // Cold-start evaluate before the window can present — do not leave
                 // Unlock chrome up; clear auto-prompt so `.active` retries once.
                 // User cancel is `.declined` (Unlock stays); this is not cancel.
+                // Never auto-kick inline when already `.active` — LA can still return
+                // appNotInteractive briefly and that looped Face ID forever.
                 isAuthenticating = false
                 biometryFailed = false
                 profileLoadFailed = false
-                showUnlockControl = false
                 gate = .locked
                 didAutoPromptThisLock = false
-                // Keep prefetch — Face ID will overlap again on the active retry.
                 if scenePhase == .active {
-                    tryAutoUnlockIfActive()
+                    // Already active but LA refused — Unlock, no retry storm.
+                    showUnlockControl = true
+                } else {
+                    // Typical cold `.inactive` — `.onChange(.active)` retries once.
+                    showUnlockControl = false
                 }
+                // Keep prefetch — Face ID will overlap on the active retry / Unlock tap.
             case .notVerified:
                 // Face ID / Touch ID (or passcode) did not match.
                 RedMedHaptics.error()
