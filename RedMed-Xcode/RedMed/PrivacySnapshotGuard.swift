@@ -8,6 +8,8 @@ import UIKit
 /// FaceTime / Screen Recording sets `UIScreen.isCaptured`. Do **not** cover the
 /// lock / watermark shell — RAM is purged then, and a cover blocks Face ID /
 /// Unlock so the owner cannot enter. Cover only when PHI is actually in memory.
+/// `OwnerAppLock` stages Keychain decode without publishing fields until after
+/// `gate = .unlocked`, so capture never paints a cover over the watermark.
 ///
 /// Non-capture cover is **`.background` only** (with PHI). Face ID / LAContext
 /// put the scene `.inactive` — covering then blanks the UI mid-unlock and

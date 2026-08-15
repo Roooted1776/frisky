@@ -381,10 +381,13 @@ struct OwnerAppLock<Content: View>: View {
                             ProfileData.hasStoredProfile()
                         }.value
                     // Keychain + embed JSON only — do not await WKWebView warm or AES.
-                    let didLoad = await profile.applyUnlockPrefetchOrReload()
+                    // Staging only: PHI fields stay empty until gate unlocks so
+                    // PrivacySnapshotGuard never covers the watermark under capture.
+                    let didLoad = await profile.prepareUnlockPrefetchOrReload()
                     let expectsProfile = didLoad ? true : await expectsProfileTask
                     guard generation == authGeneration else {
-                        // Late success after background lock — drop any applied PHI.
+                        // Late success after background lock — drop staging, no PHI published.
+                        profile.discardUnlockPrefetch()
                         profile.purgeFromMemory()
                         return
                     }
@@ -392,8 +395,9 @@ struct OwnerAppLock<Content: View>: View {
                     if didLoad {
                         keychainHasProfile = true
                         RedMedHaptics.success()
-                        // No soft fade — tabs must appear immediately after Face ID.
+                        // Unlock shell first, then publish PHI in the same turn.
                         gate = .unlocked
+                        profile.commitUnlockProfile()
                         biometryFailed = false
                         profileLoadFailed = false
                         showUnlockControl = false
