@@ -271,7 +271,7 @@ class ProfileData: ObservableObject {
             let chip = ProfileNFCCodec.chipProfile(from: snapshot())
             let artifacts = await Task.detached(priority: .userInitiated) {
                 (
-                    PasserbyHTMLCardView.previewPayload(from: chip),
+                    ProfileNFCCodec.previewPayload(from: chip),
                     ProfileNFCCodec.embedProfileJSON(from: chip)
                 )
             }.value
@@ -313,7 +313,7 @@ class ProfileData: ObservableObject {
             updated: blob.lastUpdated
         )
         return (
-            PasserbyHTMLCardView.previewPayload(from: chip),
+            ProfileNFCCodec.previewPayload(from: chip),
             ProfileNFCCodec.embedProfileJSON(from: chip)
         )
     }
