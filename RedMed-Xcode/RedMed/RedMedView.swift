@@ -146,11 +146,11 @@ struct RedMedView: View {
         packGeneration &+= 1
         let generation = packGeneration
         // Keep any live shell while packing off-main — clearing blanked RedMed until AES finished.
-        let scratch = profile.snapshot()
+        let chip = ProfileNFCCodec.chipProfile(from: profile)
         Task.detached(priority: .userInitiated) {
             let artifacts = (
-                PasserbyHTMLCardView.previewPayload(from: scratch),
-                ProfileNFCCodec.embedProfileJSON(from: scratch)
+                PasserbyHTMLCardView.previewPayload(from: chip),
+                ProfileNFCCodec.embedProfileJSON(from: chip)
             )
             await MainActor.run {
                 guard generation == packGeneration else { return }
