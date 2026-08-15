@@ -36,7 +36,8 @@ enum AppConfig {
         }
 
         /// True only for live owner writes: exact tapper base + non-empty `#d=` payload.
-        static func isValidWriteURL(_ urlString: String) -> Bool {
+        /// `nonisolated` — codec pack path runs off the main actor.
+        nonisolated static func isValidWriteURL(_ urlString: String) -> Bool {
             let base = AppConfig.medicalCardBaseURL
             guard urlString.hasPrefix(base) else { return false }
             let rest = urlString.dropFirst(base.count)

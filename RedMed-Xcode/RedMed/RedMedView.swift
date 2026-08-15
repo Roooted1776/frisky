@@ -149,7 +149,7 @@ struct RedMedView: View {
         let chip = ProfileNFCCodec.chipProfile(from: profile)
         Task.detached(priority: .userInitiated) {
             let artifacts = (
-                PasserbyHTMLCardView.previewPayload(from: chip),
+                ProfileNFCCodec.previewPayload(from: chip),
                 ProfileNFCCodec.embedProfileJSON(from: chip)
             )
             await MainActor.run {

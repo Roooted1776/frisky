@@ -123,7 +123,8 @@ enum ProfileNFCCodec {
     /// `buildPreviewURLString` so SwiftUI body re-evals do not mint a new AES ciphertext.
     /// Owner writes always use `AppConfig.medicalCardBaseURL` + `#d=` (fail closed
     /// if a caller passes a vendor / social / short-link base).
-    static func buildURLString(chip: NFCChipProfile, baseURL: String = AppConfig.medicalCardBaseURL) -> String? {
+    /// `nonisolated` — NFC write packs from `Task.detached`.
+    nonisolated static func buildURLString(chip: NFCChipProfile, baseURL: String = AppConfig.medicalCardBaseURL) -> String? {
         guard baseURL == AppConfig.medicalCardBaseURL else { return nil }
         var chip = chip
         chip.updated = ISO8601DateFormatter().string(from: Date())
@@ -139,7 +140,8 @@ enum ProfileNFCCodec {
 
     /// Stable `#d=` for WKWebView embed — keeps `chip.updated` (or one stamp if empty)
     /// and must only be called when durable fields change, not every `body` pass.
-    static func buildPreviewURLString(chip: NFCChipProfile, baseURL: String = AppConfig.medicalCardBaseURL) -> String? {
+    /// `nonisolated` — AES pack from `Task.detached` (unlock prefetch / RedMed sync).
+    nonisolated static func buildPreviewURLString(chip: NFCChipProfile, baseURL: String = AppConfig.medicalCardBaseURL) -> String? {
         guard baseURL == AppConfig.medicalCardBaseURL else { return nil }
         var chip = chip
         if chip.updated.isEmpty {
@@ -155,9 +157,29 @@ enum ProfileNFCCodec {
         buildPreviewURLString(chip: chipProfile(from: profile), baseURL: baseURL)
     }
 
+    /// Strip `#d=` from a full tapper URL (or pass through a bare fragment).
+    /// `nonisolated` — NFC callbacks / `Task.detached` pack path.
+    nonisolated static func extractPayload(fromURLString raw: String) -> String? {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        if let range = trimmed.range(of: "#d=") {
+            let payload = String(trimmed[range.upperBound...])
+            return payload.isEmpty ? nil : payload
+        }
+        return trimmed
+    }
+
+    /// Owner RedMed / prefetch — stable `#d=` fragment only (no URL prefix).
+    /// Lives here (not on MainActor `PasserbyHTMLCardView`) so `Task.detached` stays clean under Swift 6.
+    nonisolated static func previewPayload(from chip: NFCChipProfile) -> String? {
+        guard let url = buildPreviewURLString(chip: chip) else { return nil }
+        return extractPayload(fromURLString: url)
+    }
+
     /// Plain object JSON for in-app `window.__REDMED_PROFILE` — skips WebCrypto decrypt.
     /// Shape matches `tapper.html` `sanitizeProfile` (name/dob/blood/lists/contacts).
-    static func embedProfileJSON(from chip: NFCChipProfile) -> String? {
+    /// `nonisolated` — pairs with `previewPayload` off the main actor.
+    nonisolated static func embedProfileJSON(from chip: NFCChipProfile) -> String? {
         let contacts: [[String: String]] = chip.contacts.map {
             ["name": $0.name, "rel": $0.rel, "phone": $0.phone, "detail": ""]
         }
@@ -212,7 +234,7 @@ enum ProfileNFCCodec {
 
     // MARK: - Encode / decode
 
-    private static func encodePayload(_ chip: NFCChipProfile) -> String? {
+    private nonisolated static func encodePayload(_ chip: NFCChipProfile) -> String? {
         let compact = compactArray(from: chip)
         guard JSONSerialization.isValidJSONObject(compact),
               let jsonData = try? JSONSerialization.data(withJSONObject: compact, options: []) else {
@@ -260,7 +282,7 @@ enum ProfileNFCCodec {
         return nil
     }
 
-    private static func compactArray(from chip: NFCChipProfile) -> [Any] {
+    private nonisolated static func compactArray(from chip: NFCChipProfile) -> [Any] {
         let phone = chip.contacts.first.flatMap { c -> String? in
             let digits = c.phone.filter { $0.isNumber || $0 == "+" }
             return digits.isEmpty ? nil : digits
@@ -601,7 +623,7 @@ enum ProfileNFCCodec {
         return destination
     }
 
-    private static func base64url(_ data: Data) -> String {
+    private nonisolated static func base64url(_ data: Data) -> String {
         data.base64EncodedString()
             .replacingOccurrences(of: "+", with: "-")
             .replacingOccurrences(of: "/", with: "_")

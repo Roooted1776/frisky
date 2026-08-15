@@ -62,14 +62,7 @@ struct PasserbyHTMLCardView: View {
 
     /// `nonisolated` — strip `#d=` from any thread (NFC callbacks / Task.detached).
     nonisolated static func extractPayload(_ raw: String) -> String? {
-        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return nil }
-        if let range = trimmed.range(of: "#d=") {
-            let payload = String(trimmed[range.upperBound...])
-            return payload.isEmpty ? nil : payload
-        }
-        // Already a bare payload.
-        return trimmed
+        ProfileNFCCodec.extractPayload(fromURLString: raw)
     }
 
     /// Band write / capacity / NFC Scan — stamps a fresh `updated` time.
@@ -85,10 +78,9 @@ struct PasserbyHTMLCardView: View {
     }
 
     /// Owner RedMed tab embed — stable pack; caller must cache across `body` passes.
-    /// `nonisolated` — callers pack a Sendable chip from `Task.detached`.
+    /// Delegates to `ProfileNFCCodec` so off-main callers never touch this MainActor View.
     nonisolated static func previewPayload(from chip: NFCChipProfile) -> String? {
-        guard let url = ProfileNFCCodec.buildPreviewURLString(chip: chip) else { return nil }
-        return extractPayload(url)
+        ProfileNFCCodec.previewPayload(from: chip)
     }
 
     /// Copies ProfileData into a chip, then packs. ProfileData stays on the isolated caller.
