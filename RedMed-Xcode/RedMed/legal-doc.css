@@ -3,7 +3,7 @@
 /* Tokens match Theme.swift exactly — same palette as the iOS app cards. */
 :root {
   --bg: #fff7f7;                          /* Color.redmedBg */
-  --surface: rgba(255, 255, 255, 0.92);   /* Color.redmedSurface */
+  --surface: #fff3f4;                     /* Color.redmedSurface — cream-lift, not white */
   --border: rgba(28, 25, 23, 0.08);
   --divider: rgba(28, 25, 23, 0.08);      /* Color.redmedDivider */
   --accent: #e11d48;                      /* Color.redmedAccent */

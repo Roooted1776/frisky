@@ -57,7 +57,8 @@
     --muted: #78716c;
     --divider: rgba(28,25,23,0.08);
     --tab-off: #5f6369;
-    --surface: rgba(255,255,255,0.94);
+    /* Cream-lift — same Color.redmedSurface; not pure white on --bg. */
+    --surface: #fff3f4;
     --box: 10px;
     --chip: 7px;
     --logo: 72px;
@@ -315,7 +316,7 @@
     word-break: break-word;
   }
   .list-item:last-child { border-bottom: none; }
-  /* Allergies / Meds / Conditions — dropdowns like owner RedMedView. */
+  /* Allergies / Meds / Conditions / Contacts — closed when empty (no empty white panels). */
   .list-grid {
     display: flex;
     flex-direction: column;
@@ -919,7 +920,7 @@
       </div>
 
       <div class="list-grid">
-        <details class="list-drop" id="dropAllergies" open>
+        <details class="list-drop" id="dropAllergies">
           <summary>
             <span class="list-drop-title">Allergies</span>
             <span class="list-drop-count" id="countAllergies" hidden></span>
@@ -927,7 +928,7 @@
           </summary>
           <div class="list-drop-body" id="allergies"></div>
         </details>
-        <details class="list-drop" id="dropMedications" open>
+        <details class="list-drop" id="dropMedications">
           <summary>
             <span class="list-drop-title">Medications</span>
             <span class="list-drop-count" id="countMedications" hidden></span>
@@ -935,7 +936,7 @@
           </summary>
           <div class="list-drop-body" id="meds"></div>
         </details>
-        <details class="list-drop" id="dropConditions" open>
+        <details class="list-drop" id="dropConditions">
           <summary>
             <span class="list-drop-title">Conditions</span>
             <span class="list-drop-count" id="countConditions" hidden></span>
@@ -943,7 +944,7 @@
           </summary>
           <div class="list-drop-body" id="conditions"></div>
         </details>
-        <details class="list-drop" id="dropContacts" open>
+        <details class="list-drop" id="dropContacts">
           <summary>
             <span class="list-drop-title">Contacts</span>
             <span class="list-drop-count" id="countContacts" hidden></span>
@@ -1447,18 +1448,23 @@
     }
   }
 
-  function list(el, items, countId) {
+  function setListDropOpen(dropId, hasItems) {
+    var drop = document.getElementById(dropId);
+    if (drop) drop.open = !!hasItems;
+  }
+
+  function list(el, items, countId, dropId) {
     el.textContent = '';
     var countEl = countId ? document.getElementById(countId) : null;
-    if (!items || !items.length) {
-      var empty = document.createElement('div');
-      empty.className = 'list-item empty-slot';
-      empty.textContent = '—';
-      el.appendChild(empty);
+    var hasItems = !!(items && items.length);
+    if (!hasItems) {
+      // Leave body empty — closed drops stay compact (no empty white panel).
+      // Opening still shows — via :empty::after.
       if (countEl) {
         countEl.textContent = '';
         countEl.hidden = true;
       }
+      setListDropOpen(dropId, false);
       return;
     }
     if (countEl) {
@@ -1471,6 +1477,7 @@
       d.textContent = t;
       el.appendChild(d);
     });
+    setListDropOpen(dropId, true);
   }
 
   var tabAnimReady = false;
@@ -1566,9 +1573,9 @@
       if (rawBlood) bloodRow.classList.add('has-blood');
       else bloodRow.classList.remove('has-blood');
     }
-    list(document.getElementById('allergies'), p.allergies, 'countAllergies');
-    list(document.getElementById('meds'), p.meds, 'countMedications');
-    list(document.getElementById('conditions'), p.conditions, 'countConditions');
+    list(document.getElementById('allergies'), p.allergies, 'countAllergies', 'dropAllergies');
+    list(document.getElementById('meds'), p.meds, 'countMedications', 'dropMedications');
+    list(document.getElementById('conditions'), p.conditions, 'countConditions', 'dropConditions');
 
     var contactsEl = document.getElementById('contacts');
     contactsEl.textContent = '';
@@ -1585,11 +1592,9 @@
       }
     }
     if (!contacts.length) {
-      var emptyC = document.createElement('div');
-      emptyC.className = 'list-item empty-slot';
-      emptyC.textContent = '—';
-      contactsEl.appendChild(emptyC);
+      setListDropOpen('dropContacts', false);
     } else {
+      setListDropOpen('dropContacts', true);
       contacts.forEach(function (c, i) {
         var row = document.createElement('div');
         row.className = 'contact-block';
