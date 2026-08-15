@@ -97,7 +97,6 @@ final class NFCBandManager: ObservableObject {
         statusMessage = "Opening tap card…"
         Task.detached(priority: .userInitiated) {
             let source = ProfileNFCCodec.buildURLString(chip: chip)
-            try? await Task.sleep(nanoseconds: 350_000_000)
             await MainActor.run { [weak self] in
                 guard let self else { return }
                 self.isReading = false

@@ -1245,11 +1245,9 @@
     tryNext();
   }
 
-  // Bundle / app-embed already has BrandLogo.png — probing doubles decode on cold open.
+  // Bundle / app-embed already has BrandLogo + BrandWordmark — probing doubles decode.
   if (!isAppPreview()) {
     resolveLogo();
-    resolvePaneWordmarks(['BrandWordmark.png', 'assets/BrandWordmark.png']);
-  } else {
     resolvePaneWordmarks(['BrandWordmark.png', 'assets/BrandWordmark.png']);
   }
 
@@ -1811,7 +1809,7 @@
       }, function () {
         document.getElementById('coords').textContent = 'GPS unavailable';
         document.getElementById('gpsAcc').textContent = 'Tell dispatcher landmarks';
-      }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 });
+      }, { enableHighAccuracy: false, timeout: 8000, maximumAge: 30000 });
     } else {
       document.getElementById('coords').textContent = 'GPS unavailable';
     }
@@ -2229,8 +2227,12 @@
     armed = true;
     lastArmAt = Date.now() / 1000;
     resetMotionTransient();
-    startAudio(); // must play — not armed-only UI
-    paint();
+    paint(); // UI first — synth/AudioContext on next frame so profile paint is not blocked
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(function () { startAudio(); });
+    } else {
+      setTimeout(function () { startAudio(); }, 0);
+    }
   }
 
   function disarm() {
@@ -2449,6 +2451,12 @@
   // No auto-arm for bare /tapper/ or in-app Preview/Scan (?src=app). No server / no online.
   function hasBandPayload() {
     return /^#d=/.test(location.hash || '') && !appPreview();
+  }
+  // Prefetch siren PCM while profile decrypts / first paints.
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(function () { if (!sirenUrl) sirenUrl = buildSirenWavUrl(); }, { timeout: 1200 });
+  } else {
+    setTimeout(function () { if (!sirenUrl) sirenUrl = buildSirenWavUrl(); }, 0);
   }
   if (hasBandPayload()) {
     arm();

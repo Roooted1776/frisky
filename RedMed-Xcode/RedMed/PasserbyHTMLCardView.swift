@@ -166,8 +166,9 @@ private enum PasserbyShellCache {
 
 // MARK: - WKWebView process warm (Face ID overlap)
 
-/// Pre-creates a cream `WKWebView` and loads bundled `tapper.html` while Face ID
-/// runs so unlock's first RedMed paint skips cold WebKit process + first parse.
+/// Pre-creates a cream `WKWebView` and loads bundled `tapper.html` after unlock
+/// so the first RedMed paint can skip cold WebKit process + first parse when the
+/// pool is ready. Not kicked during Face ID (competes with LA on MainActor).
 /// MainActor only — WKWebView is not thread-safe.
 ///
 /// Single-flight warm. Unlock does **not** await this — tabs paint with a
@@ -402,7 +403,6 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
                 pendingProfileJS = nil
                 webView.evaluateJavaScript(pending, completionHandler: nil)
             }
-            webView.scrollView.flashScrollIndicators()
         }
 
         func webView(

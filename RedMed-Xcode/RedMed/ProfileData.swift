@@ -208,8 +208,10 @@ class ProfileData: ObservableObject {
 
     /// In-flight Keychain decode while Face ID runs — applied only after auth success.
     private var unlockBlobTask: Task<PersistedProfile?, Never>?
-    /// AES `#d=` + embed JSON; started after blob decode; may finish after Face ID.
-    private var unlockPackTask: Task<(String?, String?)?, Never>?
+    /// Embed JSON only (no AES) — unlock awaits this; usually done before Face ID returns.
+    private var unlockJSONTask: Task<String?, Never>?
+    /// AES `#d=` after JSON; finishes in background — never blocks unlock.
+    private var unlockAESTask: Task<String?, Never>?
     /// Stable preview `#d=` from Face ID overlap — RedMedView consumes on first unlock paint.
     private(set) var unlockPreviewPayload: String?
     /// Plaintext profile JSON from Face ID overlap — pairs with `unlockPreviewPayload`.
@@ -224,11 +226,12 @@ class ProfileData: ObservableObject {
         )
     }
 
-    /// Start (or restart) off-main Keychain load+decode, then AES pack while biometrics run.
+    /// Single-flight off-main Keychain decode + JSON + AES while biometrics run.
     /// Does not publish PHI — `applyUnlockPrefetchOrReload` applies only after Face ID success.
+    /// Re-calling while in flight is a no-op (keeps the Face ID overlap intact).
     func beginUnlockPrefetch() {
         guard persists else { return }
-        discardUnlockPrefetch()
+        if unlockBlobTask != nil { return }
         let account = Self.keychainAccount
         let blobTask = Task.detached(priority: .userInitiated) { () -> PersistedProfile? in
             guard let data = KeychainStore.load(account: account),
@@ -238,13 +241,17 @@ class ProfileData: ObservableObject {
             return decoded
         }
         unlockBlobTask = blobTask
-        // Pack after decode — unlock takes embed JSON immediately; AES finishes in background.
-        unlockPackTask = Task.detached(priority: .userInitiated) { () -> (String?, String?)? in
+        // JSON first (unlock critical path), then AES separately so unlock never waits on seal.
+        let jsonTask = Task.detached(priority: .userInitiated) { () -> String? in
             guard let decoded = await blobTask.value else { return nil }
             guard !Task.isCancelled else { return nil }
-            let artifacts = Self.previewArtifacts(from: decoded)
+            return Self.previewArtifactsJSONOnly(from: decoded)
+        }
+        unlockJSONTask = jsonTask
+        unlockAESTask = Task.detached(priority: .utility) { () -> String? in
+            guard let decoded = await blobTask.value else { return nil }
             guard !Task.isCancelled else { return nil }
-            return (artifacts.payload, artifacts.json)
+            return Self.previewArtifacts(from: decoded).payload
         }
     }
 
@@ -252,8 +259,10 @@ class ProfileData: ObservableObject {
     func discardUnlockPrefetch() {
         unlockBlobTask?.cancel()
         unlockBlobTask = nil
-        unlockPackTask?.cancel()
-        unlockPackTask = nil
+        unlockJSONTask?.cancel()
+        unlockJSONTask = nil
+        unlockAESTask?.cancel()
+        unlockAESTask = nil
         unlockPreviewPayload = nil
         unlockEmbedProfileJSON = nil
     }
@@ -275,8 +284,10 @@ class ProfileData: ObservableObject {
             }
         }
 
-        unlockPackTask?.cancel()
-        unlockPackTask = nil
+        unlockJSONTask?.cancel()
+        unlockJSONTask = nil
+        unlockAESTask?.cancel()
+        unlockAESTask = nil
 
         let ok = await reloadFromKeychainAsync()
         if ok {
@@ -290,28 +301,30 @@ class ProfileData: ObservableObject {
         return ok
     }
 
-    /// Embed JSON on the critical path; placeholder `#d=` — never await AES here.
-    /// In-flight Face ID pack finishes in the background (RedMed refreshes via JS).
+    /// Await Face ID–overlapped embed JSON only; placeholder `#d=` — never await AES.
+    /// In-flight AES finishes in the background (RedMed refreshes via JS).
     @MainActor
     private func adoptUnlockArtifactsFast(for blob: PersistedProfile) async {
-        let packTask = unlockPackTask
-        unlockPackTask = nil
+        let jsonTask = unlockJSONTask
+        let aesTask = unlockAESTask
+        unlockJSONTask = nil
+        unlockAESTask = nil
 
-        let json = await Task.detached(priority: .userInitiated) {
-            Self.previewArtifactsJSONOnly(from: blob)
-        }.value
-        unlockEmbedProfileJSON = json
         unlockPreviewPayload = ProfileNFCCodec.placeholderPreviewPayload
+        if let jsonTask {
+            unlockEmbedProfileJSON = await jsonTask.value
+        } else {
+            unlockEmbedProfileJSON = await Task.detached(priority: .userInitiated) {
+                Self.previewArtifactsJSONOnly(from: blob)
+            }.value
+        }
 
-        guard let packTask else { return }
+        guard let aesTask else { return }
         Task { @MainActor in
-            guard let art = await packTask.value else { return }
+            guard let payload = await aesTask.value else { return }
             // Only stash if RedMed has not taken the unlock hold yet.
             if unlockPreviewPayload == ProfileNFCCodec.placeholderPreviewPayload {
-                unlockPreviewPayload = art.0
-            }
-            if unlockEmbedProfileJSON == nil {
-                unlockEmbedProfileJSON = art.1
+                unlockPreviewPayload = payload
             }
         }
     }

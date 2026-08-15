@@ -296,14 +296,20 @@ struct NFCView: View {
 
     private func openFirstResponderPreview() {
         guard !isScannerSession, profile.hasData else { return }
-        let payload = PasserbyHTMLCardView.previewPayload(from: profile)
-        guard let payload else {
-            band.alertMessage = "Couldn't pack tapper.html#d= from RedMed."
-            return
+        let chip = ProfileNFCCodec.chipProfile(from: profile)
+        Task.detached(priority: .userInitiated) {
+            let payload = PasserbyHTMLCardView.previewPayload(from: chip)
+            let json = ProfileNFCCodec.embedProfileJSON(from: chip)
+            await MainActor.run {
+                guard let payload else {
+                    band.alertMessage = "Couldn't pack tapper.html#d= from RedMed."
+                    return
+                }
+                previewPayload = payload
+                previewEmbedJSON = json
+                showFirstResponderPreview = true
+            }
         }
-        previewPayload = payload
-        previewEmbedJSON = ProfileNFCCodec.embedProfileJSON(from: profile)
-        showFirstResponderPreview = true
     }
 
     // MARK: - Pieces

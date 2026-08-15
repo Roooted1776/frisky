@@ -165,14 +165,12 @@ struct TabBarItem: View {
                 Image(systemName: icon)
                     .font(.system(size: 22, weight: isOn ? .semibold : .regular))
                     .foregroundColor(isOn ? .redmedAccent : Color(red: 0.372, green: 0.388, blue: 0.408))
-                    .symbolEffect(.bounce, value: isOn)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 5)
                     .background(
                         RoundedRectangle(cornerRadius: 14)
                             .fill(isOn ? Color.redmedAccent.opacity(0.12) : Color.clear)
                     )
-                    .scaleEffect(isOn ? 1.05 : 1)
                 Text(label)
                     .font(.system(size: 10, weight: isOn ? .semibold : .medium))
                     .foregroundColor(isOn ? .redmedAccent : Color(red: 0.372, green: 0.388, blue: 0.408))
@@ -180,7 +178,8 @@ struct TabBarItem: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.bottom, 3)
-            .animation(RedMedMotion.snappy, value: isOn)
+            // Discrete tint swap — no spring/bounce on every tab hop.
+            .transaction { $0.animation = nil }
         }
         .buttonStyle(RedMedPressStyle(scale: 0.94, haptic: nil))
     }
