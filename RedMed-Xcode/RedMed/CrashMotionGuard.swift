@@ -61,6 +61,7 @@ final class CrashMotionGuard: ObservableObject {
 
     /// Start after first paint so cold launch stays light.
     func startMonitoring() {
+        LocatorBeacon.warmAlarmCache()
         engine.startMonitoring { [weak self] generation in
             Task { @MainActor in
                 self?.applyArm(generation: generation)
@@ -84,12 +85,11 @@ final class CrashMotionGuard: ObservableObject {
 
     /// Find Help SOS (owner + tapper) — same survival hold as crash
     /// (siren + max volume + full brightness).
+    /// Claims the arm token on the calling MainActor — does not wait on the
+    /// CoreMotion serial queue (that hop made the SOS button feel lagged).
     func armSOS() {
-        engine.requestArm { [weak self] generation in
-            Task { @MainActor in
-                self?.applyArm(generation: generation)
-            }
-        }
+        let generation = engine.claimArmGeneration()
+        applyArm(generation: generation)
     }
 
     private func applyArm(generation: UInt64) {
@@ -97,10 +97,15 @@ final class CrashMotionGuard: ObservableObject {
         guard engine.isArmGenerationCurrent(generation) else { return }
         guard !isArmed else { return }
         isArmed = true
-        BrightnessBoost.beginSurvival()
-        VolumeBoost.beginSurvival()
-        LocatorBeacon.beginSurvival()
+        // Paint Stop SOS / jump to 911 first — MPVolumeView + AVAudioSession hitch
+        // the main thread if they run in the same turn as the button press.
         NotificationCenter.default.post(name: .redMedSurvivalArmed, object: nil)
+        Task { @MainActor in
+            guard self.engine.isArmGenerationCurrent(generation), self.isArmed else { return }
+            BrightnessBoost.beginSurvival()
+            VolumeBoost.beginSurvival()
+            LocatorBeacon.beginSurvival()
+        }
     }
 
     /// Serial CoreMotion evaluator — motion fields stay on `queue`; arm flag under `lock`.
@@ -172,6 +177,19 @@ final class CrashMotionGuard: ObservableObject {
                 self.onArm = onArm
                 self.armNow()
             }
+        }
+
+        /// Explicit SOS — claim generation on the caller (MainActor) without
+        /// waiting for the motion queue. Crash path still uses `requestArm`.
+        func claimArmGeneration() -> UInt64 {
+            lock.lock()
+            defer { lock.unlock() }
+            if motionArmed {
+                return armGeneration
+            }
+            motionArmed = true
+            armGeneration &+= 1
+            return armGeneration
         }
 
         /// Non-blocking — safe to call from MainActor.
