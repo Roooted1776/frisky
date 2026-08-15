@@ -18,6 +18,8 @@ enum BiometricAuth {
         case notVerified
         /// User or system cancelled; biometry unavailable with no passcode path.
         case declined
+        /// App was not interactive yet (cold-start `.inactive`) — caller may retry on `.active`.
+        case notInteractive
     }
 
     static func authenticate(reason: String, completion: @escaping (Outcome) -> Void) {
@@ -38,11 +40,17 @@ enum BiometricAuth {
                 DispatchQueue.main.async(execute: present)
             }
             #else
-            let decline = { completion(.declined) }
+            let failOutcome: Outcome = {
+                if let la = error as? LAError, la.code == .appNotInteractive {
+                    return .notInteractive
+                }
+                return .declined
+            }()
+            let finish = { completion(failOutcome) }
             if Thread.isMainThread {
-                decline()
+                finish()
             } else {
-                DispatchQueue.main.async(execute: decline)
+                DispatchQueue.main.async(execute: finish)
             }
             #endif
             return
@@ -84,6 +92,9 @@ enum BiometricAuth {
         case .authenticationFailed:
             // Face ID / Touch ID / passcode did not match.
             return .notVerified
+        case .appNotInteractive:
+            // evaluatePolicy before the window can present — retry when `.active`.
+            return .notInteractive
         default:
             // userCancel, systemCancel, appCancel, userFallback (if ever), etc.
             return .declined
