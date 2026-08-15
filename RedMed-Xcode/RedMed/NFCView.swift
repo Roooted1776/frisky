@@ -3,7 +3,8 @@
 // One page: Write (passive rewritable Type 2 / NTAG) + Scan + Preview (under
 // Scan) → full-page tap card (what first responders see).
 // When `AppConfig.nfcHardwareEnabled` is true, Write/Scan start real CoreNFC
-// sessions. Simulate packing stays as the offline/dev fallback when the flag is off.
+// sessions. Pack-only simulate stays for offline/dev when the flag is off —
+// it never flips Linked / Not linked (that needs a real bracelet write).
 // Pipeline (hardware): silicone band tap → CoreNFC → strip NDEF → CryptoKit → local card
 // via `NFCBandManager`.
 import SwiftUI
@@ -79,9 +80,12 @@ struct NFCView: View {
         } message: {
             Text(band.alertMessage ?? "")
         }
-        .onChange(of: band.writeVerified) { _, verified in
-            guard verified, band.writeSucceeded, AppConfig.nfcHardwareEnabled else { return }
-            band.linkBracelet(on: profile, detail: "NFC write verified")
+        // Linked reacts to a finished real CoreNFC write only — never pack/simulate.
+        // Wait until isWriting clears so success + verified are both settled.
+        .onChange(of: band.isWriting) { _, writing in
+            guard !writing, band.writeSucceeded, AppConfig.nfcHardwareEnabled else { return }
+            let detail = band.writeVerified ? "NFC write verified" : "NFC write"
+            band.linkBracelet(on: profile, detail: detail)
         }
     }
 
