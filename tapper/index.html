@@ -260,6 +260,14 @@
   .rm-status.linked {
     color: rgba(225,29,72,0.9);
   }
+  /* Owner RedMed embed only — status opens native NFC tab (Write / Scan). */
+  html.app-embed .rm-status.rm-status-link,
+  body.app-embed .rm-status.rm-status-link {
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    -webkit-tap-highlight-color: transparent;
+  }
   .card {
     margin: 0 var(--page-pad-x);
     background: var(--surface);
@@ -1565,6 +1573,7 @@
     }
     // Real band tap: decode ⇒ fromBand. In-app embed: Swift sets __REDMED_BRACELET_LINKED
     // so Linked still requires a verified write + YOU card (name, birth, blood).
+    // Owner embed: status is a link to the native NFC tab (redmed://nfc).
     if (statusEl) {
       var youComplete = !!rawName && !!rawDob && !!rawBlood;
       var linked = isAppPreview()
@@ -1572,6 +1581,17 @@
         : (!!fromBand && youComplete);
       statusEl.textContent = linked ? 'Linked bracelet' : 'Not linked';
       statusEl.classList.toggle('linked', linked);
+      if (isAppEmbed()) {
+        statusEl.classList.add('rm-status-link');
+        statusEl.setAttribute('role', 'link');
+        statusEl.setAttribute('tabindex', '0');
+        statusEl.setAttribute('aria-label', (linked ? 'Linked bracelet' : 'Not linked') + ' — open NFC');
+      } else {
+        statusEl.classList.remove('rm-status-link');
+        statusEl.removeAttribute('role');
+        statusEl.removeAttribute('tabindex');
+        statusEl.removeAttribute('aria-label');
+      }
     }
     setRow('rowName', p.name);
     setRow('rowDob', p.dob);
@@ -1664,6 +1684,28 @@
       if (!document.documentElement.classList.contains('app-embed')) return;
       document.body.classList.add('app-embed');
     } catch (e) {}
+  })();
+
+  // Owner embed: Not linked / Linked bracelet → native NFC tab (ContentView).
+  // Passerby / Preview / Scan: no-op (no NFC tab; status is display-only).
+  (function wireStatusNFCLink() {
+    var statusEl = document.getElementById('statusLine');
+    if (!statusEl || statusEl.__redmedNfcWired) return;
+    statusEl.__redmedNfcWired = true;
+    function openNFC() {
+      if (!isAppEmbed()) return;
+      try { location.href = 'redmed://nfc'; } catch (e) {}
+    }
+    statusEl.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      openNFC();
+    });
+    statusEl.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' || ev.key === ' ') {
+        ev.preventDefault();
+        openNFC();
+      }
+    });
   })();
 
   decodeProfile().then(function (p) {

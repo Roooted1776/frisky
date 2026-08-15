@@ -72,6 +72,12 @@ struct ContentView: View {
             tab = .emergency
             mountedTabs.insert(.emergency)
         }
+        // Owner RedMed status (Not linked / Linked bracelet) → NFC Write / Scan.
+        .onReceive(NotificationCenter.default.publisher(for: .redMedOpenNFCTab)) { _ in
+            guard showsNFC else { return }
+            tab = .nfc
+            mountedTabs.insert(.nfc)
+        }
     }
 
     @ViewBuilder

@@ -28,8 +28,11 @@ struct RedMedApp: App {
                 }
             }
             .onOpenURL { url in
-                // Policies / tapper.html redirect with redmed://main
-                _ = url
+                // Policies use redmed://main; owner embed status uses redmed://nfc.
+                if (url.scheme ?? "").lowercased() == "redmed",
+                   (url.host ?? "").lowercased() == "nfc" {
+                    NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
+                }
             }
         }
     }

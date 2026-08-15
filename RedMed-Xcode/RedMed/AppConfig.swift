@@ -21,6 +21,9 @@ enum AppConfig {
     /// Deep link target for policy / card HTML “open owner app” redirects.
     static let mainAppURL = "redmed://main"
 
+    /// Owner RedMed embed status line → native NFC tab (`ContentView` / WK intercept).
+    static let nfcTabURL = "redmed://nfc"
+
     /// Update when the App Store listing is live (App Store Connect app ID).
     /// Setup QR only — never written to the NFC band (band carries `#d=` only).
     static let appStoreURL = "https://apps.apple.com/app/redmed/id0000000000"
