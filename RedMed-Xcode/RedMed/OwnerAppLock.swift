@@ -10,16 +10,17 @@ import SwiftUI
 /// work stays off `@Published` until auth succeeds (or is discarded on cancel /
 /// background). Late Face ID success after a generation bump must not apply.
 ///
-/// Cold launch never touches Keychain on the first frame. A UserDefaults gate
-/// (set on persist / Keychain presence check) picks lock vs tabs immediately;
-/// SecItem still confirms off-main and can correct a stale gate.
+/// Cold launch never touches Keychain on the first frame. The lock shell always
+/// paints first; SecItem confirms off-main whether a profile blob exists (for
+/// prefetch / fail-closed load) but does **not** open Main without auth.
 ///
-/// Returning-owner first load is Face ID only: cream + decorative BrandLogo
-/// watermark under the system biometrics sheet. No Accept step. Unlock is
-/// retry chrome after cancel / mismatch — not part of the first-load surface.
-/// Auto-prompt once per lock while `.active` (and again after `.background`).
-/// Face ID sheets put the scene `.inactive` — that must not re-prompt. The
-/// watermark is never a control.
+/// Every owner launch is Face ID / passcode before Main: cream + decorative
+/// BrandLogo watermark under the system biometrics sheet. No Accept step.
+/// Unlock is retry chrome after cancel / mismatch — not part of the first-load
+/// surface. Fresh install unlocks into empty tabs after auth; returning owners
+/// load Keychain (fail closed on corrupt blob). Auto-prompt once per lock while
+/// `.active` (and again after `.background`). Face ID sheets put the scene
+/// `.inactive` — that must not re-prompt. The watermark is never a control.
 ///
 /// Speed (minus Face ID wall time): Keychain decode + AES `#d=` pack + tapper.html
 /// shell warm overlap Face ID; unlock applies the prefetched blob/payload with no
@@ -34,15 +35,16 @@ struct OwnerAppLock<Content: View>: View {
         case unlocked
     }
 
-    /// Lock UI on first frame when a prior save set the gate — no cream-only stall
-    /// waiting on SecItem. Fresh installs open tabs immediately (empty profile).
-    @State private var gate: Gate = ProfileData.prefersLockOnLaunch ? .locked : .unlocked
+    /// Always locked on first frame — Main never mounts before Face ID / passcode.
+    @State private var gate: Gate = .locked
     @State private var isAuthenticating = false
     /// True only after Face ID / Touch ID (or passcode) mismatch — never on cancel
     /// or cold launch, and never for Keychain decode failure.
     @State private var biometryFailed = false
     @State private var profileLoadFailed = false
     @State private var hasEverHadSensitiveData = ProfileData.prefersLockOnLaunch
+    /// Keychain presence from the off-main check — unlock into empty tabs when false.
+    @State private var keychainHasProfile = ProfileData.prefersLockOnLaunch
     /// Bumps on lock so a late Face ID success cannot unlock after background.
     @State private var authGeneration = 0
     /// Default false — read capture state after first paint (see onAppear).
@@ -65,9 +67,6 @@ struct OwnerAppLock<Content: View>: View {
         .onAppear {
             screenCaptured = UIScreen.main.isCaptured
             tryAutoUnlockIfActive()
-            if gate == .unlocked {
-                CrashMotionGuard.shared.startMonitoring()
-            }
         }
         .task(id: authGeneration) {
             // Escape hatch: if LA never callbacks, Unlock must still appear.
@@ -79,27 +78,18 @@ struct OwnerAppLock<Content: View>: View {
         }
         .task {
             // First SwiftUI frame already committed — Keychain presence can wait.
+            // Presence only drives prefetch / fail-closed load — never skips the lock.
             let hasProfile = await Task.detached(priority: .userInitiated) {
                 ProfileData.hasStoredProfile()
             }.value
             ProfileData.setStoredProfileGate(hasProfile)
-            hasEverHadSensitiveData = hasProfile
+            keychainHasProfile = hasProfile
             if hasProfile {
-                if gate != .locked {
-                    // Stale gate said unlocked — lock now. Do not poke an in-flight Face ID.
-                    biometryFailed = false
-                    profileLoadFailed = false
-                    didAutoPromptThisLock = false
-                    showUnlockControl = false
-                    gate = .locked
-                }
-                tryAutoUnlockIfActive()
+                hasEverHadSensitiveData = true
             } else {
                 profile.discardUnlockPrefetch()
-                showUnlockControl = false
-                gate = .unlocked
-                CrashMotionGuard.shared.startMonitoring()
             }
+            tryAutoUnlockIfActive()
         }
         .onChange(of: gate) { _, newGate in
             if newGate == .locked {
@@ -107,7 +97,7 @@ struct OwnerAppLock<Content: View>: View {
                 showUnlockControl = false
                 tryAutoUnlockIfActive()
             } else {
-                // Fresh install / Face ID success — motion after PHI tabs own the CPU.
+                // Face ID success — motion after tabs own the CPU.
                 CrashMotionGuard.shared.startMonitoring()
             }
         }
@@ -135,12 +125,14 @@ struct OwnerAppLock<Content: View>: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .redMedDidEraseLocalData)) { _ in
             hasEverHadSensitiveData = false
+            keychainHasProfile = false
             biometryFailed = false
             profileLoadFailed = false
             isAuthenticating = false
             didAutoPromptThisLock = false
             showUnlockControl = false
             profile.discardUnlockPrefetch()
+            // Stay in Main after an authenticated erase; next cold launch locks again.
             gate = .unlocked
         }
     }
@@ -328,6 +320,7 @@ struct OwnerAppLock<Content: View>: View {
                 // await — background can bump authGeneration and purge mid-apply.
                 Task { @MainActor in
                     guard generation == authGeneration else { return }
+                    let expectsProfile = keychainHasProfile || ProfileData.hasStoredProfile()
                     let loaded = await profile.applyUnlockPrefetchOrReload()
                     guard generation == authGeneration else {
                         // Late success after background lock — drop any applied PHI.
@@ -339,8 +332,17 @@ struct OwnerAppLock<Content: View>: View {
                     PasserbyWebViewPool.warmEmbedShell()
                     isAuthenticating = false
                     if loaded {
+                        keychainHasProfile = true
                         RedMedHaptics.success()
                         // No soft fade — tabs must appear immediately after Face ID.
+                        gate = .unlocked
+                        biometryFailed = false
+                        profileLoadFailed = false
+                        showUnlockControl = false
+                    } else if !expectsProfile {
+                        // Fresh install — auth passed; open empty Main (Edit gates Save).
+                        keychainHasProfile = false
+                        RedMedHaptics.success()
                         gate = .unlocked
                         biometryFailed = false
                         profileLoadFailed = false
