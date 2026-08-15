@@ -1121,6 +1121,15 @@
     } catch (e) { return !!window.__REDMED_APP_PREVIEW; }
   }
 
+  // Owner RedMed embed only (native tabs own 911 / Aid / SOS / GPS).
+  // Preview / Scan are isAppPreview but NOT embed — full tap-card HTML rules.
+  function isAppEmbed() {
+    try {
+      if (window.__REDMED_APP_EMBED) return true;
+      return document.documentElement.classList.contains('app-embed');
+    } catch (e) { return !!window.__REDMED_APP_EMBED; }
+  }
+
   // AES-GCM needs a secure context (https: or http://localhost). Plain LAN IPs fail.
   function secureCryptoOk() {
     return !!(window.crypto && window.crypto.subtle);
@@ -1671,16 +1680,11 @@
   }
 
   // Lazy GPS — do not call getCurrentPosition on medical-tab load (browser location popup).
-  // App-embed: native Find Help owns location. Passerby: start only from 911 tab.
+  // App-embed: native Find Help owns location. Preview/Scan + passerby: start on 911 tab.
   var geoStarted = false;
   function ensureGeo() {
     if (geoStarted) return;
-    try {
-      if (window.__REDMED_APP_PREVIEW) return;
-      if (new URLSearchParams(location.search || '').get('src') === 'app') return;
-    } catch (e) {
-      if (window.__REDMED_APP_PREVIEW) return;
-    }
+    if (isAppEmbed()) return;
     geoStarted = true;
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(function (pos) {
@@ -1854,11 +1858,18 @@
       return new URLSearchParams(location.search || '').get('src') === 'app';
     } catch (e) { return !!window.__REDMED_APP_PREVIEW; }
   }
+  function appEmbed() {
+    try {
+      if (window.__REDMED_APP_EMBED) return true;
+      return document.documentElement.classList.contains('app-embed');
+    } catch (e) { return !!window.__REDMED_APP_EMBED; }
+  }
   var sosBtn = document.getElementById('sosBtn');
   var aidStop = document.getElementById('aidStopAlarm');
   if (!sosBtn) return;
-  // Native CrashMotionGuard owns crash + SOS in the app embed.
-  if (appPreview()) return;
+  // Native CrashMotionGuard owns crash + SOS in the owner embed only.
+  // Preview / Scan keep explicit SOS + DeviceMotion (still no auto-arm via appPreview).
+  if (appEmbed()) return;
 
   // Match CrashMotionThresholds (g, rad/s). DeviceMotion accel is m/s².
   // Ignore walking, sex, masturbation, eating, phone handling, daily rhythm.

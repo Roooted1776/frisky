@@ -4,9 +4,11 @@ import WebKit
 /// NFC Preview / NFC Scan — same bundled `tapper.html#d=` shell a stranger
 /// gets on band tap (HTML RedMed · 911 · Aid tabs visible). Loads with
 /// `?src=app` / `__REDMED_APP_PREVIEW` so SOS does **not** auto-arm (real
-/// bracelet opens hosted `/tapper/#d=…` without that flag). Does **not** set
-/// `html.app-embed` — that hides the HTML tab bar and is owner RedMed embed
-/// only (`PasserbyHTMLShell` with `appEmbed: true`).
+/// bracelet opens hosted `/tapper/#d=…` without that flag). Explicit SOS /
+/// DeviceMotion / 911 GPS still run in Preview — same as passerby HTML.
+/// Does **not** set `html.app-embed` / `__REDMED_APP_EMBED` — that hides the
+/// HTML tab bar and is owner RedMed embed only (`PasserbyHTMLShell` with
+/// `appEmbed: true`), where native owns 911 / Aid / SOS / GPS.
 struct PasserbyHTMLCardView: View {
     @Environment(\.dismiss) private var dismiss
     /// Raw `#d=` payload (no prefix), or full band URL containing `#d=`.
@@ -189,6 +191,7 @@ enum PasserbyWebViewPool {
         let boot = """
         <script>
         window.__REDMED_APP_PREVIEW=1;
+        window.__REDMED_APP_EMBED=1;
         window.__REDMED_BRACELET_LINKED=false;
         try{document.documentElement.classList.add('app-embed');}catch(e0){}
         </script>
@@ -319,7 +322,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         // `__REDMED_PROFILE` skips WebCrypto when native already has plaintext.
         let linkedJS = braceletLinked ? "true" : "false"
         let embedJS = appEmbed
-            ? "try{document.documentElement.classList.add('app-embed');}catch(e0){}"
+            ? "window.__REDMED_APP_EMBED=1;try{document.documentElement.classList.add('app-embed');}catch(e0){}"
             : ""
         let profileJS: String
         if let embedProfileJSON, !embedProfileJSON.isEmpty {
