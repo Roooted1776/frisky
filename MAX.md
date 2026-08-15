@@ -71,12 +71,15 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Deferred all Core Location until Find Help; fixed SIGTERM/launch confusion.
 - Cold launch: LaunchBackground only on UILaunchScreen (no system BrandLogo).
   Every owner launch: auto Face ID over cream + watermark before Main (Unlock
-  after cancel / mismatch). Fresh install unlocks into empty tabs after auth.
-  Keychain decode + AES `#d=` pack + tapper shell warm overlap Face ID; no
-  unlock fade. Lock shell on first frame — no Keychain in `@State`; CoreMotion
-  after unlock. PrivacySnapshotGuard never covers watermark lock — only while
-  PHI is in RAM. Owner pages + tapper: cream fill only (no page watermark).
-  Unlock fail-closed if an expected Keychain blob fails to decode.
+  after cancel / mismatch). Face ID kicks immediately on cold `.inactive`
+  (waiting for `.active` was the cream hang). Prefetch still starts in the
+  same `onAppear` tick and inside the unlock pipeline. Fresh install unlocks
+  into empty tabs after auth. Keychain decode + AES `#d=` pack + tapper shell
+  warm overlap Face ID; no unlock fade. Lock shell on first frame — no
+  Keychain in `@State`; CoreMotion after unlock. PrivacySnapshotGuard never
+  covers watermark lock — only while PHI is in RAM. Owner pages + tapper:
+  cream fill only (no page watermark). Unlock fail-closed if an expected
+  Keychain blob fails to decode.
 - Vault Local History: Accept tap before Face ID (no auto-prompt on appear).
 - Opacity keep-alive tabs: Find Help GPS + seizure autodial tear down via
   `isVisible` (not `onDisappear` — opacity hide never fires it).

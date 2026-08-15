@@ -322,7 +322,7 @@ struct HelpMenuView: View {
                 isErasing = false
                 eraseAuthFailed = true
                 VaultHistoryStore.shared.record(.unlockFailed, detail: "erase")
-            case .declined:
+            case .declined, .notInteractive:
                 isErasing = false
             }
         }
