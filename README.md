@@ -10,10 +10,10 @@ Native iOS medical ID + emergency aid app. Shipable source of truth is
 | `MAX.md` | **Max’s personal profile + shipped history** (agent memory) |
 | `AGENTS.md` | Permanent product/engineering rules for agents |
 | `RedMed-Xcode/RedMed/Main.swift` | **Owner app** shell (`ContentView`) — edit profile, Aid, NFC, Help |
-| `tapper/index.html` (+ root `tapper.html`) | **Passerby / scanner** — bracelet tap at `https://getredmed.com/tapper/`; RedMed · 911 · Aid (no Edit / NFC) |
+| `tapper/index.html` (+ root `tapper.html`) | **Passerby / scanner** — bracelet tap at `https://redmed.pages.dev/tapper/` (custom host cutover: `docs/domain.md`); RedMed · 911 · Aid (no Edit / NFC) |
 | `card.html` / `get.html` / `get/` | Legacy redirects → `/tapper/` (keeps `#d=` for old bands) |
 | `RedMed-Xcode/RedMed/{PrivacyPolicy,TOS,security,HowItWorks}.html` + `legal-doc.css` | Policy pages bundled in the app (sole copy — no repo-root duplicates) |
-| `assets/` + root `BrandLogo.png` | Pages / SW logo paths |
+| `assets/` + root `BrandLogo.png` / `BrandWordmark.png` | Pages / SW logo paths |
 | `docs/band-engraving-and-nfc-sourcing.md` | Band engraving + NFC hardware notes |
 | `docs/NFC-RESTORE.md` | CoreNFC hardware restore notes (entitlement + flag) |
 | `docs/domain.md` | Custom domain (`getredmed.com`) purchase + Pages cutover |

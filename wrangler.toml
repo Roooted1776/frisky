@@ -1,0 +1,7 @@
+# Cloudflare Pages — static passerby shell (no build step).
+# Connecting this repo to Pages project `redmed` deploys the root as-is
+# (tapper/, get/ redirect, _headers, _redirects). Direct Upload via
+# `.github/workflows/pages-deploy.yml` still needs CF API secrets.
+name = "redmed"
+pages_build_output_dir = "."
+compatibility_date = "2026-01-01"

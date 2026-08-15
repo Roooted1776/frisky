@@ -3,9 +3,10 @@ import WebKit
 
 /// NFC Preview / NFC Scan — same bundled `tapper.html#d=` shell a stranger
 /// gets on band tap (HTML RedMed · 911 · Aid tabs visible). Loads with
-/// `?src=app` so SOS does **not** auto-arm (real bracelet opens hosted
-/// `/tapper/#d=…` without that flag). Owner RedMed tab uses `PasserbyHTMLShell`
-/// with `appEmbed: true` instead (native tabs; HTML tab bar hidden).
+/// `?src=app` / `__REDMED_APP_PREVIEW` so SOS does **not** auto-arm (real
+/// bracelet opens hosted `/tapper/#d=…` without that flag). Does **not** set
+/// `html.app-embed` — that hides the HTML tab bar and is owner RedMed embed
+/// only (`PasserbyHTMLShell` with `appEmbed: true`).
 struct PasserbyHTMLCardView: View {
     @Environment(\.dismiss) private var dismiss
     /// Raw `#d=` payload (no prefix), or full band URL containing `#d=`.
@@ -70,17 +71,27 @@ struct PasserbyHTMLCardView: View {
     }
 
     /// Band write / capacity / NFC Scan — stamps a fresh `updated` time.
-    /// `nonisolated` — packs from `Task.detached` (NFC write / verify).
-    nonisolated static func payload(from profile: ProfileData) -> String? {
-        guard let url = ProfileNFCCodec.buildURLString(profile: profile) else { return nil }
+    /// `nonisolated` — packs a Sendable chip from `Task.detached` (NFC write / verify).
+    nonisolated static func payload(from chip: NFCChipProfile) -> String? {
+        guard let url = ProfileNFCCodec.buildURLString(chip: chip) else { return nil }
         return extractPayload(url)
     }
 
+    /// Copies ProfileData into a chip, then packs. ProfileData stays on the isolated caller.
+    static func payload(from profile: ProfileData) -> String? {
+        payload(from: ProfileNFCCodec.chipProfile(from: profile))
+    }
+
     /// Owner RedMed tab embed — stable pack; caller must cache across `body` passes.
-    /// `nonisolated` — callers pack from `Task.detached` (unlock prefetch / syncPackedPayload).
-    nonisolated static func previewPayload(from profile: ProfileData) -> String? {
-        guard let url = ProfileNFCCodec.buildPreviewURLString(profile: profile) else { return nil }
+    /// `nonisolated` — callers pack a Sendable chip from `Task.detached`.
+    nonisolated static func previewPayload(from chip: NFCChipProfile) -> String? {
+        guard let url = ProfileNFCCodec.buildPreviewURLString(chip: chip) else { return nil }
         return extractPayload(url)
+    }
+
+    /// Copies ProfileData into a chip, then packs. ProfileData stays on the isolated caller.
+    static func previewPayload(from profile: ProfileData) -> String? {
+        previewPayload(from: ProfileNFCCodec.chipProfile(from: profile))
     }
 }
 
