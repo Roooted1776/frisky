@@ -22,6 +22,11 @@ enum BiometricAuth {
         case notInteractive
     }
 
+    /// LAError -1004 (`kLAErrorAppNotInteractive`). Compare by raw code — Swift
+    /// case naming has flipped between `.appNotInteractive` and `.notInteractive`
+    /// across SDKs, and referencing the wrong one fails the build.
+    private static let notInteractiveLACode = -1004
+
     static func authenticate(reason: String, completion: @escaping (Outcome) -> Void) {
         let context = makeContext()
         var error: NSError?
@@ -40,12 +45,7 @@ enum BiometricAuth {
                 DispatchQueue.main.async(execute: present)
             }
             #else
-            let failOutcome: Outcome = {
-                if let la = error as? LAError, la.code == .notInteractive {
-                    return .notInteractive
-                }
-                return .declined
-            }()
+            let failOutcome: Outcome = isNotInteractive(error) ? .notInteractive : .declined
             let finish = { completion(failOutcome) }
             if Thread.isMainThread {
                 finish()
@@ -85,20 +85,26 @@ enum BiometricAuth {
         return context
     }
 
+    /// True when LocalAuthentication refused because the app was not interactive.
+    private static func isNotInteractive(_ error: Error?) -> Bool {
+        guard let error else { return false }
+        let ns = error as NSError
+        return ns.domain == LAErrorDomain && ns.code == notInteractiveLACode
+    }
+
     /// Map LAError to Outcome — only a mismatch is `notVerified`.
     private static func outcome(for error: Error?) -> Outcome {
         guard let la = error as? LAError else { return .declined }
-        switch la.code {
-        case .authenticationFailed:
+        if la.code == .authenticationFailed {
             // Face ID / Touch ID / passcode did not match.
             return .notVerified
-        case .notInteractive:
+        }
+        if isNotInteractive(la) {
             // evaluatePolicy before the window can present — retry when `.active`.
             return .notInteractive
-        default:
-            // userCancel, systemCancel, appCancel, userFallback (if ever), etc.
-            return .declined
         }
+        // userCancel, systemCancel, appCancel, userFallback (if ever), etc.
+        return .declined
     }
 
     #if targetEnvironment(simulator)
