@@ -189,6 +189,7 @@ enum PasserbyWebViewPool {
         let boot = """
         <script>
         window.__REDMED_APP_PREVIEW=1;
+        window.__REDMED_APP_EMBED=1;
         window.__REDMED_BRACELET_LINKED=false;
         try{document.documentElement.classList.add('app-embed');}catch(e0){}
         </script>
@@ -319,7 +320,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         // `__REDMED_PROFILE` skips WebCrypto when native already has plaintext.
         let linkedJS = braceletLinked ? "true" : "false"
         let embedJS = appEmbed
-            ? "try{document.documentElement.classList.add('app-embed');}catch(e0){}"
+            ? "window.__REDMED_APP_EMBED=1;try{document.documentElement.classList.add('app-embed');}catch(e0){}"
             : ""
         let profileJS: String
         if let embedProfileJSON, !embedProfileJSON.isEmpty {
