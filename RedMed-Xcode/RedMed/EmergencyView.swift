@@ -155,24 +155,25 @@ private struct FindHelpSOSButton: View {
 
     var body: some View {
         Button {
-            if survivalAlarm.isArmed {
-                RedMedHaptics.medium()
-                survivalAlarm.disarm()
-            } else {
-                RedMedHaptics.heavy()
-                // No withAnimation around arm — brightness/volume/siren must not
-                // run inside a spring transaction (that hitch is the SOS lag).
-                survivalAlarm.armSOS()
+            // Discrete chrome swap — spring / symbol replace on this control
+            // competed with the arm/disarm paint and felt like SOS lag.
+            var t = Transaction()
+            t.animation = nil
+            withTransaction(t) {
+                if survivalAlarm.isArmed {
+                    RedMedHaptics.medium()
+                    survivalAlarm.disarm()
+                } else {
+                    RedMedHaptics.heavy()
+                    survivalAlarm.armSOS()
+                }
             }
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: survivalAlarm.isArmed
                       ? "speaker.slash.fill"
                       : "sos.circle.fill")
-                    .symbolEffect(.pulse, options: .repeating, isActive: survivalAlarm.isArmed)
-                    .contentTransition(.symbolEffect(.replace))
                 Text(survivalAlarm.isArmed ? "Stop SOS alarm" : "SOS · Locate me")
-                    .contentTransition(.opacity)
             }
             .font(.system(size: 13, weight: .bold))
             .foregroundColor(.white)
@@ -180,7 +181,7 @@ private struct FindHelpSOSButton: View {
             .padding(.vertical, 10)
             .background(survivalAlarm.isArmed ? Color.redmedAccent : Color.redmedDark)
             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-            .animation(RedMedMotion.snappy, value: survivalAlarm.isArmed)
+            .transaction { $0.animation = nil }
         }
         .buttonStyle(RedMedPressStyle(haptic: nil))
         .accessibilityLabel(survivalAlarm.isArmed ? "Stop SOS alarm" : "SOS Locate me")

@@ -74,13 +74,20 @@ final class CrashMotionGuard: ObservableObject {
     }
 
     /// False-positive / SOS cancel — restores brightness/volume/siren holds.
+    /// Paints Stop → SOS first; MPVolumeView / AVAudioSession tear-down wait a turn
+    /// (same hitch as arm if they run in the button press).
     func disarm() {
         engine.invalidateArm()
         guard isArmed else { return }
         isArmed = false
-        BrightnessBoost.endSurvival()
-        VolumeBoost.endSurvival()
-        LocatorBeacon.endSurvival()
+        Task { @MainActor in
+            await Task.yield()
+            // Re-armed while we were waiting — leave the new hold alone.
+            guard !self.isArmed else { return }
+            BrightnessBoost.endSurvival()
+            VolumeBoost.endSurvival()
+            LocatorBeacon.endSurvival()
+        }
     }
 
     /// Find Help SOS (owner + tapper) — same survival hold as crash
@@ -101,6 +108,7 @@ final class CrashMotionGuard: ObservableObject {
         // the main thread if they run in the same turn as the button press.
         NotificationCenter.default.post(name: .redMedSurvivalArmed, object: nil)
         Task { @MainActor in
+            await Task.yield()
             guard self.engine.isArmGenerationCurrent(generation), self.isArmed else { return }
             BrightnessBoost.beginSurvival()
             VolumeBoost.beginSurvival()
@@ -367,7 +375,11 @@ struct CrashSurvivalCancelCard: View {
         if monitor.isArmed {
             Button {
                 RedMedHaptics.medium()
-                withAnimation(RedMedMotion.snappy) {
+                // No spring around disarm — volume/brightness tear-down must not
+                // sit inside an animation transaction (same hitch as SOS arm).
+                var t = Transaction()
+                t.animation = nil
+                withTransaction(t) {
                     monitor.disarm()
                 }
             } label: {
@@ -379,7 +391,6 @@ struct CrashSurvivalCancelCard: View {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 14))
                         .foregroundColor(.redmedAccent)
-                        .symbolEffect(.bounce, value: monitor.isArmed)
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
@@ -392,7 +403,7 @@ struct CrashSurvivalCancelCard: View {
             }
             .buttonStyle(RedMedPressStyle(haptic: nil))
             .padding(.top, 5)
-            .transition(.opacity.combined(with: .move(edge: .bottom)))
+            .transaction { $0.animation = nil }
         }
     }
 }
