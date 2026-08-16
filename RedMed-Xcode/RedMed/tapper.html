@@ -398,21 +398,31 @@
     word-break: break-word;
   }
   .list-item:last-child { border-bottom: none; }
-  /* Allergies / Meds / Conditions / Contacts — closed when empty (no empty white panels). */
+  /* Allergies / Meds / Conditions / Contacts — one card, YOU-row heights/structure. */
   .list-grid {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 0;
     margin: 14px var(--page-pad-x) 0;
+    background: var(--surface);
+    border-radius: var(--box);
+    overflow: hidden;
+    box-shadow: var(--shadow);
   }
   details.list-drop {
-    background: var(--surface);
+    background: transparent;
     border: none;
-    border-radius: var(--box);
+    border-radius: 0;
     width: 100%;
     min-width: 0;
     overflow: hidden;
-    box-shadow: var(--shadow);
+    box-shadow: none;
+  }
+  details.list-drop[hidden] { display: none; }
+  .list-grid[hidden] { display: none; }
+  /* Dividers only between visible sections (JS marks .is-last). */
+  details.list-drop:not(.is-last) {
+    border-bottom: 1px solid var(--divider);
   }
   details.list-drop[open] {
     background: rgba(225,29,72,0.03);
@@ -422,8 +432,9 @@
     list-style: none;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 13px 14px;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 16px; /* same as .row / CardRow */
     min-width: 0;
     -webkit-tap-highlight-color: transparent;
     transition: opacity 0.14s ease;
@@ -436,41 +447,43 @@
   .list-drop-title {
     flex: 1;
     min-width: 0;
-    font-size: var(--fs-title);
-    font-weight: 700;
-    color: var(--accent);
+    font-size: var(--fs-row); /* match .row .k */
+    font-weight: 500;
+    color: var(--muted);
     line-height: 1.2;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
+    text-transform: none;
+    letter-spacing: 0;
   }
   .list-drop-count {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--accent);
-    background: rgba(225,29,72,0.1);
-    border-radius: var(--chip);
-    padding: 3px 7px;
+    font-size: var(--fs-row);
+    font-weight: 600;
+    color: var(--dark); /* match .row .v */
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
   }
   .list-drop-chevron {
-    width: 24px;
-    height: 24px;
+    width: 18px;
+    height: 18px;
     flex-shrink: 0;
     position: relative;
+    opacity: 0.85;
   }
   .list-drop-chevron::before {
     content: '';
     position: absolute;
-    top: 8px;
-    left: 7px;
-    width: 8px;
-    height: 8px;
-    border-right: 2px solid var(--accent);
-    border-bottom: 2px solid var(--accent);
+    top: 4px;
+    left: 4px;
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
     transform: rotate(-45deg);
   }
   details.list-drop[open] .list-drop-chevron::before {
     top: 6px;
     transform: rotate(45deg);
+    border-color: var(--accent);
   }
   .list-drop-body {
     border-top: 1px solid var(--divider);
@@ -1900,7 +1913,24 @@
 
   function setListDropOpen(dropId, hasItems) {
     var drop = document.getElementById(dropId);
-    if (drop) drop.open = !!hasItems;
+    if (!drop) return;
+    drop.open = !!hasItems;
+    // Hide empty sections so the shared YOU-style card has no blank rows.
+    drop.hidden = !hasItems;
+    syncListGridVisibility();
+  }
+
+  function syncListGridVisibility() {
+    var grid = document.querySelector('.list-grid');
+    if (!grid) return;
+    var drops = grid.querySelectorAll('details.list-drop');
+    var visible = [];
+    for (var i = 0; i < drops.length; i++) {
+      drops[i].classList.remove('is-last');
+      if (!drops[i].hidden) visible.push(drops[i]);
+    }
+    grid.hidden = !visible.length;
+    if (visible.length) visible[visible.length - 1].classList.add('is-last');
   }
 
   function list(el, items, countId, dropId) {
@@ -1908,8 +1938,6 @@
     var countEl = countId ? document.getElementById(countId) : null;
     var hasItems = !!(items && items.length);
     if (!hasItems) {
-      // Leave body empty — closed drops stay compact (no empty white panel).
-      // Opening still shows — via :empty::after.
       if (countEl) {
         countEl.textContent = '';
         countEl.hidden = true;
