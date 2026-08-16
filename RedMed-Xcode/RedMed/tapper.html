@@ -92,9 +92,9 @@
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html {
-    /* Document grows with content so WKWebView / iOS can scroll the page. */
-    height: auto;
-    min-height: 100%;
+    /* Locked viewport — `.app` scrolls; tabbar stays in-flow (not position:fixed). */
+    height: 100%;
+    max-height: 100%;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     scrollbar-gutter: stable;
@@ -110,22 +110,29 @@
       radial-gradient(120% 60% at 50% -10%, var(--wash) 0%, transparent 58%),
       var(--bg);
     color: var(--dark);
-    /* 100vh for iOS 15.0–15.3; 100dvh when available (15.4+). */
+    /* Flex shell: scroll `.app`, tabbar in-flow. Avoids position:fixed + dual-scroll
+       eating RedMed · 911 · Aid taps (WKWebView Preview and mobile Safari). */
+    height: 100%;
+    max-height: 100%;
     min-height: 100vh;
     min-height: 100dvh;
-    padding: var(--safe-t) var(--safe-r) calc(var(--tabbar-h) + var(--safe-b)) var(--safe-l);
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    padding: var(--safe-t) var(--safe-r) 0 var(--safe-l);
+    overflow: hidden;
     touch-action: manipulation;
     position: relative;
+    display: flex;
+    flex-direction: column;
   }
   .app {
     width: 100%;
     max-width: var(--page-max);
     margin: 0 auto;
-    min-height: calc(100vh - var(--safe-t) - var(--tabbar-h) - var(--safe-b));
-    min-height: calc(100dvh - var(--safe-t) - var(--tabbar-h) - var(--safe-b));
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
   /* Responsive scrollbar (desktop / Mac Catalyst; iOS uses UIScrollView indicators). */
   * {
@@ -208,6 +215,8 @@
     min-height: calc(100vh - var(--safe-t) - var(--safe-b));
     min-height: calc(100dvh - var(--safe-t) - var(--safe-b));
   }
+  /* html.app-preview still set by Swift Preview/Scan boot — layout is the default
+     flex shell above; class pairs with scrollView.isScrollEnabled = false. */
   /* Owner embed: no lock line / BrandWordmark above the medical card. */
   html.app-embed .rm-lock,
   body.app-embed .rm-lock {
@@ -509,18 +518,16 @@
   #panel-medical {
     display: flex;
     flex-direction: column;
-    min-height: calc(100vh - var(--tabbar-h) - var(--safe-t) - var(--safe-b));
-    min-height: calc(100dvh - var(--tabbar-h) - var(--safe-t) - var(--safe-b));
+    min-height: 100%;
     padding-bottom: 8px;
     box-sizing: border-box;
   }
   /* Quiet prayer lives on owner native Aid only — not passerby / Preview shells. */
-  /* Aid column fills the viewport so .foot-note can sit toward the bottom. */
+  /* Aid column fills the scrollport so .foot-note can sit toward the bottom. */
   #panel-aid .page-pad {
     display: flex;
     flex-direction: column;
-    min-height: calc(100vh - var(--tabbar-h) - var(--safe-t) - var(--safe-b));
-    min-height: calc(100dvh - var(--tabbar-h) - var(--safe-t) - var(--safe-b));
+    min-height: 100%;
     box-sizing: border-box;
     padding-bottom: 8px;
   }
@@ -881,8 +888,9 @@
 
   /* —— Tab bar (matches CustomTabBar cream; compact, 44px hit targets) —— */
   .tabbar {
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
+    position: relative;
+    flex-shrink: 0;
+    width: 100%;
     /* Opaque page cream — same Color.redmedBg as owner CustomTabBar (not frosted white). */
     background: var(--bg);
     border: 0.5px solid var(--divider);
@@ -1198,6 +1206,14 @@
       return document.documentElement.classList.contains('app-embed');
     } catch (e) { return !!window.__REDMED_APP_EMBED; }
   }
+
+  // Preview/Scan WKWebView: mark before paint so flex tabbar CSS wins over fixed.
+  (function markAppPreviewChrome() {
+    try {
+      if (!isAppPreview() || isAppEmbed()) return;
+      document.documentElement.classList.add('app-preview');
+    } catch (e) {}
+  })();
 
   // AES-GCM needs a secure context (https: or http://localhost). Plain LAN IPs fail.
   function secureCryptoOk() {
@@ -1567,6 +1583,11 @@
       t.classList.toggle('active', t.getAttribute('data-tab') === id);
     });
     window.scrollTo(0, 0);
+    // Preview/Scan: scroll lives on `.app`, not the window.
+    try {
+      var app = document.querySelector('.app');
+      if (app) app.scrollTop = 0;
+    } catch (e0) {}
     // GPS only when 911 is open — medical open must not trigger a location popup.
     if (id === '911') ensureGeo();
   }
