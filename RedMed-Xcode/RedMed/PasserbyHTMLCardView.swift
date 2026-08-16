@@ -195,13 +195,14 @@ enum PasserbyWebViewPool {
             return Task { @MainActor in warmedEmbed }
         }
         if let warmTask { return warmTask }
-        let task = Task { @MainActor in
+        // Explicit Task result type — bare `return nil` fails typecheck in this closure.
+        let task = Task<WKWebView?, Never> { @MainActor in
             // Shell HTML may still be filling from a detached warm — read through
             // the lock (loads from bundle once if needed).
             let webView = makeConfiguredWebView(navigationDelegate: nil)
             guard let fileURL = PasserbyShellCache.shellFileURL(),
                   var html = PasserbyShellCache.shellHTML() else {
-                return nil
+                return .none
             }
             // App-embed chrome only — no PHI. Real profile arrives via JS push or full load.
             let boot = """
