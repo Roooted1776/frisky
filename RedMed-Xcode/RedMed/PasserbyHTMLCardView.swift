@@ -16,7 +16,7 @@ struct PasserbyHTMLCardView: View {
     /// Owner Linked state — passed into the shell so Preview matches native rules.
     var braceletLinked: Bool = false
     /// Plaintext profile JSON for in-app Preview (skips WebCrypto). Nil for band-style opens.
-    var embedProfileJSON: String? = nil
+    var embedProfileJSON: String? = .none
 
     private var encodedPayload: String? {
         Self.extractPayload(payloadOrURL)
@@ -98,7 +98,7 @@ struct PasserbyHTMLShell: View {
     var braceletLinked: Bool = false
     var appEmbed: Bool = true
     /// Optional plaintext JSON for `window.__REDMED_PROFILE` (skips in-app WebCrypto).
-    var embedProfileJSON: String? = nil
+    var embedProfileJSON: String? = .none
 
     var body: some View {
         PasserbyHTMLWebView(
@@ -267,7 +267,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
     let encodedPayload: String
     var braceletLinked: Bool = false
     var appEmbed: Bool = true
-    var embedProfileJSON: String? = nil
+    var embedProfileJSON: String? = .none
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
