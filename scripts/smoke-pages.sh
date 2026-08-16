@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Thin wrapper — keeps existing ./scripts/smoke-pages.sh call sites.
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+export REPO_ROOT
 exec python3 - "$@" <<'PY'
 """Local / live page-load smoke for the passerby shell + redirects.
 
@@ -10,12 +12,59 @@ Usage:
 from __future__ import annotations
 
 import os
+import re
 import sys
 import urllib.error
 import urllib.request
+from pathlib import Path
 
 BASE = os.environ.get("BASE", "http://127.0.0.1:8787").rstrip("/")
 UA = "RedMed-smoke-pages/1.0 (+https://github.com/Roooted1776/frisky)"
+REPO = Path(os.environ["REPO_ROOT"])
+
+# Tap-to-view must stay ungated — no biometrics / login / WebAuthn in the shell.
+AUTH_CODE_NEEDLES = (
+    "BiometricAuth",
+    "LocalAuthentication",
+    "evaluatePolicy",
+    "deviceOwnerAuthentication",
+    "navigator.credentials",
+    "PublicKeyCredential",
+    "webauthn",
+    "WebAuthn",
+)
+# Visible copy (HTML comments stripped) — never ask for these on tapper.
+AUTH_VISIBLE_NEEDLES = (
+    "Face ID",
+    "Touch ID",
+    "passcode",
+    "Unlock with",
+    "Sign in",
+    "Sign In",
+    "Log in",
+    "Log In",
+)
+
+
+def strip_html_comments(text: str) -> str:
+    return re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
+
+
+def check_tapper_no_auth(path: Path) -> bool:
+    raw = path.read_text(encoding="utf-8")
+    ok = True
+    for needle in AUTH_CODE_NEEDLES:
+        if needle in raw:
+            print(f"FAIL {path} auth code: {needle}")
+            ok = False
+    visible = strip_html_comments(raw)
+    for needle in AUTH_VISIBLE_NEEDLES:
+        if needle in visible:
+            print(f"FAIL {path} auth copy: {needle}")
+            ok = False
+    if ok:
+        print(f"OK   no-auth {path.relative_to(REPO)}")
+    return ok
 
 
 def fetch(path: str) -> tuple[int, bytes]:
@@ -49,6 +98,14 @@ def check(path: str, *needles: str) -> bool:
 
 def main() -> int:
     ok = True
+    # Static: band-tap shell never ships an auth gate (runs even if server is down).
+    for rel in (
+        "tapper.html",
+        "tapper/index.html",
+        "RedMed-Xcode/RedMed/tapper.html",
+    ):
+        ok &= check_tapper_no_auth(REPO / rel)
+
     ok &= check("/tapper/", 'data-tab="medical"', 'data-tab="911"', 'data-tab="aid"')
     ok &= check("/tapper/index.html", 'data-tab="medical"')
     ok &= check("/get/", "/tapper/")

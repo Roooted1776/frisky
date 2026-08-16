@@ -35,9 +35,12 @@
        Preview/Scan (`?src=app`) do not auto-arm SOS. Stop on Find Help or Aid.
        Explicit SOS toggle + DeviceMotion crash share the same local alarm.
      - Layout: any phone + iPad, iOS 15+ (and Android). Fluid width, safe-area
-       insets, no horizontal scroll. No account / login on this page (tap-to-view).
+       insets, no horizontal scroll. Tap-to-view: no Face ID, biometrics,
+       passcode, login, or any authentication before or on this page — EMT /
+       helper open the card immediately from `#d=`. Owner biometrics stay in
+       the native app only (edit / NFC write / vault / app unlock).
        iOS may need a gesture to unmute AudioContext; motion permission only
-       when the helper taps SOS.
+       when the helper taps SOS (not an auth gate).
      - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
        walk-by ~6–8″ does not fire, reliable coupling dies past ~4″,
        passive 13.56 MHz HF NFC (not Bluetooth) → opens this page
@@ -170,7 +173,7 @@
     /* +10px top vs prior 8 — matches owner Help · Edit chrome drop. */
     padding: 18px var(--page-pad-x) 6px;
   }
-  .rm-lock {
+  .rm-note {
     font-size: clamp(12px, 3.2vw, 13px);
     font-weight: 600;
     color: var(--muted);
@@ -222,12 +225,12 @@
   body.app-preview {
     padding-top: 0;
   }
-  /* Owner embed: no lock line / BrandWordmark above the medical card. */
-  html.app-embed .rm-lock,
-  body.app-embed .rm-lock {
+  /* Owner embed: no status note / BrandWordmark above the medical card. */
+  html.app-embed .rm-note,
+  body.app-embed .rm-note {
     display: none;
   }
-  .rm-lock a {
+  .rm-note a {
     color: inherit;
     font-weight: inherit;
     text-decoration: none;
@@ -326,7 +329,7 @@
     html.app-embed .rm-status.rm-status-link,
     body.app-embed .rm-status.rm-status-link { transition: none; }
   }
-  /* Owner embed: lock line gone — tighten header → YOU card. */
+  /* Owner embed: status note gone — tighten header → YOU card. */
   html.app-embed .rm-header,
   body.app-embed .rm-header {
     padding: 2px var(--page-pad-x) 4px;
@@ -982,7 +985,7 @@
     <!-- RedMed — same header + YOU card as owner RedMedView (no Edit). -->
     <div class="panel active" id="panel-medical" data-panel="medical">
       <div class="rm-header">
-        <p class="rm-lock">Tap to scan · no login · no server · no app</p>
+        <p class="rm-note">Tap to scan · no login · no server · no app</p>
         <div class="rm-title-row">
           <img class="rm-logo" id="rmLogo" width="72" height="72" alt="RedMed" decoding="async" fetchpriority="low">
           <div>
@@ -1227,10 +1230,10 @@
   }
   (function warnInsecureContext() {
     if (secureCryptoOk() || isAppPreview()) return;
-    var lock = document.querySelector('.rm-lock');
-    if (!lock) return;
-    lock.textContent = 'Open this card over HTTPS (or localhost) so any phone can decrypt the band payload.';
-    lock.style.color = 'var(--accent)';
+    var note = document.querySelector('.rm-note');
+    if (!note) return;
+    note.textContent = 'Open this card over HTTPS (or localhost) so any phone can decrypt the band payload.';
+    note.style.color = 'var(--accent)';
   })();
 
 
