@@ -136,7 +136,7 @@ struct CustomTabBar: View {
                     }
                 }
             }
-            .padding(.top, 6)
+            .padding(.top, 4.5)
 
             Capsule()
                 .fill(Color.redmedDark.opacity(0.18))
@@ -172,12 +172,21 @@ struct TabBarItem: View {
     let isOn: Bool
     let action: () -> Void
 
+    /// 911 uses `safari.fill` — hierarchical keeps the compass needle visible
+    /// (flat monochrome fills the disc solid, same failure as tapper without evenodd).
+    private var tint: Color {
+        isOn ? .redmedAccent : Color(red: 0.372, green: 0.388, blue: 0.408)
+    }
+
+    private var isCompass: Bool { icon == "safari.fill" }
+
     var body: some View {
         Button(action: action) {
             VStack(spacing: 2) {
                 Image(systemName: icon)
                     .font(.system(size: 18, weight: isOn ? .semibold : .regular))
-                    .foregroundColor(isOn ? .redmedAccent : Color(red: 0.372, green: 0.388, blue: 0.408))
+                    .symbolRenderingMode(isCompass ? .hierarchical : .monochrome)
+                    .foregroundStyle(tint)
                     .frame(width: 48, height: 26)
                     .background(
                         RoundedRectangle(cornerRadius: 11)
@@ -185,7 +194,7 @@ struct TabBarItem: View {
                     )
                 Text(label)
                     .font(.system(size: 10, weight: isOn ? .semibold : .medium))
-                    .foregroundColor(isOn ? .redmedAccent : Color(red: 0.372, green: 0.388, blue: 0.408))
+                    .foregroundColor(tint)
                     .kerning(-0.1)
             }
             .frame(maxWidth: .infinity)
