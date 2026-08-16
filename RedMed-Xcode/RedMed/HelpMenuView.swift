@@ -119,7 +119,7 @@ struct HelpMenuView: View {
     @State private var eraseAuthFailed = false
     @State private var eraseDone = false
 
-    /// Same metrics as Edit — even horizontal rhythm across Help / Edit / Preview.
+    /// Same metrics as Edit — even horizontal rhythm across Help / Edit.
     private enum Metrics {
         static let font: CGFloat = 15
         static let rowHPad: CGFloat = RedMedChrome.pagePadX

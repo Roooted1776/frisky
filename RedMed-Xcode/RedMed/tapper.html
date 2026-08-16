@@ -215,8 +215,13 @@
     min-height: calc(100vh - var(--safe-t) - var(--safe-b));
     min-height: calc(100dvh - var(--safe-t) - var(--safe-b));
   }
-  /* html.app-preview still set by Swift Preview/Scan boot — layout is the default
-     flex shell above; class pairs with scrollView.isScrollEnabled = false. */
+  /* html.app-preview: Swift Preview/Scan boot. Layout is the default flex
+     shell; native Back chrome is a sibling above the WKWebView (same as
+     RedMed Help·Edit). Class pairs with scrollView.isScrollEnabled = false. */
+  html.app-preview body,
+  body.app-preview {
+    padding-top: 0;
+  }
   /* Owner embed: no lock line / BrandWordmark above the medical card. */
   html.app-embed .rm-lock,
   body.app-embed .rm-lock {

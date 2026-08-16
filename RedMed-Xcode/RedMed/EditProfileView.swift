@@ -29,7 +29,7 @@ struct EditProfileView: View {
     private static let bloodTypeChoices = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
 
     /// One body size across the edit form (labels, fields, prompts).
-    /// Nav bar metrics live in `RedMedChrome` so Help / Edit / Preview stay even.
+    /// Nav bar metrics live in `RedMedChrome` so Help / Edit stay even.
     private enum Metrics {
         static let font: CGFloat = 15
         static let icon: CGFloat = 18

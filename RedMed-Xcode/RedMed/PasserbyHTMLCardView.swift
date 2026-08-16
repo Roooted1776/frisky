@@ -25,13 +25,18 @@ struct PasserbyHTMLCardView: View {
     }
 
     var body: some View {
-        // Same OwnerModalChrome as Help / Edit — even title + side slots.
+        // Same top chrome as main pages (RedMed Help·Edit / scanner Back / Aid
+        // topic Back) — left accent Back only. No centered "Preview" title bar
+        // (that was Help/Edit modal format; Preview is the tap-card shell).
         VStack(spacing: 0) {
-            OwnerModalChrome(
-                title: "Preview",
-                leadingTitle: "Back",
-                leadingAction: { dismiss() }
-            )
+            HStack(alignment: .center, spacing: 12) {
+                ChromeTextAction(title: "Back", weight: .bold) { dismiss() }
+                Spacer(minLength: 0)
+            }
+            .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
+            .padding(.horizontal, RedMedChrome.pagePadX)
+            .padding(.top, 16)
+            .padding(.bottom, 8)
 
             Group {
                 if let encodedPayload {
