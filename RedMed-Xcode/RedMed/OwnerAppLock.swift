@@ -14,9 +14,11 @@ import SwiftUI
 /// paints first; SecItem confirms off-main whether a profile blob exists (for
 /// prefetch / fail-closed load) but does **not** open Main without auth.
 ///
-/// Every owner launch is Face ID / passcode before Main: flat cream under the
-/// system biometrics sheet (no decorative BrandLogo). No Accept step. Unlock is
-/// retry chrome after cancel / mismatch — not part of the first-load surface.
+/// Every owner launch is Face ID / passcode before Main: remodeled load shell
+/// (layered cream atmosphere + quiet Face ID glyph — no decorative BrandLogo).
+/// No Accept step. Unlock is retry chrome after cancel / mismatch — floating
+/// translucent dock with continuous rounded edges (not part of the first-load
+/// surface until the first Face ID attempt ends).
 /// Fresh install unlocks into empty tabs after auth; returning owners load
 /// Keychain (fail closed on corrupt blob). Auto-prompt once per lock —
 /// including cold launch while still `.inactive` (waiting for `.active` was the
@@ -68,6 +70,8 @@ struct OwnerAppLock<Content: View>: View {
                 lockScreen
             }
         }
+        // Instant lock ↔ Main — no soft fade (reads as lag / stuck cream).
+        .transaction { $0.animation = nil }
         .onAppear {
             screenCaptured = UIScreen.main.isCaptured
             // Face ID first — cream hang waiting for `.active` or shell warm is wasted time.
@@ -167,10 +171,19 @@ struct OwnerAppLock<Content: View>: View {
         }
     }
 
-    /// Unlock / error chrome only after the first Face ID attempt ends.
+    /// Remodeled load shell: layered cream atmosphere + quiet Face ID glyph
+    /// (no BrandLogo — AGENTS). Retry chrome is a floating translucent dock.
     private var lockScreen: some View {
         ZStack {
-            Color.redmedBg.ignoresSafeArea()
+            lockAtmosphere
+
+            // Quiet center while Face ID owns the sheet — functional glyph only.
+            if !showUnlockControl, !screenCaptured {
+                lockLoadGlyph
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
+
             if showUnlockControl || screenCaptured {
                 lockRetryChrome
             }
@@ -179,40 +192,153 @@ struct OwnerAppLock<Content: View>: View {
         .accessibilityLabel("RedMed is locked")
     }
 
+    /// Cream base + dual rose washes — matches LaunchBackground, adds depth.
+    private var lockAtmosphere: some View {
+        ZStack {
+            Color.redmedBg
+            RadialGradient(
+                colors: [
+                    Color.redmedWash.opacity(0.78),
+                    Color.redmedWash.opacity(0.22),
+                    Color.redmedBg.opacity(0)
+                ],
+                center: UnitPoint(x: 0.5, y: 0.12),
+                startRadius: 12,
+                endRadius: 520
+            )
+            RadialGradient(
+                colors: [
+                    Color.redmedAccent.opacity(0.07),
+                    Color.redmedBg.opacity(0)
+                ],
+                center: UnitPoint(x: 0.5, y: 0.92),
+                startRadius: 8,
+                endRadius: 340
+            )
+            LinearGradient(
+                colors: [
+                    Color.white.opacity(0.35),
+                    Color.clear,
+                    Color.redmedWash.opacity(0.18)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    /// Soft Face ID disc — load presence under the system sheet, not a brand mark.
+    private var lockLoadGlyph: some View {
+        VStack(spacing: 14) {
+            ZStack {
+                Circle()
+                    .fill(.ultraThinMaterial)
+                    .opacity(0.75)
+                    .background {
+                        Circle().fill(Color.white.opacity(0.42))
+                    }
+                    .frame(
+                        width: RedMedChrome.unlockGlyphSize + 18,
+                        height: RedMedChrome.unlockGlyphSize + 18
+                    )
+                Image(systemName: "faceid")
+                    .font(.system(size: 34, weight: .medium))
+                    .foregroundStyle(Color.redmedAccent.opacity(0.72))
+                    .symbolRenderingMode(.hierarchical)
+            }
+            .frame(
+                width: RedMedChrome.unlockGlyphSize + 18,
+                height: RedMedChrome.unlockGlyphSize + 18
+            )
+
+            if isAuthenticating {
+                ProgressView()
+                    .tint(Color.redmedAccent.opacity(0.55))
+                    .scaleEffect(0.9)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .offset(y: -28)
+    }
+
     /// Status + Unlock after cancel / mismatch (hidden on first Face ID prompt).
+    /// Bottom sheet dock: 25% more translucent than opaque, continuous corners.
     private var lockRetryChrome: some View {
         VStack(spacing: 0) {
             Spacer(minLength: 0)
             VStack(spacing: 16) {
+                Capsule()
+                    .fill(Color.redmedDark.opacity(0.14))
+                    .frame(width: 36, height: 4)
+                    .padding(.bottom, 2)
+
                 if screenCaptured {
                     Text("Screen sharing is on — unlock with passcode. Profile stays hidden on the share until you stop sharing.")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, 28)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 if biometryFailed {
                     Text("Couldn't verify it's you. Try again.")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.redmedAccent)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, 28)
+                        .fixedSize(horizontal: false, vertical: true)
                 } else if profileLoadFailed {
                     Text("Couldn't load your profile. Try again.")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.redmedAccent)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, 28)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else if showUnlockControl {
+                    Text("Unlock to open RedMed")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.redmedDark.opacity(0.78))
+                        .multilineTextAlignment(.center)
                 }
+
                 if showUnlockControl {
                     unlockButton
                 }
             }
-            Spacer(minLength: 0)
-                .frame(maxHeight: 120)
+            .padding(.horizontal, 22)
+            .padding(.top, 14)
+            .padding(.bottom, 26)
+            .frame(maxWidth: .infinity)
+            .background { unlockDockBackground }
+            .padding(.horizontal, 14)
+            .padding(.bottom, 28)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.bottom, 48)
+        .transition(.identity)
+    }
+
+    /// Frosted cream dock — 0.75 fill = 25% more translucent than solid.
+    private var unlockDockBackground: some View {
+        let shape = RoundedRectangle(cornerRadius: RedMedChrome.unlockDockRadius, style: .continuous)
+        return shape
+            .fill(.ultraThinMaterial)
+            .background {
+                shape.fill(Color.redmedSurface.opacity(0.75))
+            }
+            .overlay {
+                shape.strokeBorder(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.72),
+                            Color.white.opacity(0.28)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
+            }
+            .shadow(color: Color.black.opacity(0.08), radius: 28, y: 12)
     }
 
     private var unlockButton: some View {
@@ -222,39 +348,48 @@ struct OwnerAppLock<Content: View>: View {
         } label: {
             Group {
                 if isAuthenticating {
-                    HStack(spacing: 8) {
+                    HStack(spacing: 10) {
                         ProgressView()
                             .tint(.white)
                         Text("Unlocking")
-                            .font(.system(size: 15, weight: .bold))
+                            .font(.system(size: 16, weight: .bold))
                     }
                     .accessibilityLabel("Unlocking with Face ID")
                 } else {
-                    HStack(spacing: 8) {
+                    HStack(spacing: 10) {
                         Image(systemName: "faceid")
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.system(size: 18, weight: .semibold))
                         Text("Unlock")
-                            .font(.system(size: 15, weight: .bold))
+                            .font(.system(size: 16, weight: .bold))
                     }
                 }
             }
             .foregroundColor(.white)
-            .frame(minWidth: 148, minHeight: 44)
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 52)
             .padding(.horizontal, 22)
-            .padding(.vertical, 10)
-            .background(
-                LinearGradient(
-                    colors: [Color(red: 1, green: 0.447, blue: 0.537), .redmedAccent],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-            .shadow(color: RedMedChrome.accentShadow, radius: 8, y: 4)
+            .padding(.vertical, 12)
+            .background {
+                RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color(red: 1, green: 0.447, blue: 0.537).opacity(0.75),
+                                Color.redmedAccent.opacity(0.75)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .overlay {
+                        RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous)
+                            .strokeBorder(Color.white.opacity(0.32), lineWidth: 1)
+                    }
+                    .shadow(color: RedMedChrome.accentShadow, radius: 12, y: 6)
+            }
         }
         .buttonStyle(RedMedPressStyle(haptic: nil))
         .disabled(isAuthenticating)
-        .fixedSize()
         .accessibilityHint("Face ID, Touch ID, or passcode")
     }
 
@@ -319,11 +454,12 @@ struct OwnerAppLock<Content: View>: View {
             switch outcome {
             case .declined:
                 // Cancel / dismiss — stay locked; Unlock appears for retry.
+                // Keep Keychain prefetch — no PHI published until success; Unlock
+                // tap must not cold-decode again (stuck / lag feel).
                 isAuthenticating = false
                 biometryFailed = false
                 showUnlockControl = true
                 gate = .locked
-                profile.discardUnlockPrefetch()
             case .notInteractive:
                 // Cold-start evaluate before the window can present — do not leave
                 // Unlock chrome up; clear auto-prompt so `.active` retries once.
@@ -350,7 +486,7 @@ struct OwnerAppLock<Content: View>: View {
                 biometryFailed = true
                 showUnlockControl = true
                 gate = .locked
-                profile.discardUnlockPrefetch()
+                // Keep prefetch for fast retry — staging is not published.
                 VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock")
             case .success:
                 // Apply only if this generation is still current. Check again after
