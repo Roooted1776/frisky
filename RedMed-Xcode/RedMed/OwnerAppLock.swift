@@ -14,9 +14,10 @@ import SwiftUI
 /// paints first; SecItem confirms off-main whether a profile blob exists (for
 /// prefetch / fail-closed load) but does **not** open Main without auth.
 ///
-/// Every owner launch is Face ID / passcode before Main: flat cream under the
-/// system biometrics sheet (no decorative BrandLogo). No Accept step. Unlock is
-/// retry chrome after cancel / mismatch — not part of the first-load surface.
+/// Every owner launch is Face ID / passcode before Main: cream + soft rose wash
+/// under the system biometrics sheet (no decorative BrandLogo). No Accept step.
+/// Unlock is retry chrome after cancel / mismatch — floating translucent dock
+/// with continuous rounded edges (not part of the first-load surface).
 /// Fresh install unlocks into empty tabs after auth; returning owners load
 /// Keychain (fail closed on corrupt blob). Auto-prompt once per lock —
 /// including cold launch while still `.inactive` (waiting for `.active` was the
@@ -68,6 +69,8 @@ struct OwnerAppLock<Content: View>: View {
                 lockScreen
             }
         }
+        // Instant lock ↔ Main — no soft fade (reads as lag / stuck cream).
+        .transaction { $0.animation = nil }
         .onAppear {
             screenCaptured = UIScreen.main.isCaptured
             // Face ID first — cream hang waiting for `.active` or shell warm is wasted time.
@@ -168,9 +171,21 @@ struct OwnerAppLock<Content: View>: View {
     }
 
     /// Unlock / error chrome only after the first Face ID attempt ends.
+    /// Elegant cream + soft rose wash (no BrandLogo — AGENTS). Retry chrome sits
+    /// in a floating translucent dock with continuous rounded edges.
     private var lockScreen: some View {
         ZStack {
             Color.redmedBg.ignoresSafeArea()
+            RadialGradient(
+                colors: [Color.redmedWash.opacity(0.62), Color.redmedBg.opacity(0)],
+                center: .top,
+                startRadius: 28,
+                endRadius: 480
+            )
+            .ignoresSafeArea()
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+
             if showUnlockControl || screenCaptured {
                 lockRetryChrome
             }
@@ -180,39 +195,59 @@ struct OwnerAppLock<Content: View>: View {
     }
 
     /// Status + Unlock after cancel / mismatch (hidden on first Face ID prompt).
+    /// Floating dock: 25% more translucent than opaque cream, continuous corners.
     private var lockRetryChrome: some View {
         VStack(spacing: 0) {
             Spacer(minLength: 0)
-            VStack(spacing: 16) {
+            VStack(spacing: 14) {
                 if screenCaptured {
                     Text("Screen sharing is on — unlock with passcode. Profile stays hidden on the share until you stop sharing.")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, 28)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 if biometryFailed {
                     Text("Couldn't verify it's you. Try again.")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.redmedAccent)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, 28)
+                        .fixedSize(horizontal: false, vertical: true)
                 } else if profileLoadFailed {
                     Text("Couldn't load your profile. Try again.")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.redmedAccent)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, 28)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 if showUnlockControl {
                     unlockButton
                 }
             }
-            Spacer(minLength: 0)
-                .frame(maxHeight: 120)
+            .padding(.horizontal, 22)
+            .padding(.top, 20)
+            .padding(.bottom, 22)
+            .frame(maxWidth: .infinity)
+            .background { unlockDockBackground }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 34)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.bottom, 48)
+        .transition(.identity)
+    }
+
+    /// Frosted cream dock — 0.75 fill = 25% more translucent than solid.
+    private var unlockDockBackground: some View {
+        let shape = RoundedRectangle(cornerRadius: RedMedChrome.unlockDockRadius, style: .continuous)
+        return shape
+            .fill(.ultraThinMaterial)
+            .background {
+                shape.fill(Color.redmedSurface.opacity(0.75))
+            }
+            .overlay {
+                shape.strokeBorder(Color.white.opacity(0.55), lineWidth: 1)
+            }
+            .shadow(color: Color.black.opacity(0.07), radius: 22, y: 10)
     }
 
     private var unlockButton: some View {
@@ -239,22 +274,31 @@ struct OwnerAppLock<Content: View>: View {
                 }
             }
             .foregroundColor(.white)
-            .frame(minWidth: 148, minHeight: 44)
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 48)
             .padding(.horizontal, 22)
-            .padding(.vertical, 10)
-            .background(
-                LinearGradient(
-                    colors: [Color(red: 1, green: 0.447, blue: 0.537), .redmedAccent],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-            .shadow(color: RedMedChrome.accentShadow, radius: 8, y: 4)
+            .padding(.vertical, 12)
+            .background {
+                RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color(red: 1, green: 0.447, blue: 0.537).opacity(0.75),
+                                Color.redmedAccent.opacity(0.75)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .overlay {
+                        RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous)
+                            .strokeBorder(Color.white.opacity(0.28), lineWidth: 1)
+                    }
+                    .shadow(color: RedMedChrome.accentShadow, radius: 10, y: 5)
+            }
         }
         .buttonStyle(RedMedPressStyle(haptic: nil))
         .disabled(isAuthenticating)
-        .fixedSize()
         .accessibilityHint("Face ID, Touch ID, or passcode")
     }
 
@@ -319,11 +363,12 @@ struct OwnerAppLock<Content: View>: View {
             switch outcome {
             case .declined:
                 // Cancel / dismiss — stay locked; Unlock appears for retry.
+                // Keep Keychain prefetch — no PHI published until success; Unlock
+                // tap must not cold-decode again (stuck / lag feel).
                 isAuthenticating = false
                 biometryFailed = false
                 showUnlockControl = true
                 gate = .locked
-                profile.discardUnlockPrefetch()
             case .notInteractive:
                 // Cold-start evaluate before the window can present — do not leave
                 // Unlock chrome up; clear auto-prompt so `.active` retries once.
@@ -350,7 +395,7 @@ struct OwnerAppLock<Content: View>: View {
                 biometryFailed = true
                 showUnlockControl = true
                 gate = .locked
-                profile.discardUnlockPrefetch()
+                // Keep prefetch for fast retry — staging is not published.
                 VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock")
             case .success:
                 // Apply only if this generation is still current. Check again after

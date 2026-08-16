@@ -107,11 +107,18 @@ struct CustomTabBar: View {
     @Binding var tab: AppTab
     var showsNFC: Bool = true
 
+    private var barShape: UnevenRoundedRectangle {
+        UnevenRoundedRectangle(
+            topLeadingRadius: 22,
+            bottomLeadingRadius: 0,
+            bottomTrailingRadius: 0,
+            topTrailingRadius: 22,
+            style: .continuous
+        )
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            Rectangle()
-                .fill(Color.redmedDivider)
-                .frame(height: 1)
             HStack(spacing: -3) {
                 TabBarItem(icon: "person.fill",  label: "RedMed", isOn: tab == .redmed) {
                     select(.redmed)
@@ -128,7 +135,7 @@ struct CustomTabBar: View {
                     }
                 }
             }
-            .padding(.top, 4)
+            .padding(.top, 10)
 
             Capsule()
                 .fill(Color(red: 0.11, green: 0.098, blue: 0.086).opacity(0.16))
@@ -136,10 +143,20 @@ struct CustomTabBar: View {
                 .padding(.top, 4)
                 .padding(.bottom, 5)
         }
-        .background(
-            Color.redmedBg
-                .shadow(color: Color.black.opacity(0.06), radius: 16, y: -4)
-        )
+        .background {
+            barShape
+                .fill(Color.redmedBg.opacity(0.92))
+                .background {
+                    barShape
+                        .fill(.ultraThinMaterial)
+                        .opacity(0.75)
+                }
+                .overlay {
+                    barShape
+                        .strokeBorder(Color.white.opacity(0.4), lineWidth: 1)
+                }
+                .shadow(color: Color.black.opacity(0.07), radius: 18, y: -4)
+        }
     }
 
     private func select(_ next: AppTab) {
