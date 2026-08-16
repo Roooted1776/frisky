@@ -11,17 +11,14 @@
  * refreshes the bucket. Activate deletes prior CACHE names so deploys clear
  * stale decrypt/layout. Bump CACHE in lockstep with root + bundled sw.js on
  * every decrypt/layout deploy.
+ *
+ * putShell is HTML-only. Optional assets use putAsset so logos / sw.js never
+ * overwrite shell keys (that poison served PNG/JS as /tapper/).
  */
-var CACHE = 'redmed-tapper-v92';
+var CACHE = 'redmed-tapper-v93';
 var ASSETS = [
-  './',
-  './index.html',
-  './sw.js',
   './BrandLogo.png',
-  './BrandWordmark.png',
-  '../assets/BrandLogo.png',
-  '../assets/BrandWordmark.png',
-  '../card.html'
+  '../assets/BrandLogo.png'
 ];
 /** Primary HTML shell — install must fail closed if neither key can be cached. */
 var REQUIRED_SHELLS = ['./index.html', './'];
@@ -35,6 +32,20 @@ var SHELL_KEYS = [
 
 function networkReload(reqOrUrl) {
   return fetch(reqOrUrl, { cache: 'reload' });
+}
+
+function putShell(cache, reqOrUrl, res) {
+  if (!res || !res.ok || (res.type !== 'basic' && res.type !== 'cors')) return Promise.resolve();
+  var writes = [cache.put(reqOrUrl, res.clone())];
+  SHELL_KEYS.forEach(function (key) {
+    writes.push(cache.put(key, res.clone()));
+  });
+  return Promise.all(writes).catch(function () { /* quota / opaque */ });
+}
+
+function putAsset(cache, reqOrUrl, res) {
+  if (!res || !res.ok || (res.type !== 'basic' && res.type !== 'cors')) return Promise.resolve();
+  return cache.put(reqOrUrl, res).catch(function () { /* quota / opaque */ });
 }
 
 function precacheRequiredShell(cache, i) {
@@ -55,28 +66,16 @@ function precacheRequiredShell(cache, i) {
 function precache(cache) {
   return precacheRequiredShell(cache, 0).then(function () {
     return Promise.all(
-      ASSETS.filter(function (url) {
-        return REQUIRED_SHELLS.indexOf(url) === -1;
-      }).map(function (url) {
+      ASSETS.map(function (url) {
         return networkReload(url)
           .then(function (res) {
             if (!res || !res.ok) return;
-            return putShell(cache, url, res);
+            return putAsset(cache, url, res);
           })
           .catch(function () { /* optional path missing */ });
       })
     );
   });
-}
-
-/** Store under the request URL plus canonical shell keys so /tapper/ always hits. */
-function putShell(cache, reqOrUrl, res) {
-  if (!res || !res.ok || (res.type !== 'basic' && res.type !== 'cors')) return Promise.resolve();
-  var writes = [cache.put(reqOrUrl, res.clone())];
-  SHELL_KEYS.forEach(function (key) {
-    writes.push(cache.put(key, res.clone()));
-  });
-  return Promise.all(writes).catch(function () { /* quota / opaque */ });
 }
 
 function matchOne(keys, i) {
@@ -110,11 +109,11 @@ function isShellRequest(req) {
     var url = new URL(req.url);
     if (url.origin !== self.location.origin) return false;
     var path = url.pathname;
+    // HTML shells only — never sw.js / images (multi-key put would poison HTML).
     return (
       path === '/tapper' ||
       path === '/tapper/' ||
       path.endsWith('/tapper/index.html') ||
-      path.endsWith('/tapper/sw.js') ||
       path.endsWith('/card.html')
     );
   } catch (e) {
@@ -168,7 +167,7 @@ self.addEventListener('fetch', function (event) {
     return;
   }
 
-  // Static assets: cache-first, then network + fill.
+  // Static assets: cache-first, then network + fill (single key only).
   event.respondWith(
     caches.match(req, { ignoreSearch: true }).then(function (cached) {
       if (cached) return cached;
@@ -178,7 +177,7 @@ self.addEventListener('fetch', function (event) {
           if (url.origin === self.location.origin && res.ok && res.type === 'basic') {
             var copy = res.clone();
             caches.open(CACHE).then(function (cache) {
-              cache.put(req, copy);
+              putAsset(cache, req, copy);
             });
           }
         } catch (e) { /* ignore */ }

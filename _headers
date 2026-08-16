@@ -9,13 +9,22 @@
   Cache-Control: public, max-age=0, must-revalidate
 
 /tapper/BrandLogo.png
-  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+  Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
+
+/tapper/BrandWordmark.png
+  Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
 
 /assets/BrandLogo.png
-  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+  Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
+
+/assets/BrandWordmark.png
+  Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
 
 /BrandLogo.png
-  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+  Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
+
+/BrandWordmark.png
+  Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
 
 /tapper
   Cache-Control: public, max-age=0, must-revalidate
