@@ -131,7 +131,7 @@ struct CustomTabBar: View {
             .padding(.top, 4)
 
             Capsule()
-                .fill(Color(red: 0.11, green: 0.098, blue: 0.086).opacity(0.16))
+                .fill(Color.redmedDark.opacity(0.16))
                 .frame(width: 134, height: 5)
                 .padding(.top, 4)
                 .padding(.bottom, 5)

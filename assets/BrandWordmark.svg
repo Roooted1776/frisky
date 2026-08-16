@@ -32,6 +32,6 @@
 
   
   <text x="84" y="49" font-family="ui-rounded, &#39;SF Pro Rounded&#39;, &#39;Avenir Next Rounded&#39;, system-ui, -apple-system, sans-serif" font-size="37" font-weight="700" letter-spacing="-0.8">
-    <tspan fill="url(#redType)">Red</tspan><tspan fill="#1c1917">Med</tspan>
+    <tspan fill="url(#redType)">Red</tspan><tspan fill="#211F1F">Med</tspan>
   </text>
 </svg>

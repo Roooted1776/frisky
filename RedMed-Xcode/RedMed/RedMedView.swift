@@ -75,7 +75,7 @@ struct RedMedView: View {
             .padding(.horizontal, 16)
             .padding(.top, 6)
             .padding(.bottom, 8)
-            .background(Color.redmedBg)
+            // No solid fill — same cream/wash as body (`RedMedPageBackground`).
 
             Group {
                 if let shellPayload {

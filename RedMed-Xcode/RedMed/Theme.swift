@@ -31,12 +31,13 @@ struct RedMedPressStyle: ButtonStyle {
 extension Color {
     static let redmedAccent   = Color(red: 0.882, green: 0.114, blue: 0.282) // #e11d48
     static let redmedBg       = Color(red: 1.000, green: 0.969, blue: 0.969) // #fff7f7
-    static let redmedDark     = Color(red: 0.110, green: 0.098, blue: 0.086) // #1c1917
+    /// Heading / primary ink — same on owner chrome + passerby `--dark` / legal `--text`.
+    static let redmedDark     = Color(red: 0.129, green: 0.122, blue: 0.122) // #211F1F
     static let redmedMuted    = Color(red: 0.471, green: 0.443, blue: 0.424) // #78716c
     /// Cream-lift panel fill — not pure white (white boxes on `redmedBg`).
     static let redmedSurface  = Color(red: 1.000, green: 0.953, blue: 0.957) // #fff3f4
     /// Row / chip hairline — same 8% ink as passerby dividers / legal `--border`.
-    static let redmedDivider  = Color(red: 0.110, green: 0.098, blue: 0.086).opacity(0.08)
+    static let redmedDivider  = Color(red: 0.129, green: 0.122, blue: 0.122).opacity(0.08)
     /// Soft top wash — pairs with passerby body gradient.
     static let redmedWash     = Color(red: 1.000, green: 0.910, blue: 0.922) // #ffe8eb
 }
@@ -260,7 +261,7 @@ struct OwnerModalChrome<Trailing: View>: View {
                 .fill(Color.redmedDivider)
                 .frame(height: 1)
         }
-        .background(Color.redmedBg)
+        // No solid fill — page `RedMedPageBackground` (same cream as body) shows through.
     }
 }
 

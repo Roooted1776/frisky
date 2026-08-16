@@ -53,16 +53,16 @@
     --accent-soft: #ff7289;
     --bg: #fff7f7;
     --wash: #ffe8eb;
-    --dark: #1c1917;
+    --dark: #211F1F;
     --muted: #78716c;
-    --divider: rgba(28,25,23,0.08);
+    --divider: rgba(33,31,31,0.08);
     --tab-off: #5f6369;
     /* Cream-lift — same Color.redmedSurface; not pure white on --bg. */
     --surface: #fff3f4;
     --box: 10px;
     --chip: 7px;
     --logo: 72px;
-    --shadow: 0 1px 2px rgba(28,25,23,0.04), 0 6px 16px rgba(225,29,72,0.05);
+    --shadow: 0 1px 2px rgba(33,31,31,0.04), 0 6px 16px rgba(225,29,72,0.05);
     --shadow-accent: 0 6px 16px rgba(225,29,72,0.22);
     /* Fluid shell — SE → Pro Max → iPad / landscape. */
     --page-max: 480px;
@@ -130,14 +130,14 @@
   /* Responsive scrollbar (desktop / Mac Catalyst; iOS uses UIScrollView indicators). */
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(28, 25, 23, 0.28) transparent;
+    scrollbar-color: rgba(33, 31, 31, 0.28) transparent;
   }
   ::-webkit-scrollbar {
     width: clamp(6px, 1.2vw, 10px);
     height: clamp(6px, 1.2vw, 10px);
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(28, 25, 23, 0.28);
+    background: rgba(33, 31, 31, 0.28);
     border-radius: 999px;
   }
   ::-webkit-scrollbar-track {
@@ -245,7 +245,7 @@
     letter-spacing: -0.5px;
     margin: 0;
     line-height: 1.15;
-    color: var(--dark); /* same ink as YOU rows / Color.redmedDark — not pure #000 */
+    color: var(--dark); /* same ink as YOU rows / Color.redmedDark (#211F1F) */
     overflow-wrap: anywhere;
     word-break: break-word;
   }
@@ -360,7 +360,7 @@
     word-break: break-word;
     min-width: 0;
   }
-  .row .v.empty { font-weight: 500; color: rgba(28,25,23,0.4); }
+  .row .v.empty { font-weight: 500; color: rgba(33,31,31,0.4); }
   /* Blood type / organ donor — EMT glance chips when filled. */
   .row.row-blood.has-blood .v,
   .row.row-donor.has-donor .v {
@@ -885,7 +885,7 @@
     /* Opaque page cream — same Color.redmedBg as owner CustomTabBar (not frosted white). */
     background: var(--bg);
     border-top: 1px solid var(--divider);
-    box-shadow: 0 -4px 18px rgba(28,25,23,0.06);
+    box-shadow: 0 -4px 18px rgba(33,31,31,0.06);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -946,7 +946,7 @@
     width: 134px;
     height: 5px;
     border-radius: 999px;
-    background: rgba(28,25,23,0.16);
+    background: rgba(33,31,31,0.16);
     margin-top: 4px;
   }
 
