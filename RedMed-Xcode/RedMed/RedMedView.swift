@@ -73,7 +73,7 @@ struct RedMedView: View {
             }
             .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
             .padding(.horizontal, 16)
-            .padding(.top, 6)
+            .padding(.top, 16)
             .padding(.bottom, 8)
             // No solid fill — same cream/wash as body (`RedMedPageBackground`).
 
