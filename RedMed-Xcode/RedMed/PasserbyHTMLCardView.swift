@@ -176,9 +176,9 @@ private enum PasserbyShellCache {
 
 /// Pre-creates a cream `WKWebView` and loads bundled `tapper.html` after unlock
 /// so the first RedMed paint can skip cold WebKit process + first parse when the
-/// pool is ready. Face ID overlap may kick warm after LA presents (~280ms);
-/// unlock success must **not** kick warm before `gate = .unlocked` (that stole
-/// MainActor during Keychain await). MainActor only — WKWebView is not thread-safe.
+/// pool is ready. Do **not** warm during Face ID or before `gate = .unlocked` —
+/// MainActor WebKit work during the Keychain await left a blank cream hang after
+/// auth. MainActor only — WKWebView is not thread-safe.
 ///
 /// Single-flight warm. Unlock does **not** await this — tabs paint with a
 /// placeholder `#d=` + embed JSON; `takeEmbed()` is best-effort on first RedMed
@@ -191,6 +191,17 @@ enum PasserbyWebViewPool {
     /// Kick a warm without waiting — safe to call repeatedly (single flight).
     static func warmEmbedShell() {
         _ = ensureWarmTask()
+    }
+
+    /// Drop an in-flight warm so unlock Keychain adopt owns MainActor.
+    /// Keeps an already-ready pooled view.
+    static func cancelWarm() {
+        guard warmedEmbed == nil else {
+            warmTask = nil
+            return
+        }
+        warmTask?.cancel()
+        warmTask = nil
     }
 
     /// Wait until the pooled embed exists (or shell HTML is missing).
@@ -206,6 +217,7 @@ enum PasserbyWebViewPool {
         if let warmTask { return warmTask }
         // Explicit Task result type — bare `return nil` fails typecheck in this closure.
         let task = Task<WKWebView?, Never> { @MainActor in
+            if Task.isCancelled { return .none }
             // Shell HTML may still be filling from a detached warm — read through
             // the lock (loads from bundle once if needed).
             let webView = makeConfiguredWebView(navigationDelegate: nil)
@@ -213,6 +225,7 @@ enum PasserbyWebViewPool {
                   var html = PasserbyShellCache.shellHTML() else {
                 return .none
             }
+            if Task.isCancelled { return .none }
             // App-embed chrome only — no PHI. Real profile arrives via JS push or full load.
             let boot = """
             <script>
@@ -229,6 +242,7 @@ enum PasserbyWebViewPool {
                 html = boot + html
             }
             webView.loadHTMLString(html, baseURL: fileURL)
+            if Task.isCancelled { return .none }
             warmedEmbed = webView
             return webView
         }

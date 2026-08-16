@@ -25,12 +25,12 @@ import SwiftUI
 ///
 /// Speed (minus Face ID wall time): Face ID kicks first; Keychain prefetch +
 /// tapper.html string warm start in the same `onAppear` tick and again inside
-/// the unlock pipeline (single-flight). WKWebView warm overlaps Face ID after a
-/// short delay (so LA presents first) but is **never** kicked on the success
-/// critical path before `gate = .unlocked` — that stole MainActor during the
-/// Keychain await and left cream after auth. Unlock does **not** wait on AES
-/// `#d=` or a finished WebView — placeholder `#d=` + `__REDMED_PROFILE` paints
-/// RedMed; durable AES finishes in background; warm continues best-effort.
+/// the unlock pipeline (single-flight). WKWebView warm starts **only after**
+/// `gate = .unlocked` — warming during Face ID (or before the Keychain await)
+/// stole MainActor while the LA sheet was dismissing and left a blank cream /
+/// white hang after auth. Unlock does **not** wait on AES `#d=` or a finished
+/// WebView — placeholder `#d=` + `__REDMED_PROFILE` paints RedMed; durable AES
+/// finishes in background; warm continues best-effort after first paint.
 struct OwnerAppLock<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
@@ -86,12 +86,13 @@ struct OwnerAppLock<Content: View>: View {
         .task(id: authGeneration) {
             // Escape hatch: if LA never callbacks, Unlock must still be tappable.
             // Do not flash Unlock under a live Face ID sheet (common at ~1–2s).
+            // Keep the blank-cream window short — long waits read as a white hang.
             guard gate == .locked else { return }
             let generation = authGeneration
-            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            try? await Task.sleep(nanoseconds: 800_000_000)
             guard gate == .locked, generation == authGeneration else { return }
             if isAuthenticating {
-                try? await Task.sleep(nanoseconds: 3_500_000_000)
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
                 guard gate == .locked, generation == authGeneration else { return }
             }
             // Hung LA: invalidate this generation so a late callback cannot unlock,
@@ -172,10 +173,17 @@ struct OwnerAppLock<Content: View>: View {
     }
 
     /// Flat cream (AGENTS). Retry chrome is a large centered Unlock — no dock.
+    /// Face ID sheets hold `.inactive` — keep chrome hidden under the sheet.
+    /// When the sheet dismisses (`.active`) while Keychain still applies, show
+    /// Unlocking so the gap is not a blank white/cream hang.
+    private var showsPostAuthChrome: Bool {
+        isAuthenticating && scenePhase == .active
+    }
+
     private var lockScreen: some View {
         ZStack {
             Color.redmedBg.ignoresSafeArea()
-            if showUnlockControl || screenCaptured {
+            if showUnlockControl || screenCaptured || showsPostAuthChrome {
                 lockRetryChrome
             }
         }
@@ -212,7 +220,7 @@ struct OwnerAppLock<Content: View>: View {
                     .padding(.horizontal, 28)
             }
 
-            if showUnlockControl {
+            if showUnlockControl || showsPostAuthChrome {
                 unlockButton
             }
 
@@ -296,7 +304,8 @@ struct OwnerAppLock<Content: View>: View {
 
     /// Face ID first, then Keychain prefetch + shell string in the same turn
     /// (overlap while LA sheet is up). Enter path for returning owners — first
-    /// attempt is auto Face ID only.
+    /// attempt is auto Face ID only. Do **not** build WKWebView here — that
+    /// races the post-auth Keychain await on MainActor (blank cream hang).
     private func startUnlockPipeline(isAuto: Bool) {
         guard gate == .locked else { return }
         if isAuto {
@@ -307,13 +316,9 @@ struct OwnerAppLock<Content: View>: View {
         // Face ID first; prefetch still starts inside this pipeline (same turn).
         unlockWithFaceID()
         profile.beginUnlockPrefetch()
-        // HTML string during Face ID; WKWebView warm after a short delay so LA presents first.
+        // HTML string only during Face ID — WKWebView warm waits until unlock.
         Task.detached(priority: .userInitiated) {
             PasserbyHTMLCardView.warmShellCache()
-            try? await Task.sleep(nanoseconds: 280_000_000)
-            await MainActor.run {
-                PasserbyWebViewPool.warmEmbedShell()
-            }
         }
     }
 
@@ -368,12 +373,19 @@ struct OwnerAppLock<Content: View>: View {
             case .success:
                 // Apply only if this generation is still current. Check again after
                 // await — background can bump authGeneration and purge mid-apply.
+                PasserbyWebViewPool.cancelWarm()
+                // Fast path: Face ID overlap already parked the blob — unlock on
+                // this MainActor turn (no Task hop → no blank cream frame).
+                if let didLoad = profile.tryPrepareUnlockPrefetchSync() {
+                    finishUnlockAfterAuth(
+                        generation: generation,
+                        didLoad: didLoad,
+                        expectsProfile: didLoad ? true : keychainHasProfile
+                    )
+                    return
+                }
                 Task { @MainActor in
                     guard generation == authGeneration else { return }
-                    // Do **not** kick WKWebView warm here. Face ID overlap already
-                    // started it after ~280ms; kicking again before the Keychain
-                    // await lets MainActor build WebKit while we yield — cream hang
-                    // after auth. Warm continues best-effort; miss → cold load.
                     // Off-main SecItem overlaps Keychain apply when the gate still says empty.
                     async let expectsProfileTask = keychainHasProfile
                         ? true
@@ -385,50 +397,64 @@ struct OwnerAppLock<Content: View>: View {
                     // PrivacySnapshotGuard never covers the lock shell under capture.
                     let didLoad = await profile.prepareUnlockPrefetchOrReload()
                     let expectsProfile = didLoad ? true : await expectsProfileTask
-                    guard generation == authGeneration else {
-                        // Late success after background lock — drop staging, no PHI published.
-                        profile.discardUnlockPrefetch()
-                        profile.purgeFromMemory()
-                        return
-                    }
-                    isAuthenticating = false
-                    if didLoad {
-                        keychainHasProfile = true
-                        // Unlock shell first, then publish PHI in the same turn.
-                        gate = .unlocked
-                        profile.commitUnlockProfile()
-                        biometryFailed = false
-                        profileLoadFailed = false
-                        showUnlockControl = false
-                        RedMedHaptics.success()
-                        // If Face ID was faster than the delayed warm, start after paint.
-                        Task { @MainActor in
-                            await Task.yield()
-                            PasserbyWebViewPool.warmEmbedShell()
-                        }
-                    } else if !expectsProfile {
-                        // Fresh install — auth passed; open empty Main (Edit gates Save).
-                        keychainHasProfile = false
-                        profile.prepareEmptyUnlockShell()
-                        gate = .unlocked
-                        biometryFailed = false
-                        profileLoadFailed = false
-                        showUnlockControl = false
-                        RedMedHaptics.success()
-                        Task { @MainActor in
-                            await Task.yield()
-                            PasserbyWebViewPool.warmEmbedShell()
-                        }
-                    } else {
-                        // Corrupt / unreadable Keychain — stay locked; do not open empty Edit.
-                        RedMedHaptics.error()
-                        gate = .locked
-                        biometryFailed = false
-                        profileLoadFailed = true
-                        showUnlockControl = true
-                    }
+                    finishUnlockAfterAuth(
+                        generation: generation,
+                        didLoad: didLoad,
+                        expectsProfile: expectsProfile
+                    )
                 }
             }
+        }
+    }
+
+    /// Shared unlock finish for sync (parked) and async (Keychain await) paths.
+    @MainActor
+    private func finishUnlockAfterAuth(
+        generation: Int,
+        didLoad: Bool,
+        expectsProfile: Bool
+    ) {
+        guard generation == authGeneration else {
+            // Late success after background lock — drop staging, no PHI published.
+            profile.discardUnlockPrefetch()
+            profile.purgeFromMemory()
+            return
+        }
+        isAuthenticating = false
+        if didLoad {
+            keychainHasProfile = true
+            // Unlock shell first, then publish PHI in the same turn.
+            gate = .unlocked
+            profile.commitUnlockProfile()
+            biometryFailed = false
+            profileLoadFailed = false
+            showUnlockControl = false
+            RedMedHaptics.success()
+            // Warm after paint — never on the auth → Main critical path.
+            Task { @MainActor in
+                await Task.yield()
+                PasserbyWebViewPool.warmEmbedShell()
+            }
+        } else if !expectsProfile {
+            // Fresh install — auth passed; open empty Main (Edit gates Save).
+            keychainHasProfile = false
+            profile.prepareEmptyUnlockShell()
+            gate = .unlocked
+            biometryFailed = false
+            profileLoadFailed = false
+            showUnlockControl = false
+            RedMedHaptics.success()
+            Task { @MainActor in
+                await Task.yield()
+                PasserbyWebViewPool.warmEmbedShell()
+            }
+        } else {
+            // Corrupt / unreadable Keychain — stay locked; do not open empty Edit.
+            RedMedHaptics.error()
+            gate = .locked
+            biometryFailed = false
+            profileLoadFailed = true
+            showUnlockControl = true
         }
     }
 }

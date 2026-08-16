@@ -292,12 +292,8 @@ class ProfileData: ObservableObject {
         pendingUnlockBlob = nil
 
         // Fast path: SecItem already finished during Face ID — no await / no MainActor yield.
-        if let parked = unlockPrefetchBox.takeIfReady() {
-            unlockBlobTask = nil
-            guard let parked else { return false }
-            adoptUnlockArtifactsSync(for: parked)
-            pendingUnlockBlob = parked
-            return true
+        if let parked = tryAdoptParkedUnlockBlob() {
+            return parked
         }
 
         if let blobTask = unlockBlobTask {
@@ -326,6 +322,27 @@ class ProfileData: ObservableObject {
         unlockEmbedProfileJSON = Self.previewArtifactsJSONOnly(from: blob)
         unlockPreviewPayload = ProfileNFCCodec.placeholderPreviewPayload
         pendingUnlockBlob = blob
+        return true
+    }
+
+    /// Sync adopt when Face ID overlap already parked the blob — avoids a
+    /// `Task { @MainActor }` hop (blank cream frame) after the LA sheet dismisses.
+    /// `nil` = still in flight / needs async reload; `true`/`false` = adopted.
+    @MainActor
+    func tryPrepareUnlockPrefetchSync() -> Bool? {
+        guard persists else { return false }
+        pendingUnlockBlob = nil
+        return tryAdoptParkedUnlockBlob()
+    }
+
+    /// `nil` = not ready; `true` = profile staged; `false` = empty Keychain result.
+    @MainActor
+    private func tryAdoptParkedUnlockBlob() -> Bool? {
+        guard let parked = unlockPrefetchBox.takeIfReady() else { return nil }
+        unlockBlobTask = nil
+        guard let parked else { return false }
+        adoptUnlockArtifactsSync(for: parked)
+        pendingUnlockBlob = parked
         return true
     }
 
