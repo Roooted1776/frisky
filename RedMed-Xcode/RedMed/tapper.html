@@ -1036,6 +1036,7 @@
     <!-- 911 — mirrors owner EmergencyView (content-first, no page header). -->
     <div class="panel" id="panel-911" data-panel="911">
       <div class="page-pad">
+        <a class="btn btn-call" id="callEmergency911" href="tel:112">Call <span class="emg">112</span></a>
         <div class="gps-card">
           <div class="gps-pill">LIVE GPS</div>
           <div class="coords" id="coords">–––</div>
@@ -1043,7 +1044,6 @@
         </div>
         <div class="gps-actions">
           <button class="btn btn-ink" type="button" id="copyCoordsBtn">Copy coordinates</button>
-          <a class="btn btn-call" id="callEmergency911" href="tel:112">Call <span class="emg">112</span></a>
           <button class="btn btn-sos" type="button" id="sosBtn">SOS · Locate me</button>
         </div>
 
@@ -1102,6 +1102,13 @@
       <div class="page-pad">
         <!-- Pane titles / order / emoji lockstep with AidPaneCatalog (owner AidView). -->
         <div class="aid-grid">
+          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🏥</span><span class="aid-title">Nearby Hospitals</span></span></summary>
+            <ol>
+              <li>Call <span class="emg">112</span> — dispatch routes to the right trauma level</li>
+              <li>Do not self-transport major trauma if EMS is available</li>
+              <li>Note time of injury and mechanism for the team</li>
+            </ol>
+          </details>
           <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🚗</span><span class="aid-title">Crash &amp; Head</span></span></summary>
             <ol>
               <li>Call <span class="emg">112</span> — give exact location and number of people</li>
@@ -1149,13 +1156,6 @@
               <li>Time it. Clear sharp objects. Do not restrain</li>
               <li>Nothing in the mouth. Cushion the head</li>
               <li>Call <span class="emg">112</span> if first seizure, over 5 minutes, injury, or in water</li>
-            </ol>
-          </details>
-          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🏥</span><span class="aid-title">Nearby Hospitals</span></span></summary>
-            <ol>
-              <li>Call <span class="emg">112</span> — dispatch routes to the right trauma level</li>
-              <li>Do not self-transport major trauma if EMS is available</li>
-              <li>Note time of injury and mechanism for the team</li>
             </ol>
           </details>
         </div>
