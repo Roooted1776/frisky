@@ -67,7 +67,7 @@
     /* Fluid shell — SE → Pro Max → iPad / landscape. */
     --page-max: 480px;
     --page-pad-x: clamp(16px, 4.2vw, 28px);
-    --tabbar-h: 56px;
+    --tabbar-h: 60px;
     --fs-name: 22px; /* hero under logo — RED-9 / Main.dc */
     --fs-row: 14px; /* YOU rows + lists — matches Theme CardRow */
     --fs-title: clamp(15px, 3.6vw, 17px);
@@ -79,10 +79,10 @@
     --safe-l: env(safe-area-inset-left, 0px);
   }
   @media (min-width: 600px) {
-    :root { --page-max: 560px; --tabbar-h: 58px; }
+    :root { --page-max: 560px; --tabbar-h: 62px; }
   }
   @media (min-width: 768px) {
-    :root { --page-max: 680px; --tabbar-h: 60px; --box: 10px; }
+    :root { --page-max: 680px; --tabbar-h: 64px; --box: 10px; }
   }
   @media (min-width: 1024px) {
     :root { --page-max: 760px; }
@@ -885,12 +885,14 @@
     left: 0; right: 0; bottom: 0;
     /* Opaque page cream — same Color.redmedBg as owner CustomTabBar (not frosted white). */
     background: var(--bg);
-    border-top: 0.5px solid var(--divider);
+    border: 0.5px solid var(--divider);
+    border-bottom: 0;
+    border-radius: 18px 18px 0 0;
     box-shadow: 0 -2px 10px rgba(28,25,23,0.05);
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 2px var(--safe-r) calc(3px + var(--safe-b)) var(--safe-l);
+    padding: 6px var(--safe-r) calc(3px + var(--safe-b)) var(--safe-l);
     z-index: 30;
   }
   .tabs {
@@ -955,7 +957,7 @@
   @media (max-width: 360px) {
     :root {
       --page-pad-x: 10px;
-      --tabbar-h: 54px;
+      --tabbar-h: 58px;
     }
     .seizure-strip { flex-wrap: wrap; }
   }
