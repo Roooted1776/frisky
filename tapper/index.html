@@ -249,14 +249,21 @@
     overflow-wrap: anywhere;
     word-break: break-word;
   }
-  /* Same as owner braceletStatusLabel under the name. */
+  /* Linked / Not linked + Updated share one row under the name. */
+  .rm-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+    margin: 4px 0 0;
+  }
   .rm-status {
     font-size: clamp(11px, 2.6vw, 12px);
     font-weight: 700;
     letter-spacing: 0.6px;
     text-transform: uppercase;
     color: var(--muted);
-    margin: 4px 0 0;
+    margin: 0;
   }
   .rm-status.linked {
     color: rgba(225,29,72,0.9);
@@ -268,7 +275,7 @@
     align-items: center;
     gap: 2px;
     min-height: 28px;
-    margin: 2px 0 0;
+    margin: 0;
     padding: 2px 0;
     cursor: pointer;
     text-decoration: none;
@@ -319,12 +326,13 @@
   }
   .card.you-card { margin-top: 6px; }
   .rm-updated {
-    margin: 8px var(--page-pad-x) 0;
+    margin: 0;
     font-size: 11px;
     font-weight: 500;
     letter-spacing: 0.2px;
     color: rgba(120,113,108,0.72);
-    text-align: right;
+    text-align: left;
+    line-height: 1.3;
   }
   .rm-updated[hidden] { display: none; }
   .row {
@@ -963,7 +971,10 @@
           <img class="rm-logo" id="rmLogo" src="BrandLogo.png" width="72" height="72" alt="RedMed">
           <div>
             <h1 class="rm-name" id="name">RedMed</h1>
-            <p class="rm-status" id="statusLine">Not linked</p>
+            <div class="rm-meta">
+              <p class="rm-status" id="statusLine">Not linked</p>
+              <p class="rm-updated" id="updatedLine" hidden></p>
+            </div>
           </div>
         </div>
       </div>
@@ -974,7 +985,6 @@
         <div class="row row-blood" id="rowBloodRow"><span class="k">Blood type</span><span class="v empty" id="rowBlood">—</span></div>
         <div class="row row-donor" id="rowDonorRow"><span class="k">Organ donor</span><span class="v empty" id="rowDonor">—</span></div>
       </div>
-      <p class="rm-updated" id="updatedLine" hidden></p>
 
       <div class="list-grid">
         <details class="list-drop" id="dropAllergies">
