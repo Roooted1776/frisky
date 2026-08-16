@@ -104,7 +104,7 @@ The app has no backend, database, or web service.
 trauma JSON, or show a Location banner at `@main`. First launch opens a cream
 shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash) with
 **zero Keychain** on the first frame — `OwnerAppLock` always starts locked
-(flat cream, no BrandLogo) so Main never mounts before Face ID / passcode.
+(flat cream / `redmedBg`, no BrandLogo) so Main never mounts before Face ID / passcode.
 A UserDefaults gate (`ProfileData.storedProfileGateKey`, set on persist /
 Keychain presence) hints whether a blob is expected for prefetch / fail-closed
 load; SecItem confirms off-main. Auto Face ID on every owner launch **immediately**

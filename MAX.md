@@ -74,8 +74,9 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Owner app on first launch; `Main.swift` owner shell; HTML policies redirect `redmed://main`.
 - Deferred all Core Location until Find Help; fixed SIGTERM/launch confusion.
 - Cold launch: LaunchBackground only on UILaunchScreen (no system BrandLogo).
-  Every owner launch: auto Face ID over flat cream before Main (no decorative
-  BrandLogo; Unlock after cancel / mismatch). Face ID kicks immediately on cold
+  Every owner launch: auto Face ID over cream atmosphere + Face ID glyph before
+  Main (no decorative BrandLogo; Unlock cream dock after cancel / mismatch).
+  Face ID kicks immediately on cold
   `.inactive` (waiting for `.active` was the cream hang). Prefetch still starts
   in the same `onAppear` tick and inside the unlock pipeline. Fresh install
   unlocks into empty tabs after auth. Keychain decode + AES `#d=` pack +
