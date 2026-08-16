@@ -170,8 +170,9 @@ private enum PasserbyShellCache {
 
 /// Pre-creates a cream `WKWebView` and loads bundled `tapper.html` after unlock
 /// so the first RedMed paint can skip cold WebKit process + first parse when the
-/// pool is ready. Not kicked during Face ID (competes with LA on MainActor).
-/// MainActor only — WKWebView is not thread-safe.
+/// pool is ready. Face ID overlap may kick warm after LA presents (~280ms);
+/// unlock success must **not** kick warm before `gate = .unlocked` (that stole
+/// MainActor during Keychain await). MainActor only — WKWebView is not thread-safe.
 ///
 /// Single-flight warm. Unlock does **not** await this — tabs paint with a
 /// placeholder `#d=` + embed JSON; `takeEmbed()` is best-effort on first RedMed
