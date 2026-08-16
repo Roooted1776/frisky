@@ -11,6 +11,8 @@ struct AidPane: Identifiable {
 /// Pane chrome only — topic bodies stay in AidTopicCatalog until a topic opens.
 enum AidPaneCatalog {
     static let panes: [AidPane] = [
+        AidPane(id: "hospitals", emoji: "🏥", title: "Nearby Hospitals", iconFilled: false,
+                topics: [("Find Nearby Hospitals", "trauma-hospitals")]),
         AidPane(id: "crash", emoji: "🚗", title: "Crash & Head", iconFilled: false,
                 topics: [("Car Crash", "car-crash"), ("Head & Pupils", "head-pupils"), ("Spinal", "spinal")]),
         AidPane(id: "bleed", emoji: "🩸", title: "Bleeding", iconFilled: true,
@@ -27,8 +29,6 @@ enum AidPaneCatalog {
                          ("Cold (Hypothermia)", "cold-hypothermia"), ("Heat (Exhaustion & Stroke)", "heat-stroke")]),
         AidPane(id: "seizure", emoji: "🧠", title: "Seizure", iconFilled: false,
                 topics: [("Seizure", "seizure")]),
-        AidPane(id: "hospitals", emoji: "🏥", title: "Nearby Hospitals", iconFilled: false,
-                topics: [("Find Nearby Hospitals", "trauma-hospitals")]),
     ]
 
     #if DEBUG
