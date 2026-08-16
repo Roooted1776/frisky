@@ -947,7 +947,8 @@
     line-height: 1;
     transition: background 0.14s ease;
   }
-  /* Match owner CustomTabBar SF Symbols (person.fill / safari.fill / cross.case.fill). */
+  /* Match owner CustomTabBar SF Symbols (person.fill / safari.fill / cross.case.fill).
+     911 SVG uses fill-rule=evenodd so the needle cutout reads as safari.fill. */
   .tab .icon-wrap svg {
     width: 18px;
     height: 18px;
@@ -1175,7 +1176,7 @@
   <nav class="tabbar" aria-label="RedMed">
     <div class="tabs">
       <button class="tab active" type="button" data-tab="medical"><div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v1.5c0 .83.67 1.5 1.5 1.5h17c.83 0 1.5-.67 1.5-1.5V19c0-3.33-6.67-5-10-5z"/></svg></div>RedMed</button>
-      <button class="tab" type="button" data-tab="911"><div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm2.19 12.19L6 18l3.81-8.19L18 6l-3.81 8.19z"/></svg></div>911</button>
+      <button class="tab" type="button" data-tab="911"><div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.5 5.5-2.5 7.5-7.5 2.5 2.5-7.5 7.5-2.5z"/></svg></div>911</button>
       <button class="tab" type="button" data-tab="aid"><div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M17 6h-2.2l-.6-1.2A2 2 0 0012.4 4h-.8a2 2 0 00-1.8.8L9.2 6H7a3 3 0 00-3 3v8a3 3 0 003 3h10a3 3 0 003-3V9a3 3 0 00-3-3zm-1.25 7.75h-3v3h-1.5v-3h-3v-1.5h3v-3h1.5v3h3v1.5z"/></svg></div>Aid</button>
     </div>
     <div class="home-pill" aria-hidden="true"></div>
