@@ -25,12 +25,10 @@ import SwiftUI
 ///
 /// Speed (minus Face ID wall time): Face ID kicks first; Keychain prefetch +
 /// tapper.html string warm start in the same `onAppear` tick and again inside
-/// the unlock pipeline (single-flight). WKWebView warm starts **only after**
-/// `gate = .unlocked` — warming during Face ID (or before the Keychain await)
-/// stole MainActor while the LA sheet was dismissing and left a blank cream /
-/// white hang after auth. Unlock does **not** wait on AES `#d=` or a finished
-/// WebView — placeholder `#d=` + `__REDMED_PROFILE` paints RedMed; durable AES
-/// finishes in background; warm continues best-effort after first paint.
+/// the unlock pipeline (single-flight). Parked Keychain adopt unlocks on the
+/// LA main-queue turn via `MainActor.assumeIsolated` (no Task hop). Unlock dock
+/// is solid cream (no material blur). Haptic + WKWebView warm run at utility
+/// priority after `gate = .unlocked` so tabs paint first.
 struct OwnerAppLock<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
@@ -267,7 +265,7 @@ struct OwnerAppLock<Content: View>: View {
     }
 
     /// Status + Unlock after cancel / mismatch (hidden on first Face ID prompt).
-    /// Bottom sheet dock: cream frosted surface, continuous corners.
+    /// Bottom sheet dock: solid cream surface, continuous corners.
     private var lockRetryChrome: some View {
         VStack(spacing: 0) {
             Spacer(minLength: 0)
