@@ -185,6 +185,8 @@
     border-radius: var(--box);
     box-shadow: var(--shadow);
   }
+  /* Filled band / named card — lock line is empty-state only. */
+  .rm-lock.is-filled { display: none; }
   /* In-app RedMed tab embeds this shell — hide passerby tab chrome (native tabs own 911/Aid).
      Owner embed only: native boot sets `html.app-embed` before first paint; body class
      mirrors it. Preview/Scan (?src=app) must NOT get app-embed — full HTML tabs stay.
@@ -264,24 +266,36 @@
     overflow-wrap: anywhere;
     word-break: break-word;
   }
+  /* Named cards: slightly larger hero for EMT glance. */
+  .rm-name.has-profile {
+    font-size: clamp(22px, 5.4vw, 26px);
+    letter-spacing: -0.6px;
+  }
   /* Linked / Not linked + Updated share one row under the name. */
   .rm-meta {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 4px 10px;
-    margin: 4px 0 0;
+    gap: 2px 0;
+    margin: 6px 0 0;
   }
   .rm-status {
     font-size: clamp(11px, 2.6vw, 12px);
     font-weight: 700;
-    letter-spacing: 0.6px;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
     color: var(--muted);
     margin: 0;
   }
   .rm-status.linked {
     color: rgba(225,29,72,0.9);
+  }
+  .rm-updated:not([hidden])::before {
+    content: '·';
+    display: inline-block;
+    margin: 0 8px;
+    color: rgba(120,113,108,0.45);
+    font-weight: 700;
   }
   /* Owner RedMed embed only — status opens native NFC tab (Write / Scan). */
   html.app-embed .rm-status.rm-status-link,
@@ -339,7 +353,7 @@
     overflow: hidden;
     box-shadow: var(--shadow);
   }
-  .card.you-card { margin-top: 6px; }
+  .card.you-card { margin-top: 8px; }
   .rm-updated {
     margin: 0;
     font-size: 11px;
@@ -355,7 +369,7 @@
     justify-content: space-between;
     align-items: center;
     gap: 12px;
-    padding: 11px 16px;
+    padding: 12px 16px;
     border-bottom: 1px solid var(--divider);
   }
   .row:last-child { border-bottom: none; }
@@ -379,31 +393,23 @@
   /* Blood type / organ donor — EMT glance chips when filled. */
   .row.row-blood.has-blood .v,
   .row.row-donor.has-donor .v {
-    display: inline-block;
+    flex: 0 0 auto;
+    margin-left: auto;
     font-size: var(--fs-row);
     font-weight: 700;
     color: var(--accent);
     background: rgba(225,29,72,0.1);
     border-radius: var(--chip);
-    padding: 4px 10px;
+    padding: 5px 11px;
     text-align: center;
+    line-height: 1.2;
   }
-  .list-item {
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--divider);
-    font-size: var(--fs-row);
-    font-weight: 500;
-    color: var(--dark);
-    overflow-wrap: anywhere;
-    word-break: break-word;
-  }
-  .list-item:last-child { border-bottom: none; }
   /* Allergies / Meds / Conditions / Contacts — closed when empty (no empty white panels). */
   .list-grid {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin: 14px var(--page-pad-x) 0;
+    gap: 8px;
+    margin: 16px var(--page-pad-x) 0;
   }
   details.list-drop {
     background: var(--surface);
@@ -423,7 +429,8 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 13px 14px;
+    padding: 14px 14px;
+    min-height: 48px;
     min-width: 0;
     -webkit-tap-highlight-color: transparent;
     transition: opacity 0.14s ease;
@@ -441,36 +448,47 @@
     color: var(--accent);
     line-height: 1.2;
     text-transform: uppercase;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.35px;
   }
   .list-drop-count {
+    min-width: 22px;
+    height: 22px;
+    padding: 0 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     font-size: 11px;
     font-weight: 700;
     color: var(--accent);
-    background: rgba(225,29,72,0.1);
-    border-radius: var(--chip);
-    padding: 3px 7px;
+    background: rgba(225,29,72,0.12);
+    border-radius: 999px;
+    line-height: 1;
   }
   .list-drop-chevron {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     flex-shrink: 0;
     position: relative;
+    border-radius: 8px;
   }
   .list-drop-chevron::before {
     content: '';
     position: absolute;
-    top: 8px;
-    left: 7px;
+    top: 10px;
+    left: 9px;
     width: 8px;
     height: 8px;
     border-right: 2px solid var(--accent);
     border-bottom: 2px solid var(--accent);
     transform: rotate(-45deg);
+    transition: transform 0.16s ease, top 0.16s ease;
   }
   details.list-drop[open] .list-drop-chevron::before {
-    top: 6px;
+    top: 8px;
     transform: rotate(45deg);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .list-drop-chevron::before { transition: none; }
   }
   .list-drop-body {
     border-top: 1px solid var(--divider);
@@ -478,24 +496,34 @@
   .list-drop-body:empty::after {
     content: '—';
     display: block;
-    padding: 11px 16px;
+    padding: 12px 16px;
     font-size: 11px;
     font-weight: 500;
     color: rgba(120,113,108,0.4);
   }
+  .list-item {
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--divider);
+    font-size: var(--fs-row);
+    font-weight: 500;
+    color: var(--dark);
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .list-item:last-child { border-bottom: none; }
   .list-item.empty-slot {
     color: rgba(120,113,108,0.4);
   }
   .contact-block {
-    padding: 12px 16px;
+    padding: 13px 16px;
     border-bottom: 1px solid var(--divider);
   }
   .contact-block:last-child { border-bottom: none; }
   .contact-block .cn-row {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: 10px;
   }
   .contact-block .cn {
     font-size: var(--fs-row);
@@ -508,17 +536,22 @@
   }
   .contact-block a.cp {
     font-size: var(--fs-row);
-    font-weight: 600;
+    font-weight: 700;
     color: var(--accent);
     text-decoration: none;
     white-space: nowrap;
+    padding: 6px 10px;
+    margin: -6px -4px -6px 0;
+    border-radius: var(--chip);
+    background: rgba(225,29,72,0.08);
+    -webkit-tap-highlight-color: transparent;
   }
   .contact-block a.cp:active { opacity: 0.75; }
   .contact-block .cd {
-    font-size: var(--fs-row);
+    font-size: 12px;
     font-weight: 500;
     color: var(--muted);
-    margin-top: 2px;
+    margin-top: 4px;
   }
   #panel-medical {
     display: flex;
@@ -580,7 +613,7 @@
     box-shadow: var(--shadow-accent);
   }
   .btn-secondary {
-    background: rgba(255,255,255,0.88);
+    background: var(--surface);
     border: 1px solid var(--divider);
     color: var(--dark);
     box-shadow: var(--shadow);
@@ -590,7 +623,7 @@
     color: #fff;
     font-weight: 700;
     font-size: clamp(12px, 3vw, 15px);
-    padding: clamp(8px, 2vw, 12px);
+    padding: clamp(10px, 2.2vw, 12px);
   }
   .btn-call {
     background: linear-gradient(180deg, var(--accent-soft), var(--accent));
@@ -622,9 +655,9 @@
     background: var(--surface);
     border: none;
     border-radius: var(--box);
-    padding: 12px 14px;
+    padding: 14px 14px;
     text-align: center;
-    margin: 6px 0 8px;
+    margin: 8px 0 10px;
     box-shadow: var(--shadow);
   }
   .gps-pill {
@@ -668,8 +701,8 @@
     background: var(--surface);
     border: none;
     border-radius: var(--box);
-    padding: 10px 12px;
-    margin: 6px 0;
+    padding: 12px 12px;
+    margin: 8px 0;
     min-width: 0;
     box-shadow: var(--shadow);
   }
@@ -719,12 +752,12 @@
     color: #fff;
   }
   .seizure-btn.on {
-    background: rgba(255,255,255,0.9);
+    background: var(--surface);
     color: var(--dark);
     border: 1px solid var(--divider);
   }
   .seizure-btn-reset {
-    background: rgba(255,255,255,0.9);
+    background: var(--surface);
     color: var(--dark);
     border: 1px solid var(--divider);
   }
@@ -736,8 +769,8 @@
     background: var(--surface);
     border: none;
     border-radius: var(--box);
-    padding: 12px 14px;
-    margin: 6px 0;
+    padding: 13px 14px;
+    margin: 8px 0;
     box-shadow: var(--shadow);
   }
   .info-head {
@@ -849,6 +882,11 @@
     padding: 10px 0;
     min-width: 0;
     -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.14s ease;
+  }
+  details.aid summary:active { opacity: 0.85; }
+  @media (prefers-reduced-motion: reduce) {
+    details.aid summary { transition: none; }
   }
   details.aid summary .aid-summary-row {
     display: flex;
@@ -859,20 +897,21 @@
   }
   details.aid summary::-webkit-details-marker { display: none; }
   .aid-emoji {
-    width: clamp(40px, 10vw, 48px);
-    height: clamp(40px, 10vw, 48px);
+    width: 44px;
+    height: 44px;
     border-radius: var(--chip);
     background: rgba(225,29,72,0.1);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: clamp(20px, 5vw, 26px);
+    font-size: 22px;
     flex-shrink: 0;
+    transition: background 0.14s ease;
   }
   details.aid[open] .aid-emoji { background: var(--accent); }
   .aid-title {
     display: block;
-    font-size: clamp(15px, 3.6vw, 18px);
+    font-size: clamp(15px, 3.6vw, 16px);
     font-weight: 700;
     color: var(--accent);
     line-height: 1.2;
@@ -881,6 +920,31 @@
     /* Match owner PaneCard — wrap/scale to fit, no ellipsis clip. */
     overflow-wrap: anywhere;
     word-break: break-word;
+  }
+  .aid-chevron {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .aid-chevron::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 9px;
+    width: 8px;
+    height: 8px;
+    border-right: 2.5px solid var(--accent);
+    border-bottom: 2.5px solid var(--accent);
+    transform: rotate(-45deg);
+    transition: transform 0.16s ease, top 0.16s ease;
+  }
+  details.aid[open] .aid-chevron::before {
+    top: 8px;
+    transform: rotate(45deg);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .aid-emoji, .aid-chevron::before { transition: none; }
   }
   details.aid ol {
     margin: 0 0 12px;
@@ -1108,56 +1172,56 @@
       <div class="page-pad">
         <!-- Pane titles / order / emoji lockstep with AidPaneCatalog (owner AidView). -->
         <div class="aid-grid">
-          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🏥</span><span class="aid-title">Nearby Hospitals</span></span></summary>
+          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🏥</span><span class="aid-title">Nearby Hospitals</span><span class="aid-chevron" aria-hidden="true"></span></span></summary>
             <ol>
               <li>Call <span class="emg">112</span> — dispatch routes to the right trauma level</li>
               <li>Do not self-transport major trauma if EMS is available</li>
               <li>Note time of injury and mechanism for the team</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🚗</span><span class="aid-title">Crash &amp; Head</span></span></summary>
+          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🚗</span><span class="aid-title">Crash &amp; Head</span><span class="aid-chevron" aria-hidden="true"></span></span></summary>
             <ol>
               <li>Call <span class="emg">112</span> — give exact location and number of people</li>
               <li>Hazards on. Do not move them unless fire or traffic danger</li>
               <li>Keep head/neck still. Control bleeding with firm pressure</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🩸</span><span class="aid-title">Bleeding</span></span></summary>
+          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🩸</span><span class="aid-title">Bleeding</span><span class="aid-chevron" aria-hidden="true"></span></span></summary>
             <ol>
               <li>Press hard with both hands — do not lift to check</li>
               <li>Add cloth on top if soaked. Limb: tourniquet 2–3 in above</li>
               <li>Note the time. Stay on the line with <span class="emg">112</span></li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🫁</span><span class="aid-title">Not Breathing</span></span></summary>
+          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🫁</span><span class="aid-title">Not Breathing</span><span class="aid-chevron" aria-hidden="true"></span></span></summary>
             <ol>
               <li>Call <span class="emg">112</span> — or have someone else call while you start</li>
               <li>Hard compressions 100–120/min, 2 inches deep, full recoil</li>
               <li>Keep going until EMS arrives or normal breathing returns</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">❤️</span><span class="aid-title">Choking</span></span></summary>
+          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">❤️</span><span class="aid-title">Choking</span><span class="aid-chevron" aria-hidden="true"></span></span></summary>
             <ol>
               <li>If they can cough, encourage coughing — do not slap yet</li>
               <li>Cannot cough: 5 back blows, then 5 abdominal thrusts</li>
               <li>Alternate until clear — if unresponsive, start CPR</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">⚡</span><span class="aid-title">Shock</span></span></summary>
+          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">⚡</span><span class="aid-title">Shock</span><span class="aid-chevron" aria-hidden="true"></span></span></summary>
             <ol>
               <li>Call <span class="emg">112</span>. Lay flat — do not let them walk</li>
               <li>Elevate legs 12 inches unless head/neck/spine injury</li>
               <li>Keep warm. No food, water, or medication</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🌡️</span><span class="aid-title">Burns · Cold · Heat</span></span></summary>
+          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🌡️</span><span class="aid-title">Burns · Cold · Heat</span><span class="aid-chevron" aria-hidden="true"></span></span></summary>
             <ol>
               <li>Burn: cool running water 10–20 min — never ice or butter</li>
               <li>Cold: warm chest/neck/armpits/groin — no rubbing limbs</li>
               <li>Heat stroke: call <span class="emg">112</span> — cool neck/armpits/groin fast</li>
             </ol>
           </details>
-          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🧠</span><span class="aid-title">Seizure</span></span></summary>
+          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🧠</span><span class="aid-title">Seizure</span><span class="aid-chevron" aria-hidden="true"></span></span></summary>
             <ol>
               <li>Time it. Clear sharp objects. Do not restrain</li>
               <li>Nothing in the mouth. Cushion the head</li>
@@ -1459,7 +1523,7 @@
       if (!c || typeof c !== 'object') return null;
       return {
         name: asString(c.name, 'Contact'),
-        rel: asString(c.rel),
+        rel: asString(c.rel) || asString(c.relationship),
         phone: sanitizePhone(c.phone),
         detail: asString(c.detail)
       };
@@ -1559,6 +1623,32 @@
       el.textContent = value;
       el.classList.remove('empty');
     }
+  }
+
+  /** ISO YYYY-MM-DD → "Mar 14, 1990" for EMT glance; leave other strings alone. */
+  function formatDob(raw) {
+    var s = (raw || '').trim();
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    if (!m) return s;
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var mi = parseInt(m[2], 10) - 1;
+    var day = parseInt(m[3], 10);
+    if (mi < 0 || mi > 11 || day < 1 || day > 31) return s;
+    return months[mi] + ' ' + day + ', ' + m[1];
+  }
+
+  /** Light US-ish tel display: +15551234567 → +1 555 123 4567. */
+  function formatPhoneDisplay(raw, digits) {
+    var shown = (raw || '').trim();
+    if (!shown) return '';
+    var d = String(digits || '').replace(/\D/g, '');
+    if (d.length === 11 && d.charAt(0) === '1') {
+      return '+1 ' + d.slice(1, 4) + ' ' + d.slice(4, 7) + ' ' + d.slice(7);
+    }
+    if (d.length === 10) {
+      return d.slice(0, 3) + ' ' + d.slice(3, 6) + ' ' + d.slice(6);
+    }
+    return shown;
   }
 
   function setListDropOpen(dropId, hasItems) {
@@ -1668,7 +1758,11 @@
     var nameEl = document.getElementById('name');
     var logo = document.getElementById('rmLogo');
     var statusEl = document.getElementById('statusLine');
+    var lockEl = document.querySelector('.rm-lock');
     nameEl.textContent = displayName;
+    nameEl.classList.toggle('has-profile', !!rawName);
+    // Empty-state lock line only — hide once a named / band card paints.
+    if (lockEl) lockEl.classList.toggle('is-filled', !!(rawName || fromBand));
     // Empty: grey logo on the left. Filled: logo drops; imported name takes the row.
     if (logo) {
       if (rawName) logo.classList.add('has-name');
@@ -1697,7 +1791,7 @@
       }
     }
     setRow('rowName', p.name);
-    setRow('rowDob', p.dob);
+    setRow('rowDob', formatDob(p.dob));
     setRow('rowBlood', p.blood);
     setRow('rowDonor', p.donor ? 'Yes' : '');
     // Hero already shows the name — drop the duplicate YOU row when filled.
@@ -1718,7 +1812,7 @@
       var upd = (p.updated || '').trim();
       if (upd) {
         updatedEl.hidden = false;
-        updatedEl.textContent = 'Updated ' + upd;
+        updatedEl.textContent = 'Updated ' + formatDob(upd);
       } else {
         updatedEl.hidden = true;
         updatedEl.textContent = '';
@@ -1763,7 +1857,7 @@
           var a = document.createElement('a');
           a.className = 'cp';
           a.href = 'tel:' + phone;
-          a.textContent = c.phone || phone;
+          a.textContent = formatPhoneDisplay(c.phone || phone, phone);
           nameRow.appendChild(a);
         }
         row.appendChild(nameRow);
