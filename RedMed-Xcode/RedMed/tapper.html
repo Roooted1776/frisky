@@ -67,7 +67,7 @@
     /* Fluid shell — SE → Pro Max → iPad / landscape. */
     --page-max: 480px;
     --page-pad-x: clamp(16px, 4.2vw, 28px);
-    --tabbar-h: 60px;
+    --tabbar-h: 56px; /* matches ContentView content inset */
     --fs-name: 22px; /* hero under logo — RED-9 / Main.dc */
     --fs-row: 14px; /* YOU rows + lists — matches Theme CardRow */
     --fs-title: clamp(15px, 3.6vw, 17px);
@@ -79,10 +79,10 @@
     --safe-l: env(safe-area-inset-left, 0px);
   }
   @media (min-width: 600px) {
-    :root { --page-max: 560px; --tabbar-h: 62px; }
+    :root { --page-max: 560px; --tabbar-h: 56px; }
   }
   @media (min-width: 768px) {
-    :root { --page-max: 680px; --tabbar-h: 64px; --box: 10px; }
+    :root { --page-max: 680px; --tabbar-h: 56px; --box: 10px; }
   }
   @media (min-width: 1024px) {
     :root { --page-max: 760px; }
@@ -389,7 +389,7 @@
     text-align: center;
   }
   .list-item {
-    padding: 12px 16px;
+    padding: 11px 16px;
     border-bottom: 1px solid var(--divider);
     font-size: var(--fs-row);
     font-weight: 500;
@@ -398,21 +398,31 @@
     word-break: break-word;
   }
   .list-item:last-child { border-bottom: none; }
-  /* Allergies / Meds / Conditions / Contacts — closed when empty (no empty white panels). */
+  /* Allergies / Meds / Conditions / Contacts — one card, YOU-row heights/structure. */
   .list-grid {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 0;
     margin: 14px var(--page-pad-x) 0;
+    background: var(--surface);
+    border-radius: var(--box);
+    overflow: hidden;
+    box-shadow: var(--shadow);
   }
   details.list-drop {
-    background: var(--surface);
+    background: transparent;
     border: none;
-    border-radius: var(--box);
+    border-radius: 0;
     width: 100%;
     min-width: 0;
     overflow: hidden;
-    box-shadow: var(--shadow);
+    box-shadow: none;
+  }
+  details.list-drop[hidden] { display: none; }
+  .list-grid[hidden] { display: none; }
+  /* Dividers only between visible sections (JS marks .is-last). */
+  details.list-drop:not(.is-last) {
+    border-bottom: 1px solid var(--divider);
   }
   details.list-drop[open] {
     background: rgba(225,29,72,0.03);
@@ -422,8 +432,9 @@
     list-style: none;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 13px 14px;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 16px; /* same as .row / CardRow */
     min-width: 0;
     -webkit-tap-highlight-color: transparent;
     transition: opacity 0.14s ease;
@@ -436,41 +447,43 @@
   .list-drop-title {
     flex: 1;
     min-width: 0;
-    font-size: var(--fs-title);
-    font-weight: 700;
-    color: var(--accent);
+    font-size: var(--fs-row); /* match .row .k */
+    font-weight: 500;
+    color: var(--muted);
     line-height: 1.2;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
+    text-transform: none;
+    letter-spacing: 0;
   }
   .list-drop-count {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--accent);
-    background: rgba(225,29,72,0.1);
-    border-radius: var(--chip);
-    padding: 3px 7px;
+    font-size: var(--fs-row);
+    font-weight: 600;
+    color: var(--dark); /* match .row .v */
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
   }
   .list-drop-chevron {
-    width: 24px;
-    height: 24px;
+    width: 18px;
+    height: 18px;
     flex-shrink: 0;
     position: relative;
+    opacity: 0.85;
   }
   .list-drop-chevron::before {
     content: '';
     position: absolute;
-    top: 8px;
-    left: 7px;
-    width: 8px;
-    height: 8px;
-    border-right: 2px solid var(--accent);
-    border-bottom: 2px solid var(--accent);
+    top: 4px;
+    left: 4px;
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
     transform: rotate(-45deg);
   }
   details.list-drop[open] .list-drop-chevron::before {
     top: 6px;
     transform: rotate(45deg);
+    border-color: var(--accent);
   }
   .list-drop-body {
     border-top: 1px solid var(--divider);
@@ -487,7 +500,7 @@
     color: rgba(120,113,108,0.4);
   }
   .contact-block {
-    padding: 12px 16px;
+    padding: 11px 16px;
     border-bottom: 1px solid var(--divider);
   }
   .contact-block:last-child { border-bottom: none; }
@@ -534,6 +547,7 @@
     flex-direction: column;
     min-height: 100%;
     box-sizing: border-box;
+    padding-top: 6px; /* AidView wordmarkTop */
     padding-bottom: 8px;
   }
   #panel-aid .foot-note {
@@ -541,9 +555,23 @@
     padding-top: 28px;
   }
 
-  /* —— 911 / Find Help —— */
+  /* —— 911 / Find Help —— lockstep EmergencyView (top 16, stack gap 10) —— */
   .page-pad { padding: 4px var(--page-pad-x) 0; }
-  #panel-911 .page-pad { padding-top: 14px; }
+  #panel-911 { padding-top: 0; padding-bottom: 24px; }
+  #panel-911 .page-pad {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 16px;
+  }
+  #panel-911 .page-pad > .btn,
+  #panel-911 .page-pad > .gps-card,
+  #panel-911 .page-pad > .gps-actions,
+  #panel-911 .page-pad > .seizure-strip,
+  #panel-911 .page-pad > .info,
+  #panel-911 .page-pad > .no-cell {
+    margin: 0;
+  }
   .btn {
     display: block;
     width: 100%;
@@ -589,14 +617,14 @@
     background: var(--dark);
     color: #fff;
     font-weight: 700;
-    font-size: clamp(12px, 3vw, 15px);
-    padding: clamp(8px, 2vw, 12px);
+    font-size: 12px; /* Copy coordinates */
+    padding: 10px;
   }
   .btn-call {
     background: linear-gradient(180deg, var(--accent-soft), var(--accent));
     color: #fff;
     font-weight: 700;
-    font-size: var(--fs-btn);
+    font-size: 18px; /* EmergencyView Call */
     padding: 17px;
     box-shadow: var(--shadow-accent);
   }
@@ -604,8 +632,8 @@
     background: var(--dark);
     color: #fff;
     font-weight: 700;
-    font-size: clamp(13px, 3.2vw, 16px);
-    padding: clamp(10px, 2.4vw, 14px);
+    font-size: 13px; /* FindHelpSOSButton */
+    padding: 10px;
   }
   .btn-sos.armed {
     background: var(--accent);
@@ -622,9 +650,8 @@
     background: var(--surface);
     border: none;
     border-radius: var(--box);
-    padding: 12px 14px;
+    padding: 12px;
     text-align: center;
-    margin: 6px 0 8px;
     box-shadow: var(--shadow);
   }
   .gps-pill {
@@ -640,7 +667,7 @@
   }
   .coords {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: clamp(14px, 3.8vw, 18px);
+    font-size: 15px; /* GPSCard */
     font-weight: 700;
     color: var(--dark);
     overflow-wrap: anywhere;
@@ -655,8 +682,7 @@
   .gps-actions {
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    margin: 0 0 6px;
+    gap: 8px; /* FindHelpLocationBlock VStack spacing */
   }
   .gps-actions .btn {
     margin: 0;
@@ -669,7 +695,6 @@
     border: none;
     border-radius: var(--box);
     padding: 10px 12px;
-    margin: 6px 0;
     min-width: 0;
     box-shadow: var(--shadow);
   }
@@ -681,7 +706,7 @@
   }
   .seizure-time {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: clamp(16px, 4vw, 20px);
+    font-size: 17px;
     font-weight: 700;
     color: var(--dark);
     min-width: 56px;
@@ -691,7 +716,7 @@
   }
   .seizure-hint {
     flex: 1;
-    font-size: clamp(10px, 2.6vw, 13px);
+    font-size: 10px;
     font-weight: 600;
     color: var(--muted);
     min-width: 0;
@@ -737,8 +762,39 @@
     border: none;
     border-radius: var(--box);
     padding: 12px 14px;
-    margin: 6px 0;
     box-shadow: var(--shadow);
+  }
+  /* NoCellSignalCard — compact, not Roadside InfoCard chrome */
+  .no-cell {
+    background: var(--surface);
+    border: none;
+    border-radius: var(--box);
+    padding: 10px 14px;
+    box-shadow: var(--shadow);
+  }
+  .no-cell-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .no-cell-head .no-cell-title {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .no-cell-icon {
+    font-size: 12px;
+    line-height: 1;
+    color: var(--accent);
+  }
+  .no-cell-body {
+    margin: 0;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    line-height: 1.35;
   }
   .info-head {
     display: flex;
@@ -759,7 +815,7 @@
   }
   .info h2 {
     margin: 0;
-    font-size: clamp(12px, 3vw, 15px);
+    font-size: 13px; /* InfoCard title */
     font-weight: 700;
     color: var(--dark);
     min-width: 0;
@@ -775,12 +831,12 @@
   .info ol, .info ul {
     margin: 0;
     padding-left: 16px;
-    font-size: clamp(11px, 2.8vw, 14px);
+    font-size: 12px; /* InfoCard body */
     font-weight: 600;
     line-height: 1.4;
     color: var(--dark);
   }
-  .info ol li + li, .info ul li + li { margin-top: 3px; }
+  .info ol li + li, .info ul li + li { margin-top: 6px; }
   .foot-note {
     font-size: clamp(9px, 2.4vw, 12px);
     font-weight: 500;
@@ -818,23 +874,23 @@
     font-weight: 700;
   }
 
-  /* Aid / 911 — no page header wordmark/title (content-first like owner). */
-  /* Full-width accordion — same life-saving pattern as owner AidView
-     (big targets, no 2-col / 3-col reflow when a pane opens). */
+  /* Aid — lockstep owner AidView / PaneCard heights + topic-row structure. */
+  #panel-aid { padding-top: 0; padding-bottom: 24px; }
   .aid-grid {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-top: 8px;
+    margin-top: 0;
   }
   details.aid {
     background: var(--surface);
     border: none;
     border-radius: var(--box);
-    padding: 0 12px;
+    padding: 0;
     width: 100%;
     min-width: 0;
     box-shadow: var(--shadow);
+    overflow: hidden;
   }
   details.aid[open] {
     background: rgba(225,29,72,0.03);
@@ -842,11 +898,8 @@
   details.aid summary {
     cursor: pointer;
     list-style: none;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 6px;
-    padding: 10px 0;
+    display: block;
+    padding: 10px 12px; /* PaneCard H12 / V10 */
     min-width: 0;
     -webkit-tap-highlight-color: transparent;
   }
@@ -859,37 +912,193 @@
   }
   details.aid summary::-webkit-details-marker { display: none; }
   .aid-emoji {
-    width: clamp(40px, 10vw, 48px);
-    height: clamp(40px, 10vw, 48px);
+    width: 44px;
+    height: 44px;
     border-radius: var(--chip);
     background: rgba(225,29,72,0.1);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: clamp(20px, 5vw, 26px);
+    font-size: 22px;
     flex-shrink: 0;
   }
   details.aid[open] .aid-emoji { background: var(--accent); }
   .aid-title {
     display: block;
-    font-size: clamp(15px, 3.6vw, 18px);
+    font-size: 16px;
     font-weight: 700;
     color: var(--accent);
     line-height: 1.2;
     flex: 1;
     min-width: 0;
-    /* Match owner PaneCard — wrap/scale to fit, no ellipsis clip. */
     overflow-wrap: anywhere;
     word-break: break-word;
   }
-  details.aid ol {
-    margin: 0 0 12px;
-    padding-left: 18px;
-    font-size: var(--fs-body);
-    font-weight: 500;
-    line-height: 1.45;
+  .aid-chevron {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    position: relative;
   }
-  details.aid ol li + li { margin-top: 8px; }
+  .aid-chevron::before {
+    content: '';
+    position: absolute;
+    top: 9px;
+    left: 9px;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--accent);
+    border-bottom: 2px solid var(--accent);
+    transform: rotate(-45deg);
+    transition: transform 0.14s ease, top 0.14s ease;
+  }
+  details.aid[open] .aid-chevron::before {
+    top: 11px;
+    transform: rotate(45deg);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .aid-chevron::before { transition: none; }
+  }
+  /* Topic rows — same as owner PaneCard open body */
+  .aid-topics {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0 10px 12px;
+  }
+  .aid-topic {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin: 0;
+    padding: 14px;
+    border: none;
+    border-radius: var(--box);
+    background: var(--surface);
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .aid-topic:active { opacity: 0.92; transform: scale(0.98); }
+  .aid-topic-label {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .aid-topic-chevron {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    position: relative;
+    opacity: 0.55;
+  }
+  .aid-topic-chevron::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 5px;
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid var(--accent);
+    border-bottom: 2px solid var(--accent);
+    transform: rotate(-45deg);
+  }
+  /* Topic detail overlay — TopicDetailView: Back + Recognize / What to do */
+  .aid-topic-sheet {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background:
+      radial-gradient(120% 60% at 50% -10%, var(--wash) 0%, transparent 58%),
+      var(--bg);
+    flex-direction: column;
+    padding: var(--safe-t) var(--safe-r) var(--safe-b) var(--safe-l);
+  }
+  .aid-topic-sheet.open {
+    display: flex !important; /* beat [hidden] while open */
+  }
+  .aid-topic-sheet[hidden] {
+    display: none !important;
+  }
+  .aid-topic-sheet-bar {
+    display: flex;
+    align-items: center;
+    padding: 2px var(--page-pad-x) 8px;
+    flex-shrink: 0;
+  }
+  .aid-topic-back {
+    border: none;
+    background: transparent;
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 18px;
+    font-weight: 700;
+    padding: 8px 0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .aid-topic-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 var(--page-pad-x) 32px;
+  }
+  .aid-sec-label {
+    margin: 4px 0 6px;
+    padding: 0 4px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .aid-sec-label.spaced { margin-top: 0; }
+  .aid-sec-card {
+    background: var(--surface);
+    border-radius: var(--box);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 22px;
+  }
+  .aid-sec-card.care { margin-bottom: 24px; }
+  .aid-sec-row {
+    padding: 13px 16px;
+    font-size: 15px;
+    color: var(--accent);
+    line-height: 1.35;
+    border-bottom: 1px solid var(--divider);
+  }
+  .aid-sec-row:last-child { border-bottom: none; }
+  .aid-sec-row.care-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .aid-sec-row .care-mark {
+    flex-shrink: 0;
+    margin-top: 4px;
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 7px solid var(--accent);
+  }
+  .aid-sec-row .care-text {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  body.aid-topic-open .tabbar { visibility: hidden; pointer-events: none; }
+  body.aid-topic-open .app { visibility: hidden; }
 
   /* —— Tab bar (matches CustomTabBar cream; compact, 44px hit targets) —— */
   .tabbar {
@@ -1050,8 +1259,8 @@
         </div>
         <div class="gps-actions">
           <button class="btn btn-ink" type="button" id="copyCoordsBtn">Copy coordinates</button>
-          <button class="btn btn-sos" type="button" id="sosBtn">SOS · Locate me</button>
         </div>
+        <button class="btn btn-sos" type="button" id="sosBtn">SOS · Locate me</button>
 
         <div class="seizure-strip" id="seizureStrip">
           <div>
@@ -1065,12 +1274,12 @@
           </div>
         </div>
 
-        <div class="info">
-          <div class="info-head">
-            <div class="info-icon" aria-hidden="true">📡</div>
-            <h2>No cell signal?</h2>
+        <div class="no-cell">
+          <div class="no-cell-head">
+            <span class="no-cell-icon" aria-hidden="true">📡</span>
+            <h2 class="no-cell-title">No cell signal?</h2>
           </div>
-          <p class="info-lead">
+          <p class="no-cell-body">
             T-Mobile (US) + Starlink Direct-to-Cell partners — plan/region required; not a coverage promise.
           </p>
         </div>
@@ -1106,63 +1315,55 @@
     <!-- Aid — same content-first chrome as owner AidView (no page header). -->
     <div class="panel" id="panel-aid" data-panel="aid">
       <div class="page-pad">
-        <!-- Pane titles / order / emoji lockstep with AidPaneCatalog (owner AidView). -->
+        <!-- Pane + topic rows lockstep AidPaneCatalog / PaneCard (owner AidView). -->
         <div class="aid-grid">
-          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🏥</span><span class="aid-title">Nearby Hospitals</span></span></summary>
-            <ol>
-              <li>Call <span class="emg">112</span> — dispatch routes to the right trauma level</li>
-              <li>Do not self-transport major trauma if EMS is available</li>
-              <li>Note time of injury and mechanism for the team</li>
-            </ol>
+          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🏥</span><span class="aid-title">Nearby Hospitals</span><span class="aid-chevron" aria-hidden="true"></span></span></summary>
+            <div class="aid-topics">
+            <button class="aid-topic" type="button" data-topic="trauma-hospitals"><span class="aid-topic-label">Find Nearby Hospitals</span><span class="aid-topic-chevron" aria-hidden="true"></span></button>
+            </div>
           </details>
-          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🚗</span><span class="aid-title">Crash &amp; Head</span></span></summary>
-            <ol>
-              <li>Call <span class="emg">112</span> — give exact location and number of people</li>
-              <li>Hazards on. Do not move them unless fire or traffic danger</li>
-              <li>Keep head/neck still. Control bleeding with firm pressure</li>
-            </ol>
+          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🚗</span><span class="aid-title">Crash &amp; Head</span><span class="aid-chevron" aria-hidden="true"></span></span></summary>
+            <div class="aid-topics">
+            <button class="aid-topic" type="button" data-topic="car-crash"><span class="aid-topic-label">Car Crash</span><span class="aid-topic-chevron" aria-hidden="true"></span></button>
+            <button class="aid-topic" type="button" data-topic="head-pupils"><span class="aid-topic-label">Head &amp; Pupils</span><span class="aid-topic-chevron" aria-hidden="true"></span></button>
+            <button class="aid-topic" type="button" data-topic="spinal"><span class="aid-topic-label">Spinal</span><span class="aid-topic-chevron" aria-hidden="true"></span></button>
+            </div>
           </details>
-          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🩸</span><span class="aid-title">Bleeding</span></span></summary>
-            <ol>
-              <li>Press hard with both hands — do not lift to check</li>
-              <li>Add cloth on top if soaked. Limb: tourniquet 2–3 in above</li>
-              <li>Note the time. Stay on the line with <span class="emg">112</span></li>
-            </ol>
+          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🩸</span><span class="aid-title">Bleeding</span><span class="aid-chevron" aria-hidden="true"></span></span></summary>
+            <div class="aid-topics">
+            <button class="aid-topic" type="button" data-topic="find-bleeding"><span class="aid-topic-label">Find Bleeding</span><span class="aid-topic-chevron" aria-hidden="true"></span></button>
+            <button class="aid-topic" type="button" data-topic="bad-bleeding"><span class="aid-topic-label">Bad Bleeding</span><span class="aid-topic-chevron" aria-hidden="true"></span></button>
+            <button class="aid-topic" type="button" data-topic="belt-tourniquet"><span class="aid-topic-label">Belt Tourniquet</span><span class="aid-topic-chevron" aria-hidden="true"></span></button>
+            <button class="aid-topic" type="button" data-topic="gunshot-stab"><span class="aid-topic-label">Gunshot / Stab</span><span class="aid-topic-chevron" aria-hidden="true"></span></button>
+            </div>
           </details>
-          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🫁</span><span class="aid-title">Not Breathing</span></span></summary>
-            <ol>
-              <li>Call <span class="emg">112</span> — or have someone else call while you start</li>
-              <li>Hard compressions 100–120/min, 2 inches deep, full recoil</li>
-              <li>Keep going until EMS arrives or normal breathing returns</li>
-            </ol>
+          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🫁</span><span class="aid-title">Not Breathing</span><span class="aid-chevron" aria-hidden="true"></span></span></summary>
+            <div class="aid-topics">
+            <button class="aid-topic" type="button" data-topic="cpr"><span class="aid-topic-label">CPR</span><span class="aid-topic-chevron" aria-hidden="true"></span></button>
+            </div>
           </details>
-          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">❤️</span><span class="aid-title">Choking</span></span></summary>
-            <ol>
-              <li>If they can cough, encourage coughing — do not slap yet</li>
-              <li>Cannot cough: 5 back blows, then 5 abdominal thrusts</li>
-              <li>Alternate until clear — if unresponsive, start CPR</li>
-            </ol>
+          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">❤️</span><span class="aid-title">Choking</span><span class="aid-chevron" aria-hidden="true"></span></span></summary>
+            <div class="aid-topics">
+            <button class="aid-topic" type="button" data-topic="choking"><span class="aid-topic-label">Choking</span><span class="aid-topic-chevron" aria-hidden="true"></span></button>
+            </div>
           </details>
-          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">⚡</span><span class="aid-title">Shock</span></span></summary>
-            <ol>
-              <li>Call <span class="emg">112</span>. Lay flat — do not let them walk</li>
-              <li>Elevate legs 12 inches unless head/neck/spine injury</li>
-              <li>Keep warm. No food, water, or medication</li>
-            </ol>
+          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">⚡</span><span class="aid-title">Shock</span><span class="aid-chevron" aria-hidden="true"></span></span></summary>
+            <div class="aid-topics">
+            <button class="aid-topic" type="button" data-topic="shock"><span class="aid-topic-label">Shock</span><span class="aid-topic-chevron" aria-hidden="true"></span></button>
+            </div>
           </details>
-          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🌡️</span><span class="aid-title">Burns · Cold · Heat</span></span></summary>
-            <ol>
-              <li>Burn: cool running water 10–20 min — never ice or butter</li>
-              <li>Cold: warm chest/neck/armpits/groin — no rubbing limbs</li>
-              <li>Heat stroke: call <span class="emg">112</span> — cool neck/armpits/groin fast</li>
-            </ol>
+          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🌡️</span><span class="aid-title">Burns · Cold · Heat</span><span class="aid-chevron" aria-hidden="true"></span></span></summary>
+            <div class="aid-topics">
+            <button class="aid-topic" type="button" data-topic="burn-care"><span class="aid-topic-label">Burn Care</span><span class="aid-topic-chevron" aria-hidden="true"></span></button>
+            <button class="aid-topic" type="button" data-topic="electrical-chemical-burns"><span class="aid-topic-label">Electrical &amp; Chemical</span><span class="aid-topic-chevron" aria-hidden="true"></span></button>
+            <button class="aid-topic" type="button" data-topic="cold-hypothermia"><span class="aid-topic-label">Cold (Hypothermia)</span><span class="aid-topic-chevron" aria-hidden="true"></span></button>
+            <button class="aid-topic" type="button" data-topic="heat-stroke"><span class="aid-topic-label">Heat (Exhaustion &amp; Stroke)</span><span class="aid-topic-chevron" aria-hidden="true"></span></button>
+            </div>
           </details>
-          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🧠</span><span class="aid-title">Seizure</span></span></summary>
-            <ol>
-              <li>Time it. Clear sharp objects. Do not restrain</li>
-              <li>Nothing in the mouth. Cushion the head</li>
-              <li>Call <span class="emg">112</span> if first seizure, over 5 minutes, injury, or in water</li>
-            </ol>
+          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🧠</span><span class="aid-title">Seizure</span><span class="aid-chevron" aria-hidden="true"></span></span></summary>
+            <div class="aid-topics">
+            <button class="aid-topic" type="button" data-topic="seizure"><span class="aid-topic-label">Seizure</span><span class="aid-topic-chevron" aria-hidden="true"></span></button>
+            </div>
           </details>
         </div>
 
@@ -1171,6 +1372,13 @@
         <p class="foot-note">Local only once tap — everyone and everything. No servers · no online. No Bluetooth · passive HF NFC. No PII or PHI leaves this device through RedMed.</p>
       </div>
     </div>
+  </div>
+
+  <div class="aid-topic-sheet" id="aidTopicSheet" hidden aria-hidden="true">
+    <div class="aid-topic-sheet-bar">
+      <button type="button" class="aid-topic-back" id="aidTopicBack">Back</button>
+    </div>
+    <div class="aid-topic-scroll" id="aidTopicScroll"></div>
   </div>
 
   <nav class="tabbar" aria-label="RedMed">
@@ -1289,6 +1497,148 @@
         if (d !== t) d.open = false;
       });
     }, true);
+  })();
+
+  // AidTopicCatalog lockstep (ProfileData.swift) — Recognize / What to do sheets.
+  var AID_TOPICS = {
+    'car-crash': {
+      title: 'Car Crash',
+      symptoms: ['Impact injury — any speed', 'Unresponsive or confused occupant', 'Visible bleeding or deformity'],
+      care: ['Call __EMG__ — give exact location and number of people', 'Turn on hazards. Stay at the scene', 'Do NOT move them unless there is fire, rising water, or oncoming traffic', 'If you must move: slide them as one unit — never twist the neck', 'Control bleeding: press hard with cloth, do not lift to check', 'Keep them warm and still until EMS arrives']
+    },
+    'head-pupils': {
+      title: 'Head & Pupils',
+      symptoms: ['Blow to the head', 'Unequal, very large (\'blown\'), or non-reactive pupils', 'Confusion, vomiting, or worsening over minutes'],
+      care: ['Call __EMG__ immediately', 'Shine a light — pupils should shrink equally; blown or unequal = serious', 'Keep head, neck, and spine completely still — do not bend or twist', 'Do NOT remove a motorcycle helmet unless the airway is blocked and you are trained', 'Watch for deterioration: worsening confusion, repeated vomiting, one pupil larger', 'If unconscious but breathing, recovery position only if no spinal injury suspected']
+    },
+    'spinal': {
+      title: 'Spinal',
+      symptoms: ['Fall, crash, or diving injury', 'Neck or back pain after impact', 'Numbness, tingling, or can\'t move arms/legs'],
+      care: ['Call __EMG__', 'Do NOT move them — keep head and neck still', 'Hold the head in the position you found it — do not bend or twist', 'Move only if fire, rising water, or oncoming traffic — then slide as one unit', 'Keep them warm and still until EMS arrives', 'Watch breathing — be ready for CPR without turning the neck']
+    },
+    'find-bleeding': {
+      title: 'Find Bleeding',
+      symptoms: ['Trauma with clothing on — bleeding may be hidden', 'Belly pain, rigidity, or bruising after impact', 'Rapidly dropping consciousness'],
+      care: ['Call __EMG__ first', 'Cut or pull clothing away — expose the entire body to find all wounds', 'Press hard on every bleeding source you find', 'Check the abdomen in all 4 quadrants — tell __EMG__ exactly where it hurts or is hard', 'Internal bleeding cannot be stopped in the field — keep them still and warm']
+    },
+    'bad-bleeding': {
+      title: 'Bad Bleeding',
+      symptoms: ['Blood spurting in pulses (arterial)', 'Soaks through cloth in under 1 minute', 'Large pool of blood forming'],
+      care: ['Call __EMG__ — uncontrolled bleeding kills in minutes', 'Press with both hands as hard as you can — your full body weight if needed', 'Do NOT lift to check — it restarts clotting. Add more cloth on top', 'For limbs: tourniquet 2–3 inches above wound. Note the time', 'Keep pressure until EMS takes over — do not stop']
+    },
+    'belt-tourniquet': {
+      title: 'Belt Tourniquet',
+      symptoms: ['Severe limb bleeding that won\'t stop with pressure', 'Amputation or near-amputation', 'No commercial tourniquet available'],
+      care: ['Thread belt 2–3 inches above wound — not on the joint', 'Pull as tight as humanly possible and buckle or tie off', 'Twist a stick through the loop and keep twisting until bleeding stops', 'Secure the stick so it can\'t unwind', 'Write the time on skin near the tourniquet', 'Do NOT remove it — only EMS does that']
+    },
+    'gunshot-stab': {
+      title: 'Gunshot / Stab',
+      symptoms: ['Penetrating wound to chest, abdomen, neck, or limb', 'Sucking chest wound (air noise)', 'Rapidly worsening shock'],
+      care: ['Call __EMG__ first — scene must be safe before you approach', 'Chest wound: seal it on 3 sides with plastic or foil to stop air entry', 'Abdomen: do NOT push organs back in. Cover with clean wet cloth', 'Limb: pack wound tightly with cloth, apply direct pressure or tourniquet', 'Keep victim still and warm. Note time of injury', 'Stay on the line with __EMG__ — follow their guidance']
+    },
+    'cpr': {
+      title: 'CPR',
+      symptoms: ['Unresponsive — no reaction to shouting or shoulder tap', 'No normal breathing (gasping is not breathing)', 'No pulse found at neck or wrist'],
+      care: ['Call __EMG__ immediately — or have someone else call while you start', 'Place heel of hand center of chest, other hand on top', 'Push hard and fast: 2 inches deep, 100–120 per minute', 'Allow full chest recoil between compressions — don\'t lean', 'If trained: give 2 rescue breaths every 30 compressions', 'Use AED as soon as available — turn on and follow voice prompts', 'Keep going until EMS arrives or person starts breathing normally']
+    },
+    'choking': {
+      title: 'Choking',
+      symptoms: ['Cannot speak, cry, or make a strong cough', 'Hands at throat (universal choking sign)', 'Face turning red then blue'],
+      care: ['Ask \'Are you choking?\' — if they can cough, encourage coughing', 'If they cannot cough or speak: stand behind them, lean them forward', 'Give 5 firm back blows between shoulder blades with heel of hand', 'If no result: 5 abdominal thrusts (Heimlich) — fist above navel, pull sharply inward and upward', 'Alternate back blows and abdominal thrusts until object clears or they lose consciousness', 'If unconscious: lower to ground, call __EMG__, begin CPR']
+    },
+    'shock': {
+      title: 'Shock',
+      symptoms: ['Pale, cold, clammy skin', 'Rapid weak pulse', 'Confusion, anxiety, or loss of consciousness'],
+      care: ['Call __EMG__ immediately', 'Lay them flat — do NOT let them sit up or walk', 'Elevate legs 12 inches unless head, neck, or spine injury is suspected', 'Keep them warm — cover with a blanket or jacket', 'Do NOT give food, water, or medication', 'Loosen tight clothing at neck and chest', 'Stay with them and monitor breathing until EMS arrives']
+    },
+    'cold-hypothermia': {
+      title: 'Cold (Hypothermia)',
+      symptoms: ['Shivering, confusion, slurred speech', 'Skin feels very cold and may look blue or pale', 'Stumbling, loss of coordination'],
+      care: ['Call __EMG__ for severe cases', 'Move them to a warm, sheltered location', 'Remove wet clothing gently — cut if needed', 'Warm the core first: chest, neck, armpits, groin — not the limbs', 'Use blankets, body heat, or warm (not hot) packs wrapped in cloth', 'Do NOT rub or massage limbs — it can cause cardiac arrest', 'Give warm drinks only if fully conscious and able to swallow']
+    },
+    'heat-stroke': {
+      title: 'Heat Exhaustion & Stroke',
+      symptoms: ['Heavy sweating, weakness, cold/pale/clammy skin (exhaustion)', 'Hot, red, dry or damp skin, rapid pulse, confusion (stroke)', 'Nausea, fainting, body temp above 103°F'],
+      care: ['Heat stroke: call __EMG__ immediately — it is life-threatening', 'Move to cool or shaded area', 'Cool rapidly: remove extra clothing, apply ice packs to neck/armpits/groin', 'If conscious: sip cool water slowly', 'Do NOT give fluids to an unconscious person', 'Fan them while applying cool water to skin', 'Lay them down and elevate legs if no spinal injury']
+    },
+    'burn-care': {
+      title: 'Burn Care',
+      symptoms: ['Redness and pain (1st degree)', 'Blistering with intense pain (2nd degree)', 'White, leathery, or charred skin with little pain (3rd degree — nerve damage)'],
+      care: ['Call __EMG__ for burns larger than the palm, on the face, hands, feet, or genitals, or any 3rd-degree burn', 'Cool the burn under cool running water for 10–20 minutes — never use ice', 'Remove rings, watches, and tight clothing near the burn before swelling starts', 'Cover loosely with a clean, non-stick dressing or cloth', 'Do NOT pop blisters or apply butter, oil, or ointment', 'Watch for shock: pale, cold, rapid breathing']
+    },
+    'electrical-chemical-burns': {
+      title: 'Electrical & Chemical Burns',
+      symptoms: ['Visible entry and exit wound (electrical) — damage often worse than it looks', 'Chemical contact with skin, eyes, or clothing', 'Irregular heartbeat, confusion, or muscle pain after shock'],
+      care: ['Do NOT touch them until you\'re sure the power source is off', 'Call __EMG__ — electrical burns cause internal damage far beyond the skin', 'For chemicals: brush off dry powder first, then flush skin with running water for 20 minutes', 'Remove any clothing or jewelry contaminated with the chemical', 'Be ready for CPR — electrical shock can stop the heart', 'Cover the burn loosely once flushed or the power is confirmed off']
+    },
+    'seizure': {
+      title: 'Seizure',
+      symptoms: ['Sudden collapse or falling', 'Jerking or stiffening of body, limbs, or face', 'Loss of awareness, staring, or confusion before or after'],
+      care: ['Call __EMG__ if: first seizure, lasts more than 5 minutes, no recovery, injury, or in water', 'Time the seizure from the start', 'Clear the area — move objects that could cause injury', 'Do NOT restrain them — guide gently away from danger', 'Do NOT put anything in their mouth', 'Cushion the head with something soft', 'After it stops: roll them on their side (recovery position) to protect the airway', 'Stay calm and reassure them — confusion after a seizure is normal']
+    },
+    'trauma-hospitals': {
+      title: 'Find Nearby Hospitals',
+      symptoms: ['Major trauma: crash, gunshot/stab, severe bleeding, head injury', 'Patient unstable or deteriorating', 'Need the closest ER / hospital POI on the map'],
+      care: ['Call __EMG__ — dispatch will route to the right facility automatically', 'Do NOT self-transport a major trauma patient if EMS is available — ambulances can stabilize en route', 'If you must drive: tell the ER ahead by phone so the trauma team is ready', 'Note time of injury and mechanism (e.g. speed, fall height, weapon) to report on arrival']
+    }
+  };
+
+  (function aidTopicSheet() {
+    var sheet = document.getElementById('aidTopicSheet');
+    var scroll = document.getElementById('aidTopicScroll');
+    var back = document.getElementById('aidTopicBack');
+    var root = document.getElementById('panel-aid');
+    if (!sheet || !scroll || !back || !root) return;
+
+    function emg() {
+      return (document.querySelector('.emg') || {}).textContent || '112';
+    }
+    function fillEmg(s) {
+      return String(s || '').split('__EMG__').join(emg());
+    }
+    function esc(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+    function closeSheet() {
+      sheet.classList.remove('open');
+      sheet.hidden = true;
+      sheet.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('aid-topic-open');
+      scroll.innerHTML = '';
+    }
+    function openTopic(key) {
+      var topic = AID_TOPICS[key];
+      if (!topic) return;
+      var html = '';
+      html += '<div class="aid-sec-label spaced">Recognize</div><div class="aid-sec-card">';
+      topic.symptoms.forEach(function (sym) {
+        html += '<div class="aid-sec-row">' + esc(fillEmg(sym)) + '</div>';
+      });
+      html += '</div><div class="aid-sec-label">What to do</div><div class="aid-sec-card care">';
+      topic.care.forEach(function (step) {
+        html += '<div class="aid-sec-row care-row"><span class="care-mark" aria-hidden="true"></span><span class="care-text">' + esc(fillEmg(step)) + '</span></div>';
+      });
+      html += '</div>';
+      scroll.innerHTML = html;
+      scroll.scrollTop = 0;
+      sheet.hidden = false;
+      sheet.classList.add('open');
+      sheet.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('aid-topic-open');
+    }
+
+    root.addEventListener('click', function (ev) {
+      var btn = ev.target && ev.target.closest ? ev.target.closest('.aid-topic') : null;
+      if (!btn) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      openTopic(btn.getAttribute('data-topic'));
+    });
+    back.addEventListener('click', function () { closeSheet(); });
   })();
 
 
@@ -1563,7 +1913,24 @@
 
   function setListDropOpen(dropId, hasItems) {
     var drop = document.getElementById(dropId);
-    if (drop) drop.open = !!hasItems;
+    if (!drop) return;
+    drop.open = !!hasItems;
+    // Hide empty sections so the shared YOU-style card has no blank rows.
+    drop.hidden = !hasItems;
+    syncListGridVisibility();
+  }
+
+  function syncListGridVisibility() {
+    var grid = document.querySelector('.list-grid');
+    if (!grid) return;
+    var drops = grid.querySelectorAll('details.list-drop');
+    var visible = [];
+    for (var i = 0; i < drops.length; i++) {
+      drops[i].classList.remove('is-last');
+      if (!drops[i].hidden) visible.push(drops[i]);
+    }
+    grid.hidden = !visible.length;
+    if (visible.length) visible[visible.length - 1].classList.add('is-last');
   }
 
   function list(el, items, countId, dropId) {
@@ -1571,8 +1938,6 @@
     var countEl = countId ? document.getElementById(countId) : null;
     var hasItems = !!(items && items.length);
     if (!hasItems) {
-      // Leave body empty — closed drops stay compact (no empty white panel).
-      // Opening still shows — via :empty::after.
       if (countEl) {
         countEl.textContent = '';
         countEl.hidden = true;
