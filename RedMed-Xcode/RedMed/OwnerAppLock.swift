@@ -373,19 +373,22 @@ struct OwnerAppLock<Content: View>: View {
             case .success:
                 // Apply only if this generation is still current. Check again after
                 // await — background can bump authGeneration and purge mid-apply.
-                PasserbyWebViewPool.cancelWarm()
-                // Fast path: Face ID overlap already parked the blob — unlock on
-                // this MainActor turn (no Task hop → no blank cream frame).
-                if let didLoad = profile.tryPrepareUnlockPrefetchSync() {
-                    finishUnlockAfterAuth(
-                        generation: generation,
-                        didLoad: didLoad,
-                        expectsProfile: didLoad ? true : keychainHasProfile
-                    )
-                    return
-                }
+                // Entire path is `@MainActor` — LA completion is main-queue but not
+                // MainActor-isolated; calling `cancelWarm` / sync adopt outside a
+                // Task fails Xcode concurrency checks.
                 Task { @MainActor in
                     guard generation == authGeneration else { return }
+                    PasserbyWebViewPool.cancelWarm()
+                    // Parked Face ID decode: unlock this turn with no Keychain await
+                    // (no MainActor yield to WebKit → no blank cream after the sheet).
+                    if let didLoad = profile.tryPrepareUnlockPrefetchSync() {
+                        finishUnlockAfterAuth(
+                            generation: generation,
+                            didLoad: didLoad,
+                            expectsProfile: didLoad ? true : keychainHasProfile
+                        )
+                        return
+                    }
                     // Off-main SecItem overlaps Keychain apply when the gate still says empty.
                     async let expectsProfileTask = keychainHasProfile
                         ? true
