@@ -288,6 +288,7 @@ struct HelpMenuView: View {
                 .toolbar(.visible, for: .navigationBar)
                 .toolbarBackground(Color.redmedBg, for: .navigationBar)
                 .toolbarBackground(.visible, for: .navigationBar)
+                .toolbarColorScheme(.light, for: .navigationBar)
         } label: {
             HStack {
                 Text(title)

@@ -326,6 +326,9 @@ struct EditProfileView: View {
             }
             .navigationTitle("Birth date")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.redmedBg, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { showBirthDatePicker = false }
@@ -340,6 +343,7 @@ struct EditProfileView: View {
                     .foregroundColor(.redmedAccent)
                 }
             }
+            .background { RedMedPageBackground() }
         }
         .presentationDetents([.medium])
     }
