@@ -1166,6 +1166,16 @@
     height: 18px;
     display: block;
     fill: currentColor;
+    /* Optical size/center — Material paths don't share SF Symbol metrics.
+       Compass fills the full viewBox; person/aid read smaller and sit low/high. */
+    flex-shrink: 0;
+  }
+  .tab[data-tab="medical"] .icon-wrap svg { transform: translateY(-0.5px) scale(1.06); }
+  .tab[data-tab="911"] .icon-wrap svg { transform: scale(0.92); }
+  .tab[data-tab="aid"] .icon-wrap svg { transform: translateY(0.25px) scale(1.1); }
+  .tab .tab-label {
+    line-height: 1;
+    white-space: nowrap;
   }
   .tab.active { color: var(--accent); font-weight: 700; }
   .tab.active .icon-wrap {
@@ -1386,9 +1396,9 @@
 
   <nav class="tabbar" aria-label="RedMed">
     <div class="tabs">
-      <button class="tab active" type="button" data-tab="medical"><div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v1.5c0 .83.67 1.5 1.5 1.5h17c.83 0 1.5-.67 1.5-1.5V19c0-3.33-6.67-5-10-5z"/></svg></div>RedMed</button>
-      <button class="tab" type="button" data-tab="911"><div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.5 5.5-2.5 7.5-7.5 2.5 2.5-7.5 7.5-2.5z"/></svg></div>911</button>
-      <button class="tab" type="button" data-tab="aid"><div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M17 6h-2.2l-.6-1.2A2 2 0 0012.4 4h-.8a2 2 0 00-1.8.8L9.2 6H7a3 3 0 00-3 3v8a3 3 0 003 3h10a3 3 0 003-3V9a3 3 0 00-3-3zm-1.25 7.75h-3v3h-1.5v-3h-3v-1.5h3v-3h1.5v3h3v1.5z"/></svg></div>Aid</button>
+      <button class="tab active" type="button" data-tab="medical"><div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v1.5c0 .83.67 1.5 1.5 1.5h17c.83 0 1.5-.67 1.5-1.5V19c0-3.33-6.67-5-10-5z"/></svg></div><span class="tab-label">RedMed</span></button>
+      <button class="tab" type="button" data-tab="911"><div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.5 5.5-2.5 7.5-7.5 2.5 2.5-7.5 7.5-2.5z"/></svg></div><span class="tab-label">911</span></button>
+      <button class="tab" type="button" data-tab="aid"><div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M17 6h-2.2l-.6-1.2A2 2 0 0012.4 4h-.8a2 2 0 00-1.8.8L9.2 6H7a3 3 0 00-3 3v8a3 3 0 003 3h10a3 3 0 003-3V9a3 3 0 00-3-3zm-1.25 7.75h-3v3h-1.5v-3h-3v-1.5h3v-3h1.5v3h3v1.5z"/></svg></div><span class="tab-label">Aid</span></button>
     </div>
     <div class="home-pill" aria-hidden="true"></div>
   </nav>
