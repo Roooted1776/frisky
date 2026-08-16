@@ -24,7 +24,8 @@ extension EnvironmentValues {
 
 /// Passerby / rescuer shell helpers (ped / EMS).
 ///
-/// Real bracelet tap opens hosted **HTML** `tapper.html#d=…` (no app). Owner
+/// Real bracelet tap opens hosted **HTML** `tapper.html#d=…` (no app, **no
+/// Face ID / biometrics / login / passcode** — tap-to-view is ungated). Owner
 /// NFC Preview / NFC Scan use `PasserbyHTMLCardView` — same bundled `tapper.html` with
 /// `?src=app` so SOS does not auto-arm. This file keeps `isScannerSession` /
 /// Back chrome for any remaining native scanner embedding.
