@@ -81,9 +81,10 @@ The app has no backend, database, or web service.
   prompt on appear); relock on `.background` only. Do **not**
   lock on `.inactive` — LAContext / system auth sheets put the scene inactive
   and would discard a successful unlock via `authGeneration`.
-- Owner app lock is **biometrics only before Main**: flat cream under system
-  Face ID on every launch (no Accept; no Unlock on first prompt; **no** decorative
-  BrandLogo on the lock shell). Unlock appears after cancel / mismatch. Fresh
+- Owner app lock is **biometrics only before Main**: cream atmosphere + Face ID
+  glyph under system Face ID on every launch (no Accept; no Unlock on first
+  prompt; **no** decorative BrandLogo on the lock shell). Unlock appears in a
+  cream dock after cancel / mismatch. Fresh
   install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
   Owner pages + passerby tapper: cream fill only (no page BrandLogo). **No hanging
   decorative brand marks** anywhere (no lock watermark, no Aid pane wordmarks, no

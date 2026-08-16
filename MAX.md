@@ -44,8 +44,9 @@ See also `AGENTS.md`. High-signal recap:
 3. Settings = **haptic + Location only**. Brightness 100% + system volume 100% + locator siren arm on crash / severe-impact (`CrashMotionGuard`), owner **SOS · Locate me**, or **real bracelet NFC** open of `tapper.html#d=…` (hardware-local SOS on that phone). Owner Find Help open, bare `/tapper/`, and in-app scanner preview do **not** auto-arm.
 4. Survival hold may keep siren + max volume + brightness through background until cancel on Aid (or Stop SOS on Find Help).
 5. Vault Face ID: relock on **`.background` only** (not `.inactive` — Face ID sheets).
-6. Owner lock: every launch is flat cream under auto Face ID before Main (no
-   decorative BrandLogo; Unlock = retry after cancel / mismatch). Fresh install
+6. Owner lock: every launch is cream atmosphere + Face ID glyph under auto Face
+   ID before Main (no decorative BrandLogo; Unlock = cream dock after cancel /
+   mismatch). Fresh install
    unlocks into empty tabs after auth. Owner pages + tapper: cream fill only —
    no page BrandLogo. **No hanging decorative brand marks** (lock watermark, Aid
    pane wordmarks, privacy-cover logo gone). NFC / topic sheets keep one page
