@@ -183,9 +183,10 @@ do {
     }
 
     // Also refresh the shared frisky asset copy when present.
+    // Web display is 72 CSS px → 216 @3x; keep Pages / SW payloads small.
     let sharedLogo = root.deletingLastPathComponent().appendingPathComponent("assets/BrandLogo.png")
     if FileManager.default.fileExists(atPath: sharedLogo.deletingLastPathComponent().path) {
-        try savePNG(drawLogo(size: 1024), to: sharedLogo)
+        try savePNG(drawLogo(size: 216), to: sharedLogo)
     }
 } catch {
     fputs("error: \(error)\n", stderr)
