@@ -54,7 +54,7 @@ struct ContentView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(.bottom, 64)
+            .padding(.bottom, 52)
 
             CustomTabBar(tab: scannerSafeTab, showsNFC: showsNFC)
         }
@@ -107,19 +107,12 @@ struct CustomTabBar: View {
     @Binding var tab: AppTab
     var showsNFC: Bool = true
 
-    private var barShape: UnevenRoundedRectangle {
-        UnevenRoundedRectangle(
-            topLeadingRadius: 22,
-            bottomLeadingRadius: 0,
-            bottomTrailingRadius: 0,
-            topTrailingRadius: 22,
-            style: .continuous
-        )
-    }
-
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: -3) {
+            Rectangle()
+                .fill(Color.redmedDivider)
+                .frame(height: 0.5)
+            HStack(spacing: 0) {
                 TabBarItem(icon: "person.fill",  label: "RedMed", isOn: tab == .redmed) {
                     select(.redmed)
                 }
@@ -135,28 +128,18 @@ struct CustomTabBar: View {
                     }
                 }
             }
-            .padding(.top, 10)
+            .padding(.top, 2)
 
             Capsule()
-                .fill(Color(red: 0.11, green: 0.098, blue: 0.086).opacity(0.16))
-                .frame(width: 134, height: 5)
-                .padding(.top, 4)
-                .padding(.bottom, 5)
+                .fill(Color(red: 0.11, green: 0.098, blue: 0.086).opacity(0.18))
+                .frame(width: 118, height: 4)
+                .padding(.top, 2)
+                .padding(.bottom, 3)
         }
-        .background {
-            barShape
-                .fill(Color.redmedBg.opacity(0.92))
-                .background {
-                    barShape
-                        .fill(.ultraThinMaterial)
-                        .opacity(0.75)
-                }
-                .overlay {
-                    barShape
-                        .strokeBorder(Color.white.opacity(0.4), lineWidth: 1)
-                }
-                .shadow(color: Color.black.opacity(0.07), radius: 18, y: -4)
-        }
+        .background(
+            Color.redmedBg
+                .shadow(color: Color.black.opacity(0.05), radius: 10, y: -2)
+        )
     }
 
     private func select(_ next: AppTab) {
@@ -179,14 +162,13 @@ struct TabBarItem: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 3) {
+            VStack(spacing: 2) {
                 Image(systemName: icon)
-                    .font(.system(size: 22, weight: isOn ? .semibold : .regular))
+                    .font(.system(size: 18, weight: isOn ? .semibold : .regular))
                     .foregroundColor(isOn ? .redmedAccent : Color(red: 0.372, green: 0.388, blue: 0.408))
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 5)
+                    .frame(width: 48, height: 26)
                     .background(
-                        RoundedRectangle(cornerRadius: 14)
+                        RoundedRectangle(cornerRadius: 11)
                             .fill(isOn ? Color.redmedAccent.opacity(0.12) : Color.clear)
                     )
                 Text(label)
@@ -195,10 +177,10 @@ struct TabBarItem: View {
                     .kerning(-0.1)
             }
             .frame(maxWidth: .infinity)
-            .padding(.bottom, 3)
+            .frame(minHeight: 44)
             // Discrete tint swap — no spring/bounce on every tab hop.
             .transaction { $0.animation = nil }
         }
-        .buttonStyle(RedMedPressStyle(scale: 0.94, haptic: nil))
+        .buttonStyle(RedMedPressStyle(scale: 0.96, haptic: nil))
     }
 }
