@@ -31,8 +31,6 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NFCReaderUsageDescription</key>
-	<string>RedMed uses NFC so you can write your emergency card to your bracelet and scan it to verify the same HTML tap page helpers open. Passersby who tap the band open that page in a browser — they do not need this app.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>RedMed uses Face ID, Touch ID, or your device passcode to unlock editing of your RedMed profile, authorize writing to your bracelet, and open the on-device local history vault. Scanned cards are read-only and cannot be changed without your app and authentication.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
