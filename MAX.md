@@ -77,12 +77,14 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
   BrandLogo; Unlock after cancel / mismatch). Face ID kicks immediately on cold
   `.inactive` (waiting for `.active` was the cream hang). Prefetch still starts
   in the same `onAppear` tick and inside the unlock pipeline. Fresh install
-  unlocks into empty tabs after auth. Keychain decode + AES `#d=` pack + tapper
-  shell warm overlap Face ID; no unlock fade. Lock shell on first frame — no
-  Keychain in `@State`; CoreMotion after unlock. PrivacySnapshotGuard never
-  covers lock / Unlock — only while PHI is in RAM. Owner pages + tapper:
-  cream fill only (no page BrandLogo). Unlock fail-closed if an expected
-  Keychain blob fails to decode.
+  unlocks into empty tabs after auth. Keychain decode + AES `#d=` pack +
+  tapper.html string warm overlap Face ID; WKWebView warm only after unlock
+  (Face ID–overlap WebKit stole MainActor → white/cream hang after auth).
+  Parked Keychain adopt unlocks on the same MainActor turn (no Task hop). No
+  unlock fade. Lock shell on first frame — no Keychain in `@State`; CoreMotion
+  after unlock. PrivacySnapshotGuard never covers lock / Unlock — only while
+  PHI is in RAM. Owner pages + tapper: cream fill only (no page BrandLogo).
+  Unlock fail-closed if an expected Keychain blob fails to decode.
 - Vault Local History: Accept tap before Face ID (no auto-prompt on appear).
 - Opacity keep-alive tabs: Find Help GPS + seizure autodial tear down via
   `isVisible` (not `onDisappear` — opacity hide never fires it).

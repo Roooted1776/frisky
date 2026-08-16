@@ -114,9 +114,13 @@ hangs with no sheet; that wait was the cream hang.
 unlock pipeline (single-flight overlap with Face ID). Unlock is retry after
 cancel / mismatch. Fresh install unlocks into empty tabs after
 auth; returning owners load Keychain. Owner pages + tapper: cream fill, no page
-BrandLogo. Unlock overlaps Keychain decode + AES `#d=` pack + tapper shell warm
-with Face ID and skips unlock animation so tabs paint on the next frame after
-biometrics with a ready shell. Do not call Keychain in `@State` defaults.
+BrandLogo. Unlock overlaps Keychain decode + AES `#d=` pack + tapper.html
+string warm with Face ID and skips unlock animation so tabs paint on the next
+frame after biometrics. WKWebView warm starts **only after** `gate = .unlocked`
+— warming during Face ID / before the Keychain await steals MainActor and
+leaves a blank cream / white hang after auth. Parked Face ID decode unlocks
+on the same MainActor turn (no deferred `Task` hop). Do not call Keychain in
+`@State` defaults.
 Location defaults on in Help →
 Settings with **no RedMed location gate / banner / Allow popup** — Help must not
 call `requestWhenInUseAuthorization`. When-In-Use + GPS start on Find Help only
