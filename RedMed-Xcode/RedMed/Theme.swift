@@ -176,7 +176,7 @@ struct SecondaryButton: View {
     }
 }
 
-/// Trailing chrome text — owner **Help** / **Edit** / NFC **Preview**, scanner **Back**, Aid topic **Back**.
+/// Trailing chrome text — owner **Help** / **Edit**, NFC Preview **Back**, scanner **Back**, Aid topic **Back**.
 /// Accent red text only — no chip / box fill (plain link over the HTML shell).
 struct ChromeTextAction: View {
     let title: String
@@ -203,8 +203,9 @@ struct ChromeTextAction: View {
     }
 }
 
-/// Shared top bar for owner Help / Edit / Preview full-screen modals.
-/// Equal leading/trailing slots keep the title centered and the three pages even.
+/// Shared top bar for owner Help / Edit full-screen modals.
+/// Equal leading/trailing slots keep the title centered. NFC Preview uses
+/// main-page `ChromeTextAction` Back instead (same as RedMed / topic sheets).
 struct OwnerModalChrome<Trailing: View>: View {
     let title: String
     let leadingTitle: String
@@ -266,7 +267,7 @@ struct OwnerModalChrome<Trailing: View>: View {
 }
 
 extension OwnerModalChrome where Trailing == EmptyView {
-    /// Leading-only bar (Preview Back / Help Done) — empty trailing keeps title centered
+    /// Leading-only bar (Help Done) — empty trailing keeps title centered
     /// via the shared `modalSideMinWidth` frame on the trailing slot.
     init(title: String, leadingTitle: String, leadingWeight: Font.Weight = .regular, leadingAction: @escaping () -> Void) {
         self.init(
@@ -304,9 +305,9 @@ struct OwnerModalTrailingAction: View {
 /// Box radius is shared by owner + scanner cards / CTAs (square-ish, not capsules).
 enum RedMedChrome {
     static let navTitleFont: Font = .system(size: 17, weight: .semibold)
-    /// Help · Edit · Preview chrome links over the shell.
+    /// Help · Edit (RedMed) and Back (Preview / scanner / topic) chrome links.
     static let chromeActionSize: CGFloat = 18
-    /// Cancel / Done / Back / Save inside owner modals — same size on all three.
+    /// Cancel / Done / Save inside owner Help · Edit modals.
     static let modalActionSize: CGFloat = 17
     static let modalBarHeight: CGFloat = 52
     static let modalSideMinWidth: CGFloat = 64
