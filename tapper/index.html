@@ -188,6 +188,8 @@
     border-radius: var(--box);
     box-shadow: var(--shadow);
   }
+  /* Filled band / named card — status note is empty-state only. */
+  .rm-note.is-filled { display: none; }
   /* In-app RedMed tab embeds this shell — hide passerby tab chrome (native tabs own 911/Aid).
      Owner embed only: native boot sets `html.app-embed` before first paint; body class
      mirrors it. Preview/Scan (?src=app) must NOT get app-embed — full HTML tabs stay.
@@ -267,24 +269,36 @@
     overflow-wrap: anywhere;
     word-break: break-word;
   }
+  /* Named cards: slightly larger hero for EMT glance. */
+  .rm-name.has-profile {
+    font-size: clamp(22px, 5.4vw, 26px);
+    letter-spacing: -0.6px;
+  }
   /* Linked / Not linked + Updated share one row under the name. */
   .rm-meta {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 4px 10px;
-    margin: 4px 0 0;
+    gap: 2px 0;
+    margin: 6px 0 0;
   }
   .rm-status {
     font-size: clamp(11px, 2.6vw, 12px);
     font-weight: 700;
-    letter-spacing: 0.6px;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
     color: var(--muted);
     margin: 0;
   }
   .rm-status.linked {
     color: rgba(225,29,72,0.9);
+  }
+  .rm-updated:not([hidden])::before {
+    content: '·';
+    display: inline-block;
+    margin: 0 8px;
+    color: rgba(120,113,108,0.45);
+    font-weight: 700;
   }
   /* Owner RedMed embed only — status opens native NFC tab (Write / Scan). */
   html.app-embed .rm-status.rm-status-link,
@@ -361,6 +375,7 @@
     padding: 11px 16px;
     border-bottom: 1px solid var(--divider);
   }
+  .row[hidden] { display: none !important; }
   .row:last-child { border-bottom: none; }
   .row .k {
     font-size: var(--fs-row);
@@ -382,14 +397,16 @@
   /* Blood type / organ donor — EMT glance chips when filled. */
   .row.row-blood.has-blood .v,
   .row.row-donor.has-donor .v {
-    display: inline-block;
+    flex: 0 0 auto;
+    margin-left: auto;
     font-size: var(--fs-row);
     font-weight: 700;
     color: var(--accent);
     background: rgba(225,29,72,0.1);
     border-radius: var(--chip);
-    padding: 4px 10px;
+    padding: 5px 11px;
     text-align: center;
+    line-height: 1.2;
   }
   .list-item {
     padding: 11px 16px;
@@ -465,6 +482,7 @@
     border-radius: 0;
     padding: 0;
   }
+  .list-drop-count[hidden] { display: none !important; }
   .list-drop-chevron {
     width: 18px;
     height: 18px;
@@ -524,10 +542,15 @@
   }
   .contact-block a.cp {
     font-size: var(--fs-row);
-    font-weight: 600;
+    font-weight: 700;
     color: var(--accent);
     text-decoration: none;
     white-space: nowrap;
+    padding: 6px 10px;
+    margin: -6px -4px -6px 0;
+    border-radius: var(--chip);
+    background: rgba(225,29,72,0.08);
+    -webkit-tap-highlight-color: transparent;
   }
   .contact-block a.cp:active { opacity: 0.75; }
   .contact-block .cd {
@@ -611,7 +634,7 @@
     box-shadow: var(--shadow-accent);
   }
   .btn-secondary {
-    background: rgba(255,255,255,0.88);
+    background: var(--surface);
     border: 1px solid var(--divider);
     color: var(--dark);
     box-shadow: var(--shadow);
@@ -747,12 +770,12 @@
     color: #fff;
   }
   .seizure-btn.on {
-    background: rgba(255,255,255,0.9);
+    background: var(--surface);
     color: var(--dark);
     border: 1px solid var(--divider);
   }
   .seizure-btn-reset {
-    background: rgba(255,255,255,0.9);
+    background: var(--surface);
     color: var(--dark);
     border: 1px solid var(--divider);
   }
@@ -1822,7 +1845,7 @@
       if (!c || typeof c !== 'object') return null;
       return {
         name: asString(c.name, 'Contact'),
-        rel: asString(c.rel),
+        rel: asString(c.rel) || asString(c.relationship),
         phone: sanitizePhone(c.phone),
         detail: asString(c.detail)
       };
@@ -1922,6 +1945,32 @@
       el.textContent = value;
       el.classList.remove('empty');
     }
+  }
+
+  /** ISO YYYY-MM-DD → "Mar 14, 1990" for EMT glance; leave other strings alone. */
+  function formatDob(raw) {
+    var s = (raw || '').trim();
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    if (!m) return s;
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var mi = parseInt(m[2], 10) - 1;
+    var day = parseInt(m[3], 10);
+    if (mi < 0 || mi > 11 || day < 1 || day > 31) return s;
+    return months[mi] + ' ' + day + ', ' + m[1];
+  }
+
+  /** Light US-ish tel display: +15551234567 → +1 555 123 4567. */
+  function formatPhoneDisplay(raw, digits) {
+    var shown = (raw || '').trim();
+    if (!shown) return '';
+    var d = String(digits || '').replace(/\D/g, '');
+    if (d.length === 11 && d.charAt(0) === '1') {
+      return '+1 ' + d.slice(1, 4) + ' ' + d.slice(4, 7) + ' ' + d.slice(7);
+    }
+    if (d.length === 10) {
+      return d.slice(0, 3) + ' ' + d.slice(3, 6) + ' ' + d.slice(6);
+    }
+    return shown;
   }
 
   function setListDropOpen(dropId, hasItems) {
@@ -2046,7 +2095,11 @@
     var nameEl = document.getElementById('name');
     var logo = document.getElementById('rmLogo');
     var statusEl = document.getElementById('statusLine');
+    var noteEl = document.querySelector('.rm-note');
     nameEl.textContent = displayName;
+    nameEl.classList.toggle('has-profile', !!rawName);
+    // Empty-state status note only — hide once a named / band card paints.
+    if (noteEl) noteEl.classList.toggle('is-filled', !!(rawName || fromBand));
     // Empty: grey logo on the left. Filled: logo drops; imported name takes the row.
     if (logo) {
       if (rawName) logo.classList.add('has-name');
@@ -2075,7 +2128,7 @@
       }
     }
     setRow('rowName', p.name);
-    setRow('rowDob', p.dob);
+    setRow('rowDob', formatDob(p.dob));
     setRow('rowBlood', p.blood);
     setRow('rowDonor', p.donor ? 'Yes' : '');
     // Hero already shows the name — drop the duplicate YOU row when filled.
@@ -2096,7 +2149,7 @@
       var upd = (p.updated || '').trim();
       if (upd) {
         updatedEl.hidden = false;
-        updatedEl.textContent = 'Updated ' + upd;
+        updatedEl.textContent = 'Updated ' + formatDob(upd);
       } else {
         updatedEl.hidden = true;
         updatedEl.textContent = '';
@@ -2141,7 +2194,7 @@
           var a = document.createElement('a');
           a.className = 'cp';
           a.href = 'tel:' + phone;
-          a.textContent = c.phone || phone;
+          a.textContent = formatPhoneDisplay(c.phone || phone, phone);
           nameRow.appendChild(a);
         }
         row.appendChild(nameRow);
