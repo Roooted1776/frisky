@@ -30,6 +30,9 @@ struct VaultHistoryView: View {
         .background { RedMedPageBackground() }
         .navigationTitle("Local History")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(Color.redmedBg, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarColorScheme(.light, for: .navigationBar)
         .onAppear {
             HIPAAOfflineVault.prepare()
             // No auto Face ID — vault stays Accept-then-biometrics (owner app lock auto-prompts).
