@@ -12,7 +12,6 @@ Usage:
 from __future__ import annotations
 
 import os
-import re
 import sys
 import urllib.error
 import urllib.request
@@ -33,10 +32,12 @@ AUTH_CODE_NEEDLES = (
     "webauthn",
     "WebAuthn",
 )
-# Visible copy (HTML comments stripped) — never ask for these on tapper.
-AUTH_VISIBLE_NEEDLES = (
+# Passerby shell must not mention biometrics anywhere (incl. HTML comments) —
+# MAX.md: no biometric copy in passerby HTML. Also ban login-gate UI copy.
+AUTH_COPY_NEEDLES = (
     "Face ID",
     "Touch ID",
+    "biometric",
     "passcode",
     "Unlock with",
     "Sign in",
@@ -46,10 +47,6 @@ AUTH_VISIBLE_NEEDLES = (
 )
 
 
-def strip_html_comments(text: str) -> str:
-    return re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
-
-
 def check_tapper_no_auth(path: Path) -> bool:
     raw = path.read_text(encoding="utf-8")
     ok = True
@@ -57,9 +54,8 @@ def check_tapper_no_auth(path: Path) -> bool:
         if needle in raw:
             print(f"FAIL {path} auth code: {needle}")
             ok = False
-    visible = strip_html_comments(raw)
-    for needle in AUTH_VISIBLE_NEEDLES:
-        if needle in visible:
+    for needle in AUTH_COPY_NEEDLES:
+        if needle in raw:
             print(f"FAIL {path} auth copy: {needle}")
             ok = False
     if ok:
