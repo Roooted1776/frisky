@@ -43,7 +43,8 @@ final class NFCBandManager: ObservableObject {
 
     // MARK: - Write (owner band setup)
 
-    /// Face ID → AES-GCM pack (off-main) → CoreNFC write (or simulate when hardware is parked).
+    /// Face ID → AES-GCM pack (off-main) → CoreNFC write (or pack-only simulate when hardware is parked).
+    /// Linked / Not linked flips only after a real verified-or-written CoreNFC session — never simulate.
     func writeBand(from profile: ProfileData, isScannerSession: Bool) {
         guard !isScannerSession else { return }
         guard profile.hasData else { return }
@@ -124,9 +125,10 @@ final class NFCBandManager: ObservableObject {
         scannedEmbedJSON = nil
     }
 
-    /// Mark owner bracelet paired after a verified (or simulated) write.
+    /// Mark owner bracelet paired after a real CoreNFC write (hardware only).
     func linkBracelet(on profile: ProfileData, detail: String) {
-        // Publishes + Keychain so Main's paired line flips immediately.
+        guard AppConfig.nfcHardwareEnabled else { return }
+        // Publishes + Keychain so RedMed Linked / Not linked flips immediately.
         profile.setBraceletPaired(true)
         VaultHistoryStore.shared.record(.braceletWritten, detail: detail)
     }
@@ -193,6 +195,7 @@ final class NFCBandManager: ObservableObject {
             .assign(to: &$isReading)
     }
 
+    /// Pack-only fallback when CoreNFC is parked — never marks Linked.
     private func simulateWrite(_ urlString: String, profile: ProfileData) {
         isWriting = true
         writeSucceeded = false
@@ -202,13 +205,10 @@ final class NFCBandManager: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) { [weak self] in
             guard let self else { return }
             let note = ProfileNFCCodec.capacityNote(for: profile)
-            self.linkBracelet(on: profile, detail: "Simulated write")
             self.isWriting = false
-            self.writeSucceeded = true
-            self.writeVerified = true
-            self.statusMessage = note.warn
-                ? "Simulated write OK — \(note.text)"
-                : "Simulated write OK — \(note.text)."
+            self.writeSucceeded = false
+            self.writeVerified = false
+            self.statusMessage = "Packed only (no band) — \(note.text). Linked needs a real NFC write."
         }
     }
 

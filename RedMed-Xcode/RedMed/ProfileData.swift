@@ -91,9 +91,10 @@ class ProfileData: ObservableObject {
             && !bloodType.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    /// Main header "Linked bracelet" — only after a verified write and a complete YOU card.
+    /// Main header "Linked bracelet" — real CoreNFC write + complete YOU card.
+    /// Never from pack/simulate; hardware kill switch also forces Not linked.
     var showsBraceletAsLinked: Bool {
-        braceletLinked && isEmergencyProfileConfigured
+        AppConfig.nfcHardwareEnabled && braceletLinked && isEmergencyProfileConfigured
     }
 
     /// Any RedMed profile content that should require Face ID / passcode to edit.
@@ -471,8 +472,10 @@ class ProfileData: ObservableObject {
     }
 
     /// Band pairing flag for Main / NFC chrome.
-    /// `true` only after a verified (or simulated) write; cleared when RedMed is edited.
+    /// `true` only after a real CoreNFC write; cleared when RedMed is edited.
+    /// Callers must not set `true` from pack/simulate paths.
     func setBraceletPaired(_ paired: Bool) {
+        if paired && !AppConfig.nfcHardwareEnabled { return }
         guard braceletLinked != paired else {
             if persists { _ = persist() }
             return
