@@ -54,7 +54,7 @@ struct ContentView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(.bottom, 52)
+            .padding(.bottom, 56)
 
             CustomTabBar(tab: scannerSafeTab, showsNFC: showsNFC)
         }
@@ -107,11 +107,19 @@ struct CustomTabBar: View {
     @Binding var tab: AppTab
     var showsNFC: Bool = true
 
+    /// Continuous rounded top — polished bottom chrome without frost (opaque cream).
+    private var barShape: UnevenRoundedRectangle {
+        UnevenRoundedRectangle(
+            topLeadingRadius: 18,
+            bottomLeadingRadius: 0,
+            bottomTrailingRadius: 0,
+            topTrailingRadius: 18,
+            style: .continuous
+        )
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            Rectangle()
-                .fill(Color.redmedDivider)
-                .frame(height: 0.5)
             HStack(spacing: 0) {
                 TabBarItem(icon: "person.fill",  label: "RedMed", isOn: tab == .redmed) {
                     select(.redmed)
@@ -128,7 +136,7 @@ struct CustomTabBar: View {
                     }
                 }
             }
-            .padding(.top, 2)
+            .padding(.top, 6)
 
             Capsule()
                 .fill(Color.redmedDark.opacity(0.18))
@@ -136,10 +144,14 @@ struct CustomTabBar: View {
                 .padding(.top, 2)
                 .padding(.bottom, 3)
         }
-        .background(
-            Color.redmedBg
+        .background {
+            barShape
+                .fill(Color.redmedBg)
+                .overlay {
+                    barShape.strokeBorder(Color.redmedDivider, lineWidth: 0.5)
+                }
                 .shadow(color: Color.black.opacity(0.05), radius: 10, y: -2)
-        )
+        }
     }
 
     private func select(_ next: AppTab) {

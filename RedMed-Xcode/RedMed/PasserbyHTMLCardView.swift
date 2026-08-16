@@ -9,6 +9,8 @@ import WebKit
 /// Does **not** set `html.app-embed` / `__REDMED_APP_EMBED` — that hides the
 /// HTML tab bar and is owner RedMed embed only (`PasserbyHTMLShell` with
 /// `appEmbed: true`), where native owns 911 / Aid / SOS / GPS.
+/// Sets `html.app-preview` and disables WKWebView UIScrollView scrolling so
+/// flex tabbar taps work (fixed + dual-scroll ate RedMed · 911 · Aid switches).
 struct PasserbyHTMLCardView: View {
     @Environment(\.dismiss) private var dismiss
     /// Raw `#d=` payload (no prefix), or full band URL containing `#d=`.
@@ -277,6 +279,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         // Prefer Face ID–warmed embed view — process + HTML parse already done.
         if appEmbed, let pooled = PasserbyWebViewPool.takeEmbed() {
             pooled.navigationDelegate = context.coordinator
+            pooled.scrollView.isScrollEnabled = true
             context.coordinator.shellLoaded = true
             context.coordinator.loadedShellKind = "embed"
             // Empty payload → first updateUIView pushes PHI via JS (no second parse).
@@ -284,19 +287,24 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
             context.coordinator.loadedContentKey = ""
             return pooled
         }
-        return PasserbyWebViewPool.makeConfiguredWebView(navigationDelegate: context.coordinator)
+        let webView = PasserbyWebViewPool.makeConfiguredWebView(navigationDelegate: context.coordinator)
+        // Preview/Scan: document `.app` scrolls; UIScrollView dual-scroll ate tab taps.
+        webView.scrollView.isScrollEnabled = appEmbed
+        return webView
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
         context.coordinator.appEmbed = appEmbed
+        // Embed: WKWebView scrolls. Preview/Scan: html.app-preview flex + `.app` scroll.
+        webView.scrollView.isScrollEnabled = appEmbed
         let shellKind = appEmbed ? "embed" : "full"
         let contentKey = "\(braceletLinked)|\(embedProfileJSON ?? "")"
         let payloadKey = encodedPayload
 
-        // Owner embed: keep the document. AES `#d=` changes every pack (random nonce) —
-        // pushing `__REDMED_PROFILE` avoids a full loadHTMLString after Edit / link flips.
-        if appEmbed,
-           context.coordinator.shellLoaded,
+        // Keep the document when plaintext embed JSON is present (owner embed + Preview/Scan).
+        // AES `#d=` changes every pack (random nonce) — JS push avoids remount, which
+        // reset Preview tabs back to RedMed mid-switch.
+        if context.coordinator.shellLoaded,
            context.coordinator.loadedShellKind == shellKind,
            let embedProfileJSON, !embedProfileJSON.isEmpty,
            (context.coordinator.loadedContentKey != contentKey
@@ -345,12 +353,13 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         // Inject before any tapper.html script so decrypt sees #d= and SOS sees app preview.
         // Flag + hash fallback: loadHTMLString can leave location as about:blank where
         // replaceState alone would leave decrypt empty and wrongly auto-arm SOS.
-        // Owner embed: `html.app-embed` before first paint. Preview/Scan: full HTML tabs.
+        // Owner embed: `html.app-embed` before first paint. Preview/Scan: full HTML tabs
+        // + `html.app-preview` (flex tabbar — fixed + dual-scroll ate taps in WKWebView).
         // `__REDMED_PROFILE` skips WebCrypto when native already has plaintext.
         let linkedJS = braceletLinked ? "true" : "false"
         let embedJS = appEmbed
             ? "window.__REDMED_APP_EMBED=1;try{document.documentElement.classList.add('app-embed');}catch(e0){}"
-            : ""
+            : "try{document.documentElement.classList.add('app-preview');}catch(e1){}"
         let profileJS: String
         if let embedProfileJSON, !embedProfileJSON.isEmpty {
             profileJS = "window.__REDMED_PROFILE=\(embedProfileJSON);"
