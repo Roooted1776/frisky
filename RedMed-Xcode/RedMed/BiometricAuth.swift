@@ -3,6 +3,9 @@ import UIKit
 
 /// Strict owner authentication — Face ID / Touch ID first; device passcode on
 /// the same LocalAuthentication evaluation (fallback / lockout / failed scans).
+/// Owner-only gates: app unlock, Edit, NFC write, vault, erase. Never call from
+/// passerby `tapper.html`, `PublicCardView`, or NFC Preview / Scan shells —
+/// tap-to-view stays ungated.
 /// Reuse window is zero so every gate re-prompts (Edit, NFC write, vault, app unlock).
 ///
 /// Use a single `.deviceOwnerAuthentication` call — not biometrics-only followed by

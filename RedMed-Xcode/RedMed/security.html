@@ -62,7 +62,7 @@
       <li>Profile fields persist in the iOS <strong>Keychain</strong> with <code>WhenUnlockedThisDeviceOnly</code>.</li>
       <li>Readable only while the device is unlocked; excluded from iCloud and encrypted device backups.</li>
       <li>Local history / vault files use <code>FileProtectionType.complete</code> and <code>isExcludedFromBackup</code> so they stay unreadable when the phone is locked or plugged into another computer, and are never copied to consumer iCloud backups.</li>
-      <li>Owner biometrics / device passcode gate edit, NFC write, and the local history dashboard.</li>
+      <li>Owner biometrics / device passcode gate edit, NFC write, app unlock, and the local history dashboard. Passerby <code>tapper.html</code> (band tap / EMT card) never prompts for Face ID, biometrics, passcode, login, or any authentication — tap-to-view opens the card immediately from <code>#d=</code>.</li>
       <li>App-switcher snapshots are covered so live profile text is not cached to the system snapshot image.</li>
       <li>Edit fields disable system autofill content types so medical text is not written into keyboard / autofill caches.</li>
       <li>Clearing fields and saving overwrites the stored profile. Help → <strong>Erase all RedMed data</strong> (Face ID / passcode) deletes the Keychain profile and vault files on this iPhone; deleting the App also removes them. The physical band is not wiped remotely.</li>

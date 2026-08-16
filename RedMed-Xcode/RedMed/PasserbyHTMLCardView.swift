@@ -11,6 +11,7 @@ import WebKit
 /// `appEmbed: true`), where native owns 911 / Aid / SOS / GPS.
 /// Sets `html.app-preview` and disables WKWebView UIScrollView scrolling so
 /// flex tabbar taps work (fixed + dual-scroll ate RedMed · 911 · Aid switches).
+/// Never calls `BiometricAuth` — passerby / Preview tap-to-view stays ungated.
 struct PasserbyHTMLCardView: View {
     @Environment(\.dismiss) private var dismiss
     /// Raw `#d=` payload (no prefix), or full band URL containing `#d=`.
