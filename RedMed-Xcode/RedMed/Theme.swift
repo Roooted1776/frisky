@@ -42,7 +42,7 @@ extension Color {
 }
 
 /// Cream page with rose wash only (fill color — no BrandLogo).
-/// Lock shell uses the same cream + soft wash; passerby tapper matches this fill.
+/// Lock load shell uses a richer layered atmosphere; passerby tapper matches cream fill.
 struct RedMedPageBackground: View {
     var body: some View {
         ZStack {
@@ -311,10 +311,12 @@ enum RedMedChrome {
     static let modalSideMinWidth: CGFloat = 64
     static let boxRadius: CGFloat = 10
     static let chipRadius: CGFloat = 7
-    /// Floating Face ID unlock dock — continuous, larger than card boxes.
-    static let unlockDockRadius: CGFloat = 28
-    /// Unlock CTA inside the dock — continuous pill-ish, not square boxRadius.
-    static let unlockButtonRadius: CGFloat = 18
+    /// Face ID unlock dock — continuous sheet corners (load / retry chrome).
+    static let unlockDockRadius: CGFloat = 32
+    /// Unlock CTA inside the dock — continuous pill-ish.
+    static let unlockButtonRadius: CGFloat = 20
+    /// Quiet Face ID disc on the load shell (not BrandLogo).
+    static let unlockGlyphSize: CGFloat = 64
     /// Brand mark is a circular disc — always `Circle()`, never a rounded rect.
     static let logoRadius: CGFloat = 0
     /// Tapper / empty YOU-card BrandLogo diameter (`--logo` matches).
