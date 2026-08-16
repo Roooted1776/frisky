@@ -200,6 +200,9 @@ struct NFCView: View {
 
     // MARK: - Scan (bottom of page)
 
+    /// Always show Scan on the owner NFC tab. Linked is write-status only —
+    /// hiding Scan behind it left no button after simulate packs (never link)
+    /// and when CoreNFC write had not succeeded yet.
     private var scanCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("SCAN")
@@ -207,58 +210,59 @@ struct NFCView: View {
                 .kerning(0.6)
                 .foregroundColor(.redmedMuted)
 
-            if profile.braceletLinked {
-                Text(AppConfig.nfcHardwareEnabled
-                      ? "Tap to scan: hold near the band — card opens in their browser. Quick. No login. No server. No app."
-                      : "Simulate scan opens the same tap card helpers get — quick, no login, no server, no app.")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(.redmedMuted)
-                    .lineSpacing(3)
-                    .fixedSize(horizontal: false, vertical: true)
+            Text(scanGuidance)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.redmedMuted)
+                .lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
 
-                Button {
-                    band.verifyBand(from: profile)
-                } label: {
-                    HStack(spacing: 8) {
-                        if band.isReading {
-                            ProgressView().tint(.redmedAccent)
-                        } else {
-                            Image(systemName: "wave.3.right.circle")
-                        }
-                        Text(scanButtonTitle)
+            Button {
+                band.verifyBand(from: profile)
+            } label: {
+                HStack(spacing: 8) {
+                    if band.isReading {
+                        ProgressView().tint(.redmedAccent)
+                    } else {
+                        Image(systemName: "wave.3.right.circle")
                     }
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.redmedAccent)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(Color.redmedBg)
-                    .clipShape(RoundedRectangle(cornerRadius: boxRadius))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: boxRadius)
-                            .strokeBorder(Color.redmedAccent.opacity(0.45), lineWidth: 1.5)
-                    )
+                    Text(scanButtonTitle)
                 }
-                .disabled(band.isBusy)
-                .buttonStyle(.plain)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.redmedAccent)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(Color.redmedBg)
+                .clipShape(RoundedRectangle(cornerRadius: boxRadius))
+                .overlay(
+                    RoundedRectangle(cornerRadius: boxRadius)
+                        .strokeBorder(Color.redmedAccent.opacity(0.45), lineWidth: 1.5)
+                )
+            }
+            // Hardware Scan reads any band. Simulate packs live RedMed — needs data.
+            .disabled(band.isBusy || (!AppConfig.nfcHardwareEnabled && !profile.hasData))
+            .opacity(AppConfig.nfcHardwareEnabled || profile.hasData ? 1 : 0.55)
+            .buttonStyle(.plain)
 
-                if band.isReading, !band.statusMessage.isEmpty {
-                    Text(band.statusMessage)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                }
-            } else {
-                Text(AppConfig.nfcHardwareEnabled
-                      ? "Write above first — then Scan here for the same tap card helpers see."
-                      : "Write above first — then Simulate scan here for the tap card helpers see.")
+            if band.isReading, !band.statusMessage.isEmpty {
+                Text(band.statusMessage)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.redmedMuted)
-                    .lineSpacing(3)
-                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .redmedBox()
+    }
+
+    private var scanGuidance: String {
+        if AppConfig.nfcHardwareEnabled {
+            return profile.braceletLinked
+                ? "Tap to scan: hold near the band — card opens in their browser. Quick. No login. No server. No app."
+                : "Hold near any RedMed band to open the same tap card helpers see. Write above first to link this bracelet."
+        }
+        return profile.hasData
+            ? "Simulate scan opens the same tap card helpers get — quick, no login, no server, no app."
+            : "Add your name on RedMed before a simulate scan."
     }
 
     // MARK: - First-responder Preview (under Scan box)
