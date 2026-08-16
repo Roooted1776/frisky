@@ -124,7 +124,7 @@ struct CustomTabBar: View {
                 TabBarItem(icon: "person.fill",  label: "RedMed", isOn: tab == .redmed) {
                     select(.redmed)
                 }
-                TabBarItem(icon: "phone.fill",   label: "911",    isOn: tab == .emergency) {
+                TabBarItem(icon: "safari.fill",  label: "911",    isOn: tab == .emergency) {
                     select(.emergency)
                 }
                 TabBarItem(icon: "cross.case.fill", label: "Aid", isOn: tab == .aid) {
