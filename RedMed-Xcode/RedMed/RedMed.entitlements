@@ -1,18 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<!--
-  NFC Tag Reading parked for personal/free Apple teams (signing fails otherwise).
-  Restore: uncomment key/array below, set AppConfig.nfcHardwareEnabled = true,
-  enable Near Field Communication Tag Reading on App ID com.redmed.app.
-  See docs/NFC-RESTORE.md.
--->
-<dict>
-	<!-- UNHIDE WITH PAID APPLE DEV PROGRAM:
-	<key>com.apple.developer.nfc.readersession.formats</key>
-	<array>
-		<string>NDEF</string>
-	</array>
-	-->
-</dict>
+<dict/>
 </plist>

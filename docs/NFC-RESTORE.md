@@ -16,10 +16,11 @@ unavailable, write fails and the band is not marked linked.
 ## Currently parked (personal team signing)
 
 `AppConfig.nfcHardwareEnabled = false` and
-`RedMed.entitlements` is an empty dict (no
-`com.apple.developer.nfc.readersession.formats`). Free / personal Apple
-teams cannot provision **NFC Tag Reading**, so device builds fail while the
-entitlement is present.
+`RedMed.entitlements` is a bare `<dict/>` (no NFC key, no XML comments —
+Automatic Signing strips comments and can rewrite a mismatched file
+mid-build). Free / personal Apple teams cannot provision **NFC Tag
+Reading**, so device builds fail while the entitlement is present. Keep
+flag and entitlements in lockstep.
 
 **Do not hide the owner NFC tab** — owners always get RedMed · 911 · Aid ·
 NFC; scanners never get NFC. The flag only blocks `NFCWriter` / `NFCReader`
@@ -80,5 +81,5 @@ Linear RED-19.
 ## Park again (optional)
 
 1. Set `AppConfig.nfcHardwareEnabled = false`
-2. Empty `RedMed.entitlements` to `<dict/>` (no NFC key)
+2. Set `RedMed.entitlements` to a bare `<dict/>` (no NFC key, no XML comments)
 3. Keep `NFCReaderUsageDescription` and the CoreNFC source files
