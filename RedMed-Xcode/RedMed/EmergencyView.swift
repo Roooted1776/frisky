@@ -15,10 +15,7 @@ struct EmergencyView: View {
         ZStack(alignment: .topTrailing) {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 10) {
-                    // GPS observes LocationManager alone — SOS / cards must not
-                    // rebuild on every coordinate tick.
-                    FindHelpLocationBlock(isVisible: isVisible)
-
+                    // Call first — EMS dial is the primary action on this tab.
                     Button {
                         RedMedHaptics.medium()
                         PublicEmergencyAid.dial()
@@ -42,6 +39,10 @@ struct EmergencyView: View {
                         .shadow(color: RedMedChrome.accentShadow, radius: 12, y: 5)
                     }
                     .buttonStyle(RedMedPressStyle(haptic: nil))
+
+                    // GPS observes LocationManager alone — SOS / cards must not
+                    // rebuild on every coordinate tick.
+                    FindHelpLocationBlock(isVisible: isVisible)
 
                     // Isolated observer — SOS arm must not rebuild the whole 911 scroll.
                     FindHelpSOSButton()
@@ -415,7 +416,7 @@ struct NoCellSignalCard: View {
                 Spacer(minLength: 0)
             }
 
-            // Compact field line — Call button lives under GPS.
+            // Compact field line — Call button is pinned above GPS.
             Text(AppConfig.Satellite.directToCellCarriersLine)
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundColor(.redmedMuted)
