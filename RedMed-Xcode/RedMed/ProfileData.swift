@@ -209,12 +209,15 @@ class ProfileData: ObservableObject {
 
     /// In-flight Keychain decode while Face ID runs — applied only after auth success.
     private var unlockBlobTask: Task<PersistedProfile?, Never>?
-    /// Embed JSON only (no AES) — unlock awaits this; usually done before Face ID returns.
+    /// Embed JSON only (no AES) — overlaps Face ID; unlock builds sync from the blob.
     private var unlockJSONTask: Task<String?, Never>?
     /// AES `#d=` after JSON; finishes in background — never blocks unlock.
     private var unlockAESTask: Task<String?, Never>?
     /// Staged Keychain blob after Face ID — published only via `commitUnlockProfile`.
     private var pendingUnlockBlob: PersistedProfile?
+    /// Decoded blob parked as soon as SecItem finishes — unlock can adopt without
+    /// `await` (avoids yielding MainActor to in-flight WKWebView warm).
+    private let unlockPrefetchBox = UnlockPrefetchBox()
     /// Stable preview `#d=` from Face ID overlap — RedMedView consumes on first unlock paint.
     private(set) var unlockPreviewPayload: String?
     /// Plaintext profile JSON from Face ID overlap — pairs with `unlockPreviewPayload`.
@@ -236,15 +239,19 @@ class ProfileData: ObservableObject {
         guard persists else { return }
         if unlockBlobTask != nil { return }
         let account = Self.keychainAccount
+        let box = unlockPrefetchBox
+        box.clear()
         let blobTask = Task.detached(priority: .userInitiated) { () -> PersistedProfile? in
             guard let data = KeychainStore.load(account: account),
                   let decoded = try? JSONDecoder().decode(PersistedProfile.self, from: data) else {
+                box.store(nil)
                 return nil
             }
+            box.store(decoded)
             return decoded
         }
         unlockBlobTask = blobTask
-        // JSON first (unlock critical path), then AES separately so unlock never waits on seal.
+        // JSON first (warm caches during Face ID), then AES separately so unlock never waits on seal.
         let jsonTask = Task.detached(priority: .userInitiated) { () -> String? in
             guard let decoded = await blobTask.value else { return nil }
             guard !Task.isCancelled else { return nil }
@@ -267,6 +274,7 @@ class ProfileData: ObservableObject {
         unlockAESTask?.cancel()
         unlockAESTask = nil
         pendingUnlockBlob = nil
+        unlockPrefetchBox.clear()
         unlockPreviewPayload = nil
         unlockEmbedProfileJSON = nil
     }
@@ -274,7 +282,8 @@ class ProfileData: ObservableObject {
     /// Prefer the Face ID–overlapped decode; fall back to a fresh Keychain read.
     /// Loads embed JSON staging only — does **not** publish PHI fields (so the
     /// lock / Unlock shell stays uncoverable under screen capture). Does not
-    /// wait on AES `#d=` (placeholder payload + `__REDMED_PROFILE` paints later).
+    /// wait on AES `#d=` or embed-JSON task completion — JSON is built sync from
+    /// the decoded blob (tiny) so Face ID success is not held on a peer Task.
     /// Call `commitUnlockProfile` only after `OwnerAppLock` sets `gate = .unlocked`.
     @MainActor
     @discardableResult
@@ -282,10 +291,19 @@ class ProfileData: ObservableObject {
         guard persists else { return false }
         pendingUnlockBlob = nil
 
+        // Fast path: SecItem already finished during Face ID — no await / no MainActor yield.
+        if let parked = unlockPrefetchBox.takeIfReady() {
+            unlockBlobTask = nil
+            guard let parked else { return false }
+            adoptUnlockArtifactsSync(for: parked)
+            pendingUnlockBlob = parked
+            return true
+        }
+
         if let blobTask = unlockBlobTask {
             unlockBlobTask = nil
             if let blob = await blobTask.value {
-                await adoptUnlockArtifactsFast(for: blob)
+                adoptUnlockArtifactsSync(for: blob)
                 pendingUnlockBlob = blob
                 return true
             }
@@ -305,10 +323,7 @@ class ProfileData: ObservableObject {
             return decoded
         }.value
         guard let blob else { return false }
-        let json = await Task.detached(priority: .userInitiated) {
-            Self.previewArtifactsJSONOnly(from: blob)
-        }.value
-        unlockEmbedProfileJSON = json
+        unlockEmbedProfileJSON = Self.previewArtifactsJSONOnly(from: blob)
         unlockPreviewPayload = ProfileNFCCodec.placeholderPreviewPayload
         pendingUnlockBlob = blob
         return true
@@ -322,23 +337,19 @@ class ProfileData: ObservableObject {
         apply(blob)
     }
 
-    /// Await Face ID–overlapped embed JSON only; placeholder `#d=` — never await AES.
+    /// Stage placeholder `#d=` + embed JSON from an already-decoded blob.
+    /// Sync JSON encode — never await the Face ID–overlapped JSON task (that
+    /// await yielded MainActor to WKWebView warm and left cream after auth).
     /// In-flight AES finishes in the background (RedMed refreshes via JS).
     @MainActor
-    private func adoptUnlockArtifactsFast(for blob: PersistedProfile) async {
-        let jsonTask = unlockJSONTask
+    private func adoptUnlockArtifactsSync(for blob: PersistedProfile) {
         let aesTask = unlockAESTask
+        unlockJSONTask?.cancel()
         unlockJSONTask = nil
         unlockAESTask = nil
 
         unlockPreviewPayload = ProfileNFCCodec.placeholderPreviewPayload
-        if let jsonTask {
-            unlockEmbedProfileJSON = await jsonTask.value
-        } else {
-            unlockEmbedProfileJSON = await Task.detached(priority: .userInitiated) {
-                Self.previewArtifactsJSONOnly(from: blob)
-            }.value
-        }
+        unlockEmbedProfileJSON = Self.previewArtifactsJSONOnly(from: blob)
 
         guard let aesTask else { return }
         Task { @MainActor in
@@ -576,6 +587,39 @@ struct EmergencyContact: Identifiable, Equatable {
         self.relationship = ""
         self.phone = ""
         self.detail = detail
+    }
+}
+
+/// Parks the Face ID–overlapped Keychain decode so unlock can adopt without `await`.
+private final class UnlockPrefetchBox: @unchecked Sendable {
+    private let lock = NSLock()
+    private var ready = false
+    private var blob: PersistedProfile?
+
+    func store(_ value: PersistedProfile?) {
+        lock.lock()
+        blob = value
+        ready = true
+        lock.unlock()
+    }
+
+    func clear() {
+        lock.lock()
+        blob = nil
+        ready = false
+        lock.unlock()
+    }
+
+    /// `nil` = still in flight. `.some(nil)` = finished, empty Keychain.
+    /// `.some(blob)` = finished with a profile.
+    func takeIfReady() -> PersistedProfile?? {
+        lock.lock()
+        defer { lock.unlock() }
+        guard ready else { return nil }
+        ready = false
+        let value = blob
+        blob = nil
+        return .some(value)
     }
 }
 
