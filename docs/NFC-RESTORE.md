@@ -13,15 +13,18 @@ still simulates Write/Scan by packing the compact `tapper.html#d=` URL. Real
 CoreNFC has **no** Simulator fake-success: if hardware is enabled and NFC is
 unavailable, write fails and the band is not marked linked.
 
-## Currently enabled (code + entitlement)
+## Currently parked (personal team signing)
 
-`AppConfig.nfcHardwareEnabled = true` and
-`com.apple.developer.nfc.readersession.formats` → `NDEF` are on in
-`RedMed.entitlements`.
+`AppConfig.nfcHardwareEnabled = false` and
+`RedMed.entitlements` is a bare `<dict/>` (no NFC key, no XML comments —
+Automatic Signing strips comments and can rewrite a mismatched file
+mid-build). Free / personal Apple teams cannot provision **NFC Tag
+Reading**, so device builds fail while the entitlement is present. Keep
+flag and entitlements in lockstep.
 
-**Do not hide the owner NFC tab** if you park the flag again — owners always get
-RedMed · 911 · Aid · NFC; scanners never get NFC. The flag only blocks
-`NFCWriter` / `NFCReader` sessions (simulate path stays).
+**Do not hide the owner NFC tab** — owners always get RedMed · 911 · Aid ·
+NFC; scanners never get NFC. The flag only blocks `NFCWriter` / `NFCReader`
+sessions (simulate / pack-only path stays).
 
 Owner NFC page keeps **both** capabilities on one screen: Write and Scan
 (opens the same `tapper.html#d=` page helpers see).
@@ -58,16 +61,14 @@ Owner NFC page keeps **both** capabilities on one screen: Write and Scan
   to walk-by and is not started by this app. Product copy lives in
   `AppConfig.BraceletRF.backgroundTagReadingSummary`.
 
-## Portal checklist (device install)
+## Restore (paid Program + device)
 
-Code-side enable is done. Device signing still needs the App ID capability:
-
-1. Confirm `AppConfig.nfcHardwareEnabled = true`
-2. Confirm `com.apple.developer.nfc.readersession.formats` → `NDEF` in
+1. Set `AppConfig.nfcHardwareEnabled = true`
+2. Put `com.apple.developer.nfc.readersession.formats` → `NDEF` back in
    `RedMed.entitlements`
 3. Developer portal → App ID `com.redmed.app` → enable **NFC Tag Reading**
 4. Xcode → Signing & Capabilities → **Near Field Communication Tag Reading**
-5. Confirm `Info.plist` has `NFCReaderUsageDescription`
+5. Confirm `Info.plist` has `NFCReaderUsageDescription` (kept while parked)
 6. Device test on **verified blank NTAG216** stock: Write → second phone Safari
    tap → emergency card
 
@@ -80,5 +81,5 @@ Linear RED-19.
 ## Park again (optional)
 
 1. Set `AppConfig.nfcHardwareEnabled = false`
-2. Comment out the NFC key/array in `RedMed.entitlements` (leave the rest empty)
+2. Set `RedMed.entitlements` to a bare `<dict/>` (no NFC key, no XML comments)
 3. Keep `NFCReaderUsageDescription` and the CoreNFC source files

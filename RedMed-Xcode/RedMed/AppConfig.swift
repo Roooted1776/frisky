@@ -66,7 +66,9 @@ enum AppConfig {
     /// `true` = owner Write/Scan start real `NFCNDEFReaderSession` against passive
     /// rewritable Type 2 (NTAG) bands. Requires NFC Tag Reading on App ID
     /// `com.redmed.app` + paid Apple Developer — see `docs/NFC-RESTORE.md`.
-    static let nfcHardwareEnabled = true
+    /// Parked (`false`): personal/free teams cannot provision NFC; Write/Scan
+    /// stay on the pack-only simulate path until entitlement is restored.
+    static let nfcHardwareEnabled = false
 
     /// Hardware RF contract for the RedMed bracelet.
     /// - Band is **passive**: no battery, no BLE/Wi‑Fi radio. RedMed only starts
