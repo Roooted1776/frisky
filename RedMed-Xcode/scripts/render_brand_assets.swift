@@ -115,7 +115,7 @@ func drawWordmark(height: CGFloat, darkBackground: Bool) -> NSImage {
     ]
     let medColor = darkBackground
         ? NSColor(calibratedWhite: 0.92, alpha: 1)
-        : NSColor(calibratedRed: 0.129, green: 0.122, blue: 0.122, alpha: 1) // #211F1F
+        : NSColor(calibratedRed: 0.110, green: 0.098, blue: 0.086, alpha: 1) // #1c1917
     let medAttrs: [NSAttributedString.Key: Any] = [
         .font: font,
         .foregroundColor: medColor,
