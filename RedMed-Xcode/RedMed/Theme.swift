@@ -179,6 +179,7 @@ struct SecondaryButton: View {
 /// Accent red text only — no chip / box fill (plain link over the HTML shell).
 struct ChromeTextAction: View {
     let title: String
+    var weight: Font.Weight = .regular
     let action: () -> Void
 
     var body: some View {
@@ -187,7 +188,7 @@ struct ChromeTextAction: View {
             action()
         } label: {
             Text(title)
-                .font(.system(size: RedMedChrome.chromeActionSize, weight: .regular))
+                .font(.system(size: RedMedChrome.chromeActionSize, weight: weight))
                 .foregroundColor(.redmedAccent)
                 .kerning(-0.2)
                 .lineLimit(1)

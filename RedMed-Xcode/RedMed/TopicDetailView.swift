@@ -65,22 +65,16 @@ struct TopicDetailView: View {
         VStack(spacing: 0) {
             BrandWordmarkHeader()
 
-            // Pane-style chrome — not system toolbar (that paints black fill/text).
+            // Pane-style chrome — Back only (topic name already opened the sheet).
             HStack(alignment: .center, spacing: 12) {
-                ChromeTextAction(title: "Back") { dismiss() }
-                Text(topic.title)
-                    .font(RedMedChrome.navTitleFont)
-                    .foregroundColor(.redmedAccent)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.75)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .layoutPriority(1)
+                ChromeTextAction(title: "Back", weight: .bold) { dismiss() }
+                Spacer(minLength: 0)
             }
             .padding(.horizontal, RedMedChrome.pagePadX)
             .padding(.top, 2)
             .padding(.bottom, 8)
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel(topic.title)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
