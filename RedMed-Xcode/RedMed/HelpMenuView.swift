@@ -4,7 +4,8 @@ import UIKit
 
 // MARK: - WebView wrapper (policies + passerby card only)
 struct LocalWebView: UIViewRepresentable {
-    let filename: String // e.g. "PrivacyPolicy"
+    let filename: String
+    var fragment: String? = nil
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
@@ -31,10 +32,24 @@ struct LocalWebView: UIViewRepresentable {
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
-        guard context.coordinator.loadedFilename != filename else { return }
+        let key = "\(filename)#\(fragment ?? "")"
+        context.coordinator.fragment = fragment
+        if context.coordinator.loadedKey == key { return }
+
+        let loadedFile = context.coordinator.loadedKey?
+            .split(separator: "#", maxSplits: 1)
+            .first
+            .map(String.init)
+        if loadedFile == filename, context.coordinator.didLoadHTML {
+            context.coordinator.loadedKey = key
+            context.coordinator.scrollToFragment(in: webView)
+            return
+        }
+
         guard let url = Bundle.main.url(forResource: filename, withExtension: "html"),
               var html = try? String(contentsOf: url, encoding: .utf8) else { return }
-        context.coordinator.loadedFilename = filename
+        context.coordinator.loadedKey = key
+        context.coordinator.didLoadHTML = true
         // Cream before first paint — file loads can flash system white before CSS.
         let cream = "<style>html,body{background:#fff7f7!important;margin:0}</style>\n"
         if let range = html.range(of: "<head>") {
@@ -42,11 +57,13 @@ struct LocalWebView: UIViewRepresentable {
         } else {
             html = cream + html
         }
-        webView.loadHTMLString(html, baseURL: url.deletingLastPathComponent())
+        // File URL as base so in-page hashes and legal-doc.css resolve locally.
+        webView.loadHTMLString(html, baseURL: url)
     }
 
     /// Policy HTML + stylesheet only — never lateral loads into tapper.html / other bundle files.
     private static let allowedFileBasenames: Set<String> = [
+        "Help.html",
         "PrivacyPolicy.html",
         "TOS.html",
         "security.html",
@@ -62,10 +79,22 @@ struct LocalWebView: UIViewRepresentable {
 
     /// Blocks in-webview navigation to untrusted schemes; opens http(s)/tel/mailto/redmed externally.
     final class Coordinator: NSObject, WKNavigationDelegate {
-        var loadedFilename: String?
+        var loadedKey: String?
+        var fragment: String?
+        var didLoadHTML = false
+
+        func scrollToFragment(in webView: WKWebView) {
+            guard let fragment, !fragment.isEmpty else { return }
+            let safe = fragment.filter { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" }
+            guard safe == fragment else { return }
+            webView.evaluateJavaScript(
+                "document.getElementById('\(safe)')?.scrollIntoView({block:'start'})"
+            )
+        }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             webView.scrollView.flashScrollIndicators()
+            scrollToFragment(in: webView)
         }
 
         func webView(
@@ -202,11 +231,11 @@ struct HelpMenuView: View {
 
                         helpSectionLabel("Policies")
                         helpCard {
-                            policyLink("Privacy Policy", file: "PrivacyPolicy")
+                            policyLink("Privacy Policy", file: "Help", fragment: "privacy")
                             Divider().padding(.leading, Metrics.rowHPad)
-                            policyLink("Terms of Service", file: "TOS")
+                            policyLink("Terms of Service", file: "Help", fragment: "terms")
                             Divider().padding(.leading, Metrics.rowHPad)
-                            policyLink("Security", file: "security")
+                            policyLink("Security", file: "Help", fragment: "security")
                         }
 
                         helpSectionLabel("Data")
@@ -287,9 +316,9 @@ struct HelpMenuView: View {
     }
 
     @ViewBuilder
-    private func policyLink(_ title: String, file: String) -> some View {
+    private func policyLink(_ title: String, file: String, fragment: String? = nil) -> some View {
         NavigationLink {
-            LocalWebView(filename: file)
+            LocalWebView(filename: file, fragment: fragment)
                 .navigationTitle(title)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar(.visible, for: .navigationBar)
