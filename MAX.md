@@ -44,11 +44,9 @@ See also `AGENTS.md`. High-signal recap:
 3. Settings = **haptic + Location only**. Brightness 100% + system volume 100% + locator siren arm on crash / severe-impact (`CrashMotionGuard`), owner **SOS · Locate me**, or **real bracelet NFC** open of `tapper.html#d=…` (hardware-local SOS on that phone). Owner Find Help open, bare `/tapper/`, and in-app scanner preview do **not** auto-arm.
 4. Survival hold may keep siren + max volume + brightness through background until cancel on Aid (or Stop SOS on Find Help).
 5. Vault Face ID: relock on **`.background` only** (not `.inactive` — Face ID sheets).
-6. Owner lock: front page is `LockEntryPage` — static user-page cream (`#fff7f7` /
-   `redmedBg`, no LockOpen clip, no wash) behind a small original medical lock
-   glyph (not BrandLogo, not Apple Face ID mark) under auto Face ID before Main
-   (Unlock = cream dock after cancel / mismatch). Path: open → Face ID → Main.
-   No atmosphere video — that overlay delayed Face ID / Main. Fresh install
+6. Owner lock: front page is `LockEntryPage` — Face ID on static user-page cream
+   (`#fff7f7` / `redmedBg`). Hide glyph, Help, other tabs, LockOpen clip. Path:
+   open → Face ID → Main. Unlock dock after cancel / mismatch only. Fresh install
    unlocks into empty tabs after auth. Owner pages + tapper: cream fill only —
    no page BrandLogo. **No hanging decorative brand marks** (lock watermark, Aid
    pane wordmarks, privacy-cover logo gone). NFC / topic sheets keep one page
@@ -82,10 +80,9 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Owner app on first launch; `Main.swift` owner shell; HTML policies redirect `redmed://main`.
 - Deferred all Core Location until Find Help; fixed SIGTERM/launch confusion.
 - Cold launch: LaunchBackground only on UILaunchScreen (no system BrandLogo).
-  Every owner launch: auto Face ID on `LockEntryPage` (static `#fff7f7` cream)
-  behind the medical lock glyph (no LockOpen clip, no decorative BrandLogo;
-  Unlock cream dock after cancel / mismatch). No atmosphere video (that overlay
-  was the cream hang). Face ID kicks immediately on cold
+  Every owner launch: auto Face ID on `LockEntryPage` (static `#fff7f7` cream,
+  no glyph, no other pages) then Main. Unlock after cancel / mismatch. No
+  atmosphere video (that overlay was the cream hang). Face ID kicks immediately on cold
   `.inactive` (waiting for `.active` was the cream hang). Prefetch still starts
   in the same `onAppear` tick and inside the unlock pipeline. Fresh install
   unlocks into empty tabs after auth. Keychain decode + AES `#d=` pack +

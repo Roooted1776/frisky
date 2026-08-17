@@ -362,7 +362,6 @@ struct HelpMenuView: View {
                 .toolbarBackground(Color.redmedBg, for: .navigationBar)
                 .toolbarBackground(.visible, for: .navigationBar)
                 .toolbarColorScheme(.light, for: .navigationBar)
-                .background(Color.redmedBg.ignoresSafeArea())
         } label: {
             HStack {
                 Text(policy.title)

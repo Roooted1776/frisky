@@ -15,11 +15,9 @@ import SwiftUI
 /// prefetch / fail-closed load) but does **not** open Main without auth.
 ///
 /// Every owner launch is Face ID / passcode before Main. Front page is
-/// `LockEntryPage`: static user-page cream (`Color.redmedBg`) behind a small
-/// medical lock glyph (not BrandLogo, not Apple Face ID mark). Path: open →
-/// auth → Main. No LockOpen atmosphere clip — solid cream only. No Accept
-/// step. No post-auth overlay (that clip-over-Main was the cream hang). Unlock
-/// is retry chrome after cancel / mismatch only.
+/// `LockEntryPage`: static user-page cream only (`Color.redmedBg`) — Face ID,
+/// then Main. No glyph, no Help, no other tabs. No LockOpen clip. Unlock is
+/// retry chrome after cancel / mismatch only.
 /// Fresh install unlocks into empty tabs after auth; returning owners load
 /// Keychain (fail closed on corrupt blob). Auto-prompt once per lock —
 /// including cold launch while still `.inactive` (waiting for `.active` was

@@ -95,17 +95,11 @@ The app has no backend, database, or web service.
   lock on `.inactive` — LAContext / system auth sheets put the scene inactive
   and would discard a successful unlock via `authGeneration`.
 - Owner app lock is **biometrics only before Main**. Front page is
-  `LockEntryPage`: static user-page cream (`Color.redmedBg` / `#fff7f7` — same
-  fill as RedMed / tapper, no wash, no `LockOpen.mp4`) behind a small original
-  medical lock glyph (heart + static EKG, Face ID–sized, transparent, one-shot
-  pop — not Apple Face ID scan, not BrandLogo) under system Face ID on every
-  launch (no Accept; no Unlock on first prompt; **no** decorative BrandLogo on
-  the lock shell). Path: open → Face ID → Main. Do **not** play a lock
-  atmosphere clip — that overlay was the cream hang. Face ID kicks immediately;
-  auth goes straight to Main (no clip overlay, no wait for ready/end). No
-  `AVAudioSession` (survival alarm owns that). Unlock appears in a cream dock
-  after cancel / mismatch. Fresh
-  install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
+  `LockEntryPage`: static user-page cream only (`Color.redmedBg` / `#fff7f7` —
+  same fill as the RedMed user tab). Path: open → Face ID → Main. Hide glyph,
+  Help, 911 / Aid / NFC, and atmosphere video on this page — Face ID sits on
+  cream, then Main. Do **not** play a lock atmosphere clip. Unlock appears
+  after cancel / mismatch. Fresh install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
   Owner pages + passerby tapper: cream fill only (no page BrandLogo). **No hanging
   decorative brand marks** anywhere (no lock watermark, no Aid pane wordmarks, no
   privacy-cover logo) — page BrandWordmark headers on NFC / topic sheets only;

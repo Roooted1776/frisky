@@ -44,8 +44,8 @@ extension Color {
 }
 
 /// Cream page with rose wash only (fill color — no BrandLogo).
-/// Lock load shell is static `redmedBg` (same as the user page); passerby
-/// tapper matches cream fill.
+/// Lock front (`LockEntryPage`) is static `redmedBg` only; passerby tapper
+/// matches cream fill.
 struct RedMedPageBackground: View {
     var body: some View {
         ZStack {

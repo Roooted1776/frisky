@@ -1,11 +1,10 @@
 import SwiftUI
 
-/// Front-of-app lock page — Face ID, then Main.
+/// Front-of-app page — Face ID on user-page cream, then Main.
 ///
-/// Static user-page cream (`Color.redmedBg` / `#fff7f7`). No LockOpen clip, no
-/// wash. Glyph under the Face ID sheet; Unlock dock only after cancel /
-/// mismatch. Auth logic stays in `OwnerAppLock` so this page can be rewritten
-/// without touching the gate.
+/// No glyph, no Help, no 911 / Aid / NFC. Flat `Color.redmedBg` (`#fff7f7`),
+/// same fill as the RedMed user tab. Unlock dock only after Face ID cancel /
+/// mismatch. Auth stays in `OwnerAppLock`.
 struct LockEntryPage: View {
     var showsRetryDock: Bool
     var screenCaptured: Bool
@@ -22,14 +21,6 @@ struct LockEntryPage: View {
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
 
-            if !showsRetryDock {
-                LockMedGlyph()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .offset(y: -28)
-                    .allowsHitTesting(false)
-                    .accessibilityHidden(true)
-            }
-
             if showsRetryDock {
                 retryDock
             }
@@ -38,16 +29,11 @@ struct LockEntryPage: View {
         .accessibilityLabel("RedMed is locked")
     }
 
-    /// Status + Unlock after cancel / mismatch (hidden on first Face ID prompt).
+    /// Unlock after cancel / mismatch (hidden on first Face ID prompt).
     private var retryDock: some View {
         VStack(spacing: 0) {
             Spacer(minLength: 0)
             VStack(spacing: 16) {
-                Capsule()
-                    .fill(Color.redmedDark.opacity(0.14))
-                    .frame(width: 36, height: 4)
-                    .padding(.bottom, 2)
-
                 if screenCaptured {
                     Text("Screen sharing is on — unlock with passcode. Profile stays hidden on the share until you stop sharing.")
                         .font(.system(size: 13, weight: .semibold))
@@ -67,11 +53,6 @@ struct LockEntryPage: View {
                         .foregroundColor(.redmedAccent)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
-                } else if showUnlockControl {
-                    Text("Unlock to open RedMed")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(.redmedDark.opacity(0.78))
-                        .multilineTextAlignment(.center)
                 }
 
                 if showUnlockControl {
@@ -82,32 +63,12 @@ struct LockEntryPage: View {
             .padding(.top, 14)
             .padding(.bottom, 26)
             .frame(maxWidth: .infinity)
-            .background { dockBackground }
+            .background(Color.redmedBg)
             .padding(.horizontal, 14)
             .padding(.bottom, 28)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .transition(.identity)
-    }
-
-    private var dockBackground: some View {
-        let shape = RoundedRectangle(cornerRadius: RedMedChrome.unlockDockRadius, style: .continuous)
-        return shape
-            .fill(Color.redmedSurface)
-            .overlay {
-                shape.strokeBorder(
-                    LinearGradient(
-                        colors: [
-                            Color.white.opacity(0.55),
-                            Color.redmedDivider
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1
-                )
-            }
-            .shadow(color: Color.black.opacity(0.06), radius: 16, y: 8)
     }
 
     private var unlockButton: some View {
@@ -117,20 +78,12 @@ struct LockEntryPage: View {
         } label: {
             Group {
                 if isAuthenticating {
-                    HStack(spacing: 10) {
-                        Image(systemName: "faceid")
-                            .font(.system(size: 18, weight: .semibold))
-                        Text("Unlocking")
-                            .font(.system(size: 16, weight: .bold))
-                    }
-                    .accessibilityLabel("Unlocking with Face ID")
+                    Text("Unlocking")
+                        .font(.system(size: 16, weight: .bold))
+                        .accessibilityLabel("Unlocking with Face ID")
                 } else {
-                    HStack(spacing: 10) {
-                        Image(systemName: "faceid")
-                            .font(.system(size: 18, weight: .semibold))
-                        Text("Unlock")
-                            .font(.system(size: 16, weight: .bold))
-                    }
+                    Text("Unlock")
+                        .font(.system(size: 16, weight: .bold))
                 }
             }
             .foregroundColor(.white)
@@ -140,21 +93,7 @@ struct LockEntryPage: View {
             .padding(.vertical, 12)
             .background {
                 RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 1, green: 0.447, blue: 0.537).opacity(0.75),
-                                Color.redmedAccent.opacity(0.75)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .overlay {
-                        RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous)
-                            .strokeBorder(Color.white.opacity(0.32), lineWidth: 1)
-                    }
-                    .shadow(color: RedMedChrome.accentShadow, radius: 12, y: 6)
+                    .fill(Color.redmedAccent)
             }
         }
         .buttonStyle(RedMedPressStyle(haptic: nil))
