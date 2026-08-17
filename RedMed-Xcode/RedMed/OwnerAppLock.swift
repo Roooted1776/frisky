@@ -89,8 +89,9 @@ struct OwnerAppLock<Content: View>: View {
         }
         .onAppear {
             screenCaptured = UIScreen.main.isCaptured
-            LockOpenClip.prewarm()
             // Face ID first — cream hang waiting for `.active` or shell warm is wasted time.
+            // Do not prewarm LockOpen here: cold launch / Face ID hold `.inactive` and
+            // AVURLAsset then logs FigApplicationStateMonitor AllocFailed.
             tryAutoUnlockIfActive()
             // Always prefetch (single-flight). Do not gate on UserDefaults — stale/false
             // gate left Face ID overlapping nothing.
@@ -166,6 +167,8 @@ struct OwnerAppLock<Content: View>: View {
                 killOpenOverlay()
                 lock(purge: true)
             } else if phase == .active {
+                // Safe window for CoreMedia — not under a Face ID `.inactive` sheet.
+                LockOpenClip.prewarm()
                 tryAutoUnlockIfActive()
             }
         }
