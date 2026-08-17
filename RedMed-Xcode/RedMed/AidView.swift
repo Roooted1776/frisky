@@ -56,8 +56,10 @@ struct AidView: View {
         // Full-width accordion — life-saving: big targets, text always fits, no
         // 2-col reflow when a pane opens. Same pattern as passerby tapper.html Aid.
         // No page header / pane BrandWordmark — content-first, nothing hanging.
-        // Help overlays top-leading. Scanner Back overlays top-trailing.
-        ZStack(alignment: .top) {
+        // Help is a sibling row (same as RedMed) so Aid panes sit below it.
+        VStack(spacing: 0) {
+            PageHelpChrome()
+
             GeometryReader { geo in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 10) {
@@ -101,22 +103,12 @@ struct AidView: View {
                             .padding(.top, 8)
                     }
                     .padding(.horizontal, RedMedChrome.pagePadX)
-                    .padding(.top, 54)
+                    .padding(.top, 4)
                     .padding(.bottom, 24)
                     .frame(minHeight: geo.size.height, alignment: .top)
                 }
                 .scrollIndicators(.visible)
             }
-
-            HStack(alignment: .center, spacing: 12) {
-                OwnerHelpButton()
-                Spacer(minLength: 0)
-                if isScannerSession {
-                    ScannerBackButton()
-                }
-            }
-            .padding(.horizontal, RedMedChrome.pagePadX)
-            .padding(.top, 16)
         }
         .background { RedMedPageBackground() }
         .sheet(item: $activeTopic) { topic in

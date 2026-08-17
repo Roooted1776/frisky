@@ -83,6 +83,37 @@ struct OwnerHelpButton: View {
     }
 }
 
+/// Sibling Help row (same metrics as RedMed). Used on 911 / Aid / NFC so
+/// page sections sit below Help instead of under an overlay. RedMed owns its own bar.
+struct PageHelpChrome<Trailing: View>: View {
+    @Environment(\.isScannerSession) private var isScannerSession
+    @ViewBuilder var trailing: () -> Trailing
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            if isScannerSession {
+                ScannerBackButton()
+                Spacer(minLength: 0)
+                OwnerHelpButton()
+            } else {
+                OwnerHelpButton()
+                Spacer(minLength: 0)
+                trailing()
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
+        .padding(.horizontal, RedMedChrome.pagePadX)
+        .padding(.top, 16)
+        .padding(.bottom, 8)
+    }
+}
+
+extension PageHelpChrome where Trailing == EmptyView {
+    init() {
+        self.trailing = { EmptyView() }
+    }
+}
+
 /// Local Help cover so the button works on tab roots and on sheets / full-screen covers.
 private struct PresentsOwnerHelp: ViewModifier {
     @State private var showHelp = false

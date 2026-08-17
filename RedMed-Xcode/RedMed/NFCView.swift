@@ -33,9 +33,8 @@ struct NFCView: View {
         // BrandWordmark (911 / Aid are content-first; no hanging pane marks).
         // Owner-only tab; scanners never mount this.
         VStack(spacing: 0) {
-            BrandWordmarkHeader {
-                OwnerHelpButton()
-            }
+            PageHelpChrome()
+            BrandWordmarkHeader(top: 0)
 
             ScrollView {
                 VStack(spacing: 16) {
