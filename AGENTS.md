@@ -98,13 +98,15 @@ The app has no backend, database, or web service.
   bundled `LockOpen.mp4` behind a Face ID–sized medical mark (`FaceIDFrame.mp4`
   heart + EKG draw + plus sparkle; else `LockMedGlyph` — not Apple Face ID
   scan, not BrandLogo) under system Face ID on every launch (no Accept; no
-  Unlock on first prompt; **no** decorative BrandLogo on the lock shell).
+  Proceed on first prompt; **no** decorative BrandLogo on the lock shell).
   **Video never gates open or unlock** — cream paints first, Face ID kicks
   on the first interactive frame, AV builds off-main, auth goes straight to Main (no clip
   overlay, no wait for ready/end; that overlay was the cream hang). Missing
   file / Reduce Motion / Low Power = cream washes + static glyph. No `AVAudioSession`
-  (survival alarm owns that). Unlock appears in a cream dock after cancel /
-  mismatch. Fresh
+  (survival alarm owns that). After cancel / mismatch a cream dock (~25% of
+  the screen) shows **Proceed** (Face ID retry) and **Agreement** (swipe
+  Privacy / TOS / Security — same bundled Help.html as owner Help). Agreement
+  is view-only, not an Accept gate. Fresh
   install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
   Owner pages + passerby tapper: cream fill only (no page BrandLogo). **No hanging
   decorative brand marks** anywhere (no lock watermark, no Aid pane wordmarks, no
@@ -135,7 +137,7 @@ had to tap the app again to open Main. Cream still paints immediately;
 AV / WebKit stay deferred so interactive arrives on the next frame.
 `didAutoPromptThisLock` blocks re-prompt while the Face ID sheet holds
 `.inactive`. App lock may reuse a just-completed device Face ID (short
-window) so that scan opens Main; Unlock is retry after cancel / mismatch.
+window) so that scan opens Main; Proceed is retry after cancel / mismatch.
 Edit / NFC / vault stay reuse-zero. Prefetch still starts in the same
 `onAppear` tick and inside the unlock pipeline (single-flight overlap with
 Face ID). Fresh install unlocks into empty tabs after
