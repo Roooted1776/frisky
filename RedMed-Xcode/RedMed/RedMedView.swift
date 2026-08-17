@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// Owner / scanner RedMed tab — same bundled `tapper.html` medical panel helpers see
-/// on a band tap. Owner keeps Help · Edit top chrome; scanners keep Back · Help.
+/// on a band tap. Owner keeps Edit top chrome; Help is a bottom unlock-dock
+/// button. Scanners keep Back top chrome + the same bottom Help button.
 /// First-responder Preview lives on the NFC tab under Scan — not here.
 /// Native 911 / Aid / NFC tabs stay separate (HTML tab bar hidden in app-embed).
 struct RedMedView: View {
@@ -55,16 +56,14 @@ struct RedMedView: View {
     }
 
     var body: some View {
-        // Chrome is a sibling above the WKWebView — never an overlay. Overlaying
-        // Help · Edit on UIKit WebView lets the web view steal taps (Edit looks dead).
+        // Chrome is a sibling of the WKWebView — never an overlay. Overlaying
+        // Edit on UIKit WebView lets the web view steal taps (Edit looks dead).
         VStack(spacing: 0) {
             HStack(alignment: .center, spacing: 12) {
                 if isScannerSession {
                     ScannerBackButton()
                     Spacer(minLength: 0)
-                    OwnerHelpButton()
                 } else {
-                    OwnerHelpButton()
                     ChromeTextAction(title: "Edit") { requestEdit() }
                     Spacer(minLength: 0)
                 }
@@ -99,6 +98,11 @@ struct RedMedView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            OwnerHelpDockButton()
+                .padding(.horizontal, 22)
+                .padding(.top, 8)
+                .padding(.bottom, 10)
         }
         // Owner profile only — never redact the passerby / EMS scanner card.
         .privacySensitive(!isScannerSession)

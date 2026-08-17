@@ -44,11 +44,11 @@ See also `AGENTS.md`. High-signal recap:
 3. Settings = **haptic + Location only**. Brightness 100% + system volume 100% + locator siren arm on crash / severe-impact (`CrashMotionGuard`), owner **SOS · Locate me**, or **real bracelet NFC** open of `tapper.html#d=…` (hardware-local SOS on that phone). Owner Find Help open, bare `/tapper/`, and in-app scanner preview do **not** auto-arm.
 4. Survival hold may keep siren + max volume + brightness through background until cancel on Aid (or Stop SOS on Find Help).
 5. Vault Face ID: relock on **`.background` only** (not `.inactive` — Face ID sheets).
-6. Owner lock: every launch is cream atmosphere + muted `LockOpen.mp4` behind
-   a Face ID–sized medical mark (`FaceIDFrame.mp4`, else `LockMedGlyph` — not
-   BrandLogo, not Apple Face ID scan) under auto Face ID before Main (Unlock
-   = cream dock after cancel / mismatch). Video never delays Face ID or Main
-   (no overlay, no ready/end wait). Fresh install
+6. Owner lock: front page is `LockEntryPage` — Higgs `FaceIDFrame` on user cream,
+   first Face ID, then Main. No passcode pad on that Face ID. Passerby tapper
+   has no Face ID / password / login in front of the card. No Unlock retry, no second Face ID this process
+   (Edit / NFC / vault skip). Erase still prompts. No background re-lock Face ID.
+   Fresh install
    unlocks into empty tabs after auth. Owner pages + tapper: cream fill only —
    no page BrandLogo. **No hanging decorative brand marks** (lock watermark, Aid
    pane wordmarks, privacy-cover logo gone). NFC / topic sheets keep one page
@@ -82,13 +82,9 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Owner app on first launch; `Main.swift` owner shell; HTML policies redirect `redmed://main`.
 - Deferred all Core Location until Find Help; fixed SIGTERM/launch confusion.
 - Cold launch: LaunchBackground only on UILaunchScreen (no system BrandLogo).
-  Every owner launch: auto Face ID over cream + muted LockOpen.mp4 behind the
-  Face ID–frame medical mark (`FaceIDFrame.mp4`, else glyph; no decorative
-  BrandLogo; Unlock cream dock after cancel / mismatch). Clip never gates
-  Face ID or Main (no overlay; that was the cream hang). Face ID starts on the first interactive frame (not cold
-  `.inactive` — that SpringBoard overlay left Face ID done but the owner
-  still had to tap the app to open). App lock reuses a just-completed
-  device Face ID so that scan opens Main. Prefetch still starts
+  Every owner launch: Higgs `FaceIDFrame` + first Face ID on `LockEntryPage`,
+  then Main. No Unlock retry, no second Face ID this process. Face ID kicks immediately on cold
+  `.inactive` (waiting for `.active` was the cream hang). Prefetch still starts
   in the same `onAppear` tick and inside the unlock pipeline. Fresh install
   unlocks into empty tabs after auth. Keychain decode + AES `#d=` pack +
   tapper.html string warm overlap Face ID; WKWebView warm only after unlock

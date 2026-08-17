@@ -127,9 +127,8 @@ final class LockAtmospherePlayerView: UIView {
     }
 }
 
-/// Bundled Face ID–frame clip. Muted square mark under the system sheet —
-/// never a gate. Missing file / Reduce Motion / Low Power fall back to
-/// `LockMedGlyph`. Not Apple Face ID scan rings.
+/// Higgs Face ID–frame clip. Muted square mark under the first Face ID sheet —
+/// never a gate. Missing file / Reduce Motion / Low Power = cream only.
 enum FaceIDFrameClip {
     static let resourceName = "FaceIDFrame"
 

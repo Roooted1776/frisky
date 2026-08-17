@@ -44,8 +44,8 @@ extension Color {
 }
 
 /// Cream page with rose wash only (fill color — no BrandLogo).
-/// Lock load shell uses muted LockOpen video over cream (static washes when
-/// the clip is skipped); passerby tapper matches cream fill.
+/// Lock front (`LockEntryPage`) is static `redmedBg` only; passerby tapper
+/// matches cream fill.
 struct RedMedPageBackground: View {
     var body: some View {
         ZStack {
@@ -199,8 +199,63 @@ struct SecondaryButton: View {
     }
 }
 
-/// Trailing chrome text — owner **Help** / **Edit**, NFC Preview **Back**, scanner **Back**, Aid topic **Back**.
-/// Help is on every native screen except the Face ID lock shell.
+/// Full-width CTA from the original Face ID unlock dock — gradient fill,
+/// continuous corners, white hairline. Help on the RedMed user page uses this.
+struct UnlockScreenButton: View {
+    let title: String
+    var icon: String? = nil
+    var isBusy: Bool = false
+    var busyTitle: String? = nil
+    var disabled: Bool = false
+    var accessibilityHintText: String? = nil
+    let action: () -> Void
+
+    var body: some View {
+        Button {
+            RedMedHaptics.medium()
+            action()
+        } label: {
+            HStack(spacing: 10) {
+                if let icon {
+                    Image(systemName: icon)
+                        .font(.system(size: 18, weight: .semibold))
+                }
+                Text(isBusy ? (busyTitle ?? title) : title)
+                    .font(.system(size: 16, weight: .bold))
+            }
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 52)
+            .padding(.horizontal, 22)
+            .padding(.vertical, 12)
+            .background {
+                RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color(red: 1, green: 0.447, blue: 0.537).opacity(0.75),
+                                Color.redmedAccent.opacity(0.75)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .overlay {
+                        RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous)
+                            .strokeBorder(Color.white.opacity(0.32), lineWidth: 1)
+                    }
+                    .shadow(color: RedMedChrome.accentShadow, radius: 12, y: 6)
+            }
+        }
+        .buttonStyle(RedMedPressStyle(haptic: nil))
+        .disabled(disabled || isBusy)
+        .accessibilityHint(accessibilityHintText ?? "")
+    }
+}
+
+/// Trailing chrome text — owner **Edit**, NFC Preview **Back**, scanner **Back**, Aid topic **Back**.
+/// Help on the RedMed user page is `UnlockScreenButton` at the bottom, not this.
+/// Help on 911 / Aid / NFC stays top chrome. No Help on the Face ID lock shell.
 /// Accent red text only — no chip / box fill (plain link over the HTML shell).
 struct ChromeTextAction: View {
     let title: String

@@ -1,25 +1,21 @@
 import LocalAuthentication
 import UIKit
 
-/// Strict owner authentication — Face ID / Touch ID first; device passcode on
-/// the same LocalAuthentication evaluation (fallback / lockout / failed scans).
-/// Owner-only gates: app unlock, Edit, NFC write, vault, erase. Never call from
-/// passerby `tapper.html`, `PublicCardView`, or NFC Preview / Scan shells —
-/// tap-to-view stays ungated.
-/// Reuse window is zero for Edit / NFC write / vault. App lock may pass a short
-/// `allowableReuseDuration` so the Face ID that just opened the phone admits
-/// the owner into Main without a second scan or tapping the icon again.
+/// Strict owner authentication. Never call from passerby `tapper.html`,
+/// `PublicCardView`, or NFC Preview / Scan — tap-to-view stays ungated
+/// (no Face ID, no passcode, no login).
 ///
-/// Use a single `.deviceOwnerAuthentication` call — not biometrics-only followed by
-/// a second evaluate. A second `.deviceOwnerAuthentication` after `userFallback`
-/// prefers Face ID again when biometrics are still available, so tapping Passcode
-/// re-scans instead of opening the passcode pad.
+/// App unlock is Face ID / Touch ID only (`allowPasscode: false`) so no
+/// password pad sits in front of Main / the YOU card. Erase still allows
+/// device passcode (`force: true`, default `allowPasscode`). After the first
+/// success this process, Edit / NFC / vault skip LA unless `force`.
+/// Reuse window is zero so the first app-unlock Face ID is always fresh.
 enum BiometricAuth {
     /// Distinguishes a failed scan from cancel / dismiss so lock UI does not
     /// claim “couldn't verify” on every unlock the owner backs out of.
     enum Outcome: Equatable {
         case success
-        /// Face ID / Touch ID (or passcode after fallback) did not match.
+        /// Face ID / Touch ID (or passcode after fallback, when allowed) did not match.
         case notVerified
         /// User or system cancelled; biometry unavailable with no passcode path.
         case declined
@@ -27,31 +23,50 @@ enum BiometricAuth {
         case notInteractive
     }
 
-    /// App lock only — device Face ID that just unlocked the phone / opened
-    /// RedMed counts. Long enough to cover lock-screen → icon, short enough
-    /// that a later grab still gets a fresh scan. Other gates stay at `0`.
-    static let appLockReuseDuration: TimeInterval = 8
-
     /// LAError -1004 (`kLAErrorAppNotInteractive`). Compare by raw code — Swift
     /// case naming has flipped between `.appNotInteractive` and `.notInteractive`
     /// across SDKs, and referencing the wrong one fails the build.
     private static let notInteractiveLACode = -1004
 
+    /// First successful owner unlock this process. Later gates skip the sheet.
+    private static var didUnlockThisLaunch = false
+
     static func authenticate(
         reason: String,
+        force: Bool = false,
+        allowPasscode: Bool = true,
         allowableReuseDuration: TimeInterval = 0,
         completion: @escaping (Outcome) -> Void
     ) {
-        let context = makeContext(allowableReuseDuration: allowableReuseDuration)
+        if didUnlockThisLaunch, !force {
+            let finish = { completion(.success) }
+            if Thread.isMainThread {
+                finish()
+            } else {
+                DispatchQueue.main.async(execute: finish)
+            }
+            return
+        }
+        let context = makeContext(
+            allowPasscode: allowPasscode,
+            allowableReuseDuration: allowableReuseDuration
+        )
         var error: NSError?
+        let policy: LAPolicy = allowPasscode
+            ? .deviceOwnerAuthentication
+            : .deviceOwnerAuthenticationWithBiometrics
 
-        // One evaluation: system shows Face ID / Touch ID first, then Enter
-        // Passcode in-sheet (including after failed scans / lockout). Screen
-        // share often disables Face ID — same policy still reaches passcode.
-        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
+        // App unlock: Face ID only — empty fallback title hides Enter Passcode.
+        // Erase / lockout recovery: one `.deviceOwnerAuthentication` so the
+        // passcode pad stays in-sheet (do not chain a second evaluate).
+        guard context.canEvaluatePolicy(policy, error: &error) else {
             #if targetEnvironment(simulator)
             DispatchQueue.main.async {
-                presentSimulatorPrompt(reason: reason, completion: completion)
+                presentSimulatorPrompt(
+                    reason: reason,
+                    allowPasscode: allowPasscode,
+                    completion: completion
+                )
             }
             #else
             let failOutcome: Outcome = isNotInteractive(error) ? .notInteractive : .declined
@@ -60,13 +75,13 @@ enum BiometricAuth {
             return
         }
 
-        context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { success, evalError in
+        context.evaluatePolicy(policy, localizedReason: reason) { success, evalError in
             // Always hop a main turn — even when LA already called back on main.
-            // Sync apply during Face ID teardown leaves SwiftUI on the lock shell
-            // until the owner taps the app again.
+            // Sync apply during Face ID teardown can leave SwiftUI on the lock shell.
             DispatchQueue.main.async {
                 context.invalidate()
                 if success {
+                    didUnlockThisLaunch = true
                     completion(.success)
                 } else {
                     completion(outcome(for: evalError))
@@ -75,13 +90,17 @@ enum BiometricAuth {
         }
     }
 
-    private static func makeContext(allowableReuseDuration: TimeInterval) -> LAContext {
+    private static func makeContext(
+        allowPasscode: Bool,
+        allowableReuseDuration: TimeInterval
+    ) -> LAContext {
         let context = LAContext()
         context.touchIDAuthenticationAllowableReuseDuration = allowableReuseDuration
         context.localizedCancelTitle = "Cancel"
-        // Default system fallback ("Enter Passcode") stays inside this evaluation.
-        // Do not set localizedFallbackTitle — a custom title with a biometrics-only
-        // policy hands userFallback to the app and invites a second Face ID prompt.
+        if !allowPasscode {
+            // Empty title hides the passcode / password button on Face ID.
+            context.localizedFallbackTitle = ""
+        }
         return context
     }
 
@@ -108,13 +127,17 @@ enum BiometricAuth {
     }
 
     #if targetEnvironment(simulator)
-    private static func presentSimulatorPrompt(reason: String, completion: @escaping (Outcome) -> Void) {
+    private static func presentSimulatorPrompt(
+        reason: String,
+        allowPasscode: Bool,
+        completion: @escaping (Outcome) -> Void
+    ) {
         guard let top = topViewController() else {
             completion(.declined)
             return
         }
         let alert = UIAlertController(
-            title: "Face ID or Passcode",
+            title: allowPasscode ? "Face ID or Passcode" : "Face ID",
             message: reason,
             preferredStyle: .alert
         )
@@ -122,6 +145,7 @@ enum BiometricAuth {
             completion(.declined)
         })
         alert.addAction(UIAlertAction(title: "Authenticate", style: .default) { _ in
+            didUnlockThisLaunch = true
             completion(.success)
         })
         top.present(alert, animated: true)
