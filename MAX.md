@@ -45,10 +45,10 @@ See also `AGENTS.md`. High-signal recap:
 4. Survival hold may keep siren + max volume + brightness through background until cancel on Aid (or Stop SOS on Find Help).
 5. Vault Face ID: relock on **`.background` only** (not `.inactive` — Face ID sheets).
 6. Owner lock: every launch is cream atmosphere + muted `LockOpen.mp4` behind
-   a small original medical lock glyph (not BrandLogo, not Apple Face ID mark)
-   under auto Face ID before Main (Unlock = cream dock after cancel /
-   mismatch). Video never delays Face ID or Main (no overlay, no ready/end
-   wait). Fresh install
+   a Face ID–sized medical mark (`FaceIDFrame.mp4`, else `LockMedGlyph` — not
+   BrandLogo, not Apple Face ID scan) under auto Face ID before Main (Unlock
+   = cream dock after cancel / mismatch). Video never delays Face ID or Main
+   (no overlay, no ready/end wait). Fresh install
    unlocks into empty tabs after auth. Owner pages + tapper: cream fill only —
    no page BrandLogo. **No hanging decorative brand marks** (lock watermark, Aid
    pane wordmarks, privacy-cover logo gone). NFC / topic sheets keep one page
@@ -83,10 +83,12 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Deferred all Core Location until Find Help; fixed SIGTERM/launch confusion.
 - Cold launch: LaunchBackground only on UILaunchScreen (no system BrandLogo).
   Every owner launch: auto Face ID over cream + muted LockOpen.mp4 behind the
-  medical lock glyph (no decorative BrandLogo; Unlock cream dock after cancel /
-  mismatch). Clip never gates Face ID or Main (no overlay; that was the cream
-  hang). Face ID kicks immediately on cold
-  `.inactive` (waiting for `.active` was the cream hang). Prefetch still starts
+  Face ID–frame medical mark (`FaceIDFrame.mp4`, else glyph; no decorative
+  BrandLogo; Unlock cream dock after cancel / mismatch). Clip never gates
+  Face ID or Main (no overlay; that was the cream hang). Face ID starts on the first interactive frame (not cold
+  `.inactive` — that SpringBoard overlay left Face ID done but the owner
+  still had to tap the app to open). App lock reuses a just-completed
+  device Face ID so that scan opens Main. Prefetch still starts
   in the same `onAppear` tick and inside the unlock pipeline. Fresh install
   unlocks into empty tabs after auth. Keychain decode + AES `#d=` pack +
   tapper.html string warm overlap Face ID; WKWebView warm only after unlock

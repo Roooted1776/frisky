@@ -343,6 +343,8 @@ enum RedMedChrome {
     static let unlockButtonRadius: CGFloat = 20
     /// Small lock-load medical mark (not BrandLogo asset, not Apple Face ID).
     static let unlockGlyphSize: CGFloat = 56
+    /// Higgs Face ID–frame clip — square, cream-margin, sits where the glyph is.
+    static let unlockFrameSize: CGFloat = 96
     /// Brand mark is a circular disc — always `Circle()`, never a rounded rect.
     static let logoRadius: CGFloat = 0
     /// Tapper / empty YOU-card BrandLogo diameter (`--logo` matches).

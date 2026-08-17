@@ -6,7 +6,9 @@ import UIKit
 /// Owner-only gates: app unlock, Edit, NFC write, vault, erase. Never call from
 /// passerby `tapper.html`, `PublicCardView`, or NFC Preview / Scan shells —
 /// tap-to-view stays ungated.
-/// Reuse window is zero so every gate re-prompts (Edit, NFC write, vault, app unlock).
+/// Reuse window is zero for Edit / NFC write / vault. App lock may pass a short
+/// `allowableReuseDuration` so the Face ID that just opened the phone admits
+/// the owner into Main without a second scan or tapping the icon again.
 ///
 /// Use a single `.deviceOwnerAuthentication` call — not biometrics-only followed by
 /// a second evaluate. A second `.deviceOwnerAuthentication` after `userFallback`
@@ -25,13 +27,22 @@ enum BiometricAuth {
         case notInteractive
     }
 
+    /// App lock only — device Face ID that just unlocked the phone / opened
+    /// RedMed counts. Long enough to cover lock-screen → icon, short enough
+    /// that a later grab still gets a fresh scan. Other gates stay at `0`.
+    static let appLockReuseDuration: TimeInterval = 8
+
     /// LAError -1004 (`kLAErrorAppNotInteractive`). Compare by raw code — Swift
     /// case naming has flipped between `.appNotInteractive` and `.notInteractive`
     /// across SDKs, and referencing the wrong one fails the build.
     private static let notInteractiveLACode = -1004
 
-    static func authenticate(reason: String, completion: @escaping (Outcome) -> Void) {
-        let context = makeContext()
+    static func authenticate(
+        reason: String,
+        allowableReuseDuration: TimeInterval = 0,
+        completion: @escaping (Outcome) -> Void
+    ) {
+        let context = makeContext(allowableReuseDuration: allowableReuseDuration)
         var error: NSError?
 
         // One evaluation: system shows Face ID / Touch ID first, then Enter
@@ -39,28 +50,21 @@ enum BiometricAuth {
         // share often disables Face ID — same policy still reaches passcode.
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
             #if targetEnvironment(simulator)
-            let present = {
+            DispatchQueue.main.async {
                 presentSimulatorPrompt(reason: reason, completion: completion)
-            }
-            if Thread.isMainThread {
-                present()
-            } else {
-                DispatchQueue.main.async(execute: present)
             }
             #else
             let failOutcome: Outcome = isNotInteractive(error) ? .notInteractive : .declined
-            let finish = { completion(failOutcome) }
-            if Thread.isMainThread {
-                finish()
-            } else {
-                DispatchQueue.main.async(execute: finish)
-            }
+            DispatchQueue.main.async { completion(failOutcome) }
             #endif
             return
         }
 
         context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { success, evalError in
-            let finish = {
+            // Always hop a main turn — even when LA already called back on main.
+            // Sync apply during Face ID teardown leaves SwiftUI on the lock shell
+            // until the owner taps the app again.
+            DispatchQueue.main.async {
                 context.invalidate()
                 if success {
                     completion(.success)
@@ -68,19 +72,12 @@ enum BiometricAuth {
                     completion(outcome(for: evalError))
                 }
             }
-            // LA callbacks are off-main; hop only when needed.
-            if Thread.isMainThread {
-                finish()
-            } else {
-                DispatchQueue.main.async(execute: finish)
-            }
         }
     }
 
-    private static func makeContext() -> LAContext {
+    private static func makeContext(allowableReuseDuration: TimeInterval) -> LAContext {
         let context = LAContext()
-        // No Face ID / Touch ID reuse across gates — every unlock is fresh.
-        context.touchIDAuthenticationAllowableReuseDuration = 0
+        context.touchIDAuthenticationAllowableReuseDuration = allowableReuseDuration
         context.localizedCancelTitle = "Cancel"
         // Default system fallback ("Enter Passcode") stays inside this evaluation.
         // Do not set localizedFallbackTitle — a custom title with a biometrics-only

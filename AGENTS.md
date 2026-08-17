@@ -95,14 +95,14 @@ The app has no backend, database, or web service.
   lock on `.inactive` — LAContext / system auth sheets put the scene inactive
   and would discard a successful unlock via `authGeneration`.
 - Owner app lock is **biometrics only before Main**: cream atmosphere + muted
-  bundled `LockOpen.mp4` behind a small original medical lock glyph (heart +
-  static EKG, Face ID–sized, transparent, one-shot pop — not Apple Face ID
+  bundled `LockOpen.mp4` behind a Face ID–sized medical mark (`FaceIDFrame.mp4`
+  heart + EKG draw + plus sparkle; else `LockMedGlyph` — not Apple Face ID
   scan, not BrandLogo) under system Face ID on every launch (no Accept; no
   Unlock on first prompt; **no** decorative BrandLogo on the lock shell).
   **Video never gates open or unlock** — cream paints first, Face ID kicks
-  immediately, AV builds off-main, auth goes straight to Main (no clip
+  on the first interactive frame, AV builds off-main, auth goes straight to Main (no clip
   overlay, no wait for ready/end; that overlay was the cream hang). Missing
-  file / Reduce Motion / Low Power = cream washes only. No `AVAudioSession`
+  file / Reduce Motion / Low Power = cream washes + static glyph. No `AVAudioSession`
   (survival alarm owns that). Unlock appears in a cream dock after cancel /
   mismatch. Fresh
   install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
@@ -128,13 +128,17 @@ shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash)
 (flat cream / `redmedBg`, no BrandLogo) so Main never mounts before Face ID / passcode.
 A UserDefaults gate (`ProfileData.storedProfileGateKey`, set on persist /
 Keychain presence) hints whether a blob is expected for prefetch / fail-closed
-load; SecItem confirms off-main. Auto Face ID on every owner launch **immediately**
-(including cold-start `.inactive` — do **not** wait for `.active` or the cream
-hangs with no sheet; that wait was the cream hang.
+load; SecItem confirms off-main. Auto Face ID on every owner launch on the first **interactive** frame
+(UIKit `active` / scene `.active` — not cold-start `.inactive`). Evaluating
+LA while inactive presents a SpringBoard overlay; after Face ID the owner
+had to tap the app again to open Main. Cream still paints immediately;
+AV / WebKit stay deferred so interactive arrives on the next frame.
 `didAutoPromptThisLock` blocks re-prompt while the Face ID sheet holds
-`.inactive`). Prefetch still starts in the same `onAppear` tick and inside the
-unlock pipeline (single-flight overlap with Face ID). Unlock is retry after
-cancel / mismatch. Fresh install unlocks into empty tabs after
+`.inactive`. App lock may reuse a just-completed device Face ID (short
+window) so that scan opens Main; Unlock is retry after cancel / mismatch.
+Edit / NFC / vault stay reuse-zero. Prefetch still starts in the same
+`onAppear` tick and inside the unlock pipeline (single-flight overlap with
+Face ID). Fresh install unlocks into empty tabs after
 auth; returning owners load Keychain. Owner pages + tapper: cream fill, no page
 BrandLogo. Unlock overlaps Keychain decode + AES `#d=` pack + tapper.html
 string warm with Face ID and skips unlock animation so tabs paint on the next
