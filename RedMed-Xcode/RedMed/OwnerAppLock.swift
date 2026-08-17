@@ -363,19 +363,14 @@ struct OwnerAppLock<Content: View>: View {
             RedMedHaptics.medium()
             startUnlockPipeline(isAuto: false)
         } label: {
-            HStack(spacing: 10) {
-                Image(systemName: "faceid")
-                    .font(.system(size: 18, weight: .semibold))
-                Text("Proceed")
-                    .font(.system(size: 16, weight: .bold))
-            }
-            .accessibilityLabel(isAuthenticating ? "Proceeding with Face ID" : "Proceed")
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity)
-            .frame(minHeight: 52)
-            .padding(.horizontal, 22)
-            .padding(.vertical, 12)
-            .background {
+            Text("Proceed")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: 52)
+                .padding(.horizontal, 22)
+                .padding(.vertical, 12)
+                .background {
                 RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous)
                     .fill(
                         LinearGradient(
