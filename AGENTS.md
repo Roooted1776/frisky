@@ -29,12 +29,13 @@ The app has no backend, database, or web service.
   write/read sessions, never tab chrome. Owner writes the passive HF NFC band
   from the NFC tab (Face ID gated) as `medicalCardBaseURL#d=` only
   (`AppConfig.OwnerBandURI`) — no vendor cloud, no social/short URL, no BLE.
+  Launch path is Face ID lock then Main (those tabs). No extra pages before Face ID.
 - **Scanner / passerby shell** (`PublicCardView` / bracelet tap → `tapper.html#d=…`,
   `isScannerSession == true`): tabs are **RedMed · 911 · Aid** only — **no Edit**,
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain or
   owner `@AppStorage` / UserDefaults prefs. Hosted at
   `https://getredmed.com/tapper/` from `tapper/index.html` (legacy `https://redmed.pages.dev/tapper/` still hosted — see `docs/domain.md`).
-  **Tap-to-view never requires Face ID / biometrics** — owner biometrics gate
+  **Tap-to-view never requires Face ID / biometrics / passcode / login** — owner biometrics gate
   edit, NFC write, vault, and app unlock only. Passerby HTML never asks.
   **Nothing blocks the tap card** (YOU card / Preview / Scan / band tap): no
   privacy veil, no native overlay stealing taps, no login. Safari opens
@@ -53,7 +54,8 @@ The app has no backend, database, or web service.
   the policy HTML. Owner Help menu is Settings + Privacy / TOS / Security only (no
   in-app How It Works / MainInfoView, no Local History row, no local tapper.html
   WebView). Help is reachable from every native screen except the lock shell;
-  scanner Help is policies only. NFC Preview (under Scan) / NFC Scan open bundled `tapper.html#d=`
+  RedMed (user) Help is a bottom `UnlockScreenButton` (original unlock-dock CTA);
+  911 / Aid / NFC keep top Help chrome. Scanner Help is policies only. NFC Preview (under Scan) / NFC Scan open bundled `tapper.html#d=`
   (`?src=app`, no SOS auto-arm);
   live band taps stay `https://getredmed.com/tapper/#d=` (legacy `pages.dev` bands still open).
 
@@ -94,18 +96,16 @@ The app has no backend, database, or web service.
   prompt on appear); relock on `.background` only. Do **not**
   lock on `.inactive` — LAContext / system auth sheets put the scene inactive
   and would discard a successful unlock via `authGeneration`.
-- Owner app lock is **biometrics only before Main**: cream atmosphere + muted
-  bundled `LockOpen.mp4` behind a Face ID–sized medical mark (`FaceIDFrame.mp4`
-  heart + EKG draw + plus sparkle; else `LockMedGlyph` — not Apple Face ID
-  scan, not BrandLogo) under system Face ID on every launch (no Accept; no
-  Proceed on first prompt; **no** decorative BrandLogo on the lock shell).
-  **Video never gates open or unlock** — cream paints first, Face ID kicks
-  on the first interactive frame, AV builds off-main, auth goes straight to Main (no clip
-  overlay, no wait for ready/end; that overlay was the cream hang). Missing
-  file / Reduce Motion / Low Power = cream washes + static glyph. No `AVAudioSession`
-  (survival alarm owns that). After cancel / mismatch the **Face** page
-  (Proceed CTA) replaces the Face ID shell — not a bottom dock. Fresh
-  install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
+- Owner app lock is **biometrics only before Main**. Front page is
+  `LockEntryPage`: user-page cream + Higgs `FaceIDFrame` clip. Path: open →
+  first Face ID → Main. No passcode / password pad on that Face ID (no
+  `Enter Passcode` fallback). Passerby `tapper.html` never has Face ID,
+  passcode, login, or any page in front of the card. No glyph, no Help on
+  `LockEntryPage`. After cancel / mismatch, **Face** (`FacePage`) with a
+  **Proceed** CTA replaces that shell (not a bottom dock). After a successful
+  Face ID, Edit / NFC / vault skip Face ID this process. Erase still
+  prompts. Do not re-lock into a second Face ID on background. Do **not** play
+  `LockOpen.mp4`. Clip never gates Face ID. Fresh install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
   Owner pages + passerby tapper: cream fill only (no page BrandLogo). **No hanging
   decorative brand marks** anywhere (no lock watermark, no Aid pane wordmarks, no
   privacy-cover logo) — page BrandWordmark headers on NFC / topic sheets only;
@@ -128,17 +128,13 @@ shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash)
 (flat cream / `redmedBg`, no BrandLogo) so Main never mounts before Face ID / passcode.
 A UserDefaults gate (`ProfileData.storedProfileGateKey`, set on persist /
 Keychain presence) hints whether a blob is expected for prefetch / fail-closed
-load; SecItem confirms off-main. Auto Face ID on every owner launch on the first **interactive** frame
-(UIKit `active` / scene `.active` — not cold-start `.inactive`). Evaluating
-LA while inactive presents a SpringBoard overlay; after Face ID the owner
-had to tap the app again to open Main. Cream still paints immediately;
-AV / WebKit stay deferred so interactive arrives on the next frame.
+load; SecItem confirms off-main. Auto Face ID on every owner launch **immediately**
+(including cold-start `.inactive` — do **not** wait for `.active` or the cream
+hangs with no sheet; that wait was the cream hang.
 `didAutoPromptThisLock` blocks re-prompt while the Face ID sheet holds
-`.inactive`. App lock may reuse a just-completed device Face ID (short
-window) so that scan opens Main; Proceed is retry after cancel / mismatch.
-Edit / NFC / vault stay reuse-zero. Prefetch still starts in the same
-`onAppear` tick and inside the unlock pipeline (single-flight overlap with
-Face ID). Fresh install unlocks into empty tabs after
+`.inactive`). Prefetch still starts in the same `onAppear` tick and inside the
+unlock pipeline (single-flight overlap with Face ID). After cancel / mismatch
+the **Face** page (`FacePage`) shows **Proceed**. Fresh install unlocks into empty tabs after
 auth; returning owners load Keychain. Owner pages + tapper: cream fill, no page
 BrandLogo. Unlock overlaps Keychain decode + AES `#d=` pack + tapper.html
 string warm with Face ID and skips unlock animation so tabs paint on the next

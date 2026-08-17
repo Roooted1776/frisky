@@ -383,7 +383,8 @@ struct HelpMenuView: View {
         guard showsOwnerTools, !isErasing else { return }
         isErasing = true
         BiometricAuth.authenticate(
-            reason: "Confirm with Face ID, Touch ID, or passcode to erase all RedMed data on this iPhone."
+            reason: "Confirm with Face ID, Touch ID, or passcode to erase all RedMed data on this iPhone.",
+            force: true
         ) { outcome in
             switch outcome {
             case .success:
