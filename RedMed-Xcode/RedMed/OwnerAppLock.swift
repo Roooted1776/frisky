@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Owner app lock — Face ID / passcode before PHI is published into profile fields.
 ///
@@ -21,17 +22,20 @@ import SwiftUI
 /// step. No post-auth overlay (that clip-over-Main was the cream hang). Unlock
 /// is retry chrome after cancel / mismatch only.
 /// Fresh install unlocks into empty tabs after auth; returning owners load
-/// Keychain (fail closed on corrupt blob). Auto-prompt once per lock —
-/// including cold launch while still `.inactive` (waiting for `.active` was
-/// the cream hang: empty cream with no sheet). Face ID sheets put the scene
-/// `.inactive` — `didAutoPromptThisLock` blocks re-prompt.
+/// Keychain (fail closed on corrupt blob). Auto-prompt once per lock on the
+/// first **interactive** frame (UIKit active / scene `.active`) — not cold
+/// `.inactive`. Evaluating LA while inactive presents a SpringBoard overlay;
+/// after Face ID the owner had to tap the app again to open Main.
+/// `didAutoPromptThisLock` still blocks re-prompt while the Face ID sheet holds
+/// `.inactive`. App lock reuses a just-completed device Face ID (short window)
+/// so that scan opens Main; Edit / NFC / vault stay reuse-zero.
 ///
-/// Speed (minus Face ID wall time): Face ID kicks first; Keychain prefetch +
-/// tapper.html string warm start in the same `onAppear` tick and again inside
-/// the unlock pipeline (single-flight). Parked Keychain adopt unlocks on the
-/// LA main-queue turn via `MainActor.assumeIsolated` (no Task hop). Unlock dock
-/// is solid cream (no material blur). Haptic + WKWebView warm run at utility
-/// priority after `gate = .unlocked` so Main paints first.
+/// Speed (minus Face ID wall time): Face ID kicks on first interactive frame;
+/// Keychain prefetch + tapper.html string warm start in the same `onAppear`
+/// tick and again inside the unlock pipeline (single-flight). Parked Keychain
+/// adopt unlocks on the LA main-queue turn via `MainActor.assumeIsolated` (no
+/// Task hop). Unlock dock is solid cream (no material blur). Haptic + WKWebView
+/// warm run at utility priority after `gate = .unlocked` so Main paints first.
 struct OwnerAppLock<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
@@ -61,6 +65,9 @@ struct OwnerAppLock<Content: View>: View {
     /// Unlock control stays hidden until the first Face ID attempt ends (cancel /
     /// mismatch / load fail). First load = biometrics sheet only.
     @State private var showUnlockControl = false
+    /// Face ID succeeded while the sheet still held `.inactive` — apply when
+    /// the scene is interactive so Main paints without an extra tap.
+    @State private var pendingUnlockGeneration: Int? = nil
 
     var body: some View {
         ZStack {
@@ -75,8 +82,9 @@ struct OwnerAppLock<Content: View>: View {
         .transaction { $0.animation = nil }
         .onAppear {
             screenCaptured = UIScreen.main.isCaptured
-            // Face ID first — cream hang waiting for `.active` or shell warm is wasted time.
+            // Prefetch now; Face ID waits until the window can present in-app.
             tryAutoUnlockIfActive()
+            flushPendingUnlock()
             // Always prefetch (single-flight). Do not gate on UserDefaults — stale/false
             // gate left Face ID overlapping nothing.
             profile.beginUnlockPrefetch()
@@ -114,14 +122,17 @@ struct OwnerAppLock<Content: View>: View {
             } else {
                 profile.discardUnlockPrefetch()
             }
+            flushPendingUnlock()
             tryAutoUnlockIfActive()
         }
         .onChange(of: gate) { _, newGate in
             if newGate == .locked {
                 didAutoPromptThisLock = false
                 showUnlockControl = false
+                pendingUnlockGeneration = nil
                 tryAutoUnlockIfActive()
             } else {
+                pendingUnlockGeneration = nil
                 // Face ID success — yield so tabs paint before CoreMotion steals the CPU.
                 Task { @MainActor in
                     await Task.yield()
@@ -142,8 +153,15 @@ struct OwnerAppLock<Content: View>: View {
                 showUnlockControl = false
                 lock(purge: true)
             } else if phase == .active {
+                flushPendingUnlock()
                 tryAutoUnlockIfActive()
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+            // SwiftUI scenePhase can lag UIKit; this is the frame the window can
+            // present LA in-app and the frame Main must paint after Face ID.
+            flushPendingUnlock()
+            tryAutoUnlockIfActive()
         }
         .onChange(of: profile.hasSensitiveProfileData) { _, hasData in
             if hasData { hasEverHadSensitiveData = true }
@@ -159,6 +177,7 @@ struct OwnerAppLock<Content: View>: View {
             isAuthenticating = false
             didAutoPromptThisLock = false
             showUnlockControl = false
+            pendingUnlockGeneration = nil
             profile.discardUnlockPrefetch()
             // Stay in Main after an authenticated erase; next cold launch locks again.
             gate = .unlocked
@@ -377,13 +396,36 @@ struct OwnerAppLock<Content: View>: View {
 
     private func tryAutoUnlockIfActive() {
         guard gate == .locked, !didAutoPromptThisLock else { return }
-        // Cold launch often starts `.inactive` before first `.active`. Waiting for
-        // `.active` left a cream hang with no Face ID. Kick LA unless truly
-        // backgrounded — `didAutoPromptThisLock` blocks re-prompt while the Face
-        // ID sheet holds the scene `.inactive` (AGENTS: no re-prompt on inactive).
-        guard scenePhase != .background else { return }
+        // Face ID must present in-app. Evaluating during cold `.inactive` puts
+        // the sheet on SpringBoard — after Face ID the owner had to tap the
+        // icon again. Cream still paints first; AV / WebKit stay deferred so
+        // interactive arrives on the next frame. `didAutoPromptThisLock`
+        // blocks re-prompt while the Face ID sheet holds `.inactive`.
+        guard canPresentLocalAuthentication else { return }
         didAutoPromptThisLock = true
         startUnlockPipeline(isAuto: true)
+    }
+
+    /// Window can present an in-app LA sheet (or reuse just-completed device Face ID).
+    private var canPresentLocalAuthentication: Bool {
+        if scenePhase == .background { return false }
+        if UIApplication.shared.applicationState == .background { return false }
+        if UIApplication.shared.applicationState == .active { return true }
+        if scenePhase == .active { return true }
+        return UIApplication.shared.connectedScenes.contains {
+            $0.activationState == .foregroundActive
+        }
+    }
+
+    /// Apply a Face ID success that landed while the sheet held `.inactive`.
+    private func flushPendingUnlock() {
+        guard gate == .locked, let generation = pendingUnlockGeneration else { return }
+        guard generation == authGeneration else {
+            pendingUnlockGeneration = nil
+            return
+        }
+        pendingUnlockGeneration = nil
+        applyUnlockSuccess(generation: generation)
     }
 
     private func lock(purge: Bool) {
@@ -393,6 +435,7 @@ struct OwnerAppLock<Content: View>: View {
         biometryFailed = false
         profileLoadFailed = false
         showUnlockControl = false
+        pendingUnlockGeneration = nil
         if purge {
             profile.purgeFromMemory()
         }
@@ -427,7 +470,8 @@ struct OwnerAppLock<Content: View>: View {
         authGeneration &+= 1
         let generation = authGeneration
         BiometricAuth.authenticate(
-            reason: "Unlock RedMed"
+            reason: "Unlock RedMed",
+            allowableReuseDuration: BiometricAuth.appLockReuseDuration
         ) { outcome in
             guard generation == authGeneration else { return }
             switch outcome {
@@ -435,32 +479,35 @@ struct OwnerAppLock<Content: View>: View {
                 // Cancel / dismiss — stay locked; Unlock appears for retry.
                 // Keep Keychain prefetch — no PHI published until success; Unlock
                 // tap must not cold-decode again (stuck / lag feel).
+                pendingUnlockGeneration = nil
                 isAuthenticating = false
                 biometryFailed = false
                 showUnlockControl = true
                 gate = .locked
             case .notInteractive:
-                // Cold-start evaluate before the window can present — do not leave
-                // Unlock chrome up; clear auto-prompt so `.active` retries once.
+                // Evaluate before the window can present — do not leave Unlock
+                // chrome up; clear auto-prompt so `.active` retries once.
                 // User cancel is `.declined` (Unlock stays); this is not cancel.
-                // Never auto-kick inline when already `.active` — LA can still return
-                // notInteractive briefly and that looped Face ID forever.
+                // Never auto-kick inline when already interactive — LA can still
+                // return notInteractive briefly and that looped Face ID forever.
+                pendingUnlockGeneration = nil
                 isAuthenticating = false
                 biometryFailed = false
                 profileLoadFailed = false
                 gate = .locked
                 didAutoPromptThisLock = false
-                if scenePhase == .active {
-                    // Already active but LA refused — Unlock, no retry storm.
+                if canPresentLocalAuthentication {
+                    // Already interactive but LA refused — Unlock, no retry storm.
                     showUnlockControl = true
                 } else {
-                    // Typical cold `.inactive` — `.onChange(.active)` retries once.
+                    // Cold `.inactive` — didBecomeActive / `.active` retries once.
                     showUnlockControl = false
                 }
                 // Keep prefetch — Face ID will overlap on the active retry / Unlock tap.
             case .notVerified:
                 // Face ID / Touch ID (or passcode) did not match.
                 RedMedHaptics.error()
+                pendingUnlockGeneration = nil
                 isAuthenticating = false
                 biometryFailed = true
                 showUnlockControl = true
@@ -468,11 +515,10 @@ struct OwnerAppLock<Content: View>: View {
                 // Keep prefetch for fast retry — staging is not published.
                 VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock")
             case .success:
-                // Apply only if this generation is still current. Check again after
-                // await — background can bump authGeneration and purge mid-apply.
-                // LA completion is main-queue (`DispatchQueue.main`) but not
-                // MainActor-isolated. Prefer `assumeIsolated` when already on
-                // main so a parked Keychain adopt unlocks this turn (no Task hop).
+                // BiometricAuth already hopped a main turn past Face ID teardown.
+                // Apply now; if the sheet still holds `.inactive`, pending flush
+                // on didBecomeActive paints Main without tapping the icon.
+                pendingUnlockGeneration = generation
                 applyUnlockSuccess(generation: generation)
             }
         }
@@ -481,6 +527,7 @@ struct OwnerAppLock<Content: View>: View {
     /// Fast path: parked Face ID decode on the current main turn.
     /// Slow path: `Task { @MainActor }` only when Keychain still needs an await.
     private func applyUnlockSuccess(generation: Int) {
+        guard generation == authGeneration, gate == .locked else { return }
         if Thread.isMainThread {
             let parked = MainActor.assumeIsolated {
                 tryFinishWithParkedUnlock(generation: generation)
@@ -489,7 +536,7 @@ struct OwnerAppLock<Content: View>: View {
         }
 
         Task { @MainActor in
-            guard generation == authGeneration else { return }
+            guard generation == authGeneration, gate == .locked else { return }
             if tryFinishWithParkedUnlock(generation: generation) { return }
             // Off-main SecItem overlaps Keychain apply when the gate still says empty.
             async let expectsProfileTask = keychainHasProfile
@@ -535,11 +582,13 @@ struct OwnerAppLock<Content: View>: View {
     ) {
         guard generation == authGeneration else {
             // Late success after background lock — drop staging, no PHI published.
+            pendingUnlockGeneration = nil
             profile.discardUnlockPrefetch()
             profile.purgeFromMemory()
             return
         }
         isAuthenticating = false
+        pendingUnlockGeneration = nil
         if didLoad {
             keychainHasProfile = true
             // Unlock shell first, then publish PHI in the same turn.

@@ -128,13 +128,17 @@ shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash)
 (flat cream / `redmedBg`, no BrandLogo) so Main never mounts before Face ID / passcode.
 A UserDefaults gate (`ProfileData.storedProfileGateKey`, set on persist /
 Keychain presence) hints whether a blob is expected for prefetch / fail-closed
-load; SecItem confirms off-main. Auto Face ID on every owner launch **immediately**
-(including cold-start `.inactive` — do **not** wait for `.active` or the cream
-hangs with no sheet; that wait was the cream hang.
+load; SecItem confirms off-main. Auto Face ID on every owner launch on the first **interactive** frame
+(UIKit `active` / scene `.active` — not cold-start `.inactive`). Evaluating
+LA while inactive presents a SpringBoard overlay; after Face ID the owner
+had to tap the app again to open Main. Cream still paints immediately;
+AV / WebKit stay deferred so interactive arrives on the next frame.
 `didAutoPromptThisLock` blocks re-prompt while the Face ID sheet holds
-`.inactive`). Prefetch still starts in the same `onAppear` tick and inside the
-unlock pipeline (single-flight overlap with Face ID). Unlock is retry after
-cancel / mismatch. Fresh install unlocks into empty tabs after
+`.inactive`. App lock may reuse a just-completed device Face ID (short
+window) so that scan opens Main; Unlock is retry after cancel / mismatch.
+Edit / NFC / vault stay reuse-zero. Prefetch still starts in the same
+`onAppear` tick and inside the unlock pipeline (single-flight overlap with
+Face ID). Fresh install unlocks into empty tabs after
 auth; returning owners load Keychain. Owner pages + tapper: cream fill, no page
 BrandLogo. Unlock overlaps Keychain decode + AES `#d=` pack + tapper.html
 string warm with Face ID and skips unlock animation so tabs paint on the next

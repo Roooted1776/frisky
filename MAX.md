@@ -85,8 +85,10 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
   Every owner launch: auto Face ID over cream + muted LockOpen.mp4 behind the
   medical lock glyph (no decorative BrandLogo; Unlock cream dock after cancel /
   mismatch). Clip never gates Face ID or Main (no overlay; that was the cream
-  hang). Face ID kicks immediately on cold
-  `.inactive` (waiting for `.active` was the cream hang). Prefetch still starts
+  hang). Face ID starts on the first interactive frame (not cold
+  `.inactive` — that SpringBoard overlay left Face ID done but the owner
+  still had to tap the app to open). App lock reuses a just-completed
+  device Face ID so that scan opens Main. Prefetch still starts
   in the same `onAppear` tick and inside the unlock pipeline. Fresh install
   unlocks into empty tabs after auth. Keychain decode + AES `#d=` pack +
   tapper.html string warm overlap Face ID; WKWebView warm only after unlock
