@@ -2,6 +2,29 @@ import SwiftUI
 import WebKit
 import UIKit
 
+/// Bundled owner Help: one HTML file, three policy anchors. Offline. No network.
+enum HelpDocument {
+    static let bundledFile = "Help"
+
+    enum Policy: String, CaseIterable, Identifiable {
+        case privacy
+        case terms
+        case security
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .privacy: return "Privacy Policy"
+            case .terms: return "Terms of Service"
+            case .security: return "Security"
+            }
+        }
+
+        var fragment: String { rawValue }
+    }
+}
+
 // MARK: - WebView wrapper (policies + passerby card only)
 struct LocalWebView: UIViewRepresentable {
     let filename: String
@@ -231,11 +254,12 @@ struct HelpMenuView: View {
 
                         helpSectionLabel("Policies")
                         helpCard {
-                            policyLink("Privacy Policy", file: "Help", fragment: "privacy")
-                            Divider().padding(.leading, Metrics.rowHPad)
-                            policyLink("Terms of Service", file: "Help", fragment: "terms")
-                            Divider().padding(.leading, Metrics.rowHPad)
-                            policyLink("Security", file: "Help", fragment: "security")
+                            ForEach(HelpDocument.Policy.allCases) { policy in
+                                if policy != .privacy {
+                                    Divider().padding(.leading, Metrics.rowHPad)
+                                }
+                                policyLink(policy)
+                            }
                         }
 
                         helpSectionLabel("Data")
@@ -316,10 +340,10 @@ struct HelpMenuView: View {
     }
 
     @ViewBuilder
-    private func policyLink(_ title: String, file: String, fragment: String? = nil) -> some View {
+    private func policyLink(_ policy: HelpDocument.Policy) -> some View {
         NavigationLink {
-            LocalWebView(filename: file, fragment: fragment)
-                .navigationTitle(title)
+            LocalWebView(filename: HelpDocument.bundledFile, fragment: policy.fragment)
+                .navigationTitle(policy.title)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar(.visible, for: .navigationBar)
                 .toolbarBackground(Color.redmedBg, for: .navigationBar)
@@ -327,7 +351,7 @@ struct HelpMenuView: View {
                 .toolbarColorScheme(.light, for: .navigationBar)
         } label: {
             HStack {
-                Text(title)
+                Text(policy.title)
                     .font(.system(size: Metrics.font, weight: .medium))
                     .foregroundColor(.redmedDark)
                 Spacer(minLength: 0)

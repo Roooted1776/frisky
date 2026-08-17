@@ -38,13 +38,15 @@ The app has no backend, database, or web service.
   edit, NFC write, vault, and app unlock only. Passerby HTML never asks.
 - Product HTML is only (1) one passerby file `tapper.html` (identical in `tapper/index.html`,
   repo root, and the app bundle; legacy `card.html` / `get.html` / `/get/` redirect to `/tapper/`, preserving `#d=`) and
-  (2) policy pages bundled solely under `RedMed-Xcode/RedMed/` (`PrivacyPolicy`,
-  `TOS`, `security`, `HowItWorks`, `legal-doc.css`). `HowItWorks.html` redirects
-  into `redmed://main`. Policies CTA to the owner app; they do not host owner
-  edit UI. Do not reintroduce repo-root copies of the policy HTML. Owner Help
-  is Settings + Privacy / TOS / Security only (no in-app How It Works /
-  MainInfoView, no Local History row, no local tapper.html WebView). NFC
-  Preview (under Scan) / NFC Scan open bundled `tapper.html#d=` (`?src=app`, no SOS auto-arm);
+  (2) policy pages bundled solely under `RedMed-Xcode/RedMed/`: one `Help.html`
+  (Privacy + TOS + Security, in-file anchors) plus `legal-doc.css`. Legacy
+  `PrivacyPolicy.html` / `TOS.html` / `security.html` redirect into `Help.html`.
+  `HowItWorks.html` redirects into `redmed://main`. Policies CTA to the owner
+  app; they do not host owner edit UI. Do not reintroduce repo-root copies of
+  the policy HTML. Owner Help is Settings + Privacy / TOS / Security only (no
+  in-app How It Works / MainInfoView, no Local History row, no local tapper.html
+  WebView). NFC Preview (under Scan) / NFC Scan open bundled `tapper.html#d=`
+  (`?src=app`, no SOS auto-arm);
   live band taps stay `https://getredmed.com/tapper/#d=` (legacy `pages.dev` bands still open).
 
 - **Bracelet tap (physics, not a setting):** `AppConfig.BraceletRF` is the single
