@@ -27,8 +27,8 @@ import SwiftUI
 /// tapper.html string warm start in the same `onAppear` tick and again inside
 /// the unlock pipeline (single-flight). Parked Keychain adopt unlocks on the
 /// LA main-queue turn via `MainActor.assumeIsolated` (no Task hop). Unlock dock
-/// is solid cream (no material blur). Haptic + WKWebView warm run at utility
-/// priority after `gate = .unlocked` so tabs paint first.
+/// is solid cream (no material blur). Haptic runs utility; WKWebView warm kicks
+/// userInitiated after `gate = .unlocked` so tabs paint first.
 struct OwnerAppLock<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
@@ -82,24 +82,23 @@ struct OwnerAppLock<Content: View>: View {
             }
         }
         .task(id: authGeneration) {
-            // Escape hatch: if LA never callbacks, Unlock must still be tappable.
-            // Do not flash Unlock under a live Face ID sheet (common at ~1–2s).
-            // Keep the blank-cream window short — long waits read as a white hang.
+            // Escape hatch: show Unlock if the sheet is slow — never bump
+            // authGeneration while LA is live. The old 0.8s+2s bump discarded
+            // passcode / slow Face ID success and left a locked cream hang.
             guard gate == .locked else { return }
             let generation = authGeneration
             try? await Task.sleep(nanoseconds: 800_000_000)
             guard gate == .locked, generation == authGeneration else { return }
-            if isAuthenticating {
-                try? await Task.sleep(nanoseconds: 2_000_000_000)
-                guard gate == .locked, generation == authGeneration else { return }
-            }
-            // Hung LA: invalidate this generation so a late callback cannot unlock,
-            // clear isAuthenticating so Unlock is not stuck disabled.
-            if isAuthenticating {
-                authGeneration &+= 1
-                isAuthenticating = false
-            }
             showUnlockControl = true
+            // Truly hung LA (no callback): re-enable the button without killing
+            // a late success — generation stays so a finishing evaluate still unlocks.
+            if isAuthenticating {
+                try? await Task.sleep(nanoseconds: 12_000_000_000)
+                guard gate == .locked, generation == authGeneration else { return }
+                if isAuthenticating {
+                    isAuthenticating = false
+                }
+            }
         }
         .task {
             // First SwiftUI frame already committed — Keychain presence can wait.
@@ -347,9 +346,11 @@ struct OwnerAppLock<Content: View>: View {
         } label: {
             Group {
                 if isAuthenticating {
+                    // No ProgressView — system spinner fights first MainActor frames
+                    // under / after Face ID and reads as a white hitch.
                     HStack(spacing: 10) {
-                        ProgressView()
-                            .tint(.white)
+                        Image(systemName: "faceid")
+                            .font(.system(size: 18, weight: .semibold))
                         Text("Unlocking")
                             .font(.system(size: 16, weight: .bold))
                     }
@@ -565,9 +566,12 @@ struct OwnerAppLock<Content: View>: View {
             biometryFailed = false
             profileLoadFailed = false
             showUnlockControl = false
-            // Haptic + WebKit off the critical path — tabs paint first.
+            // Haptic off the critical path. Kick WebKit warm at userInitiated so
+            // RedMed's first mount can takeEmbed more often (utility always lost).
             Task(priority: .utility) { @MainActor in
                 RedMedHaptics.success()
+            }
+            Task(priority: .userInitiated) { @MainActor in
                 PasserbyWebViewPool.warmEmbedShell()
             }
         } else if !expectsProfile {
@@ -580,6 +584,8 @@ struct OwnerAppLock<Content: View>: View {
             showUnlockControl = false
             Task(priority: .utility) { @MainActor in
                 RedMedHaptics.success()
+            }
+            Task(priority: .userInitiated) { @MainActor in
                 PasserbyWebViewPool.warmEmbedShell()
             }
         } else {

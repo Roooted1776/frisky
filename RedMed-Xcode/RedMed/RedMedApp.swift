@@ -15,8 +15,9 @@ struct RedMedApp: App {
             }
             // On the guard (not only the lock) so capture cover can see purged vs PHI-in-RAM.
             .environmentObject(profile)
-            // Match launch screen so any pre-paint gap stays cream, not system black.
+            // Match launch screen so any pre-paint gap stays cream, not system black/white.
             .background(Color.redmedBg.ignoresSafeArea())
+            .background(CreamWindowBackground())
             // Main.dc / cream chrome is light-only — keep phone + Xcode/sim identical.
             .preferredColorScheme(.light)
             .task {

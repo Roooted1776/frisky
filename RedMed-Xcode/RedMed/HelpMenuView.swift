@@ -32,10 +32,17 @@ struct LocalWebView: UIViewRepresentable {
 
     func updateUIView(_ webView: WKWebView, context: Context) {
         guard context.coordinator.loadedFilename != filename else { return }
-        guard let url = Bundle.main.url(forResource: filename, withExtension: "html") else { return }
+        guard let url = Bundle.main.url(forResource: filename, withExtension: "html"),
+              var html = try? String(contentsOf: url, encoding: .utf8) else { return }
         context.coordinator.loadedFilename = filename
-        // Read access limited to the HTML file's directory (bundle resources).
-        webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
+        // Cream before first paint — file loads can flash system white before CSS.
+        let cream = "<style>html,body{background:#fff7f7!important;margin:0}</style>\n"
+        if let range = html.range(of: "<head>") {
+            html.replaceSubrange(range, with: "<head>\n" + cream)
+        } else {
+            html = cream + html
+        }
+        webView.loadHTMLString(html, baseURL: url.deletingLastPathComponent())
     }
 
     /// Policy HTML + stylesheet only — never lateral loads into tapper.html / other bundle files.

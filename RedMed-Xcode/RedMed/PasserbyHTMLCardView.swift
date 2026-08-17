@@ -228,6 +228,7 @@ enum PasserbyWebViewPool {
             if Task.isCancelled { return .none }
             // App-embed chrome only — no PHI. Real profile arrives via JS push or full load.
             let boot = """
+            <style>html,body{background:#fff7f7!important;margin:0}</style>
             <script>
             window.__REDMED_APP_PREVIEW=1;
             window.__REDMED_APP_EMBED=1;
@@ -388,6 +389,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
             profileJS = ""
         }
         let boot = """
+        <style>html,body{background:#fff7f7!important;margin:0}</style>
         <script>
         window.__REDMED_APP_PREVIEW=1;
         window.__REDMED_BRACELET_LINKED=\(linkedJS);

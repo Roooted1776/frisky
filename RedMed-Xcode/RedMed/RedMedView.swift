@@ -113,6 +113,7 @@ struct RedMedView: View {
         )) {
             EditProfileView(requireAuthOnSave: requireAuthOnSave)
                 .environmentObject(profile)
+                .presentationBackground(Color.redmedBg)
         }
         .fullScreenCover(isPresented: Binding(
             get: { showHelp && !isScannerSession },
@@ -120,6 +121,7 @@ struct RedMedView: View {
         )) {
             HelpMenuView(onOpenNFC: { tab = .nfc })
                 .environmentObject(profile)
+                .presentationBackground(Color.redmedBg)
         }
         .alert("Authentication Failed", isPresented: $showAuthFailedAlert) {
             Button("OK", role: .cancel) {}
