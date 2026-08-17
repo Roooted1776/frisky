@@ -11,8 +11,8 @@ struct EmergencyView: View {
     var body: some View {
         // Fixed cream chrome (no NavigationView / system toolbar fill).
         // No page header text / BrandWordmark — content-first like RedMed / Aid.
-        // Scanner Back overlays top-trailing. Location nudge is Settings-only.
-        ZStack(alignment: .topTrailing) {
+        // Help overlays top-leading. Scanner Back overlays top-trailing.
+        ZStack(alignment: .top) {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 10) {
                     // Call first — EMS dial is the primary action on this tab.
@@ -78,16 +78,20 @@ struct EmergencyView: View {
                     )
                 }
                 .padding(.horizontal, RedMedChrome.pagePadX)
-                .padding(.top, isScannerSession ? 54 : RedMedChrome.wordmarkTop + 10)
+                .padding(.top, 54)
                 .padding(.bottom, 24)
             }
             .scrollIndicators(.visible)
 
-            if isScannerSession {
-                ScannerBackButton()
-                    .padding(.horizontal, RedMedChrome.pagePadX)
-                    .padding(.top, RedMedChrome.wordmarkTop)
+            HStack(alignment: .center, spacing: 12) {
+                OwnerHelpButton()
+                Spacer(minLength: 0)
+                if isScannerSession {
+                    ScannerBackButton()
+                }
             }
+            .padding(.horizontal, RedMedChrome.pagePadX)
+            .padding(.top, 16)
         }
         .background { RedMedPageBackground() }
     }

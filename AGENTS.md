@@ -36,6 +36,10 @@ The app has no backend, database, or web service.
   `https://getredmed.com/tapper/` from `tapper/index.html` (legacy `https://redmed.pages.dev/tapper/` still hosted — see `docs/domain.md`).
   **Tap-to-view never requires Face ID / biometrics** — owner biometrics gate
   edit, NFC write, vault, and app unlock only. Passerby HTML never asks.
+  Native **Help** chrome is on every owner and in-app scanner screen except the
+  Face ID lock shell. Scanner Help is **policies only** (no Settings, Erase, or
+  Write to NFC) so it cannot mutate owner Keychain or `@AppStorage`. Passerby
+  `tapper.html` has no Help button.
 - Product HTML is only (1) one passerby file `tapper.html` (identical in `tapper/index.html`,
   repo root, and the app bundle; legacy `card.html` / `get.html` / `/get/` redirect to `/tapper/`, preserving `#d=`) and
   (2) policy pages bundled solely under `RedMed-Xcode/RedMed/`: one `Help.html`
@@ -43,9 +47,10 @@ The app has no backend, database, or web service.
   `PrivacyPolicy.html` / `TOS.html` / `security.html` redirect into `Help.html`.
   `HowItWorks.html` redirects into `redmed://main`. Policies CTA to the owner
   app; they do not host owner edit UI. Do not reintroduce repo-root copies of
-  the policy HTML. Owner Help is Settings + Privacy / TOS / Security only (no
+  the policy HTML. Owner Help menu is Settings + Privacy / TOS / Security only (no
   in-app How It Works / MainInfoView, no Local History row, no local tapper.html
-  WebView). NFC Preview (under Scan) / NFC Scan open bundled `tapper.html#d=`
+  WebView). Help is reachable from every native screen except the lock shell;
+  scanner Help is policies only. NFC Preview (under Scan) / NFC Scan open bundled `tapper.html#d=`
   (`?src=app`, no SOS auto-arm);
   live band taps stay `https://getredmed.com/tapper/#d=` (legacy `pages.dev` bands still open).
 

@@ -200,6 +200,7 @@ struct SecondaryButton: View {
 }
 
 /// Trailing chrome text — owner **Help** / **Edit**, NFC Preview **Back**, scanner **Back**, Aid topic **Back**.
+/// Help is on every native screen except the Face ID lock shell.
 /// Accent red text only — no chip / box fill (plain link over the HTML shell).
 struct ChromeTextAction: View {
     let title: String
@@ -328,7 +329,7 @@ struct OwnerModalTrailingAction: View {
 /// Box radius is shared by owner + scanner cards / CTAs (square-ish, not capsules).
 enum RedMedChrome {
     static let navTitleFont: Font = .system(size: 17, weight: .semibold)
-    /// Help · Edit (RedMed) and Back (Preview / scanner / topic) chrome links.
+    /// Help / Edit (RedMed), Help on 911 / Aid / NFC, Back (Preview / scanner / topic).
     static let chromeActionSize: CGFloat = 18
     /// Cancel / Done / Save inside owner Help · Edit modals.
     static let modalActionSize: CGFloat = 17

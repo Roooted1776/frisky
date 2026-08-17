@@ -3,9 +3,10 @@ import SwiftUI
 /// Root tab shell.
 ///
 /// Permanent product rule (bracelet tap / scanner):
-/// - Owner (`isScannerSession == false`): RedMed · 911 · Aid · NFC (+ Edit on RedMed)
+/// - Owner (`isScannerSession == false`): RedMed · 911 · Aid · NFC (+ Edit on RedMed).
+///   Help chrome on every native screen except the Face ID lock shell.
 /// - Scanner / tap (`isScannerSession == true` or HTML `tapper.html#d=`): RedMed · 911 · Aid
-///   only — **no Edit**, **no NFC**
+///   only — **no Edit**, **no NFC**. Help is policies-only (no Settings / Erase / NFC write).
 ///
 /// Never gate the NFC tab on `AppConfig.nfcHardwareEnabled` — that flag only
 /// disables CoreNFC sessions inside `NFCBandManager` (`NFCWriter` / `NFCReader`).
@@ -44,7 +45,7 @@ struct ContentView: View {
             Color.redmedBg.ignoresSafeArea()
 
             ZStack {
-                mountedTab(.redmed) { RedMedView(tab: scannerSafeTab) }
+                mountedTab(.redmed) { RedMedView() }
                 mountedTab(.emergency) {
                     EmergencyView(isVisible: activeTab == .emergency)
                 }
@@ -79,6 +80,7 @@ struct ContentView: View {
             tab = .nfc
             mountedTabs.insert(.nfc)
         }
+        .presentsOwnerHelp()
     }
 
     @ViewBuilder
