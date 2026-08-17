@@ -20,9 +20,9 @@ import UIKit
 /// clip, else `LockMedGlyph` — not BrandLogo, not Apple Face ID scan). Path:
 /// open → auth → Main. Video never gates Face ID or Main — missing file /
 /// Reduce Motion / Low Power = cream + static glyph. No Accept step. No
-/// post-auth overlay (that clip-over-Main was the cream hang). Bottom ~25%
-/// cream dock: **Proceed** only (Face ID retry). Dock is retry chrome after
-/// cancel / mismatch; hidden on the first Face ID prompt.
+/// post-auth overlay (that clip-over-Main was the cream hang). After cancel /
+/// mismatch, **Proceed** lives on its own cream page (not a bottom dock).
+/// Hidden on the first Face ID prompt.
 /// Fresh install unlocks into empty tabs after auth; returning owners load
 /// Keychain (fail closed on corrupt blob). Auto-prompt once per lock on the
 /// first **interactive** frame (UIKit active / scene `.active`) — not cold
@@ -36,7 +36,7 @@ import UIKit
 /// Keychain prefetch + tapper.html string warm start in the same `onAppear`
 /// tick and again inside the unlock pipeline (single-flight). Parked Keychain
 /// adopt unlocks on the LA main-queue turn via `MainActor.assumeIsolated` (no
-/// Task hop). Unlock dock is solid cream (no material blur). Haptic + WKWebView
+/// Task hop). Proceed page is solid cream (no material blur). Haptic + WKWebView
 /// warm run at utility priority after `gate = .unlocked` so Main paints first.
 struct OwnerAppLock<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
@@ -187,38 +187,75 @@ struct OwnerAppLock<Content: View>: View {
     }
 
     /// Remodeled load shell: cream + muted LockOpen bloom behind the Face ID
-    /// frame clip (static glyph fallback). Retry chrome is a ~25% cream dock
-    /// with Proceed. Face ID sheets hold `.inactive` — mark only
+    /// frame clip (static glyph fallback). After cancel / mismatch, swap to a
+    /// full cream Proceed page. Face ID sheets hold `.inactive` — mark only
     /// under the sheet; atmosphere + frame clips keep playing (pause on
     /// `.background` only). After auth success: straight to Main — no clip
     /// overlay, no “Opening” dock.
-    private var showsRetryDock: Bool {
+    private var showsProceedPage: Bool {
         showUnlockControl || screenCaptured
     }
 
     private var lockScreen: some View {
-        GeometryReader { geo in
-            ZStack {
-                lockAtmosphere
-
-                // Quiet center while Face ID owns the sheet — functional glyph only.
-                if !showsRetryDock {
-                    lockLoadGlyph
-                        .allowsHitTesting(false)
-                        .accessibilityHidden(true)
-                }
-
-                if showsRetryDock {
-                    lockRetryChrome(height: dockHeight(in: geo.size))
-                }
+        Group {
+            if showsProceedPage {
+                lockProceedPage
+            } else {
+                lockPromptShell
             }
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("RedMed is locked")
     }
 
-    private func dockHeight(in size: CGSize) -> CGFloat {
-        max(size.height * RedMedChrome.unlockDockHeightFraction, RedMedChrome.unlockDockMinHeight)
+    /// Quiet center while Face ID owns the sheet — functional glyph only.
+    private var lockPromptShell: some View {
+        ZStack {
+            lockAtmosphere
+            lockMedMark
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .offset(y: -28)
+        }
+    }
+
+    /// Full cream page — Proceed only. Not a sheet over the Face ID shell.
+    private var lockProceedPage: some View {
+        ZStack {
+            RedMedPageBackground()
+            VStack(spacing: 0) {
+                Spacer(minLength: 0)
+                lockMedMark
+                Spacer(minLength: 0)
+                VStack(spacing: 14) {
+                    if screenCaptured {
+                        Text("Screen sharing is on — unlock with passcode. Profile stays hidden on the share until you stop sharing.")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.redmedMuted)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if biometryFailed {
+                        Text("Couldn't verify it's you. Try again.")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.redmedAccent)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } else if profileLoadFailed {
+                        Text("Couldn't load your profile. Try again.")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.redmedAccent)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if showUnlockControl {
+                        proceedButton
+                    }
+                }
+                .padding(.horizontal, 22)
+                .padding(.bottom, 36)
+            }
+        }
+        .transition(.identity)
     }
 
     /// Cream first paint, then muted LockOpen bloom behind the glyph.
@@ -268,7 +305,7 @@ struct OwnerAppLock<Content: View>: View {
 
     /// Small medical lock mark under the system sheet. Higgs `FaceIDFrame`
     /// clip when present; static glyph otherwise. Video never waits Face ID.
-    private var lockLoadGlyph: some View {
+    private var lockMedMark: some View {
         Group {
             if FaceIDFrameClip.shouldPlay {
                 FaceIDFrameVideo(playing: scenePhase != .background)
@@ -280,82 +317,8 @@ struct OwnerAppLock<Content: View>: View {
                 LockMedGlyph()
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .offset(y: -28)
         .allowsHitTesting(false)
-    }
-
-    /// Proceed after cancel / mismatch (hidden on first Face ID prompt).
-    /// Bottom sheet dock: ~25% of the screen, solid cream, continuous corners.
-    private func lockRetryChrome(height: CGFloat) -> some View {
-        VStack(spacing: 0) {
-            Spacer(minLength: 0)
-            VStack(spacing: 10) {
-                Capsule()
-                    .fill(Color.redmedDark.opacity(0.14))
-                    .frame(width: 36, height: 4)
-                    .padding(.bottom, 2)
-
-                if screenCaptured {
-                    Text("Screen sharing is on — unlock with passcode. Profile stays hidden on the share until you stop sharing.")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.redmedMuted)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(3)
-                        .minimumScaleFactor(0.85)
-                }
-                if biometryFailed {
-                    Text("Couldn't verify it's you. Try again.")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.redmedAccent)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.85)
-                } else if profileLoadFailed {
-                    Text("Couldn't load your profile. Try again.")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.redmedAccent)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.85)
-                }
-
-                if showUnlockControl {
-                    proceedButton
-                }
-            }
-            .padding(.horizontal, 22)
-            .padding(.top, 12)
-            .padding(.bottom, 18)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .background { unlockDockBackground }
-            .padding(.horizontal, 14)
-            .padding(.bottom, 10)
-            .frame(height: height)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .transition(.identity)
-    }
-
-    /// Solid cream dock — no material blur (faster composite under/after Face ID).
-    private var unlockDockBackground: some View {
-        let shape = RoundedRectangle(cornerRadius: RedMedChrome.unlockDockRadius, style: .continuous)
-        return shape
-            .fill(Color.redmedSurface)
-            .overlay {
-                shape.strokeBorder(
-                    LinearGradient(
-                        colors: [
-                            Color.white.opacity(0.55),
-                            Color.redmedDivider
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1
-                )
-            }
-            .shadow(color: Color.black.opacity(0.06), radius: 16, y: 8)
+        .accessibilityHidden(true)
     }
 
     private var proceedButton: some View {
@@ -371,26 +334,27 @@ struct OwnerAppLock<Content: View>: View {
                 .padding(.horizontal, 22)
                 .padding(.vertical, 12)
                 .background {
-                RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 1, green: 0.447, blue: 0.537).opacity(0.75),
-                                Color.redmedAccent.opacity(0.75)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+                    RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color(red: 1, green: 0.447, blue: 0.537).opacity(0.75),
+                                    Color.redmedAccent.opacity(0.75)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                         )
-                    )
-                    .overlay {
-                        RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous)
-                            .strokeBorder(Color.white.opacity(0.32), lineWidth: 1)
-                    }
-                    .shadow(color: RedMedChrome.accentShadow, radius: 12, y: 6)
-            }
+                        .overlay {
+                            RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous)
+                                .strokeBorder(Color.white.opacity(0.32), lineWidth: 1)
+                        }
+                        .shadow(color: RedMedChrome.accentShadow, radius: 12, y: 6)
+                }
         }
         .buttonStyle(RedMedPressStyle(haptic: nil))
         .disabled(isAuthenticating)
+        .accessibilityLabel("Proceed")
         .accessibilityHint("Face ID, Touch ID, or passcode")
     }
 
