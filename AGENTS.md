@@ -52,9 +52,7 @@ The app has no backend, database, or web service.
   app; they do not host owner edit UI. Do not reintroduce repo-root copies of
   the policy HTML. Owner Help menu is Settings + Privacy / TOS / Security only (no
   in-app How It Works / MainInfoView, no Local History row, no local tapper.html
-  WebView). Help → Privacy / TOS / Security opens `AgreementPage` (static
-  `Color.redmedBg` / `#fff7f7`, swipe of the three `Help.html` anchors). Help is
-  reachable from every native screen except the lock shell;
+  WebView). Help is reachable from every native screen except the lock shell;
   scanner Help is policies only. NFC Preview (under Scan) / NFC Scan open bundled `tapper.html#d=`
   (`?src=app`, no SOS auto-arm);
   live band taps stay `https://getredmed.com/tapper/#d=` (legacy `pages.dev` bands still open).
@@ -96,16 +94,17 @@ The app has no backend, database, or web service.
   prompt on appear); relock on `.background` only. Do **not**
   lock on `.inactive` — LAContext / system auth sheets put the scene inactive
   and would discard a successful unlock via `authGeneration`.
-- Owner app lock is **biometrics only before Main**: static user-page cream
-  (`Color.redmedBg` / `#fff7f7` — same fill as RedMed / tapper, no wash, no
-  `LockOpen.mp4`) behind a small original medical lock glyph (heart +
-  static EKG, Face ID–sized, transparent, one-shot pop — not Apple Face ID
-  scan, not BrandLogo) under system Face ID on every launch (no Accept; no
-  Unlock on first prompt; **no** decorative BrandLogo on the lock shell).
-  Do **not** play a lock atmosphere clip — that overlay was the cream hang.
-  Face ID kicks immediately; auth goes straight to Main (no clip overlay, no
-  wait for ready/end). No `AVAudioSession` (survival alarm owns that). Unlock
-  appears in a cream dock after cancel / mismatch. Fresh
+- Owner app lock is **biometrics only before Main**. Front page is
+  `LockEntryPage`: static user-page cream (`Color.redmedBg` / `#fff7f7` — same
+  fill as RedMed / tapper, no wash, no `LockOpen.mp4`) behind a small original
+  medical lock glyph (heart + static EKG, Face ID–sized, transparent, one-shot
+  pop — not Apple Face ID scan, not BrandLogo) under system Face ID on every
+  launch (no Accept; no Unlock on first prompt; **no** decorative BrandLogo on
+  the lock shell). Path: open → Face ID → Main. Do **not** play a lock
+  atmosphere clip — that overlay was the cream hang. Face ID kicks immediately;
+  auth goes straight to Main (no clip overlay, no wait for ready/end). No
+  `AVAudioSession` (survival alarm owns that). Unlock appears in a cream dock
+  after cancel / mismatch. Fresh
   install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
   Owner pages + passerby tapper: cream fill only (no page BrandLogo). **No hanging
   decorative brand marks** anywhere (no lock watermark, no Aid pane wordmarks, no

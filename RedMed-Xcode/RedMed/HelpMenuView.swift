@@ -6,7 +6,7 @@ import UIKit
 enum HelpDocument {
     static let bundledFile = "Help"
 
-    enum Policy: String, CaseIterable, Identifiable, Hashable {
+    enum Policy: String, CaseIterable, Identifiable {
         case privacy
         case terms
         case security
@@ -355,7 +355,14 @@ struct HelpMenuView: View {
     @ViewBuilder
     private func policyLink(_ policy: HelpDocument.Policy) -> some View {
         NavigationLink {
-            AgreementPage(start: policy)
+            LocalWebView(filename: HelpDocument.bundledFile, fragment: policy.fragment)
+                .navigationTitle(policy.title)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar(.visible, for: .navigationBar)
+                .toolbarBackground(Color.redmedBg, for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
+                .toolbarColorScheme(.light, for: .navigationBar)
+                .background(Color.redmedBg.ignoresSafeArea())
         } label: {
             HStack {
                 Text(policy.title)
