@@ -17,7 +17,9 @@ import SwiftUI
 /// Every owner launch is Face ID / passcode before Main: layered cream
 /// atmosphere + quiet Face ID glyph (no BrandLogo). No Accept step. Unlock is
 /// retry chrome in a floating cream dock after cancel / mismatch — hidden on
-/// the first Face ID attempt. Fresh install unlocks into empty tabs after auth;
+/// the first Face ID attempt. Face ID success mounts Main in the same turn and
+/// plays `LockOpen` full-bleed over it (muted). Gate still has no fade — the
+/// clip is the transition. Fresh install unlocks into empty tabs after auth;
 /// returning owners load Keychain (fail closed on corrupt blob). Auto-prompt
 /// once per lock — including cold launch while still `.inactive` (waiting for
 /// `.active` was the cream hang: empty cream with no sheet). Face ID sheets put
@@ -58,20 +60,36 @@ struct OwnerAppLock<Content: View>: View {
     /// Unlock control stays hidden until the first Face ID attempt ends (cancel /
     /// mismatch / load fail). First load = biometrics sheet only.
     @State private var showUnlockControl = false
+    /// Full-page open clip — armed only on Face ID success, over already-mounted Main.
+    @State private var playOpenOverlay = false
+    @State private var openOverlayOpacity = 1.0
 
     var body: some View {
         ZStack {
-            switch gate {
-            case .unlocked:
-                content()
-            case .locked:
-                lockScreen
+            Group {
+                switch gate {
+                case .unlocked:
+                    content()
+                case .locked:
+                    lockScreen
+                }
+            }
+            // Instant lock ↔ Main — no soft fade (reads as lag / stuck cream).
+            // Open clip sits on top of Main; it is not a gate animation.
+            .transaction { $0.animation = nil }
+            if playOpenOverlay {
+                LockOpenOverlay {
+                    dismissOpenOverlay()
+                }
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+                .opacity(openOverlayOpacity)
+                .accessibilityHidden(true)
             }
         }
-        // Instant lock ↔ Main — no soft fade (reads as lag / stuck cream).
-        .transaction { $0.animation = nil }
         .onAppear {
             screenCaptured = UIScreen.main.isCaptured
+            LockOpenClip.prewarm()
             // Face ID first — cream hang waiting for `.active` or shell warm is wasted time.
             tryAutoUnlockIfActive()
             // Always prefetch (single-flight). Do not gate on UserDefaults — stale/false
@@ -145,6 +163,7 @@ struct OwnerAppLock<Content: View>: View {
                 profile.discardUnlockPrefetch()
                 didAutoPromptThisLock = false
                 showUnlockControl = false
+                killOpenOverlay()
                 lock(purge: true)
             } else if phase == .active {
                 tryAutoUnlockIfActive()
@@ -165,6 +184,7 @@ struct OwnerAppLock<Content: View>: View {
             didAutoPromptThisLock = false
             showUnlockControl = false
             profile.discardUnlockPrefetch()
+            killOpenOverlay()
             // Stay in Main after an authenticated erase; next cold launch locks again.
             gate = .unlocked
         }
@@ -410,10 +430,32 @@ struct OwnerAppLock<Content: View>: View {
         biometryFailed = false
         profileLoadFailed = false
         showUnlockControl = false
+        killOpenOverlay()
         if purge {
             profile.purgeFromMemory()
         }
         SecurePasteboard.clear()
+    }
+
+    /// Arm the clip before `gate = .unlocked` so the first Main frame is covered.
+    private func beginOpenOverlay() {
+        openOverlayOpacity = 1
+        playOpenOverlay = LockOpenClip.url != nil
+    }
+
+    private func dismissOpenOverlay() {
+        withAnimation(.easeOut(duration: 0.18)) {
+            openOverlayOpacity = 0
+        }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 200_000_000)
+            killOpenOverlay()
+        }
+    }
+
+    private func killOpenOverlay() {
+        playOpenOverlay = false
+        openOverlayOpacity = 1
     }
 
     /// Face ID first, then Keychain prefetch + shell string in the same turn
@@ -559,7 +601,8 @@ struct OwnerAppLock<Content: View>: View {
         isAuthenticating = false
         if didLoad {
             keychainHasProfile = true
-            // Unlock shell first, then publish PHI in the same turn.
+            // Clip first, then Main + PHI in the same turn — Face ID sheet is already down.
+            beginOpenOverlay()
             gate = .unlocked
             profile.commitUnlockProfile()
             biometryFailed = false
@@ -574,6 +617,7 @@ struct OwnerAppLock<Content: View>: View {
             // Fresh install — auth passed; open empty Main (Edit gates Save).
             keychainHasProfile = false
             profile.prepareEmptyUnlockShell()
+            beginOpenOverlay()
             gate = .unlocked
             biometryFailed = false
             profileLoadFailed = false
