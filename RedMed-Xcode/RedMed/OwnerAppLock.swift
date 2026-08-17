@@ -14,21 +14,21 @@ import SwiftUI
 /// paints first; SecItem confirms off-main whether a profile blob exists (for
 /// prefetch / fail-closed load) but does **not** open Main without auth.
 ///
-/// Every owner launch is Face ID / passcode before Main: layered cream
-/// atmosphere + quiet Face ID glyph (no BrandLogo). No Accept step. Unlock is
-/// retry chrome in a floating cream dock after cancel / mismatch — hidden on
-/// the first Face ID attempt. Fresh install unlocks into empty tabs after auth;
-/// returning owners load Keychain (fail closed on corrupt blob). Auto-prompt
-/// once per lock — including cold launch while still `.inactive` (waiting for
-/// `.active` was the cream hang: empty cream with no sheet). Face ID sheets put
-/// the scene `.inactive` — `didAutoPromptThisLock` blocks re-prompt.
+/// Every owner launch is Face ID / passcode before Main: cream + Face ID glyph
+/// (no BrandLogo). Path: open → auth → Main. No Accept step. No post-auth
+/// “Opening” dock. Unlock is retry chrome after cancel / mismatch only.
+/// Fresh install unlocks into empty tabs after auth; returning owners load
+/// Keychain (fail closed on corrupt blob). Auto-prompt once per lock —
+/// including cold launch while still `.inactive` (waiting for `.active` was
+/// the cream hang: empty cream with no sheet). Face ID sheets put the scene
+/// `.inactive` — `didAutoPromptThisLock` blocks re-prompt.
 ///
 /// Speed (minus Face ID wall time): Face ID kicks first; Keychain prefetch +
 /// tapper.html string warm start in the same `onAppear` tick and again inside
 /// the unlock pipeline (single-flight). Parked Keychain adopt unlocks on the
 /// LA main-queue turn via `MainActor.assumeIsolated` (no Task hop). Unlock dock
 /// is solid cream (no material blur). Haptic + WKWebView warm run at utility
-/// priority after `gate = .unlocked` so tabs paint first.
+/// priority after `gate = .unlocked` so Main paints first.
 struct OwnerAppLock<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
@@ -82,21 +82,13 @@ struct OwnerAppLock<Content: View>: View {
             }
         }
         .task(id: authGeneration) {
-            // Escape hatch: if LA never callbacks, Unlock must still be tappable.
-            // Do not flash Unlock under a live Face ID sheet (common at ~1–2s).
-            // Keep the blank-cream window short — long waits read as a white hang.
+            // Hung LA only — do not flash Unlock under a live Face ID sheet.
+            // Path is open → auth → Main; Unlock is cancel / mismatch / dead LA.
             guard gate == .locked else { return }
             let generation = authGeneration
-            try? await Task.sleep(nanoseconds: 800_000_000)
+            try? await Task.sleep(nanoseconds: 15_000_000_000)
             guard gate == .locked, generation == authGeneration else { return }
             if isAuthenticating {
-                try? await Task.sleep(nanoseconds: 2_000_000_000)
-                guard gate == .locked, generation == authGeneration else { return }
-            }
-            // Hung LA: invalidate this generation so a late callback cannot unlock,
-            // clear isAuthenticating so Unlock is not stuck disabled.
-            if isAuthenticating {
-                authGeneration &+= 1
                 isAuthenticating = false
             }
             showUnlockControl = true
@@ -173,14 +165,9 @@ struct OwnerAppLock<Content: View>: View {
     /// Remodeled load shell: layered cream atmosphere + quiet Face ID glyph
     /// (no BrandLogo — AGENTS). Retry chrome is a floating cream dock.
     /// Face ID sheets hold `.inactive` — glyph only under the sheet.
-    /// When the sheet dismisses (`.active`) while Keychain still applies, show
-    /// Unlocking in the dock so the gap is not a blank cream hang.
-    private var showsPostAuthChrome: Bool {
-        isAuthenticating && scenePhase == .active
-    }
-
+    /// After auth success: straight to Main — no “Opening RedMed” dock gap.
     private var showsRetryDock: Bool {
-        showUnlockControl || screenCaptured || showsPostAuthChrome
+        showUnlockControl || screenCaptured
     }
 
     private var lockScreen: some View {
@@ -294,16 +281,14 @@ struct OwnerAppLock<Content: View>: View {
                         .foregroundColor(.redmedAccent)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
-                } else if showUnlockControl || showsPostAuthChrome {
-                    Text(showsPostAuthChrome && !showUnlockControl
-                          ? "Opening RedMed"
-                          : "Unlock to open RedMed")
+                } else if showUnlockControl {
+                    Text("Unlock to open RedMed")
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(.redmedDark.opacity(0.78))
                         .multilineTextAlignment(.center)
                 }
 
-                if showUnlockControl || showsPostAuthChrome {
+                if showUnlockControl {
                     unlockButton
                 }
             }
@@ -347,9 +332,11 @@ struct OwnerAppLock<Content: View>: View {
         } label: {
             Group {
                 if isAuthenticating {
+                    // No ProgressView — system spinner fights first MainActor frames
+                    // under / after Face ID and reads as a white hitch.
                     HStack(spacing: 10) {
-                        ProgressView()
-                            .tint(.white)
+                        Image(systemName: "faceid")
+                            .font(.system(size: 18, weight: .semibold))
                         Text("Unlocking")
                             .font(.system(size: 16, weight: .bold))
                     }
@@ -565,7 +552,7 @@ struct OwnerAppLock<Content: View>: View {
             biometryFailed = false
             profileLoadFailed = false
             showUnlockControl = false
-            // Haptic + WebKit off the critical path — tabs paint first.
+            // Haptic + WebKit off the critical path — Main paints first.
             Task(priority: .utility) { @MainActor in
                 RedMedHaptics.success()
                 PasserbyWebViewPool.warmEmbedShell()

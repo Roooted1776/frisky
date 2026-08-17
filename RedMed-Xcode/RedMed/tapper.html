@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="format-detection" content="telephone=yes">
 <meta name="theme-color" content="#fff7f7">
 <meta name="color-scheme" content="light">
@@ -13,6 +13,29 @@
 <meta name="referrer" content="no-referrer">
 <!-- Favicon / touch icon set in resolveLogo when the empty-card mark is shown. -->
 <title>RedMed — tap to scan</title>
+<style>html,body{background:#fff7f7!important;margin:0}</style>
+<script>
+// Register SW ASAP so the next band tap is cache-first. Skip app Preview/Scan.
+// Payload stays in #d= only — SW never stores medical fields.
+(function () {
+  function appPreview() {
+    try {
+      if (window.__REDMED_APP_PREVIEW) return true;
+      return new URLSearchParams(location.search || '').get('src') === 'app';
+    } catch (e) { return !!window.__REDMED_APP_PREVIEW; }
+  }
+  if (appPreview()) return;
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker
+    .register('sw.js', { scope: './', updateViaCache: 'none' })
+    .then(function (reg) {
+      var run = function () { try { reg.update(); } catch (e) {} };
+      if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 4000 });
+      else setTimeout(run, 2500);
+    })
+    .catch(function () {});
+})();
+</script>
 <meta name="description" content="Tap the RedMed band to open the emergency card. Quick. No login. No server. No app — HTML only on this phone.">
 <!-- ONE scanner file: tapper.html (Pages + app bundle).
      Specs (permanent):
@@ -258,6 +281,8 @@
     background: transparent;
     opacity: 1;
   }
+  /* No src until resolveLogo — hide broken-image chrome on EMT open. */
+  .rm-logo:not([src]) { visibility: hidden; }
   .rm-logo.has-name { display: none; }
   .rm-name {
     font-size: var(--fs-name);
@@ -1247,7 +1272,7 @@
         <div class="row row-donor" id="rowDonorRow"><span class="k">Organ donor</span><span class="v empty" id="rowDonor">—</span></div>
       </div>
 
-      <div class="list-grid">
+      <div class="list-grid" hidden>
         <details class="list-drop" id="dropAllergies">
           <summary>
             <span class="list-drop-title">Allergies</span>
@@ -2436,30 +2461,6 @@
   if (call) { call.setAttribute('href', 'tel:' + num); }
   var call911 = document.getElementById('callEmergency911');
   if (call911) { call911.setAttribute('href', 'tel:' + num); }
-})();
-</script>
-<script>
-// Register SW ASAP (not on window.load) so the next bracelet tap is controlled
-// and paints almost instantly from Cache Storage. Payload stays in #d= only —
-// the service worker never stores medical fields. Skip in app-embed (file: WKWebView).
-(function () {
-  function appPreview() {
-    try {
-      if (window.__REDMED_APP_PREVIEW) return true;
-      return new URLSearchParams(location.search || '').get('src') === 'app';
-    } catch (e) { return !!window.__REDMED_APP_PREVIEW; }
-  }
-  if (appPreview()) return;
-  if (!('serviceWorker' in navigator)) return;
-  navigator.serviceWorker
-    .register('sw.js', { scope: './', updateViaCache: 'none' })
-    .then(function (reg) {
-      // Defer update check so first paint / decrypt is not fighting network.
-      var run = function () { try { reg.update(); } catch (e) {} };
-      if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 4000 });
-      else setTimeout(run, 2500);
-    })
-    .catch(function () {});
 })();
 </script>
 <script>

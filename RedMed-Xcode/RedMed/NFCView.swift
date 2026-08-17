@@ -58,6 +58,7 @@ struct NFCView: View {
                     braceletLinked: profile.showsBraceletAsLinked,
                     embedProfileJSON: band.scannedEmbedJSON
                 )
+                .presentationBackground(Color.redmedBg)
             }
         }
         .fullScreenCover(isPresented: $showFirstResponderPreview) {
@@ -66,6 +67,7 @@ struct NFCView: View {
                 braceletLinked: profile.showsBraceletAsLinked,
                 embedProfileJSON: previewEmbedJSON
             )
+            .presentationBackground(Color.redmedBg)
         }
         .alert("Authentication Failed", isPresented: $band.authFailed) {
             Button("OK", role: .cancel) {}

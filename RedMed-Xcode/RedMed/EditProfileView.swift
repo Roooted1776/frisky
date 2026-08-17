@@ -179,6 +179,7 @@ struct EditProfileView: View {
         }
         .sheet(isPresented: $showBirthDatePicker) {
             birthDatePickerSheet
+                .presentationBackground(Color.redmedBg)
         }
         .confirmationDialog("Blood type", isPresented: $showBloodTypePicker, titleVisibility: .visible) {
             ForEach(Self.bloodTypeChoices, id: \.self) { type in

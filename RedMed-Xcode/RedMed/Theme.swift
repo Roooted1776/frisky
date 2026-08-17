@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Shared springs / fades for owner + scanner chrome. Keep short — presence, not noise.
 enum RedMedMotion {
@@ -60,6 +61,27 @@ struct RedMedPageBackground: View {
         .ignoresSafeArea()
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+}
+
+/// Paints the UIWindow cream so UIKit transition gaps are never system white.
+struct CreamWindowBackground: UIViewRepresentable {
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        view.isUserInteractionEnabled = false
+        view.backgroundColor = .clear
+        DispatchQueue.main.async {
+            let cream = UIColor(Color.redmedBg)
+            view.window?.backgroundColor = cream
+            view.window?.rootViewController?.view.backgroundColor = cream
+        }
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        let cream = UIColor(Color.redmedBg)
+        uiView.window?.backgroundColor = cream
+        uiView.window?.rootViewController?.view.backgroundColor = cream
     }
 }
 

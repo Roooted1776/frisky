@@ -117,6 +117,7 @@ struct AidView: View {
         .background { RedMedPageBackground() }
         .sheet(item: $activeTopic) { topic in
             TopicDetailView(topic: topic)
+                .presentationBackground(Color.redmedBg)
         }
         .task {
             await Task.yield()
