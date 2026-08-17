@@ -1,17 +1,15 @@
 import SwiftUI
 
 /// Owner / scanner RedMed tab — same bundled `tapper.html` medical panel helpers see
-/// on a band tap. Owner keeps Help · Edit top chrome; scanners keep Back.
+/// on a band tap. Owner keeps Help · Edit top chrome; scanners keep Back · Help.
 /// First-responder Preview lives on the NFC tab under Scan — not here.
 /// Native 911 / Aid / NFC tabs stay separate (HTML tab bar hidden in app-embed).
 struct RedMedView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
-    @Binding var tab: AppTab
     @State private var showEdit = false
     /// When true, Edit opened without Face ID (empty RedMed profile) — Save must authenticate.
     @State private var requireAuthOnSave = false
-    @State private var showHelp = false
     @State private var showAuthFailedAlert = false
     /// Cached `#d=` — never AES-pack inside `body` (random nonce remounted WKWebView).
     @State private var packedPayload: String?
@@ -59,14 +57,14 @@ struct RedMedView: View {
     var body: some View {
         // Chrome is a sibling above the WKWebView — never an overlay. Overlaying
         // Help · Edit on UIKit WebView lets the web view steal taps (Edit looks dead).
-        // Scanner / passerby shells never show Help · Edit (no NFC either — ContentView).
         VStack(spacing: 0) {
             HStack(alignment: .center, spacing: 12) {
                 if isScannerSession {
                     ScannerBackButton()
                     Spacer(minLength: 0)
+                    OwnerHelpButton()
                 } else {
-                    ChromeTextAction(title: "Help") { showHelp = true }
+                    OwnerHelpButton()
                     ChromeTextAction(title: "Edit") { requestEdit() }
                     Spacer(minLength: 0)
                 }
@@ -112,14 +110,6 @@ struct RedMedView: View {
             set: { showEdit = $0 && !isScannerSession }
         )) {
             EditProfileView(requireAuthOnSave: requireAuthOnSave)
-                .environmentObject(profile)
-                .presentationBackground(Color.redmedBg)
-        }
-        .fullScreenCover(isPresented: Binding(
-            get: { showHelp && !isScannerSession },
-            set: { showHelp = $0 && !isScannerSession }
-        )) {
-            HelpMenuView(onOpenNFC: { tab = .nfc })
                 .environmentObject(profile)
                 .presentationBackground(Color.redmedBg)
         }

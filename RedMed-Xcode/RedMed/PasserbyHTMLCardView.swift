@@ -27,12 +27,13 @@ struct PasserbyHTMLCardView: View {
 
     var body: some View {
         // Same top chrome as main pages (RedMed Help·Edit / scanner Back / Aid
-        // topic Back) — left accent Back only. No centered "Preview" title bar
+        // topic Back) — Back leading, Help trailing. No centered "Preview" title bar
         // (that was Help/Edit modal format; Preview is the tap-card shell).
         VStack(spacing: 0) {
             HStack(alignment: .center, spacing: 12) {
                 ChromeTextAction(title: "Back", weight: .bold) { dismiss() }
                 Spacer(minLength: 0)
+                OwnerHelpButton()
             }
             .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
             .padding(.horizontal, RedMedChrome.pagePadX)
@@ -60,6 +61,7 @@ struct PasserbyHTMLCardView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background { RedMedPageBackground() }
+        .presentsOwnerHelp()
     }
 
     /// Slurp bundled `tapper.html` off the hot path so first RedMed / Preview paint skips disk.

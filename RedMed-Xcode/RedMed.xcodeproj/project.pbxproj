@@ -29,6 +29,7 @@
 		AABB00000000000000000018 /* security.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000018 /* security.html */; };
 		AABB00000000000000000019 /* HowItWorks.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000019 /* HowItWorks.html */; };
 		AABB0000000000000000001A /* legal-doc.css in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001A /* legal-doc.css */; };
+		AABB00000000000000000050 /* Help.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000050 /* Help.html */; };
 		AABB0000000000000000001B /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001B /* KeychainStore.swift */; };
 		AABB0000000000000000001C /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001C /* AppConfig.swift */; };
 		AABB0000000000000000001D /* ProfileNFCCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001D /* ProfileNFCCodec.swift */; };
@@ -87,6 +88,7 @@
 		AAAA00000000000000000018 /* security.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = security.html; sourceTree = "<group>"; };
 		AAAA00000000000000000019 /* HowItWorks.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = HowItWorks.html; sourceTree = "<group>"; };
 		AAAA0000000000000000001A /* legal-doc.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = "legal-doc.css"; sourceTree = "<group>"; };
+		AAAA00000000000000000050 /* Help.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = Help.html; sourceTree = "<group>"; };
 		AAAA0000000000000000001B /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000001C /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000001D /* ProfileNFCCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileNFCCodec.swift; sourceTree = "<group>"; };
@@ -237,6 +239,7 @@
 		AAAA00000000000000000049 /* Policies */ = {
 			isa = PBXGroup;
 			children = (
+				AAAA00000000000000000050 /* Help.html */,
 				AAAA00000000000000000016 /* PrivacyPolicy.html */,
 				AAAA00000000000000000017 /* TOS.html */,
 				AAAA00000000000000000018 /* security.html */,
@@ -365,6 +368,7 @@
 				AABB00000000000000000016 /* PrivacyPolicy.html in Resources */,
 				AABB00000000000000000017 /* TOS.html in Resources */,
 				AABB00000000000000000018 /* security.html in Resources */,
+				AABB00000000000000000050 /* Help.html in Resources */,
 				AABB00000000000000000019 /* HowItWorks.html in Resources */,
 				AABB00000000000000000021 /* card.html in Resources */,
 				AABB00000000000000000024 /* tapper.html in Resources */,

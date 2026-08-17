@@ -230,14 +230,9 @@ enum ProfileNFCCodec {
         }
         let byteCount = url.utf8.count
         if byteCount > 850 {
-            return ("\(byteCount) bytes on tag — too large for most NFC tags. Shorten entries or use NTAG216.", true)
-        } else if byteCount > 480 {
-            return ("\(byteCount) bytes on tag — needs an NTAG216", false)
-        } else if byteCount > 140 {
-            return ("\(byteCount) bytes on tag — needs NTAG215 or NTAG216", false)
-        } else {
-            return ("\(byteCount) bytes on tag — fits NTAG213+", false)
+            return ("\(byteCount) bytes on tag — too large for NXP NTAG216. Shorten entries.", true)
         }
+        return ("\(byteCount) bytes on tag — NXP NTAG216", false)
     }
 
     // MARK: - Encode / decode

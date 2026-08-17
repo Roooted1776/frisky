@@ -1,6 +1,6 @@
 // Owner-only NFC bracelet setup. Ped/EMS scanner shells never mount this tab —
 // see ContentView.showsNFC / scannerSafeTab.
-// One page: Write (passive rewritable Type 2 / NTAG) + Scan + Preview (under
+// One page: Write (blank unlocked NXP NTAG216, ISO 14443A Type 2) + Scan + Preview (under
 // Scan) → full-page tap card (what first responders see).
 // When `AppConfig.nfcHardwareEnabled` is true, Write/Scan start real CoreNFC
 // sessions. Pack-only simulate stays for offline/dev when the flag is off —
@@ -33,7 +33,8 @@ struct NFCView: View {
         // BrandWordmark (911 / Aid are content-first; no hanging pane marks).
         // Owner-only tab; scanners never mount this.
         VStack(spacing: 0) {
-            BrandWordmarkHeader()
+            PageHelpChrome()
+            BrandWordmarkHeader(top: 0)
 
             ScrollView {
                 VStack(spacing: 16) {
@@ -128,6 +129,10 @@ struct NFCView: View {
 
             thinRule
 
+            factRow(icon: "cpu", text: rf.chipSpecSummary)
+            thinRule
+            factRow(icon: "textformat", text: rf.laserFaceSummary)
+            thinRule
             factRow(icon: "hand.point.up.left.fill", text: rf.tapDistanceSummary)
             thinRule
             factRow(icon: "iphone.radiowaves.left.and.right", text: rf.powerOnTapSummary)
@@ -190,7 +195,7 @@ struct NFCView: View {
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                tipRow("Write once after RedMed is filled — blank rewritable Type 2 (NTAG) band.")
+                tipRow("Write once after RedMed is filled — blank unlocked NXP NTAG216 (ISO 14443A Type 2).")
                 tipRow("Write packs #d= onto the chip only — never a vendor cloud or social/short link.")
                 tipRow("Tap to scan: same HTML card helpers get — quick, no login, no server, no app.")
             }
