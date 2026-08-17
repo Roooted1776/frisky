@@ -55,7 +55,8 @@ See also `AGENTS.md`. High-signal recap:
    BrandWordmark header; tapper YOU-card BrandLogo stays as the medical header.
    Privacy cover: opaque, no fade; capture only while PHI in RAM; non-capture
    cover **`.background` only** (never `.inactive` / Face ID sheets) — never over
-   the lock / Unlock shell.
+   the lock / Unlock shell, and **never over the tap card** (Preview / Scan /
+   passerby YOU card).
 7. Cold launch: zero Location / MapKit / trauma JSON at `@main`. CoreMotion crash monitor may start after first-frame yield.
 8. Unique `project.pbxproj` IDs (duplicate IDs drop sources).
 9. Passerby SW: cache-first multi-key shell for almost-instant EMT open; clear prior CACHE on activate; bump `redmed-tapper-vN` in lockstep. Tap-to-view = HTML; no biometric copy in any passerby / policy HTML.
@@ -165,6 +166,8 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Re-adding Settings toggles for brightness, locator, or crash survival alarm.
 - Auto-arming brightness or locate-me siren just from opening **owner** Find Help, bare `/tapper/`, or in-app scanner preview (crash + explicit owner SOS; real bracelet `#d=` tap may arm hardware-local SOS).
 - Requiring Face ID / biometrics for passerby tap-to-view (`tapper.html` / scanner shell).
+- Covering or overlaying the tap card (Preview / Scan / YOU card) — privacy
+  veil, tab-bar shadow hits, dual-scroll, login, or Face ID.
 - Relocking vault on `.inactive`.
 - Mutating owner `@AppStorage` from scanner UI.
 - Repo-root policy HTML duplicates.

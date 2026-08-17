@@ -12,6 +12,7 @@ import WebKit
 /// Sets `html.app-preview` and disables WKWebView UIScrollView scrolling so
 /// flex tabbar taps work (fixed + dual-scroll ate RedMed · 911 · Aid switches).
 /// Never calls `BiometricAuth` — passerby / Preview tap-to-view stays ungated.
+/// Nothing covers this shell (no privacy veil, no Face ID, no native overlay).
 struct PasserbyHTMLCardView: View {
     @Environment(\.dismiss) private var dismiss
     /// Raw `#d=` payload (no prefix), or full band URL containing `#d=`.
@@ -31,7 +32,10 @@ struct PasserbyHTMLCardView: View {
         // (that was Help/Edit modal format; Preview is the tap-card shell).
         VStack(spacing: 0) {
             HStack(alignment: .center, spacing: 12) {
-                ChromeTextAction(title: "Back", weight: .bold) { dismiss() }
+                ChromeTextAction(title: "Back", weight: .bold) {
+                    TapCardPresentation.setVisible(false)
+                    dismiss()
+                }
                 Spacer(minLength: 0)
             }
             .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
@@ -60,6 +64,8 @@ struct PasserbyHTMLCardView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background { RedMedPageBackground() }
+        .onAppear { TapCardPresentation.setVisible(true) }
+        .onDisappear { TapCardPresentation.setVisible(false) }
     }
 
     /// Slurp bundled `tapper.html` off the hot path so first RedMed / Preview paint skips disk.
@@ -94,6 +100,17 @@ struct PasserbyHTMLCardView: View {
     /// Copies ProfileData into a chip, then packs. ProfileData stays on the isolated caller.
     static func previewPayload(from profile: ProfileData) -> String? {
         previewPayload(from: ProfileNFCCodec.chipProfile(from: profile))
+    }
+}
+
+/// Preview / Scan full-screen tap card is up. Privacy cover must not veil it.
+enum TapCardPresentation {
+    @MainActor static var isVisible = false
+
+    @MainActor static func setVisible(_ visible: Bool) {
+        guard isVisible != visible else { return }
+        isVisible = visible
+        NotificationCenter.default.post(name: .redMedTapCardPresentationDidChange, object: nil)
     }
 }
 

@@ -4,8 +4,9 @@ enum AppConfig {
     /// Passerby / rescuer shell written to passive NFC bands. Any phone that taps
     /// the bracelet opens this page in a browser — read-only medical card + 911 +
     /// Aid. No Face ID / biometrics / login / passcode to view — tap-to-view is
-    /// ungated on every phone. Medical data is only in the `#d=` fragment (flat
-    /// array → AES-GCM → base64url; no server storage). `sw.js` cache-first stores
+    /// ungated on every phone. Nothing covers or blocks the tap card. Medical
+    /// data is only in the `#d=` fragment (flat array → AES-GCM → base64url; no
+    /// server storage). `sw.js` cache-first stores
     /// the static layout for instant offline / EMT taps (activate clears prior
     /// CACHE buckets). Owner edit / treatments live in `Main.swift`, not here.
     /// Source page: `tapper.html` / `tapper/index.html` (identical at `tapper/`, repo root,
@@ -146,7 +147,7 @@ enum AppConfig {
 
         /// What can still open the URL later (Apple OS path; phone off / locked OK).
         static var backgroundTagReadingSummary: String {
-            "iOS Background Tag Reading can still open the card later — phone can be off or locked; a deliberate tap (phone top \(intentionalTapRangeLabel) from the band) still works. Unlock if asked, then tap the NFC banner so Safari opens the card. Wrist + pocket is usually fine. Phone pressed to the clasp can pop Safari. Same for any passerby. Writing the chip does not change that. Band stays passive — no battery."
+            "iOS Background Tag Reading can still open the card later — phone can be off or locked; a deliberate tap (phone top \(intentionalTapRangeLabel) from the band) still works. Safari opens the tap card immediately — no Face ID, no login, no app. Wrist + pocket is usually fine. Phone pressed to the clasp can pop Safari. Same for any passerby. Writing the chip does not change that. Band stays passive — no battery."
         }
 
         static var paymentPOSSummary: String {

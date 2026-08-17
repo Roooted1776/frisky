@@ -541,6 +541,8 @@ extension Notification.Name {
     static let redMedSurvivalArmed = Notification.Name("redMedSurvivalArmed")
     /// Owner RedMed embed tapped Not linked / Linked bracelet — ContentView selects NFC.
     static let redMedOpenNFCTab = Notification.Name("redMedOpenNFCTab")
+    /// Preview / Scan tap card presented — PrivacySnapshotGuard must not cover it.
+    static let redMedTapCardPresentationDidChange = Notification.Name("redMedTapCardPresentationDidChange")
 }
 
 struct EmergencyContact: Identifiable, Equatable {

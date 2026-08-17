@@ -2,14 +2,17 @@ import SwiftUI
 import UIKit
 
 /// Hides PHI from iOS app-switcher snapshots and active screen capture / mirroring.
-/// Apply at the owner window root — scanners still need a readable emergency card
-/// only while active; when backgrounded or recorded, cover everything.
+/// Apply at the owner window root. The passerby **tap card** (Preview / Scan /
+/// `PasserbyHTMLCardView`) must stay readable — never cover it. Helpers need
+/// that YOU card unblocked. Cover owner chrome when backgrounded or recorded.
 ///
 /// FaceTime / Screen Recording sets `UIScreen.isCaptured`. Do **not** cover the
 /// lock / Unlock shell — RAM is purged then, and a cover blocks Face ID /
-/// Unlock so the owner cannot enter. Cover only when PHI is actually in memory.
-/// `OwnerAppLock` stages Keychain decode without publishing fields until after
-/// `gate = .unlocked`, so capture never paints a cover over the lock shell.
+/// Unlock so the owner cannot enter. Do **not** cover the tap card — that is
+/// the public EMT view. Cover only when PHI is actually in memory and the tap
+/// card is not up. `OwnerAppLock` stages Keychain decode without publishing
+/// fields until after `gate = .unlocked`, so capture never paints a cover over
+/// the lock shell.
 ///
 /// Non-capture cover is **`.background` only** (with PHI). Face ID / LAContext
 /// put the scene `.inactive` — covering then blanks the UI mid-unlock and
@@ -24,6 +27,8 @@ struct PrivacySnapshotGuard<Content: View>: View {
     /// Cold launch reports `.inactive` before first `.active`. Covering then paints
     /// a blank shell over the real UI and reads as a long hang after the launch screen.
     @State private var hasBeenActive = false
+    /// Preview / Scan tap card is the public EMT view — never veil it.
+    @State private var tapCardVisible = TapCardPresentation.isVisible
     @ViewBuilder private var content: () -> Content
 
     init(@ViewBuilder content: @escaping () -> Content) {
@@ -35,6 +40,8 @@ struct PrivacySnapshotGuard<Content: View>: View {
     }
 
     private var mustCover: Bool {
+        // Tap card (Preview / Scan / band-style shell) stays readable — never cover.
+        if tapCardVisible { return false }
         // Capture cover only while PHI is resident — lock / Unlock must stay tappable.
         if screenCaptured {
             return phiInMemory
@@ -59,6 +66,7 @@ struct PrivacySnapshotGuard<Content: View>: View {
             }
         }
         .onAppear {
+            tapCardVisible = TapCardPresentation.isVisible
             screenCaptured = UIScreen.main.isCaptured
             if scenePhase == .active {
                 hasBeenActive = true
@@ -73,12 +81,16 @@ struct PrivacySnapshotGuard<Content: View>: View {
                 SecurePasteboard.clear()
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .redMedTapCardPresentationDidChange)) { _ in
+            tapCardVisible = TapCardPresentation.isVisible
+        }
         .onReceive(NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)) { _ in
             let nowCaptured = UIScreen.main.isCaptured
             screenCaptured = nowCaptured
             if nowCaptured {
                 SecurePasteboard.clear()
-                if phiInMemory {
+                // Don't log a cover we refused to paint over the tap card.
+                if phiInMemory, !tapCardVisible {
                     VaultHistoryStore.shared.record(.screenCaptureCovered, detail: "share")
                 }
             }

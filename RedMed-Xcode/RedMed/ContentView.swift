@@ -42,6 +42,7 @@ struct ContentView: View {
         ZStack(alignment: .bottom) {
             // Same cream as tapper body / RedMedPageBackground — no system white in tab gaps.
             Color.redmedBg.ignoresSafeArea()
+                .allowsHitTesting(false)
 
             ZStack {
                 mountedTab(.redmed) { RedMedView(tab: scannerSafeTab) }
@@ -151,7 +152,10 @@ struct CustomTabBar: View {
                     barShape.strokeBorder(Color.redmedDivider, lineWidth: 0.5)
                 }
                 .shadow(color: Color.black.opacity(0.05), radius: 10, y: -2)
+                .allowsHitTesting(false)
         }
+        // Bar bounds only — upward shadow must not eat YOU-card / list taps.
+        .contentShape(barShape)
     }
 
     private func select(_ next: AppTab) {
