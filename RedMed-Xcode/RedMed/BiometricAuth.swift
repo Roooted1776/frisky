@@ -35,6 +35,7 @@ enum BiometricAuth {
         reason: String,
         force: Bool = false,
         allowPasscode: Bool = true,
+        allowableReuseDuration: TimeInterval = 0,
         completion: @escaping (Outcome) -> Void
     ) {
         if didUnlockThisLaunch, !force {
@@ -46,7 +47,10 @@ enum BiometricAuth {
             }
             return
         }
-        let context = makeContext(allowPasscode: allowPasscode)
+        let context = makeContext(
+            allowPasscode: allowPasscode,
+            allowableReuseDuration: allowableReuseDuration
+        )
         var error: NSError?
         let policy: LAPolicy = allowPasscode
             ? .deviceOwnerAuthentication
@@ -57,32 +61,24 @@ enum BiometricAuth {
         // passcode pad stays in-sheet (do not chain a second evaluate).
         guard context.canEvaluatePolicy(policy, error: &error) else {
             #if targetEnvironment(simulator)
-            let present = {
+            DispatchQueue.main.async {
                 presentSimulatorPrompt(
                     reason: reason,
                     allowPasscode: allowPasscode,
                     completion: completion
                 )
             }
-            if Thread.isMainThread {
-                present()
-            } else {
-                DispatchQueue.main.async(execute: present)
-            }
             #else
             let failOutcome: Outcome = isNotInteractive(error) ? .notInteractive : .declined
-            let finish = { completion(failOutcome) }
-            if Thread.isMainThread {
-                finish()
-            } else {
-                DispatchQueue.main.async(execute: finish)
-            }
+            DispatchQueue.main.async { completion(failOutcome) }
             #endif
             return
         }
 
         context.evaluatePolicy(policy, localizedReason: reason) { success, evalError in
-            let finish = {
+            // Always hop a main turn — even when LA already called back on main.
+            // Sync apply during Face ID teardown can leave SwiftUI on the lock shell.
+            DispatchQueue.main.async {
                 context.invalidate()
                 if success {
                     didUnlockThisLaunch = true
@@ -91,23 +87,17 @@ enum BiometricAuth {
                     completion(outcome(for: evalError))
                 }
             }
-            // LA callbacks are off-main; hop only when needed.
-            if Thread.isMainThread {
-                finish()
-            } else {
-                DispatchQueue.main.async(execute: finish)
-            }
         }
     }
 
-    private static func makeContext(allowPasscode: Bool) -> LAContext {
+    private static func makeContext(
+        allowPasscode: Bool,
+        allowableReuseDuration: TimeInterval
+    ) -> LAContext {
         let context = LAContext()
-        // No Face ID / Touch ID reuse across gates — every unlock is fresh.
-        context.touchIDAuthenticationAllowableReuseDuration = 0
+        context.touchIDAuthenticationAllowableReuseDuration = allowableReuseDuration
         context.localizedCancelTitle = "Cancel"
-        if allowPasscode {
-            // Default system fallback ("Enter Passcode") stays inside this evaluation.
-        } else {
+        if !allowPasscode {
             // Empty title hides the passcode / password button on Face ID.
             context.localizedFallbackTitle = ""
         }

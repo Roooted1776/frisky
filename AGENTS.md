@@ -35,7 +35,7 @@ The app has no backend, database, or web service.
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain or
   owner `@AppStorage` / UserDefaults prefs. Hosted at
   `https://getredmed.com/tapper/` from `tapper/index.html` (legacy `https://redmed.pages.dev/tapper/` still hosted — see `docs/domain.md`).
-  **Tap-to-view never requires Face ID / biometrics** — owner biometrics gate
+  **Tap-to-view never requires Face ID / biometrics / passcode / login** — owner biometrics gate
   edit, NFC write, vault, and app unlock only. Passerby HTML never asks.
   **Nothing blocks the tap card** (YOU card / Preview / Scan / band tap): no
   privacy veil, no native overlay stealing taps, no login. Safari opens

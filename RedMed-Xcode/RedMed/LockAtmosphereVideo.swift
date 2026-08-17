@@ -184,6 +184,7 @@ final class FaceIDFramePlayerView: UIView {
         let cream = UIColor(red: 1, green: 0.969, blue: 0.969, alpha: 1)
         backgroundColor = cream
         playerLayer.backgroundColor = cream.cgColor
+        // Aspect so cream margin stays — do not crop the circle.
         playerLayer.videoGravity = .resizeAspect
     }
 
