@@ -52,7 +52,9 @@ The app has no backend, database, or web service.
   app; they do not host owner edit UI. Do not reintroduce repo-root copies of
   the policy HTML. Owner Help menu is Settings + Privacy / TOS / Security only (no
   in-app How It Works / MainInfoView, no Local History row, no local tapper.html
-  WebView). Help is reachable from every native screen except the lock shell;
+  WebView). Help → Privacy / TOS / Security opens `AgreementPage` (static
+  `Color.redmedBg` / `#fff7f7`, swipe of the three `Help.html` anchors). Help is
+  reachable from every native screen except the lock shell;
   scanner Help is policies only. NFC Preview (under Scan) / NFC Scan open bundled `tapper.html#d=`
   (`?src=app`, no SOS auto-arm);
   live band taps stay `https://getredmed.com/tapper/#d=` (legacy `pages.dev` bands still open).

@@ -18,6 +18,7 @@
 		AABB00000000000000000009 /* TopicDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000009 /* TopicDetailView.swift */; };
 		AABB0000000000000000000A /* NFCView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000000A /* NFCView.swift */; };
 		AABB0000000000000000000B /* HelpMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000000E /* HelpMenuView.swift */; };
+		AABB00000000000000000052 /* AgreementPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000052 /* AgreementPage.swift */; };
 		AABB0000000000000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000000C /* Assets.xcassets */; };
 		AABB00000000000000000010 /* NearbyHospitals.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000010 /* NearbyHospitals.swift */; };
 		AABB00000000000000000011 /* MedicationData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000011 /* MedicationData.swift */; };
@@ -77,6 +78,7 @@
 		AAAA0000000000000000000C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AAAA0000000000000000000D /* RedMed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RedMed.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AAAA0000000000000000000E /* HelpMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpMenuView.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000052 /* AgreementPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgreementPage.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000000F /* RedMed.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RedMed.entitlements; sourceTree = "<group>"; };
 		AAAA00000000000000000010 /* NearbyHospitals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyHospitals.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000011 /* MedicationData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationData.swift; sourceTree = "<group>"; };
@@ -231,6 +233,7 @@
 			isa = PBXGroup;
 			children = (
 				AAAA0000000000000000000E /* HelpMenuView.swift */,
+				AAAA00000000000000000052 /* AgreementPage.swift */,
 				AAAA0000000000000000002D /* AppSettings.swift */,
 			);
 			name = "Help & Settings";
@@ -427,6 +430,7 @@
 				AABB00000000000000000031 /* NFCBandManager.swift in Sources */,
 				AABB0000000000000000000A /* NFCView.swift in Sources */,
 				AABB0000000000000000000B /* HelpMenuView.swift in Sources */,
+				AABB00000000000000000052 /* AgreementPage.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
