@@ -29,12 +29,15 @@
   --lh: 1.6;
 }
 
+html {
+  background: var(--bg);
+}
+
 body {
   font-family: var(--font);
   -webkit-font-smoothing: antialiased;
-  background:
-    radial-gradient(120% 60% at 50% -10%, #ffe8eb 0%, transparent 58%),
-    var(--bg);
+  /* Static cream — same Color.redmedBg as the RedMed user page. No wash. */
+  background: var(--bg);
   color: var(--text);
   font-size: var(--fs-base);
   line-height: var(--lh);

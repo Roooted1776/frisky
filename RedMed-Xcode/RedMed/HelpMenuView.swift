@@ -362,6 +362,8 @@ struct HelpMenuView: View {
                 .toolbarBackground(Color.redmedBg, for: .navigationBar)
                 .toolbarBackground(.visible, for: .navigationBar)
                 .toolbarColorScheme(.light, for: .navigationBar)
+                // Solid user-page cream — no system grey around the policy WebView.
+                .background(Color.redmedBg.ignoresSafeArea())
         } label: {
             HStack {
                 Text(policy.title)
