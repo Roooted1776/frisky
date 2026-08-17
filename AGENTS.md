@@ -81,8 +81,10 @@ The app has no backend, database, or web service.
   prompt on appear); relock on `.background` only. Do **not**
   lock on `.inactive` — LAContext / system auth sheets put the scene inactive
   and would discard a successful unlock via `authGeneration`.
-- Owner app lock is **biometrics only before Main**: cream atmosphere + Face ID
-  glyph under system Face ID on every launch (no Accept; no Unlock on first
+- Owner app lock is **biometrics only before Main**: cream atmosphere + small
+  original medical lock glyph (heart + static EKG, Face ID–sized, transparent,
+  one-shot pop — not Apple Face ID scan, not BrandLogo) under system Face ID
+  on every launch (no Accept; no Unlock on first
   prompt; **no** decorative BrandLogo on the lock shell). Unlock appears in a
   cream dock after cancel / mismatch. Fresh
   install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.

@@ -14,8 +14,9 @@ import SwiftUI
 /// paints first; SecItem confirms off-main whether a profile blob exists (for
 /// prefetch / fail-closed load) but does **not** open Main without auth.
 ///
-/// Every owner launch is Face ID / passcode before Main: cream + Face ID glyph
-/// (no BrandLogo). Path: open → auth → Main. No Accept step. No post-auth
+/// Every owner launch is Face ID / passcode before Main: cream + small medical
+/// lock glyph (not BrandLogo, not Apple Face ID mark). Path: open → auth → Main.
+/// No Accept step. No post-auth
 /// “Opening” dock. Unlock is retry chrome after cancel / mismatch only.
 /// Fresh install unlocks into empty tabs after auth; returning owners load
 /// Keychain (fail closed on corrupt blob). Auto-prompt once per lock —
@@ -162,7 +163,7 @@ struct OwnerAppLock<Content: View>: View {
         }
     }
 
-    /// Remodeled load shell: layered cream atmosphere + quiet Face ID glyph
+    /// Remodeled load shell: layered cream atmosphere + small medical glyph
     /// (no BrandLogo — AGENTS). Retry chrome is a floating cream dock.
     /// Face ID sheets hold `.inactive` — glyph only under the sheet.
     /// After auth success: straight to Main — no “Opening RedMed” dock gap.
@@ -227,28 +228,13 @@ struct OwnerAppLock<Content: View>: View {
         .accessibilityHidden(true)
     }
 
-    /// Soft Face ID disc — load presence under the system sheet, not a brand mark.
-    /// Cream fill (no material / ProgressView) — materials + spinner compete
-    /// with LA on the first MainActor frames and are invisible under the sheet.
+    /// Small medical lock mark under the system sheet — no cream disc so the
+    /// atmosphere shows through. Spring pop only (no material / ProgressView).
     private var lockLoadGlyph: some View {
-        ZStack {
-            Circle()
-                .fill(Color.redmedSurface.opacity(0.92))
-                .overlay {
-                    Circle().strokeBorder(Color.white.opacity(0.55), lineWidth: 1)
-                }
-                .frame(
-                    width: RedMedChrome.unlockGlyphSize + 18,
-                    height: RedMedChrome.unlockGlyphSize + 18
-                )
-            Image(systemName: "faceid")
-                .font(.system(size: 34, weight: .medium))
-                .foregroundStyle(Color.redmedAccent.opacity(0.72))
-                .symbolRenderingMode(.hierarchical)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .offset(y: -28)
-        .allowsHitTesting(false)
+        LockMedGlyph()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .offset(y: -28)
+            .allowsHitTesting(false)
     }
 
     /// Status + Unlock after cancel / mismatch (hidden on first Face ID prompt).
