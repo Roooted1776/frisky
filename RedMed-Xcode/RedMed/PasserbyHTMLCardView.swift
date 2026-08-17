@@ -104,12 +104,24 @@ struct PasserbyHTMLCardView: View {
 }
 
 /// Preview / Scan full-screen tap card is up. Privacy cover must not veil it.
+/// Lock-guarded so `@State` / View init never touch a MainActor static (Xcode
+/// isolation error — same class of bug as Keychain in `@State` defaults).
 enum TapCardPresentation {
-    @MainActor static var isVisible = false
+    private static let lock = NSLock()
+    private static var visible = false
 
-    @MainActor static func setVisible(_ visible: Bool) {
-        guard isVisible != visible else { return }
-        isVisible = visible
+    static var isVisible: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return visible
+    }
+
+    static func setVisible(_ visible: Bool) {
+        lock.lock()
+        let changed = self.visible != visible
+        self.visible = visible
+        lock.unlock()
+        guard changed else { return }
         NotificationCenter.default.post(name: .redMedTapCardPresentationDidChange, object: nil)
     }
 }

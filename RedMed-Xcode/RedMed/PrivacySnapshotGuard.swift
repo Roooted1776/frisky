@@ -28,7 +28,8 @@ struct PrivacySnapshotGuard<Content: View>: View {
     /// a blank shell over the real UI and reads as a long hang after the launch screen.
     @State private var hasBeenActive = false
     /// Preview / Scan tap card is the public EMT view — never veil it.
-    @State private var tapCardVisible = TapCardPresentation.isVisible
+    /// Literal default — do not read MainActor / TapCardPresentation in `@State`.
+    @State private var tapCardVisible = false
     @ViewBuilder private var content: () -> Content
 
     init(@ViewBuilder content: @escaping () -> Content) {
