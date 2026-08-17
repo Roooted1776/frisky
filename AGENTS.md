@@ -53,7 +53,8 @@ The app has no backend, database, or web service.
   the policy HTML. Owner Help menu is Settings + Privacy / TOS / Security only (no
   in-app How It Works / MainInfoView, no Local History row, no local tapper.html
   WebView). Help is reachable from every native screen except the lock shell;
-  scanner Help is policies only. NFC Preview (under Scan) / NFC Scan open bundled `tapper.html#d=`
+  RedMed (user) Help is a bottom `UnlockScreenButton` (original unlock-dock CTA);
+  911 / Aid / NFC keep top Help chrome. Scanner Help is policies only. NFC Preview (under Scan) / NFC Scan open bundled `tapper.html#d=`
   (`?src=app`, no SOS auto-arm);
   live band taps stay `https://getredmed.com/tapper/#d=` (legacy `pages.dev` bands still open).
 

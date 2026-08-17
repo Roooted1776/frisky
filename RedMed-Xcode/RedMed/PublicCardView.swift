@@ -83,6 +83,20 @@ struct OwnerHelpButton: View {
     }
 }
 
+/// RedMed user-page Help — original unlock-dock CTA, pinned at the bottom.
+struct OwnerHelpDockButton: View {
+    @Environment(\.ownerHelpOpen) private var ownerHelpOpen
+
+    var body: some View {
+        if let ownerHelpOpen {
+            UnlockScreenButton(title: "Help") {
+                ownerHelpOpen.wrappedValue = true
+            }
+            .accessibilityIdentifier("owner-help")
+        }
+    }
+}
+
 /// Sibling Help row (same metrics as RedMed). Used on 911 / Aid / NFC so
 /// page sections sit below Help instead of under an overlay. RedMed owns its own bar.
 struct PageHelpChrome<Trailing: View>: View {

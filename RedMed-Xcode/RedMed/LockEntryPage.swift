@@ -56,7 +56,16 @@ struct LockEntryPage: View {
                 }
 
                 if showUnlockControl {
-                    unlockButton
+                    UnlockScreenButton(
+                        title: "Unlock",
+                        icon: "faceid",
+                        isBusy: isAuthenticating,
+                        busyTitle: "Unlocking",
+                        disabled: isAuthenticating,
+                        accessibilityHintText: "Face ID, Touch ID, or passcode",
+                        action: onUnlock
+                    )
+                    .accessibilityLabel(isAuthenticating ? "Unlocking with Face ID" : "Unlock")
                 }
             }
             .padding(.horizontal, 22)
@@ -69,35 +78,5 @@ struct LockEntryPage: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .transition(.identity)
-    }
-
-    private var unlockButton: some View {
-        Button {
-            RedMedHaptics.medium()
-            onUnlock()
-        } label: {
-            Group {
-                if isAuthenticating {
-                    Text("Unlocking")
-                        .font(.system(size: 16, weight: .bold))
-                        .accessibilityLabel("Unlocking with Face ID")
-                } else {
-                    Text("Unlock")
-                        .font(.system(size: 16, weight: .bold))
-                }
-            }
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity)
-            .frame(minHeight: 52)
-            .padding(.horizontal, 22)
-            .padding(.vertical, 12)
-            .background {
-                RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous)
-                    .fill(Color.redmedAccent)
-            }
-        }
-        .buttonStyle(RedMedPressStyle(haptic: nil))
-        .disabled(isAuthenticating)
-        .accessibilityHint("Face ID, Touch ID, or passcode")
     }
 }
