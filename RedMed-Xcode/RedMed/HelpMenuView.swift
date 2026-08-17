@@ -6,7 +6,7 @@ import UIKit
 enum HelpDocument {
     static let bundledFile = "Help"
 
-    enum Policy: String, CaseIterable, Identifiable, Hashable {
+    enum Policy: String, CaseIterable, Identifiable {
         case privacy
         case terms
         case security
@@ -22,38 +22,6 @@ enum HelpDocument {
         }
 
         var fragment: String { rawValue }
-    }
-}
-
-/// Swipeable Privacy → Terms → Security. Same bundled `Help.html` anchors as
-/// owner Help. Lock Agreement presents this as a sheet; not an Accept gate.
-struct PolicySlideshowView: View {
-    var start: HelpDocument.Policy = .privacy
-    @Environment(\.dismiss) private var dismiss
-    @State private var page: HelpDocument.Policy
-
-    init(start: HelpDocument.Policy = .privacy) {
-        self.start = start
-        _page = State(initialValue: start)
-    }
-
-    var body: some View {
-        VStack(spacing: 0) {
-            OwnerModalChrome(
-                title: page.title,
-                leadingTitle: "Done",
-                leadingAction: { dismiss() }
-            )
-            TabView(selection: $page) {
-                ForEach(HelpDocument.Policy.allCases) { policy in
-                    LocalWebView(filename: HelpDocument.bundledFile, fragment: policy.fragment)
-                        .tag(policy)
-                }
-            }
-            .tabViewStyle(.page(indexDisplayMode: .always))
-        }
-        .background { RedMedPageBackground() }
-        .presentationBackground(Color.redmedBg)
     }
 }
 
@@ -387,8 +355,13 @@ struct HelpMenuView: View {
     @ViewBuilder
     private func policyLink(_ policy: HelpDocument.Policy) -> some View {
         NavigationLink {
-            PolicySlideshowView(start: policy)
-                .toolbar(.hidden, for: .navigationBar)
+            LocalWebView(filename: HelpDocument.bundledFile, fragment: policy.fragment)
+                .navigationTitle(policy.title)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar(.visible, for: .navigationBar)
+                .toolbarBackground(Color.redmedBg, for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
+                .toolbarColorScheme(.light, for: .navigationBar)
         } label: {
             HStack {
                 Text(policy.title)

@@ -21,9 +21,8 @@ import UIKit
 /// open → auth → Main. Video never gates Face ID or Main — missing file /
 /// Reduce Motion / Low Power = cream + static glyph. No Accept step. No
 /// post-auth overlay (that clip-over-Main was the cream hang). Bottom ~25%
-/// cream dock: **Proceed** (Face ID retry) + **Agreement** (Privacy / TOS /
-/// Security slideshow). Dock is retry chrome after cancel / mismatch; hidden
-/// on the first Face ID prompt. Agreement is view-only — not a blocking EULA.
+/// cream dock: **Proceed** only (Face ID retry). Dock is retry chrome after
+/// cancel / mismatch; hidden on the first Face ID prompt.
 /// Fresh install unlocks into empty tabs after auth; returning owners load
 /// Keychain (fail closed on corrupt blob). Auto-prompt once per lock on the
 /// first **interactive** frame (UIKit active / scene `.active`) — not cold
@@ -71,8 +70,6 @@ struct OwnerAppLock<Content: View>: View {
     /// Face ID succeeded while the sheet still held `.inactive` — apply when
     /// the scene is interactive so Main paints without an extra tap.
     @State private var pendingUnlockGeneration: Int? = nil
-    /// Privacy / TOS / Security slideshow from the lock dock. View-only.
-    @State private var showAgreement = false
 
     var body: some View {
         ZStack {
@@ -99,7 +96,7 @@ struct OwnerAppLock<Content: View>: View {
         }
         .task(id: authGeneration) {
             // Hung LA only — do not flash Proceed under a live Face ID sheet.
-            // Path is open → auth → Main; Proceed + Agreement is cancel / mismatch / dead LA.
+            // Path is open → auth → Main; Proceed is cancel / mismatch / dead LA.
             guard gate == .locked else { return }
             let generation = authGeneration
             try? await Task.sleep(nanoseconds: 15_000_000_000)
@@ -134,7 +131,6 @@ struct OwnerAppLock<Content: View>: View {
             if newGate == .locked {
                 didAutoPromptThisLock = false
                 showUnlockControl = false
-                showAgreement = false
                 pendingUnlockGeneration = nil
                 tryAutoUnlockIfActive()
             } else {
@@ -157,7 +153,6 @@ struct OwnerAppLock<Content: View>: View {
                 profile.discardUnlockPrefetch()
                 didAutoPromptThisLock = false
                 showUnlockControl = false
-                showAgreement = false
                 lock(purge: true)
             } else if phase == .active {
                 flushPendingUnlock()
@@ -184,7 +179,6 @@ struct OwnerAppLock<Content: View>: View {
             isAuthenticating = false
             didAutoPromptThisLock = false
             showUnlockControl = false
-            showAgreement = false
             pendingUnlockGeneration = nil
             profile.discardUnlockPrefetch()
             // Stay in Main after an authenticated erase; next cold launch locks again.
@@ -194,7 +188,7 @@ struct OwnerAppLock<Content: View>: View {
 
     /// Remodeled load shell: cream + muted LockOpen bloom behind the Face ID
     /// frame clip (static glyph fallback). Retry chrome is a ~25% cream dock
-    /// with Proceed + Agreement. Face ID sheets hold `.inactive` — mark only
+    /// with Proceed. Face ID sheets hold `.inactive` — mark only
     /// under the sheet; atmosphere + frame clips keep playing (pause on
     /// `.background` only). After auth success: straight to Main — no clip
     /// overlay, no “Opening” dock.
@@ -221,9 +215,6 @@ struct OwnerAppLock<Content: View>: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("RedMed is locked")
-        .sheet(isPresented: $showAgreement) {
-            PolicySlideshowView()
-        }
     }
 
     private func dockHeight(in size: CGSize) -> CGFloat {
@@ -294,7 +285,7 @@ struct OwnerAppLock<Content: View>: View {
         .allowsHitTesting(false)
     }
 
-    /// Proceed + Agreement after cancel / mismatch (hidden on first Face ID prompt).
+    /// Proceed after cancel / mismatch (hidden on first Face ID prompt).
     /// Bottom sheet dock: ~25% of the screen, solid cream, continuous corners.
     private func lockRetryChrome(height: CGFloat) -> some View {
         VStack(spacing: 0) {
@@ -331,7 +322,6 @@ struct OwnerAppLock<Content: View>: View {
 
                 if showUnlockControl {
                     proceedButton
-                    agreementButton
                 }
             }
             .padding(.horizontal, 22)
@@ -371,34 +361,20 @@ struct OwnerAppLock<Content: View>: View {
     private var proceedButton: some View {
         Button {
             RedMedHaptics.medium()
-            showAgreement = false
             startUnlockPipeline(isAuto: false)
         } label: {
-            Group {
-                if isAuthenticating {
-                    // No ProgressView — system spinner fights first MainActor frames
-                    // under / after Face ID and reads as a white hitch.
-                    HStack(spacing: 10) {
-                        Image(systemName: "faceid")
-                            .font(.system(size: 18, weight: .semibold))
-                        Text("Proceeding")
-                            .font(.system(size: 16, weight: .bold))
-                    }
-                    .accessibilityLabel("Proceeding with Face ID")
-                } else {
-                    HStack(spacing: 10) {
-                        Image(systemName: "faceid")
-                            .font(.system(size: 18, weight: .semibold))
-                        Text("Proceed")
-                            .font(.system(size: 16, weight: .bold))
-                    }
-                }
+            HStack(spacing: 10) {
+                Image(systemName: "faceid")
+                    .font(.system(size: 18, weight: .semibold))
+                Text("Proceed")
+                    .font(.system(size: 16, weight: .bold))
             }
+            .accessibilityLabel(isAuthenticating ? "Proceeding with Face ID" : "Proceed")
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .frame(minHeight: 48)
+            .frame(minHeight: 52)
             .padding(.horizontal, 22)
-            .padding(.vertical, 10)
+            .padding(.vertical, 12)
             .background {
                 RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous)
                     .fill(
@@ -423,34 +399,8 @@ struct OwnerAppLock<Content: View>: View {
         .accessibilityHint("Face ID, Touch ID, or passcode")
     }
 
-    private var agreementButton: some View {
-        Button {
-            RedMedHaptics.light()
-            showAgreement = true
-        } label: {
-            Text("Agreement")
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.redmedAccent)
-                .frame(maxWidth: .infinity)
-                .frame(minHeight: 48)
-                .padding(.horizontal, 22)
-                .padding(.vertical, 10)
-                .background {
-                    RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous)
-                        .fill(Color.redmedBg)
-                        .overlay {
-                            RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous)
-                                .strokeBorder(Color.redmedAccent.opacity(0.45), lineWidth: 1.5)
-                        }
-                }
-        }
-        .buttonStyle(RedMedPressStyle(haptic: nil))
-        .disabled(isAuthenticating)
-        .accessibilityHint("Privacy Policy, Terms of Service, and Security")
-    }
-
     private func tryAutoUnlockIfActive() {
-        guard gate == .locked, !didAutoPromptThisLock, !showAgreement else { return }
+        guard gate == .locked, !didAutoPromptThisLock else { return }
         // Face ID must present in-app. Evaluating during cold `.inactive` puts
         // the sheet on SpringBoard — after Face ID the owner had to tap the
         // icon again. Cream still paints first; AV / WebKit stay deferred so
@@ -490,7 +440,6 @@ struct OwnerAppLock<Content: View>: View {
         biometryFailed = false
         profileLoadFailed = false
         showUnlockControl = false
-        showAgreement = false
         pendingUnlockGeneration = nil
         if purge {
             profile.purgeFromMemory()
@@ -532,7 +481,7 @@ struct OwnerAppLock<Content: View>: View {
             guard generation == authGeneration else { return }
             switch outcome {
             case .declined:
-                // Cancel / dismiss — stay locked; Proceed + Agreement appear for retry.
+                // Cancel / dismiss — stay locked; Proceed appears for retry.
                 // Keep Keychain prefetch — no PHI published until success; Proceed
                 // tap must not cold-decode again (stuck / lag feel).
                 pendingUnlockGeneration = nil
@@ -653,7 +602,6 @@ struct OwnerAppLock<Content: View>: View {
             biometryFailed = false
             profileLoadFailed = false
             showUnlockControl = false
-            showAgreement = false
             // Haptic + WebKit off the critical path — Main paints first.
             Task(priority: .utility) { @MainActor in
                 RedMedHaptics.success()
@@ -667,7 +615,6 @@ struct OwnerAppLock<Content: View>: View {
             biometryFailed = false
             profileLoadFailed = false
             showUnlockControl = false
-            showAgreement = false
             Task(priority: .utility) { @MainActor in
                 RedMedHaptics.success()
                 PasserbyWebViewPool.warmEmbedShell()

@@ -104,9 +104,7 @@ The app has no backend, database, or web service.
   overlay, no wait for ready/end; that overlay was the cream hang). Missing
   file / Reduce Motion / Low Power = cream washes + static glyph. No `AVAudioSession`
   (survival alarm owns that). After cancel / mismatch a cream dock (~25% of
-  the screen) shows **Proceed** (Face ID retry) and **Agreement** (swipe
-  Privacy / TOS / Security — same bundled Help.html as owner Help). Agreement
-  is view-only, not an Accept gate. Fresh
+  the screen) shows **Proceed** only (Face ID retry). Fresh
   install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
   Owner pages + passerby tapper: cream fill only (no page BrandLogo). **No hanging
   decorative brand marks** anywhere (no lock watermark, no Aid pane wordmarks, no
