@@ -56,8 +56,11 @@ The app has no backend, database, or web service.
 
 - **Bracelet tap (physics, not a setting):** `AppConfig.BraceletRF` is the single
   source of truth — intentional tap ~1–2″, walk-by ~6–8″ does not fire, reliable
-  coupling dies past ~4″, passive 13.56 MHz HF NFC (not Bluetooth). NFC tab /
-  bracelet copy must use `BraceletRF` helpers, not hardcoded inches.
+  coupling dies past ~4″, passive 13.56 MHz HF NFC (not Bluetooth). Product chip
+  is **NXP NTAG216** only: ISO 14443A Type 2, NDEF blank unlocked, no factory
+  pre-encode, no lock. Do not source NTAG213, MIFARE, LF, or UHF. Laser face is
+  **MED ID** only. NFC tab / bracelet copy must use `BraceletRF` helpers, not
+  hardcoded inches.
   Tap opens the HTML shell for EMT / helper — passive, no app install.
   **iOS Background Tag Reading** can still open `tapper.html#d=` later — phone
   can be off or locked; a deliberate tap (phone top ~1–2″) still works for owner

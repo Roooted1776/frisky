@@ -4,9 +4,10 @@ CoreNFC write/read is wired in production via `NFCBandManager` (owns
 `NFCWriter` / `NFCReader`) — real `NFCNDEFReaderSession` sessions with write +
 read-back verify, NDEF URI strip, and CryptoKit AES-GCM via `ProfileNFCCodec`.
 
-**Target band:** passive, rewritable, NFC Forum **Type 2** (NXP NTAG213+ /
-prefer NTAG216). Owner **Write** on the NFC tab programs the chip; locked or
-non-NDEF tags are rejected with a clear error.
+**Target band:** blank unlocked **NXP NTAG216**, 13.56 MHz, ISO 14443A Type 2,
+NDEF empty at factory. No pre-encode, no lock. Not NTAG213, MIFARE, LF, or UHF.
+Owner **Write** on the NFC tab programs the chip; locked or non-NDEF tags are
+rejected with a clear error. Laser face is **MED ID** only.
 
 When hardware is off (`AppConfig.nfcHardwareEnabled = false`), `NFCBandManager`
 still simulates Write/Scan by packing the compact `tapper.html#d=` URL. Real
@@ -32,7 +33,8 @@ Owner NFC page keeps **both** capabilities on one screen: Write and Scan
 ## RF / hardware contract
 
 - Bracelet is **passive** HF NFC at **13.56 MHz** (`AppConfig.BraceletRF`) —
-  ISO 14443 / NFC Forum Type 2 / NTAG213+ NDEF. No battery, no BLE.
+  **NXP NTAG216**, ISO 14443A Type 2, NDEF blank unlocked. No battery, no BLE.
+  Not NTAG213, MIFARE, LF, or UHF. Factory does not pre-encode or lock.
 - Chip must be **rewritable** (NDEF not permanently locked). Factory-blank or
   overwriteable stub only — see `docs/band-engraving-and-nfc-sourcing.md`.
 - **Owner data independence:** `NFCWriter` / `ProfileNFCCodec` write only
@@ -49,7 +51,7 @@ Owner NFC page keeps **both** capabilities on one screen: Write and Scan
   - Do not market these as a tunable read range
   - `NFCBandManager` / `NFCWriter` / `NFCReader` only `begin()` after Write or Scan
   - Deliberate stranger tap must still open the emergency card
-- Do **not** source LF (~125 kHz) or UHF chips — CoreNFC cannot program them.
+- Do **not** source NTAG213, MIFARE, LF (~125 kHz), or UHF chips.
 - Payment POS may share 13.56 MHz but speaks EMV, not RedMed NDEF URLs
   (`ignoredByPaymentPOS`) — protocol, not distance.
 - **iOS Background Tag Reading (not RedMed):** what can still open the URL later

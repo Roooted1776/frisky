@@ -65,7 +65,12 @@ See also `AGENTS.md`. High-signal recap:
    band stays passive — **no battery** (reject AirTag-style cells / recurring
    demand). Do not claim “no background NFC” without the Apple OS caveat.
 11. Crash / high-speed **vehicle impact** detection is **local** — CoreMotion in the native app (owner + in-app scanner), DeviceMotion in passerby `tapper.html` (same g thresholds). Not Apple Crash Detection, no cloud. Must ignore running, walking, sex, masturbation, eating, hand/wrist handling, and other rhythmic daily activity. Real bracelet NFC (`#d=`) → local SOS on that phone only (no server). Owner Find Help does not auto-arm. Passerby HTML alarm is Web Audio + wake lock (no system volume/brightness APIs).
-12. **Hardware ship is not app architecture.** Blank NXP NTAG216 (Type 2, NDEF unlocked) → NFC entitlement live on device → factory MOQ. Band mold: adult wine/burgundy silicone (`#6B1E2F`) + flat laser plate; face engrave `MED ID` only. No Shopify / custom-chip / storefront stacks as the hardware path.
+12. **Hardware ship is not app architecture.** Blank **NXP NTAG216**, 13.56 MHz,
+   ISO 14443A Type 2, NDEF unlocked / empty (no pre-encode, no lock) → NFC
+   entitlement live on device → factory MOQ. Not NTAG213, MIFARE, LF, or UHF.
+   Band mold: adult wine/burgundy silicone (`#6B1E2F`) + flat laser plate; face
+   engrave `MED ID` only. No Shopify / custom-chip / storefront stacks as the
+   hardware path.
 
 ## What he has already done (shipped history)
 
