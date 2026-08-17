@@ -21,7 +21,7 @@ import UIKit
 /// open → auth → Main. Video never gates Face ID or Main — missing file /
 /// Reduce Motion / Low Power = cream + static glyph. No Accept step. No
 /// post-auth overlay (that clip-over-Main was the cream hang). After cancel /
-/// mismatch, **Proceed** lives on its own cream page (not a bottom dock).
+/// mismatch, the **Face** page (Proceed CTA) replaces the lock shell.
 /// Hidden on the first Face ID prompt.
 /// Fresh install unlocks into empty tabs after auth; returning owners load
 /// Keychain (fail closed on corrupt blob). Auto-prompt once per lock on the
@@ -36,7 +36,7 @@ import UIKit
 /// Keychain prefetch + tapper.html string warm start in the same `onAppear`
 /// tick and again inside the unlock pipeline (single-flight). Parked Keychain
 /// adopt unlocks on the LA main-queue turn via `MainActor.assumeIsolated` (no
-/// Task hop). Proceed page is solid cream (no material blur). Haptic + WKWebView
+/// Task hop). Face page is solid cream (no material blur). Haptic + WKWebView
 /// warm run at utility priority after `gate = .unlocked` so Main paints first.
 struct OwnerAppLock<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
@@ -188,18 +188,18 @@ struct OwnerAppLock<Content: View>: View {
 
     /// Remodeled load shell: cream + muted LockOpen bloom behind the Face ID
     /// frame clip (static glyph fallback). After cancel / mismatch, swap to a
-    /// full cream Proceed page. Face ID sheets hold `.inactive` — mark only
+    /// full cream Face page. Face ID sheets hold `.inactive` — mark only
     /// under the sheet; atmosphere + frame clips keep playing (pause on
     /// `.background` only). After auth success: straight to Main — no clip
     /// overlay, no “Opening” dock.
-    private var showsProceedPage: Bool {
+    private var showsFacePage: Bool {
         showUnlockControl || screenCaptured
     }
 
     private var lockScreen: some View {
         Group {
-            if showsProceedPage {
-                lockProceedPage
+            if showsFacePage {
+                facePage
             } else {
                 lockPromptShell
             }
@@ -218,11 +218,20 @@ struct OwnerAppLock<Content: View>: View {
         }
     }
 
-    /// Full cream page — Proceed only. Not a sheet over the Face ID shell.
-    private var lockProceedPage: some View {
+    /// Face — cream page after cancel / mismatch. Proceed only. Not a sheet.
+    private var facePage: some View {
         ZStack {
             RedMedPageBackground()
             VStack(spacing: 0) {
+                Text("Face")
+                    .font(RedMedChrome.navTitleFont)
+                    .foregroundColor(.redmedDark)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: RedMedChrome.modalBarHeight)
+                    .accessibilityAddTraits(.isHeader)
+                Rectangle()
+                    .fill(Color.redmedDivider)
+                    .frame(height: 1)
                 Spacer(minLength: 0)
                 lockMedMark
                 Spacer(minLength: 0)

@@ -46,7 +46,7 @@ See also `AGENTS.md`. High-signal recap:
 5. Vault Face ID: relock on **`.background` only** (not `.inactive` — Face ID sheets).
 6. Owner lock: every launch is cream atmosphere + muted `LockOpen.mp4` behind
    a Face ID–sized medical mark (`FaceIDFrame.mp4`, else `LockMedGlyph` — not
-   BrandLogo, not Apple Face ID scan) under auto Face ID before Main (Proceed
+   BrandLogo, not Apple Face ID scan) under auto Face ID before Main (Face
    page after cancel / mismatch). Video never delays Face ID or Main
    (no overlay, no ready/end wait). Fresh install
    unlocks into empty tabs after auth. Owner pages + tapper: cream fill only —
@@ -84,7 +84,7 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Cold launch: LaunchBackground only on UILaunchScreen (no system BrandLogo).
   Every owner launch: auto Face ID over cream + muted LockOpen.mp4 behind the
   Face ID–frame medical mark (`FaceIDFrame.mp4`, else glyph; no decorative
-  BrandLogo; Proceed page after cancel / mismatch). Clip never gates
+  BrandLogo; Face page after cancel / mismatch). Clip never gates
   Face ID or Main (no overlay; that was the cream hang). Face ID starts on the first interactive frame (not cold
   `.inactive` — that SpringBoard overlay left Face ID done but the owner
   still had to tap the app to open). App lock reuses a just-completed

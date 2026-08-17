@@ -103,8 +103,8 @@ The app has no backend, database, or web service.
   on the first interactive frame, AV builds off-main, auth goes straight to Main (no clip
   overlay, no wait for ready/end; that overlay was the cream hang). Missing
   file / Reduce Motion / Low Power = cream washes + static glyph. No `AVAudioSession`
-  (survival alarm owns that). After cancel / mismatch a full cream **Proceed**
-  page (Face ID retry) replaces the Face ID shell — not a bottom dock. Fresh
+  (survival alarm owns that). After cancel / mismatch the **Face** page
+  (Proceed CTA) replaces the Face ID shell — not a bottom dock. Fresh
   install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
   Owner pages + passerby tapper: cream fill only (no page BrandLogo). **No hanging
   decorative brand marks** anywhere (no lock watermark, no Aid pane wordmarks, no
