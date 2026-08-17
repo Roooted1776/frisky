@@ -12,6 +12,7 @@ import WebKit
 /// Sets `html.app-preview` and disables WKWebView UIScrollView scrolling so
 /// flex tabbar taps work (fixed + dual-scroll ate RedMed · 911 · Aid switches).
 /// Never calls `BiometricAuth` — passerby / Preview tap-to-view stays ungated.
+/// Nothing covers this shell (no privacy veil, no Face ID, no native overlay).
 struct PasserbyHTMLCardView: View {
     @Environment(\.dismiss) private var dismiss
     /// Raw `#d=` payload (no prefix), or full band URL containing `#d=`.
@@ -31,7 +32,10 @@ struct PasserbyHTMLCardView: View {
         // (that was Help/Edit modal format; Preview is the tap-card shell).
         VStack(spacing: 0) {
             HStack(alignment: .center, spacing: 12) {
-                ChromeTextAction(title: "Back", weight: .bold) { dismiss() }
+                ChromeTextAction(title: "Back", weight: .bold) {
+                    TapCardPresentation.setVisible(false)
+                    dismiss()
+                }
                 Spacer(minLength: 0)
                 OwnerHelpButton()
             }
@@ -61,6 +65,8 @@ struct PasserbyHTMLCardView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background { RedMedPageBackground() }
+        .onAppear { TapCardPresentation.setVisible(true) }
+        .onDisappear { TapCardPresentation.setVisible(false) }
         .presentsOwnerHelp()
     }
 
@@ -96,6 +102,29 @@ struct PasserbyHTMLCardView: View {
     /// Copies ProfileData into a chip, then packs. ProfileData stays on the isolated caller.
     static func previewPayload(from profile: ProfileData) -> String? {
         previewPayload(from: ProfileNFCCodec.chipProfile(from: profile))
+    }
+}
+
+/// Preview / Scan full-screen tap card is up. Privacy cover must not veil it.
+/// Lock-guarded so `@State` / View init never touch a MainActor static (Xcode
+/// isolation error — same class of bug as Keychain in `@State` defaults).
+enum TapCardPresentation {
+    private static let lock = NSLock()
+    private static var visible = false
+
+    static var isVisible: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return visible
+    }
+
+    static func setVisible(_ visible: Bool) {
+        lock.lock()
+        let changed = self.visible != visible
+        self.visible = visible
+        lock.unlock()
+        guard changed else { return }
+        NotificationCenter.default.post(name: .redMedTapCardPresentationDidChange, object: nil)
     }
 }
 

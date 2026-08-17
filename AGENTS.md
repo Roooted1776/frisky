@@ -36,6 +36,9 @@ The app has no backend, database, or web service.
   `https://getredmed.com/tapper/` from `tapper/index.html` (legacy `https://redmed.pages.dev/tapper/` still hosted — see `docs/domain.md`).
   **Tap-to-view never requires Face ID / biometrics** — owner biometrics gate
   edit, NFC write, vault, and app unlock only. Passerby HTML never asks.
+  **Nothing blocks the tap card** (YOU card / Preview / Scan / band tap): no
+  privacy veil, no native overlay stealing taps, no login. Safari opens
+  `tapper.html#d=` immediately.
   Native **Help** chrome is on every owner and in-app scanner screen except the
   Face ID lock shell. Scanner Help is **policies only** (no Settings, Erase, or
   Write to NFC) so it cannot mutate owner Keychain or `@AppStorage`. Passerby
@@ -111,7 +114,8 @@ The app has no backend, database, or web service.
   app-switcher snapshots can capture mid-transition PHI. Capture cover **only
   while PHI is in RAM**. Non-capture cover is true **`.background` only** (with
   PHI) — never on `.inactive` (Face ID / LAContext blanks the UI mid-unlock),
-  and never over the lock / Unlock shell. After unlock while still
+  never over the lock / Unlock shell, and **never over the tap card** (NFC
+  Preview / Scan / `PasserbyHTMLCardView`). After unlock while still
   sharing, cover again; copy should say screen sharing, not a vague
   “Profile hidden”.
 - `HIPAAOfflineVault`: complete file protection + backup exclusion; history
