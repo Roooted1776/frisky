@@ -1,35 +1,31 @@
 import SwiftUI
 
-/// Root tab shell.
+/// Root shell.
 ///
-/// Permanent product rule (bracelet tap / scanner):
-/// - Owner (`isScannerSession == false`): RedMed · 911 · Aid · NFC (+ Edit on RedMed).
-///   Help chrome on every native screen except the Face ID lock shell.
+/// - Owner (`isScannerSession == false`): Face ID then RedMed user main only.
+///   No 911 / Aid / NFC tabs. Edit stays on RedMed. Help is the bottom dock.
 /// - Scanner / tap (`isScannerSession == true` or HTML `tapper.html#d=`): RedMed · 911 · Aid
 ///   only — **no Edit**, **no NFC**. Help is policies-only (no Settings / Erase / NFC write).
 ///
-/// Never gate the NFC tab on `AppConfig.nfcHardwareEnabled` — that flag only
+/// Never gate scanner chrome on `AppConfig.nfcHardwareEnabled` — that flag only
 /// disables CoreNFC sessions inside `NFCBandManager` (`NFCWriter` / `NFCReader`).
 struct ContentView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
     @State private var tab: AppTab = .redmed
-    /// Only mount a tab's heavy subtree after first visit; keep it alive after.
+    /// Scanner only: mount a tab's heavy subtree after first visit; keep it alive after.
     @State private var mountedTabs: Set<AppTab> = [.redmed]
-
-    /// Owner-only fourth tab. Scanners never see NFC.
-    private var showsNFC: Bool { !isScannerSession }
 
     private var activeTab: AppTab { scannerSafeTab.wrappedValue }
 
     private var scannerSafeTab: Binding<AppTab> {
         Binding(
             get: {
-                if !showsNFC && tab == .nfc { return .redmed }
+                if tab == .nfc { return .redmed }
                 return tab
             },
             set: { newValue in
-                if !showsNFC && newValue == .nfc {
+                if newValue == .nfc {
                     tab = .redmed
                 } else {
                     tab = newValue
@@ -39,9 +35,29 @@ struct ContentView: View {
     }
 
     var body: some View {
+        Group {
+            if isScannerSession {
+                scannerTabs
+            } else {
+                ownerUserMain
+            }
+        }
+        .presentsOwnerHelp()
+    }
+
+    /// Face ID → this. No tab bar, no 911 / Aid / NFC.
+    private var ownerUserMain: some View {
+        ZStack {
+            Color.redmedBg.ignoresSafeArea()
+                .allowsHitTesting(false)
+            RedMedView()
+        }
+    }
+
+    /// Passerby / in-app scanner: RedMed · 911 · Aid.
+    private var scannerTabs: some View {
         // No Location banner / CLLocationManager here — Find Help owns that.
         ZStack(alignment: .bottom) {
-            // Same cream as tapper body / RedMedPageBackground — no system white in tab gaps.
             Color.redmedBg.ignoresSafeArea()
                 .allowsHitTesting(false)
 
@@ -51,14 +67,11 @@ struct ContentView: View {
                     EmergencyView(isVisible: activeTab == .emergency)
                 }
                 mountedTab(.aid) { AidView() }
-                if showsNFC {
-                    mountedTab(.nfc) { NFCView() }
-                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(.bottom, 56)
 
-            CustomTabBar(tab: scannerSafeTab, showsNFC: showsNFC)
+            CustomTabBar(tab: scannerSafeTab, showsNFC: false)
         }
         .ignoresSafeArea(edges: .bottom)
         .onAppear {
@@ -68,20 +81,10 @@ struct ContentView: View {
         .onChange(of: tab) { _, newTab in
             mountedTabs.insert(newTab)
         }
-        .onChange(of: isScannerSession) { _, _ in clampScannerTab() }
-        // Crash / SOS → 911. Notification avoids @ObservedObject on the root tab tree
-        // (that rebuilt RedMed's WKWebView on every arm/disarm).
         .onReceive(NotificationCenter.default.publisher(for: .redMedSurvivalArmed)) { _ in
             tab = .emergency
             mountedTabs.insert(.emergency)
         }
-        // Owner RedMed status (Not linked / Linked bracelet) → NFC Write / Scan.
-        .onReceive(NotificationCenter.default.publisher(for: .redMedOpenNFCTab)) { _ in
-            guard showsNFC else { return }
-            tab = .nfc
-            mountedTabs.insert(.nfc)
-        }
-        .presentsOwnerHelp()
     }
 
     @ViewBuilder
@@ -100,7 +103,7 @@ struct ContentView: View {
     }
 
     private func clampScannerTab() {
-        if !showsNFC && tab == .nfc {
+        if tab == .nfc {
             tab = .redmed
         }
     }

@@ -23,12 +23,12 @@ set up a working runtime here:
 The app has no backend, database, or web service.
 
 **Roles / shells (permanent — do not regress):**
-- **Owner app** (`Main` → `ContentView`, `isScannerSession == false`): tabs are
-  **RedMed · 911 · Aid · NFC**. Edit is available on RedMed. NFC tab is always
-  visible for owners; `AppConfig.nfcHardwareEnabled` only gates CoreNFC
-  write/read sessions, never tab chrome. Owner writes the passive HF NFC band
-  from the NFC tab (Face ID gated) as `medicalCardBaseURL#d=` only
-  (`AppConfig.OwnerBandURI`) — no vendor cloud, no social/short URL, no BLE.
+- **Owner app** (`Main` → `ContentView`, `isScannerSession == false`): Face ID
+  then **RedMed user main only** — no 911 / Aid / NFC tabs, no pages before that
+  pair. Edit is available on RedMed. `AppConfig.nfcHardwareEnabled` only gates
+  CoreNFC write/read sessions. Owner band URI remains
+  `medicalCardBaseURL#d=` only (`AppConfig.OwnerBandURI`) — no vendor cloud, no
+  social/short URL, no BLE.
 - **Scanner / passerby shell** (`PublicCardView` / bracelet tap → `tapper.html#d=…`,
   `isScannerSession == true`): tabs are **RedMed · 911 · Aid** only — **no Edit**,
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain or
@@ -50,11 +50,11 @@ The app has no backend, database, or web service.
   `PrivacyPolicy.html` / `TOS.html` / `security.html` redirect into `Help.html`.
   `HowItWorks.html` redirects into `redmed://main`. Policies CTA to the owner
   app; they do not host owner edit UI. Do not reintroduce repo-root copies of
-  the policy HTML. Owner Help menu is Settings + Privacy / TOS / Security only (no
+  the policy HTML.   Owner Help menu is Settings + Privacy / TOS / Security only (no
   in-app How It Works / MainInfoView, no Local History row, no local tapper.html
-  WebView). Help is reachable from every native screen except the lock shell;
-  RedMed (user) Help is a bottom `UnlockScreenButton` (original unlock-dock CTA);
-  911 / Aid / NFC keep top Help chrome. Scanner Help is policies only. NFC Preview (under Scan) / NFC Scan open bundled `tapper.html#d=`
+  WebView, no Write to NFC while owner NFC is off the tab shell). Help is
+  reachable from RedMed user main (bottom `UnlockScreenButton`) and scanner
+  screens except the lock shell. Scanner Help is policies only. NFC Preview (under Scan) / NFC Scan open bundled `tapper.html#d=`
   (`?src=app`, no SOS auto-arm);
   live band taps stay `https://getredmed.com/tapper/#d=` (legacy `pages.dev` bands still open).
 
@@ -100,7 +100,7 @@ The app has no backend, database, or web service.
   first Face ID → Main. No Unlock retry, no glyph, no Help on this page. After
   that success, Edit / NFC / vault skip Face ID this process. Erase still
   prompts. Do not re-lock into a second Face ID on background. Do **not** play
-  `LockOpen.mp4`. Clip never gates Face ID. Fresh install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
+  `LockOpen.mp4`. Clip never gates Face ID. Fresh install unlocks into empty RedMed after auth. Do **not** re-prompt on `.inactive`.
   Owner pages + passerby tapper: cream fill only (no page BrandLogo). **No hanging
   decorative brand marks** anywhere (no lock watermark, no Aid pane wordmarks, no
   privacy-cover logo) — page BrandWordmark headers on NFC / topic sheets only;
@@ -129,7 +129,7 @@ hangs with no sheet; that wait was the cream hang.
 `didAutoPromptThisLock` blocks re-prompt while the Face ID sheet holds
 `.inactive`). Prefetch still starts in the same `onAppear` tick and inside the
 unlock pipeline (single-flight overlap with Face ID). Unlock is retry after
-cancel / mismatch. Fresh install unlocks into empty tabs after
+cancel / mismatch. Fresh install unlocks into empty RedMed after
 auth; returning owners load Keychain. Owner pages + tapper: cream fill, no page
 BrandLogo. Unlock overlaps Keychain decode + AES `#d=` pack + tapper.html
 string warm with Face ID and skips unlock animation so tabs paint on the next
@@ -145,12 +145,14 @@ when Location is enabled (`AppSettings.locationEnabled` + `LocationManager.start
 iOS may show its system Allow sheet once (cannot auto-accept). Passerby
 `tapper.html` must not call `geolocation` until the 911 tab opens. CoreMotion crash
 monitoring starts after unlock; do not construct
-`CMMotionManager` at `CrashMotionGuard` shared init or during Face ID. `ContentView` lazy
-tab mounting mounts RedMed only on cold start (911 / Aid / NFC on first visit,
-kept alive after with opacity). Opacity keep-alive **does not** fire
+`CMMotionManager` at `CrashMotionGuard` shared init or during Face ID. Owner
+`ContentView` is RedMed user main only after Face ID (no tab bar). Scanner
+`ContentView` lazy-mounts RedMed on first paint and 911 / Aid on first visit
+(kept alive after with opacity). Opacity keep-alive **does not** fire
 `onDisappear` on tab switch — any side effect that must stop when leaving a
 tab (Find Help GPS, seizure autodial, etc.) needs an explicit `isVisible`
-(or equivalent) hook from `ContentView`, not `onDisappear` alone. Keychain
+(or equivalent) hook from `ContentView`, not `onDisappear` alone. Owner crash /
+SOS still arms the on-device alarm; it does not switch to a 911 page. Keychain
 profile decode runs off-main (prefetched during Face ID) and must **fail closed**
 (stay locked) if a stored blob was expected but decode returns false — never
 unlock into an empty profile that can overwrite Keychain. Empty Keychain after
