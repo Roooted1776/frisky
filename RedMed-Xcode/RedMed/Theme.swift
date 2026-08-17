@@ -392,9 +392,7 @@ enum RedMedChrome {
     static let modalSideMinWidth: CGFloat = 64
     static let boxRadius: CGFloat = 10
     static let chipRadius: CGFloat = 7
-    /// Face ID unlock dock — continuous sheet corners (load / retry chrome).
-    static let unlockDockRadius: CGFloat = 32
-    /// Unlock CTA inside the dock — continuous pill-ish.
+    /// Proceed CTA — continuous pill-ish.
     static let unlockButtonRadius: CGFloat = 20
     /// Small lock-load medical mark (not BrandLogo asset, not Apple Face ID).
     static let unlockGlyphSize: CGFloat = 56

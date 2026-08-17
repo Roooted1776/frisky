@@ -100,8 +100,10 @@ The app has no backend, database, or web service.
   `LockEntryPage`: user-page cream + Higgs `FaceIDFrame` clip. Path: open →
   first Face ID → Main. No passcode / password pad on that Face ID (no
   `Enter Passcode` fallback). Passerby `tapper.html` never has Face ID,
-  passcode, login, or any page in front of the card. No Unlock retry, no glyph, no Help on this page. After
-  that success, Edit / NFC / vault skip Face ID this process. Erase still
+  passcode, login, or any page in front of the card. No glyph, no Help on
+  `LockEntryPage`. After cancel / mismatch, **Face** (`FacePage`) with a
+  **Proceed** CTA replaces that shell (not a bottom dock). After a successful
+  Face ID, Edit / NFC / vault skip Face ID this process. Erase still
   prompts. Do not re-lock into a second Face ID on background. Do **not** play
   `LockOpen.mp4`. Clip never gates Face ID. Fresh install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
   Owner pages + passerby tapper: cream fill only (no page BrandLogo). **No hanging
@@ -131,8 +133,8 @@ load; SecItem confirms off-main. Auto Face ID on every owner launch **immediatel
 hangs with no sheet; that wait was the cream hang.
 `didAutoPromptThisLock` blocks re-prompt while the Face ID sheet holds
 `.inactive`). Prefetch still starts in the same `onAppear` tick and inside the
-unlock pipeline (single-flight overlap with Face ID). Unlock is retry after
-cancel / mismatch. Fresh install unlocks into empty tabs after
+unlock pipeline (single-flight overlap with Face ID). After cancel / mismatch
+the **Face** page (`FacePage`) shows **Proceed**. Fresh install unlocks into empty tabs after
 auth; returning owners load Keychain. Owner pages + tapper: cream fill, no page
 BrandLogo. Unlock overlaps Keychain decode + AES `#d=` pack + tapper.html
 string warm with Face ID and skips unlock animation so tabs paint on the next

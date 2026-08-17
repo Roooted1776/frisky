@@ -18,8 +18,9 @@ import SwiftUI
 ///
 /// Every owner launch is Face ID before Main (no passcode pad). Front page is
 /// `LockEntryPage`: cream + Higgs `FaceIDFrame` clip, first Face ID, then Main.
-/// No Unlock retry, no second Face ID this process (Edit / NFC / vault skip).
-/// Erase still prompts. No LockOpen clip.
+/// After cancel / mismatch, **Face** (`FacePage`) with **Proceed** replaces
+/// that shell. No second Face ID this process after success (Edit / NFC / vault
+/// skip). Erase still prompts. No LockOpen clip.
 /// Fresh install unlocks into empty tabs after auth; returning owners load
 /// Keychain (fail closed on corrupt blob). Auto-prompt once per lock —
 /// including cold launch while still `.inactive` (waiting for `.active` was
@@ -29,7 +30,7 @@ import SwiftUI
 /// Speed (minus Face ID wall time): Face ID kicks first; Keychain prefetch +
 /// tapper.html string warm start in the same `onAppear` tick and again inside
 /// the unlock pipeline (single-flight). Parked Keychain adopt unlocks on the
-/// LA main-queue turn via `MainActor.assumeIsolated` (no Task hop). Unlock dock
+/// LA main-queue turn via `MainActor.assumeIsolated` (no Task hop). Face page
 /// is solid cream (no material blur). Haptic + WKWebView warm run at utility
 /// priority after `gate = .unlocked` so Main paints first.
 struct OwnerAppLock<Content: View>: View {
@@ -58,8 +59,7 @@ struct OwnerAppLock<Content: View>: View {
     @State private var screenCaptured = false
     /// One auto Face ID per lock session — blocks inactive→active re-entry loops.
     @State private var didAutoPromptThisLock = false
-    /// Unlock control stays hidden until the first Face ID attempt ends (cancel /
-    /// mismatch / load fail). First load = biometrics sheet only.
+    /// Face page after cancel / mismatch. First load = Face ID sheet only.
     @State private var showUnlockControl = false
 
     var body: some View {
@@ -68,7 +68,18 @@ struct OwnerAppLock<Content: View>: View {
             case .unlocked:
                 content()
             case .locked:
-                LockEntryPage(playing: scenePhase != .background)
+                if showUnlockControl {
+                    FacePage(
+                        playing: scenePhase != .background,
+                        screenCaptured: screenCaptured,
+                        biometryFailed: biometryFailed,
+                        profileLoadFailed: profileLoadFailed,
+                        isAuthenticating: isAuthenticating,
+                        onProceed: { startUnlockPipeline(isAuto: false) }
+                    )
+                } else {
+                    LockEntryPage(playing: scenePhase != .background)
+                }
             }
         }
         // Instant lock ↔ Main — no soft fade (reads as lag / stuck cream).
@@ -85,7 +96,7 @@ struct OwnerAppLock<Content: View>: View {
             }
         }
         .task(id: authGeneration) {
-            // Hung LA only — first Face ID has no Unlock retry.
+            // Hung LA — Face page with Proceed (do not leave a dead Face ID sheet).
             guard gate == .locked else { return }
             let generation = authGeneration
             try? await Task.sleep(nanoseconds: 15_000_000_000)
@@ -93,6 +104,7 @@ struct OwnerAppLock<Content: View>: View {
             if isAuthenticating {
                 isAuthenticating = false
             }
+            showUnlockControl = true
         }
         .task {
             // First SwiftUI frame already committed — Keychain presence can wait.
@@ -162,7 +174,7 @@ struct OwnerAppLock<Content: View>: View {
 
     /// Front page is `LockEntryPage` — static cream, Face ID, then Main.
     private func tryAutoUnlockIfActive() {
-        guard gate == .locked, !didAutoPromptThisLock else { return }
+        guard gate == .locked, !didAutoPromptThisLock, !showUnlockControl else { return }
         // Cold launch often starts `.inactive` before first `.active`. Waiting for
         // `.active` left a cream hang with no Face ID. Kick LA unless truly
         // backgrounded — `didAutoPromptThisLock` blocks re-prompt while the Face
@@ -219,10 +231,10 @@ struct OwnerAppLock<Content: View>: View {
             guard generation == authGeneration else { return }
             switch outcome {
             case .declined:
-                // Cancel — stay on cream + Higgs clip. No Unlock retry (first Face ID only).
+                // Cancel — Face page with Proceed. Keep Keychain prefetch.
                 isAuthenticating = false
                 biometryFailed = false
-                showUnlockControl = false
+                showUnlockControl = true
                 gate = .locked
             case .notInteractive:
                 // Cold-start evaluate before the window can present. Clear
@@ -237,7 +249,7 @@ struct OwnerAppLock<Content: View>: View {
                 RedMedHaptics.error()
                 isAuthenticating = false
                 biometryFailed = true
-                showUnlockControl = false
+                showUnlockControl = true
                 gate = .locked
                 VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock")
             case .success:

@@ -127,8 +127,9 @@ final class LockAtmospherePlayerView: UIView {
     }
 }
 
-/// Higgs Face ID–frame clip. Muted square mark under the first Face ID sheet —
-/// never a gate. Missing file / Reduce Motion / Low Power = cream only.
+/// Higgs Face ID–frame clip. Muted square mark under Face ID / Face page —
+/// never a gate. Missing file / Reduce Motion / Low Power: LockEntryPage is
+/// cream only; Face page falls back to `LockMedGlyph`. Not Apple Face ID scan rings.
 enum FaceIDFrameClip {
     static let resourceName = "FaceIDFrame"
 

@@ -46,8 +46,9 @@ See also `AGENTS.md`. High-signal recap:
 5. Vault Face ID: relock on **`.background` only** (not `.inactive` — Face ID sheets).
 6. Owner lock: front page is `LockEntryPage` — Higgs `FaceIDFrame` on user cream,
    first Face ID, then Main. No passcode pad on that Face ID. Passerby tapper
-   has no Face ID / password / login in front of the card. No Unlock retry, no second Face ID this process
-   (Edit / NFC / vault skip). Erase still prompts. No background re-lock Face ID.
+   has no Face ID / password / login in front of the card. After cancel /
+   mismatch, **Face** page with Proceed. No second Face ID this process after
+   success (Edit / NFC / vault skip). Erase still prompts. No background re-lock Face ID.
    Fresh install
    unlocks into empty tabs after auth. Owner pages + tapper: cream fill only —
    no page BrandLogo. **No hanging decorative brand marks** (lock watermark, Aid
@@ -83,7 +84,8 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Deferred all Core Location until Find Help; fixed SIGTERM/launch confusion.
 - Cold launch: LaunchBackground only on UILaunchScreen (no system BrandLogo).
   Every owner launch: Higgs `FaceIDFrame` + first Face ID on `LockEntryPage`,
-  then Main. No Unlock retry, no second Face ID this process. Face ID kicks immediately on cold
+  then Main. Cancel / mismatch opens the **Face** page (Proceed). No second
+  Face ID this process after success. Face ID kicks immediately on cold
   `.inactive` (waiting for `.active` was the cream hang). Prefetch still starts
   in the same `onAppear` tick and inside the unlock pipeline. Fresh install
   unlocks into empty tabs after auth. Keychain decode + AES `#d=` pack +
