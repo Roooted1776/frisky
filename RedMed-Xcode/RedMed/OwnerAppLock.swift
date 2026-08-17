@@ -2,9 +2,10 @@ import SwiftUI
 
 /// Owner app lock — Face ID / passcode before PHI is published into profile fields.
 ///
-/// On background / lock: profile fields are purged from RAM (Keychain untouched).
-/// On unlock: reload from Keychain. Scanner / passerby shells never mount this —
-/// they use `ProfileData(persisting: false)` snapshots only.
+/// On background after first unlock: stay in Main (no second Face ID).
+/// PrivacySnapshotGuard still covers snapshots while PHI is in RAM.
+/// Scanner / passerby shells never mount this — they use
+/// `ProfileData(persisting: false)` snapshots only.
 ///
 /// Prefetch may decode Keychain + pack `#d=` off-main while Face ID runs; that
 /// work stays off `@Published` until auth succeeds (or is discarded on cancel /
@@ -15,9 +16,9 @@ import SwiftUI
 /// prefetch / fail-closed load) but does **not** open Main without auth.
 ///
 /// Every owner launch is Face ID / passcode before Main. Front page is
-/// `LockEntryPage`: static user-page cream only (`Color.redmedBg`) — Face ID,
-/// then Main. No glyph, no Help, no other tabs. No LockOpen clip. Unlock is
-/// retry chrome after cancel / mismatch only.
+/// `LockEntryPage`: cream + Higgs `FaceIDFrame` clip, first Face ID, then Main.
+/// No Unlock retry, no second Face ID this process (Edit / NFC / vault skip).
+/// Erase still prompts. No LockOpen clip.
 /// Fresh install unlocks into empty tabs after auth; returning owners load
 /// Keychain (fail closed on corrupt blob). Auto-prompt once per lock —
 /// including cold launch while still `.inactive` (waiting for `.active` was
@@ -66,15 +67,7 @@ struct OwnerAppLock<Content: View>: View {
             case .unlocked:
                 content()
             case .locked:
-                LockEntryPage(
-                    showsRetryDock: showUnlockControl || screenCaptured,
-                    screenCaptured: screenCaptured,
-                    biometryFailed: biometryFailed,
-                    profileLoadFailed: profileLoadFailed,
-                    showUnlockControl: showUnlockControl,
-                    isAuthenticating: isAuthenticating,
-                    onUnlock: { startUnlockPipeline(isAuto: false) }
-                )
+                LockEntryPage(playing: scenePhase != .background)
             }
         }
         // Instant lock ↔ Main — no soft fade (reads as lag / stuck cream).
@@ -91,8 +84,7 @@ struct OwnerAppLock<Content: View>: View {
             }
         }
         .task(id: authGeneration) {
-            // Hung LA only — do not flash Unlock under a live Face ID sheet.
-            // Path is open → auth → Main; Unlock is cancel / mismatch / dead LA.
+            // Hung LA only — first Face ID has no Unlock retry.
             guard gate == .locked else { return }
             let generation = authGeneration
             try? await Task.sleep(nanoseconds: 15_000_000_000)
@@ -100,7 +92,6 @@ struct OwnerAppLock<Content: View>: View {
             if isAuthenticating {
                 isAuthenticating = false
             }
-            showUnlockControl = true
         }
         .task {
             // First SwiftUI frame already committed — Keychain presence can wait.
@@ -136,18 +127,15 @@ struct OwnerAppLock<Content: View>: View {
             }
         }
         .onChange(of: scenePhase) { _, phase in
-            // LAContext / system auth sheets put the scene `.inactive`.
-            // Only purge + lock on true background (same rule as VaultHistoryView).
-            if phase == .background,
-               profile.hasSensitiveProfileData
-                || hasEverHadSensitiveData
-                || profile.holdsEditingSession
-                || gate == .locked {
-                profile.discardUnlockPrefetch()
-                didAutoPromptThisLock = false
-                showUnlockControl = false
-                lock(purge: true)
-            } else if phase == .active {
+            // First Face ID only — do not re-lock into a second sheet.
+            // Cover still paints from PrivacySnapshotGuard while PHI is in RAM.
+            if phase == .background {
+                SecurePasteboard.clear()
+                if gate == .locked {
+                    profile.discardUnlockPrefetch()
+                }
+            } else if phase == .active, gate == .locked {
+                // Cold `.inactive` Face ID is still the first unlock, not a retry gate.
                 tryAutoUnlockIfActive()
             }
         }
@@ -229,40 +217,26 @@ struct OwnerAppLock<Content: View>: View {
             guard generation == authGeneration else { return }
             switch outcome {
             case .declined:
-                // Cancel / dismiss — stay locked; Unlock appears for retry.
-                // Keep Keychain prefetch — no PHI published until success; Unlock
-                // tap must not cold-decode again (stuck / lag feel).
+                // Cancel — stay on cream + Higgs clip. No Unlock retry (first Face ID only).
                 isAuthenticating = false
                 biometryFailed = false
-                showUnlockControl = true
+                showUnlockControl = false
                 gate = .locked
             case .notInteractive:
-                // Cold-start evaluate before the window can present — do not leave
-                // Unlock chrome up; clear auto-prompt so `.active` retries once.
-                // User cancel is `.declined` (Unlock stays); this is not cancel.
-                // Never auto-kick inline when already `.active` — LA can still return
-                // notInteractive briefly and that looped Face ID forever.
+                // Cold-start evaluate before the window can present. Clear
+                // auto-prompt so `.active` runs the first Face ID once.
                 isAuthenticating = false
                 biometryFailed = false
                 profileLoadFailed = false
                 gate = .locked
                 didAutoPromptThisLock = false
-                if scenePhase == .active {
-                    // Already active but LA refused — Unlock, no retry storm.
-                    showUnlockControl = true
-                } else {
-                    // Typical cold `.inactive` — `.onChange(.active)` retries once.
-                    showUnlockControl = false
-                }
-                // Keep prefetch — Face ID will overlap on the active retry / Unlock tap.
+                showUnlockControl = false
             case .notVerified:
-                // Face ID / Touch ID (or passcode) did not match.
                 RedMedHaptics.error()
                 isAuthenticating = false
                 biometryFailed = true
-                showUnlockControl = true
+                showUnlockControl = false
                 gate = .locked
-                // Keep prefetch for fast retry — staging is not published.
                 VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock")
             case .success:
                 // Apply only if this generation is still current. Check again after

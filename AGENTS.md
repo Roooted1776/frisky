@@ -96,11 +96,11 @@ The app has no backend, database, or web service.
   lock on `.inactive` — LAContext / system auth sheets put the scene inactive
   and would discard a successful unlock via `authGeneration`.
 - Owner app lock is **biometrics only before Main**. Front page is
-  `LockEntryPage`: static user-page cream only (`Color.redmedBg` / `#fff7f7` —
-  same fill as the RedMed user tab). Path: open → Face ID → Main. Hide glyph,
-  Help, 911 / Aid / NFC, and atmosphere video on this page — Face ID sits on
-  cream, then Main. Do **not** play a lock atmosphere clip. Unlock appears
-  after cancel / mismatch. Fresh install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
+  `LockEntryPage`: user-page cream + Higgs `FaceIDFrame` clip. Path: open →
+  first Face ID → Main. No Unlock retry, no glyph, no Help on this page. After
+  that success, Edit / NFC / vault skip Face ID this process. Erase still
+  prompts. Do not re-lock into a second Face ID on background. Do **not** play
+  `LockOpen.mp4`. Clip never gates Face ID. Fresh install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
   Owner pages + passerby tapper: cream fill only (no page BrandLogo). **No hanging
   decorative brand marks** anywhere (no lock watermark, no Aid pane wordmarks, no
   privacy-cover logo) — page BrandWordmark headers on NFC / topic sheets only;

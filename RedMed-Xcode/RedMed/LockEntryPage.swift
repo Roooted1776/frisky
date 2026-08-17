@@ -1,18 +1,11 @@
 import SwiftUI
 
-/// Front-of-app page — Face ID on user-page cream, then Main.
+/// Front-of-app page — first Face ID only, Higgs `FaceIDFrame` clip, then Main.
 ///
-/// No glyph, no Help, no 911 / Aid / NFC. Flat `Color.redmedBg` (`#fff7f7`),
-/// same fill as the RedMed user tab. Unlock dock only after Face ID cancel /
-/// mismatch. Auth stays in `OwnerAppLock`.
+/// Cream user-page fill. No Unlock retry, no Help, no other tabs. Clip never
+/// gates Face ID. Missing file / Reduce Motion / Low Power = cream only.
 struct LockEntryPage: View {
-    var showsRetryDock: Bool
-    var screenCaptured: Bool
-    var biometryFailed: Bool
-    var profileLoadFailed: Bool
-    var showUnlockControl: Bool
-    var isAuthenticating: Bool
-    var onUnlock: () -> Void
+    var playing: Bool
 
     var body: some View {
         ZStack {
@@ -21,62 +14,15 @@ struct LockEntryPage: View {
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
 
-            if showsRetryDock {
-                retryDock
+            if FaceIDFrameClip.shouldPlay {
+                FaceIDFrameVideo(playing: playing)
+                    .frame(width: RedMedChrome.unlockGlyphSize, height: RedMedChrome.unlockGlyphSize)
+                    .offset(y: -28)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
             }
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("RedMed is locked")
-    }
-
-    /// Unlock after cancel / mismatch (hidden on first Face ID prompt).
-    private var retryDock: some View {
-        VStack(spacing: 0) {
-            Spacer(minLength: 0)
-            VStack(spacing: 16) {
-                if screenCaptured {
-                    Text("Screen sharing is on — unlock with passcode. Profile stays hidden on the share until you stop sharing.")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.redmedMuted)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                if biometryFailed {
-                    Text("Couldn't verify it's you. Try again.")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.redmedAccent)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                } else if profileLoadFailed {
-                    Text("Couldn't load your profile. Try again.")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.redmedAccent)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                if showUnlockControl {
-                    UnlockScreenButton(
-                        title: "Unlock",
-                        icon: "faceid",
-                        isBusy: isAuthenticating,
-                        busyTitle: "Unlocking",
-                        disabled: isAuthenticating,
-                        accessibilityHintText: "Face ID, Touch ID, or passcode",
-                        action: onUnlock
-                    )
-                    .accessibilityLabel(isAuthenticating ? "Unlocking with Face ID" : "Unlock")
-                }
-            }
-            .padding(.horizontal, 22)
-            .padding(.top, 14)
-            .padding(.bottom, 26)
-            .frame(maxWidth: .infinity)
-            .background(Color.redmedBg)
-            .padding(.horizontal, 14)
-            .padding(.bottom, 28)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .transition(.identity)
     }
 }

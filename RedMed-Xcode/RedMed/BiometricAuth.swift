@@ -6,7 +6,10 @@ import UIKit
 /// Owner-only gates: app unlock, Edit, NFC write, vault, erase. Never call from
 /// passerby `tapper.html`, `PublicCardView`, or NFC Preview / Scan shells —
 /// tap-to-view stays ungated.
-/// Reuse window is zero so every gate re-prompts (Edit, NFC write, vault, app unlock).
+/// Reuse window is zero so the first app-unlock Face ID is always fresh.
+/// After that success, Edit / NFC / vault skip LA this process (erase still
+/// forces a prompt). Never call from passerby `tapper.html`, `PublicCardView`,
+/// or NFC Preview / Scan shells — tap-to-view stays ungated.
 ///
 /// Use a single `.deviceOwnerAuthentication` call — not biometrics-only followed by
 /// a second evaluate. A second `.deviceOwnerAuthentication` after `userFallback`
@@ -30,7 +33,19 @@ enum BiometricAuth {
     /// across SDKs, and referencing the wrong one fails the build.
     private static let notInteractiveLACode = -1004
 
-    static func authenticate(reason: String, completion: @escaping (Outcome) -> Void) {
+    /// First successful owner unlock this process. Later gates skip the sheet.
+    private static var didUnlockThisLaunch = false
+
+    static func authenticate(reason: String, force: Bool = false, completion: @escaping (Outcome) -> Void) {
+        if didUnlockThisLaunch, !force {
+            let finish = { completion(.success) }
+            if Thread.isMainThread {
+                finish()
+            } else {
+                DispatchQueue.main.async(execute: finish)
+            }
+            return
+        }
         let context = makeContext()
         var error: NSError?
 
@@ -63,6 +78,7 @@ enum BiometricAuth {
             let finish = {
                 context.invalidate()
                 if success {
+                    didUnlockThisLaunch = true
                     completion(.success)
                 } else {
                     completion(outcome(for: evalError))
@@ -125,6 +141,7 @@ enum BiometricAuth {
             completion(.declined)
         })
         alert.addAction(UIAlertAction(title: "Authenticate", style: .default) { _ in
+            didUnlockThisLaunch = true
             completion(.success)
         })
         top.present(alert, animated: true)
