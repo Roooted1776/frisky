@@ -11,11 +11,23 @@ enum LockOpenClip {
         Bundle.main.url(forResource: resourceName, withExtension: "mp4")
     }
 
+    /// Kept alive across Face ID so unlock playback reuses a decoded asset.
+    private static var prewarmedAsset: AVURLAsset?
+
+    static var asset: AVURLAsset? {
+        if let prewarmedAsset { return prewarmedAsset }
+        guard let url else { return nil }
+        return AVURLAsset(url: url)
+    }
+
     /// Decode keys while Face ID is up so the first success frame is not a stall.
     static func prewarm() {
         guard let url else { return }
         let asset = AVURLAsset(url: url)
-        asset.loadValuesAsynchronously(forKeys: ["playable", "duration"]) { }
+        prewarmedAsset = asset
+        Task {
+            _ = try? await asset.load(.isPlayable, .duration)
+        }
     }
 }
 
@@ -50,11 +62,11 @@ final class LockOpenPlayerView: UIView {
     private var playerLayer: AVPlayerLayer { layer as! AVPlayerLayer }
 
     func start() {
-        guard let url = LockOpenClip.url else {
+        guard let asset = LockOpenClip.asset else {
             finish()
             return
         }
-        let item = AVPlayerItem(url: url)
+        let item = AVPlayerItem(asset: asset)
         let player = AVPlayer(playerItem: item)
         player.isMuted = true
         player.actionAtItemEnd = .pause
