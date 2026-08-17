@@ -113,6 +113,18 @@ body {
 }
 .legal-nav span[aria-hidden] { display: none; }
 
+.legal-nav-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 8px 0 12px;
+  background:
+    linear-gradient(var(--bg) 70%, transparent);
+}
+.legal-policy {
+  scroll-margin-top: 64px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .legal-nav a { transition: none; }
 }

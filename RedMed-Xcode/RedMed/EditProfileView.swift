@@ -83,7 +83,10 @@ struct EditProfileView: View {
                 leadingTitle: "Cancel",
                 leadingAction: { dismiss() }
             ) {
-                OwnerModalTrailingAction(title: "Save", action: save)
+                HStack(spacing: 12) {
+                    OwnerHelpButton()
+                    OwnerModalTrailingAction(title: "Save", action: save)
+                }
             }
 
             ScrollView {
@@ -163,6 +166,7 @@ struct EditProfileView: View {
             }
         }
         .background { RedMedPageBackground() }
+        .presentsOwnerHelp()
         .onAppear {
             loadDraft()
             SuggestionCatalog.warmUp()

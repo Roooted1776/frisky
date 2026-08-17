@@ -6,13 +6,13 @@ struct EmergencyView: View {
     /// whether 911 is the front tab so GPS + seizure autodial can tear down.
     var isVisible: Bool = true
 
-    @Environment(\.isScannerSession) private var isScannerSession
-
     var body: some View {
         // Fixed cream chrome (no NavigationView / system toolbar fill).
         // No page header text / BrandWordmark — content-first like RedMed / Aid.
-        // Scanner Back overlays top-trailing. Location nudge is Settings-only.
-        ZStack(alignment: .topTrailing) {
+        // Help is a sibling row (same as RedMed) so Call / Find Help sit below it.
+        VStack(spacing: 0) {
+            PageHelpChrome()
+
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 10) {
                     // Call first — EMS dial is the primary action on this tab.
@@ -78,16 +78,10 @@ struct EmergencyView: View {
                     )
                 }
                 .padding(.horizontal, RedMedChrome.pagePadX)
-                .padding(.top, isScannerSession ? 54 : RedMedChrome.wordmarkTop + 10)
+                .padding(.top, 4)
                 .padding(.bottom, 24)
             }
             .scrollIndicators(.visible)
-
-            if isScannerSession {
-                ScannerBackButton()
-                    .padding(.horizontal, RedMedChrome.pagePadX)
-                    .padding(.top, RedMedChrome.wordmarkTop)
-            }
         }
         .background { RedMedPageBackground() }
     }

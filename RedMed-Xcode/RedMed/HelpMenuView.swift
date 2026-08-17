@@ -2,9 +2,33 @@ import SwiftUI
 import WebKit
 import UIKit
 
+/// Bundled owner Help: one HTML file, three policy anchors. Offline. No network.
+enum HelpDocument {
+    static let bundledFile = "Help"
+
+    enum Policy: String, CaseIterable, Identifiable {
+        case privacy
+        case terms
+        case security
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .privacy: return "Privacy Policy"
+            case .terms: return "Terms of Service"
+            case .security: return "Security"
+            }
+        }
+
+        var fragment: String { rawValue }
+    }
+}
+
 // MARK: - WebView wrapper (policies + passerby card only)
 struct LocalWebView: UIViewRepresentable {
-    let filename: String // e.g. "PrivacyPolicy"
+    let filename: String
+    var fragment: String? = nil
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
@@ -31,10 +55,24 @@ struct LocalWebView: UIViewRepresentable {
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
-        guard context.coordinator.loadedFilename != filename else { return }
+        let key = "\(filename)#\(fragment ?? "")"
+        context.coordinator.fragment = fragment
+        if context.coordinator.loadedKey == key { return }
+
+        let loadedFile = context.coordinator.loadedKey?
+            .split(separator: "#", maxSplits: 1)
+            .first
+            .map(String.init)
+        if loadedFile == filename, context.coordinator.didLoadHTML {
+            context.coordinator.loadedKey = key
+            context.coordinator.scrollToFragment(in: webView)
+            return
+        }
+
         guard let url = Bundle.main.url(forResource: filename, withExtension: "html"),
               var html = try? String(contentsOf: url, encoding: .utf8) else { return }
-        context.coordinator.loadedFilename = filename
+        context.coordinator.loadedKey = key
+        context.coordinator.didLoadHTML = true
         // Cream before first paint — file loads can flash system white before CSS.
         let cream = "<style>html,body{background:#fff7f7!important;margin:0}</style>\n"
         if let range = html.range(of: "<head>") {
@@ -42,11 +80,13 @@ struct LocalWebView: UIViewRepresentable {
         } else {
             html = cream + html
         }
-        webView.loadHTMLString(html, baseURL: url.deletingLastPathComponent())
+        // File URL as base so in-page hashes and legal-doc.css resolve locally.
+        webView.loadHTMLString(html, baseURL: url)
     }
 
     /// Policy HTML + stylesheet only — never lateral loads into tapper.html / other bundle files.
     private static let allowedFileBasenames: Set<String> = [
+        "Help.html",
         "PrivacyPolicy.html",
         "TOS.html",
         "security.html",
@@ -62,10 +102,22 @@ struct LocalWebView: UIViewRepresentable {
 
     /// Blocks in-webview navigation to untrusted schemes; opens http(s)/tel/mailto/redmed externally.
     final class Coordinator: NSObject, WKNavigationDelegate {
-        var loadedFilename: String?
+        var loadedKey: String?
+        var fragment: String?
+        var didLoadHTML = false
+
+        func scrollToFragment(in webView: WKWebView) {
+            guard let fragment, !fragment.isEmpty else { return }
+            let safe = fragment.filter { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" }
+            guard safe == fragment else { return }
+            webView.evaluateJavaScript(
+                "document.getElementById('\(safe)')?.scrollIntoView({block:'start'})"
+            )
+        }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             webView.scrollView.flashScrollIndicators()
+            scrollToFragment(in: webView)
         }
 
         func webView(
@@ -115,6 +167,7 @@ struct LocalWebView: UIViewRepresentable {
 // MARK: - Help menu
 struct HelpMenuView: View {
     @Environment(\.dismiss) var dismiss
+    @Environment(\.isScannerSession) private var isScannerSession
     @EnvironmentObject private var profile: ProfileData
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
@@ -134,6 +187,15 @@ struct HelpMenuView: View {
         static let sectionGap: CGFloat = 22
     }
 
+    /// Owner-only: Settings, Erase, Write to NFC. Scanner Help is policies only.
+    private var showsOwnerTools: Bool { !isScannerSession }
+
+    private var firstHelpSection: String {
+        if !showsOwnerTools { return "Policies" }
+        if onOpenNFC != nil { return "Bracelet" }
+        return "Settings"
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -145,12 +207,12 @@ struct HelpMenuView: View {
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        if onOpenNFC != nil {
+                        if showsOwnerTools, let onOpenNFC {
                             helpSectionLabel("Bracelet")
                             helpCard {
                                 Button {
                                     dismiss()
-                                    DispatchQueue.main.async { onOpenNFC?() }
+                                    DispatchQueue.main.async { onOpenNFC() }
                                 } label: {
                                     Text("Write to NFC tag")
                                         .font(.system(size: Metrics.font, weight: .medium))
@@ -164,77 +226,82 @@ struct HelpMenuView: View {
                             }
                         }
 
-                        helpSectionLabel("Settings")
-                        helpCard {
-                            Toggle("Haptic feedback", isOn: $hapticsEnabled)
-                                .font(.system(size: Metrics.font))
-                                .tint(.redmedAccent)
-                                .padding(.horizontal, Metrics.rowHPad)
-                                .padding(.vertical, Metrics.rowVPad)
-                            Divider().padding(.leading, Metrics.rowHPad)
-                            Toggle("Location", isOn: $locationEnabled)
-                                .font(.system(size: Metrics.font))
-                                .tint(.redmedAccent)
-                                .padding(.horizontal, Metrics.rowHPad)
-                                .padding(.vertical, Metrics.rowVPad)
-                                .onChange(of: locationEnabled) { _, on in
-                                    // Pref only — never call requestWhenInUseAuthorization here.
-                                    // Find Help prompts the system sheet once when GPS is actually needed.
-                                    if on { locationSuggester.refresh() }
-                                }
-                            if locationEnabled && locationSuggester.mustOpenSettings {
+                        if showsOwnerTools {
+                            helpSectionLabel("Settings")
+                            helpCard {
+                                Toggle("Haptic feedback", isOn: $hapticsEnabled)
+                                    .font(.system(size: Metrics.font))
+                                    .tint(.redmedAccent)
+                                    .padding(.horizontal, Metrics.rowHPad)
+                                    .padding(.vertical, Metrics.rowVPad)
                                 Divider().padding(.leading, Metrics.rowHPad)
-                                Button("Open iOS Location Settings") {
-                                    locationSuggester.openSettings()
+                                Toggle("Location", isOn: $locationEnabled)
+                                    .font(.system(size: Metrics.font))
+                                    .tint(.redmedAccent)
+                                    .padding(.horizontal, Metrics.rowHPad)
+                                    .padding(.vertical, Metrics.rowVPad)
+                                    .onChange(of: locationEnabled) { _, on in
+                                        // Pref only — never call requestWhenInUseAuthorization here.
+                                        // Find Help prompts the system sheet once when GPS is actually needed.
+                                        if on { locationSuggester.refresh() }
+                                    }
+                                if locationEnabled && locationSuggester.mustOpenSettings {
+                                    Divider().padding(.leading, Metrics.rowHPad)
+                                    Button("Open iOS Location Settings") {
+                                        locationSuggester.openSettings()
+                                    }
+                                    .font(.system(size: Metrics.font, weight: .medium))
+                                    .foregroundColor(.redmedAccent)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal, Metrics.rowHPad)
+                                    .padding(.vertical, Metrics.rowVPad)
                                 }
-                                .font(.system(size: Metrics.font, weight: .medium))
-                                .foregroundColor(.redmedAccent)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal, Metrics.rowHPad)
-                                .padding(.vertical, Metrics.rowVPad)
                             }
+                            Text("Location defaults on. No RedMed popup — iOS may ask Allow once the first time Find Help needs GPS (Apple requires that tap). Siren / max volume / brightness arm on crash or SOS only.")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.redmedMuted)
+                                .padding(.horizontal, 4)
+                                .padding(.top, 8)
                         }
-                        Text("Location defaults on. No RedMed popup — iOS may ask Allow once the first time Find Help needs GPS (Apple requires that tap). Siren / max volume / brightness arm on crash or SOS only.")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.redmedMuted)
-                            .padding(.horizontal, 4)
-                            .padding(.top, 8)
 
                         helpSectionLabel("Policies")
                         helpCard {
-                            policyLink("Privacy Policy", file: "PrivacyPolicy")
-                            Divider().padding(.leading, Metrics.rowHPad)
-                            policyLink("Terms of Service", file: "TOS")
-                            Divider().padding(.leading, Metrics.rowHPad)
-                            policyLink("Security", file: "security")
+                            ForEach(HelpDocument.Policy.allCases) { policy in
+                                if policy != .privacy {
+                                    Divider().padding(.leading, Metrics.rowHPad)
+                                }
+                                policyLink(policy)
+                            }
                         }
 
-                        helpSectionLabel("Data")
-                        helpCard {
-                            Button(role: .destructive) {
-                                showEraseConfirm = true
-                            } label: {
-                                Group {
-                                    if isErasing {
-                                        ProgressView()
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                    } else {
-                                        Text("Erase all RedMed data")
-                                            .font(.system(size: Metrics.font, weight: .medium))
-                                            .frame(maxWidth: .infinity, alignment: .leading)
+                        if showsOwnerTools {
+                            helpSectionLabel("Data")
+                            helpCard {
+                                Button(role: .destructive) {
+                                    showEraseConfirm = true
+                                } label: {
+                                    Group {
+                                        if isErasing {
+                                            ProgressView()
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                        } else {
+                                            Text("Erase all RedMed data")
+                                                .font(.system(size: Metrics.font, weight: .medium))
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                        }
                                     }
+                                    .padding(.horizontal, Metrics.rowHPad)
+                                    .padding(.vertical, Metrics.rowVPad)
+                                    .contentShape(Rectangle())
                                 }
-                                .padding(.horizontal, Metrics.rowHPad)
-                                .padding(.vertical, Metrics.rowVPad)
-                                .contentShape(Rectangle())
+                                .disabled(isErasing || (!profile.hasSensitiveProfileData && !ProfileData.prefersLockOnLaunch))
                             }
-                            .disabled(isErasing || (!profile.hasSensitiveProfileData && !ProfileData.prefersLockOnLaunch))
+                            Text("Deletes the profile from this iPhone’s Keychain and clears local history. Settings prefs stay. The physical band is not wiped remotely — rewrite or discard it.")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.redmedMuted)
+                                .padding(.horizontal, 4)
+                                .padding(.top, 8)
                         }
-                        Text("Deletes the profile from this iPhone’s Keychain and clears local history. Settings prefs stay. The physical band is not wiped remotely — rewrite or discard it.")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.redmedMuted)
-                            .padding(.horizontal, 4)
-                            .padding(.top, 8)
                     }
                     .padding(.top, 20)
                     .padding(.horizontal, Metrics.rowHPad)
@@ -245,9 +312,8 @@ struct HelpMenuView: View {
             .background { RedMedPageBackground() }
             .toolbar(.hidden, for: .navigationBar)
             .onAppear {
-                if locationEnabled {
-                    locationSuggester.refresh()
-                }
+                guard showsOwnerTools, locationEnabled else { return }
+                locationSuggester.refresh()
             }
             .confirmationDialog(
                 "Erase all RedMed data on this iPhone?",
@@ -277,7 +343,7 @@ struct HelpMenuView: View {
     @ViewBuilder
     private func helpSectionLabel(_ text: String) -> some View {
         SectionLabel(text: text)
-            .padding(.top, text == "Bracelet" || (text == "Settings" && onOpenNFC == nil) ? 0 : Metrics.sectionGap)
+            .padding(.top, text == firstHelpSection ? 0 : Metrics.sectionGap)
     }
 
     @ViewBuilder
@@ -287,10 +353,10 @@ struct HelpMenuView: View {
     }
 
     @ViewBuilder
-    private func policyLink(_ title: String, file: String) -> some View {
+    private func policyLink(_ policy: HelpDocument.Policy) -> some View {
         NavigationLink {
-            LocalWebView(filename: file)
-                .navigationTitle(title)
+            LocalWebView(filename: HelpDocument.bundledFile, fragment: policy.fragment)
+                .navigationTitle(policy.title)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar(.visible, for: .navigationBar)
                 .toolbarBackground(Color.redmedBg, for: .navigationBar)
@@ -298,7 +364,7 @@ struct HelpMenuView: View {
                 .toolbarColorScheme(.light, for: .navigationBar)
         } label: {
             HStack {
-                Text(title)
+                Text(policy.title)
                     .font(.system(size: Metrics.font, weight: .medium))
                     .foregroundColor(.redmedDark)
                 Spacer(minLength: 0)
@@ -314,7 +380,7 @@ struct HelpMenuView: View {
     }
 
     private func requestErase() {
-        guard !isErasing else { return }
+        guard showsOwnerTools, !isErasing else { return }
         isErasing = true
         BiometricAuth.authenticate(
             reason: "Confirm with Face ID, Touch ID, or passcode to erase all RedMed data on this iPhone."

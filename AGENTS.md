@@ -39,21 +39,31 @@ The app has no backend, database, or web service.
   **Nothing blocks the tap card** (YOU card / Preview / Scan / band tap): no
   privacy veil, no native overlay stealing taps, no login. Safari opens
   `tapper.html#d=` immediately.
+  Native **Help** chrome is on every owner and in-app scanner screen except the
+  Face ID lock shell. Scanner Help is **policies only** (no Settings, Erase, or
+  Write to NFC) so it cannot mutate owner Keychain or `@AppStorage`. Passerby
+  `tapper.html` has no Help button.
 - Product HTML is only (1) one passerby file `tapper.html` (identical in `tapper/index.html`,
   repo root, and the app bundle; legacy `card.html` / `get.html` / `/get/` redirect to `/tapper/`, preserving `#d=`) and
-  (2) policy pages bundled solely under `RedMed-Xcode/RedMed/` (`PrivacyPolicy`,
-  `TOS`, `security`, `HowItWorks`, `legal-doc.css`). `HowItWorks.html` redirects
-  into `redmed://main`. Policies CTA to the owner app; they do not host owner
-  edit UI. Do not reintroduce repo-root copies of the policy HTML. Owner Help
-  is Settings + Privacy / TOS / Security only (no in-app How It Works /
-  MainInfoView, no Local History row, no local tapper.html WebView). NFC
-  Preview (under Scan) / NFC Scan open bundled `tapper.html#d=` (`?src=app`, no SOS auto-arm);
+  (2) policy pages bundled solely under `RedMed-Xcode/RedMed/`: one `Help.html`
+  (Privacy + TOS + Security, in-file anchors) plus `legal-doc.css`. Legacy
+  `PrivacyPolicy.html` / `TOS.html` / `security.html` redirect into `Help.html`.
+  `HowItWorks.html` redirects into `redmed://main`. Policies CTA to the owner
+  app; they do not host owner edit UI. Do not reintroduce repo-root copies of
+  the policy HTML. Owner Help menu is Settings + Privacy / TOS / Security only (no
+  in-app How It Works / MainInfoView, no Local History row, no local tapper.html
+  WebView). Help is reachable from every native screen except the lock shell;
+  scanner Help is policies only. NFC Preview (under Scan) / NFC Scan open bundled `tapper.html#d=`
+  (`?src=app`, no SOS auto-arm);
   live band taps stay `https://getredmed.com/tapper/#d=` (legacy `pages.dev` bands still open).
 
 - **Bracelet tap (physics, not a setting):** `AppConfig.BraceletRF` is the single
   source of truth — intentional tap ~1–2″, walk-by ~6–8″ does not fire, reliable
-  coupling dies past ~4″, passive 13.56 MHz HF NFC (not Bluetooth). NFC tab /
-  bracelet copy must use `BraceletRF` helpers, not hardcoded inches.
+  coupling dies past ~4″, passive 13.56 MHz HF NFC (not Bluetooth). Product chip
+  is **NXP NTAG216** only: ISO 14443A Type 2, NDEF blank unlocked, no factory
+  pre-encode, no lock. Do not source NTAG213, MIFARE, LF, or UHF. Laser face is
+  **MED ID** only. NFC tab / bracelet copy must use `BraceletRF` helpers, not
+  hardcoded inches.
   Tap opens the HTML shell for EMT / helper — passive, no app install.
   **iOS Background Tag Reading** can still open `tapper.html#d=` later — phone
   can be off or locked; a deliberate tap (phone top ~1–2″) still works for owner
