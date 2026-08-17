@@ -44,8 +44,9 @@ See also `AGENTS.md`. High-signal recap:
 3. Settings = **haptic + Location only**. Brightness 100% + system volume 100% + locator siren arm on crash / severe-impact (`CrashMotionGuard`), owner **SOS · Locate me**, or **real bracelet NFC** open of `tapper.html#d=…` (hardware-local SOS on that phone). Owner Find Help open, bare `/tapper/`, and in-app scanner preview do **not** auto-arm.
 4. Survival hold may keep siren + max volume + brightness through background until cancel on Aid (or Stop SOS on Find Help).
 5. Vault Face ID: relock on **`.background` only** (not `.inactive` — Face ID sheets).
-6. Owner lock: every launch is flat cream under auto Face ID before Main (no
-   decorative BrandLogo; Unlock = retry after cancel / mismatch). Fresh install
+6. Owner lock: every launch is cream atmosphere + Face ID glyph under auto Face
+   ID before Main (no decorative BrandLogo; Unlock = cream dock after cancel /
+   mismatch). Fresh install
    unlocks into empty tabs after auth. Owner pages + tapper: cream fill only —
    no page BrandLogo. **No hanging decorative brand marks** (lock watermark, Aid
    pane wordmarks, privacy-cover logo gone). NFC / topic sheets keep one page
@@ -73,8 +74,9 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Owner app on first launch; `Main.swift` owner shell; HTML policies redirect `redmed://main`.
 - Deferred all Core Location until Find Help; fixed SIGTERM/launch confusion.
 - Cold launch: LaunchBackground only on UILaunchScreen (no system BrandLogo).
-  Every owner launch: auto Face ID over flat cream before Main (no decorative
-  BrandLogo; Unlock after cancel / mismatch). Face ID kicks immediately on cold
+  Every owner launch: auto Face ID over cream atmosphere + Face ID glyph before
+  Main (no decorative BrandLogo; Unlock cream dock after cancel / mismatch).
+  Face ID kicks immediately on cold
   `.inactive` (waiting for `.active` was the cream hang). Prefetch still starts
   in the same `onAppear` tick and inside the unlock pipeline. Fresh install
   unlocks into empty tabs after auth. Keychain decode + AES `#d=` pack +
