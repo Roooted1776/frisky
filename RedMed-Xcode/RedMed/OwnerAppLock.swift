@@ -14,10 +14,12 @@ import SwiftUI
 /// paints first; SecItem confirms off-main whether a profile blob exists (for
 /// prefetch / fail-closed load) but does **not** open Main without auth.
 ///
-/// Every owner launch is Face ID / passcode before Main: cream + small medical
-/// lock glyph (not BrandLogo, not Apple Face ID mark). Path: open → auth → Main.
-/// No Accept step. No post-auth
-/// “Opening” dock. Unlock is retry chrome after cancel / mismatch only.
+/// Every owner launch is Face ID / passcode before Main: cream + muted
+/// `LockOpen` atmosphere video behind a small medical lock glyph (not BrandLogo,
+/// not Apple Face ID mark). Path: open → auth → Main. Video never gates Face ID
+/// or Main — missing file / Reduce Motion / Low Power = cream only. No Accept
+/// step. No post-auth overlay (that clip-over-Main was the cream hang). Unlock
+/// is retry chrome after cancel / mismatch only.
 /// Fresh install unlocks into empty tabs after auth; returning owners load
 /// Keychain (fail closed on corrupt blob). Auto-prompt once per lock —
 /// including cold launch while still `.inactive` (waiting for `.active` was
@@ -163,10 +165,11 @@ struct OwnerAppLock<Content: View>: View {
         }
     }
 
-    /// Remodeled load shell: layered cream atmosphere + small medical glyph
-    /// (no BrandLogo — AGENTS). Retry chrome is a floating cream dock.
-    /// Face ID sheets hold `.inactive` — glyph only under the sheet.
-    /// After auth success: straight to Main — no “Opening RedMed” dock gap.
+    /// Remodeled load shell: cream + muted LockOpen bloom behind a small
+    /// medical glyph (no BrandLogo — AGENTS). Retry chrome is a floating cream
+    /// dock. Face ID sheets hold `.inactive` — glyph only under the sheet;
+    /// atmosphere video keeps playing (pause on `.background` only).
+    /// After auth success: straight to Main — no clip overlay, no “Opening” dock.
     private var showsRetryDock: Bool {
         showUnlockControl || screenCaptured
     }
@@ -190,38 +193,45 @@ struct OwnerAppLock<Content: View>: View {
         .accessibilityLabel("RedMed is locked")
     }
 
-    /// Cream base + dual rose washes — matches LaunchBackground / `redmedBg`.
+    /// Cream first paint, then muted LockOpen bloom behind the glyph.
+    /// Static washes stay for Reduce Motion / missing clip. Video never waits
+    /// Face ID or Main — AV starts on the next run loop; unlock tears it down
+    /// without waiting for a frame or end.
     private var lockAtmosphere: some View {
         ZStack {
             Color.redmedBg
-            RadialGradient(
-                colors: [
-                    Color.redmedWash.opacity(0.78),
-                    Color.redmedWash.opacity(0.22),
-                    Color.redmedBg.opacity(0)
-                ],
-                center: UnitPoint(x: 0.5, y: 0.12),
-                startRadius: 12,
-                endRadius: 520
-            )
-            RadialGradient(
-                colors: [
-                    Color.redmedAccent.opacity(0.07),
-                    Color.redmedBg.opacity(0)
-                ],
-                center: UnitPoint(x: 0.5, y: 0.92),
-                startRadius: 8,
-                endRadius: 340
-            )
-            LinearGradient(
-                colors: [
-                    Color.redmedSurface.opacity(0.55),
-                    Color.clear,
-                    Color.redmedWash.opacity(0.18)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            if LockOpenClip.shouldPlay {
+                LockAtmosphereVideo(playing: scenePhase != .background)
+            } else {
+                RadialGradient(
+                    colors: [
+                        Color.redmedWash.opacity(0.78),
+                        Color.redmedWash.opacity(0.22),
+                        Color.redmedBg.opacity(0)
+                    ],
+                    center: UnitPoint(x: 0.5, y: 0.12),
+                    startRadius: 12,
+                    endRadius: 520
+                )
+                RadialGradient(
+                    colors: [
+                        Color.redmedAccent.opacity(0.07),
+                        Color.redmedBg.opacity(0)
+                    ],
+                    center: UnitPoint(x: 0.5, y: 0.92),
+                    startRadius: 8,
+                    endRadius: 340
+                )
+                LinearGradient(
+                    colors: [
+                        Color.redmedSurface.opacity(0.55),
+                        Color.clear,
+                        Color.redmedWash.opacity(0.18)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            }
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)

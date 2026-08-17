@@ -44,7 +44,8 @@ extension Color {
 }
 
 /// Cream page with rose wash only (fill color — no BrandLogo).
-/// Lock load shell uses a richer layered atmosphere; passerby tapper matches cream fill.
+/// Lock load shell uses muted LockOpen video over cream (static washes when
+/// the clip is skipped); passerby tapper matches cream fill.
 struct RedMedPageBackground: View {
     var body: some View {
         ZStack {
