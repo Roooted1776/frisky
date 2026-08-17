@@ -62,9 +62,15 @@ final class NFCWriter: NSObject, ObservableObject {
 
 }
 
-/// NDEF URI helpers — keep `#d=` fragments intact for phone background taps.
+/// NDEF URI helpers — keep `#d=` fragments intact for iOS Background Tag Reading.
+/// Hand-build TNF Well Known type "U" so Safari gets `https://…/tapper/#d=…`
+/// even when the screen is off or locked (iPhone XS+). Apple's URI helper can
+/// drop the fragment, which opens bare `/tapper/` instead of the card.
 enum NFCURICodec {
     static func payload(for urlString: String) -> NFCNDEFPayload? {
+        if let payload = wellKnownURIRecord(urlString) {
+            return payload
+        }
         if let payload = NFCNDEFPayload.wellKnownTypeURIPayload(string: urlString) {
             return payload
         }
@@ -72,26 +78,58 @@ enum NFCURICodec {
         return NFCNDEFPayload.wellKnownTypeURIPayload(url: url)
     }
 
+    /// NFC Forum URI Record (RTD-URI): identifier code + UTF-8 remainder.
+    /// `0x04` = `https://` so BTR treats this as a website, not a custom scheme.
+    static func wellKnownURIRecord(_ urlString: String) -> NFCNDEFPayload? {
+        let prefixes: [(UInt8, String)] = [
+            (0x02, "https://www."),
+            (0x01, "http://www."),
+            (0x04, "https://"),
+            (0x03, "http://")
+        ]
+        var identifier: UInt8 = 0x00
+        var remainder = urlString
+        for (code, prefix) in prefixes {
+            if urlString.count >= prefix.count,
+               urlString.lowercased().hasPrefix(prefix) {
+                identifier = code
+                remainder = String(urlString.dropFirst(prefix.count))
+                break
+            }
+        }
+        guard let rest = remainder.data(using: .utf8) else { return nil }
+        var bytes = Data([identifier])
+        bytes.append(rest)
+        return NFCNDEFPayload(
+            format: .nfcWellKnown,
+            type: Data("U".utf8),
+            identifier: Data(),
+            payload: bytes
+        )
+    }
+
     static func string(from payload: NFCNDEFPayload) -> String? {
+        // Decode the raw RTD-URI first so `#d=` survives read-back / BTR.
+        if payload.typeNameFormat == .nfcWellKnown,
+           let type = String(data: payload.type, encoding: .utf8), type == "U",
+           !payload.payload.isEmpty {
+            let code = payload.payload[payload.payload.startIndex]
+            let rest = payload.payload.dropFirst()
+            if let body = String(data: Data(rest), encoding: .utf8) {
+                let prefixes: [UInt8: String] = [
+                    0x00: "",
+                    0x01: "http://www.",
+                    0x02: "https://www.",
+                    0x03: "http://",
+                    0x04: "https://"
+                ]
+                return (prefixes[code] ?? "") + body
+            }
+        }
         if let url = payload.wellKnownTypeURIPayload() {
             return url.absoluteString
         }
-        guard payload.typeNameFormat == .nfcWellKnown,
-              let type = String(data: payload.type, encoding: .utf8), type == "U",
-              !payload.payload.isEmpty else {
-            return nil
-        }
-        let code = payload.payload[payload.payload.startIndex]
-        let rest = payload.payload.dropFirst()
-        guard let body = String(data: Data(rest), encoding: .utf8) else { return nil }
-        let prefixes: [UInt8: String] = [
-            0x00: "",
-            0x01: "http://www.",
-            0x02: "https://www.",
-            0x03: "http://",
-            0x04: "https://"
-        ]
-        return (prefixes[code] ?? "") + body
+        return nil
     }
 
     static func match(_ a: String, _ b: String) -> Bool {

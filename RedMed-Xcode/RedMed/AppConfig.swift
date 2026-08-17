@@ -146,7 +146,7 @@ enum AppConfig {
 
         /// What can still open the URL later (Apple OS path; phone off / locked OK).
         static var backgroundTagReadingSummary: String {
-            "iOS Background Tag Reading can still open the card later — phone can be off or locked; a deliberate tap (phone top \(intentionalTapRangeLabel) from the band) still works. Wrist + pocket is usually fine. Phone pressed to the clasp can pop Safari. Same for any passerby. Writing the chip does not change that. Band stays passive — no battery."
+            "iOS Background Tag Reading can still open the card later — phone can be off or locked; a deliberate tap (phone top \(intentionalTapRangeLabel) from the band) still works. Unlock if asked, then tap the NFC banner so Safari opens the card. Wrist + pocket is usually fine. Phone pressed to the clasp can pop Safari. Same for any passerby. Writing the chip does not change that. Band stays passive — no battery."
         }
 
         static var paymentPOSSummary: String {

@@ -3,9 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-capable" content="no">
+<meta name="mobile-web-app-capable" content="no">
 <meta name="format-detection" content="telephone=yes">
 <meta name="theme-color" content="#fff7f7">
 <meta name="color-scheme" content="light">
@@ -66,7 +65,8 @@
        when the helper taps SOS (not an auth gate).
      - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
        walk-by ~6–8″ does not fire, reliable coupling dies past ~4″,
-       passive 13.56 MHz HF NFC (not Bluetooth) → opens this page
+       passive 13.56 MHz HF NFC (not Bluetooth) → Safari opens this page
+       (apple-mobile-web-app-capable=no so iOS BTR is not a Home Screen web app)
      - Logo: BrandLogo.png 216px (bundle /tapper/) or assets/BrandLogo.png (Pages);
        deferred until after profile paint, skipped when name hides the mark
      - Legacy card.html / get.html /get/ redirect to /tapper/ and keep #d=
@@ -1513,18 +1513,14 @@
     var candidates = ['BrandLogo.png', 'assets/BrandLogo.png'];
     var head = document.head || document.getElementsByTagName('head')[0];
     function ensureIconLinks() {
-      var icons = document.querySelectorAll('link[rel="apple-touch-icon"], link[rel="icon"]');
+      var icons = document.querySelectorAll('link[rel="icon"]');
       if (icons.length) return icons;
-      var touch = document.createElement('link');
-      touch.rel = 'apple-touch-icon';
-      touch.setAttribute('sizes', '180x180');
-      head.appendChild(touch);
       var icon = document.createElement('link');
       icon.rel = 'icon';
       icon.type = 'image/png';
       icon.setAttribute('sizes', '216x216');
       head.appendChild(icon);
-      return document.querySelectorAll('link[rel="apple-touch-icon"], link[rel="icon"]');
+      return document.querySelectorAll('link[rel="icon"]');
     }
     var i = 0;
     function apply(src) {
