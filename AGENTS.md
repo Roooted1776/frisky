@@ -95,14 +95,14 @@ The app has no backend, database, or web service.
   lock on `.inactive` — LAContext / system auth sheets put the scene inactive
   and would discard a successful unlock via `authGeneration`.
 - Owner app lock is **biometrics only before Main**: cream atmosphere + muted
-  bundled `LockOpen.mp4` behind a small original medical lock glyph (heart +
-  static EKG, Face ID–sized, transparent, one-shot pop — not Apple Face ID
+  bundled `LockOpen.mp4` behind a Face ID–sized medical mark (`FaceIDFrame.mp4`
+  heart + EKG draw + plus sparkle; else `LockMedGlyph` — not Apple Face ID
   scan, not BrandLogo) under system Face ID on every launch (no Accept; no
   Unlock on first prompt; **no** decorative BrandLogo on the lock shell).
   **Video never gates open or unlock** — cream paints first, Face ID kicks
   immediately, AV builds off-main, auth goes straight to Main (no clip
   overlay, no wait for ready/end; that overlay was the cream hang). Missing
-  file / Reduce Motion / Low Power = cream washes only. No `AVAudioSession`
+  file / Reduce Motion / Low Power = cream washes + static glyph. No `AVAudioSession`
   (survival alarm owns that). Unlock appears in a cream dock after cancel /
   mismatch. Fresh
   install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.

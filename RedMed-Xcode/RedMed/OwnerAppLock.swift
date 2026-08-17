@@ -15,11 +15,12 @@ import SwiftUI
 /// prefetch / fail-closed load) but does **not** open Main without auth.
 ///
 /// Every owner launch is Face ID / passcode before Main: cream + muted
-/// `LockOpen` atmosphere video behind a small medical lock glyph (not BrandLogo,
-/// not Apple Face ID mark). Path: open → auth → Main. Video never gates Face ID
-/// or Main — missing file / Reduce Motion / Low Power = cream only. No Accept
-/// step. No post-auth overlay (that clip-over-Main was the cream hang). Unlock
-/// is retry chrome after cancel / mismatch only.
+/// `LockOpen` atmosphere video behind a Face ID–sized medical mark (`FaceIDFrame`
+/// clip, else `LockMedGlyph` — not BrandLogo, not Apple Face ID scan). Path:
+/// open → auth → Main. Video never gates Face ID or Main — missing file /
+/// Reduce Motion / Low Power = cream + static glyph. No Accept step. No
+/// post-auth overlay (that clip-over-Main was the cream hang). Unlock is retry
+/// chrome after cancel / mismatch only.
 /// Fresh install unlocks into empty tabs after auth; returning owners load
 /// Keychain (fail closed on corrupt blob). Auto-prompt once per lock —
 /// including cold launch while still `.inactive` (waiting for `.active` was
@@ -165,10 +166,10 @@ struct OwnerAppLock<Content: View>: View {
         }
     }
 
-    /// Remodeled load shell: cream + muted LockOpen bloom behind a small
-    /// medical glyph (no BrandLogo — AGENTS). Retry chrome is a floating cream
-    /// dock. Face ID sheets hold `.inactive` — glyph only under the sheet;
-    /// atmosphere video keeps playing (pause on `.background` only).
+    /// Remodeled load shell: cream + muted LockOpen bloom behind the Face ID
+    /// frame clip (static glyph fallback). Retry chrome is a floating cream
+    /// dock. Face ID sheets hold `.inactive` — mark only under the sheet;
+    /// atmosphere + frame clips keep playing (pause on `.background` only).
     /// After auth success: straight to Main — no clip overlay, no “Opening” dock.
     private var showsRetryDock: Bool {
         showUnlockControl || screenCaptured
@@ -238,13 +239,23 @@ struct OwnerAppLock<Content: View>: View {
         .accessibilityHidden(true)
     }
 
-    /// Small medical lock mark under the system sheet — no cream disc so the
-    /// atmosphere shows through. Spring pop only (no material / ProgressView).
+    /// Small medical lock mark under the system sheet. Higgs `FaceIDFrame`
+    /// clip when present; static glyph otherwise. Video never waits Face ID.
     private var lockLoadGlyph: some View {
-        LockMedGlyph()
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .offset(y: -28)
-            .allowsHitTesting(false)
+        Group {
+            if FaceIDFrameClip.shouldPlay {
+                FaceIDFrameVideo(playing: scenePhase != .background)
+                    .frame(
+                        width: RedMedChrome.unlockFrameSize,
+                        height: RedMedChrome.unlockFrameSize
+                    )
+            } else {
+                LockMedGlyph()
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .offset(y: -28)
+        .allowsHitTesting(false)
     }
 
     /// Status + Unlock after cancel / mismatch (hidden on first Face ID prompt).
