@@ -45,7 +45,8 @@ See also `AGENTS.md`. High-signal recap:
 4. Survival hold may keep siren + max volume + brightness through background until cancel on Aid (or Stop SOS on Find Help).
 5. Vault Face ID: relock on **`.background` only** (not `.inactive` — Face ID sheets).
 6. Owner lock: front page is `LockEntryPage` — Higgs `FaceIDFrame` on user cream,
-   first Face ID, then Main. No Unlock retry, no second Face ID this process
+   first Face ID, then Main. No passcode pad on that Face ID. Passerby tapper
+   has no Face ID / password / login in front of the card. No Unlock retry, no second Face ID this process
    (Edit / NFC / vault skip). Erase still prompts. No background re-lock Face ID.
    Fresh install
    unlocks into empty tabs after auth. Owner pages + tapper: cream fill only —

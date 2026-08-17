@@ -98,7 +98,9 @@ The app has no backend, database, or web service.
   and would discard a successful unlock via `authGeneration`.
 - Owner app lock is **biometrics only before Main**. Front page is
   `LockEntryPage`: user-page cream + Higgs `FaceIDFrame` clip. Path: open →
-  first Face ID → Main. No Unlock retry, no glyph, no Help on this page. After
+  first Face ID → Main. No passcode / password pad on that Face ID (no
+  `Enter Passcode` fallback). Passerby `tapper.html` never has Face ID,
+  passcode, login, or any page in front of the card. No Unlock retry, no glyph, no Help on this page. After
   that success, Edit / NFC / vault skip Face ID this process. Erase still
   prompts. Do not re-lock into a second Face ID on background. Do **not** play
   `LockOpen.mp4`. Clip never gates Face ID. Fresh install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.

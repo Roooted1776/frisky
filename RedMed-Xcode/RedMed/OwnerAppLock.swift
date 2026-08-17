@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Owner app lock — Face ID / passcode before PHI is published into profile fields.
+/// Owner app lock — Face ID / Touch ID before PHI is published into profile fields.
+/// No passcode / password pad on this gate (tapper / Main are next).
 ///
 /// On background after first unlock: stay in Main (no second Face ID).
 /// PrivacySnapshotGuard still covers snapshots while PHI is in RAM.
@@ -15,7 +16,7 @@ import SwiftUI
 /// paints first; SecItem confirms off-main whether a profile blob exists (for
 /// prefetch / fail-closed load) but does **not** open Main without auth.
 ///
-/// Every owner launch is Face ID / passcode before Main. Front page is
+/// Every owner launch is Face ID before Main (no passcode pad). Front page is
 /// `LockEntryPage`: cream + Higgs `FaceIDFrame` clip, first Face ID, then Main.
 /// No Unlock retry, no second Face ID this process (Edit / NFC / vault skip).
 /// Erase still prompts. No LockOpen clip.
@@ -41,7 +42,7 @@ struct OwnerAppLock<Content: View>: View {
         case unlocked
     }
 
-    /// Always locked on first frame — Main never mounts before Face ID / passcode.
+    /// Always locked on first frame — Main never mounts before Face ID.
     @State private var gate: Gate = .locked
     @State private var isAuthenticating = false
     /// True only after Face ID / Touch ID (or passcode) mismatch — never on cancel
@@ -212,7 +213,8 @@ struct OwnerAppLock<Content: View>: View {
         authGeneration &+= 1
         let generation = authGeneration
         BiometricAuth.authenticate(
-            reason: "Unlock RedMed"
+            reason: "Unlock RedMed",
+            allowPasscode: false
         ) { outcome in
             guard generation == authGeneration else { return }
             switch outcome {
