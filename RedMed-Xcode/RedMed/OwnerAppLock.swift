@@ -19,7 +19,7 @@ import SwiftUI
 /// `LockEntryPage`: cream + Higgs `FaceIDFrame` clip, first Face ID, then Main.
 /// No Unlock retry, no second Face ID this process (Edit / NFC / vault skip).
 /// Erase still prompts. No LockOpen clip.
-/// Fresh install unlocks into empty RedMed after auth; returning owners load
+/// Fresh install unlocks into empty tabs after auth; returning owners load
 /// Keychain (fail closed on corrupt blob). Auto-prompt once per lock —
 /// including cold launch while still `.inactive` (waiting for `.active` was
 /// the cream hang: empty cream with no sheet). Face ID sheets put the scene
@@ -49,7 +49,7 @@ struct OwnerAppLock<Content: View>: View {
     @State private var biometryFailed = false
     @State private var profileLoadFailed = false
     @State private var hasEverHadSensitiveData = ProfileData.prefersLockOnLaunch
-    /// Keychain presence from the off-main check — unlock into empty RedMed when false.
+    /// Keychain presence from the off-main check — unlock into empty tabs when false.
     @State private var keychainHasProfile = ProfileData.prefersLockOnLaunch
     /// Bumps on lock so a late Face ID success cannot unlock after background.
     @State private var authGeneration = 0

@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// Owner user main / scanner RedMed tab — same bundled `tapper.html` medical
-/// panel helpers see on a band tap. Owner: Edit top chrome + bottom Help dock
-/// (no 911 / Aid / NFC). Scanners keep Back top chrome + the same bottom Help
-/// button, with native 911 / Aid tabs below. HTML tab bar stays hidden in app-embed.
+/// Owner / scanner RedMed tab — same bundled `tapper.html` medical panel helpers see
+/// on a band tap. Owner keeps Edit top chrome; Help is a bottom unlock-dock
+/// button. Scanners keep Back top chrome + the same bottom Help button.
+/// First-responder Preview lives on the NFC tab under Scan — not here.
+/// Native 911 / Aid / NFC tabs stay separate (HTML tab bar hidden in app-embed).
 struct RedMedView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession

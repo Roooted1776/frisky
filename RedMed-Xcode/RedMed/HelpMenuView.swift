@@ -187,8 +187,7 @@ struct HelpMenuView: View {
         static let sectionGap: CGFloat = 22
     }
 
-    /// Owner-only: Settings, Erase. Scanner Help is policies only.
-    /// Write to NFC is off while owner NFC is not on the tab shell.
+    /// Owner-only: Settings, Erase, Write to NFC. Scanner Help is policies only.
     private var showsOwnerTools: Bool { !isScannerSession }
 
     private var firstHelpSection: String {

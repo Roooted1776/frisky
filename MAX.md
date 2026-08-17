@@ -27,7 +27,7 @@
 
 Native iOS medical ID + emergency aid. Passive **13.56 MHz HF NFC** bracelet (not Bluetooth). Offline-first: no RedMed cloud backend for PHI.
 
-- **Owner app** (`Main` / `ContentView`): Face ID then RedMed user main only (+ Edit, bottom Help). No 911 / Aid / NFC tabs. Local Keychain profile.
+- **Owner app** (`Main` / `ContentView`): RedMed · 911 · Aid · NFC (+ Edit). Local Keychain profile, Face ID gates, write passive NFC band.
 - **Passerby / scanner**: `tapper.html#d=…` / `PublicCardView` — RedMed · 911 · Aid only. Snapshot profile. No Edit, no NFC, no owner pref mutation.
 - Hosted passerby path: `https://getredmed.com/tapper/` (`tapper/index.html`; legacy `pages.dev` — `docs/domain.md`).
 - Positioning: local EMS assist / fast ID handoff — not a medical device, no outcome promises, call 911 first. HIPAA-aligned offline posture; no false certification claims.
@@ -45,10 +45,10 @@ See also `AGENTS.md`. High-signal recap:
 4. Survival hold may keep siren + max volume + brightness through background until cancel on Aid (or Stop SOS on Find Help).
 5. Vault Face ID: relock on **`.background` only** (not `.inactive` — Face ID sheets).
 6. Owner lock: front page is `LockEntryPage` — Higgs `FaceIDFrame` on user cream,
-   first Face ID, then RedMed user main. No Unlock retry, no second Face ID this process
+   first Face ID, then Main. No Unlock retry, no second Face ID this process
    (Edit / NFC / vault skip). Erase still prompts. No background re-lock Face ID.
    Fresh install
-   unlocks into empty RedMed after auth. Owner pages + tapper: cream fill only —
+   unlocks into empty tabs after auth. Owner pages + tapper: cream fill only —
    no page BrandLogo. **No hanging decorative brand marks** (lock watermark, Aid
    pane wordmarks, privacy-cover logo gone). NFC / topic sheets keep one page
    BrandWordmark header; tapper YOU-card BrandLogo stays as the medical header.
@@ -77,15 +77,15 @@ See also `AGENTS.md`. High-signal recap:
 Compressed from merged PRs / `main` history. Agents should treat these as **done** unless asked to change them.
 
 ### Roles, launch, chrome
-- Locked owner vs passerby shells; owner Face ID then RedMed user main only; scanners RedMed/911/Aid.
+- Locked owner vs passerby shells; four owner tabs (RedMed · 911 · Aid · NFC); scanners RedMed/911/Aid.
 - Owner app on first launch; `Main.swift` owner shell; HTML policies redirect `redmed://main`.
 - Deferred all Core Location until Find Help; fixed SIGTERM/launch confusion.
 - Cold launch: LaunchBackground only on UILaunchScreen (no system BrandLogo).
   Every owner launch: Higgs `FaceIDFrame` + first Face ID on `LockEntryPage`,
-  then RedMed user main. No Unlock retry, no second Face ID this process. Face ID kicks immediately on cold
+  then Main. No Unlock retry, no second Face ID this process. Face ID kicks immediately on cold
   `.inactive` (waiting for `.active` was the cream hang). Prefetch still starts
   in the same `onAppear` tick and inside the unlock pipeline. Fresh install
-  unlocks into empty RedMed after auth. Keychain decode + AES `#d=` pack +
+  unlocks into empty tabs after auth. Keychain decode + AES `#d=` pack +
   tapper.html string warm overlap Face ID; WKWebView warm only after unlock
   (Face ID–overlap WebKit stole MainActor → white/cream hang after auth).
   Parked Keychain adopt unlocks on the same MainActor turn (no Task hop). No
@@ -111,8 +111,8 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 ### NFC / bracelet / passerby web
 - Passive HF NFC physics + BraceletRF constants (Type 2 / rewritable NTAG).
 - Owner Write gated to `OwnerBandURI` (`#d=` only — no vendor cloud / social / BLE).
-- NFC write lives in `NFCView` (off owner tab chrome for now); CoreNFC on via `nfcHardwareEnabled` + NDEF entitlement
-  (scanners never get NFC).
+- NFC tab for owners; CoreNFC on via `nfcHardwareEnabled` + NDEF entitlement
+  (tab always visible; scanners never get NFC).
 - Main paired line reactive: write → Paired; profile edit → Not paired until rewrite.
 - Same RedMed header for owner + responder; Linked only after NFC write **and**
   YOU-card identity (name, birth, blood) is filled.

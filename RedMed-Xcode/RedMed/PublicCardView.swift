@@ -139,7 +139,10 @@ private struct PresentsOwnerHelp: ViewModifier {
             .environment(\.ownerHelpOpen, $showHelp)
             .fullScreenCover(isPresented: $showHelp) {
                 HelpMenuView(
-                    onOpenNFC: nil
+                    onOpenNFC: isScannerSession ? nil : {
+                        showHelp = false
+                        NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
+                    }
                 )
                 .environmentObject(profile)
                 .environment(\.isScannerSession, isScannerSession)
