@@ -1,7 +1,10 @@
 {
   "mcpServers": {
     "github": {
-      "url": "https://api.githubcopilot.com/mcp/"
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${env:CURSOR_GITHUB_TOKEN}"
+      }
     },
     "cloudflare": {
       "url": "https://mcp.cloudflare.com/mcp"
