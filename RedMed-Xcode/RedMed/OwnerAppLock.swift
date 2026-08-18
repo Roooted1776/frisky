@@ -50,7 +50,6 @@ struct OwnerAppLock<Content: View>: View {
     /// or cold launch, and never for Keychain decode failure.
     @State private var biometryFailed = false
     @State private var profileLoadFailed = false
-    @State private var hasEverHadSensitiveData = ProfileData.prefersLockOnLaunch
     /// Keychain presence from the off-main check — unlock into empty tabs when false.
     @State private var keychainHasProfile = ProfileData.prefersLockOnLaunch
     /// Bumps on lock so a late Face ID success cannot unlock after background.
@@ -115,7 +114,6 @@ struct OwnerAppLock<Content: View>: View {
             ProfileData.setStoredProfileGate(hasProfile)
             keychainHasProfile = hasProfile
             if hasProfile {
-                hasEverHadSensitiveData = true
                 // Face ID may already be running (onAppear kicked LA first) — still
                 // start single-flight prefetch so unlock overlaps SecItem.
                 if gate == .locked {
@@ -152,14 +150,10 @@ struct OwnerAppLock<Content: View>: View {
                 tryAutoUnlockIfActive()
             }
         }
-        .onChange(of: profile.hasSensitiveProfileData) { _, hasData in
-            if hasData { hasEverHadSensitiveData = true }
-        }
         .onReceive(NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)) { _ in
             screenCaptured = UIScreen.main.isCaptured
         }
         .onReceive(NotificationCenter.default.publisher(for: .redMedDidEraseLocalData)) { _ in
-            hasEverHadSensitiveData = false
             keychainHasProfile = false
             biometryFailed = false
             profileLoadFailed = false
@@ -182,19 +176,6 @@ struct OwnerAppLock<Content: View>: View {
         guard scenePhase != .background else { return }
         didAutoPromptThisLock = true
         startUnlockPipeline(isAuto: true)
-    }
-
-    private func lock(purge: Bool) {
-        authGeneration &+= 1
-        gate = .locked
-        isAuthenticating = false
-        biometryFailed = false
-        profileLoadFailed = false
-        showUnlockControl = false
-        if purge {
-            profile.purgeFromMemory()
-        }
-        SecurePasteboard.clear()
     }
 
     /// Face ID first, then Keychain prefetch + shell string in the same turn

@@ -60,9 +60,8 @@
 		AABB00000000000000000036 /* BrandWordmark.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000036 /* BrandWordmark.png */; };
 		AABB0000000000000000004C /* PasserbyHTMLCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000004C /* PasserbyHTMLCardView.swift */; };
 		AABB0000000000000000004D /* AudioSessionGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000004D /* AudioSessionGate.swift */; };
-		AABB0000000000000000004E /* LockOpen.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000004E /* LockOpen.mp4 */; };
 		AABB00000000000000000051 /* FaceIDFrame.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000051 /* FaceIDFrame.mp4 */; };
-		AABB0000000000000000004F /* LockAtmosphereVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000004F /* LockAtmosphereVideo.swift */; };
+		AABB0000000000000000004F /* FaceIDFrameVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000004F /* FaceIDFrameVideo.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -122,9 +121,8 @@
 		AAAA00000000000000000036 /* BrandWordmark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BrandWordmark.png; sourceTree = "<group>"; };
 		AAAA0000000000000000004C /* PasserbyHTMLCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasserbyHTMLCardView.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000004D /* AudioSessionGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSessionGate.swift; sourceTree = "<group>"; };
-		AAAA0000000000000000004E /* LockOpen.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file.mp4; path = LockOpen.mp4; sourceTree = "<group>"; };
 		AAAA00000000000000000051 /* FaceIDFrame.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file.mp4; path = FaceIDFrame.mp4; sourceTree = "<group>"; };
-		AAAA0000000000000000004F /* LockAtmosphereVideo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockAtmosphereVideo.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000004F /* FaceIDFrameVideo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceIDFrameVideo.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -147,8 +145,7 @@
 				AAAA00000000000000000033 /* OwnerAppLock.swift */,
 				AAAA00000000000000000052 /* LockEntryPage.swift */,
 				AAAA00000000000000000053 /* FacePage.swift */,
-				AAAA0000000000000000004F /* LockAtmosphereVideo.swift */,
-				AAAA0000000000000000004E /* LockOpen.mp4 */,
+				AAAA0000000000000000004F /* FaceIDFrameVideo.swift */,
 				AAAA00000000000000000051 /* FaceIDFrame.mp4 */,
 				AAAA00000000000000000003 /* Theme.swift */,
 				AAAA0000000000000000001C /* AppConfig.swift */,
@@ -384,7 +381,6 @@
 				AABB00000000000000000025 /* sw.js in Resources */,
 				AABB00000000000000000022 /* BrandLogo.png in Resources */,
 				AABB00000000000000000036 /* BrandWordmark.png in Resources */,
-				AABB0000000000000000004E /* LockOpen.mp4 in Resources */,
 				AABB00000000000000000051 /* FaceIDFrame.mp4 in Resources */,
 				AABB0000000000000000001A /* legal-doc.css in Resources */,
 			);
@@ -427,7 +423,7 @@
 				AABB00000000000000000030 /* CrashMotionGuard.swift in Sources */,
 				AABB00000000000000000032 /* SatelliteFieldUI.swift in Sources */,
 				AABB00000000000000000033 /* OwnerAppLock.swift in Sources */,
-				AABB0000000000000000004F /* LockAtmosphereVideo.swift in Sources */,
+				AABB0000000000000000004F /* FaceIDFrameVideo.swift in Sources */,
 				AABB00000000000000000034 /* SecurePasteboard.swift in Sources */,
 				AABB00000000000000000020 /* EmergencyNumber.swift in Sources */,
 				AABB0000000000000000001C /* AppConfig.swift in Sources */,
