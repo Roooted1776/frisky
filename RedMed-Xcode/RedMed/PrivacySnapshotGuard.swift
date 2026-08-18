@@ -102,9 +102,7 @@ struct PrivacySnapshotGuard<Content: View>: View {
         ZStack {
             Color.redmedBg.ignoresSafeArea()
             VStack(spacing: 12) {
-                Text("RedMed")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(.redmedDark)
+                // Cream only — no BrandLogo / wordmark on the cover (PHI snapshot).
                 Text(screenCaptured ? "Hidden while screen sharing" : "Profile hidden")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.redmedMuted)
