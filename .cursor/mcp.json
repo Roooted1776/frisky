@@ -1,5 +1,8 @@
 {
   "mcpServers": {
+    "github": {
+      "url": "https://api.githubcopilot.com/mcp/"
+    },
     "cloudflare": {
       "url": "https://mcp.cloudflare.com/mcp"
     },
