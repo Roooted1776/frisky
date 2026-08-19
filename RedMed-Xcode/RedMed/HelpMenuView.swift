@@ -96,6 +96,7 @@ struct LocalWebView: UIViewRepresentable {
         // Passerby card — policy “Emergency card (any phone)” CTA.
         "tapper.html",
         "BrandLogo.png",
+        "pheart.png",
         "BrandWordmark.png",
         "sw.js"
     ]

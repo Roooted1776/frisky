@@ -68,8 +68,9 @@
        walk-by ~6–8″ does not fire, reliable coupling dies past ~4″,
        passive 13.56 MHz HF NFC (not Bluetooth) → Safari opens this page
        (apple-mobile-web-app-capable=no so iOS BTR is not a Home Screen web app)
-     - Logo: BrandLogo.png 216px (bundle /tapper/) or assets/BrandLogo.png (Pages);
-       deferred until after profile paint, skipped when name hides the mark
+     - Logo: pheart.png / BrandLogo.png 216px (bundle /tapper/) or assets/
+       copies (Pages); cream #fff7f7 around the circle. Deferred until after
+       profile paint, skipped when name hides the mark
      - Legacy card.html / get.html /get/ redirect to /tapper/ and keep #d=
      Keep identical: tapper/index.html, repo-root tapper.html, RedMed-Xcode/RedMed/tapper.html.
      Cloudflare Pages serves AppConfig URL https://getredmed.com/tapper/ from tapper/
@@ -1512,12 +1513,12 @@
 
   // Empty YOU card only — named band taps hide the logo (has-name), so skip the
   // fetch entirely on the EMT critical path. Icons are injected here too so the
-  // head never eagerly requests BrandLogo.png before we know the name.
+  // head never eagerly requests pheart.png / BrandLogo.png before we know the name.
   function resolveLogo() {
     var img = document.getElementById('rmLogo');
     if (!img || img.classList.contains('has-name')) return;
     if (img.getAttribute('src')) return;
-    var candidates = ['BrandLogo.png', 'assets/BrandLogo.png'];
+    var candidates = ['pheart.png', 'BrandLogo.png', 'assets/pheart.png', 'assets/BrandLogo.png'];
     var head = document.head || document.getElementsByTagName('head')[0];
     function ensureIconLinks() {
       var icons = document.querySelectorAll('link[rel="icon"]');
