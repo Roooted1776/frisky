@@ -150,7 +150,7 @@ struct LocalWebView: UIViewRepresentable {
             if url.isFileURL {
                 let name = url.lastPathComponent
                 if LocalWebView.passerbyShellFiles.contains(name) {
-                    if let hosted = URL(string: AppConfig.medicalCardBaseURL) {
+                    if let hosted = Self.hostedPasserbyURL(from: url) {
                         UIApplication.shared.open(hosted, options: [:], completionHandler: nil)
                     }
                     decisionHandler(.cancel)
@@ -192,6 +192,19 @@ struct LocalWebView: UIViewRepresentable {
                 return true
             }
             return false
+        }
+
+        /// AppConfig write base + any `#d=` / search from a bundled tapper.html tap.
+        private static func hostedPasserbyURL(from fileURL: URL) -> URL? {
+            var raw = AppConfig.medicalCardBaseURL
+            if let query = fileURL.query, !query.isEmpty {
+                let sep = raw.contains("?") ? "&" : "?"
+                raw += sep + query
+            }
+            if let fragment = fileURL.fragment, !fragment.isEmpty {
+                raw += "#" + fragment
+            }
+            return URL(string: raw)
         }
 
         private static func policyDestination(file: String, fragment: String?) -> String? {
