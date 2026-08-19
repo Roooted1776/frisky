@@ -103,10 +103,9 @@ struct RedMedView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            OwnerHelpDockButton()
-                .padding(.horizontal, 22)
-                .padding(.top, 8)
-                .padding(.bottom, 10)
+            // Big bottom "Help" dock removed from the RedMed user page.
+            // Help remains available via other native chrome (e.g. Edit modal bar)
+            // and on the 911 / Aid / NFC tabs.
         }
         // Owner profile only — never redact the passerby / EMS scanner card.
         .privacySensitive(!isScannerSession)
