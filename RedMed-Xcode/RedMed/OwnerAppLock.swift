@@ -30,8 +30,8 @@ import SwiftUI
 /// Speed (minus Face ID wall time): Face ID kicks first; Keychain prefetch +
 /// tapper.html string warm start in the same `onAppear` tick and again inside
 /// the unlock pipeline (single-flight). Parked Keychain adopt unlocks on the
-/// LA main-queue turn via `MainActor.assumeIsolated` (no Task hop). Face page
-/// is solid cream (no material blur). Haptic + WKWebView warm run at utility
+/// next MainActor turn (LA completion is main-queue but not MainActor-isolated).
+/// Face page is solid cream (no material blur). Haptic + WKWebView warm run at utility
 /// priority after `gate = .unlocked` so Main paints first.
 struct OwnerAppLock<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
@@ -209,71 +209,61 @@ struct OwnerAppLock<Content: View>: View {
             reason: "Unlock RedMed",
             allowPasscode: false
         ) { outcome in
-            guard generation == authGeneration else { return }
-            switch outcome {
-            case .declined:
-                // Cancel — Face page with Proceed. Keep Keychain prefetch.
-                isAuthenticating = false
-                biometryFailed = false
-                showUnlockControl = true
-                gate = .locked
-            case .notInteractive:
-                // Cold-start evaluate before the window can present. Clear
-                // auto-prompt so `.active` runs the first Face ID once.
-                isAuthenticating = false
-                biometryFailed = false
-                profileLoadFailed = false
-                gate = .locked
-                didAutoPromptThisLock = false
-                showUnlockControl = false
-            case .notVerified:
-                RedMedHaptics.error()
-                isAuthenticating = false
-                biometryFailed = true
-                showUnlockControl = true
-                gate = .locked
-                VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock")
-            case .success:
-                // Apply only if this generation is still current. Check again after
-                // await — background can bump authGeneration and purge mid-apply.
-                // LA completion is main-queue (`DispatchQueue.main`) but not
-                // MainActor-isolated. Prefer `assumeIsolated` when already on
-                // main so a parked Keychain adopt unlocks this turn (no Task hop).
-                applyUnlockSuccess(generation: generation)
+            // LA delivers on main queue but not MainActor — hop before @State writes.
+            Task { @MainActor in
+                guard generation == authGeneration else { return }
+                switch outcome {
+                case .declined:
+                    // Cancel — Face page with Proceed. Keep Keychain prefetch.
+                    isAuthenticating = false
+                    biometryFailed = false
+                    showUnlockControl = true
+                    gate = .locked
+                case .notInteractive:
+                    // Cold-start evaluate before the window can present. Clear
+                    // auto-prompt so `.active` runs the first Face ID once.
+                    isAuthenticating = false
+                    biometryFailed = false
+                    profileLoadFailed = false
+                    gate = .locked
+                    didAutoPromptThisLock = false
+                    showUnlockControl = false
+                case .notVerified:
+                    RedMedHaptics.error()
+                    isAuthenticating = false
+                    biometryFailed = true
+                    showUnlockControl = true
+                    gate = .locked
+                    VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock")
+                case .success:
+                    // Check again after await — background can bump authGeneration.
+                    await applyUnlockSuccess(generation: generation)
+                }
             }
         }
     }
 
-    /// Fast path: parked Face ID decode on the current main turn.
-    /// Slow path: `Task { @MainActor }` only when Keychain still needs an await.
-    private func applyUnlockSuccess(generation: Int) {
-        if Thread.isMainThread {
-            let parked = MainActor.assumeIsolated {
-                tryFinishWithParkedUnlock(generation: generation)
-            }
-            if parked { return }
-        }
-
-        Task { @MainActor in
-            guard generation == authGeneration else { return }
-            if tryFinishWithParkedUnlock(generation: generation) { return }
-            // Off-main SecItem overlaps Keychain apply when the gate still says empty.
-            async let expectsProfileTask = keychainHasProfile
-                ? true
-                : await Task.detached(priority: .userInitiated) {
-                    ProfileData.hasStoredProfile()
-                }.value
-            // Keychain blob only — embed JSON is sync from the blob (no await).
-            // Staging only: PHI fields stay empty until gate unlocks so
-            // PrivacySnapshotGuard never covers the lock shell under capture.
-            let didLoad = await profile.prepareUnlockPrefetchOrReload()
-            let expectsProfile = didLoad ? true : await expectsProfileTask
-            finishUnlockAfterAuth(
-                generation: generation,
-                didLoad: didLoad,
-                expectsProfile: expectsProfile
-            )
-        }
+    /// Parked Face ID decode first; await Keychain only when prefetch is not ready.
+    @MainActor
+    private func applyUnlockSuccess(generation: Int) async {
+        guard generation == authGeneration else { return }
+        if tryFinishWithParkedUnlock(generation: generation) { return }
+        // Off-main SecItem overlaps Keychain apply when the gate still says empty.
+        async let expectsProfileTask = keychainHasProfile
+            ? true
+            : await Task.detached(priority: .userInitiated) {
+                ProfileData.hasStoredProfile()
+            }.value
+        // Keychain blob only — embed JSON is sync from the blob (no await).
+        // Staging only: PHI fields stay empty until gate unlocks so
+        // PrivacySnapshotGuard never covers the lock shell under capture.
+        let didLoad = await profile.prepareUnlockPrefetchOrReload()
+        let expectsProfile = didLoad ? true : await expectsProfileTask
+        finishUnlockAfterAuth(
+            generation: generation,
+            didLoad: didLoad,
+            expectsProfile: expectsProfile
+        )
     }
 
     /// Cancel stale WebKit warm + adopt Face ID–parked Keychain if ready.

@@ -337,9 +337,8 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         if appEmbed, let pooled = PasserbyWebViewPool.takeEmbed() {
             pooled.navigationDelegate = context.coordinator
             pooled.scrollView.isScrollEnabled = true
-            context.coordinator.shellLoaded = true
+            // Warm pool may still be parsing — wait for didFinish before shellLoaded.
             context.coordinator.loadedShellKind = "embed"
-            // Empty payload → first updateUIView pushes PHI via JS (no second parse).
             context.coordinator.loadedPayload = ""
             context.coordinator.loadedContentKey = ""
             return pooled
@@ -538,14 +537,13 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         var pendingProfileJS: String?
         var pageVisible = true
         var loadAttempts = 0
+        var isRecovering = false
         var forceReload: ((WKWebView) -> Void)?
 
         func recoverIfNeeded(_ webView: WKWebView) {
-            if webView.isLoading { return }
+            if webView.isLoading || isRecovering { return }
             if webView.url == nil {
-                loadedKey = nil
-                shellLoaded = false
-                forceReload?(webView)
+                scheduleRecovery(into: webView)
                 return
             }
             webView.evaluateJavaScript(
@@ -563,10 +561,21 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
                     ok = false
                 }
                 if error != nil || !ok {
-                    self.loadedKey = nil
-                    self.shellLoaded = false
-                    self.forceReload?(webView)
+                    self.scheduleRecovery(into: webView)
                 }
+            }
+        }
+
+        /// Defer reload out of updateUIView / evaluateJavaScript callbacks.
+        private func scheduleRecovery(into webView: WKWebView) {
+            guard !isRecovering else { return }
+            isRecovering = true
+            loadedKey = nil
+            shellLoaded = false
+            DispatchQueue.main.async { [weak self, weak webView] in
+                guard let self, let webView else { return }
+                self.isRecovering = false
+                self.forceReload?(webView)
             }
         }
 
@@ -579,10 +588,8 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         }
 
         func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
-            loadedKey = nil
-            shellLoaded = false
             loadAttempts = 0
-            forceReload?(webView)
+            scheduleRecovery(into: webView)
         }
 
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
@@ -603,9 +610,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
             if ns.domain == NSURLErrorDomain && ns.code == NSURLErrorCancelled { return }
             if ns.domain == "WebKitErrorDomain" && ns.code == 102 { return }
             guard loadAttempts < 2 else { return }
-            loadedKey = nil
-            shellLoaded = false
-            forceReload?(webView)
+            scheduleRecovery(into: webView)
         }
 
         func webView(
