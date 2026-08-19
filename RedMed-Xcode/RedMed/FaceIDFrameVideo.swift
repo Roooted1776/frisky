@@ -19,8 +19,9 @@ enum FaceIDFrameClip {
     }
 }
 
-/// Face ID–sized square clip (cream + red medical circle). Plays once and
-/// holds the last frame. Unlock tears it down without waiting.
+/// Face ID–sized square clip (cream + red medical circle). ~1.25s one-shot
+/// (EKG draw + plus; no start/end hang). Holds the last frame. Unlock
+/// tears it down without waiting.
 struct FaceIDFrameVideo: UIViewRepresentable {
     /// Pause on true background only — Face ID holds `.inactive` and must keep playing.
     var playing: Bool
