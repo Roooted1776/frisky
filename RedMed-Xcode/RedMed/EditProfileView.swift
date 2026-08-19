@@ -94,10 +94,10 @@ struct EditProfileView: View {
                     editSectionLabel("You")
                     editCard {
                         youRow(label: "Name") {
-                            TextField("Full name", text: $name)
-                                .font(.system(size: Metrics.font))
-                                .foregroundColor(.redmedDark)
-                                .vaultSafeTextInput(capitalization: .words)
+                            // Own view + stable id — list TextFields in this sheet
+                            // were stealing the first field's UIKit coordinator (name).
+                            YouNameField(text: $name)
+                                .id("edit-you-full-name")
                         }
                         Divider().padding(.leading, Metrics.labelWidth + 12 + Metrics.rowHPad)
                         birthDateRow
@@ -118,6 +118,7 @@ struct EditProfileView: View {
                     editCard {
                         DraftLinesEditor(
                             lines: $allergies,
+                            sectionKey: "allergies",
                             placeholder: "Allergy",
                             addLabel: "Add allergy",
                             onTextChange: { id, text in
@@ -130,6 +131,7 @@ struct EditProfileView: View {
                     editCard {
                         DraftLinesEditor(
                             lines: $medications,
+                            sectionKey: "medications",
                             placeholder: "Medication",
                             addLabel: "Add medication",
                             onTextChange: { id, text in
@@ -142,6 +144,7 @@ struct EditProfileView: View {
                     editCard {
                         DraftLinesEditor(
                             lines: $conditions,
+                            sectionKey: "conditions",
                             placeholder: "Condition",
                             addLabel: "Add condition",
                             onTextChange: { id, text in
@@ -166,6 +169,9 @@ struct EditProfileView: View {
             }
         }
         .background { RedMedPageBackground() }
+        // Once on the sheet — per-field `.privacySensitive()` made SwiftUI
+        // reuse the first TextField coordinator (list typing landed in Name).
+        .privacySensitive()
         .presentsOwnerHelp()
         .onAppear {
             loadDraft()
@@ -234,7 +240,9 @@ struct EditProfileView: View {
         lines: [DraftLine],
         catalog: [SuggestionCatalog.Entry]
     ) {
-        suggestionLineID = lineID
+        if suggestionLineID != lineID {
+            suggestionLineID = lineID
+        }
         let taken = Set(
             lines.lazy
                 .filter { $0.id != lineID }
@@ -388,45 +396,11 @@ struct EditProfileView: View {
     @ViewBuilder
     private var contactsEditor: some View {
         ForEach($contacts) { $contact in
-            HStack(alignment: .center, spacing: 10) {
-                TextField("Name", text: $contact.name)
-                    .font(.system(size: Metrics.font))
-                    .foregroundColor(.redmedDark)
-                    .vaultSafeTextInput(capitalization: .words)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                TextField("Phone", text: $contact.phone)
-                    .font(.system(size: Metrics.font))
-                    .foregroundColor(.redmedDark)
-                    .keyboardType(.phonePad)
-                    .vaultSafeTextInput(capitalization: .never)
-                    .multilineTextAlignment(.trailing)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-
-                Button {
-                    let id = contact.id
-                    contacts.removeAll { $0.id == id }
-                } label: {
-                    Text("✕")
-                        .font(.system(size: Metrics.icon))
-                        .foregroundColor(.redmedAccent)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
+            ContactDraftRow(contact: $contact) {
+                let id = contact.id
+                contacts.removeAll { $0.id == id }
             }
-            .padding(.horizontal, Metrics.rowHPad)
-            .padding(.vertical, Metrics.rowVPad)
-
-            Divider().padding(.leading, Metrics.rowHPad)
-
-            TextField("Relation (optional)", text: $contact.relationship)
-                .font(.system(size: Metrics.font))
-                .foregroundColor(.redmedDark)
-                .vaultSafeTextInput(capitalization: .words)
-                .padding(.horizontal, Metrics.rowHPad)
-                .padding(.vertical, Metrics.rowVPad)
-
-            Divider().padding(.leading, Metrics.rowHPad)
+            .id(contact.id)
         }
 
         Button {
@@ -580,10 +554,85 @@ struct DraftLine: Identifiable, Equatable {
     }
 }
 
+/// Isolated so list/contact TextFields cannot reuse this field's UIKit coordinator.
+private struct YouNameField: View {
+    @Binding var text: String
+
+    var body: some View {
+        TextField("Full name", text: $text)
+            .font(.system(size: 15))
+            .foregroundColor(.redmedDark)
+            .vaultSafeTextInput(capitalization: .words)
+            .id("edit-you-full-name")
+    }
+}
+
+/// One emergency-contact block. Own view + per-control ids — `$contact.name`
+/// lived next to You `$name` in the same body and typed into the You name field.
+private struct ContactDraftRow: View {
+    @Binding var contact: EmergencyContact
+    var onDelete: () -> Void
+
+    private enum Metrics {
+        static let font: CGFloat = 15
+        static let icon: CGFloat = 18
+        static let rowHPad: CGFloat = 16
+        static let rowVPad: CGFloat = 13
+    }
+
+    private var contactID: String { contact.id.uuidString }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .center, spacing: 10) {
+                TextField("Contact name", text: $contact.name)
+                    .font(.system(size: Metrics.font))
+                    .foregroundColor(.redmedDark)
+                    .vaultSafeTextInput(capitalization: .words)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .id("edit-contact-\(contactID)-name")
+
+                TextField("Phone", text: $contact.phone)
+                    .font(.system(size: Metrics.font))
+                    .foregroundColor(.redmedDark)
+                    .keyboardType(.phonePad)
+                    .vaultSafeTextInput(capitalization: .never)
+                    .multilineTextAlignment(.trailing)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .id("edit-contact-\(contactID)-phone")
+
+                Button(action: onDelete) {
+                    Text("✕")
+                        .font(.system(size: Metrics.icon))
+                        .foregroundColor(.redmedAccent)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, Metrics.rowHPad)
+            .padding(.vertical, Metrics.rowVPad)
+
+            Divider().padding(.leading, Metrics.rowHPad)
+
+            TextField("Relation (optional)", text: $contact.relationship)
+                .font(.system(size: Metrics.font))
+                .foregroundColor(.redmedDark)
+                .vaultSafeTextInput(capitalization: .words)
+                .padding(.horizontal, Metrics.rowHPad)
+                .padding(.vertical, Metrics.rowVPad)
+                .id("edit-contact-\(contactID)-rel")
+
+            Divider().padding(.leading, Metrics.rowHPad)
+        }
+        .id("edit-contact-row-\(contactID)")
+    }
+}
+
 /// Edit rows: padding 13/16, TextField + ✕. No FocusState — sheet-wide focus
 /// tracking hung Edit. Suggestions live in a fixed bottom strip via onTextChange.
 private struct DraftLinesEditor: View {
     @Binding var lines: [DraftLine]
+    let sectionKey: String
     let placeholder: String
     let addLabel: String
     var onTextChange: ((UUID, String) -> Void)? = nil
@@ -597,30 +646,17 @@ private struct DraftLinesEditor: View {
 
     var body: some View {
         ForEach($lines) { $line in
-            HStack(spacing: 0) {
-                TextField(placeholder, text: $line.text)
-                    .font(.system(size: Metrics.font))
-                    .foregroundColor(.redmedDark)
-                    .vaultSafeTextInput(capitalization: .words)
-                    .onChange(of: line.text) { _, newValue in
-                        onTextChange?(line.id, newValue)
-                    }
-                Button {
-                    let id = line.id
-                    onTextChange?(id, "")
-                    lines.removeAll { $0.id == id }
-                } label: {
-                    Text("✕")
-                        .font(.system(size: Metrics.icon))
-                        .foregroundColor(.redmedAccent)
-                        .padding(.leading, 10)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
+            DraftLineRow(
+                line: $line,
+                sectionKey: sectionKey,
+                placeholder: placeholder,
+                onTextChange: onTextChange
+            ) {
+                let id = line.id
+                onTextChange?(id, "")
+                lines.removeAll { $0.id == id }
             }
-            .padding(.horizontal, Metrics.rowHPad)
-            .padding(.vertical, Metrics.rowVPad)
-            Divider().padding(.leading, Metrics.rowHPad)
+            .id(line.id)
         }
 
         Button {
@@ -637,5 +673,49 @@ private struct DraftLinesEditor: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+}
+
+private struct DraftLineRow: View {
+    @Binding var line: DraftLine
+    let sectionKey: String
+    let placeholder: String
+    var onTextChange: ((UUID, String) -> Void)?
+    var onDelete: () -> Void
+
+    private enum Metrics {
+        static let font: CGFloat = 15
+        static let icon: CGFloat = 18
+        static let rowHPad: CGFloat = 16
+        static let rowVPad: CGFloat = 13
+    }
+
+    private var fieldID: String { "edit-\(sectionKey)-\(line.id.uuidString)" }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                TextField(placeholder, text: $line.text)
+                    .font(.system(size: Metrics.font))
+                    .foregroundColor(.redmedDark)
+                    .vaultSafeTextInput(capitalization: .words)
+                    .id(fieldID)
+                    .onChange(of: line.text) { _, newValue in
+                        onTextChange?(line.id, newValue)
+                    }
+                Button(action: onDelete) {
+                    Text("✕")
+                        .font(.system(size: Metrics.icon))
+                        .foregroundColor(.redmedAccent)
+                        .padding(.leading, 10)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, Metrics.rowHPad)
+            .padding(.vertical, Metrics.rowVPad)
+            Divider().padding(.leading, Metrics.rowHPad)
+        }
+        .id(fieldID + "-row")
     }
 }
