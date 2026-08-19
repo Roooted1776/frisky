@@ -102,8 +102,8 @@ function redmedAssetURL(file) {
        walk-by ~6–8″ does not fire, reliable coupling dies past ~4″,
        passive 13.56 MHz HF NFC (not Bluetooth) → Safari opens this page
        (apple-mobile-web-app-capable=no so iOS BTR is not a Home Screen web app)
-     - Logo: pheart.png / BrandLogo.png 216px (bundle /tapper/) or assets/
-       copies (Pages); cream #fff7f7 around the circle. YOU-card medical
+     - Logo: pheart.png only on YOU-card — cream #fff7f7 watermark tile (216px).
+       Not transparent BrandLogo (NFC / wordmark only). Bundle /tapper/ + assets/
        header mark stays next to the name on empty and named cards. Deferred
        until after profile paint (in-app Preview / owner embed included).
      - Legacy card.html / get.html /get/ redirect to /tapper/ and keep #d=
@@ -316,7 +316,7 @@ function redmedAssetURL(file) {
     flex-shrink: 0;
     display: block;
     object-fit: cover;
-    background: var(--bg); /* cream underlay — matches redmedBg / page fill */
+    background: transparent; /* cream #fff7f7 is baked into pheart.png watermark tile */
     opacity: 1;
   }
   /* Preset src on #rmLogo; resolveLogo falls back on error. */
@@ -1570,9 +1570,7 @@ function redmedAssetURL(file) {
     }
     var candidates = [
       redmedAssetURL('pheart.png'),
-      redmedAssetURL('BrandLogo.png'),
-      'assets/pheart.png',
-      'assets/BrandLogo.png'
+      'assets/pheart.png'
     ];
     var i = 0;
     function apply(src) {
