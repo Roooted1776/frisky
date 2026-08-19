@@ -191,9 +191,41 @@ struct ChromeTextAction: View {
     }
 }
 
-/// Shared top bar for owner Help / Edit full-screen modals.
-/// Equal leading/trailing slots keep the title centered. NFC Preview uses
-/// main-page `ChromeTextAction` Back instead (same as RedMed / topic sheets).
+/// One type size / height for Cancel · Help · Save · Done in owner modals.
+struct OwnerModalBarButton: View {
+    let title: String
+    var weight: Font.Weight = .regular
+    var alignment: Alignment = .center
+    /// Equal-width Edit columns. Off for Help Done so the title stays centered.
+    var fillWidth: Bool = false
+    let action: () -> Void
+
+    var body: some View {
+        Button {
+            RedMedHaptics.light()
+            action()
+        } label: {
+            Text(title)
+                .font(.system(size: RedMedChrome.modalActionSize, weight: weight))
+                .foregroundColor(.redmedAccent)
+                .kerning(-0.2)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+                .frame(
+                    maxWidth: fillWidth ? .infinity : nil,
+                    maxHeight: .infinity,
+                    alignment: alignment
+                )
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(RedMedPressStyle(scale: 0.96, haptic: nil))
+        .tint(.redmedAccent)
+    }
+}
+
+/// Shared top bar for owner Help full-screen modal (Done + title).
+/// Edit uses `OwnerModalActionBar` (Cancel · Help · Save on one baseline).
+/// NFC Preview uses main-page `ChromeTextAction` Back instead.
 struct OwnerModalChrome<Trailing: View>: View {
     let title: String
     let leadingTitle: String
@@ -218,17 +250,13 @@ struct OwnerModalChrome<Trailing: View>: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
-                Button(action: {
-                    RedMedHaptics.light()
-                    leadingAction()
-                }) {
-                    Text(leadingTitle)
-                        .font(.system(size: RedMedChrome.modalActionSize, weight: leadingWeight))
-                        .foregroundColor(.redmedAccent)
-                        .frame(minWidth: RedMedChrome.modalSideMinWidth, alignment: .leading)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(RedMedPressStyle(scale: 0.96, haptic: nil))
+                OwnerModalBarButton(
+                    title: leadingTitle,
+                    weight: leadingWeight,
+                    alignment: .leading,
+                    action: leadingAction
+                )
+                .frame(minWidth: RedMedChrome.modalSideMinWidth, alignment: .leading)
 
                 Spacer(minLength: 8)
 
@@ -254,6 +282,65 @@ struct OwnerModalChrome<Trailing: View>: View {
     }
 }
 
+/// Edit modal bar: Cancel (left), Help (center), Save (right).
+/// Same type size and bar height so Help stays level with both actions.
+struct OwnerModalActionBar<Center: View>: View {
+    let leadingTitle: String
+    var leadingWeight: Font.Weight = .regular
+    let leadingAction: () -> Void
+    let trailingTitle: String
+    var trailingWeight: Font.Weight = .bold
+    let trailingAction: () -> Void
+    let center: Center
+
+    init(
+        leadingTitle: String,
+        leadingWeight: Font.Weight = .regular,
+        leadingAction: @escaping () -> Void,
+        trailingTitle: String,
+        trailingWeight: Font.Weight = .bold,
+        trailingAction: @escaping () -> Void,
+        @ViewBuilder center: () -> Center
+    ) {
+        self.leadingTitle = leadingTitle
+        self.leadingWeight = leadingWeight
+        self.leadingAction = leadingAction
+        self.trailingTitle = trailingTitle
+        self.trailingWeight = trailingWeight
+        self.trailingAction = trailingAction
+        self.center = center()
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .center, spacing: 0) {
+                OwnerModalBarButton(
+                    title: leadingTitle,
+                    weight: leadingWeight,
+                    alignment: .leading,
+                    fillWidth: true,
+                    action: leadingAction
+                )
+                center
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                OwnerModalBarButton(
+                    title: trailingTitle,
+                    weight: trailingWeight,
+                    alignment: .trailing,
+                    fillWidth: true,
+                    action: trailingAction
+                )
+            }
+            .padding(.horizontal, RedMedChrome.pagePadX)
+            .frame(height: RedMedChrome.modalBarHeight)
+
+            Rectangle()
+                .fill(Color.redmedDivider)
+                .frame(height: 1)
+        }
+    }
+}
+
 extension OwnerModalChrome where Trailing == EmptyView {
     /// Leading-only bar (Help Done) — empty trailing keeps title centered
     /// via the shared `modalSideMinWidth` frame on the trailing slot.
@@ -268,34 +355,13 @@ extension OwnerModalChrome where Trailing == EmptyView {
     }
 }
 
-/// Accent text button for the trailing slot of `OwnerModalChrome` (Edit Save).
-struct OwnerModalTrailingAction: View {
-    let title: String
-    var weight: Font.Weight = .bold
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: {
-            RedMedHaptics.light()
-            action()
-        }) {
-            Text(title)
-                .font(.system(size: RedMedChrome.modalActionSize, weight: weight))
-                .foregroundColor(.redmedAccent)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(RedMedPressStyle(scale: 0.96, haptic: nil))
-    }
-}
-
 /// Inline nav titles (topic detail). Semibold 17 accent beside ChromeTextAction (18 regular).
 /// Box radius is shared by owner + scanner cards / CTAs (square-ish, not capsules).
 enum RedMedChrome {
     static let navTitleFont: Font = .system(size: 17, weight: .semibold)
     /// Help / Edit (RedMed), Help on 911 / Aid / NFC, Back (Preview / scanner / topic).
     static let chromeActionSize: CGFloat = 18
-    /// Cancel / Done / Save inside owner Help · Edit modals.
+    /// Cancel / Help / Save / Done inside owner Help · Edit modals.
     static let modalActionSize: CGFloat = 17
     static let modalBarHeight: CGFloat = 52
     static let modalSideMinWidth: CGFloat = 64
