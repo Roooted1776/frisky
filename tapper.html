@@ -10,7 +10,7 @@
 <meta name="color-scheme" content="light">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; worker-src 'self'; connect-src 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="no-referrer">
-<!-- Favicon / touch icon set in resolveLogo when the empty-card mark is shown. -->
+<!-- Favicon / touch icon set in resolveLogo after first profile paint. -->
 <title>RedMed — tap to scan</title>
 <style>html,body{background:#fff7f7!important;margin:0}</style>
 <script>
@@ -69,8 +69,9 @@
        passive 13.56 MHz HF NFC (not Bluetooth) → Safari opens this page
        (apple-mobile-web-app-capable=no so iOS BTR is not a Home Screen web app)
      - Logo: pheart.png / BrandLogo.png 216px (bundle /tapper/) or assets/
-       copies (Pages); cream #fff7f7 around the circle. Deferred until after
-       profile paint, skipped when name hides the mark
+       copies (Pages); cream #fff7f7 around the circle. YOU-card medical
+       header mark stays next to the name on empty and named cards. Deferred
+       until after profile paint (in-app Preview / owner embed included).
      - Legacy card.html / get.html /get/ redirect to /tapper/ and keep #d=
      Keep identical: tapper/index.html, repo-root tapper.html, RedMed-Xcode/RedMed/tapper.html.
      Cloudflare Pages serves AppConfig URL https://getredmed.com/tapper/ from tapper/
@@ -286,7 +287,6 @@
   }
   /* No src until resolveLogo — hide broken-image chrome on EMT open. */
   .rm-logo:not([src]) { visibility: hidden; }
-  .rm-logo.has-name { display: none; }
   .rm-name {
     font-size: var(--fs-name);
     font-weight: 700;
@@ -296,11 +296,6 @@
     color: var(--dark); /* same ink as YOU rows / Color.redmedDark (#1c1917) */
     overflow-wrap: anywhere;
     word-break: break-word;
-  }
-  /* Named cards: slightly larger hero for EMT glance. */
-  .rm-name.has-profile {
-    font-size: clamp(22px, 5.4vw, 26px);
-    letter-spacing: -0.6px;
   }
   /* Linked / Not linked + Updated share one row under the name. */
   .rm-meta {
@@ -1511,12 +1506,12 @@
   })();
 
 
-  // Empty YOU card only — named band taps hide the logo (has-name), so skip the
-  // fetch entirely on the EMT critical path. Icons are injected here too so the
-  // head never eagerly requests pheart.png / BrandLogo.png before we know the name.
+  // YOU-card mark — empty and named cards keep the heart next to the name.
+  // Deferred until after profile paint so decrypt wins the first frame.
+  // Icons are injected here so the head never eagerly requests pheart.png.
   function resolveLogo() {
     var img = document.getElementById('rmLogo');
-    if (!img || img.classList.contains('has-name')) return;
+    if (!img) return;
     if (img.getAttribute('src')) return;
     var candidates = ['pheart.png', 'BrandLogo.png', 'assets/pheart.png', 'assets/BrandLogo.png'];
     var head = document.head || document.getElementsByTagName('head')[0];
@@ -1545,9 +1540,8 @@
     tryNext();
   }
 
-  // After profile paint: load logo only when it will actually show.
+  // After profile paint: load the YOU-card mark (Safari, Preview, owner embed).
   function resolveBrandAssets() {
-    if (isAppPreview()) return;
     resolveLogo();
   }
 
@@ -2122,18 +2116,11 @@
     var rawBlood = (p.blood || '').trim();
     var displayName = rawName || 'RedMed';
     var nameEl = document.getElementById('name');
-    var logo = document.getElementById('rmLogo');
     var statusEl = document.getElementById('statusLine');
     var noteEl = document.querySelector('.rm-note');
     nameEl.textContent = displayName;
-    nameEl.classList.toggle('has-profile', !!rawName);
     // Empty-state status note only — hide once a named / band card paints.
     if (noteEl) noteEl.classList.toggle('is-filled', !!(rawName || fromBand));
-    // Empty: grey logo on the left. Filled: logo drops; imported name takes the row.
-    if (logo) {
-      if (rawName) logo.classList.add('has-name');
-      else logo.classList.remove('has-name');
-    }
     // Real band tap: decode ⇒ fromBand. In-app embed: Swift sets __REDMED_BRACELET_LINKED
     // so Linked still requires a verified write + YOU card (name, birth, blood).
     // Owner embed: status is a link to the native NFC tab (redmed://nfc).
@@ -2160,9 +2147,6 @@
     setRow('rowDob', formatDob(p.dob));
     setRow('rowBlood', p.blood);
     setRow('rowDonor', p.donor ? 'Yes' : '');
-    // Hero already shows the name — drop the duplicate YOU row when filled.
-    var nameRow = document.getElementById('rowNameRow');
-    if (nameRow) nameRow.hidden = !!rawName;
     var bloodRow = document.getElementById('rowBloodRow');
     if (bloodRow) {
       if (rawBlood) bloodRow.classList.add('has-blood');
@@ -2265,8 +2249,7 @@
   (function bootProfile() {
     function afterPaint() {
       try {
-        var logo = document.getElementById('rmLogo');
-        if (logo && !logo.classList.contains('has-name')) resolveBrandAssets();
+        resolveBrandAssets();
       } catch (e1) {}
       try { document.dispatchEvent(new Event('redmed-profile-painted')); } catch (e2) {}
     }
