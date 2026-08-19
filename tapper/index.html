@@ -282,7 +282,7 @@
     flex-shrink: 0;
     display: block;
     object-fit: cover;
-    background: transparent;
+    background: #fff; /* white underlay so the logo renders cleanly on first paint */
     opacity: 1;
   }
   /* No src until resolveLogo — hide broken-image chrome on EMT open. */
@@ -1257,7 +1257,7 @@
       <div class="rm-header">
         <p class="rm-note">Tap to scan · no login · no server · no app</p>
         <div class="rm-title-row">
-          <img class="rm-logo" id="rmLogo" width="72" height="72" alt="RedMed" decoding="async" fetchpriority="low">
+          <img class="rm-logo" id="rmLogo" width="72" height="72" alt="RedMed" decoding="async" fetchpriority="high">
           <div>
             <h1 class="rm-name" id="name">RedMed</h1>
             <div class="rm-meta">
@@ -1507,8 +1507,8 @@
 
 
   // YOU-card mark — empty and named cards keep the heart next to the name.
-  // Deferred until after profile paint so decrypt wins the first frame.
-  // Icons are injected here so the head never eagerly requests pheart.png.
+  // Load immediately so the logo/photo shows on first paint.
+  // Icons are injected here so the head can advertise the same logo.
   function resolveLogo() {
     var img = document.getElementById('rmLogo');
     if (!img) return;
@@ -2247,10 +2247,9 @@
   // Sync path when native injected __REDMED_PROFILE; band taps decrypt now
   // (AES key already prefetched when #d= is present).
   (function bootProfile() {
+    // Eager logo/photo load: avoid any "missing image" flash during decrypt.
+    try { resolveBrandAssets(); } catch (e0) {}
     function afterPaint() {
-      try {
-        resolveBrandAssets();
-      } catch (e1) {}
       try { document.dispatchEvent(new Event('redmed-profile-painted')); } catch (e2) {}
     }
     try {
