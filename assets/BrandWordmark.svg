@@ -19,10 +19,7 @@
   </defs>
 
   
-  <g filter="url(#tileShadow)">
-    <rect x="4" y="6" width="64" height="64" rx="19" fill="url(#tile)"></rect>
-    <rect x="4" y="6" width="64" height="36" rx="19" fill="url(#sheen)"></rect>
-  </g>
+  <circle cx="36" cy="38" r="32" fill="#eb2f35"></circle>
 
   
   <g transform="translate(36 38) scale(1.9) translate(-16 -14)">

@@ -118,17 +118,3 @@ struct PrivacySnapshotGuard<Content: View>: View {
         .accessibilityHidden(true)
     }
 }
-
-extension View {
-    /// Blocks system autofill / keyboard learning caches for PHI fields and marks
-    /// content privacy-sensitive so app-switcher snapshots do not retain glyphs.
-    func vaultSafeTextInput(
-        capitalization: TextInputAutocapitalization = .sentences
-    ) -> some View {
-        self
-            .textContentType(nil as UITextContentType?)
-            .autocorrectionDisabled(true)
-            .textInputAutocapitalization(capitalization)
-            .privacySensitive()
-    }
-}

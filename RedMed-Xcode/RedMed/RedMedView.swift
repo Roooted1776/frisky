@@ -8,6 +8,9 @@ import SwiftUI
 struct RedMedView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
+    /// ContentView keep-alive never calls `onDisappear`. Pass whether RedMed
+    /// is the front tab so a parked WKWebView can recover if WebKit died.
+    var isVisible: Bool = true
     @State private var showEdit = false
     /// When true, Edit opened without Face ID (empty RedMed profile) — Save must authenticate.
     @State private var requireAuthOnSave = false
@@ -79,7 +82,8 @@ struct RedMedView: View {
                     PasserbyHTMLShell(
                         encodedPayload: shellPayload,
                         braceletLinked: profile.showsBraceletAsLinked,
-                        embedProfileJSON: shellEmbedJSON
+                        embedProfileJSON: shellEmbedJSON,
+                        pageVisible: isVisible
                     )
                     // Opacity tab swaps must not animate WKWebView (jank + flash).
                     .transaction { $0.animation = nil }

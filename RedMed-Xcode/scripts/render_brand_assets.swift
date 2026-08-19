@@ -3,7 +3,8 @@ import AppKit
 import CoreText
 import Foundation
 
-// Renders crisp BrandLogo / BrandWordmark PNGs from vector paths (no soft screenshots).
+// Scales repo-root pheart.png into BrandLogo / BrandWordmark / AppIcon slots.
+// pheart is the circular heart on cream #fff7f7 (same as Color.redmedBg).
 
 let root = URL(fileURLWithPath: CommandLine.arguments.count > 1
     ? CommandLine.arguments[1]
@@ -101,7 +102,21 @@ func drawLogo(size: CGFloat, cornerRadius: CGFloat? = nil) -> NSImage {
     return image
 }
 
-func drawWordmark(height: CGFloat, darkBackground: Bool) -> NSImage {
+func scaledSquare(_ image: NSImage, size: CGFloat) -> NSImage {
+    let out = NSImage(size: NSSize(width: size, height: size))
+    out.lockFocus()
+    defer { out.unlockFocus() }
+    NSGraphicsContext.current?.imageInterpolation = .high
+    image.draw(
+        in: NSRect(x: 0, y: 0, width: size, height: size),
+        from: .zero,
+        operation: .copy,
+        fraction: 1
+    )
+    return out
+}
+
+func drawWordmark(logo: NSImage, height: CGFloat, darkBackground: Bool) -> NSImage {
     let logoSize = height * 0.84
     let padding = height * 0.08
     let gap = height * 0.22
@@ -143,9 +158,9 @@ func drawWordmark(height: CGFloat, darkBackground: Bool) -> NSImage {
         ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
     }
 
-    let logo = drawLogo(size: logoSize)
+    let mark = scaledSquare(logo, size: logoSize)
     let logoY = (height - logoSize) / 2
-    logo.draw(in: NSRect(x: padding, y: logoY, width: logoSize, height: logoSize))
+    mark.draw(in: NSRect(x: padding, y: logoY, width: logoSize, height: logoSize))
 
     let textOrigin = NSPoint(
         x: padding + logoSize + gap,
@@ -156,37 +171,49 @@ func drawWordmark(height: CGFloat, darkBackground: Bool) -> NSImage {
 }
 
 do {
+    let repoRoot = root.deletingLastPathComponent()
+    let pheartURL = repoRoot.appendingPathComponent("pheart.png")
+    guard let pheart = NSImage(contentsOf: pheartURL) else {
+        fputs("error: missing \(pheartURL.path)\n", stderr)
+        exit(1)
+    }
+
     let logoDir = root.appendingPathComponent("RedMed/Assets.xcassets/BrandLogo.imageset")
     let wordDir = root.appendingPathComponent("RedMed/Assets.xcassets/BrandWordmark.imageset")
+    let iconDir = root.appendingPathComponent("RedMed/Assets.xcassets/AppIcon.appiconset")
     try ensureDir(logoDir)
     try ensureDir(wordDir)
 
-    // Displayed up to ~96pt on launch; ship dense PNGs so @3x stays sharp.
     let logoScales: [(String, CGFloat)] = [
         ("BrandLogo.png", 180),
         ("BrandLogo@2x.png", 360),
         ("BrandLogo@3x.png", 540)
     ]
     for (name, px) in logoScales {
-        try savePNG(drawLogo(size: px), to: logoDir.appendingPathComponent(name))
+        try savePNG(scaledSquare(pheart, size: px), to: logoDir.appendingPathComponent(name))
     }
 
-    // Wordmark height matches the SVG viewBox ratio (~76pt design).
     let wordScales: [(String, CGFloat)] = [
         ("BrandWordmark.png", 159),
         ("BrandWordmark@2x.png", 318),
         ("BrandWordmark@3x.png", 477)
     ]
     for (name, h) in wordScales {
-        // Transparent bg — launch / UI sit on light surfaces.
-        try savePNG(drawWordmark(height: h, darkBackground: false), to: wordDir.appendingPathComponent(name))
+        try savePNG(drawWordmark(logo: pheart, height: h, darkBackground: false), to: wordDir.appendingPathComponent(name))
     }
 
-    // Also refresh the shared frisky asset copy when present.
+    try savePNG(scaledSquare(pheart, size: 1024), to: iconDir.appendingPathComponent("AppIcon-1024.png"))
+
     // Web display is 72 CSS px → 216 @3x; keep Pages / SW payloads small.
-    let sharedLogo = root.deletingLastPathComponent().appendingPathComponent("assets/BrandLogo.png")
+    let sharedLogo = repoRoot.appendingPathComponent("assets/BrandLogo.png")
     if FileManager.default.fileExists(atPath: sharedLogo.deletingLastPathComponent().path) {
-        try savePNG(drawLogo(size: 216), to: sharedLogo)
+        try savePNG(scaledSquare(pheart, size: 216), to: sharedLogo)
+        try savePNG(scaledSquare(pheart, size: 216), to: repoRoot.appendingPathComponent("assets/pheart.png"))
+        try savePNG(scaledSquare(pheart, size: 216), to: repoRoot.appendingPathComponent("BrandLogo.png"))
+        try savePNG(scaledSquare(pheart, size: 216), to: repoRoot.appendingPathComponent("tapper/BrandLogo.png"))
+        try savePNG(scaledSquare(pheart, size: 216), to: repoRoot.appendingPathComponent("tapper/pheart.png"))
+        try savePNG(scaledSquare(pheart, size: 216), to: root.appendingPathComponent("RedMed/BrandLogo.png"))
+        try savePNG(scaledSquare(pheart, size: 1024), to: root.appendingPathComponent("RedMed/pheart.png"))
     }
 } catch {
     fputs("error: \(error)\n", stderr)
