@@ -29,11 +29,12 @@ struct ContentView: View {
                 return tab
             },
             set: { newValue in
-                if !showsNFC && newValue == .nfc {
-                    tab = .redmed
-                } else {
-                    tab = newValue
-                }
+                // Mount in the same turn as `tab` — `onChange` ran *after* the
+                // first body pass, so 911 / Aid / NFC painted empty cream on
+                // first tap (the unreliable load).
+                let next: AppTab = (!showsNFC && newValue == .nfc) ? .redmed : newValue
+                mountedTabs.insert(next)
+                tab = next
             }
         )
     }
@@ -45,18 +46,24 @@ struct ContentView: View {
             Color.redmedBg.ignoresSafeArea()
                 .allowsHitTesting(false)
 
-            ZStack {
-                mountedTab(.redmed) { RedMedView() }
-                mountedTab(.emergency) {
-                    EmergencyView(isVisible: activeTab == .emergency)
-                }
-                mountedTab(.aid) { AidView() }
-                if showsNFC {
-                    mountedTab(.nfc) { NFCView() }
+            GeometryReader { geo in
+                let slide = geo.size.width > 8 ? geo.size.width : 10_000
+                ZStack {
+                    mountedTab(.redmed, slide: slide) {
+                        RedMedView(isVisible: activeTab == .redmed)
+                    }
+                    mountedTab(.emergency, slide: slide) {
+                        EmergencyView(isVisible: activeTab == .emergency)
+                    }
+                    mountedTab(.aid, slide: slide) { AidView() }
+                    if showsNFC {
+                        mountedTab(.nfc, slide: slide) { NFCView() }
+                    }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(.bottom, 56)
+            .clipped()
 
             CustomTabBar(tab: scannerSafeTab, showsNFC: showsNFC)
         }
@@ -87,11 +94,15 @@ struct ContentView: View {
     @ViewBuilder
     private func mountedTab<Content: View>(
         _ tab: AppTab,
+        slide: CGFloat,
         @ViewBuilder content: () -> Content
     ) -> some View {
         if mountedTabs.contains(tab) {
             content()
-                .opacity(activeTab == tab ? 1 : 0)
+                // Opacity 0 on a live WKWebView drops the compositor layer —
+                // RedMed came back cream after 911 / Aid / NFC. Keep the layer;
+                // slide inactive tabs offscreen (clipped by the parent).
+                .offset(x: activeTab == tab ? 0 : slide)
                 // Discrete swap — spring/fade on a live WKWebView is visible jank.
                 .transaction { $0.animation = nil }
                 .allowsHitTesting(activeTab == tab)
