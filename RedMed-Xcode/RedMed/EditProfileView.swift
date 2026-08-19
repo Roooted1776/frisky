@@ -79,15 +79,13 @@ struct EditProfileView: View {
 
     private var editorBody: some View {
         VStack(spacing: 0) {
-            OwnerModalChrome(
-                title: "Edit",
+            OwnerModalActionBar(
                 leadingTitle: "Cancel",
-                leadingAction: { dismiss() }
+                leadingAction: { dismiss() },
+                trailingTitle: "Save",
+                trailingAction: save
             ) {
-                HStack(spacing: 12) {
-                    OwnerHelpButton()
-                    OwnerModalTrailingAction(title: "Save", action: save)
-                }
+                OwnerModalHelpButton()
             }
 
             ScrollView {
