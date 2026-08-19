@@ -40,6 +40,7 @@ struct NFCView: View {
                 VStack(spacing: 16) {
                     factsCard
                     setupCard
+                        .padding(.top, 4)
                     scanCard
                     // Under the Scan box — same tap card first responders get.
                     firstResponderPreviewLink
@@ -149,7 +150,7 @@ struct NFCView: View {
     private var setupCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("SET UP")
-                .font(.system(size: 11, weight: .semibold))
+                .font(.system(size: 12, weight: .semibold))
                 .kerning(0.6)
                 .foregroundColor(.redmedMuted)
 
@@ -164,7 +165,7 @@ struct NFCView: View {
                     }
                     Text(writeButtonTitle)
                 }
-                .font(.system(size: 16, weight: .bold))
+                .font(.system(size: 17, weight: .bold))
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
@@ -183,13 +184,13 @@ struct NFCView: View {
 
             if !profile.hasData {
                 Text("Add your name on RedMed before writing a tag.")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.redmedAccent)
             }
 
             if !band.statusMessage.isEmpty {
                 Text(band.statusMessage)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundColor(statusIsError ? .redmedAccent : .redmedMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -384,7 +385,7 @@ struct NFCView: View {
                 .frame(width: 5, height: 5)
                 .padding(.top, 6)
             Text(text)
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.redmedMuted)
                 .lineSpacing(2)
         }
