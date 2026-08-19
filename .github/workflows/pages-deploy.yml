@@ -63,10 +63,19 @@ jobs:
         run: |
           if [ -z "$TOKEN" ] || [ -z "$ACCOUNT" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "::warning::CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID not set. Direct Upload skipped. Connect Roooted1776/frisky to Pages project redmed in the Cloudflare dashboard (wrangler.toml) or add the secrets and re-run. Live /tapper/ stays 404 until one of those lands."
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Require Cloudflare deploy credentials
+        if: steps.cf.outputs.skip == 'true'
+        run: |
+          echo "::error::CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID not set — live /tapper/ stays 404 and repo pages never publish."
+          echo "Fix one of:"
+          echo "  1) GitHub repo Settings → Secrets → add CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID, then re-run Pages tapper deploy"
+          echo "  2) Cloudflare Dashboard → Pages project redmed → Connect to Roooted1776/frisky (branch main, output dir .)"
+          echo "Until then https://redmed.pages.dev/tapper/ will not match this repo."
+          exit 1
 
       - name: Deploy to Cloudflare Pages
         if: steps.cf.outputs.skip != 'true'
