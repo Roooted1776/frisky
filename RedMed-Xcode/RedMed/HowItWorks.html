@@ -5,21 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#fff7f7">
 <title>RedMed — How It Works</title>
+<style>html,body{background:#fff7f7!important;margin:0}</style>
 <link rel="stylesheet" href="legal-doc.css">
 <script>
 (function () {
   // Owner app is iPhone-only. Everyone else (Android, desktop, EMT phones)
   // opens the same passerby web card — no install, no account.
   var APP = "redmed://main";
-  var WEB = "../tapper/index.html";
-  try {
-    // Bundled under RedMed/ → sibling tapper.html; Pages/repo → /tapper/.
-    if (/\/RedMed\//.test(location.pathname) || location.protocol === "file:") {
-      WEB = "tapper.html";
-    } else {
-      WEB = "/tapper/" + (location.search || "") + (location.hash || "");
-    }
-  } catch (e) {}
+  var WEB = "https://redmed.pages.dev/tapper/" + (location.search || "") + (location.hash || "");
 
   var ua = navigator.userAgent || "";
   var isIOS = /iPhone|iPad|iPod/i.test(ua) ||
@@ -55,7 +48,7 @@
     <strong>Owner app</strong>
     Profile editing, Aid treatments, and band setup live in the RedMed iPhone app.
     <a href="redmed://main">Open RedMed (iPhone)</a>
-    · <a href="tapper.html">Open emergency card (any phone)</a>
+    · <a href="https://redmed.pages.dev/tapper/">Open emergency card (any phone)</a>
   </aside>
 
   <hr class="legal-rule-thin" aria-hidden="true">
@@ -75,7 +68,7 @@
 
   <article class="legal-body">
     <p><strong>iPhone owners:</strong> <a href="redmed://main">Open the RedMed app</a>.</p>
-    <p><strong>Any phone (EMT / helper / Android / desktop):</strong> <a href="tapper.html">Open the emergency card</a> — RedMed · 911 · Aid in the browser. No app install.</p>
+    <p><strong>Any phone (EMT / helper / Android / desktop):</strong> <a href="https://redmed.pages.dev/tapper/">Open the emergency card</a> — RedMed · 911 · Aid in the browser. No app install.</p>
     <p>In an emergency in the United States, call <strong>911</strong> first — before reading Aid content or writing a band.</p>
     <p>Related: <a href="Help.html#privacy">Privacy Policy</a> · <a href="Help.html#terms">Terms Of Service</a> · <a href="Help.html#security">Security</a></p>
   </article>

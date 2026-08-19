@@ -25,7 +25,7 @@ enum HelpDocument {
     }
 }
 
-// MARK: - WebView wrapper (policies + passerby card only)
+// MARK: - WebView wrapper (bundled Help / policy HTML only)
 struct LocalWebView: UIViewRepresentable {
     let filename: String
     var fragment: String? = nil
@@ -69,36 +69,37 @@ struct LocalWebView: UIViewRepresentable {
             return
         }
 
-        guard let url = Bundle.main.url(forResource: filename, withExtension: "html"),
-              var html = try? String(contentsOf: url, encoding: .utf8) else { return }
+        guard let url = Bundle.main.url(forResource: filename, withExtension: "html") else { return }
         context.coordinator.loadedKey = key
         context.coordinator.didLoadHTML = true
-        // Cream before first paint — file loads can flash system white before CSS.
-        let cream = "<style>html,body{background:#fff7f7!important;margin:0}</style>\n"
-        if let range = html.range(of: "<head>") {
-            html.replaceSubrange(range, with: "<head>\n" + cream)
-        } else {
-            html = cream + html
-        }
-        // File URL as base so in-page hashes and legal-doc.css resolve locally.
-        webView.loadHTMLString(html, baseURL: url)
+        // Real file load so #privacy / #terms / #security and sibling Help.html
+        // links resolve. loadHTMLString blocked those as local-resource navigations.
+        webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
     }
 
-    /// Policy HTML + stylesheet only — never lateral loads into tapper.html / other bundle files.
+    /// Policy HTML + stylesheet only — never lateral loads into tapper.html.
     private static let allowedFileBasenames: Set<String> = [
         "Help.html",
         "PrivacyPolicy.html",
         "TOS.html",
         "security.html",
-        // Redirect-only → redmed://main (iPhone) or tapper.html (any device).
+        // Redirect-only → redmed://main (iPhone) or hosted tapper (any device).
         "HowItWorks.html",
-        "legal-doc.css",
-        // Passerby card — policy “Emergency card (any phone)” CTA.
+        "legal-doc.css"
+    ]
+
+    /// Passerby shell filenames. Open the hosted card in Safari — do not dump
+    /// an empty tapper.html into the Help webview.
+    private static let passerbyShellFiles: Set<String> = [
         "tapper.html",
-        "BrandLogo.png",
-        "pheart.png",
-        "BrandWordmark.png",
-        "sw.js"
+        "card.html"
+    ]
+
+    /// Legacy one-file stubs → Help.html anchors.
+    private static let policyStubFragments: [String: String] = [
+        "PrivacyPolicy.html": "privacy",
+        "TOS.html": "terms",
+        "security.html": "security"
     ]
 
     /// Blocks in-webview navigation to untrusted schemes; opens http(s)/tel/mailto/redmed externally.
@@ -108,11 +109,27 @@ struct LocalWebView: UIViewRepresentable {
         var didLoadHTML = false
 
         func scrollToFragment(in webView: WKWebView) {
-            guard let fragment, !fragment.isEmpty else { return }
-            let safe = fragment.filter { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" }
-            guard safe == fragment else { return }
+            guard let fragment else { return }
+            jumpToPolicyFragment(fragment, in: webView)
+        }
+
+        func jumpToPolicyFragment(_ id: String, in webView: WKWebView) {
+            let safe = id.filter { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" }
+            guard safe == id, !safe.isEmpty else { return }
+            // replaceState, not location.hash — assigning hash can reload the file.
             webView.evaluateJavaScript(
-                "document.getElementById('\(safe)')?.scrollIntoView({block:'start'})"
+                """
+                (function(){
+                  var id = '\(safe)';
+                  var el = document.getElementById(id);
+                  if (el) el.scrollIntoView({block:'start'});
+                  try { history.replaceState(null, '', '#' + id); } catch (e) {}
+                  document.querySelectorAll('.legal-nav a').forEach(function (a) {
+                    if (a.getAttribute('href') === '#' + id) a.setAttribute('aria-current', 'page');
+                    else a.removeAttribute('aria-current');
+                  });
+                })();
+                """
             )
         }
 
@@ -132,7 +149,27 @@ struct LocalWebView: UIViewRepresentable {
             }
             if url.isFileURL {
                 let name = url.lastPathComponent
+                if LocalWebView.passerbyShellFiles.contains(name) {
+                    if let hosted = URL(string: AppConfig.medicalCardBaseURL) {
+                        UIApplication.shared.open(hosted, options: [:], completionHandler: nil)
+                    }
+                    decisionHandler(.cancel)
+                    return
+                }
+                if navigationAction.navigationType == .linkActivated,
+                   let dest = Self.policyDestination(file: name, fragment: url.fragment),
+                   isShowingHelp(webView) {
+                    decisionHandler(.cancel)
+                    fragment = dest
+                    jumpToPolicyFragment(dest, in: webView)
+                    return
+                }
                 if LocalWebView.allowedFileBasenames.contains(name) {
+                    if let dest = url.fragment, !dest.isEmpty {
+                        fragment = dest
+                    } else if let dest = LocalWebView.policyStubFragments[name] {
+                        fragment = dest
+                    }
                     decisionHandler(.allow)
                 } else {
                     decisionHandler(.cancel)
@@ -147,6 +184,23 @@ struct LocalWebView: UIViewRepresentable {
             default:
                 decisionHandler(.cancel)
             }
+        }
+
+        private func isShowingHelp(_ webView: WKWebView) -> Bool {
+            if webView.url?.lastPathComponent == "Help.html" { return true }
+            if loadedKey?.split(separator: "#", maxSplits: 1).first.map(String.init) == "Help" {
+                return true
+            }
+            return false
+        }
+
+        private static func policyDestination(file: String, fragment: String?) -> String? {
+            if file == "Help.html",
+               let fragment,
+               fragment == "privacy" || fragment == "terms" || fragment == "security" {
+                return fragment
+            }
+            return LocalWebView.policyStubFragments[file]
         }
 
         func webView(
