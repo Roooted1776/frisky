@@ -71,6 +71,8 @@ final class FaceIDFramePlayerView: UIView {
     @available(*, unavailable)
     required init?(coder: NSCoder) { nil }
 
+    deinit { stop() }
+
     /// Off this turn so Face ID `onAppear` is not paying AVPlayer setup.
     func schedulePrepare() {
         guard !prepareStarted else { return }
