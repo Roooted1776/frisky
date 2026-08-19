@@ -552,7 +552,16 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
                 "(document.body && document.body.childElementCount > 0) ? 1 : 0"
             ) { [weak self] result, error in
                 guard let self else { return }
-                let ok = (result as? Int).map { $0 > 0 } ?? ((result as? Bool) ?? false)
+                let ok: Bool
+                if let n = result as? NSNumber {
+                    ok = n.intValue > 0
+                } else if let n = result as? Int {
+                    ok = n > 0
+                } else if let b = result as? Bool {
+                    ok = b
+                } else {
+                    ok = false
+                }
                 if error != nil || !ok {
                     self.loadedKey = nil
                     self.shellLoaded = false
