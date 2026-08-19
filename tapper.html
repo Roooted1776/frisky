@@ -2249,6 +2249,7 @@
   // Native owner embed: push profile after Edit without loadHTMLString.
   window.__redmedApplyProfile = function (raw, linkedFlag) {
     try {
+      window.__redmedNativeProfile = true;
       if (linkedFlag === true || linkedFlag === false) {
         window.__REDMED_BRACELET_LINKED = linkedFlag;
       }
@@ -2277,6 +2278,20 @@
       }
     } catch (e0) {}
     decodeProfile().then(function (p) {
+      // Native JS push can land between this decrypt start and settle. Do not
+      // paint the empty/#d= result over a profile Swift already applied —
+      // that race left the owner RedMed tab cream / empty on some opens.
+      if (window.__redmedNativeProfile) {
+        afterPaint();
+        return;
+      }
+      if (window.__REDMED_PROFILE) {
+        try {
+          renderProfile(sanitizeProfile(window.__REDMED_PROFILE), true);
+          afterPaint();
+          return;
+        } catch (e1) {}
+      }
       renderProfile(p, p != null);
       afterPaint();
     });
