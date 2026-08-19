@@ -118,17 +118,3 @@ struct PrivacySnapshotGuard<Content: View>: View {
         .accessibilityHidden(true)
     }
 }
-
-extension View {
-    /// Blocks system autofill / keyboard learning caches for PHI fields.
-    /// Snapshot redaction is `.privacySensitive()` on the Edit sheet, not here —
-    /// per-field redaction reused the first TextField coordinator.
-    func vaultSafeTextInput(
-        capitalization: TextInputAutocapitalization = .sentences
-    ) -> some View {
-        self
-            .textContentType(nil as UITextContentType?)
-            .autocorrectionDisabled(true)
-            .textInputAutocapitalization(capitalization)
-    }
-}
