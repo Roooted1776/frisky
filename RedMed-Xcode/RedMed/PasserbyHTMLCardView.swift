@@ -250,33 +250,41 @@ enum PasserbyWebViewPool {
         }
         if let warmTask { return warmTask }
         // Explicit Task result type — bare `return nil` fails typecheck in this closure.
+        // Keep MainActor responsive: disk IO + big String work happens off-main,
+        // then we create/load the WKWebView back on MainActor.
         let task = Task<WKWebView?, Never> { @MainActor in
             if Task.isCancelled { return .none }
-            // Shell HTML may still be filling from a detached warm — read through
-            // the lock (loads from bundle once if needed).
-            let webView = makeConfiguredWebView(navigationDelegate: nil)
-            guard let fileURL = PasserbyShellCache.shellFileURL(),
-                  var html = PasserbyShellCache.shellHTML() else {
-                return .none
-            }
-            if Task.isCancelled { return .none }
-            // App-embed chrome only — no PHI. Real profile arrives via JS push or full load.
-            let boot = """
-            <style>html,body{background:#fff7f7!important;margin:0}</style>
-            <script>
-            window.__REDMED_APP_PREVIEW=1;
-            window.__REDMED_APP_EMBED=1;
-            window.__REDMED_BRACELET_LINKED=false;
-            try{document.documentElement.classList.add('app-embed');}catch(e0){}
-            </script>
 
-            """
-            if let range = html.range(of: "<head>") {
-                html.replaceSubrange(range, with: "<head>\n" + boot)
-            } else {
-                html = boot + html
-            }
-            webView.loadHTMLString(html, baseURL: fileURL)
+            let prepared: (String, String)? = await Task.detached(priority: .userInitiated) {
+                guard let fileURL = PasserbyShellCache.shellFileURL(),
+                      var html = PasserbyShellCache.shellHTML() else {
+                    return nil
+                }
+
+                // App-embed chrome only — no PHI. Real profile arrives via JS push or full load.
+                let boot = """
+                <style>html,body{background:#fff7f7!important;margin:0}</style>
+                <script>
+                window.__REDMED_APP_PREVIEW=1;
+                window.__REDMED_APP_EMBED=1;
+                window.__REDMED_BRACELET_LINKED=false;
+                try{document.documentElement.classList.add('app-embed');}catch(e0){}
+                </script>
+
+                """
+                if let range = html.range(of: "<head>") {
+                    html.replaceSubrange(range, with: "<head>\n" + boot)
+                } else {
+                    html = boot + html
+                }
+                return (fileURL.path, html)
+            }.value
+
+            guard let (filePath, html) = prepared else { return .none }
+            if Task.isCancelled { return .none }
+
+            let webView = makeConfiguredWebView(navigationDelegate: nil)
+            webView.loadHTMLString(html, baseURL: URL(fileURLWithPath: filePath))
             if Task.isCancelled { return .none }
             warmedEmbed = webView
             return webView
