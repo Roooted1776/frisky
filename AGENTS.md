@@ -97,7 +97,7 @@ The app has no backend, database, or web service.
   lock on `.inactive` — LAContext / system auth sheets put the scene inactive
   and would discard a successful unlock via `authGeneration`.
 - Owner app lock is **biometrics only before Main**. Front page is
-  `LockEntryPage`: user-page cream + Higgs `FaceIDFrame` clip. Path: open →
+  `LockEntryPage`: user-page cream + static medical mark. Path: open →
   first Face ID → Main. No passcode / password pad on that Face ID (no
   `Enter Passcode` fallback). Passerby `tapper.html` never has Face ID,
   passcode, login, or any page in front of the card. No glyph, no Help on

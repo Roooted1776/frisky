@@ -371,7 +371,7 @@ enum RedMedChrome {
     static let unlockButtonRadius: CGFloat = 20
     /// Small lock-load medical mark (not BrandLogo asset, not Apple Face ID).
     static let unlockGlyphSize: CGFloat = 56
-    /// Higgs Face ID–frame clip — square, cream-margin, sits where the glyph is.
+    /// Face-page square mark — same red medical circle as lock entry.
     static let unlockFrameSize: CGFloat = 96
     /// Tapper / empty YOU-card BrandLogo diameter (`--logo` matches).
     static let logoSize: CGFloat = 72
@@ -385,7 +385,7 @@ enum RedMedChrome {
 }
 
 /// Original medical lock mark — heart + static EKG, Face ID–sized.
-/// Face-page fallback when FaceIDFrame is missing / Reduce Motion / Low Power.
+/// Face-page static mark — heart + EKG. Not Apple Face ID scan rings.
 /// One-shot squash-settle; not Apple Face ID scan rings, not `BrandLogo`.
 struct LockMedGlyph: View {
     var size: CGFloat = RedMedChrome.unlockGlyphSize

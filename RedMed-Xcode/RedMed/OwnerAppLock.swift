@@ -17,7 +17,7 @@ import SwiftUI
 /// prefetch / fail-closed load) but does **not** open Main without auth.
 ///
 /// Every owner launch is Face ID before Main (no passcode pad). Front page is
-/// `LockEntryPage`: cream + Higgs `FaceIDFrame` clip, first Face ID, then Main.
+/// `LockEntryPage`: cream + static medical mark, first Face ID, then Main.
 /// After cancel / mismatch, **Face** (`FacePage`) with **Proceed** replaces
 /// that shell. No second Face ID this process after success (Edit / NFC / vault
 /// skip). Erase still prompts. No LockOpen clip.
@@ -69,7 +69,6 @@ struct OwnerAppLock<Content: View>: View {
             case .locked:
                 if showUnlockControl {
                     FacePage(
-                        playing: scenePhase != .background,
                         screenCaptured: screenCaptured,
                         biometryFailed: biometryFailed,
                         profileLoadFailed: profileLoadFailed,
@@ -77,7 +76,7 @@ struct OwnerAppLock<Content: View>: View {
                         onProceed: { startUnlockPipeline(isAuto: false) }
                     )
                 } else {
-                    LockEntryPage(playing: scenePhase != .background)
+                    LockEntryPage()
                 }
             }
         }

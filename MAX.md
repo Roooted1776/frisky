@@ -44,7 +44,7 @@ See also `AGENTS.md`. High-signal recap:
 3. Settings = **haptic + Location only**. Brightness 100% + system volume 100% + locator siren arm on crash / severe-impact (`CrashMotionGuard`), owner **SOS · Locate me**, or **real bracelet NFC** open of `tapper.html#d=…` (hardware-local SOS on that phone). Owner Find Help open, bare `/tapper/`, and in-app scanner preview do **not** auto-arm.
 4. Survival hold may keep siren + max volume + brightness through background until cancel on Aid (or Stop SOS on Find Help).
 5. Vault Face ID: relock on **`.background` only** (not `.inactive` — Face ID sheets).
-6. Owner lock: front page is `LockEntryPage` — Higgs `FaceIDFrame` on user cream,
+6. Owner lock: front page is `LockEntryPage` — static medical mark on user cream,
    first Face ID, then Main. No passcode pad on that Face ID. Passerby tapper
    has no Face ID / password / login in front of the card. After cancel /
    mismatch, **Face** page with Proceed. No second Face ID this process after
@@ -83,7 +83,7 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Owner app on first launch; `Main.swift` owner shell; HTML policies redirect `redmed://main`.
 - Deferred all Core Location until Find Help; fixed SIGTERM/launch confusion.
 - Cold launch: LaunchBackground only on UILaunchScreen (no system BrandLogo).
-  Every owner launch: Higgs `FaceIDFrame` + first Face ID on `LockEntryPage`,
+  Every owner launch: static medical mark + first Face ID on `LockEntryPage`,
   then Main. Cancel / mismatch opens the **Face** page (Proceed). No second
   Face ID this process after success. Face ID kicks immediately on cold
   `.inactive` (waiting for `.active` was the cream hang). Prefetch still starts

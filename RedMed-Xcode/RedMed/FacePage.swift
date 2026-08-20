@@ -2,9 +2,8 @@ import SwiftUI
 
 /// Lock retry page after Face ID cancel / mismatch. Title **Face**.
 /// Single **Proceed** CTA. Cream user-page fill. Not a dock over LockEntryPage.
-/// Clip never gates Face ID. Missing file / Reduce Motion / Low Power → glyph.
+/// Static medical mark — never gates Face ID.
 struct FacePage: View {
-    var playing: Bool
     var screenCaptured: Bool
     var biometryFailed: Bool
     var profileLoadFailed: Bool
@@ -30,7 +29,13 @@ struct FacePage: View {
                     .frame(height: 1)
 
                 Spacer(minLength: 0)
-                mark
+                LockMedGlyph()
+                    .frame(
+                        width: RedMedChrome.unlockFrameSize,
+                        height: RedMedChrome.unlockFrameSize
+                    )
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
                 Spacer(minLength: 0)
 
                 VStack(spacing: 14) {
@@ -68,22 +73,5 @@ struct FacePage: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Face")
-    }
-
-    @ViewBuilder
-    private var mark: some View {
-        Group {
-            if FaceIDFrameClip.shouldPlay {
-                FaceIDFrameVideo(playing: playing)
-                    .frame(
-                        width: RedMedChrome.unlockFrameSize,
-                        height: RedMedChrome.unlockFrameSize
-                    )
-            } else {
-                LockMedGlyph()
-            }
-        }
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
     }
 }
