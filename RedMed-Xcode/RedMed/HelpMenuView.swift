@@ -92,6 +92,7 @@ struct LocalWebView: UIViewRepresentable {
     /// an empty tapper.html into the Help webview.
     private static let passerbyShellFiles: Set<String> = [
         "tapper.html",
+        "index.html",
         "card.html"
     ]
 

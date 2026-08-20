@@ -10,10 +10,28 @@
 <meta name="color-scheme" content="light">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; worker-src 'self'; connect-src 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="no-referrer">
-<!-- Favicon / touch icon set in resolveLogo after first profile paint. -->
+<!-- Favicon wired in resolveLogo from pheart.png (preset src + fallbacks). -->
 <title>RedMed — tap to scan</title>
 <style>html,body{background:#fff7f7!important;margin:0}</style>
-<link rel="preload" as="image" href="pheart.png" fetchpriority="high">
+<script>
+// Same-origin asset paths for /tapper/, /tapper.html, and bundle roots.
+function redmedAssetURL(file) {
+  try {
+    var path = location.pathname || '';
+    var i = path.indexOf('/tapper/');
+    if (i >= 0) return path.slice(0, i + 7) + file;
+    if (/\/tapper$/i.test(path)) return path + '/' + file;
+  } catch (e) {}
+  return file;
+}
+</script>
+<link rel="preload" as="image" href="pheart.png" fetchpriority="high" id="redmedLogoPreload">
+<script>
+(function () {
+  var link = document.getElementById('redmedLogoPreload');
+  if (link) link.href = redmedAssetURL('pheart.png');
+})();
+</script>
 <script>
 // Prefetch AES key while HTML parses — overlaps with body download on band taps.
 (function () {
@@ -84,8 +102,8 @@
        walk-by ~6–8″ does not fire, reliable coupling dies past ~4″,
        passive 13.56 MHz HF NFC (not Bluetooth) → Safari opens this page
        (apple-mobile-web-app-capable=no so iOS BTR is not a Home Screen web app)
-     - Logo: pheart.png / BrandLogo.png 216px (bundle /tapper/) or assets/
-       copies (Pages); cream #fff7f7 around the circle. YOU-card medical
+     - Logo: pheart.png only on YOU-card — cream #fff7f7 watermark tile (216px).
+       Not transparent BrandLogo (NFC / wordmark only). Bundle /tapper/ + assets/
        header mark stays next to the name on empty and named cards. Deferred
        until after profile paint (in-app Preview / owner embed included).
      - Legacy card.html / get.html /get/ redirect to /tapper/ and keep #d=
@@ -298,10 +316,10 @@
     flex-shrink: 0;
     display: block;
     object-fit: cover;
-    background: #fff; /* white underlay so the logo renders cleanly on first paint */
+    background: transparent; /* cream #fff7f7 is baked into pheart.png watermark tile */
     opacity: 1;
   }
-  /* No src until resolveLogo — hide broken-image chrome on EMT open. */
+  /* Preset src on #rmLogo; resolveLogo falls back on error. */
   .rm-logo:not([src]) { visibility: hidden; }
   .rm-name {
     font-size: var(--fs-name);
@@ -1541,14 +1559,19 @@
     }
     var preset = img.getAttribute('src');
     if (preset) {
-      ensureIconLinks().forEach(function (el) { el.setAttribute('href', preset); });
+      var resolved = redmedAssetURL(preset.replace(/^\.\//, ''));
+      if (resolved !== preset) img.setAttribute('src', resolved);
+      ensureIconLinks().forEach(function (el) { el.setAttribute('href', img.getAttribute('src') || resolved); });
       img.onerror = function () {
         img.removeAttribute('src');
         resolveLogo();
       };
       return;
     }
-    var candidates = ['pheart.png', 'BrandLogo.png', 'assets/pheart.png', 'assets/BrandLogo.png'];
+    var candidates = [
+      redmedAssetURL('pheart.png'),
+      'assets/pheart.png'
+    ];
     var i = 0;
     function apply(src) {
       img.src = src;
@@ -1944,6 +1967,7 @@
     } catch (e0) {}
     // GPS only when 911 is open — medical open must not trigger a location popup.
     if (id === '911') ensureGeo();
+    if (id === 'aid') ensureAidChrome();
   }
 
   function decodeProfile() {
@@ -2159,7 +2183,19 @@
   showTab('medical');
   tabAnimReady = true;
 
-  // Aid accordion + topic sheets — idle until after profile decode starts.
+  // Aid accordion + topic sheets — idle by default; eager when Aid tab opens.
+  var aidChromeReady = false;
+  function ensureAidChrome() {
+    if (aidChromeReady) return;
+    aidChromeReady = true;
+    initAidChrome();
+  }
+  document.addEventListener('click', function (ev) {
+    var t = ev.target;
+    if (!t || !t.closest) return;
+    if (t.closest('#panel-aid') || t.closest('[data-tab="aid"]')) ensureAidChrome();
+  }, true);
+
   function initAidChrome() {
     (function aidAccordion() {
       var root = document.getElementById('panel-aid');
@@ -2314,7 +2350,7 @@
       back.addEventListener('click', function () { closeSheet(); });
     })();
   }
-  scheduleIdle(initAidChrome);
+  scheduleIdle(ensureAidChrome);
 
   // Owner RedMed embed only — native boot sets html.app-embed before first paint.
   // Preview / Scan use ?src=app / __REDMED_APP_PREVIEW (no SOS) but keep full
@@ -2328,7 +2364,7 @@
 
   // Owner embed: Not linked / Linked bracelet → native NFC tab (ContentView).
   // Passerby / Preview / Scan: no-op (no NFC tab; status is display-only).
-  scheduleIdle(function wireStatusNFCLink() {
+  function wireStatusNFCLink() {
     var statusEl = document.getElementById('statusLine');
     if (!statusEl || statusEl.__redmedNfcWired) return;
     statusEl.__redmedNfcWired = true;
@@ -2348,7 +2384,12 @@
         openNFC();
       }
     });
-  });
+  }
+  if (document.documentElement.classList.contains('app-embed')) {
+    wireStatusNFCLink();
+  } else {
+    scheduleIdle(wireStatusNFCLink);
+  }
 
   function setCoords(lat, lon, acc) {
     if (!isFinite(lat) || !isFinite(lon)) return;
