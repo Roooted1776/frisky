@@ -1,8 +1,9 @@
 # Band engraving + NFC / QR sourcing
 
 Product note for physical RedMed bracelets. Matches the shipping model:
-passive NTAG NDEF URI → `https://getredmed.com/tapper/#d=…` (profile only in
-the fragment; no RedMed backend).
+passive NTAG NDEF URI → `AppConfig.medicalCardBaseURL#d=…` (currently
+`https://redmed.pages.dev/tapper/#d=…`; `getredmed.com` only after
+`docs/domain.md` cutover). Profile only in the fragment; no RedMed backend.
 
 **Mold, color, and engraving below are locked product law.** Do not reopen for
 vendor preference, “also black,” metal-plate SKUs, or extra face copy without an
@@ -81,7 +82,7 @@ Do not substitute slogans, URLs, or vendor names.
 | Avoid | NTAG213, MIFARE, LF 125 kHz, UHF, pre-encoded vendor URLs, password-locked UID products you cannot overwrite from CoreNFC |
 | Factory NDEF | Leave **empty** (or a harmless stub). Owner overwrites on first Write in the NFC tab (`OwnerBandURI` / `#d=` only). |
 | QR (optional, outer only) | App Store listing URL only (`AppConfig.appStoreURL`). **Do not** QR-encode `tapper/#d=…`. If the plate only fits one mark, **`MED ID` wins** — omit QR. |
-| Chip (NDEF) | `https://getredmed.com/tapper/#d=<base64url>` — written by RedMed app only (`OwnerBandURI`). |
+| Chip (NDEF) | `AppConfig.medicalCardBaseURL#d=<base64url>` — currently `https://redmed.pages.dev/tapper/#d=` (`OwnerBandURI`). `getredmed.com` after domain cutover. |
 
 **Do not** pair the band with a third-party QR/NFC “profile” SaaS (Seritag Linking,
 Tap NFC cloud, Linktree, bit.ly medical short-links, MedicAlert-style hosted

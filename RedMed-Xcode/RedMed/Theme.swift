@@ -118,7 +118,8 @@ struct PrimaryButton: View {
 }
 
 /// Full-width CTA from the original Face ID unlock dock — gradient fill,
-/// continuous corners, white hairline. Help on the RedMed user page uses this.
+/// continuous corners, white hairline. Face page **Proceed** still uses this.
+/// Owner RedMed tab no longer mounts a bottom Help dock.
 struct UnlockScreenButton: View {
     let title: String
     var disabled: Bool = false
@@ -163,8 +164,8 @@ struct UnlockScreenButton: View {
 }
 
 /// Trailing chrome text — owner **Edit**, NFC Preview **Back**, scanner **Back**, Aid topic **Back**.
-/// Help on the RedMed user page is `UnlockScreenButton` at the bottom, not this.
-/// Help on 911 / Aid / NFC stays top chrome. No Help on the Face ID lock shell.
+/// Help on 911 / Aid / NFC / Edit stays chrome text, not a bottom dock.
+/// No Help on the Face ID lock shell or the owner RedMed tab itself.
 /// Accent red text only — no chip / box fill (plain link over the HTML shell).
 struct ChromeTextAction: View {
     let title: String
