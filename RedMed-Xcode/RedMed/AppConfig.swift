@@ -15,10 +15,10 @@ enum AppConfig {
     /// (local-only). Hosted Pages must serve the tapper shell (RedMed · 911 · Aid).
     /// Local: `./scripts/deploy-pages.sh`. Live: `DEPLOY=1` + CF tokens, or the
     /// `Pages tapper deploy` GitHub Action on `main`.
-    /// Write base stays `redmed.pages.dev` until `getredmed.com` DNS + Pages
-    /// custom domain are green (`docs/domain.md`). Do not flip to the custom
-    /// host while it NXDOMAINs — NFC bands would open a dead URL.
-    static let medicalCardBaseURL = "https://redmed.pages.dev/tapper/"
+    /// Write base is public GitHub Pages until Cloudflare `redmed.pages.dev`
+    /// publishes or `getredmed.com` DNS + custom domain are green
+    /// (`docs/domain.md`). Do not flip to `getredmed.com` while it NXDOMAINs.
+    static let medicalCardBaseURL = "https://roooted1776.github.io/tapper/"
 
     /// Deep link target for policy / card HTML “open owner app” redirects.
     static let mainAppURL = "redmed://main"

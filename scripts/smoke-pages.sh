@@ -7,7 +7,7 @@ exec python3 - "$@" <<'PY'
 
 Usage:
   ./scripts/smoke-pages.sh
-  BASE=https://redmed.pages.dev ./scripts/smoke-pages.sh
+  BASE=https://roooted1776.github.io ./scripts/smoke-pages.sh
 """
 from __future__ import annotations
 

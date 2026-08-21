@@ -30,8 +30,9 @@ Native iOS medical ID + emergency aid. Passive **13.56 MHz HF NFC** bracelet (no
 - **Owner app** (`Main` / `ContentView`): RedMed · 911 · Aid · NFC (+ Edit). Local Keychain profile, Face ID gates, write passive NFC band.
 - **Passerby / scanner**: `tapper.html#d=…` / `PublicCardView` — RedMed · 911 · Aid only. Snapshot profile. No Edit, no NFC, no owner pref mutation.
 - Hosted passerby path: `AppConfig.medicalCardBaseURL` — currently
-  `https://redmed.pages.dev/tapper/` (`tapper/index.html`). Locked custom-host
+  `https://roooted1776.github.io/tapper/` (`tapper/index.html`). Locked custom-host
   pick is `getredmed.com` (`docs/domain.md`); do not flip AppConfig while NXDOMAIN.
+  `redmed.pages.dev` is optional until CF secrets land.
 - Positioning: local EMS assist / fast ID handoff — not a medical device, no outcome promises, call 911 first. HIPAA-aligned offline posture; no false certification claims.
 
 ## Permanent decisions he has locked (do not regress)
@@ -41,9 +42,9 @@ See also `AGENTS.md`. High-signal recap:
 1. Owner vs scanner shells are permanent product law.
 2. **Owner band data independence:** owner Write packs only
    `AppConfig.medicalCardBaseURL#d=…` (`OwnerBandURI`). Current base is
-   `https://redmed.pages.dev/tapper/`. Locked pick after cutover:
+   `https://roooted1776.github.io/tapper/`. Locked pick after cutover:
    `https://getredmed.com/tapper/`. No vendor tag-management cloud, no
-   social/short-link URL on the chip, no BLE. Pages hosts the static shell;
+   social/short-link URL on the chip, no BLE. Pages/GitHub Pages host the static shell;
    PHI stays in the fragment. Do not write `getredmed.com` onto bands while
    it NXDOMAINs.
 3. Settings = **haptic + Location only**. Brightness 100% + system volume 100% + locator siren arm on crash / severe-impact (`CrashMotionGuard`), owner **SOS · Locate me**, or **real bracelet NFC** open of `tapper.html#d=…` (hardware-local SOS on that phone). Owner Find Help open, bare `/tapper/`, and in-app scanner preview do **not** auto-arm.
@@ -176,13 +177,12 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 
 ## Open / watch items (as of 2026-08-20)
 
-- **Live passerby 404 (blocks band taps):** `https://redmed.pages.dev/tapper/`
-  is 404. `getredmed.com` NXDOMAIN (not registered). Pages tapper deploy fails
-  on `main`: `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` are not in repo
-  secrets. Agents cannot publish. Max must add those two GitHub secrets (or
-  connect Cloudflare Pages project `redmed` → `Roooted1776/frisky`, branch
-  `main`, output `.`), then re-run **Pages tapper deploy**. Until then NFC
-  writes pack a dead URL. Do not flip AppConfig to `getredmed.com` first.
+- **Live passerby host:** `https://roooted1776.github.io/tapper/` is green
+  (public GitHub Pages user site; AppConfig write base). `redmed.pages.dev`
+  is still 404 until `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` (or
+  Pages Git connect). `getredmed.com` NXDOMAIN — do not flip AppConfig first.
+  Republish shell: `./scripts/publish-github-io.sh` / chunk assemble on
+  `Roooted1776/Roooted1776.github.io`.
 - Official **Cursor Bugbot usage limit** hit on this account — prefer manual Bugbot-style review + Autofix until spend limits raised.
 - GitHub Actions **macOS billing** previously blocked CI; `ios-build.yml` is
   `workflow_dispatch` only. Confirm billing before relying on compile CI.

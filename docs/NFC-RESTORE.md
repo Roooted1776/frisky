@@ -39,7 +39,7 @@ Owner NFC page keeps **both** capabilities on one screen: Write and Scan
   overwriteable stub only — see `docs/band-engraving-and-nfc-sourcing.md`.
 - **Owner data independence:** `NFCWriter` / `ProfileNFCCodec` write only
   `AppConfig.medicalCardBaseURL#d=…` (`OwnerBandURI.isValidWriteURL`). Current
-  base is `https://redmed.pages.dev/tapper/`. Flip to `getredmed.com` only after
+  base is `https://roooted1776.github.io/tapper/`. Flip to `getredmed.com` only after
   `docs/domain.md` cutover is green. No vendor tag-management cloud, no
   social/short-link redirect, no App Store URL on the chip, no BLE. Profile
   lives in `#d=` only; Pages serves the shell.

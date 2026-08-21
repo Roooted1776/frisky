@@ -1,12 +1,12 @@
-# Deploy the tapper shell to Cloudflare Pages so bracelet taps hit
-# https://redmed.pages.dev/tapper/ (RedMed · 911 · Aid — no login, no server).
-# Custom host getredmed.com is cutover-only — see docs/domain.md.
+# Optional Cloudflare Pages deploy for redmed.pages.dev.
+# Live band write base today is https://roooted1776.github.io/tapper/
+# (public GitHub Pages — see docs/domain.md). Custom host getredmed.com
+# is cutover-only.
 #
 # Direct Upload needs CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID.
-# Missing secrets skip upload (warning, not a red X) — connect the GitHub
-# repo to Pages project `redmed` in the Cloudflare dashboard instead
-# (`wrangler.toml` output dir = repo root). Live /tapper/ stays 404 until
-# one of those two paths actually publishes.
+# Missing secrets fail this workflow (does not take down github.io).
+# Connect Pages project `redmed` in the Cloudflare dashboard instead
+# (`wrangler.toml` output dir = repo root) when you want pages.dev live.
 
 name: Pages tapper deploy
 
@@ -67,15 +67,12 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Require Cloudflare deploy credentials
+      - name: Cloudflare secrets optional
         if: steps.cf.outputs.skip == 'true'
         run: |
-          echo "::error::CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID not set — live /tapper/ stays 404 and repo pages never publish."
-          echo "Fix one of:"
-          echo "  1) GitHub repo Settings → Secrets → add CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID, then re-run Pages tapper deploy"
-          echo "  2) Cloudflare Dashboard → Pages project redmed → Connect to Roooted1776/frisky (branch main, output dir .)"
-          echo "Until then https://redmed.pages.dev/tapper/ will not match this repo."
-          exit 1
+          echo "::warning::CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID not set — skipping redmed.pages.dev Direct Upload."
+          echo "Live band write base is https://roooted1776.github.io/tapper/ (docs/domain.md)."
+          echo "To publish pages.dev later: add the two secrets, or connect Pages project redmed to this repo."
 
       - name: Deploy to Cloudflare Pages
         if: steps.cf.outputs.skip != 'true'
@@ -85,11 +82,15 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy . --project-name=redmed --commit-dirty=true
 
-      - name: Smoke live /tapper/ after deploy
+      - name: Smoke live github.io /tapper/
+        run: |
+          set -euo pipefail
+          BASE=https://roooted1776.github.io ./scripts/smoke-pages.sh
+
+      - name: Smoke redmed.pages.dev after CF deploy
         if: steps.cf.outputs.skip != 'true'
         run: |
           set -euo pipefail
-          # Pages CDN can lag a few seconds after Direct Upload.
           ok=0
           for i in 1 2 3 4 5 6 7 8 9 10; do
             if BASE=https://redmed.pages.dev ./scripts/smoke-pages.sh; then
