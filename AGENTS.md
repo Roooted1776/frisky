@@ -176,6 +176,14 @@ it in `init`.
 **Xcode project:** `project.pbxproj` object IDs must stay unique. Duplicate
 `AAAA`/`AABB` IDs silently drop sources from the target (seen when Haptic /
 Brightness collided with HIPAA vault files).
+`IPHONEOS_DEPLOYMENT_TARGET` must be a literal `17.0` in **all four** build
+configs — both project-level and both **target-level** (`PBXNativeTarget
+"RedMed"`). Target-level settings override project-level, so a target-level
+`$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)` silently drops the app to whatever
+the installed Xcode recommends (15.0 on Xcode 26.6) and breaks the build on
+iOS 16+ API — `UnevenRoundedRectangle` in `ContentView`, `Locale.region` in
+`EmergencyNumber`. Never use `$(RECOMMENDED_…)` here; it re-breaks on every
+runner Xcode bump.
 
 **Passerby SW:** shell fetch is **cache-first** (multi-key: `/tapper/`,
 `index.html`, etc.) for **almost-instant** EMT / helper open when Cache
