@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// Owner / scanner RedMed tab — same bundled `tapper.html` medical panel helpers see
-/// on a band tap. Owner keeps Edit top chrome; Help is a bottom unlock-dock
-/// button. Scanners keep Back top chrome + the same bottom Help button.
+/// on a band tap. Owner keeps Edit top chrome only (no bottom Help dock).
+/// Scanners keep Back top chrome. Help lives on Edit / 911 / Aid / NFC.
 /// First-responder Preview lives on the NFC tab under Scan — not here.
 /// Native 911 / Aid / NFC tabs stay separate (HTML tab bar hidden in app-embed).
 struct RedMedView: View {

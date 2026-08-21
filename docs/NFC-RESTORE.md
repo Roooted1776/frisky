@@ -38,9 +38,11 @@ Owner NFC page keeps **both** capabilities on one screen: Write and Scan
 - Chip must be **rewritable** (NDEF not permanently locked). Factory-blank or
   overwriteable stub only — see `docs/band-engraving-and-nfc-sourcing.md`.
 - **Owner data independence:** `NFCWriter` / `ProfileNFCCodec` write only
-  `https://getredmed.com/tapper/#d=…` (`AppConfig.OwnerBandURI.isValidWriteURL`).
-  No vendor tag-management cloud, no social/short-link redirect, no App Store
-  URL on the chip, no BLE. Profile lives in `#d=` only; Pages serves the shell.
+  `AppConfig.medicalCardBaseURL#d=…` (`OwnerBandURI.isValidWriteURL`). Current
+  base is `https://redmed.pages.dev/tapper/`. Flip to `getredmed.com` only after
+  `docs/domain.md` cutover is green. No vendor tag-management cloud, no
+  social/short-link redirect, no App Store URL on the chip, no BLE. Profile
+  lives in `#d=` only; Pages serves the shell.
 - “Paired phone” means this iPhone wrote + verified the chip and stored a local
   link flag. RedMed does **not** keep an active RF session or background-scan
   the band (different from Bluetooth pairing on ~2.4 GHz). iOS Background Tag

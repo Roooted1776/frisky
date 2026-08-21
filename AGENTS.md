@@ -33,17 +33,21 @@ The app has no backend, database, or web service.
 - **Scanner / passerby shell** (`PublicCardView` / bracelet tap → `tapper.html#d=…`,
   `isScannerSession == true`): tabs are **RedMed · 911 · Aid** only — **no Edit**,
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain or
-  owner `@AppStorage` / UserDefaults prefs. Hosted at
-  `https://getredmed.com/tapper/` from `tapper/index.html` (legacy `https://redmed.pages.dev/tapper/` still hosted — see `docs/domain.md`).
+  owner `@AppStorage` / UserDefaults prefs. Hosted passerby path is
+  `AppConfig.medicalCardBaseURL` (currently `https://redmed.pages.dev/tapper/`,
+  from `tapper/index.html`). Locked custom-host pick is `getredmed.com` — flip
+  AppConfig only after `docs/domain.md` cutover is green. Do not write
+  `getredmed.com` onto bands while it NXDOMAINs.
   **Tap-to-view never requires Face ID / biometrics / passcode / login** — owner biometrics gate
   edit, NFC write, vault, and app unlock only. Passerby HTML never asks.
   **Nothing blocks the tap card** (YOU card / Preview / Scan / band tap): no
   privacy veil, no native overlay stealing taps, no login. Safari opens
   `tapper.html#d=` immediately.
-  Native **Help** chrome is on every owner and in-app scanner screen except the
-  Face ID lock shell. Scanner Help is **policies only** (no Settings, Erase, or
-  Write to NFC) so it cannot mutate owner Keychain or `@AppStorage`. Passerby
-  `tapper.html` has no Help button.
+  Native **Help** chrome is on Edit, 911, Aid, NFC, and in-app scanner screens.
+  Not on the Face ID lock shell. Not a bottom dock on the owner RedMed tab
+  (that dock was removed). Scanner Help is **policies only** (no Settings,
+  Erase, or Write to NFC) so it cannot mutate owner Keychain or `@AppStorage`.
+  Passerby `tapper.html` has no Help button.
 - Product HTML is only (1) one passerby file `tapper.html` (identical in `tapper/index.html`,
   repo root, and the app bundle; legacy `card.html` / `get.html` / `/get/` redirect to `/tapper/`, preserving `#d=`) and
   (2) policy pages bundled solely under `RedMed-Xcode/RedMed/`: one `Help.html`
@@ -53,11 +57,12 @@ The app has no backend, database, or web service.
   app; they do not host owner edit UI. Do not reintroduce repo-root copies of
   the policy HTML. Owner Help menu is Settings + Privacy / TOS / Security only (no
   in-app How It Works / MainInfoView, no Local History row, no local tapper.html
-  WebView). Help is reachable from every native screen except the lock shell;
-  RedMed (user) Help is a bottom `UnlockScreenButton` (original unlock-dock CTA);
-  911 / Aid / NFC keep top Help chrome. Scanner Help is policies only. NFC Preview (under Scan) / NFC Scan open bundled `tapper.html#d=`
-  (`?src=app`, no SOS auto-arm);
-  live band taps stay `https://getredmed.com/tapper/#d=` (legacy `pages.dev` bands still open).
+  WebView). Help is on Edit (modal bar) plus 911 / Aid / NFC (top chrome).
+  Owner RedMed tab is Edit-only — no bottom Help dock. Scanner Help is
+  policies only. NFC Preview (under Scan) / NFC Scan open bundled
+  `tapper.html#d=` (`?src=app`, no SOS auto-arm);
+  live band taps use `AppConfig.medicalCardBaseURL#d=` (currently
+  `https://redmed.pages.dev/tapper/#d=`; `getredmed.com` after domain cutover).
 
 - **Bracelet tap (physics, not a setting):** `AppConfig.BraceletRF` is the single
   source of truth — intentional tap ~1–2″, walk-by ~6–8″ does not fire, reliable
@@ -105,7 +110,7 @@ The app has no backend, database, or web service.
   **Proceed** CTA replaces that shell (not a bottom dock). After a successful
   Face ID, Edit / NFC / vault skip Face ID this process. Erase still
   prompts. Do not re-lock into a second Face ID on background. Do **not** play
-  `LockOpen.mp4`. Clip never gates Face ID. Fresh install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
+  `LockOpen.mp4` or `FaceIDFrame.mp4`. Clip never gates Face ID. Fresh install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
   Owner pages + passerby tapper: cream fill only (no page BrandLogo). **No hanging
   decorative brand marks** anywhere (no lock watermark, no Aid pane wordmarks, no
   privacy-cover logo) — page BrandWordmark headers on NFC / topic sheets only;
