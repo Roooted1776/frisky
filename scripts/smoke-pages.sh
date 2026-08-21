@@ -110,6 +110,9 @@ def main() -> int:
     ok &= check("/index.html", "tapper/")
     ok &= check("/BrandLogo.png")
     ok &= check("/BrandWordmark.png")
+    # YOU-card mark — the only image the shell renders.
+    ok &= check("/pheart.png")
+    ok &= check("/tapper/pheart.png")
     ok &= check("/tapper/BrandLogo.png")
     ok &= check("/tapper/BrandWordmark.png")
     ok &= check("/tapper/sw.js", "redmed-tapper-v")

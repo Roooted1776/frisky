@@ -8,7 +8,7 @@
 <meta name="format-detection" content="telephone=yes">
 <meta name="theme-color" content="#fff7f7">
 <meta name="color-scheme" content="light">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; worker-src 'self'; connect-src 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; media-src 'self' blob:; worker-src 'self'; connect-src 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="no-referrer">
 <!-- Favicon wired in resolveLogo from pheart.png (preset src + fallbacks). -->
 <title>RedMed — tap to scan</title>
@@ -19,7 +19,7 @@ function redmedAssetURL(file) {
   try {
     var path = location.pathname || '';
     var i = path.indexOf('/tapper/');
-    if (i >= 0) return path.slice(0, i + 7) + file;
+    if (i >= 0) return path.slice(0, i + '/tapper/'.length) + file;
     if (/\/tapper$/i.test(path)) return path + '/' + file;
   } catch (e) {}
   return file;
@@ -621,7 +621,7 @@ function redmedAssetURL(file) {
     color: var(--muted);
     margin-top: 2px;
   }
-  #panel-medical {
+  #panel-medical.active {
     display: flex;
     flex-direction: column;
     min-height: 100%;
@@ -1570,6 +1570,7 @@ function redmedAssetURL(file) {
     }
     var candidates = [
       redmedAssetURL('pheart.png'),
+      '../assets/pheart.png',
       'assets/pheart.png'
     ];
     var i = 0;

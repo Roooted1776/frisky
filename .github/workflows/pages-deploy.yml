@@ -54,6 +54,9 @@ jobs:
           test -f BrandWordmark.png
           test -f tapper/BrandLogo.png
           test -f tapper/BrandWordmark.png
+          test -f pheart.png
+          test -f tapper/pheart.png
+          test -f assets/pheart.png
 
       - name: Cloudflare secrets
         id: cf
