@@ -11,7 +11,7 @@
  * putShell is HTML-only. Optional assets use putAsset so logos / sw.js never
  * overwrite shell keys (that poison served PNG/JS as /tapper/).
  */
-var CACHE = 'redmed-tapper-v114';
+var CACHE = 'redmed-tapper-v115';
 var ASSETS = [
   './pheart.png',
   './BrandLogo.png',
@@ -93,11 +93,35 @@ function cachedShell(req) {
   return matchOne([req].concat(SHELL_KEYS), 0);
 }
 
+/** Only the real tapper shell may be broadcast across SHELL_KEYS. Legacy
+ *  /card.html, /get*, and / serve redirect stubs whenever _redirects is not in
+ *  play (local http.server, bundle); putShell would copy a stub over /tapper/
+ *  and the next band tap would paint the redirect page instead of the card. */
+function isCanonicalShell(reqOrUrl) {
+  try {
+    var raw = typeof reqOrUrl === 'string' ? reqOrUrl : reqOrUrl.url;
+    var url = new URL(raw, self.location.href);
+    if (url.origin !== self.location.origin) return false;
+    var path = url.pathname;
+    return (
+      path === '/tapper' ||
+      path === '/tapper/' ||
+      path.endsWith('/tapper.html') ||
+      path.endsWith('/tapper/index.html')
+    );
+  } catch (e) {
+    return false;
+  }
+}
+
 function refreshShell(cache, req) {
   return networkReload(req)
     .then(function (res) {
       if (res && res.ok) {
-        putShell(cache, req, res.clone());
+        // Single-key refresh for legacy / root aliases — only the canonical
+        // shell may overwrite every SHELL_KEY.
+        if (isCanonicalShell(req)) putShell(cache, req, res.clone());
+        else putAsset(cache, req, res.clone());
         return res;
       }
       return null;

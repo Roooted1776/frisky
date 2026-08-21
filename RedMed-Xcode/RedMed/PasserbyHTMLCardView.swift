@@ -415,10 +415,15 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
                 coordinator.pendingProfileJS = js
                 coordinator.shellLoaded = false
             } else {
-                coordinator.shellLoaded = true
-                if let js {
-                    webView.evaluateJavaScript(js, completionHandler: nil)
-                }
+                // Pooled view was warmed with `navigationDelegate: nil` (see
+                // `PasserbyWebViewPool`) — if its WebContent process died before
+                // this delegate attached, `webViewWebContentProcessDidTerminate`
+                // never fired and `isLoading` alone reads as "finished" over a
+                // blank/dead document. RedMed is the default first tab, so the
+                // `pageVisible` flip that normally drives `recoverIfNeeded` may
+                // never happen. Verify real content before trusting the pool.
+                coordinator.pendingProfileJS = js
+                coordinator.confirmPooledShellLoaded(webView)
             }
             return
         }
@@ -634,6 +639,44 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
                 }
                 if error != nil || !ok {
                     self.scheduleRecovery(into: webView)
+                }
+            }
+        }
+
+        /// Pooled embed reported `!isLoading` right after `makeUIView` attached this
+        /// delegate. That can mean a normal finish (Face ID ran long enough for the
+        /// warm parse to finish) or a WebContent process death that happened while
+        /// the pool still had `navigationDelegate: nil` — no `didFinish` /
+        /// `webViewWebContentProcessDidTerminate` ever fired for that case. Probe the
+        /// document before trusting it so a dead pooled view still recovers even
+        /// when `pageVisible` never flips to trigger `recoverIfNeeded`.
+        func confirmPooledShellLoaded(_ webView: WKWebView) {
+            guard webView.url != nil else {
+                scheduleRecovery(into: webView)
+                return
+            }
+            webView.evaluateJavaScript(
+                "(document.body && document.body.childElementCount > 0) ? 1 : 0"
+            ) { [weak self, weak webView] result, error in
+                guard let self, let webView else { return }
+                let ok: Bool
+                if let n = result as? NSNumber {
+                    ok = n.intValue > 0
+                } else if let n = result as? Int {
+                    ok = n > 0
+                } else if let b = result as? Bool {
+                    ok = b
+                } else {
+                    ok = false
+                }
+                guard error == nil, ok else {
+                    self.scheduleRecovery(into: webView)
+                    return
+                }
+                self.shellLoaded = true
+                if let pending = self.pendingProfileJS {
+                    self.pendingProfileJS = nil
+                    webView.evaluateJavaScript(pending, completionHandler: nil)
                 }
             }
         }
