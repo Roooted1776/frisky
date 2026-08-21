@@ -15,8 +15,8 @@ enum HelpDocument {
 
         var title: String {
             switch self {
-            case .privacy: return "Privacy Policy"
-            case .terms: return "Terms of Service"
+            case .privacy: return "Privacy"
+            case .terms: return "Terms"
             case .security: return "Security"
             }
         }

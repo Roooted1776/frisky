@@ -5,7 +5,7 @@ import Foundation
 /// The app used to hard-code `911`, which reaches nobody on a UK handset. Every
 /// user-facing mention of the number and every `tel://` dial now goes through
 /// here, so the UI and the dialler always agree with each other and with the
-/// published Terms and Privacy Policy.
+/// published Terms and Privacy pages.
 ///
 /// Region comes from `Locale.current.region` — the user's chosen region in
 /// Settings, not the SIM and not the current GPS fix. That is the right source
