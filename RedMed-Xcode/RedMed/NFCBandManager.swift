@@ -34,6 +34,9 @@ final class NFCBandManager: ObservableObject {
     private let writer = NFCWriter()
     private let reader = NFCReader()
     private var cancellables = Set<AnyCancellable>()
+    /// Face ID sheet is up — Write stays tappable because `isBusy` is only
+    /// CoreNFC, so a second tap used to start a second session.
+    private var writeAuthInFlight = false
 
     var isBusy: Bool { isWriting || isReading }
 
@@ -47,7 +50,9 @@ final class NFCBandManager: ObservableObject {
     /// Linked / Not linked flips only after a real verified-or-written CoreNFC session — never simulate.
     func writeBand(from profile: ProfileData, isScannerSession: Bool) {
         guard !isScannerSession else { return }
+        guard !writeAuthInFlight, !isBusy else { return }
         guard profile.hasData else { return }
+        writeAuthInFlight = true
 
         BiometricAuth.authenticate(
             reason: "Confirm with Face ID, Touch ID, or passcode to write your RedMed card to the bracelet."
@@ -56,6 +61,7 @@ final class NFCBandManager: ObservableObject {
             if outcome == .success {
                 let chip = ProfileNFCCodec.chipProfile(from: profile)
                 Task { @MainActor [weak self] in
+                    defer { self?.writeAuthInFlight = false }
                     let urlString = await Task.detached(priority: .userInitiated) {
                         ProfileNFCCodec.buildURLString(chip: chip)
                     }.value
@@ -74,9 +80,15 @@ final class NFCBandManager: ObservableObject {
                         self.simulateWrite(urlString, profile: profile)
                     }
                 }
-            } else if outcome == .notVerified {
-                self.authFailed = true
-                VaultHistoryStore.shared.record(.unlockFailed, detail: "nfcWrite")
+            } else {
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    self.writeAuthInFlight = false
+                    if outcome == .notVerified {
+                        self.authFailed = true
+                        VaultHistoryStore.shared.record(.unlockFailed, detail: "nfcWrite")
+                    }
+                }
             }
         }
     }
@@ -87,6 +99,7 @@ final class NFCBandManager: ObservableObject {
     /// Simulate path: pack live RedMed → same one-page HTML cover (tap card).
     /// Hardware sessions gated by `AppConfig.nfcHardwareEnabled`.
     func verifyBand(from profile: ProfileData) {
+        guard !isBusy else { return }
         if AppConfig.nfcHardwareEnabled {
             statusMessage = ""
             reader.readTag(alertMessage: "Hold your iPhone near the bracelet to verify the card.") { [weak self] _, urlString in

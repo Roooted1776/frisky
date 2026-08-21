@@ -273,6 +273,9 @@ struct OwnerAppLock<Content: View>: View {
         guard let didLoad = profile.tryPrepareUnlockPrefetchSync() else {
             return false
         }
+        // Parked empty + unknown Keychain presence: async path re-checks SecItem
+        // so a stale UserDefaults gate cannot open empty Main over a real blob.
+        if !didLoad, !keychainHasProfile { return false }
         finishUnlockAfterAuth(
             generation: generation,
             didLoad: didLoad,

@@ -298,23 +298,20 @@ final class CrashMotionGuard: ObservableObject {
             }
             recentHumanPeaks.removeAll { now.timeIntervalSince($0) > CrashMotionThresholds.humanActivityWindow }
 
-            // Sustained human-band motion (sex, masturbation, jogging phone bounce).
+            // Sustained / rhythmic / repeated human-band motion → busy window.
+            // Fall through so overrideBusyPeakG (24g) can still arm a real crash.
             if let start = humanBurstStart,
                now.timeIntervalSince(start) >= CrashMotionThresholds.sustainedHumanSeconds,
                !recentHumanPeaks.isEmpty {
                 markBusy(at: now)
-                return
             }
 
-            // Rhythmic cadence — repeating thrust / stroke / step intervals.
             if isRhythmicHumanActivity(now: now) {
                 markBusy(at: now)
-                return
             }
 
             if recentHumanPeaks.count >= CrashMotionThresholds.humanActivitySpikeCount {
                 markBusy(at: now)
-                return
             }
 
             if spin >= CrashMotionThresholds.handSpinRadPerSec {

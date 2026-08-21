@@ -153,6 +153,24 @@ class ProfileData: ObservableObject {
         return copy
     }
 
+    /// Revert RAM fields from a `snapshot()` after a failed Keychain persist.
+    func restore(from other: ProfileData) {
+        withBulkUpdate {
+            name = other.name
+            birthDate = other.birthDate
+            bloodType = other.bloodType
+            allergies = other.allergies
+            medications = other.medications
+            conditions = other.conditions
+            contacts = other.contacts.map {
+                EmergencyContact(name: $0.name, relationship: $0.relationship, phone: $0.phone)
+            }
+            braceletLinked = other.braceletLinked
+            isOrganDonor = other.isOrganDonor
+            lastUpdated = other.lastUpdated
+        }
+    }
+
     /// - Returns: `true` when the Keychain write succeeded.
     @discardableResult
     func persist() -> Bool {
@@ -462,7 +480,6 @@ class ProfileData: ObservableObject {
 
     private func apply(_ blob: PersistedProfile) {
         // One objectWillChange for the whole blob — unlock must not storm the tab tree.
-        var scrubbedDemo = false
         withBulkUpdate {
             if name != blob.name { name = blob.name }
             if birthDate != blob.birthDate { birthDate = blob.birthDate }
@@ -480,22 +497,6 @@ class ProfileData: ObservableObject {
             if braceletLinked != blob.braceletLinked { braceletLinked = blob.braceletLinked }
             if isOrganDonor != blob.isOrganDonor { isOrganDonor = blob.isOrganDonor }
             if lastUpdated != blob.lastUpdated { lastUpdated = blob.lastUpdated }
-            // Scrub any leftover Alex Rivera demo blob from older builds.
-            if name == "Alex Rivera" {
-                name = ""
-                birthDate = ""
-                bloodType = ""
-                allergies = []
-                medications = []
-                conditions = []
-                contacts = []
-                isOrganDonor = false
-                lastUpdated = ""
-                scrubbedDemo = true
-            }
-        }
-        if scrubbedDemo {
-            _ = persist()
         }
     }
 

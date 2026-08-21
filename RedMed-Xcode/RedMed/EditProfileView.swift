@@ -518,6 +518,7 @@ struct EditProfileView: View {
             || nextContacts.map { "\($0.name)|\($0.relationship)|\($0.phone)" }
                 != profile.contacts.map { "\($0.name)|\($0.relationship)|\($0.phone)" }
 
+        let prior = profile.snapshot()
         profile.name = nextName
         profile.birthDate = nextBirth
         profile.bloodType = nextBlood
@@ -533,6 +534,7 @@ struct EditProfileView: View {
         }
 
         guard profile.persist() else {
+            profile.restore(from: prior)
             showSaveFailedAlert = true
             return
         }

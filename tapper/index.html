@@ -2891,15 +2891,12 @@ function redmedAssetURL(file) {
 
     if (humanBurstStart && now - humanBurstStart >= SUSTAINED_HUMAN_S && recentHumanPeaks.length) {
       markBusy(now);
-      return;
     }
     if (isRhythmicHumanActivity(now)) {
       markBusy(now);
-      return;
     }
     if (recentHumanPeaks.length >= HUMAN_SPIKE_COUNT) {
       markBusy(now);
-      return;
     }
 
     if (spinRad >= HAND_SPIN_RAD) {

@@ -346,9 +346,13 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
             pooled.navigationDelegate = context.coordinator
             pooled.scrollView.isScrollEnabled = true
             // Warm pool may still be parsing — wait for didFinish before shellLoaded.
+            // Do not performFullLoad on the first updateUIView: that cancels the
+            // in-flight parse and left RedMed cream after Face ID.
+            context.coordinator.usingPooledShell = true
             context.coordinator.loadedShellKind = "embed"
             context.coordinator.loadedPayload = ""
             context.coordinator.loadedContentKey = ""
+            context.coordinator.shellLoaded = false
             return pooled
         }
         let webView = PasserbyWebViewPool.makeConfiguredWebView(navigationDelegate: context.coordinator)
@@ -379,44 +383,88 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         }
 
         if pageVisible {
-            if !context.coordinator.pageVisible {
-                context.coordinator.pageVisible = true
-                context.coordinator.recoverIfNeeded(webView)
+            if !coordinator.pageVisible {
+                coordinator.pageVisible = true
+                coordinator.recoverIfNeeded(webView)
             }
         } else {
-            context.coordinator.pageVisible = false
+            coordinator.pageVisible = false
+        }
+
+        let loadKey = "\(payloadKey)|\(contentKey)|\(shellKind)"
+
+        // Warm-pooled embed: push profile into the already-parsing (or parsed)
+        // document. A second loadHTMLString cancels WebKit mid-parse.
+        if coordinator.usingPooledShell {
+            coordinator.usingPooledShell = false
+            coordinator.adoptLoadIdentity(
+                loadKey: loadKey,
+                payloadKey: payloadKey,
+                contentKey: contentKey,
+                shellKind: shellKind
+            )
+            let js: String? = {
+                guard let embedProfileJSON, !embedProfileJSON.isEmpty else { return nil }
+                return Self.profilePushJS(
+                    encodedPayload: encodedPayload,
+                    braceletLinked: braceletLinked,
+                    embedProfileJSON: embedProfileJSON
+                )
+            }()
+            if webView.isLoading {
+                coordinator.pendingProfileJS = js
+                coordinator.shellLoaded = false
+            } else {
+                coordinator.shellLoaded = true
+                if let js {
+                    webView.evaluateJavaScript(js, completionHandler: nil)
+                }
+            }
+            return
         }
 
         // Keep the document when plaintext embed JSON is present (owner embed + Preview/Scan).
         // AES `#d=` changes every pack (random nonce) — JS push avoids remount, which
         // reset Preview tabs back to RedMed mid-switch.
-        if context.coordinator.shellLoaded,
-           context.coordinator.loadedShellKind == shellKind,
+        if coordinator.shellLoaded,
+           coordinator.loadedShellKind == shellKind,
            let embedProfileJSON, !embedProfileJSON.isEmpty,
-           (context.coordinator.loadedContentKey != contentKey
-            || context.coordinator.loadedPayload != payloadKey) {
-            context.coordinator.loadedContentKey = contentKey
-            context.coordinator.loadedPayload = payloadKey
-            context.coordinator.loadedKey = "\(payloadKey)|\(contentKey)|\(shellKind)"
+           (coordinator.loadedContentKey != contentKey
+            || coordinator.loadedPayload != payloadKey) {
+            coordinator.adoptLoadIdentity(
+                loadKey: loadKey,
+                payloadKey: payloadKey,
+                contentKey: contentKey,
+                shellKind: shellKind
+            )
             let js = Self.profilePushJS(
                 encodedPayload: encodedPayload,
                 braceletLinked: braceletLinked,
                 embedProfileJSON: embedProfileJSON
             )
-            // Warmed shell may still be parsing — queue until didFinish.
             if webView.isLoading {
-                context.coordinator.pendingProfileJS = js
+                coordinator.pendingProfileJS = js
             } else {
                 webView.evaluateJavaScript(js, completionHandler: nil)
             }
             return
         }
 
-        let loadKey = "\(payloadKey)|\(contentKey)|\(shellKind)"
-        guard context.coordinator.loadedKey != loadKey else { return }
+        guard coordinator.loadedKey != loadKey else {
+            // Same document still parsing — keep the latest profile for didFinish.
+            if !coordinator.shellLoaded,
+               let embedProfileJSON, !embedProfileJSON.isEmpty {
+                coordinator.pendingProfileJS = Self.profilePushJS(
+                    encodedPayload: encodedPayload,
+                    braceletLinked: braceletLinked,
+                    embedProfileJSON: embedProfileJSON
+                )
+            }
+            return
+        }
         Self.performFullLoad(
             into: webView,
-            coordinator: context.coordinator,
+            coordinator: coordinator,
             encodedPayload: encodedPayload,
             braceletLinked: braceletLinked,
             appEmbed: appEmbed,
@@ -440,11 +488,13 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         guard let fileURL = PasserbyShellCache.shellFileURL(),
               var html = PasserbyShellCache.shellHTML(),
               let lit = jsStringLiteral(encodedPayload) else { return }
-        coordinator.loadedKey = loadKey
-        coordinator.loadedPayload = payloadKey
-        coordinator.loadedContentKey = contentKey
-        coordinator.loadedShellKind = shellKind
-        coordinator.shellLoaded = true
+        coordinator.adoptLoadIdentity(
+            loadKey: loadKey,
+            payloadKey: payloadKey,
+            contentKey: contentKey,
+            shellKind: shellKind
+        )
+        coordinator.shellLoaded = false
         coordinator.loadAttempts += 1
         // Inject before any tapper.html script so decrypt sees #d= and SOS sees app preview.
         // Flag + hash fallback: loadHTMLString can leave location as about:blank where
@@ -539,6 +589,8 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         var loadedContentKey: String?
         var loadedShellKind: String?
         var shellLoaded = false
+        /// Face ID–warmed embed taken in makeUIView — first update must not reload it.
+        var usingPooledShell = false
         /// Owner RedMed embed only — Preview / Scan / passerby never open the NFC tab.
         var appEmbed = false
         /// Profile push that arrived before `didFinish` — replay once the document is ready.
@@ -548,8 +600,20 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         var isRecovering = false
         var forceReload: ((WKWebView) -> Void)?
 
+        func adoptLoadIdentity(
+            loadKey: String,
+            payloadKey: String,
+            contentKey: String,
+            shellKind: String
+        ) {
+            loadedKey = loadKey
+            loadedPayload = payloadKey
+            loadedContentKey = contentKey
+            loadedShellKind = shellKind
+        }
+
         func recoverIfNeeded(_ webView: WKWebView) {
-            if webView.isLoading || isRecovering { return }
+            if webView.isLoading || isRecovering || loadAttempts >= 2 { return }
             if webView.url == nil {
                 scheduleRecovery(into: webView)
                 return
@@ -576,7 +640,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
 
         /// Defer reload out of updateUIView / evaluateJavaScript callbacks.
         private func scheduleRecovery(into webView: WKWebView) {
-            guard !isRecovering else { return }
+            guard !isRecovering, loadAttempts < 2 else { return }
             isRecovering = true
             loadedKey = nil
             shellLoaded = false
@@ -588,6 +652,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            shellLoaded = true
             loadAttempts = 0
             if let pending = pendingProfileJS {
                 pendingProfileJS = nil
@@ -596,7 +661,8 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         }
 
         func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
-            loadAttempts = 0
+            // Share retryLoad's cap — resetting to 0 looped loadHTMLString forever
+            // when WebContent died before didFinish.
             scheduleRecovery(into: webView)
         }
 
