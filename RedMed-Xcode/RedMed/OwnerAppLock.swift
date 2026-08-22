@@ -235,14 +235,19 @@ struct OwnerAppLock<Content: View>: View {
                     gate = .locked
                     VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock")
                 case .success:
-                    // Check again after await — background can bump authGeneration.
+                    // LA sheet is still tearing down on this main-queue turn.
+                    // Yield once so unlock's WKWebView / tab mount does not race
+                    // Face ID dismissal (that race was an instant post-auth crash).
+                    await Task.yield()
+                    guard generation == authGeneration else { return }
                     await applyUnlockSuccess(generation: generation)
                 }
             }
         }
     }
 
-    /// Parked Face ID decode first; await Keychain only when prefetch is not ready.
+    /// Prefer parked Face ID decode; await Keychain only when prefetch is not ready.
+    /// One MainActor yield already happened in the LA success path (sheet teardown).
     @MainActor
     private func applyUnlockSuccess(generation: Int) async {
         guard generation == authGeneration else { return }
@@ -265,10 +270,12 @@ struct OwnerAppLock<Content: View>: View {
         )
     }
 
-    /// Cancel stale WebKit warm + adopt Face ID–parked Keychain if ready.
+    /// Stop in-flight WebKit warm safely, then adopt Face ID–parked Keychain if ready.
     /// Returns `true` when unlock finished (hit or empty Keychain result).
     @MainActor
     private func tryFinishWithParkedUnlock(generation: Int) -> Bool {
+        // stopLoading before release — bare Task.cancel mid-loadHTMLString can
+        // WebThread-crash. Ready pooled views are kept.
         PasserbyWebViewPool.cancelWarm()
         guard let didLoad = profile.tryPrepareUnlockPrefetchSync() else {
             return false
