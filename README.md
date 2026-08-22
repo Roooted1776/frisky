@@ -10,7 +10,7 @@ Native iOS medical ID + emergency aid app. Shipable source of truth is
 | `MAX.md` | **Max’s personal profile + shipped history** (agent memory) |
 | `AGENTS.md` | Permanent product/engineering rules for agents |
 | `RedMed-Xcode/RedMed/Main.swift` | **Owner app** shell (`ContentView`) — edit profile, Aid, NFC, Help |
-| `tapper/index.html` (+ root `tapper.html`) | **Passerby / scanner** — bracelet tap at `https://redmed.pages.dev/tapper/` (custom host cutover: `docs/domain.md`); RedMed · 911 · Aid (no Edit / NFC) |
+| `tapper/index.html` (+ root `tapper.html`) | **Passerby / scanner** — bracelet tap at `https://roooted1776.github.io/tapper/` (custom host cutover: `docs/domain.md`); RedMed · 911 · Aid (no Edit / NFC) |
 | `card.html` / `get.html` / `get/` | Legacy redirects → `/tapper/` (keeps `#d=` for old bands) |
 | `RedMed-Xcode/RedMed/Help.html` + `legal-doc.css` | Owner Help policies (Privacy, Terms, Security in one bundled file). Legacy `PrivacyPolicy` / `TOS` / `security` redirect into it. `HowItWorks.html` still redirects `redmed://main`. |
 | `pheart.png` + `assets/` / `BrandLogo.png` / `BrandWordmark.png` | Heart mark (`#fff7f7` around the circle). App icon, YOU-card logo, Pages / SW paths |

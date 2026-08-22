@@ -1,12 +1,16 @@
 # RedMed domain — getredmed.com
 
-Locked pick for the hosted passerby shell (replacing `redmed.pages.dev` as the
+Locked pick for the hosted passerby shell (replacing interim hosts as the
 **write** base). Profile data stays in `#d=` only — no RedMed PHI backend.
 
-**Current (2026-08-20):** AppConfig still writes `https://redmed.pages.dev/tapper/`.
-That path is 404 until Pages publishes (GitHub secrets `CLOUDFLARE_API_TOKEN` +
-`CLOUDFLARE_ACCOUNT_ID`, or connect Pages project `redmed` to this repo).
-`getredmed.com` does not resolve. Do not flip AppConfig first.
+**Current (2026-08-21):** AppConfig writes
+`https://roooted1776.github.io/tapper/` (public GitHub Pages user site —
+shell only, no PHI). Smoke green: RedMed · 911 · Aid.
+
+`https://redmed.pages.dev/tapper/` is still **404** until
+`CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` land (or Pages project
+`redmed` connects to this repo). `getredmed.com` does not resolve. Do not
+flip AppConfig to `getredmed.com` first.
 
 ## Buy (you must do this — agents cannot pay)
 
@@ -16,9 +20,10 @@ That path is 404 until Pages publishes (GitHub secrets `CLOUDFLARE_API_TOKEN` +
 3. Skip **`redmed.com`** until Afternic quotes a BIN (premium, quote-only).
 
 Do not merge or ship NFC writes to the custom host until steps below show green.
-`AppConfig.medicalCardBaseURL` must stay on `https://redmed.pages.dev/tapper/`
-until step 3 (HTTPS Active + `/tapper/` smoke) is green — a premature flip
-writes dead URLs onto bands while DNS is still NXDOMAIN.
+`AppConfig.medicalCardBaseURL` must stay on a live host
+(`https://roooted1776.github.io/tapper/` today) until step 3 (HTTPS Active +
+`/tapper/` smoke) is green — a premature flip writes dead URLs onto bands
+while DNS is still NXDOMAIN.
 
 ## Attach to Pages (cutover)
 
@@ -28,21 +33,33 @@ writes dead URLs onto bands while DNS is still NXDOMAIN.
    **Active**.
 3. Smoke: `https://getredmed.com/tapper/` loads RedMed · 911 · Aid (same shell as
    today). Bare `https://getredmed.com/` must land on `/tapper/` and keep `#d=`.
-4. Optional: Cloudflare **Redirect Rules** — `redmed.pages.dev/*` →
-   `https://getredmed.com/$1` (301). Keep Pages serving both hosts either way so
-   bands already written with `pages.dev` still open.
+4. Optional: Cloudflare **Redirect Rules** — `redmed.pages.dev/*` and
+   `roooted1776.github.io/*` → `https://getredmed.com/$1` (301). Keep serving
+   prior hosts either way so bands already written still open.
 5. Ship the app build that sets
    `AppConfig.medicalCardBaseURL = "https://getredmed.com/tapper/"`.
-   Until then, leave it on `https://redmed.pages.dev/tapper/`.
-6. New NFC writes use the custom host. Old `pages.dev` bands keep working.
+   Until then, leave it on the live interim host.
+6. New NFC writes use the custom host. Old `github.io` / `pages.dev` bands keep
+   working if those hosts stay up.
+
+## Publish paths (interim)
+
+| Path | Status |
+|------|--------|
+| Public GitHub Pages `Roooted1776/Roooted1776.github.io` | **Live** — AppConfig write base |
+| Cloudflare Pages project `redmed` (`redmed.pages.dev`) | Blocked — missing CF secrets / Git connect |
+| Custom host `getredmed.com` | Not registered (NXDOMAIN) |
+
+Public shell publish (no PHI): `./scripts/publish-github-io.sh` copies HTML/SW/assets
+into the user Pages repo; Actions assembles chunked uploads when needed.
 
 ## URL contract
 
 | Role | URL |
 |------|-----|
-| Current AppConfig write base | `https://redmed.pages.dev/tapper/` |
+| Current AppConfig write base | `https://roooted1776.github.io/tapper/` |
+| Cloudflare Pages (when secrets land) | `https://redmed.pages.dev/tapper/` |
 | Locked custom host (after cutover) | `https://getredmed.com/tapper/` |
-| Keep serving after cutover | `https://redmed.pages.dev/tapper/` (old bands) |
 | Optional short alias (if bought) | `https://redmed.band/` → same Pages project |
 
 Path stays **`/tapper/`** so SW cache keys and legacy `/get/` → `/tapper/` redirects

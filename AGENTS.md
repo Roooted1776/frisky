@@ -34,10 +34,11 @@ The app has no backend, database, or web service.
   `isScannerSession == true`): tabs are **RedMed · 911 · Aid** only — **no Edit**,
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain or
   owner `@AppStorage` / UserDefaults prefs. Hosted passerby path is
-  `AppConfig.medicalCardBaseURL` (currently `https://redmed.pages.dev/tapper/`,
+  `AppConfig.medicalCardBaseURL` (currently `https://roooted1776.github.io/tapper/`,
   from `tapper/index.html`). Locked custom-host pick is `getredmed.com` — flip
   AppConfig only after `docs/domain.md` cutover is green. Do not write
-  `getredmed.com` onto bands while it NXDOMAINs.
+  `getredmed.com` onto bands while it NXDOMAINs. `redmed.pages.dev` stays
+  optional until Cloudflare secrets / Pages Git connect land.
   **Tap-to-view never requires Face ID / biometrics / passcode / login** — owner biometrics gate
   edit, NFC write, vault, and app unlock only. Passerby HTML never asks.
   **Nothing blocks the tap card** (YOU card / Preview / Scan / band tap): no
@@ -62,7 +63,7 @@ The app has no backend, database, or web service.
   policies only. NFC Preview (under Scan) / NFC Scan open bundled
   `tapper.html#d=` (`?src=app`, no SOS auto-arm);
   live band taps use `AppConfig.medicalCardBaseURL#d=` (currently
-  `https://redmed.pages.dev/tapper/#d=`; `getredmed.com` after domain cutover).
+  `https://roooted1776.github.io/tapper/#d=`; `getredmed.com` after domain cutover).
 
 - **Bracelet tap (physics, not a setting):** `AppConfig.BraceletRF` is the single
   source of truth — intentional tap ~1–2″, walk-by ~6–8″ does not fire, reliable
