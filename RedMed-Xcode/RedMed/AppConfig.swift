@@ -15,10 +15,21 @@ enum AppConfig {
     /// (local-only). Hosted Pages must serve the tapper shell (RedMed · 911 · Aid).
     /// Local: `./scripts/deploy-pages.sh`. Live: `DEPLOY=1` + CF tokens, or the
     /// `Pages tapper deploy` GitHub Action on `main`.
-    /// Write base is public GitHub Pages until Cloudflare `redmed.pages.dev`
-    /// publishes or `getredmed.com` DNS + custom domain are green
-    /// (`docs/domain.md`). Do not flip to `getredmed.com` while it NXDOMAINs.
-    static let medicalCardBaseURL = "https://roooted1776.github.io/tapper/"
+    ///
+    /// Product HTML app URL is a **custom domain, TBD**. Fill this with
+    /// `https://<your-domain>/tapper/` only after HTTPS is Active (`docs/domain.md`).
+    /// `nil` = do not encode a placeholder onto bands.
+    static let medicalCardCustomDomainTBD: String? = nil
+
+    /// NFC write + passerby open URL. Uses the custom domain when set; otherwise
+    /// the live GitHub Pages interim so taps keep working.
+    static var medicalCardBaseURL: String {
+        if let custom = medicalCardCustomDomainTBD?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !custom.isEmpty {
+            return custom.hasSuffix("/") ? custom : custom + "/"
+        }
+        return "https://roooted1776.github.io/tapper/"
+    }
 
     /// Deep link target for policy / card HTML “open owner app” redirects.
     static let mainAppURL = "redmed://main"
