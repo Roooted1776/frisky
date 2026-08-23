@@ -1,10 +1,10 @@
 # Optional Cloudflare Pages deploy for redmed.pages.dev.
 # Live band write base today is https://roooted1776.github.io/tapper/
-# (public GitHub Pages — see docs/domain.md). Custom host getredmed.com
-# is cutover-only.
+# (public GitHub Pages — see docs/domain.md). Custom host is TBD
+# (AppConfig.medicalCardCustomDomainTBD).
 #
 # Direct Upload needs CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID.
-# Missing secrets fail this workflow (does not take down github.io).
+# Missing secrets skip CF upload (does not take down github.io).
 # Connect Pages project `redmed` in the Cloudflare dashboard instead
 # (`wrangler.toml` output dir = repo root) when you want pages.dev live.
 
@@ -40,20 +40,26 @@ jobs:
       - name: Refuse band-setup / missing tabs
         run: |
           set -euo pipefail
+          fail() { echo "::error::$1"; exit 1; }
           f=tapper/index.html
-          grep -q 'data-tab="medical"' "$f"
-          grep -q 'data-tab="911"' "$f"
-          grep -q 'data-tab="aid"' "$f"
-          ! grep -q 'Checking your phone' "$f"
-          ! grep -q 'Set up your RedMed band' "$f"
-          cmp -s tapper.html tapper/index.html
-          cmp -s tapper.html RedMed-Xcode/RedMed/tapper.html
-          test -f assets/BrandLogo.png
-          test -f assets/BrandWordmark.png
-          test -f assets/pheart.png
-          test -f tapper/BrandLogo.png
-          test -f tapper/BrandWordmark.png
-          test -f tapper/pheart.png
+          grep -q 'data-tab="medical"' "$f" || fail "$f missing data-tab=medical"
+          grep -q 'data-tab="911"' "$f" || fail "$f missing data-tab=911"
+          grep -q 'data-tab="aid"' "$f" || fail "$f missing data-tab=aid"
+          ! grep -q 'Checking your phone' "$f" || fail "$f still has Checking your phone"
+          ! grep -q 'Set up your RedMed band' "$f" || fail "$f still has band-setup copy"
+          echo "OK tabs + no band-setup in $f"
+          cmp -s tapper.html tapper/index.html || fail "tapper.html != tapper/index.html — run scripts/sync-tapper.sh"
+          cmp -s tapper.html RedMed-Xcode/RedMed/tapper.html || fail "tapper.html != RedMed-Xcode/RedMed/tapper.html — run scripts/sync-tapper.sh"
+          echo "OK triple tapper.html identical"
+          # Brand photos live in assets/ (canonical) + tapper/ (shell-relative).
+          # They are NOT at repo root — do not test -f BrandLogo.png.
+          for p in \
+            assets/BrandLogo.png assets/BrandWordmark.png assets/pheart.png \
+            tapper/BrandLogo.png tapper/BrandWordmark.png tapper/pheart.png
+          do
+            test -f "$p" || fail "missing $p (brand files are in assets/ + tapper/, not repo root)"
+          done
+          echo "OK brand PNGs in assets/ and tapper/"
 
       - name: Cloudflare secrets
         id: cf
@@ -85,7 +91,9 @@ jobs:
       - name: Smoke live github.io /tapper/
         run: |
           set -euo pipefail
-          BASE=https://roooted1776.github.io ./scripts/smoke-pages.sh
+          # GitHub Contents API rewrites drop the +x bit (file is 100644).
+          # Always invoke through bash so Permission denied (126) cannot recur.
+          BASE=https://roooted1776.github.io bash scripts/smoke-pages.sh
 
       - name: Smoke redmed.pages.dev after CF deploy
         if: steps.cf.outputs.skip != 'true'
@@ -93,7 +101,7 @@ jobs:
           set -euo pipefail
           ok=0
           for i in 1 2 3 4 5 6 7 8 9 10; do
-            if BASE=https://redmed.pages.dev ./scripts/smoke-pages.sh; then
+            if BASE=https://redmed.pages.dev bash scripts/smoke-pages.sh; then
               ok=1
               break
             fi
