@@ -27,9 +27,6 @@ struct PasserbyHTMLCardView: View {
     }
 
     var body: some View {
-        // Same top chrome as main pages (RedMed Help·Edit / scanner Back / Aid
-        // topic Back) — Back leading, Help trailing. No centered "Preview" title bar
-        // (that was Help/Edit modal format; Preview is the tap-card shell).
         VStack(spacing: 0) {
             HStack(alignment: .center, spacing: 12) {
                 ChromeTextAction(title: "Back", weight: .bold) {
@@ -49,7 +46,6 @@ struct PasserbyHTMLCardView: View {
                     PasserbyHTMLShell(
                         encodedPayload: encodedPayload,
                         braceletLinked: braceletLinked,
-                        // Full passerby chrome — what a band tap opens (not owner embed).
                         appEmbed: false,
                         embedProfileJSON: embedProfileJSON
                     )
@@ -70,44 +66,32 @@ struct PasserbyHTMLCardView: View {
         .presentsOwnerHelp()
     }
 
-    /// Slurp bundled `tapper.html` off the hot path so first RedMed / Preview paint skips disk.
-    /// `nonisolated` — callers warm from `Task.detached` during unlock / cold start.
     nonisolated static func warmShellCache() {
         PasserbyShellCache.warm()
     }
 
-    /// `nonisolated` — strip `#d=` from any thread (NFC callbacks / Task.detached).
     nonisolated static func extractPayload(_ raw: String) -> String? {
         ProfileNFCCodec.extractPayload(fromURLString: raw)
     }
 
-    /// Band write / capacity / NFC Scan — stamps a fresh `updated` time.
-    /// `nonisolated` — packs a Sendable chip from `Task.detached` (NFC write / verify).
     nonisolated static func payload(from chip: NFCChipProfile) -> String? {
         guard let url = ProfileNFCCodec.buildURLString(chip: chip) else { return nil }
         return extractPayload(url)
     }
 
-    /// Copies ProfileData into a chip, then packs. ProfileData stays on the isolated caller.
     static func payload(from profile: ProfileData) -> String? {
         payload(from: ProfileNFCCodec.chipProfile(from: profile))
     }
 
-    /// Owner RedMed tab embed — stable pack; caller must cache across `body` passes.
-    /// Delegates to `ProfileNFCCodec` so off-main callers never touch this MainActor View.
     nonisolated static func previewPayload(from chip: NFCChipProfile) -> String? {
         ProfileNFCCodec.previewPayload(from: chip)
     }
 
-    /// Copies ProfileData into a chip, then packs. ProfileData stays on the isolated caller.
     static func previewPayload(from profile: ProfileData) -> String? {
         previewPayload(from: ProfileNFCCodec.chipProfile(from: profile))
     }
 }
 
-/// Preview / Scan full-screen tap card is up. Privacy cover must not veil it.
-/// Lock-guarded so `@State` / View init never touch a MainActor static (Xcode
-/// isolation error — same class of bug as Keychain in `@State` defaults).
 enum TapCardPresentation {
     private static let lock = NSLock()
     private static var visible = false
@@ -128,17 +112,11 @@ enum TapCardPresentation {
     }
 }
 
-// MARK: - Embedded shell (owner RedMed tab — no Back chrome)
-
-/// Bundled `tapper.html`. Owner RedMed tab sets `appEmbed` so the HTML tab bar
-/// hides (native tabs own 911 / Aid). Preview / Scan leave `appEmbed` false.
 struct PasserbyHTMLShell: View {
     let encodedPayload: String
     var braceletLinked: Bool = false
     var appEmbed: Bool = true
-    /// Optional plaintext JSON for `window.__REDMED_PROFILE` (skips in-app WebCrypto).
     var embedProfileJSON: String? = .none
-    /// False while the owner RedMed tab is slid offscreen — recover a dead WKWebView on return.
     var pageVisible: Bool = true
 
     var body: some View {
@@ -149,21 +127,13 @@ struct PasserbyHTMLShell: View {
             embedProfileJSON: embedProfileJSON,
             pageVisible: pageVisible
         )
-        // No `.id` remount — `updateUIView` reloads only when loadKey changes.
-        // Ciphertext-based `.id` used to destroy WKWebView on every AES re-seal.
     }
 
-    /// Warm bundled tapper.html into memory during Face ID (no PHI).
-    /// Routes to the nonisolated process cache (MainActor-safe from any caller).
     static func warmShellCache() {
         PasserbyHTMLCardView.warmShellCache()
     }
 }
 
-// MARK: - Shell HTML cache (nonisolated — View / UIViewRepresentable are MainActor)
-
-/// Process-wide bundled `tapper.html` cache. Lock-guarded so unlock / cold start
-/// can warm off the main thread without Swift concurrency isolation errors.
 private enum PasserbyShellCache {
     private static var cachedShellHTML: String?
     private static var cachedShellFileURL: URL?
@@ -180,7 +150,6 @@ private enum PasserbyShellCache {
               let html = try? String(contentsOf: url, encoding: .utf8) else { return }
         cachedShellFileURL = url
         cachedShellHTML = html
-        // Seal empty `#d=` off the unlock path (first access otherwise hits MainActor).
         _ = ProfileNFCCodec.placeholderPreviewPayload
     }
 
@@ -206,33 +175,16 @@ private enum PasserbyShellCache {
     }
 }
 
-// MARK: - WKWebView process warm (Face ID overlap)
-
-/// Pre-creates a cream `WKWebView` and loads bundled `tapper.html` after unlock
-/// so the first RedMed paint can skip cold WebKit process + first parse when the
-/// pool is ready. Do **not** warm during Face ID or before `gate = .unlocked` —
-/// MainActor WebKit work during the Keychain await left a blank cream hang after
-/// auth. MainActor only — WKWebView is not thread-safe.
-///
-/// Single-flight warm. Unlock does **not** await this — tabs paint with a
-/// placeholder `#d=` + embed JSON; `takeEmbed()` is best-effort on first RedMed
-/// mount. `ensureWarmEmbedShell()` remains for callers that need a hard wait.
 @MainActor
 enum PasserbyWebViewPool {
     private static var warmedEmbed: WKWebView?
     private static var warmTask: Task<WKWebView?, Never>?
-    /// Retains an in-flight warm view until load finishes or cancel stops it.
-    /// Releasing a WKWebView mid-`loadHTMLString` can WebThread-crash the process.
     private static var warmingEmbed: WKWebView?
 
-    /// Kick a warm without waiting — safe to call repeatedly (single flight).
     static func warmEmbedShell() {
         _ = ensureWarmTask()
     }
 
-    /// Drop an in-flight warm so unlock Keychain adopt owns MainActor.
-    /// Keeps an already-ready pooled view. Always `stopLoading` before release —
-    /// cancelling a Task alone can dealloc a live WKWebView mid-parse and crash.
     static func cancelWarm() {
         guard warmedEmbed == nil else {
             warmTask = nil
@@ -247,7 +199,6 @@ enum PasserbyWebViewPool {
         }
     }
 
-    /// Wait until the pooled embed exists (or shell HTML is missing).
     static func ensureWarmEmbedShell() async {
         if warmedEmbed != nil { return }
         _ = await ensureWarmTask().value
@@ -258,9 +209,6 @@ enum PasserbyWebViewPool {
             return Task { @MainActor in warmedEmbed }
         }
         if let warmTask { return warmTask }
-        // Explicit Task result type — bare `return nil` fails typecheck in this closure.
-        // Keep MainActor responsive: disk IO + big String work happens off-main,
-        // then we create/load the WKWebView back on MainActor.
         let task = Task<WKWebView?, Never> { @MainActor in
             if Task.isCancelled { return .none }
 
@@ -270,7 +218,6 @@ enum PasserbyWebViewPool {
                     return nil
                 }
 
-                // App-embed chrome only — no PHI. Real profile arrives via JS push or full load.
                 let boot = """
                 <style>html,body{background:#fff7f7!important;margin:0}</style>
                 <script>
@@ -313,10 +260,15 @@ enum PasserbyWebViewPool {
         return task
     }
 
-    /// Owner RedMed tab takes the warmed view once (nil after).
-    /// Miss leaves `warmTask` running so a late warm is not discarded mid-flight.
+    /// Owner RedMed tab takes a *finished* warmed view once (nil after).
+    /// Mid-load handoff can miss didFinish after delegate attach and leave
+    /// RedMed permanently cream — only return when parse has a real document.
     static func takeEmbed() -> WKWebView? {
         guard let view = warmedEmbed else { return nil }
+        guard !view.isLoading, view.url != nil else {
+            // Still parsing — first paint uses a fresh webview with a live delegate.
+            return nil
+        }
         warmedEmbed = nil
         warmTask = nil
         return view
@@ -344,8 +296,6 @@ enum PasserbyWebViewPool {
     }
 }
 
-// MARK: - WKWebView
-
 private struct PasserbyHTMLWebView: UIViewRepresentable {
     let encodedPayload: String
     var braceletLinked: Bool = false
@@ -357,13 +307,13 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> WKWebView {
         context.coordinator.appEmbed = appEmbed
-        // Prefer Face ID–warmed embed view — process + HTML parse already done.
+        // Prefer a *finished* Face ID–warmed embed. Mid-load handoff can miss
+        // didFinish after delegate attach (warm used navigationDelegate: nil) and
+        // leave RedMed permanently cream — the default first tab never flips
+        // pageVisible to trigger recoverIfNeeded.
         if appEmbed, let pooled = PasserbyWebViewPool.takeEmbed() {
             pooled.navigationDelegate = context.coordinator
             pooled.scrollView.isScrollEnabled = true
-            // Warm pool may still be parsing — wait for didFinish before shellLoaded.
-            // Do not performFullLoad on the first updateUIView: that cancels the
-            // in-flight parse and left RedMed cream after Face ID.
             context.coordinator.usingPooledShell = true
             context.coordinator.loadedShellKind = "embed"
             context.coordinator.loadedPayload = ""
@@ -372,14 +322,12 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
             return pooled
         }
         let webView = PasserbyWebViewPool.makeConfiguredWebView(navigationDelegate: context.coordinator)
-        // Preview/Scan: document `.app` scrolls; UIScrollView dual-scroll ate tab taps.
         webView.scrollView.isScrollEnabled = appEmbed
         return webView
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
         context.coordinator.appEmbed = appEmbed
-        // Embed: WKWebView scrolls. Preview/Scan: html.app-preview flex + `.app` scroll.
         webView.scrollView.isScrollEnabled = appEmbed
         let shellKind = appEmbed ? "embed" : "full"
         let contentKey = "\(braceletLinked)|\(embedProfileJSON ?? "")"
@@ -409,8 +357,6 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
 
         let loadKey = "\(payloadKey)|\(contentKey)|\(shellKind)"
 
-        // Warm-pooled embed: push profile into the already-parsing (or parsed)
-        // document. A second loadHTMLString cancels WebKit mid-parse.
         if coordinator.usingPooledShell {
             coordinator.usingPooledShell = false
             coordinator.adoptLoadIdentity(
@@ -427,26 +373,13 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
                     embedProfileJSON: embedProfileJSON
                 )
             }()
-            if webView.isLoading {
-                coordinator.pendingProfileJS = js
-                coordinator.shellLoaded = false
-            } else {
-                // Pooled view was warmed with `navigationDelegate: nil` (see
-                // `PasserbyWebViewPool`) — if its WebContent process died before
-                // this delegate attached, `webViewWebContentProcessDidTerminate`
-                // never fired and `isLoading` alone reads as "finished" over a
-                // blank/dead document. RedMed is the default first tab, so the
-                // `pageVisible` flip that normally drives `recoverIfNeeded` may
-                // never happen. Verify real content before trusting the pool.
-                coordinator.pendingProfileJS = js
-                coordinator.confirmPooledShellLoaded(webView)
-            }
+            coordinator.pendingProfileJS = js
+            // Finished pool only (takeEmbed guards) — still probe + deadline.
+            coordinator.confirmPooledShellLoaded(webView)
+            coordinator.scheduleLoadDeadline(for: webView)
             return
         }
 
-        // Keep the document when plaintext embed JSON is present (owner embed + Preview/Scan).
-        // AES `#d=` changes every pack (random nonce) — JS push avoids remount, which
-        // reset Preview tabs back to RedMed mid-switch.
         if coordinator.shellLoaded,
            coordinator.loadedShellKind == shellKind,
            let embedProfileJSON, !embedProfileJSON.isEmpty,
@@ -472,7 +405,6 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         }
 
         guard coordinator.loadedKey != loadKey else {
-            // Same document still parsing — keep the latest profile for didFinish.
             if !coordinator.shellLoaded,
                let embedProfileJSON, !embedProfileJSON.isEmpty {
                 coordinator.pendingProfileJS = Self.profilePushJS(
@@ -493,7 +425,6 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         )
     }
 
-    /// Full `tapper.html` parse with boot script (profile + `#d=` + embed chrome).
     private static func performFullLoad(
         into webView: WKWebView,
         coordinator: Coordinator,
@@ -517,12 +448,6 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         )
         coordinator.shellLoaded = false
         coordinator.loadAttempts += 1
-        // Inject before any tapper.html script so decrypt sees #d= and SOS sees app preview.
-        // Flag + hash fallback: loadHTMLString can leave location as about:blank where
-        // replaceState alone would leave decrypt empty and wrongly auto-arm SOS.
-        // Owner embed: `html.app-embed` before first paint. Preview/Scan: full HTML tabs
-        // + `html.app-preview` (flex tabbar — fixed + dual-scroll ate taps in WKWebView).
-        // `__REDMED_PROFILE` skips WebCrypto when native already has plaintext.
         let linkedJS = braceletLinked ? "true" : "false"
         let embedJS = appEmbed
             ? "window.__REDMED_APP_EMBED=1;try{document.documentElement.classList.add('app-embed');}catch(e0){}"
@@ -557,12 +482,10 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         } else {
             html = boot + html
         }
-        // baseURL = the tapper.html file so relative BrandLogo / sw.js resolve like a real open.
         webView.loadHTMLString(html, baseURL: fileURL)
+        coordinator.scheduleLoadDeadline(for: webView)
     }
 
-    /// JS push after Edit / pooled-view first paint. Retries until `__redmedApplyProfile`
-    /// exists so a warm-pool race cannot leave RedMed empty.
     private static func profilePushJS(
         encodedPayload: String,
         braceletLinked: Bool,
@@ -595,8 +518,6 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         """
     }
 
-    /// JSON string literal for safe JS concatenation (bare String is not a valid
-    /// `JSONSerialization` top-level object — wrap in an array, then strip `[` `]`).
     private static func jsStringLiteral(_ value: String) -> String? {
         guard let data = try? JSONSerialization.data(withJSONObject: [value]),
               let wrapped = String(data: data, encoding: .utf8),
@@ -610,16 +531,15 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         var loadedContentKey: String?
         var loadedShellKind: String?
         var shellLoaded = false
-        /// Face ID–warmed embed taken in makeUIView — first update must not reload it.
         var usingPooledShell = false
-        /// Owner RedMed embed only — Preview / Scan / passerby never open the NFC tab.
         var appEmbed = false
-        /// Profile push that arrived before `didFinish` — replay once the document is ready.
         var pendingProfileJS: String?
         var pageVisible = true
         var loadAttempts = 0
         var isRecovering = false
         var forceReload: ((WKWebView) -> Void)?
+        /// Bounded recovery if didFinish / probe never completes (blank RedMed).
+        private var loadDeadlineTask: Task<Void, Never>?
 
         func adoptLoadIdentity(
             loadKey: String,
@@ -631,6 +551,22 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
             loadedPayload = payloadKey
             loadedContentKey = contentKey
             loadedShellKind = shellKind
+        }
+
+        func cancelLoadDeadline() {
+            loadDeadlineTask?.cancel()
+            loadDeadlineTask = nil
+        }
+
+        /// If shellLoaded is still false after 2.5s, force recovery (capped by loadAttempts).
+        func scheduleLoadDeadline(for webView: WKWebView) {
+            cancelLoadDeadline()
+            loadDeadlineTask = Task { @MainActor [weak self, weak webView] in
+                try? await Task.sleep(nanoseconds: 2_500_000_000)
+                guard let self, let webView, !Task.isCancelled else { return }
+                guard !self.shellLoaded else { return }
+                self.scheduleRecovery(into: webView)
+            }
         }
 
         func recoverIfNeeded(_ webView: WKWebView) {
@@ -659,13 +595,6 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
             }
         }
 
-        /// Pooled embed reported `!isLoading` right after `makeUIView` attached this
-        /// delegate. That can mean a normal finish (Face ID ran long enough for the
-        /// warm parse to finish) or a WebContent process death that happened while
-        /// the pool still had `navigationDelegate: nil` — no `didFinish` /
-        /// `webViewWebContentProcessDidTerminate` ever fired for that case. Probe the
-        /// document before trusting it so a dead pooled view still recovers even
-        /// when `pageVisible` never flips to trigger `recoverIfNeeded`.
         func confirmPooledShellLoaded(_ webView: WKWebView) {
             guard webView.url != nil else {
                 scheduleRecovery(into: webView)
@@ -689,6 +618,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
                     self.scheduleRecovery(into: webView)
                     return
                 }
+                self.cancelLoadDeadline()
                 self.shellLoaded = true
                 if let pending = self.pendingProfileJS {
                     self.pendingProfileJS = nil
@@ -697,8 +627,8 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
             }
         }
 
-        /// Defer reload out of updateUIView / evaluateJavaScript callbacks.
         private func scheduleRecovery(into webView: WKWebView) {
+            cancelLoadDeadline()
             guard !isRecovering, loadAttempts < 2 else { return }
             isRecovering = true
             loadedKey = nil
@@ -711,6 +641,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            cancelLoadDeadline()
             shellLoaded = true
             loadAttempts = 0
             if let pending = pendingProfileJS {
@@ -720,8 +651,6 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         }
 
         func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
-            // Share retryLoad's cap — resetting to 0 looped loadHTMLString forever
-            // when WebContent died before didFinish.
             scheduleRecovery(into: webView)
         }
 
@@ -739,7 +668,6 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
 
         private func retryLoad(_ webView: WKWebView, error: Error) {
             let ns = error as NSError
-            // A newer loadHTMLString cancels the in-flight one — not a real fail.
             if ns.domain == NSURLErrorDomain && ns.code == NSURLErrorCancelled { return }
             if ns.domain == "WebKitErrorDomain" && ns.code == 102 { return }
             guard loadAttempts < 2 else { return }
@@ -765,8 +693,6 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
                 UIApplication.shared.open(url, options: [:], completionHandler: nil)
                 decisionHandler(.cancel)
             case "redmed":
-                // Owner embed status → NFC tab. Preview / Scan / passerby: drop NFC URLs
-                // (bracelet tap shell = RedMed · 911 · Aid only — no NFC · no Edit).
                 if Self.isNFCTabURL(url) {
                     if appEmbed {
                         NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
@@ -786,7 +712,6 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
             for navigationAction: WKNavigationAction,
             windowFeatures: WKWindowFeatures
         ) -> WKWebView? {
-            // Deny target=_blank / window.open — same posture as LocalWebView.
             if let url = navigationAction.request.url, !url.isFileURL {
                 if (url.scheme ?? "").lowercased() == "redmed", Self.isNFCTabURL(url) {
                     if appEmbed {
@@ -799,12 +724,10 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
             return nil
         }
 
-        /// `redmed://nfc` from owner embed status line (Not linked / Linked bracelet).
         private static func isNFCTabURL(_ url: URL) -> Bool {
             guard (url.scheme ?? "").lowercased() == "redmed" else { return false }
             let host = (url.host ?? "").lowercased()
             if host == "nfc" { return true }
-            // Tolerate redmed:///nfc or path-only forms.
             let path = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/")).lowercased()
             return path == "nfc"
         }
