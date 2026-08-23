@@ -2,6 +2,16 @@
 
 Last audited against `main` (v1.1 / build 2). Product is local-only medical ID + emergency assist. No profile backend.
 
+## Permanent rule: local, always loadable
+
+| Surface | Where data lives | How the shell loads |
+|---------|------------------|---------------------|
+| **Owner app** (RedMed / Preview / Scan) | Keychain + RAM only | Bundled `tapper.html` via `loadHTMLString` — **no network** |
+| **Band / passerby phone** | `#d=` fragment only | Hosted static shell; **SW cache-first** after first open (works offline) |
+| **PHI on servers** | Never | No profile API, no analytics SDKs that phone home |
+
+Do not add a profile backend. Do not require login to view a tapped card. Do not wait on network when a cached or bundled shell exists.
+
 ## Green (code + hosted shell)
 
 | Area | Status |
@@ -11,6 +21,7 @@ Last audited against `main` (v1.1 / build 2). Product is local-only medical ID +
 | Owner tabs | RedMed · 911 · Aid · NFC; scanners never see NFC |
 | NFC Preview + Scan | Both use `fullScreenCover(item:)` after pack — no empty-cover race |
 | Passerby shell | Identical triple: `tapper.html` / `tapper/index.html` / `RedMed-Xcode/RedMed/tapper.html` |
+| Offline shell | SW `redmed-tapper-v118` precaches HTML + pheart / BrandLogo / BrandWordmark |
 | Band URI contract | Write only `medicalCardBaseURL + #d=` base64url; vendor/social/short URLs rejected |
 | AES-GCM on chip | Public client key by design (EMS decrypts with no account) |
 | ATS | Arbitrary loads + local networking **false** |

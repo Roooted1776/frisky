@@ -1,10 +1,16 @@
-/* RedMed passerby layout cache — zero servers, zero profile DB.
+/* RedMed passerby layout cache — local-first, always loadable.
  *
- * Served under /tapper/ (see tapper/index.html). After a responder opens the card
- * once online, these static assets stay in Cache Storage. A later bracelet
- * tap (EMT / helper, no app) must paint almost instantly from cache — even
- * with no signal. Medical fields live only in the URL #d= fragment (never
- * cached here — fragments are not part of the HTTP request).
+ * Product rule: zero profile servers / zero profile DB. Medical fields live
+ * only in the URL #d= fragment (never cached here — fragments are not part
+ * of the HTTP request). The shell is static HTML+assets only.
+ *
+ * Served under /tapper/ (see tapper/index.html). After a responder opens the
+ * card once online, these static assets stay in Cache Storage. A later
+ * bracelet tap (EMT / helper, no app) must paint almost instantly from
+ * cache — even with no signal.
+ *
+ * Owner app path is separate: WKWebView loads the *bundled* tapper.html via
+ * loadHTMLString (file base) — no network required for Preview / Scan / embed.
  *
  * Shell strategy: cache-first with multi-key fallback (/tapper/ ↔ index.html);
  * never wait on network when any shell copy exists. Background networkReload
@@ -15,12 +21,14 @@
  * putShell is HTML-only. Optional assets use putAsset so logos / sw.js never
  * overwrite shell keys (that poison served PNG/JS as /tapper/).
  */
-var CACHE = 'redmed-tapper-v117';
+var CACHE = 'redmed-tapper-v118';
 var ASSETS = [
   './pheart.png',
   './BrandLogo.png',
+  './BrandWordmark.png',
   '../assets/pheart.png',
-  '../assets/BrandLogo.png'
+  '../assets/BrandLogo.png',
+  '../assets/BrandWordmark.png'
 ];
 /** Primary HTML shell — install must fail closed if neither key can be cached. */
 var REQUIRED_SHELLS = ['./index.html', './'];
