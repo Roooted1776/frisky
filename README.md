@@ -2,7 +2,7 @@
 
 Native iOS medical ID + emergency aid app. Shipable source of truth is
 `RedMed-Xcode/` (SwiftUI, iOS 17+, Xcode 15+).
-Cursor, Claude, and other LLM programs should open this repo at `/Users/claude/Documents/frisky` (the local project root).
+Cursor, Claude, and other LLM programs should open this repo at `/Users/claude/Documents/frisky` (the local project root) and use `main` as the only default branch.
 
 ## Canonical tree
 
@@ -22,13 +22,7 @@ Cursor, Claude, and other LLM programs should open this repo at `/Users/claude/D
 No other product HTML. Owner UI is native SwiftUI only. Do not reintroduce
 `uploads/`, `screenshots/`, or UK `compliance/` drafts — git history has them.
 
-Do not open a PR with `base: main` and `compare: main` — pick a feature
-branch from the compare dropdown (or push one first).
-
-## Branch naming
-
-Git cannot store `main/foo` while a branch named `main` exists (ref file vs
-directory clash). Use `main-<desc>-xxxx` (hyphen), not `main/<desc>-xxxx`.
+`main` is the only and default branch. Do not leave extra remote branches.
 
 ## Build (macOS only)
 
