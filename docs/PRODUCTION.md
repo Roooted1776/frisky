@@ -26,7 +26,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | AES-GCM on chip | Public client key by design (EMS decrypts with no account) |
 | ATS | Arbitrary loads + local networking **false** |
 | Snapshot / pasteboard | Privacy cover + secure pasteboard clear on background |
-| Live github.io | `/tapper/`, assets, SW return 200 |
+| Live github.io | `/tapper/`, assets, SW return 200 (interim host) |
 | Open PRs | Must be none before ship; squash only into `main` |
 
 ## Blockers before App Store / hardware NFC
@@ -47,14 +47,16 @@ These cannot be finished in git alone.
    - iOS build workflow is **manual only** (`workflow_dispatch`) — GitHub Actions billing was blocking runners.
    - Restore push/PR triggers after Billing is green; Archive from Xcode on the paid team for TestFlight.
 
-4. **Custom domain (optional)**
-   - Band base is `https://roooted1776.github.io/tapper/` until `getredmed.com` DNS + Pages custom domain are green.
-   - Do **not** flip `medicalCardBaseURL` while the domain NXDOMAINs — existing bands would break.
+4. **Custom HTML domain (TBD)**
+   - Product URL for the tapper HTML app is a **custom domain, not chosen yet** (`AppConfig.medicalCardCustomDomainTBD = nil`).
+   - Band writes stay on `https://roooted1776.github.io/tapper/` until the custom host has HTTPS Active and `/tapper/` smokes green.
+   - Do **not** flip `medicalCardBaseURL` / fill `medicalCardCustomDomainTBD` while the domain NXDOMAINs — bands would open a dead page.
+   - See `docs/domain.md`.
 
 ## Soft polish (not ship-stoppers)
 
 - Stale remote branches (`fix-preview-button-link`, `organize-swift-folders`, …): delete after merge; sole long-lived branch is `main`.
-- GitHub Pages does not apply Cloudflare `_headers` / `_redirects`; meta CSP + JS redirects cover github.io. CF remains preferred when `redmed.pages.dev` / custom domain is live.
+- GitHub Pages does not apply Cloudflare `_headers` / `_redirects`; meta CSP + JS redirects cover github.io. CF remains preferred when a custom domain is live.
 - Help → Privacy / Terms / Security are full copy in `Help.html`; thin redirect stubs exist for deep links.
 - Device QA matrix (required once): Face ID unlock, Edit save, Preview, Simulate Scan, 911 call sheet, Aid, erase, background snapshot cover, real band write after NFC entitlement.
 
@@ -64,11 +66,12 @@ These cannot be finished in git alone.
 2. Xcode Archive on paid team with NFC capability when ready.
 3. Flip `nfcHardwareEnabled` only after entitlement is present and a blank NTAG216 verifies.
 4. Set real `appStoreURL` from App Store Connect.
-5. Tag release on `main` (e.g. `v1.1.0`); Pages deploy stays automatic from `main`.
+5. When the custom HTML domain is chosen and HTTPS-green, set `medicalCardCustomDomainTBD` and ship that build.
+6. Tag release on `main` (e.g. `v1.1.0`); Pages deploy stays automatic from `main`.
 
 ## Do not ship with
 
 - Experimental long-lived branches merged via merge-commit (squash only).
 - `nfcHardwareEnabled = true` without NFC entitlement (runtime session failures).
-- `medicalCardBaseURL` pointed at a dead host.
+- `medicalCardCustomDomainTBD` / `medicalCardBaseURL` pointed at a dead host.
 - Secrets, analytics SDKs, or network profile upload (product rule: local only).

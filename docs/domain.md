@@ -1,71 +1,45 @@
-# RedMed domain — getredmed.com
+# RedMed domain — custom host TBD
 
-Locked pick for the hosted passerby shell (replacing interim hosts as the
-**write** base). Profile data stays in `#d=` only — no RedMed PHI backend.
+The HTML tap app (passerby shell) ships on a **custom domain**. The name is
+**TBD** — not locked to `getredmed.com` or any other pick.
 
-**Current (2026-08-21):** AppConfig writes
-`https://roooted1776.github.io/tapper/` (public GitHub Pages user site —
-shell only, no PHI). Smoke green: RedMed · 911 · Aid.
+Profile data stays in `#d=` only. No RedMed PHI backend.
 
-`https://redmed.pages.dev/tapper/` is still **404** until
-`CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` land (or Pages project
-`redmed` connects to this repo). `getredmed.com` does not resolve. Do not
-flip AppConfig to `getredmed.com` first.
+**Do not write an unregistered / placeholder host onto NFC bands.**
+`AppConfig.medicalCardCustomDomainTBD` stays `nil` until you choose a domain
+and HTTPS + `/tapper/` smoke are green. Until then `medicalCardBaseURL` is the
+live interim host:
 
-## Buy (you must do this — agents cannot pay)
+`https://roooted1776.github.io/tapper/`
 
-1. Cloudflare Dashboard → **Domain Registration** → register **`getredmed.com`**
-   (at-cost .com; DNS stays in the same account as Pages).
-2. Optional same cart: **`redmed.band`** (short NFC base). Not required for v1.
-3. Skip **`redmed.com`** until Afternic quotes a BIN (premium, quote-only).
-
-Do not merge or ship NFC writes to the custom host until steps below show green.
-`AppConfig.medicalCardBaseURL` must stay on a live host
-(`https://roooted1776.github.io/tapper/` today) until step 3 (HTTPS Active +
-`/tapper/` smoke) is green — a premature flip writes dead URLs onto bands
-while DNS is still NXDOMAIN.
-
-## Attach to Pages (cutover)
-
-1. Cloudflare Pages project **`redmed`** → **Custom domains** → add
-   `getredmed.com` and `www.getredmed.com`.
-2. Finish DNS (Cloudflare Registrar usually auto-configures). Wait for HTTPS
-   **Active**.
-3. Smoke: `https://getredmed.com/tapper/` loads RedMed · 911 · Aid (same shell as
-   today). Bare `https://getredmed.com/` must land on `/tapper/` and keep `#d=`.
-4. Optional: Cloudflare **Redirect Rules** — `redmed.pages.dev/*` and
-   `roooted1776.github.io/*` → `https://getredmed.com/$1` (301). Keep serving
-   prior hosts either way so bands already written still open.
-5. Ship the app build that sets
-   `AppConfig.medicalCardBaseURL = "https://getredmed.com/tapper/"`.
-   Until then, leave it on the live interim host.
-6. New NFC writes use the custom host. Old `github.io` / `pages.dev` bands keep
-   working if those hosts stay up.
-
-## Publish paths (interim)
+## Current (2026-08-23)
 
 | Path | Status |
 |------|--------|
-| Public GitHub Pages `Roooted1776/Roooted1776.github.io` | **Live** — AppConfig write base |
-| Cloudflare Pages project `redmed` (`redmed.pages.dev`) | Blocked — missing CF secrets / Git connect |
-| Custom host `getredmed.com` | Not registered (NXDOMAIN) |
+| Custom HTML app URL | **TBD** — set `AppConfig.medicalCardCustomDomainTBD` when ready |
+| Public GitHub Pages `Roooted1776.github.io/tapper/` | **Live interim** — NFC write base |
+| Cloudflare Pages `redmed.pages.dev` | Optional; 404 until CF secrets / Git connect |
 
-Public shell publish (no PHI): `./scripts/publish-github-io.sh` copies HTML/SW/assets
-into the user Pages repo; Actions assembles chunked uploads when needed.
+Smoke on the live interim: RedMed · 911 · Aid, no login.
+
+## When you pick the domain
+
+1. Register the custom domain (Cloudflare Registrar recommended so DNS + Pages stay together).
+2. Attach it to the Pages project that serves `tapper/`.
+3. Wait for HTTPS **Active**.
+4. Smoke: `https://<your-domain>/tapper/` loads RedMed · 911 · Aid. Bare `/` must land on `/tapper/` and keep `#d=`.
+5. Optional: 301 old github.io / pages.dev URLs to the custom host; keep serving old hosts so already-written bands still open.
+6. Set `AppConfig.medicalCardCustomDomainTBD` to `https://<your-domain>/tapper/` and ship that build.
+7. New NFC writes use the custom host. Old github.io bands keep working if that host stays up.
+
+Path stays **`/tapper/`** so SW cache keys and legacy `/get/` → `/tapper/` redirects stay coherent.
 
 ## URL contract
 
 | Role | URL |
 |------|-----|
+| Product HTML app | Custom domain, **TBD** |
 | Current AppConfig write base | `https://roooted1776.github.io/tapper/` |
-| Cloudflare Pages (when secrets land) | `https://redmed.pages.dev/tapper/` |
-| Locked custom host (after cutover) | `https://getredmed.com/tapper/` |
-| Optional short alias (if bought) | `https://redmed.band/` → same Pages project |
+| Cloudflare Pages (optional) | `https://redmed.pages.dev/tapper/` |
 
-Path stays **`/tapper/`** so SW cache keys and legacy `/get/` → `/tapper/` redirects
-stay coherent.
-
-## Rejected / taken (do not chase)
-
-`redmed.com` (Afternic), `redmed.app`, `redmed.io`, `redmed.health`, `redmed.org`,
-`redmed.co`, `red-med.com`.
+`getredmed.com` / `redmed.band` are examples only — not locked. Skip premium names (`redmed.com`, etc.) unless you buy them.
