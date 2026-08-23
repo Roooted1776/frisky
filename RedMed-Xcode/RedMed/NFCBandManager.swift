@@ -23,13 +23,17 @@ final class NFCBandManager: ObservableObject {
     @Published var writeSucceeded = false
     @Published var writeVerified = false
     @Published var lastPackedURL: String?
-    /// `#d=` payload or full band URL for `PasserbyHTMLCardView` (HTML shell).
-    @Published var scannedHTMLPayload: String?
-    /// Plaintext profile JSON for Scan Preview — skips WebCrypto decrypt hang.
-    @Published var scannedEmbedJSON: String?
-    @Published var showScannedCard = false
+    /// Scan / simulate → full passerby shell (item present; payload never empty).
+    @Published var scannedCard: ScannedCardSession?
     @Published var authFailed = false
     @Published var alertMessage: String?
+
+    /// One-shot Scan open — same shape as NFCView.PreviewSession.
+    struct ScannedCardSession: Identifiable {
+        let id = UUID()
+        let payload: String
+        let embedJSON: String?
+    }
 
     private let writer = NFCWriter()
     private let reader = NFCReader()
@@ -111,7 +115,7 @@ final class NFCBandManager: ObservableObject {
         let chip = ProfileNFCCodec.chipProfile(from: profile)
         isReading = true
         statusMessage = "Opening tap card…"
-        // Pack #d= + embed JSON first — present only when linked (no empty cover race).
+        // Pack #d= + embed JSON first — present only when complete.
         Task { @MainActor [weak self] in
             let packed = await Task.detached(priority: .userInitiated) {
                 (
@@ -131,9 +135,7 @@ final class NFCBandManager: ObservableObject {
     }
 
     func dismissScannedCard() {
-        showScannedCard = false
-        scannedHTMLPayload = nil
-        scannedEmbedJSON = nil
+        scannedCard = nil
     }
 
     /// Mark owner bracelet paired after a real CoreNFC write (hardware only).
@@ -228,8 +230,6 @@ final class NFCBandManager: ObservableObject {
             alertMessage = "Couldn't read a RedMed tap card from this tag."
             return
         }
-        scannedEmbedJSON = embedJSON
-        scannedHTMLPayload = payloadOrURL
-        showScannedCard = true
+        scannedCard = ScannedCardSession(payload: payloadOrURL, embedJSON: embedJSON)
     }
 }

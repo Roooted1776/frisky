@@ -60,15 +60,13 @@ struct NFCView: View {
         }
         .background { RedMedPageBackground() }
         // Band Scan → same one-page tap card a real band tap opens.
-        .fullScreenCover(isPresented: $band.showScannedCard) {
-            if let payload = band.scannedHTMLPayload {
-                PasserbyHTMLCardView(
-                    payloadOrURL: payload,
-                    braceletLinked: profile.showsBraceletAsLinked,
-                    embedProfileJSON: band.scannedEmbedJSON
-                )
-                .presentationBackground(Color.redmedBg)
-            }
+        .fullScreenCover(item: $band.scannedCard) { session in
+            PasserbyHTMLCardView(
+                payloadOrURL: session.payload,
+                braceletLinked: profile.showsBraceletAsLinked,
+                embedProfileJSON: session.embedJSON
+            )
+            .presentationBackground(Color.redmedBg)
         }
         .fullScreenCover(item: $previewSession) { session in
             PasserbyHTMLCardView(
