@@ -253,6 +253,23 @@ class ProfileData: ObservableObject {
     /// Single-flight off-main Keychain decode + JSON + AES while biometrics run.
     /// Does not publish PHI — `commitUnlockProfile` applies only after Face ID + gate unlock.
     /// Re-calling while in flight is a no-op (keeps the Face ID overlap intact).
+    /// After Face ID parks `LAContext`, retry Keychain if the overlap load
+    /// ran without a context (bound items fail closed, no second sheet).
+    func beginUnlockPrefetchWithParkedContext() {
+        guard persists else { return }
+        if unlockPrefetchBox.hasReadyProfile { return }
+        if BiometricAuth.peekAuthenticationContext() != nil {
+            unlockBlobTask?.cancel()
+            unlockBlobTask = nil
+            unlockJSONTask?.cancel()
+            unlockJSONTask = nil
+            unlockAESTask?.cancel()
+            unlockAESTask = nil
+            unlockPrefetchBox.clear()
+        }
+        beginUnlockPrefetch()
+    }
+
     func beginUnlockPrefetch() {
         guard persists else { return }
         if unlockBlobTask != nil { return }
@@ -615,6 +632,12 @@ private final class UnlockPrefetchBox: @unchecked Sendable {
     private let lock = NSLock()
     private var ready = false
     private var blob: PersistedProfile?
+
+    var hasReadyProfile: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return ready && blob != nil
+    }
 
     func store(_ value: PersistedProfile?) {
         lock.lock()
