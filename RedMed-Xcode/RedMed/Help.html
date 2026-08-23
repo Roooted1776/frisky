@@ -34,7 +34,7 @@
     <h1 class="legal-doc-title">Privacy</h1>
     <p class="legal-meta">
       <strong>Effective</strong> August 2026<br>
-      <strong>Version</strong> 4.0 (United States)<br>
+      <strong>Version</strong> 4.1 (United States)<br>
       <strong>Law</strong> US federal and state privacy law (including CCPA/CPRA for California residents)
     </p>
     <p class="legal-parties">Applies to people in the United States who use the RedMed app or a RedMed NFC band</p>
@@ -46,9 +46,8 @@
       <p>This Privacy page explains what RedMed does and does not hold about you. Read it with <a href="#terms">Terms</a> and <a href="#security">Security</a>.</p>
 
     <h2><span class="sec-num">1.</span> Who we are</h2>
-    <p>For any personal information we do control, the business is <strong>[REGISTERED COMPANY NAME]</strong>, organized under the laws of <strong>[STATE OF FORMATION]</strong>, with principal place of business at <strong>[BUSINESS ADDRESS]</strong> (“RedMed”, “we”, “us”).</p>
+    <p>For any personal information we do control, RedMed is operated by an individual based in the <strong>State of New Jersey, United States</strong> (“RedMed”, “we”, “us”), not a registered company. There is no separate corporate entity behind RedMed at this time.</p>
     <p>Contact: <a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a>.</p>
-    <p class="legal-footer-disclaimer">Fill in the company name, state, and address before publishing this page to US users.</p>
 
     <h2><span class="sec-num">2.</span> What RedMed is</h2>
     <p>RedMed is a consumer app for a <strong>local emergency medical ID</strong>: store self-reported details on your iPhone, optionally write them to a passive NFC band, call for help, and show on-device first-aid while waiting for professionals.</p>
@@ -67,6 +66,7 @@
       <li><strong>Emergency contacts:</strong> names, relationships, and phones you choose to list. Tell those people you listed them.</li>
       <li><strong>Location:</strong> coordinates and heading shown only while Find Help is open, so you can read them to a dispatcher.</li>
       <li><strong>Support email:</strong> if you write us, we see the address and message you send.</li>
+      <li><strong>Motion data (crash/impact alarm):</strong> while the App is unlocked, it can read your iPhone's motion sensors to detect a possible vehicle crash or severe impact and trigger a local alarm. See <a href="#terms">Terms</a> §7. This processing happens only in memory on your device to evaluate the last few seconds of motion — it is never stored, logged, or sent to us.</li>
     </ul>
     <p>Providing a profile is optional. Leaving fields blank is fine; an empty card is less useful in an emergency.</p>
 
@@ -111,7 +111,7 @@
     <p>The passerby card may keep its static shell in browser Cache Storage so a later tap opens offline. Medical fields stay in the URL <code>#d=</code> fragment and are not written into that cache. No advertising or analytics cookies. The owner profile lives in Keychain, not web localStorage.</p>
 
     <h2><span class="sec-num">13.</span> Children and people you support</h2>
-    <p>RedMed is not directed to children under 13, and we do not knowingly collect their information on RedMed servers. A parent, guardian, or caregiver may create a profile for a child or an adult they support. That person is responsible for accuracy and for what goes on the band. A child’s band is as readable as an adult’s.</p>
+    <p>RedMed is not directed to children under 13, and we do not knowingly collect their information on RedMed servers. Only an adult who meets the eligibility rules in <a href="#terms">Terms</a> §15 may create a profile for a child or an adult they support. That adult is responsible for accuracy and for what goes on the band. A child’s band is as readable as an adult’s.</p>
 
     <h2><span class="sec-num">14.</span> Changes</h2>
     <p>We may update this page. The Effective date above shows the latest revision. Material changes will appear in the app where practicable.</p>
@@ -126,8 +126,8 @@
     <h1 class="legal-doc-title">Terms</h1>
     <p class="legal-meta">
       <strong>Effective</strong> August 2026<br>
-      <strong>Version</strong> 4.0 (United States)<br>
-      <strong>Governing law</strong> Laws of the State of <strong>[GOVERNING STATE]</strong>, United States
+      <strong>Version</strong> 4.1 (United States)<br>
+      <strong>Governing law</strong> Laws of the State of <strong>New Jersey</strong>, United States
     </p>
     <p class="legal-parties">Applies to people in the United States who use the RedMed app or a RedMed NFC band</p>
     <div class="legal-notice">
@@ -136,8 +136,7 @@
     </div>
     <article class="legal-body">
       <h2><span class="sec-num">1.</span> Who we are</h2>
-    <p>RedMed is provided by <strong>[REGISTERED COMPANY NAME]</strong> (“RedMed”, “we”, “us”), organized under the laws of <strong>[STATE OF FORMATION]</strong>, with principal place of business at <strong>[BUSINESS ADDRESS]</strong>. Contact: <a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a>.</p>
-    <p class="legal-footer-disclaimer">Fill in the company details before publishing this page to US users.</p>
+    <p>RedMed is provided by an individual based in the <strong>State of New Jersey, United States</strong> (“RedMed”, “we”, “us”), not a registered company. Contact: <a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a>.</p>
 
     <h2><span class="sec-num">2.</span> Agreement</h2>
     <p>These Terms govern the RedMed iPhone app and any associated passive NFC medical band programmed through the app (together, the “App”).</p>
@@ -164,41 +163,46 @@
     <h2><span class="sec-num">6.</span> Find Help and location</h2>
     <p>Location and compass are used only while Find Help is visible, to display coordinates you can read to 911. Defaults on in Settings. First GPS use may trigger iOS’s When-In-Use Allow dialog — we cannot skip it.</p>
     <p>The optional seizure stopwatch is started by you. At five minutes it may open the dialer. It does not detect seizures and must never delay an earlier call when one is needed.</p>
-    <p>RedMed does not run Apple Emergency SOS via satellite, Apple Crash Detection, or carrier satellite messaging. Find Help may open Phone or Messages, or describe those built-in steps when there is no cell signal; RedMed does not operate those radios. Coordinates stay on-device and are not sent to us.</p>
+    <p>RedMed does not use Apple's Emergency SOS via satellite, Apple Crash Detection API, or carrier satellite messaging — see <a href="#crash-alarm">§7</a> for RedMed's own, separate crash/impact alarm. Find Help may open Phone or Messages, or describe those built-in steps when there is no cell signal; RedMed does not operate those radios. Coordinates stay on-device and are not sent to us.</p>
 
-    <h2><span class="sec-num">7.</span> No medical advice</h2>
+    <h2 id="crash-alarm"><span class="sec-num">7.</span> Automatic crash / severe-impact alarm</h2>
+    <p>Separately from Find Help, the App can run an on-device motion monitor (built by RedMed, not Apple's Crash Detection) that watches your iPhone's motion sensors while the App is unlocked. If it detects a sudden, severe impact consistent with a vehicle crash or comparable event, it can automatically trigger a local <strong>alarm</strong> — maximum screen brightness, maximum device volume, and an audible siren — to draw attention and help you or a bystander find the phone and call for help. You can stop the alarm at any time with the on-screen "Stop the alarm" control.</p>
+    <p>The alarm is <strong>local and automatic only</strong>. It does not call 911, does not message anyone, does not transmit your location or any data to RedMed or anyone else, and does not detect every crash or every severe impact. It is tuned to avoid triggering during ordinary daily motion (walking, running, exercise, and other normal handling of the phone), which means it can also fail to trigger during an actual crash, and it can trigger by mistake during unrelated hard impacts (for example, a dropped phone or a hard fall). <strong>Do not rely on the alarm instead of calling 911</strong> if you are able to call. Motion data used to evaluate a possible impact is processed only in memory on your device for this purpose and is not stored or transmitted.</p>
+    <p>Using the alarm as a substitute for a monitored medical device, a certified crash-detection system, or a direct call to 911 is outside its intended purpose and at your own risk.</p>
+
+    <h2><span class="sec-num">8.</span> No medical advice</h2>
     <p>Aid content is general public information, similar to material from public-health sources. It is for education while you wait for EMS. It is not personalized medical advice and creates no clinician-patient relationship.</p>
     <p>YOU ACKNOWLEDGE THAT REDMED DOES NOT PROMISE OR WARRANT ANY PARTICULAR RESULT — INCLUDING THAT HELP WILL BE REACHED, THAT RESPONDERS WILL USE THE INFORMATION, THAT TREATMENT WILL BE CORRECT, OR THAT HARM WILL BE AVOIDED. Use of Aid or Find Help is at your own risk and never replaces calling 911.</p>
 
-    <h2><span class="sec-num">8.</span> Not a medical device</h2>
+    <h2><span class="sec-num">9.</span> Not a medical device</h2>
     <p>The App and band are <strong>not medical devices</strong> under the Federal Food, Drug, and Cosmetic Act or FDA rules for their current purpose: consumer storage and display of self-reported emergency ID, plus a convenience assist for contacting emergency services. RedMed is not FDA-cleared, approved, or registered as a device for diagnosis, treatment, cure, mitigation, or prevention of disease.</p>
-    <p>RedMed does not diagnose, treat, monitor vitals, or provide clinical decision support. The band is a passive NFC tag — the digital equivalent of a wallet medical ID — not a therapeutic instrument.</p>
+    <p>RedMed does not diagnose, treat, monitor vitals, or provide clinical decision support. The band is a passive NFC tag — the digital equivalent of a wallet medical ID — not a therapeutic instrument. The crash/impact alarm in <a href="#crash-alarm">§7</a> is a local attention-getting signal, not a monitor, diagnostic tool, or treatment system.</p>
     <p>Using RedMed as if it were a monitor, alarm, or treatment system is outside the intended purpose and at that person’s sole risk.</p>
 
-    <h2><span class="sec-num">9.</span> Call 911 first</h2>
+    <h2><span class="sec-num">10.</span> Call 911 first</h2>
     <p>Nothing in the App should delay calling <strong>911</strong>. Prefer calling before reading Aid or writing a band. If you are deaf, hard of hearing, or speech-impaired, use <strong>TTY 911</strong>, relay, or text-to-911 where available.</p>
 
-    <h2><span class="sec-num">10.</span> Helping someone else</h2>
+    <h2><span class="sec-num">11.</span> Helping someone else</h2>
     <p>Many US states have Good Samaritan laws that can limit civil liability for people who render emergency aid in good faith. Those laws vary. This is general information, not legal advice. RedMed does not represent that any particular action taken with the App will be protected under any state’s law.</p>
 
-    <h2><span class="sec-num">11.</span> Availability</h2>
-    <p>We aim to keep the App working as described, but we do not promise uninterrupted service or that GPS, NFC, compass, or other device features will work on every phone or in every situation. Those features come from your device and OS.</p>
+    <h2><span class="sec-num">12.</span> Availability</h2>
+    <p>We aim to keep the App working as described, but we do not promise uninterrupted service or that GPS, NFC, compass, motion sensors, or other device features will work on every phone or in every situation. Those features come from your device and OS.</p>
 
-    <h2><span class="sec-num">12.</span> Disclaimers</h2>
-    <p>TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE APP AND ANY BAND ARE PROVIDED “AS IS” AND “AS AVAILABLE,” WITHOUT WARRANTIES OF ANY KIND, EXPRESS, IMPLIED, OR STATUTORY, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. WITHOUT LIMITING THE FOREGOING, REDMED DISCLAIMS ANY WARRANTY THAT THE APP OR BAND WILL (A) FUNCTION AS A MEDICAL DEVICE; (B) DETECT, DIAGNOSE, TREAT, OR PREVENT ANY CONDITION; (C) REACH EMS OR ANY THIRD PARTY; (D) PRODUCE ANY PARTICULAR MEDICAL OR RESCUE OUTCOME; OR (E) BE ERROR-FREE, AVAILABLE, OR COMPATIBLE WITH EVERY DEVICE OR NETWORK. SOME STATES DO NOT ALLOW LIMITATIONS ON IMPLIED WARRANTIES, SO SOME OF THE ABOVE MAY NOT APPLY TO YOU.</p>
+    <h2><span class="sec-num">13.</span> Disclaimers</h2>
+    <p>TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE APP AND ANY BAND ARE PROVIDED “AS IS” AND “AS AVAILABLE,” WITHOUT WARRANTIES OF ANY KIND, EXPRESS, IMPLIED, OR STATUTORY, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. WITHOUT LIMITING THE FOREGOING, REDMED DISCLAIMS ANY WARRANTY THAT THE APP OR BAND WILL (A) FUNCTION AS A MEDICAL DEVICE; (B) DETECT, DIAGNOSE, TREAT, OR PREVENT ANY CONDITION; (C) REACH EMS OR ANY THIRD PARTY; (D) PRODUCE ANY PARTICULAR MEDICAL OR RESCUE OUTCOME; (E) DETECT A REAL CRASH OR SEVERE IMPACT, OR AVOID TRIGGERING THE ALARM IN §7 WHEN NO CRASH OCCURRED; OR (F) BE ERROR-FREE, AVAILABLE, OR COMPATIBLE WITH EVERY DEVICE OR NETWORK. SOME STATES DO NOT ALLOW LIMITATIONS ON IMPLIED WARRANTIES, SO SOME OF THE ABOVE MAY NOT APPLY TO YOU.</p>
 
-    <h2><span class="sec-num">13.</span> Limitation of liability</h2>
-    <p>TO THE MAXIMUM EXTENT PERMITTED BY LAW, REDMED AND ITS OFFICERS, DIRECTORS, EMPLOYEES, AND AGENTS WILL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, OR FOR ANY LOSS OF DATA, PROFITS, OR BUSINESS, OR FOR ANY CLAIM ARISING FROM PERSONAL INJURY, WRONGFUL DEATH, FAILED RESCUE, DELAYED CARE, RELIANCE ON SELF-REPORTED PROFILE DATA, AID CONTENT, GPS/COORDINATES, NFC READ FAILURE, OR THE ACTS OR OMISSIONS OF EMS, BYSTANDERS, OR OTHER THIRD PARTIES, ARISING OUT OF OR RELATED TO YOUR USE OF THE APP OR A BAND, WHETHER BASED IN CONTRACT, TORT (INCLUDING NEGLIGENCE), STRICT PRODUCT LIABILITY, OR OTHERWISE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.</p>
+    <h2><span class="sec-num">14.</span> Limitation of liability</h2>
+    <p>TO THE MAXIMUM EXTENT PERMITTED BY LAW, REDMED AND ITS OFFICERS, DIRECTORS, EMPLOYEES, AND AGENTS WILL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, OR FOR ANY LOSS OF DATA, PROFITS, OR BUSINESS, OR FOR ANY CLAIM ARISING FROM PERSONAL INJURY, WRONGFUL DEATH, FAILED RESCUE, DELAYED CARE, RELIANCE ON SELF-REPORTED PROFILE DATA, AID CONTENT, GPS/COORDINATES, NFC READ FAILURE, A MISSED OR FALSE TRIGGER OF THE CRASH/IMPACT ALARM IN §7, OR THE ACTS OR OMISSIONS OF EMS, BYSTANDERS, OR OTHER THIRD PARTIES, ARISING OUT OF OR RELATED TO YOUR USE OF THE APP OR A BAND, WHETHER BASED IN CONTRACT, TORT (INCLUDING NEGLIGENCE), STRICT PRODUCT LIABILITY, OR OTHERWISE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.</p>
     <p>TO THE MAXIMUM EXTENT PERMITTED BY LAW, OUR TOTAL LIABILITY FOR ANY CLAIM ARISING OUT OF OR RELATED TO THESE TERMS OR THE APP WILL NOT EXCEED THE GREATER OF (A) THE AMOUNT YOU PAID US FOR THE APP OR BAND IN THE TWELVE MONTHS BEFORE THE CLAIM OR (B) FIFTY US DOLLARS (US $50).</p>
     <p>Nothing here excludes liability that cannot be excluded under applicable law, including fraud or death or personal injury caused by negligence where such exclusion is prohibited. Where a limitation is partially unenforceable, it applies to the maximum extent allowed.</p>
 
-    <h2><span class="sec-num">14.</span> Your responsibility</h2>
+    <h2><span class="sec-num">15.</span> Your responsibility</h2>
     <p>Use the App only as permitted by these Terms and applicable law. If you use it in the course of a business, you agree to defend and indemnify RedMed against claims, losses, and reasonable attorneys’ fees arising from your use in breach of these Terms, except to the extent caused by our willful misconduct.</p>
 
-    <h2><span class="sec-num">15.</span> Eligibility</h2>
-    <p>You must have capacity to enter a binding contract to create a profile. If you create or manage a profile for a child or an adult you support, you confirm you have authority to do so and you are responsible for accuracy.</p>
+    <h2><span class="sec-num">16.</span> Eligibility</h2>
+    <p>You must be at least 18 years old, or the age of majority in your jurisdiction, and have capacity to enter a binding contract, to create and manage your own profile or to accept these Terms on behalf of a child or another adult. A parent, guardian, or caregiver who is under that age may not use the App to create a profile for someone else. If you create or manage a profile for a child or an adult you support, you confirm you have authority to do so and you are responsible for accuracy. See <a href="#privacy">Privacy</a> §13 for our position on data from children under 13.</p>
 
-    <h2><span class="sec-num">16.</span> Physical bands</h2>
+    <h2><span class="sec-num">17.</span> Physical bands</h2>
     <p>If you buy a band from us or an authorized seller:</p>
     <ul>
       <li>Medical information is written to a <strong>passive NXP NTAG216</strong> at 13.56 MHz (ISO 14443A Type 2, NDEF blank unlocked). No battery, no Bluetooth, no sensors. Laser face: <strong>MED ID</strong> only.</li>
@@ -208,16 +212,22 @@
       <li>Returns and refunds follow checkout terms and applicable state law. Overwrite or erase the chip before returning when you can — we cannot wipe it remotely.</li>
     </ul>
 
-    <h2><span class="sec-num">17.</span> Changes</h2>
-    <p>We may revise these Terms. If a change materially affects your rights, we will tell you in the App or by a contact you gave us before it takes effect. You may stop using the App. The Effective date above shows the latest revision.</p>
+    <h2><span class="sec-num">18.</span> Changes</h2>
+    <p>We may revise these Terms. If a change materially affects your rights, we will tell you in the App or by a contact you gave us before it takes effect. Material changes require you to re-accept these Terms in the App before you can keep using it. You may stop using the App. The Effective date above shows the latest revision.</p>
 
-    <h2><span class="sec-num">18.</span> Disputes</h2>
-    <p>Contact us first at <a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a>. Except where prohibited, these Terms are governed by the laws of the State of <strong>[GOVERNING STATE]</strong>, without regard to conflict-of-law rules, and you and we consent to the exclusive jurisdiction of the state and federal courts located in <strong>[VENUE COUNTY/CITY, STATE]</strong>. You may have additional rights under the laws of your state of residence.</p>
+    <h2 id="disputes-informal"><span class="sec-num">19.</span> Disputes</h2>
+    <p>Contact us first at <a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a>. We will try in good faith to resolve any dispute informally for at least 30 days before either side starts a formal proceeding. Except where prohibited or as provided in <a href="#arbitration">§20 (Arbitration)</a>, these Terms are governed by the laws of the State of <strong>New Jersey</strong>, without regard to conflict-of-law rules, and any dispute not subject to arbitration is brought exclusively in the state or federal courts located in <strong>New Jersey</strong>. You may have additional rights under the laws of your state of residence.</p>
 
-    <h2><span class="sec-num">19.</span> Severability</h2>
+    <h2 id="arbitration"><span class="sec-num">20.</span> Arbitration and class action waiver</h2>
+    <p><strong>Please read this section carefully. It affects your legal rights, including your right to file a lawsuit in court.</strong></p>
+    <p>You and RedMed agree to resolve any dispute, claim, or controversy arising out of or relating to these Terms, the Privacy or Security pages, or your use of the App or a band (a “Claim”) by <strong>binding individual arbitration</strong> under the Consumer Arbitration Rules of the American Arbitration Association (AAA), rather than in court, except that either side may bring an individual claim in small claims court if it qualifies, and either side may seek injunctive relief in court for misuse of intellectual property.</p>
+    <p><strong>Class action waiver.</strong> Claims must be brought in your individual capacity, not as a plaintiff or class member in any purported class, collective, consolidated, or representative proceeding. The arbitrator may not consolidate more than one person’s claims and may not otherwise preside over any form of a representative or class proceeding. If this class action waiver is found unenforceable as to a particular Claim, that Claim (and only that Claim) may proceed in court, and the rest of this arbitration agreement still applies to all other Claims.</p>
+    <p>This arbitration agreement does not apply to Claims that cannot be subject to mandatory arbitration under applicable law, and nothing here limits any non-waivable right you have under such law. <strong>You may opt out</strong> of this arbitration agreement by emailing <a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a> with the subject line “Arbitration Opt-Out” within 30 days of first accepting these Terms, including your name and that you opt out; if you opt out, disputes are resolved under <a href="#disputes-informal">§19</a> instead.</p>
+
+    <h2><span class="sec-num">21.</span> Severability</h2>
     <p>If any provision is held invalid or unenforceable, the rest stays in effect.</p>
 
-    <h2><span class="sec-num">20.</span> Contact</h2>
+    <h2><span class="sec-num">22.</span> Contact</h2>
     <p><a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a></p>
     </article>
   </section>
@@ -227,7 +237,7 @@
     <h1 class="legal-doc-title">Security</h1>
     <p class="legal-meta">
       <strong>Effective</strong> August 2026<br>
-      <strong>Version</strong> 4.0 (United States)<br>
+      <strong>Version</strong> 4.1 (United States)<br>
       <strong>Read with</strong> <a href="#privacy">Privacy</a> and <a href="#terms">Terms</a>
     </p>
     <p class="legal-parties">How RedMed protects the iPhone app, the passerby card, and the NFC band in the United States</p>
@@ -260,16 +270,19 @@
     <h2><span class="sec-num">4.</span> Location</h2>
     <p>GPS starts only on Find Help (When-In-Use). Coordinates stay on-device for display. We do not receive, log, or retain them. Accurate coordinates and a successful 911 call are not guaranteed.</p>
 
-    <h2><span class="sec-num">5.</span> HIPAA alignment (operator)</h2>
+    <h2><span class="sec-num">5.</span> Crash / severe-impact alarm</h2>
+    <p>The on-device motion monitor described in <a href="#terms">Terms</a> §7 runs entirely on the phone: no network call, no upload, no RedMed server involvement. It evaluates a short rolling window of motion sensor data to estimate whether a severe impact occurred, then discards it. A false trigger or a missed trigger is a known limitation of on-device motion heuristics, not a data-security failure — see Terms §7, §13, and §14 for the corresponding disclaimers and liability limits.</p>
+
+    <h2><span class="sec-num">6.</span> HIPAA alignment (operator)</h2>
     <p>Same posture as <a href="#privacy">Privacy</a>: no profile on our systems → RedMed is outside the covered-entity / BA path for that profile. Device Keychain and no backend are the controls. They are not a hospital Security Rule program and not a “HIPAA certified” claim.</p>
 
-    <h2><span class="sec-num">6.</span> Report a vulnerability</h2>
+    <h2><span class="sec-num">7.</span> Report a vulnerability</h2>
     <p>Open a private GitHub security advisory on <a href="https://github.com/Roooted1776/frisky">Roooted1776/frisky</a> for XSS in <code>#d=</code> rendering, Keychain / vault bypass, or owner unlock gate bypass. Or email <a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a>. Do not file public issues with live keys or real medical payloads. See root <code>SECURITY.md</code>.</p>
 
-    <h2><span class="sec-num">7.</span> Trust root</h2>
+    <h2><span class="sec-num">8.</span> Trust root</h2>
     <p>There is no RedMed profile server. The trust root is the owner’s iPhone: Keychain, biometrics gates, RAM purge on background, vault file protection, and the band fragment if written.</p>
 
-    <h2><span class="sec-num">8.</span> Contact</h2>
+    <h2><span class="sec-num">9.</span> Contact</h2>
     <p><a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a></p>
     </article>
   </section>
