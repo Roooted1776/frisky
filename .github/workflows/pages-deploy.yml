@@ -24,8 +24,6 @@ on:
       - '_headers'
       - '_redirects'
       - 'wrangler.toml'
-      - 'BrandLogo.png'
-      - 'BrandWordmark.png'
       - 'assets/**'
       - '.github/workflows/pages-deploy.yml'
   workflow_dispatch:
@@ -50,10 +48,12 @@ jobs:
           ! grep -q 'Set up your RedMed band' "$f"
           cmp -s tapper.html tapper/index.html
           cmp -s tapper.html RedMed-Xcode/RedMed/tapper.html
-          test -f BrandLogo.png
-          test -f BrandWordmark.png
+          test -f assets/BrandLogo.png
+          test -f assets/BrandWordmark.png
+          test -f assets/pheart.png
           test -f tapper/BrandLogo.png
           test -f tapper/BrandWordmark.png
+          test -f tapper/pheart.png
 
       - name: Cloudflare secrets
         id: cf
