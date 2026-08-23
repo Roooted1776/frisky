@@ -21,7 +21,7 @@ function redmedAssetURL(file) {
   try {
     var path = location.pathname || '';
     var i = path.indexOf('/tapper/');
-    if (i >= 0) return path.slice(0, i + 7) + file;
+    if (i >= 0) return path.slice(0, i + '/tapper/'.length) + file;
     if (/\/tapper$/i.test(path)) return path + '/' + file;
   } catch (e) {}
   return file;
@@ -623,7 +623,7 @@ function redmedAssetURL(file) {
     color: var(--muted);
     margin-top: 2px;
   }
-  #panel-medical {
+  #panel-medical.active {
     display: flex;
     flex-direction: column;
     min-height: 100%;
@@ -1572,6 +1572,7 @@ function redmedAssetURL(file) {
     }
     var candidates = [
       redmedAssetURL('pheart.png'),
+      '../assets/pheart.png',
       'assets/pheart.png'
     ];
     var i = 0;

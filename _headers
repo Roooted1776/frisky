@@ -9,6 +9,15 @@
 /sw.js
   Cache-Control: public, max-age=0, must-revalidate
 
+/tapper/pheart.png
+  Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
+
+/assets/pheart.png
+  Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
+
+/pheart.png
+  Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
+
 /tapper/BrandLogo.png
   Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
 
