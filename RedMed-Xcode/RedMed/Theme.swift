@@ -117,7 +117,7 @@ struct PrimaryButton: View {
         .buttonStyle(RedMedPressStyle(haptic: nil))
         .disabled(disabled)
         .opacity(disabled ? 0.48 : 1)
-        .accessibilityAddTraits(disabled ? [.isButton, .isNotEnabled] : .isButton)
+        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -170,7 +170,7 @@ struct UnlockScreenButton: View {
         .opacity(disabled ? 0.48 : 1)
         .accessibilityLabel(title)
         .accessibilityHint(disabled ? "Waiting for Face ID" : (accessibilityHintText ?? ""))
-        .accessibilityAddTraits(disabled ? [.isButton, .isNotEnabled] : .isButton)
+        .accessibilityAddTraits(.isButton)
     }
 }
 

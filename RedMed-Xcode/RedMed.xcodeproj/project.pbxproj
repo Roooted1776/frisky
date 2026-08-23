@@ -18,8 +18,6 @@
 		AABB00000000000000000009 /* TopicDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000009 /* TopicDetailView.swift */; };
 		AABB0000000000000000000A /* NFCView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000000A /* NFCView.swift */; };
 		AABB0000000000000000000B /* HelpMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000000E /* HelpMenuView.swift */; };
-		AABB00000000000000000052 /* LockEntryPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000052 /* LockEntryPage.swift */; };
-		AABB00000000000000000053 /* FacePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000053 /* FacePage.swift */; };
 		AABB0000000000000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000000C /* Assets.xcassets */; };
 		AABB00000000000000000010 /* NearbyHospitals.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000010 /* NearbyHospitals.swift */; };
 		AABB00000000000000000011 /* MedicationData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000011 /* MedicationData.swift */; };
@@ -31,7 +29,6 @@
 		AABB00000000000000000018 /* security.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000018 /* security.html */; };
 		AABB00000000000000000019 /* HowItWorks.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000019 /* HowItWorks.html */; };
 		AABB0000000000000000001A /* legal-doc.css in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001A /* legal-doc.css */; };
-		AABB00000000000000000050 /* Help.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000050 /* Help.html */; };
 		AABB0000000000000000001B /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001B /* KeychainStore.swift */; };
 		AABB0000000000000000001C /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001C /* AppConfig.swift */; };
 		AABB0000000000000000001D /* ProfileNFCCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001D /* ProfileNFCCodec.swift */; };
@@ -40,7 +37,6 @@
 		AABB00000000000000000020 /* EmergencyNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000020 /* EmergencyNumber.swift */; };
 		AABB00000000000000000021 /* card.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000021 /* card.html */; };
 		AABB00000000000000000022 /* BrandLogo.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000022 /* BrandLogo.png */; };
-		AABB00000000000000000054 /* pheart.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000054 /* pheart.png */; };
 		AABB00000000000000000023 /* Main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000023 /* Main.swift */; };
 		AABB00000000000000000024 /* tapper.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000024 /* tapper.html */; };
 		AABB00000000000000000025 /* sw.js in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000025 /* sw.js */; };
@@ -61,6 +57,10 @@
 		AABB00000000000000000036 /* BrandWordmark.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000036 /* BrandWordmark.png */; };
 		AABB0000000000000000004C /* PasserbyHTMLCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000004C /* PasserbyHTMLCardView.swift */; };
 		AABB0000000000000000004D /* AudioSessionGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000004D /* AudioSessionGate.swift */; };
+		AABB00000000000000000050 /* Help.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000050 /* Help.html */; };
+		AABB00000000000000000052 /* LockEntryPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000052 /* LockEntryPage.swift */; };
+		AABB00000000000000000053 /* FacePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000053 /* FacePage.swift */; };
+		AABB00000000000000000054 /* pheart.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000054 /* pheart.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -78,8 +78,6 @@
 		AAAA0000000000000000000C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AAAA0000000000000000000D /* RedMed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RedMed.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AAAA0000000000000000000E /* HelpMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpMenuView.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000052 /* LockEntryPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockEntryPage.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000053 /* FacePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacePage.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000000F /* RedMed.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RedMed.entitlements; sourceTree = "<group>"; };
 		AAAA00000000000000000010 /* NearbyHospitals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyHospitals.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000011 /* MedicationData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationData.swift; sourceTree = "<group>"; };
@@ -91,7 +89,6 @@
 		AAAA00000000000000000018 /* security.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = security.html; sourceTree = "<group>"; };
 		AAAA00000000000000000019 /* HowItWorks.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = HowItWorks.html; sourceTree = "<group>"; };
 		AAAA0000000000000000001A /* legal-doc.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = "legal-doc.css"; sourceTree = "<group>"; };
-		AAAA00000000000000000050 /* Help.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = Help.html; sourceTree = "<group>"; };
 		AAAA0000000000000000001B /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000001C /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000001D /* ProfileNFCCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileNFCCodec.swift; sourceTree = "<group>"; };
@@ -100,7 +97,6 @@
 		AAAA00000000000000000020 /* EmergencyNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyNumber.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000021 /* card.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = card.html; sourceTree = "<group>"; };
 		AAAA00000000000000000022 /* BrandLogo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BrandLogo.png; sourceTree = "<group>"; };
-		AAAA00000000000000000054 /* pheart.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = pheart.png; sourceTree = "<group>"; };
 		AAAA00000000000000000023 /* Main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Main.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000024 /* tapper.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = tapper.html; sourceTree = "<group>"; };
 		AAAA00000000000000000025 /* sw.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = sw.js; sourceTree = "<group>"; };
@@ -121,6 +117,10 @@
 		AAAA00000000000000000036 /* BrandWordmark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BrandWordmark.png; sourceTree = "<group>"; };
 		AAAA0000000000000000004C /* PasserbyHTMLCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasserbyHTMLCardView.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000004D /* AudioSessionGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSessionGate.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000050 /* Help.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = Help.html; sourceTree = "<group>"; };
+		AAAA00000000000000000052 /* LockEntryPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockEntryPage.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000053 /* FacePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacePage.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000054 /* pheart.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = pheart.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
