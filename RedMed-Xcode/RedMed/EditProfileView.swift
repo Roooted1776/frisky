@@ -773,11 +773,17 @@ private struct RepresentedField: UIViewRepresentable {
         tf.backgroundColor = .clear
         tf.keyboardType = keyboardType
         tf.autocapitalizationType = autocapitalization
+        // PHI fields: minimize system dictionary / autofill / keyboard learning.
         tf.autocorrectionType = .no
         tf.spellCheckingType = .no
         tf.smartDashesType = .no
         tf.smartQuotesType = .no
+        tf.smartInsertDeleteType = .no
         tf.textContentType = nil
+        tf.passwordRules = nil
+        // Clear input assistant bar groups (reduces some keyboard chrome / suggestion surface).
+        tf.inputAssistantItem.leadingBarButtonGroups = []
+        tf.inputAssistantItem.trailingBarButtonGroups = []
         tf.textAlignment = textAlignment
         tf.accessibilityIdentifier = fieldID
         tf.accessibilityLabel = placeholder
@@ -805,6 +811,11 @@ private struct RepresentedField: UIViewRepresentable {
         if tf.textAlignment != textAlignment {
             tf.textAlignment = textAlignment
         }
+        // Keep lockdown traits if UIKit resets them on reuse.
+        if tf.autocorrectionType != .no { tf.autocorrectionType = .no }
+        if tf.spellCheckingType != .no { tf.spellCheckingType = .no }
+        if tf.smartInsertDeleteType != .no { tf.smartInsertDeleteType = .no }
+        if tf.textContentType != nil { tf.textContentType = nil }
         tf.accessibilityIdentifier = fieldID
     }
 
