@@ -7,14 +7,13 @@ import Security
 /// **Bound items (current):** `WhenPasscodeSetThisDeviceOnly` +
 /// `biometryCurrentSet` via `kSecAttrAccessControl`. SecItem will not return
 /// PHI without OS biometry (Face ID / Touch ID for the current enrollment).
-/// Re-enrolling Face ID / adding-removing fingers invalidates the item
-/// (fail closed — owner re-saves from Edit after unlock).
+/// Re-enrolling Face ID / changing fingers invalidates the item (fail closed).
 ///
-/// **Legacy items:** plain `WhenUnlockedThisDeviceOnly` with no ACL. `load`
-/// still reads them; the next successful `save` migrates to the bound form.
+/// **Legacy items:** plain accessibility with no ACL. `load` still reads them;
+/// a successful read then **migrates** to the bound form (best-effort).
 ///
-/// `load` automatically uses `BiometricAuth.peekAuthenticationContext()` when
-/// no context is passed, so unlock / persist paths do not need plumbing changes.
+/// `load` / `save` use `BiometricAuth.peekAuthenticationContext()` when present
+/// so post–Face ID SecItem work does not present a second sheet.
 /// Never iCloud Keychain (`kSecAttrSynchronizable = false`).
 enum KeychainStore {
     private static let defaultService = "com.redmed.app.profile"
@@ -24,7 +23,7 @@ enum KeychainStore {
         if let ac = SecAccessControlCreateWithFlags(
             nil,
             kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly,
-            .biometryCurrentSet,
+            SecAccessControlCreateFlags.biometryCurrentSet,
             &error
         ) {
             return ac
@@ -33,10 +32,29 @@ enum KeychainStore {
         return SecAccessControlCreateWithFlags(
             nil,
             kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-            .biometryCurrentSet,
+            SecAccessControlCreateFlags.biometryCurrentSet,
             &error
         )
     }
+
+    private static func baseQuery(account: String, service: String) -> [String: Any] {
+        [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: kCFBooleanFalse as Any
+        ]
+    }
+
+    /// Attach parked LAContext so ACL items can update/read without a second prompt.
+    private static func withAuthContext(_ query: inout [String: Any]) {
+        if let ctx = BiometricAuth.peekAuthenticationContext() {
+            query[kSecUseAuthenticationContext as String] = ctx
+            query[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUIFail
+        }
+    }
+
+    // MARK: - Save
 
     @discardableResult
     static func save(_ data: Data, account: String, service: String = defaultService) -> Bool {
@@ -44,44 +62,50 @@ enum KeychainStore {
             return saveLegacyUnbound(data, account: account, service: service)
         }
 
-        let base: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-            kSecAttrSynchronizable as String: kCFBooleanFalse as Any
-        ]
+        var query = baseQuery(account: account, service: service)
+        withAuthContext(&query)
 
         let update: [String: Any] = [kSecValueData as String: data]
-        let updateStatus = SecItemUpdate(base as CFDictionary, update as CFDictionary)
+        let updateStatus = SecItemUpdate(query as CFDictionary, update as CFDictionary)
         if updateStatus == errSecSuccess {
             return true
         }
 
+        // Missing, ACL mismatch, or auth — replace with a single bound item.
         if updateStatus == errSecItemNotFound
             || updateStatus == errSecAuthFailed
             || updateStatus == errSecInteractionNotAllowed
             || updateStatus == errSecNoSuchAttr
+            || updateStatus == errSecParam
         {
-            // Replace legacy unbound (or missing) with bound item. Only delete after
-            // we are committed to add; if add fails, restore attempt via legacy save.
-            var add = base
-            add[kSecValueData as String] = data
-            add[kSecAttrAccessControl as String] = access
-            let addStatus = SecItemAdd(add as CFDictionary, nil)
-            if addStatus == errSecSuccess {
-                // Remove any duplicate legacy row if both somehow existed (rare).
-                return true
-            }
-            if addStatus == errSecDuplicateItem {
-                SecItemDelete(base as CFDictionary)
-                if SecItemAdd(add as CFDictionary, nil) == errSecSuccess {
-                    return true
-                }
-            }
-            return saveLegacyUnbound(data, account: account, service: service)
+            return replaceWithBound(data, account: account, service: service, access: access)
         }
 
-        return false
+        // Last resort unbound so Edit Save never silently drops PHI.
+        return saveLegacyUnbound(data, account: account, service: service)
+    }
+
+    private static func replaceWithBound(
+        _ data: Data,
+        account: String,
+        service: String,
+        access: SecAccessControl
+    ) -> Bool {
+        var del = baseQuery(account: account, service: service)
+        withAuthContext(&del)
+        SecItemDelete(del as CFDictionary)
+        // Also delete without context (legacy row).
+        SecItemDelete(baseQuery(account: account, service: service) as CFDictionary)
+
+        var add = baseQuery(account: account, service: service)
+        add[kSecValueData as String] = data
+        add[kSecAttrAccessControl as String] = access
+        // Never set kSecAttrAccessible alongside kSecAttrAccessControl.
+        let addStatus = SecItemAdd(add as CFDictionary, nil)
+        if addStatus == errSecSuccess {
+            return true
+        }
+        return saveLegacyUnbound(data, account: account, service: service)
     }
 
     private static func saveLegacyUnbound(
@@ -89,12 +113,7 @@ enum KeychainStore {
         account: String,
         service: String
     ) -> Bool {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-            kSecAttrSynchronizable as String: kCFBooleanFalse as Any
-        ]
+        let query = baseQuery(account: account, service: service)
         let update: [String: Any] = [
             kSecValueData as String: data,
             kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
@@ -108,8 +127,8 @@ enum KeychainStore {
         return SecItemAdd(attributes as CFDictionary, nil) == errSecSuccess
     }
 
-    /// Read PHI. Uses parked Face ID `LAContext` when available so SecItem does not
-    /// present a second sheet. Falls back to legacy unbound items.
+    // MARK: - Load
+
     static func load(
         account: String,
         service: String = defaultService,
@@ -117,16 +136,17 @@ enum KeychainStore {
         allowInteractive: Bool = false
     ) -> Data? {
         let ctx = context ?? BiometricAuth.peekAuthenticationContext()
-        if let ctx, let data = loadBound(account: account, service: service, context: ctx) {
+        if let data = loadBound(account: account, service: service, context: ctx, interactive: false) {
             return data
         }
         if let data = loadLegacy(account: account, service: service) {
+            // Upgrade unbound → biometry ACL while we hold auth (best-effort).
+            _ = save(data, account: account, service: service)
             return data
         }
         if allowInteractive {
             return loadBound(account: account, service: service, context: nil, interactive: true)
         }
-        // Bound item, no context yet (Face ID still up) — fail closed without UI.
         return loadBound(account: account, service: service, context: nil, interactive: false)
     }
 
@@ -134,16 +154,11 @@ enum KeychainStore {
         account: String,
         service: String,
         context: LAContext?,
-        interactive: Bool = false
+        interactive: Bool
     ) -> Data? {
-        var query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-            kSecAttrSynchronizable as String: kCFBooleanFalse as Any,
-            kSecReturnData as String: true,
-            kSecMatchLimit as String: kSecMatchLimitOne
-        ]
+        var query = baseQuery(account: account, service: service)
+        query[kSecReturnData as String] = true
+        query[kSecMatchLimit as String] = kSecMatchLimitOne
         if let context {
             query[kSecUseAuthenticationContext as String] = context
             query[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUIFail
@@ -159,32 +174,23 @@ enum KeychainStore {
     }
 
     private static func loadLegacy(account: String, service: String) -> Data? {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-            kSecAttrSynchronizable as String: kCFBooleanFalse as Any,
-            kSecReturnData as String: true,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-            kSecUseAuthenticationUI as String: kSecUseAuthenticationUIFail
-        ]
+        var query = baseQuery(account: account, service: service)
+        query[kSecReturnData as String] = true
+        query[kSecMatchLimit as String] = kSecMatchLimitOne
+        query[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUIFail
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
         guard status == errSecSuccess else { return nil }
         return result as? Data
     }
 
-    /// Presence without presenting UI. Auth-required counts as present.
+    // MARK: - Presence / delete
+
     static func exists(account: String, service: String = defaultService) -> Bool {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-            kSecAttrSynchronizable as String: kCFBooleanFalse as Any,
-            kSecReturnData as String: false,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-            kSecUseAuthenticationUI as String: kSecUseAuthenticationUIFail
-        ]
+        var query = baseQuery(account: account, service: service)
+        query[kSecReturnData as String] = false
+        query[kSecMatchLimit as String] = kSecMatchLimitOne
+        query[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUIFail
         let status = SecItemCopyMatching(query as CFDictionary, nil)
         switch status {
         case errSecSuccess, errSecInteractionNotAllowed, errSecAuthFailed:
@@ -197,12 +203,9 @@ enum KeychainStore {
     }
 
     static func delete(account: String, service: String = defaultService) {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-            kSecAttrSynchronizable as String: kCFBooleanFalse as Any
-        ]
+        var query = baseQuery(account: account, service: service)
+        withAuthContext(&query)
         SecItemDelete(query as CFDictionary)
+        SecItemDelete(baseQuery(account: account, service: service) as CFDictionary)
     }
 }
