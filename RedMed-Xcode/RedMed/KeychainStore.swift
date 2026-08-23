@@ -2,11 +2,17 @@ import Foundation
 import Security
 
 /// Hardware-encrypted on-device storage for the RedMed profile blob.
-/// `.whenUnlockedThisDeviceOnly` + non-synchronizable — never iCloud Keychain.
+/// `.whenPasscodeSetThisDeviceOnly` + non-synchronizable — never iCloud Keychain.
+/// Requires a device passcode (standard on Face ID / Touch ID phones). Items do
+/// not migrate to a new device and are unavailable if the passcode is removed.
 enum KeychainStore {
     private static let defaultService = "com.redmed.app.profile"
 
+    /// Preferred accessibility for new writes and migrated items.
+    private static let preferredAccessibility = kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly
+
     /// Update-or-add. Never delete-then-add — a failed add after delete would wipe PHI.
+    /// Always writes the preferred accessibility class.
     @discardableResult
     static func save(_ data: Data, account: String, service: String = defaultService) -> Bool {
         let query: [String: Any] = [
@@ -17,7 +23,7 @@ enum KeychainStore {
         ]
         let update: [String: Any] = [
             kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+            kSecAttrAccessible as String: preferredAccessibility
         ]
         let updateStatus = SecItemUpdate(query as CFDictionary, update as CFDictionary)
         if updateStatus == errSecSuccess {
@@ -29,7 +35,7 @@ enum KeychainStore {
 
         var attributes = query
         attributes[kSecValueData as String] = data
-        attributes[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+        attributes[kSecAttrAccessible as String] = preferredAccessibility
         return SecItemAdd(attributes as CFDictionary, nil) == errSecSuccess
     }
 
@@ -44,8 +50,13 @@ enum KeychainStore {
         ]
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
-        guard status == errSecSuccess else { return nil }
-        return result as? Data
+        guard status == errSecSuccess, let data = result as? Data else { return nil }
+
+        // Upgrade legacy WhenUnlockedThisDeviceOnly blobs to the passcode-bound class.
+        // Best-effort; failure leaves the original item readable under its old class.
+        _ = save(data, account: account, service: service)
+
+        return data
     }
 
     /// Presence check only — no blob decode (cold-launch gate).
