@@ -157,6 +157,7 @@ struct CustomTabBar: View {
                 .frame(width: 118, height: 4)
                 .padding(.top, 2)
                 .padding(.bottom, 3)
+                .accessibilityHidden(true)
         }
         .background {
             barShape
@@ -169,6 +170,7 @@ struct CustomTabBar: View {
         }
         // Bar bounds only — upward shadow must not eat YOU-card / list taps.
         .contentShape(barShape)
+        .accessibilityElement(children: .contain)
     }
 
     private func select(_ next: AppTab) {
@@ -209,6 +211,7 @@ struct TabBarItem: View {
                         RoundedRectangle(cornerRadius: 11)
                             .fill(isOn ? Color.redmedAccent.opacity(0.12) : Color.clear)
                     )
+                    .accessibilityHidden(true)
                 Text(label)
                     .font(.system(size: 10, weight: isOn ? .semibold : .medium))
                     .foregroundColor(tint)
@@ -220,5 +223,8 @@ struct TabBarItem: View {
             .transaction { $0.animation = nil }
         }
         .buttonStyle(RedMedPressStyle(scale: 0.96, haptic: nil))
+        .accessibilityLabel(label)
+        .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : .isButton)
+        .accessibilityHint(isOn ? "Selected" : "Switch to \(label)")
     }
 }
