@@ -13,7 +13,7 @@ RedMed is a local-only iOS medical ID + emergency assist app. There is no RedMed
 
 | Asset | Intentional exposure | Defended |
 |-------|----------------------|----------|
-| Owner profile on device | Never leaves phone | Keychain `WhenUnlockedThisDeviceOnly`, Face ID / passcode gates, RAM purge on background, snapshot cover, vault file protection |
+| Owner profile on device | Never leaves phone | Keychain `WhenPasscodeSetThisDeviceOnly` + `biometryCurrentSet` ACL, Face ID / passcode gates, parked LAContext cleared on background, RAM purge, snapshot cover, vault file protection |
 | Passerby `#d=` payload | Any phone that taps the band | Safe DOM render (`textContent`), length caps, phone sanitization, CSP + security headers on Pages. **No Face ID / biometrics / login / passcode** on `tapper.html` — tap-to-view is ungated |
 | AES-GCM on the band | Packing / obfuscation only | Public client key by design — EMS must decrypt with no account. Not confidentiality against a deliberate tap |
 | GPS | On-device display only | When-In-Use; never uploaded to RedMed |
@@ -31,8 +31,11 @@ Out of scope: cloning a passive NFC band (same as photocopying a wallet medical 
 ## Hardening checklist (repo)
 
 - Passerby HTML: `textContent` for PHI fields; no `eval`; zlib inflate capped; CSP + `nosniff` / `frame-ancestors` / referrer policy via `_headers` (live on Pages paths) + matching meta CSP (`upgrade-insecure-requests`).
-- Owner: `OwnerAppLock` + `BiometricAuth` (reuse duration 0); scanner snapshots use `ProfileData(persisting: false)`.
+- Owner: `OwnerAppLock` + `BiometricAuth` (reuse duration 0 for UI; parked LAContext for SecItem only, cleared on background / erase / lock); scanner snapshots use `ProfileData(persisting: false)`.
 - Passerby `tapper.html` / in-app Preview: never call `BiometricAuth`, WebAuthn, or any login gate — band tap must open RedMed · 911 · Aid with zero authentication.
+- Keychain profile: `SecAccessControl` with `WhenPasscodeSetThisDeviceOnly` + `biometryCurrentSet` (re-enroll invalidates). Legacy unbound items still load, then migrate best-effort. Never synchronizable.
+- Edit fields: no autocorrect / spellcheck / smart dashes / content type; smart insert-delete off; password rules nil; input assistant bar groups cleared — reduce system dictionary / autofill learning of PHI.
+- ATS: `NSAllowsArbitraryLoads` and `NSAllowsLocalNetworking` explicit false (app is local-only for PHI; band URL is HTTPS).
 - Vault: `HIPAAOfflineVault` complete protection + backup exclusion; basename-only file paths; history timestamps/kind only (unlock fail / NFC fail / capture cover — no field values).
 - Help → Erase all RedMed data (Face ID): deletes Keychain profile + vault; does not remote-wipe the band.
 - No analytics / crash SDKs that phone home PHI.
