@@ -28,11 +28,13 @@ import SwiftUI
 /// `.inactive` — `didAutoPromptThisLock` blocks re-prompt.
 ///
 /// Speed (minus Face ID wall time): Face ID kicks first; Keychain prefetch +
-/// tapper.html string warm start in the same `onAppear` tick and again inside
-/// the unlock pipeline (single-flight). Parked Keychain adopt unlocks on the
-/// next MainActor turn (LA completion is main-queue but not MainActor-isolated).
-/// Face page is solid cream (no material blur). Haptic + WKWebView warm run at utility
-/// priority after `gate = .unlocked` so Main paints first.
+/// tapper.html string warm + embed WKWebView warm start in the same `onAppear`
+/// tick and again inside the unlock pipeline (single-flight). Parked Keychain
+/// adopt unlocks on the next MainActor turn (LA completion is main-queue but
+/// not MainActor-isolated). Face page is solid cream (no material blur).
+/// `cancelWarm` runs on the parked fast path so a mid-load pool never hands
+/// off; finished pools are kept. Haptic + any remaining warm run at utility
+/// after `gate = .unlocked` so Main paints first.
 struct OwnerAppLock<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
@@ -92,6 +94,9 @@ struct OwnerAppLock<Content: View>: View {
             Task.detached(priority: .userInitiated) {
                 PasserbyHTMLCardView.warmShellCache()
             }
+            // Overlap embed WK parse with Face ID wall time. cancelWarm on parked
+            // unlock path; takeEmbed only returns finished views (no mid-load cream).
+            PasserbyWebViewPool.warmEmbedShell()
         }
         .task(id: authGeneration) {
             // Hung LA — Face page with Proceed (do not leave a dead Face ID sheet).
@@ -143,6 +148,7 @@ struct OwnerAppLock<Content: View>: View {
                 SecurePasteboard.clear()
                 if gate == .locked {
                     profile.discardUnlockPrefetch()
+                    PasserbyWebViewPool.cancelWarm()
                 }
             } else if phase == .active, gate == .locked {
                 // Cold `.inactive` Face ID is still the first unlock, not a retry gate.
@@ -177,10 +183,11 @@ struct OwnerAppLock<Content: View>: View {
         startUnlockPipeline(isAuto: true)
     }
 
-    /// Face ID first, then Keychain prefetch + shell string in the same turn
-    /// (overlap while LA sheet is up). Enter path for returning owners — first
-    /// attempt is auto Face ID only. Do **not** build WKWebView here — that
-    /// races the post-auth Keychain await on MainActor (blank cream hang).
+    /// Face ID first, then Keychain prefetch + shell string + embed WK warm in the
+    /// same turn (overlap while LA sheet is up). Enter path for returning owners —
+    /// first attempt is auto Face ID only. WK warm uses navigationDelegate: nil;
+    /// takeEmbed only hands off finished parses. cancelWarm on parked unlock
+    /// stops mid-load before Keychain adopt (avoids prior cream hang).
     private func startUnlockPipeline(isAuto: Bool) {
         guard gate == .locked else { return }
         if isAuto {
@@ -191,10 +198,12 @@ struct OwnerAppLock<Content: View>: View {
         // Face ID first; prefetch still starts inside this pipeline (same turn).
         unlockWithFaceID()
         profile.beginUnlockPrefetch()
-        // HTML string only during Face ID — WKWebView warm waits until unlock.
         Task.detached(priority: .userInitiated) {
             PasserbyHTMLCardView.warmShellCache()
         }
+        // Embed WK parse overlaps Face ID — finished pool is taken on first RedMed
+        // paint; unfinished is cancelled on parked path then re-warmed after unlock.
+        PasserbyWebViewPool.warmEmbedShell()
     }
 
     private func unlockWithFaceID() {
@@ -314,6 +323,7 @@ struct OwnerAppLock<Content: View>: View {
             profileLoadFailed = false
             showUnlockControl = false
             // Haptic + WebKit off the critical path — Main paints first.
+            // Re-warm if Face ID–overlapped warm was cancelled or not yet finished.
             Task(priority: .utility) { @MainActor in
                 RedMedHaptics.success()
                 PasserbyWebViewPool.warmEmbedShell()
