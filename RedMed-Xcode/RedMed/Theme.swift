@@ -94,6 +94,7 @@ struct SectionLabel: View {
 
 struct PrimaryButton: View {
     let title: String
+    var disabled: Bool = false
     let action: () -> Void
 
     var body: some View {
@@ -111,9 +112,12 @@ struct PrimaryButton: View {
                                    startPoint: .top, endPoint: .bottom)
                 )
                 .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-                .shadow(color: RedMedChrome.accentShadow, radius: 10, y: 5)
+                .shadow(color: disabled ? .clear : RedMedChrome.accentShadow, radius: 10, y: 5)
         }
         .buttonStyle(RedMedPressStyle(haptic: nil))
+        .disabled(disabled)
+        .opacity(disabled ? 0.48 : 1)
+        .accessibilityAddTraits(disabled ? [.isButton, .isNotEnabled] : .isButton)
     }
 }
 
@@ -154,12 +158,19 @@ struct UnlockScreenButton: View {
                             RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous)
                                 .strokeBorder(Color.white.opacity(0.32), lineWidth: 1)
                         }
-                        .shadow(color: RedMedChrome.accentShadow, radius: 12, y: 6)
+                        .shadow(
+                            color: disabled ? .clear : RedMedChrome.accentShadow,
+                            radius: 12,
+                            y: 6
+                        )
                 }
         }
         .buttonStyle(RedMedPressStyle(haptic: nil))
         .disabled(disabled)
-        .accessibilityHint(accessibilityHintText ?? "")
+        .opacity(disabled ? 0.48 : 1)
+        .accessibilityLabel(title)
+        .accessibilityHint(disabled ? "Waiting for Face ID" : (accessibilityHintText ?? ""))
+        .accessibilityAddTraits(disabled ? [.isButton, .isNotEnabled] : .isButton)
     }
 }
 
