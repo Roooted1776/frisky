@@ -9,27 +9,29 @@ import UIKit
 /// password pad sits in front of Main / the YOU card. Erase still allows
 /// device passcode (`force: true`, default `allowPasscode`). After the first
 /// success this process, Edit / NFC / vault skip LA unless `force`.
-/// Reuse window is zero so the first app-unlock Face ID is always fresh.
+///
+/// On success the `LAContext` is **parked** (not invalidated) so
+/// `KeychainStore.load(context:)` can use `kSecUseAuthenticationContext`
+/// without a second Face ID sheet. Background / consume clears the park.
 enum BiometricAuth {
-    /// Distinguishes a failed scan from cancel / dismiss so lock UI does not
-    /// claim “couldn't verify” on every unlock the owner backs out of.
     enum Outcome: Equatable {
         case success
-        /// Face ID / Touch ID (or passcode after fallback, when allowed) did not match.
         case notVerified
-        /// User or system cancelled; biometry unavailable with no passcode path.
         case declined
-        /// App was not interactive yet (cold-start `.inactive`) — caller may retry on `.active`.
         case notInteractive
     }
 
-    /// LAError -1004 (`kLAErrorAppNotInteractive`). Compare by raw code — Swift
-    /// case naming has flipped between `.appNotInteractive` and `.notInteractive`
-    /// across SDKs, and referencing the wrong one fails the build.
     private static let notInteractiveLACode = -1004
 
-    /// First successful owner unlock this process. Later gates skip the sheet.
     private static var didUnlockThisLaunch = false
+
+    /// Authenticated context for SecItem after a successful evaluate.
+    private static let parkLock = NSLock()
+    private static var parkedContext: LAContext?
+
+    /// Seconds the parked context may satisfy SecItem without a new Face ID.
+    /// Covers unlock → Keychain load → first persist; background clears earlier.
+    private static let secItemReuseDuration: TimeInterval = 60
 
     static func authenticate(
         reason: String,
@@ -49,16 +51,13 @@ enum BiometricAuth {
         }
         let context = makeContext(
             allowPasscode: allowPasscode,
-            allowableReuseDuration: allowableReuseDuration
+            allowableReuseDuration: max(allowableReuseDuration, secItemReuseDuration)
         )
         var error: NSError?
         let policy: LAPolicy = allowPasscode
             ? .deviceOwnerAuthentication
             : .deviceOwnerAuthenticationWithBiometrics
 
-        // App unlock: Face ID only — empty fallback title hides Enter Passcode.
-        // Erase / lockout recovery: one `.deviceOwnerAuthentication` so the
-        // passcode pad stays in-sheet (do not chain a second evaluate).
         guard context.canEvaluatePolicy(policy, error: &error) else {
             #if targetEnvironment(simulator)
             DispatchQueue.main.async {
@@ -76,18 +75,50 @@ enum BiometricAuth {
         }
 
         context.evaluatePolicy(policy, localizedReason: reason) { success, evalError in
-            // Always hop a main turn — even when LA already called back on main.
-            // Sync apply during Face ID teardown can leave SwiftUI on the lock shell.
             DispatchQueue.main.async {
-                context.invalidate()
                 if success {
                     didUnlockThisLaunch = true
+                    // Keep context alive for Keychain SecItem (do not invalidate yet).
+                    park(context)
                     completion(.success)
                 } else {
+                    context.invalidate()
+                    clearPark()
                     completion(outcome(for: evalError))
                 }
             }
         }
+    }
+
+    /// LAContext from the latest successful evaluate, if still valid for SecItem.
+    static func authenticationContext() -> LAContext? {
+        parkLock.lock()
+        defer { parkLock.unlock() }
+        return parkedContext
+    }
+
+    /// Take the parked context for a SecItem read (still left parked for reuse).
+    static func peekAuthenticationContext() -> LAContext? {
+        authenticationContext()
+    }
+
+    /// Drop the parked context (background, erase, failed Keychain).
+    static func clearAuthenticationContext() {
+        clearPark()
+    }
+
+    private static func park(_ context: LAContext) {
+        parkLock.lock()
+        parkedContext?.invalidate()
+        parkedContext = context
+        parkLock.unlock()
+    }
+
+    private static func clearPark() {
+        parkLock.lock()
+        parkedContext?.invalidate()
+        parkedContext = nil
+        parkLock.unlock()
     }
 
     private static func makeContext(
@@ -98,31 +129,25 @@ enum BiometricAuth {
         context.touchIDAuthenticationAllowableReuseDuration = allowableReuseDuration
         context.localizedCancelTitle = "Cancel"
         if !allowPasscode {
-            // Empty title hides the passcode / password button on Face ID.
             context.localizedFallbackTitle = ""
         }
         return context
     }
 
-    /// True when LocalAuthentication refused because the app was not interactive.
     private static func isNotInteractive(_ error: Error?) -> Bool {
         guard let error else { return false }
         let ns = error as NSError
         return ns.domain == LAErrorDomain && ns.code == notInteractiveLACode
     }
 
-    /// Map LAError to Outcome — only a mismatch is `notVerified`.
     private static func outcome(for error: Error?) -> Outcome {
         guard let la = error as? LAError else { return .declined }
         if la.code == .authenticationFailed {
-            // Face ID / Touch ID / passcode did not match.
             return .notVerified
         }
         if isNotInteractive(la) {
-            // evaluatePolicy before the window can present — retry when `.active`.
             return .notInteractive
         }
-        // userCancel, systemCancel, appCancel, userFallback (if ever), etc.
         return .declined
     }
 
@@ -146,6 +171,7 @@ enum BiometricAuth {
         })
         alert.addAction(UIAlertAction(title: "Authenticate", style: .default) { _ in
             didUnlockThisLaunch = true
+            // Simulator has no real ACL biometry — empty park; Keychain uses legacy path.
             completion(.success)
         })
         top.present(alert, animated: true)
