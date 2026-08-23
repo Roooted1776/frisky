@@ -15,7 +15,7 @@
  * putShell is HTML-only. Optional assets use putAsset so logos / sw.js never
  * overwrite shell keys (that poison served PNG/JS as /tapper/).
  */
-var CACHE = 'redmed-tapper-v116';
+var CACHE = 'redmed-tapper-v117';
 var ASSETS = [
   './pheart.png',
   './BrandLogo.png',
@@ -67,59 +67,37 @@ function precacheRequiredShell(cache, i) {
 
 function precache(cache) {
   return precacheRequiredShell(cache, 0).then(function () {
-    return Promise.all(
-      ASSETS.map(function (url) {
-        return networkReload(url)
-          .then(function (res) {
-            if (!res || !res.ok) return;
-            return putAsset(cache, url, res);
-          })
-          .catch(function () { /* optional path missing */ });
-      })
-    );
+    return Promise.all(ASSETS.map(function (url) {
+      return networkReload(url).then(function (res) {
+        return putAsset(cache, url, res);
+      }).catch(function () { /* optional assets */ });
+    }));
   });
 }
 
-function matchOne(keys, i) {
-  if (i >= keys.length) return Promise.resolve(null);
-  return caches.match(keys[i], { ignoreSearch: true }).then(function (hit) {
-    return hit || matchOne(keys, i + 1);
-  });
-}
-
-/** Instant path: any cached shell wins. Do not wait on network. */
 function cachedShell(req) {
-  return matchOne([req].concat(SHELL_KEYS), 0);
-}
-
-/** Only the real tapper shell may be broadcast across SHELL_KEYS. Legacy
- *  /card.html, /get*, and / serve redirect stubs whenever _redirects is not in
- *  play (local http.server, bundle); putShell would copy a stub over /tapper/
- *  and the next band tap would paint the redirect page instead of the card. */
-function isCanonicalShell(reqOrUrl) {
-  try {
-    var raw = typeof reqOrUrl === 'string' ? reqOrUrl : reqOrUrl.url;
-    var url = new URL(raw, self.location.href);
-    if (url.origin !== self.location.origin) return false;
-    var path = url.pathname;
-    return (
-      path === '/tapper' ||
-      path === '/tapper/' ||
-      path.endsWith('/tapper.html') ||
-      path.endsWith('/tapper/index.html')
-    );
-  } catch (e) {
-    return false;
-  }
+  return caches.open(CACHE).then(function (cache) {
+    return cache.match(req, { ignoreSearch: true }).then(function (hit) {
+      if (hit) return hit;
+      // Multi-key fallback: any shell copy paints the card.
+      return Promise.all(SHELL_KEYS.map(function (k) {
+        return cache.match(k, { ignoreSearch: true });
+      })).then(function (hits) {
+        for (var i = 0; i < hits.length; i++) {
+          if (hits[i]) return hits[i];
+        }
+        return null;
+      });
+    });
+  });
 }
 
 function refreshShell(cache, req) {
   return networkReload(req)
     .then(function (res) {
       if (res && res.ok) {
-        // Single-key refresh for legacy / root aliases — only the canonical
-        // shell may overwrite every SHELL_KEY.
-        if (isCanonicalShell(req)) putShell(cache, req, res.clone());
+        if (isShellRequest(req))
+          putShell(cache, req, res.clone());
         else putAsset(cache, req, res.clone());
         return res;
       }
