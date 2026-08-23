@@ -111,24 +111,22 @@ final class NFCBandManager: ObservableObject {
         let chip = ProfileNFCCodec.chipProfile(from: profile)
         isReading = true
         statusMessage = "Opening tap card…"
-        // Open immediately with embed JSON + placeholder — AES seal fills durable `#d=` after.
-        let json = ProfileNFCCodec.embedProfileJSON(from: chip)
-        presentHTMLCard(
-            payloadOrURL: ProfileNFCCodec.placeholderPreviewPayload,
-            embedJSON: json
-        )
-        isReading = false
-        statusMessage = ""
-        Task.detached(priority: .userInitiated) {
-            let source = ProfileNFCCodec.buildURLString(chip: chip)
-            await MainActor.run { [weak self] in
-                guard let self, self.showScannedCard else { return }
-                guard let source else {
-                    self.alertMessage = "Couldn't pack or decode the tap card from RedMed."
-                    return
-                }
-                self.scannedHTMLPayload = source
+        // Pack #d= + embed JSON first — present only when linked (no empty cover race).
+        Task { @MainActor [weak self] in
+            let packed = await Task.detached(priority: .userInitiated) {
+                (
+                    ProfileNFCCodec.buildURLString(chip: chip),
+                    ProfileNFCCodec.embedProfileJSON(from: chip)
+                )
+            }.value
+            guard let self else { return }
+            self.isReading = false
+            self.statusMessage = ""
+            guard let url = packed.0 else {
+                self.alertMessage = "Couldn't pack or decode the tap card from RedMed."
+                return
             }
+            self.presentHTMLCard(payloadOrURL: url, embedJSON: packed.1)
         }
     }
 

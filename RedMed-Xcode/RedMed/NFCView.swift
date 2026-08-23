@@ -14,11 +14,18 @@ struct NFCView: View {
     @Environment(\.isScannerSession) private var isScannerSession
     @StateObject private var band = NFCBandManager()
     /// Full passerby shell from live RedMed — what first responders see on a band tap.
-    @State private var showFirstResponderPreview = false
-    @State private var previewPayload: String?
-    @State private var previewEmbedJSON: String?
+    /// `item:` presentation so the cover always binds a complete payload (no empty race).
+    @State private var previewSession: PreviewSession?
 
     private let boxRadius = RedMedChrome.boxRadius
+
+    /// One-shot Preview open — payload + embed JSON must both be set before present.
+    private struct PreviewSession: Identifiable {
+        let id = UUID()
+        let payload: String
+        let embedJSON: String?
+        let linked: Bool
+    }
 
     var body: some View {
         if isScannerSession {
@@ -63,11 +70,11 @@ struct NFCView: View {
                 .presentationBackground(Color.redmedBg)
             }
         }
-        .fullScreenCover(isPresented: $showFirstResponderPreview) {
+        .fullScreenCover(item: $previewSession) { session in
             PasserbyHTMLCardView(
-                payloadOrURL: previewPayload ?? "",
-                braceletLinked: profile.showsBraceletAsLinked,
-                embedProfileJSON: previewEmbedJSON
+                payloadOrURL: session.payload,
+                braceletLinked: session.linked,
+                embedProfileJSON: session.embedJSON
             )
             .presentationBackground(Color.redmedBg)
         }
@@ -304,7 +311,7 @@ struct NFCView: View {
                             .strokeBorder(Color.redmedAccent.opacity(0.45), lineWidth: 1.5)
                     )
             }
-            .disabled(!profile.hasData || band.isBusy)
+            .disabled(!profile.hasData || band.isBusy || previewSession != nil)
             .opacity(profile.hasData ? 1 : 0.55)
             .buttonStyle(.plain)
         }
@@ -313,19 +320,27 @@ struct NFCView: View {
         .redmedBox()
     }
 
+    /// Pack `#d=` + embed JSON **before** presenting so the cover is never empty.
+    /// `fullScreenCover(item:)` binds the complete session (no isPresented race).
     private func openFirstResponderPreview() {
-        guard !isScannerSession, profile.hasData else { return }
+        guard !isScannerSession, profile.hasData, previewSession == nil else { return }
         let chip = ProfileNFCCodec.chipProfile(from: profile)
-        // Open immediately — JSON is cheap; AES `#d=` fills in background (no button hang).
-        previewEmbedJSON = ProfileNFCCodec.embedProfileJSON(from: chip)
-        previewPayload = ProfileNFCCodec.placeholderPreviewPayload
-        showFirstResponderPreview = true
-        Task.detached(priority: .userInitiated) {
-            let payload = PasserbyHTMLCardView.previewPayload(from: chip)
-            await MainActor.run {
-                guard showFirstResponderPreview, let payload else { return }
-                previewPayload = payload
-            }
+        let linked = profile.showsBraceletAsLinked
+        // AES pack is tiny (profile-scale) — do it off-main, then present once ready.
+        Task { @MainActor in
+            let packed = await Task.detached(priority: .userInitiated) {
+                (
+                    ProfileNFCCodec.previewPayload(from: chip)
+                        ?? ProfileNFCCodec.placeholderPreviewPayload,
+                    ProfileNFCCodec.embedProfileJSON(from: chip)
+                )
+            }.value
+            guard previewSession == nil else { return }
+            previewSession = PreviewSession(
+                payload: packed.0,
+                embedJSON: packed.1,
+                linked: linked
+            )
         }
     }
 
