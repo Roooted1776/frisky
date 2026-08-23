@@ -2,7 +2,7 @@
 
 Native iOS medical ID + emergency aid app. Shipable source of truth is
 `RedMed-Xcode/` (SwiftUI, iOS 17+, Xcode 15+).
-The local working copy of this repository is at `/Users/claude/Documents/frisky`.
+Cursor, Claude, and other LLM programs should open this repo at `/Users/claude/Documents/frisky` (the local project root).
 
 ## Canonical tree
 
