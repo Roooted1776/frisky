@@ -75,7 +75,8 @@ struct RedMedView: View {
             .padding(.horizontal, 16)
             .padding(.top, 16)
             .padding(.bottom, 8)
-            // No solid fill — same cream/wash as body (`RedMedPageBackground`).
+            // Opaque cream through status bar — covers white cutoff above the WKWebView.
+            .redmedTopChromeFill()
 
             Group {
                 if let shellPayload {

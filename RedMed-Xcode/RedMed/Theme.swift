@@ -290,7 +290,8 @@ struct OwnerModalChrome<Trailing: View>: View {
                 .fill(Color.redmedDivider)
                 .frame(height: 1)
         }
-        // No solid fill — page `RedMedPageBackground` (same cream as body) shows through.
+        // Opaque cream through the status bar — kills white cutoff above modals.
+        .redmedTopChromeFill()
     }
 }
 
@@ -350,6 +351,7 @@ struct OwnerModalActionBar<Center: View>: View {
                 .fill(Color.redmedDivider)
                 .frame(height: 1)
         }
+        .redmedTopChromeFill()
     }
 }
 
@@ -518,6 +520,8 @@ struct BrandWordmarkHeader<Trailing: View>: View {
         .padding(.horizontal, RedMedChrome.pagePadX)
         .padding(.top, top)
         .padding(.bottom, RedMedChrome.wordmarkBottom)
+        // Keep wordmark band cream so no white peeks between chrome and content.
+        .background(Color.redmedBg)
     }
 }
 
@@ -536,5 +540,14 @@ extension View {
             .background(Color.redmedSurface)
             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
             .shadow(color: elevated ? RedMedChrome.cardShadow : .clear, radius: 8, y: 3)
+    }
+
+    /// Opaque cream behind top Help / Edit / Back chrome.
+    /// Extends into the top safe area so system white never cuts off above the page.
+    func redmedTopChromeFill() -> some View {
+        self.background(alignment: .top) {
+            Color.redmedBg
+                .ignoresSafeArea(edges: .top)
+        }
     }
 }
