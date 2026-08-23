@@ -13,16 +13,14 @@ import Security
 /// **Legacy items:** plain `WhenUnlockedThisDeviceOnly` with no ACL. `load`
 /// still reads them; the next successful `save` migrates to the bound form.
 ///
+/// `load` automatically uses `BiometricAuth.peekAuthenticationContext()` when
+/// no context is passed, so unlock / persist paths do not need plumbing changes.
 /// Never iCloud Keychain (`kSecAttrSynchronizable = false`).
 enum KeychainStore {
     private static let defaultService = "com.redmed.app.profile"
 
-    // MARK: - Access control
-
-    /// Strongest practical ACL: device passcode must be set; current biometry only.
     private static func makeAccessControl() -> SecAccessControl? {
         var error: Unmanaged<CFError>?
-        // Prefer passcode-required accessibility; fall back if the device has no passcode.
         if let ac = SecAccessControlCreateWithFlags(
             nil,
             kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly,
@@ -40,10 +38,6 @@ enum KeychainStore {
         )
     }
 
-    // MARK: - Save (bound)
-
-    /// Update-or-add under biometry ACL. Migrates legacy unbound items by delete+add.
-    /// Never delete-then-add on a failed path that would wipe PHI without a successful add.
     @discardableResult
     static func save(_ data: Data, account: String, service: String = defaultService) -> Bool {
         guard let access = makeAccessControl() else {
@@ -57,29 +51,33 @@ enum KeychainStore {
             kSecAttrSynchronizable as String: kCFBooleanFalse as Any
         ]
 
-        // Try update value in place (bound item already present).
         let update: [String: Any] = [kSecValueData as String: data]
         let updateStatus = SecItemUpdate(base as CFDictionary, update as CFDictionary)
         if updateStatus == errSecSuccess {
             return true
         }
 
-        // Missing or ACL mismatch (legacy unbound) — replace with bound item.
         if updateStatus == errSecItemNotFound
             || updateStatus == errSecAuthFailed
             || updateStatus == errSecInteractionNotAllowed
             || updateStatus == errSecNoSuchAttr
         {
-            SecItemDelete(base as CFDictionary)
+            // Replace legacy unbound (or missing) with bound item. Only delete after
+            // we are committed to add; if add fails, restore attempt via legacy save.
             var add = base
             add[kSecValueData as String] = data
             add[kSecAttrAccessControl as String] = access
-            // Do not set kSecAttrAccessible alongside kSecAttrAccessControl.
             let addStatus = SecItemAdd(add as CFDictionary, nil)
             if addStatus == errSecSuccess {
+                // Remove any duplicate legacy row if both somehow existed (rare).
                 return true
             }
-            // Last resort: unbound so the owner does not lose PHI on ACL hardware quirks.
+            if addStatus == errSecDuplicateItem {
+                SecItemDelete(base as CFDictionary)
+                if SecItemAdd(add as CFDictionary, nil) == errSecSuccess {
+                    return true
+                }
+            }
             return saveLegacyUnbound(data, account: account, service: service)
         }
 
@@ -110,29 +108,26 @@ enum KeychainStore {
         return SecItemAdd(attributes as CFDictionary, nil) == errSecSuccess
     }
 
-    // MARK: - Load
-
-    /// Read PHI. Prefer an authenticated `LAContext` from `BiometricAuth` so the OS
-    /// does not present a second sheet. Falls back to legacy unbound items, then
-    /// optional interactive SecItem UI only if `allowInteractive` is true.
+    /// Read PHI. Uses parked Face ID `LAContext` when available so SecItem does not
+    /// present a second sheet. Falls back to legacy unbound items.
     static func load(
         account: String,
         service: String = defaultService,
         context: LAContext? = nil,
         allowInteractive: Bool = false
     ) -> Data? {
-        if let context, let data = loadBound(account: account, service: service, context: context) {
+        let ctx = context ?? BiometricAuth.peekAuthenticationContext()
+        if let ctx, let data = loadBound(account: account, service: service, context: ctx) {
             return data
         }
-        // Legacy unbound (pre-ACL) — readable while device unlocked.
         if let data = loadLegacy(account: account, service: service) {
             return data
         }
-        // Bound item but no context yet (should not happen on owner unlock path).
         if allowInteractive {
             return loadBound(account: account, service: service, context: nil, interactive: true)
         }
-        return nil
+        // Bound item, no context yet (Face ID still up) — fail closed without UI.
+        return loadBound(account: account, service: service, context: nil, interactive: false)
     }
 
     private static func loadBound(
@@ -175,14 +170,11 @@ enum KeychainStore {
         ]
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
-        // Bound items often surface as auth errors when UI is forced to fail — not legacy data.
         guard status == errSecSuccess else { return nil }
         return result as? Data
     }
 
-    // MARK: - Presence
-
-    /// Presence without presenting UI. Treats auth-required as "exists".
+    /// Presence without presenting UI. Auth-required counts as present.
     static func exists(account: String, service: String = defaultService) -> Bool {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -195,16 +187,11 @@ enum KeychainStore {
         ]
         let status = SecItemCopyMatching(query as CFDictionary, nil)
         switch status {
-        case errSecSuccess, errSecInteractionNotAllowed, errSecAuthFailed,
-             errSecUserCanceled, errSecMissingEntitlement:
-            // MissingEntitlement should not happen; still fail closed as "present" only on known codes.
-            return status == errSecSuccess
-                || status == errSecInteractionNotAllowed
-                || status == errSecAuthFailed
+        case errSecSuccess, errSecInteractionNotAllowed, errSecAuthFailed:
+            return true
         case errSecItemNotFound:
             return false
         default:
-            // Unknown status — prefer UserDefaults gate over false negative (fail-closed unlock).
             return status != errSecItemNotFound
         }
     }
