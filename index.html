@@ -15,7 +15,9 @@
   location.replace("tapper/" + q + h);
 })();
 </script>
-<meta http-equiv="refresh" content="0;url=tapper/">
+<!-- No meta refresh here: it navigates to a fragment-less "tapper/" and would
+     drop the band's #d= payload. The script above and the link below both
+     carry the fragment, matching card.html / get.html / get/index.html. -->
 <style>
   body {
     margin: 0;
