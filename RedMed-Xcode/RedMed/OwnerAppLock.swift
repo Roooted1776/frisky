@@ -6,6 +6,11 @@ import SwiftUI
 /// Keychain profile is biometry-bound (`KeychainStore`); Face ID parks an
 /// `LAContext` so SecItem can read without a second sheet. Background clears
 /// the park. Prefetch without context only resolves legacy unbound blobs.
+///
+/// **Warm rules:** `PasserbyHTMLCardView.warmShellCache()` (string) may overlap
+/// Face ID. `PasserbyWebViewPool.warmEmbedShell()` (WK) runs **only after**
+/// `gate = .unlocked` — WebKit during Face ID steals MainActor and leaves a
+/// cream hang after auth.
 struct OwnerAppLock<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
@@ -50,10 +55,10 @@ struct OwnerAppLock<Content: View>: View {
             screenCaptured = UIScreen.main.isCaptured
             tryAutoUnlockIfActive()
             profile.beginUnlockPrefetch()
+            // String cache only — not WK — during Face ID window.
             Task.detached(priority: .userInitiated) {
                 PasserbyHTMLCardView.warmShellCache()
             }
-            PasserbyWebViewPool.warmEmbedShell()
         }
         .task(id: authGeneration) {
             guard gate == .locked else { return }
@@ -137,10 +142,10 @@ struct OwnerAppLock<Content: View>: View {
         }
         unlockWithFaceID()
         profile.beginUnlockPrefetch()
+        // String warm only during Face ID — WK waits until after unlock.
         Task.detached(priority: .userInitiated) {
             PasserbyHTMLCardView.warmShellCache()
         }
-        PasserbyWebViewPool.warmEmbedShell()
     }
 
     private func unlockWithFaceID() {
@@ -242,6 +247,7 @@ struct OwnerAppLock<Content: View>: View {
             biometryFailed = false
             profileLoadFailed = false
             showUnlockControl = false
+            // WK warm only after unlock — never during Face ID.
             Task(priority: .utility) { @MainActor in
                 RedMedHaptics.success()
                 PasserbyWebViewPool.warmEmbedShell()
