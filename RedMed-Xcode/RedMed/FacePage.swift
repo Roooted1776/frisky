@@ -40,13 +40,19 @@ struct FacePage: View {
 
                 VStack(spacing: 14) {
                     if screenCaptured {
-                        Text("Screen sharing is on — unlock with Face ID. Profile stays hidden on the share until you stop sharing.")
+                        Text("Screen sharing is on. Unlock with Face ID — your profile stays hidden on the share until you stop sharing.")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.redmedMuted)
                             .multilineTextAlignment(.center)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    if biometryFailed {
+                    if isAuthenticating {
+                        Text("Looking for Face ID…")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.redmedMuted)
+                            .multilineTextAlignment(.center)
+                            .accessibilityAddTraits(.updatesFrequently)
+                    } else if biometryFailed {
                         Text("Couldn't verify it's you. Try again.")
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.redmedAccent)
