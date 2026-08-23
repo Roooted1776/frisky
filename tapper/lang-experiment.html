@@ -21,6 +21,7 @@
     --chip: 7px;
     --page-pad: clamp(16px, 4.2vw, 28px);
     --shadow: 0 1px 2px rgba(28,25,23,0.04), 0 6px 16px rgba(225,29,72,0.05);
+    --shadow-accent: 0 6px 16px rgba(225,29,72,0.22);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
@@ -38,41 +39,44 @@
   .shell {
     max-width: 480px;
     margin: 0 auto;
-    padding: 14px var(--page-pad) 40px;
+    padding: 12px var(--page-pad) 36px;
   }
   .banner {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.35px;
     text-transform: uppercase;
     color: var(--accent);
-    background: rgba(225,29,72,0.1);
-    border-radius: var(--chip);
-    padding: 6px 10px;
+    background: rgba(225,29,72,0.08);
+    border-radius: 999px;
+    padding: 5px 11px;
     display: inline-block;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
   .lang-bar {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 16px;
+    gap: 5px;
+    margin-bottom: 14px;
   }
   .lang-btn {
     border: 1px solid var(--divider);
     background: var(--surface);
     color: var(--dark);
     border-radius: 999px;
-    padding: 8px 12px;
-    font-size: 13px;
+    padding: 6px 11px;
+    font-size: 12px;
     font-weight: 600;
     font-family: inherit;
     cursor: pointer;
+    transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
   }
+  .lang-btn:active { transform: scale(0.97); }
   .lang-btn.active {
     background: var(--accent);
     border-color: var(--accent);
     color: #fff;
+    box-shadow: 0 2px 8px rgba(225,29,72,0.25);
   }
   .header {
     display: flex;
@@ -87,12 +91,14 @@
     object-fit: cover;
     box-shadow: 0 3px 10px rgba(225,29,72,0.18);
     background: transparent;
+    flex-shrink: 0;
   }
   .name {
     margin: 0;
     font-size: 22px;
     font-weight: 700;
     letter-spacing: -0.4px;
+    line-height: 1.15;
   }
   .meta {
     margin: 4px 0 0;
@@ -111,6 +117,7 @@
     padding: 10px 14px;
     margin: 0 0 14px;
     text-align: center;
+    line-height: 1.35;
   }
   .card {
     background: var(--surface);
@@ -122,19 +129,21 @@
   .row {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     gap: 12px;
     padding: 12px 16px;
     border-bottom: 1px solid var(--divider);
   }
   .row:last-child { border-bottom: none; }
-  .k { font-size: 14px; font-weight: 500; color: var(--muted); }
-  .v { font-size: 14px; font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+  .k { font-size: 14px; font-weight: 500; color: var(--muted); flex-shrink: 0; }
+  .v { font-size: 14px; font-weight: 600; text-align: right; overflow-wrap: anywhere; min-width: 0; }
   .v.chip {
     color: var(--accent);
     background: rgba(225,29,72,0.1);
     border-radius: var(--chip);
     padding: 4px 10px;
     font-weight: 700;
+    flex: 0 0 auto;
   }
   .section-title {
     margin: 0 0 8px;
@@ -162,7 +171,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-top: 8px;
+    margin-top: 4px;
   }
   .btn {
     display: block;
@@ -176,11 +185,13 @@
     font-family: inherit;
     cursor: pointer;
     text-decoration: none;
+    transition: transform 0.14s ease, opacity 0.14s ease;
   }
+  .btn:active { transform: scale(0.98); opacity: 0.94; }
   .btn-call {
     background: linear-gradient(180deg, var(--accent-soft), var(--accent));
     color: #fff;
-    box-shadow: 0 6px 16px rgba(225,29,72,0.22);
+    box-shadow: var(--shadow-accent);
   }
   .btn-sos {
     background: var(--dark);
@@ -190,11 +201,12 @@
   }
   .btn-sos.armed {
     background: var(--accent);
+    box-shadow: var(--shadow-accent);
   }
   .tabs {
     display: flex;
     gap: 4px;
-    margin: 18px 0 12px;
+    margin: 16px 0 12px;
     background: var(--surface);
     border-radius: 14px;
     padding: 4px;
@@ -211,6 +223,7 @@
     color: #5f6369;
     font-family: inherit;
     cursor: pointer;
+    transition: background 0.14s ease, color 0.14s ease;
   }
   .tab.active {
     background: rgba(225,29,72,0.12);
@@ -225,8 +238,16 @@
     line-height: 1.4;
     margin-top: 16px;
   }
-  [dir="rtl"] .v { text-align: left; }
+  /* RTL polish — keep the cream design intentional, not broken */
   [dir="rtl"] .header { flex-direction: row-reverse; }
+  [dir="rtl"] .v { text-align: left; }
+  [dir="rtl"] .row { flex-direction: row-reverse; }
+  [dir="rtl"] .lang-bar { flex-direction: row-reverse; }
+  [dir="rtl"] .tabs { flex-direction: row-reverse; }
+  @media (prefers-reduced-motion: reduce) {
+    .lang-btn, .btn, .tab { transition: none; }
+    .btn:active, .lang-btn:active { transform: none; }
+  }
 </style>
 </head>
 <body>
@@ -246,12 +267,12 @@
     </div>
 
     <div class="tabs" role="tablist">
-      <button class="tab active" type="button" data-tab="medical" data-i18n="tabMedical">RedMed</button>
-      <button class="tab" type="button" data-tab="911" data-i18n="tab911">911</button>
-      <button class="tab" type="button" data-tab="aid" data-i18n="tabAid">Aid</button>
+      <button class="tab active" type="button" role="tab" aria-selected="true" data-tab="medical" data-i18n="tabMedical">RedMed</button>
+      <button class="tab" type="button" role="tab" aria-selected="false" data-tab="911" data-i18n="tab911">911</button>
+      <button class="tab" type="button" role="tab" aria-selected="false" data-tab="aid" data-i18n="tabAid">Aid</button>
     </div>
 
-    <div class="panel active" id="panel-medical" data-panel="medical">
+    <div class="panel active" id="panel-medical" role="tabpanel" data-panel="medical">
       <div class="card">
         <div class="row"><span class="k" data-i18n="name">Name</span><span class="v" id="rowName">Alex Rivera</span></div>
         <div class="row"><span class="k" data-i18n="dob">Birth date</span><span class="v" id="rowDob">Mar 14, 1990</span></div>
@@ -284,7 +305,7 @@
       </div>
     </div>
 
-    <div class="panel" id="panel-911" data-panel="911">
+    <div class="panel" id="panel-911" role="tabpanel" data-panel="911" hidden>
       <div class="actions">
         <a class="btn btn-call" id="callBtn" href="tel:911"><span data-i18n="call">Call</span> <span id="emgNum">911</span></a>
         <button class="btn btn-sos" type="button" id="sosBtn" data-i18n="sos">SOS · Locate me</button>
@@ -292,7 +313,7 @@
       <p class="hint" data-i18n="gpsHint">GPS and seizure timer stay on the production shell. This page is chrome-only i18n.</p>
     </div>
 
-    <div class="panel" id="panel-aid" data-panel="aid">
+    <div class="panel" id="panel-aid" role="tabpanel" data-panel="aid" hidden>
       <div class="list">
         <div class="list-item" data-i18n="aidCpr">CPR</div>
         <div class="list-item" data-i18n="aidBleed">Severe bleeding</div>
@@ -517,7 +538,6 @@
     { id: 'zh', label: '中文' }
   ];
 
-  // Rough emergency numbers for the experiment chrome (production uses navigator.language region map).
   var EMG = { en: '911', es: '911', fr: '112', de: '112', pt: '192', ar: '112', zh: '120' };
 
   var current = 'en';
@@ -562,6 +582,7 @@
       b.type = 'button';
       b.className = 'lang-btn';
       b.setAttribute('data-lang', m.id);
+      b.setAttribute('aria-pressed', 'false');
       b.textContent = m.label;
       b.addEventListener('click', function () { apply(m.id); });
       bar.appendChild(b);
@@ -572,10 +593,14 @@
     t.addEventListener('click', function () {
       var id = t.getAttribute('data-tab');
       document.querySelectorAll('.tab').forEach(function (x) {
-        x.classList.toggle('active', x === t);
+        var on = x === t;
+        x.classList.toggle('active', on);
+        x.setAttribute('aria-selected', on ? 'true' : 'false');
       });
       document.querySelectorAll('.panel').forEach(function (p) {
-        p.classList.toggle('active', p.getAttribute('data-panel') === id);
+        var on = p.getAttribute('data-panel') === id;
+        p.classList.toggle('active', on);
+        p.hidden = !on;
       });
     });
   });
@@ -585,7 +610,6 @@
     paintSos();
   });
 
-  // Prefer browser language when it matches an experiment locale.
   function pickInitial() {
     try {
       var raw = (navigator.language || 'en').toLowerCase();
