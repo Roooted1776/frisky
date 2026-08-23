@@ -27,6 +27,8 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | ATS | Arbitrary loads + local networking **false** |
 | Snapshot / pasteboard | Privacy cover + secure pasteboard clear on background |
 | Live github.io | `/tapper/`, assets, SW return 200 (interim host) |
+| First-launch consent | After Face ID only (`ConsentGateView` v4.1); never before lock, never on tapper |
+| Policies | Help.html v4.1 — crash-alarm disclosure, NJ venue, arbitration opt-out, clickwrap |
 | Open PRs | Must be none before ship; squash only into `main` |
 
 ## Blockers before App Store / hardware NFC
@@ -55,7 +57,8 @@ These cannot be finished in git alone.
 
 ## Soft polish (not ship-stoppers)
 
-- Stale remote branches (`fix-preview-button-link`, `organize-swift-folders`, …): delete after merge; sole long-lived branch is `main`.
+- Stale remote branches: delete after merge; sole long-lived branch is `main`.
+- Device QA: first-launch I-agree (after Face ID) must not reappear on relaunch; policy links open Help.html anchors.
 - GitHub Pages does not apply Cloudflare `_headers` / `_redirects`; meta CSP + JS redirects cover github.io. CF remains preferred when a custom domain is live.
 - Help → Privacy / Terms / Security are full copy in `Help.html`; thin redirect stubs exist for deep links.
 - Device QA matrix (required once): Face ID unlock, Edit save, Preview, Simulate Scan, 911 call sheet, Aid, erase, background snapshot cover, real band write after NFC entitlement.
