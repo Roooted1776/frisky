@@ -108,10 +108,10 @@ def main() -> int:
     ok &= check("/get.html", "/tapper/")
     ok &= check("/card.html", "/tapper/")
     ok &= check("/index.html", "tapper/")
-    ok &= check("/BrandLogo.png")
-    ok &= check("/BrandWordmark.png")
-    # YOU-card mark — the only image the shell renders.
-    ok &= check("/pheart.png")
+    # Brand photos live under assets/ (canonical) + tapper/ (shell-relative).
+    ok &= check("/assets/BrandLogo.png")
+    ok &= check("/assets/BrandWordmark.png")
+    ok &= check("/assets/pheart.png")
     ok &= check("/tapper/pheart.png")
     ok &= check("/tapper/BrandLogo.png")
     ok &= check("/tapper/BrandWordmark.png")

@@ -32,13 +32,13 @@ fi
 
 mkdir -p "$DEST/tapper" "$DEST/get" "$DEST/assets" "$DEST/.github/workflows"
 cp -f index.html tapper.html card.html get.html sw.js \
-  pheart.png BrandLogo.png BrandWordmark.png \
   _headers _redirects \
   "$DEST/"
 cp -f get/index.html "$DEST/get/index.html"
 cp -f tapper/index.html tapper/sw.js \
   tapper/pheart.png tapper/BrandLogo.png tapper/BrandWordmark.png \
   "$DEST/tapper/"
+# Canonical brand photos — assets/ only (no repo-root PNG copies).
 cp -f assets/pheart.png assets/BrandLogo.png assets/BrandWordmark.png \
   assets/BrandWordmark.svg \
   "$DEST/assets/"

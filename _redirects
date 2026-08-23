@@ -3,6 +3,7 @@
 #
 # Canonical passerby shell stays under /tapper/ (SW + AppConfig.medicalCardBaseURL).
 # Root → /tapper/ so getredmed.com/ and redmed.pages.dev/ both land on the shell.
+# Brand PNGs live under /assets/ (and /tapper/ for shell-relative loads).
 
 / /tapper/ 302
 /index.html /tapper/ 302
@@ -12,3 +13,8 @@
 /get /tapper/ 302
 /get/ /tapper/ 302
 /get/index.html /tapper/ 302
+
+# Legacy root brand URLs → assets/
+/BrandLogo.png /assets/BrandLogo.png 301
+/BrandWordmark.png /assets/BrandWordmark.png 301
+/pheart.png /assets/pheart.png 301
