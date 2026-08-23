@@ -34,7 +34,7 @@
 	<key>NFCReaderUsageDescription</key>
 	<string>RedMed writes your emergency card onto a passive NFC bracelet and reads it back to verify. Other phones open that card in the browser without this app — including when the screen is off or locked.</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>RedMed uses Face ID, Touch ID, or your device passcode to unlock editing of your RedMed profile, authorize writing to your bracelet, and open the on-device local history vault. Scanned cards are read-only and cannot be changed without your app and authentication.</string>
+	<string>RedMed uses Face ID or Touch ID to unlock your profile, authorize writing to your bracelet, and open the on-device local history vault. Device passcode is only used for erase or lockout recovery. Scanned cards are read-only and cannot be changed without your app and authentication.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>RedMed uses your location to give 911 your exact GPS coordinates in an emergency.</string>
 	<key>UIBackgroundModes</key>
