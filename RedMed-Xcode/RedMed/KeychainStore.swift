@@ -147,7 +147,10 @@ enum KeychainStore {
         if allowInteractive {
             return loadBound(account: account, service: service, context: nil, interactive: true)
         }
-        return loadBound(account: account, service: service, context: nil, interactive: false)
+        if ctx != nil {
+            return loadBound(account: account, service: service, context: nil, interactive: false)
+        }
+        return nil
     }
 
     private static func loadBound(
