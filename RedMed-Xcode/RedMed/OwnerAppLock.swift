@@ -26,6 +26,7 @@ struct OwnerAppLock<Content: View>: View {
     @State private var biometryFailed = false
     @State private var faceIDUnavailableReason: BiometricAuth.UnavailableReason?
     @State private var profileLoadFailed = false
+    @State private var notInteractive = false
     @State private var keychainHasProfile = ProfileData.prefersLockOnLaunch
     @State private var authGeneration = 0
     @State private var screenCaptured = false
@@ -44,6 +45,7 @@ struct OwnerAppLock<Content: View>: View {
                         biometryFailed: biometryFailed,
                         unavailableReason: faceIDUnavailableReason,
                         profileLoadFailed: profileLoadFailed,
+                        notInteractive: notInteractive,
                         isAuthenticating: isAuthenticating,
                         onProceed: { startUnlockPipeline(isAuto: false) },
                         onOpenSettings: {
@@ -127,6 +129,7 @@ struct OwnerAppLock<Content: View>: View {
             biometryFailed = false
             faceIDUnavailableReason = nil
             profileLoadFailed = false
+            notInteractive = false
             isAuthenticating = false
             didAutoPromptThisLock = false
             showUnlockControl = false
@@ -163,6 +166,7 @@ struct OwnerAppLock<Content: View>: View {
         biometryFailed = false
         faceIDUnavailableReason = nil
         profileLoadFailed = false
+        notInteractive = false
         authGeneration &+= 1
         let generation = authGeneration
         BiometricAuth.authenticate(
@@ -176,6 +180,7 @@ struct OwnerAppLock<Content: View>: View {
                     isAuthenticating = false
                     biometryFailed = false
                     faceIDUnavailableReason = nil
+                    notInteractive = false
                     showUnlockControl = true
                     gate = .locked
                 case .notInteractive:
@@ -183,6 +188,10 @@ struct OwnerAppLock<Content: View>: View {
                     biometryFailed = false
                     faceIDUnavailableReason = nil
                     profileLoadFailed = false
+                    // System couldn't present the Face ID sheet (backgrounded,
+                    // interrupted, another modal in flight). Tell the user
+                    // so Proceed doesn't look like a dead button.
+                    notInteractive = true
                     gate = .locked
                     didAutoPromptThisLock = false
                     // Leave showUnlockControl as-is. Hiding Face after a
@@ -192,6 +201,7 @@ struct OwnerAppLock<Content: View>: View {
                     isAuthenticating = false
                     biometryFailed = true
                     faceIDUnavailableReason = nil
+                    notInteractive = false
                     showUnlockControl = true
                     gate = .locked
                     VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock")
@@ -204,6 +214,7 @@ struct OwnerAppLock<Content: View>: View {
                     isAuthenticating = false
                     biometryFailed = false
                     faceIDUnavailableReason = reason
+                    notInteractive = false
                     showUnlockControl = true
                     gate = .locked
                     VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock-unavailable")
@@ -274,6 +285,7 @@ struct OwnerAppLock<Content: View>: View {
             biometryFailed = false
             faceIDUnavailableReason = nil
             profileLoadFailed = false
+            notInteractive = false
             showUnlockControl = false
             // Live RedMed tab loads from the Face ID string cache. A pooled
             // WK on this turn races first paint.
@@ -285,6 +297,7 @@ struct OwnerAppLock<Content: View>: View {
             biometryFailed = false
             faceIDUnavailableReason = nil
             profileLoadFailed = false
+            notInteractive = false
             showUnlockControl = false
             RedMedHaptics.success()
         } else {
@@ -293,6 +306,7 @@ struct OwnerAppLock<Content: View>: View {
             biometryFailed = false
             faceIDUnavailableReason = nil
             profileLoadFailed = true
+            notInteractive = false
             showUnlockControl = true
             BiometricAuth.clearAuthenticationContext()
         }
