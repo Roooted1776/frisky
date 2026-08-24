@@ -8,9 +8,9 @@ import SwiftUI
 /// the park. Prefetch without context only resolves legacy unbound blobs.
 ///
 /// **Warm rules:** `PasserbyHTMLCardView.warmShellCache()` (string) may overlap
-/// Face ID. `PasserbyWebViewPool.warmEmbedShell()` (WK) runs **only after**
-/// `gate = .unlocked` — WebKit during Face ID steals MainActor and leaves a
-/// cream hang after auth.
+/// Face ID. Do **not** create a WKWebView during Face ID (cream hang). After
+/// unlock, the live RedMed tab loads from that string cache — do not start a
+/// second pooled WK on the same turn (it races first paint).
 struct OwnerAppLock<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
@@ -66,6 +66,8 @@ struct OwnerAppLock<Content: View>: View {
             try? await Task.sleep(nanoseconds: 15_000_000_000)
             guard gate == .locked, generation == authGeneration else { return }
             if isAuthenticating {
+                // Hung Face ID sheet — kill it so Proceed can start a new one.
+                BiometricAuth.cancelInFlight()
                 isAuthenticating = false
             }
             showUnlockControl = true
@@ -174,7 +176,7 @@ struct OwnerAppLock<Content: View>: View {
                     gate = .locked
                     didAutoPromptThisLock = false
                     showUnlockControl = false
-                case .notVerified:
+                case .unavailable, .notVerified:
                     RedMedHaptics.error()
                     isAuthenticating = false
                     biometryFailed = true
@@ -182,10 +184,11 @@ struct OwnerAppLock<Content: View>: View {
                     gate = .locked
                     VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock")
                 case .success:
-                    await Task.yield()
                     guard generation == authGeneration else { return }
-                    // Context is parked — bound Keychain load works in prepareUnlock.
-                    profile.beginUnlockPrefetch()
+                    // Bound Keychain needs the parked LAContext. Restart the
+                    // Face ID-overlapped load now — the pre-park attempt fails
+                    // closed without a sheet (kSecUseAuthenticationUIFail).
+                    profile.beginUnlockPrefetchWithParkedContext()
                     await applyUnlockSuccess(generation: generation)
                 }
             }
@@ -247,11 +250,9 @@ struct OwnerAppLock<Content: View>: View {
             biometryFailed = false
             profileLoadFailed = false
             showUnlockControl = false
-            // WK warm only after unlock — never during Face ID.
-            Task(priority: .utility) { @MainActor in
-                RedMedHaptics.success()
-                PasserbyWebViewPool.warmEmbedShell()
-            }
+            // Live RedMed tab loads from the Face ID string cache. A pooled
+            // WK on this turn races first paint.
+            RedMedHaptics.success()
         } else if !expectsProfile {
             keychainHasProfile = false
             profile.prepareEmptyUnlockShell()
@@ -259,10 +260,7 @@ struct OwnerAppLock<Content: View>: View {
             biometryFailed = false
             profileLoadFailed = false
             showUnlockControl = false
-            Task(priority: .utility) { @MainActor in
-                RedMedHaptics.success()
-                PasserbyWebViewPool.warmEmbedShell()
-            }
+            RedMedHaptics.success()
         } else {
             RedMedHaptics.error()
             gate = .locked

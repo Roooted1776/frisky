@@ -6,12 +6,13 @@ struct RedMedApp: App {
 
     var body: some Scene {
         WindowGroup {
-            // Explicit "I agree" consent before anything else — not browsewrap.
             // Owner UI lives in Main.swift — not HTML.
             // Privacy cover hides PHI from iOS app-switcher snapshots.
-            ConsentGateView {
-                PrivacySnapshotGuard {
-                    OwnerAppLock {
+            // Face ID first (no extra pages before the lock). Consent is
+            // first-launch only, after unlock, never on passerby tapper.
+            PrivacySnapshotGuard {
+                OwnerAppLock {
+                    ConsentGateView {
                         Main()
                     }
                 }

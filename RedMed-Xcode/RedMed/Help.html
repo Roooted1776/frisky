@@ -115,7 +115,7 @@
 
     <h2><span class="sec-num">5.</span> Where it lives</h2>
     <p>Your profile stays on your iPhone Keychain and, if you write one, on the band’s NFC chip. It is not uploaded, synced, or backed up to any RedMed server — we do not operate one for profiles.</p>
-    <p>On iOS we use the <code>WhenUnlockedThisDeviceOnly</code> Keychain class: readable only while the phone is unlocked, and <strong>excluded from iCloud and encrypted backups</strong>. It does not sync to your other Apple devices.</p>
+    <p>On iOS we use the <code>WhenPasscodeSetThisDeviceOnly</code> Keychain class bound to <code>biometryCurrentSet</code> (Face ID / Touch ID): readable only after a successful owner biometric, and <strong>excluded from iCloud and encrypted backups</strong>. It does not sync to your other Apple devices. Enrolling a new Face ID invalidates the stored profile.</p>
     <p>When someone taps the band, nothing is fetched from us. The card is built from what is on the chip (<code>#d=</code> in the URL fragment).</p>
 
     <h2><span class="sec-num">6.</span> The band is readable by design</h2>
@@ -154,7 +154,7 @@
     <p>The passerby card may keep its static shell in browser Cache Storage so a later tap opens offline. Medical fields stay in the URL <code>#d=</code> fragment and are not written into that cache. No advertising or analytics cookies. The owner profile lives in Keychain, not web localStorage.</p>
 
     <h2><span class="sec-num">13.</span> Children and people you support</h2>
-    <p>RedMed is not directed to children under 13, and we do not knowingly collect their information on RedMed servers. Only an adult who meets the eligibility rules in <a href="#terms">Terms</a> §15 may create a profile for a child or an adult they support. That adult is responsible for accuracy and for what goes on the band. A child’s band is as readable as an adult’s.</p>
+    <p>RedMed is not directed to children under 13, and we do not knowingly collect their information on RedMed servers. Only an adult who meets the eligibility rules in <a href="#terms">Terms</a> §16 may create a profile for a child or an adult they support. That adult is responsible for accuracy and for what goes on the band. A child’s band is as readable as an adult’s.</p>
 
     <h2><span class="sec-num">14.</span> Changes</h2>
     <p>We may update this page. The Effective date above shows the latest revision. Material changes will appear in the app where practicable.</p>
@@ -184,6 +184,7 @@
     <h2><span class="sec-num">2.</span> Agreement</h2>
     <p>These Terms govern the RedMed iPhone app and any associated passive NFC medical band programmed through the app (together, the “App”).</p>
     <p>By downloading, installing, opening, or using the App — as the person who creates a profile, or as anyone who views a card by tapping a band or opening a <code>#d=</code> link — you agree to these Terms and to <a href="#privacy">Privacy</a>. If you do not agree, do not use the App.</p>
+    <p>In the owner iPhone app, after Face ID, first launch (and any material policy change) requires an explicit I-agree tap before the App is usable. A passerby who only views a band card agrees by opening that card.</p>
     <p>Nothing here limits rights you cannot waive under US consumer-protection law. Where a term conflicts with a non-waivable statutory right, that right wins.</p>
 
     <h2><span class="sec-num">3.</span> What the App does</h2>
@@ -296,7 +297,7 @@
 
     <h2><span class="sec-num">2.</span> On-device profile</h2>
     <ul>
-      <li>Profile fields in iOS <strong>Keychain</strong> with <code>WhenUnlockedThisDeviceOnly</code>.</li>
+      <li>Profile fields in iOS <strong>Keychain</strong> with <code>WhenPasscodeSetThisDeviceOnly</code> and <code>biometryCurrentSet</code> (Face ID). Legacy unbound blobs migrate on next load.</li>
       <li>Readable only while unlocked; excluded from iCloud and encrypted backups.</li>
       <li>Local history / vault files use complete file protection and backup exclusion.</li>
       <li>Owner Face ID / biometrics gate app unlock, Edit, NFC write, and Local History. Erase still prompts.</li>
@@ -320,7 +321,7 @@
     <p>Same posture as <a href="#privacy">Privacy</a>: no profile on our systems → RedMed is outside the covered-entity / BA path for that profile. Device Keychain and no backend are the controls. They are not a hospital Security Rule program and not a “HIPAA certified” claim.</p>
 
     <h2><span class="sec-num">7.</span> Report a vulnerability</h2>
-    <p>Open a private GitHub security advisory on <a href="https://github.com/Roooted1776/frisky">Roooted1776/frisky</a> for XSS in <code>#d=</code> rendering, Keychain / vault bypass, or owner unlock gate bypass. Or email <a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a>. Do not file public issues with live keys or real medical payloads. See root <code>SECURITY.md</code>.</p>
+    <p>Open a private GitHub security advisory on <a href="https://github.com/Roooted1776/frisky">Roooted1776/frisky</a> for XSS in <code>#d=</code> rendering, Keychain / vault bypass, or owner unlock gate bypass. Or email <a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a>. Do not file public issues with live keys or real medical payloads. See <code>docs/SECURITY.md</code>.</p>
 
     <h2><span class="sec-num">8.</span> Trust root</h2>
     <p>There is no RedMed profile server. The trust root is the owner’s iPhone: Keychain, biometrics gates, RAM purge on background, vault file protection, and the band fragment if written.</p>

@@ -142,6 +142,7 @@ struct UnlockScreenButton: View {
                 .frame(minHeight: 52)
                 .padding(.horizontal, 22)
                 .padding(.vertical, 12)
+                .contentShape(RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous))
                 .background {
                     RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous)
                         .fill(

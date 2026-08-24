@@ -7,7 +7,29 @@ Native iOS medical ID + emergency aid. **Source of truth:** git `main` at
 /Users/claude/Documents/frisky
 ```
 
-Fetch/Pull **main** in GitHub Desktop. Build:
+## Fetch / pull `main` (Mac)
+
+After every remote squash-merge, update the Mac clone:
+
+**GitHub Desktop**
+
+1. Open the **frisky** repository.
+2. **Fetch origin**
+3. **Pull** branch **main**
+
+**Terminal**
+
+```bash
+cd /Users/claude/Documents/frisky
+git fetch origin
+git checkout main
+git pull origin main
+```
+
+Do not create a second clone. Do not pull feature branches as the long-lived
+working tree — `main` only.
+
+Build:
 
 ```bash
 open RedMed-Xcode/RedMed.xcodeproj

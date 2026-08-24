@@ -19,6 +19,8 @@ enum BiometricAuth {
         case notVerified
         case declined
         case notInteractive
+        /// Face ID / Touch ID cannot run (lockout, not enrolled, not available).
+        case unavailable
     }
 
     private static let notInteractiveLACode = -1004
@@ -28,6 +30,9 @@ enum BiometricAuth {
     /// Authenticated context for SecItem after a successful evaluate.
     private static let parkLock = NSLock()
     private static var parkedContext: LAContext?
+    /// Live `evaluatePolicy` context. Invalidate before starting a new one —
+    /// a second evaluate while the first is up fails immediately (dead Proceed).
+    private static var inFlightContext: LAContext?
 
     /// Seconds the parked context may satisfy SecItem without a new Face ID.
     /// Covers unlock → Keychain load → first persist; background clears earlier.
@@ -49,6 +54,9 @@ enum BiometricAuth {
             }
             return
         }
+
+        cancelInFlight()
+
         let context = makeContext(
             allowPasscode: allowPasscode,
             allowableReuseDuration: max(allowableReuseDuration, secItemReuseDuration)
@@ -68,26 +76,48 @@ enum BiometricAuth {
                 )
             }
             #else
-            let failOutcome: Outcome = isNotInteractive(error) ? .notInteractive : .declined
+            let failOutcome: Outcome
+            if isNotInteractive(error) {
+                failOutcome = .notInteractive
+            } else if isUnavailable(error) {
+                failOutcome = .unavailable
+            } else {
+                failOutcome = .declined
+            }
             DispatchQueue.main.async { completion(failOutcome) }
             #endif
             return
         }
 
-        context.evaluatePolicy(policy, localizedReason: reason) { success, evalError in
-            DispatchQueue.main.async {
-                if success {
-                    didUnlockThisLaunch = true
-                    // Keep context alive for Keychain SecItem (do not invalidate yet).
-                    park(context)
-                    completion(.success)
-                } else {
-                    context.invalidate()
-                    clearPark()
-                    completion(outcome(for: evalError))
+        setInFlight(context)
+        // Next main turn so a Proceed tap after userCancel is not the same
+        // run loop as the leftover sheet (that race fails with no prompt).
+        DispatchQueue.main.async {
+            context.evaluatePolicy(policy, localizedReason: reason) { success, evalError in
+                DispatchQueue.main.async {
+                    clearInFlight(ifSame: context)
+                    if success {
+                        didUnlockThisLaunch = true
+                        // Keep context alive for Keychain SecItem (do not invalidate yet).
+                        park(context)
+                        completion(.success)
+                    } else {
+                        context.invalidate()
+                        clearPark()
+                        completion(outcome(for: evalError))
+                    }
                 }
             }
         }
+    }
+
+    /// Kill a hung / leftover Face ID sheet so Proceed can start a fresh one.
+    static func cancelInFlight() {
+        parkLock.lock()
+        let ctx = inFlightContext
+        inFlightContext = nil
+        parkLock.unlock()
+        ctx?.invalidate()
     }
 
     /// LAContext from the latest successful evaluate, if still valid for SecItem.
@@ -105,6 +135,20 @@ enum BiometricAuth {
     /// Drop the parked context (background, erase, failed Keychain).
     static func clearAuthenticationContext() {
         clearPark()
+    }
+
+    private static func setInFlight(_ context: LAContext) {
+        parkLock.lock()
+        inFlightContext = context
+        parkLock.unlock()
+    }
+
+    private static func clearInFlight(ifSame context: LAContext) {
+        parkLock.lock()
+        if inFlightContext === context {
+            inFlightContext = nil
+        }
+        parkLock.unlock()
     }
 
     private static func park(_ context: LAContext) {
@@ -140,13 +184,33 @@ enum BiometricAuth {
         return ns.domain == LAErrorDomain && ns.code == notInteractiveLACode
     }
 
+    private static func isUnavailable(_ error: Error?) -> Bool {
+        guard let error else { return false }
+        let ns = error as NSError
+        guard ns.domain == LAErrorDomain else { return false }
+        switch ns.code {
+        case LAError.biometryNotAvailable.rawValue,
+             LAError.biometryNotEnrolled.rawValue,
+             LAError.biometryLockout.rawValue,
+             LAError.passcodeNotSet.rawValue:
+            return true
+        default:
+            return false
+        }
+    }
+
     private static func outcome(for error: Error?) -> Outcome {
-        guard let la = error as? LAError else { return .declined }
+        guard let la = error as? LAError else {
+            return isUnavailable(error) ? .unavailable : .declined
+        }
         if la.code == .authenticationFailed {
             return .notVerified
         }
         if isNotInteractive(la) {
             return .notInteractive
+        }
+        if isUnavailable(la) {
+            return .unavailable
         }
         return .declined
     }
@@ -158,6 +222,35 @@ enum BiometricAuth {
         completion: @escaping (Outcome) -> Void
     ) {
         guard let top = topViewController() else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                guard let retry = topViewController() else {
+                    completion(.unavailable)
+                    return
+                }
+                presentAlert(
+                    on: retry,
+                    reason: reason,
+                    allowPasscode: allowPasscode,
+                    completion: completion
+                )
+            }
+            return
+        }
+        presentAlert(
+            on: top,
+            reason: reason,
+            allowPasscode: allowPasscode,
+            completion: completion
+        )
+    }
+
+    private static func presentAlert(
+        on top: UIViewController,
+        reason: String,
+        allowPasscode: Bool,
+        completion: @escaping (Outcome) -> Void
+    ) {
+        if top.presentedViewController != nil {
             completion(.declined)
             return
         }

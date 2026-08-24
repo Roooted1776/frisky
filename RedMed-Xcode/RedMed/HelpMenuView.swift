@@ -449,7 +449,7 @@ struct HelpMenuView: View {
                 RedMedHaptics.success()
                 isErasing = false
                 eraseDone = true
-            case .notVerified:
+            case .notVerified, .unavailable:
                 RedMedHaptics.error()
                 isErasing = false
                 eraseAuthFailed = true

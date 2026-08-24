@@ -1,13 +1,11 @@
 import SwiftUI
 
-/// First-launch legal consent gate. Requires an affirmative, explicit "I agree"
-/// tap before the app is usable — not the "by using the app you agree"
-/// browsewrap in Terms §2. Re-shown whenever `currentVersion` bumps (a material
-/// change to Terms/Privacy/Security). Local UserDefaults flag only — no PHI,
-/// no network call, nothing sent to RedMed.
+/// First-launch legal consent, shown only after Face ID unlock.
+/// Never mounts in front of the lock shell (AGENTS.md: no extra pages before Face ID).
+/// Never shown on passerby tapper. Re-shown when `currentVersion` bumps.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
-    /// Bump alongside the "Version" line in Help.html Terms/Privacy/Security
+    /// Bump with the Version line in Help.html Terms / Privacy / Security
     /// whenever a change is material enough to require re-consent.
     static let currentVersion = "4.1"
 
@@ -44,8 +42,8 @@ struct ConsentGateView<Content: View>: View {
                         .padding(.top, 24)
 
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("RedMed is a local emergency medical ID and EMS assist. It is **not** a medical device, does not provide medical advice, and does not promise any medical outcome. Always call 911 first in a real emergency.")
-                        Text("Your profile stays on this iPhone, and on a band if you write one — RedMed runs no server for it. Please read the full Terms, Privacy, and Security pages below before continuing.")
+                        Text("RedMed is a local emergency medical ID and EMS assist. It is not a medical device, does not provide medical advice, and does not promise any medical outcome. Always call 911 first in a real emergency.")
+                        Text("Your profile stays on this iPhone, and on a band if you write one — RedMed runs no server for it. Read the full Terms, Privacy, and Security pages below before continuing.")
                     }
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.redmedMuted)

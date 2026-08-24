@@ -29,15 +29,15 @@ The app has no backend, database, or web service.
   write/read sessions, never tab chrome. Owner writes the passive HF NFC band
   from the NFC tab (Face ID gated) as `medicalCardBaseURL#d=` only
   (`AppConfig.OwnerBandURI`) — no vendor cloud, no social/short URL, no BLE.
-  Launch path is Face ID lock then Main (those tabs). No extra pages before Face ID.
+  Launch path is Face ID lock then Main (those tabs). No extra pages before Face ID. After unlock, a first-launch clickwrap (`ConsentGateView`, versioned in UserDefaults) may appear once before Main — never in front of Face ID, never on passerby tapper.
 - **Scanner / passerby shell** (`PublicCardView` / bracelet tap → `tapper.html#d=…`,
   `isScannerSession == true`): tabs are **RedMed · 911 · Aid** only — **no Edit**,
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain or
   owner `@AppStorage` / UserDefaults prefs. Hosted passerby path is
   `AppConfig.medicalCardBaseURL` (currently `https://roooted1776.github.io/tapper/`,
-  from `tapper/index.html`). Locked custom-host pick is `getredmed.com` — flip
-  AppConfig only after `docs/domain.md` cutover is green. Do not write
-  `getredmed.com` onto bands while it NXDOMAINs. `redmed.pages.dev` stays
+  from `tapper/index.html`). Custom HTML host is TBD (`AppConfig.medicalCardCustomDomainTBD = nil`). Flip
+  AppConfig only after `docs/domain.md` cutover is green. Do not write an
+  unregistered host onto bands. `redmed.pages.dev` stays
   optional until Cloudflare secrets / Pages Git connect land.
   **Tap-to-view never requires Face ID / biometrics / passcode / login** — owner biometrics gate
   edit, NFC write, vault, and app unlock only. Passerby HTML never asks.
@@ -63,7 +63,7 @@ The app has no backend, database, or web service.
   policies only. NFC Preview (under Scan) / NFC Scan open bundled
   `tapper.html#d=` (`?src=app`, no SOS auto-arm);
   live band taps use `AppConfig.medicalCardBaseURL#d=` (currently
-  `https://roooted1776.github.io/tapper/#d=`; `getredmed.com` after domain cutover).
+  `https://roooted1776.github.io/tapper/#d=`; custom host after domain cutover).
 
 - **Bracelet tap (physics, not a setting):** `AppConfig.BraceletRF` is the single
   source of truth — intentional tap ~1–2″, walk-by ~6–8″ does not fire, reliable
@@ -103,12 +103,15 @@ The app has no backend, database, or web service.
   lock on `.inactive` — LAContext / system auth sheets put the scene inactive
   and would discard a successful unlock via `authGeneration`.
 - Owner app lock is **biometrics only before Main**. Front page is
-  `LockEntryPage`: user-page cream + static medical mark. Path: open →
-  first Face ID → Main. No passcode / password pad on that Face ID (no
+  `LockEntryPage`: user-page cream only. Path: open →
+  first Face ID → Main. No hanging mark / lock watermark / FaceIDFrame clip on
+  that shell. No passcode / password pad on that Face ID (no
   `Enter Passcode` fallback). Passerby `tapper.html` never has Face ID,
   passcode, login, or any page in front of the card. No glyph, no Help on
   `LockEntryPage`. After cancel / mismatch, **Face** (`FacePage`) with a
-  **Proceed** CTA replaces that shell (not a bottom dock). After a successful
+  **Proceed** CTA replaces that shell (not a bottom dock) — cream + Proceed,
+  no hanging mark. Proceed retries Face ID immediately (cancel any hung
+  `LAContext` first). After a successful
   Face ID, Edit / NFC / vault skip Face ID this process. Erase still
   prompts. Do not re-lock into a second Face ID on background. Do **not** play
   `LockOpen.mp4` or `FaceIDFrame.mp4`. Clip never gates Face ID. Fresh install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
