@@ -72,6 +72,7 @@ struct FacePage: View {
                     ) {
                         onProceed()
                     }
+                    .zIndex(1)
                 }
                 .padding(.horizontal, 22)
                 .padding(.bottom, 36)

@@ -108,7 +108,9 @@ The app has no backend, database, or web service.
   `Enter Passcode` fallback). Passerby `tapper.html` never has Face ID,
   passcode, login, or any page in front of the card. No glyph, no Help on
   `LockEntryPage`. After cancel / mismatch, **Face** (`FacePage`) with a
-  **Proceed** CTA replaces that shell (not a bottom dock). After a successful
+  **Proceed** CTA replaces that shell (not a bottom dock). Proceed must
+  cancel any in-flight `LAContext` and wait a beat before `evaluatePolicy`
+  (same-turn retry after userCancel fails immediately — dead button). After a successful
   Face ID, Edit / NFC / vault skip Face ID this process. Erase still
   prompts. Do not re-lock into a second Face ID on background. Do **not** play
   `LockOpen.mp4` or `FaceIDFrame.mp4`. Clip never gates Face ID. Fresh install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
