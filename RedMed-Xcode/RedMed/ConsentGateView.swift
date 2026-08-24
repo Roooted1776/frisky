@@ -37,9 +37,7 @@ struct ConsentGateView<Content: View>: View {
             RedMedPageBackground()
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    Text("Before you use RedMed")
-                        .font(.system(size: 22, weight: .heavy))
-                        .foregroundColor(.redmedDark)
+                    LockMedGlyph(size: 64)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.top, 24)
 
