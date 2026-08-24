@@ -22,6 +22,22 @@ func savePNG(_ rep: NSBitmapImageRep, to url: URL) throws {
     fputs("wrote \(url.path) (\(rep.pixelsWide)x\(rep.pixelsHigh))\n", stderr)
 }
 
+/// NSBitmapImageRep's PNG encoder writes plain truecolor+alpha with no
+/// palette reduction — 2-3x larger than needed for flat brand art. Best
+/// effort only: silently no-ops when pngquant isn't on PATH (e.g. CI),
+/// so the pipeline still runs without it, just with bigger files.
+func quantizePNG(at url: URL) {
+    guard let pngquant = ["/opt/homebrew/bin/pngquant", "/usr/local/bin/pngquant"]
+        .first(where: { FileManager.default.isExecutable(atPath: $0) }) else { return }
+    let proc = Process()
+    proc.executableURL = URL(fileURLWithPath: pngquant)
+    proc.arguments = ["--quality=85-100", "--speed", "1", "--strip", "--force", "--ext", ".png", url.path]
+    proc.standardError = FileHandle.nullDevice
+    proc.standardOutput = FileHandle.nullDevice
+    try? proc.run()
+    proc.waitUntilExit()
+}
+
 /// Renders at exact pixel dimensions regardless of the screen's Retina backing
 /// scale — `NSImage.lockFocus()` silently doubles output on Retina displays,
 /// which previously made every "size N" export come out as N*2 pixels.
@@ -275,12 +291,19 @@ do {
     // Web display is 72 CSS px → 216 @3x; keep Pages / SW payloads small.
     let sharedLogo = repoRoot.appendingPathComponent("assets/BrandLogo.png")
     if FileManager.default.fileExists(atPath: sharedLogo.deletingLastPathComponent().path) {
-        try savePNG(scaledSquare(pheart, size: 216), to: sharedLogo)
-        try savePNG(scaledSquare(pheart, size: 216), to: repoRoot.appendingPathComponent("assets/pheart.png"))
-        try savePNG(scaledSquare(pheart, size: 216), to: repoRoot.appendingPathComponent("BrandLogo.png"))
-        try savePNG(scaledSquare(pheart, size: 216), to: repoRoot.appendingPathComponent("tapper/BrandLogo.png"))
-        try savePNG(scaledSquare(pheart, size: 216), to: repoRoot.appendingPathComponent("tapper/pheart.png"))
-        try savePNG(scaledSquare(pheart, size: 216), to: root.appendingPathComponent("RedMed/BrandLogo.png"))
+        let sharedTargets = [
+            sharedLogo,
+            repoRoot.appendingPathComponent("assets/pheart.png"),
+            repoRoot.appendingPathComponent("BrandLogo.png"),
+            repoRoot.appendingPathComponent("tapper/BrandLogo.png"),
+            repoRoot.appendingPathComponent("tapper/pheart.png"),
+            root.appendingPathComponent("RedMed/BrandLogo.png")
+        ]
+        for target in sharedTargets {
+            try savePNG(scaledSquare(pheart, size: 216), to: target)
+            quantizePNG(at: target)
+        }
+        // Bundled app copy: not web-served, kept truecolor for sharpest in-app decode.
         try savePNG(scaledSquare(pheart, size: 1024), to: root.appendingPathComponent("RedMed/pheart.png"))
     }
 } catch {
