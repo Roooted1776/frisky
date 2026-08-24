@@ -82,11 +82,6 @@ struct LocalWebView: UIViewRepresentable {
     /// Policy HTML + stylesheet only — never lateral loads into tapper.html.
     private static let allowedFileBasenames: Set<String> = [
         "Help.html",
-        "PrivacyPolicy.html",
-        "TOS.html",
-        "security.html",
-        // Redirect-only → redmed://main (iPhone) or hosted tapper (any device).
-        "HowItWorks.html",
         "legal-doc.css"
     ]
 
@@ -96,13 +91,6 @@ struct LocalWebView: UIViewRepresentable {
         "tapper.html",
         "index.html",
         "card.html"
-    ]
-
-    /// Legacy one-file stubs → Help.html anchors.
-    private static let policyStubFragments: [String: String] = [
-        "PrivacyPolicy.html": "privacy",
-        "TOS.html": "terms",
-        "security.html": "security"
     ]
 
     /// Blocks in-webview navigation to untrusted schemes; opens http(s)/tel/mailto/redmed externally.
@@ -170,8 +158,6 @@ struct LocalWebView: UIViewRepresentable {
                 if LocalWebView.allowedFileBasenames.contains(name) {
                     if let dest = url.fragment, !dest.isEmpty {
                         fragment = dest
-                    } else if let dest = LocalWebView.policyStubFragments[name] {
-                        fragment = dest
                     }
                     decisionHandler(.allow)
                 } else {
@@ -210,13 +196,13 @@ struct LocalWebView: UIViewRepresentable {
             return URL(string: raw)
         }
 
+        private static let helpFragments: Set<String> = ["faq", "privacy", "terms", "security"]
+
         private static func policyDestination(file: String, fragment: String?) -> String? {
-            if file == "Help.html",
-               let fragment,
-               fragment == "privacy" || fragment == "terms" || fragment == "security" {
-                return fragment
+            guard file == "Help.html", let fragment, helpFragments.contains(fragment) else {
+                return nil
             }
-            return LocalWebView.policyStubFragments[file]
+            return fragment
         }
 
         func webView(
