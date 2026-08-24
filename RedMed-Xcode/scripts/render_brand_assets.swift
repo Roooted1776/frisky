@@ -3,8 +3,8 @@ import AppKit
 import CoreText
 import Foundation
 
-// Scales repo-root pheart.png into BrandLogo / BrandWordmark / AppIcon slots.
-// pheart is the circular heart on cream #fff7f7 (same as Color.redmedBg).
+// Scales repo-root BrandLogo.png into BrandLogo / BrandWordmark / AppIcon slots.
+// The source art is the circular heart on cream #fff7f7 (same as Color.redmedBg).
 
 let root = URL(fileURLWithPath: CommandLine.arguments.count > 1
     ? CommandLine.arguments[1]
@@ -251,9 +251,9 @@ func drawWordmark(logo: NSImage, height: Int, darkBackground: Bool) -> NSBitmapI
 
 do {
     let repoRoot = root.deletingLastPathComponent()
-    let pheartURL = repoRoot.appendingPathComponent("pheart.png")
-    guard let pheart = NSImage(contentsOf: pheartURL) else {
-        fputs("error: missing \(pheartURL.path)\n", stderr)
+    let brandLogoURL = repoRoot.appendingPathComponent("BrandLogo.png")
+    guard let brandLogo = NSImage(contentsOf: brandLogoURL) else {
+        fputs("error: missing \(brandLogoURL.path)\n", stderr)
         exit(1)
     }
 
@@ -269,7 +269,7 @@ do {
         ("BrandLogo@3x.png", 540)
     ]
     for (name, px) in logoScales {
-        try savePNG(scaledSquare(pheart, size: px), to: logoDir.appendingPathComponent(name))
+        try savePNG(scaledSquare(brandLogo, size: px), to: logoDir.appendingPathComponent(name))
     }
 
     let wordScales: [(String, Int)] = [
@@ -278,33 +278,33 @@ do {
         ("BrandWordmark@3x.png", 477)
     ]
     for (name, h) in wordScales {
-        try savePNG(drawWordmark(logo: pheart, height: h, darkBackground: false), to: wordDir.appendingPathComponent(name))
+        try savePNG(drawWordmark(logo: brandLogo, height: h, darkBackground: false), to: wordDir.appendingPathComponent(name))
     }
 
     // App Store marketing icon: must be exactly 1024x1024 with no alpha channel.
     let redmedCream = NSColor(calibratedRed: 1, green: 0.969, blue: 0.969, alpha: 1) // #fff7f7
     try savePNG(
-        scaledSquare(pheart, size: 1024, opaqueBackground: redmedCream),
+        scaledSquare(brandLogo, size: 1024, opaqueBackground: redmedCream),
         to: iconDir.appendingPathComponent("AppIcon-1024.png")
     )
 
     // Web display is 72 CSS px → 216 @3x; keep Pages / SW payloads small.
+    // repoRoot BrandLogo.png is the source (read above), not a write target here.
     let sharedLogo = repoRoot.appendingPathComponent("assets/BrandLogo.png")
     if FileManager.default.fileExists(atPath: sharedLogo.deletingLastPathComponent().path) {
         let sharedTargets = [
             sharedLogo,
             repoRoot.appendingPathComponent("assets/pheart.png"),
-            repoRoot.appendingPathComponent("BrandLogo.png"),
             repoRoot.appendingPathComponent("tapper/BrandLogo.png"),
             repoRoot.appendingPathComponent("tapper/pheart.png"),
             root.appendingPathComponent("RedMed/BrandLogo.png")
         ]
         for target in sharedTargets {
-            try savePNG(scaledSquare(pheart, size: 216), to: target)
+            try savePNG(scaledSquare(brandLogo, size: 216), to: target)
             quantizePNG(at: target)
         }
         // Bundled app copy: not web-served, kept truecolor for sharpest in-app decode.
-        try savePNG(scaledSquare(pheart, size: 1024), to: root.appendingPathComponent("RedMed/pheart.png"))
+        try savePNG(scaledSquare(brandLogo, size: 1024), to: root.appendingPathComponent("RedMed/pheart.png"))
     }
 } catch {
     fputs("error: \(error)\n", stderr)
