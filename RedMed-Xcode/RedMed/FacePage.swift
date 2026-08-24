@@ -11,6 +11,7 @@ struct FacePage: View {
     var biometryFailed: Bool
     var unavailableReason: BiometricAuth.UnavailableReason?
     var profileLoadFailed: Bool
+    var notInteractive: Bool
     var isAuthenticating: Bool
     var onProceed: () -> Void
     var onOpenSettings: () -> Void
@@ -53,6 +54,12 @@ struct FacePage: View {
                             .fixedSize(horizontal: false, vertical: true)
                     } else if profileLoadFailed {
                         Text("Couldn't load your profile. Try again.")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.redmedAccent)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } else if notInteractive {
+                        Text("Couldn't open Face ID. Try again.")
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.redmedAccent)
                             .multilineTextAlignment(.center)
