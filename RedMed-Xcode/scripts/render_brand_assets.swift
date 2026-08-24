@@ -14,37 +14,14 @@ func ensureDir(_ url: URL) throws {
     try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
 }
 
-func savePNG(_ rep: NSBitmapImageRep, to url: URL) throws {
-    guard let data = rep.representation(using: .png, properties: [:]) else {
+func savePNG(_ image: NSImage, to url: URL) throws {
+    guard let tiff = image.tiffRepresentation,
+          let rep = NSBitmapImageRep(data: tiff),
+          let data = rep.representation(using: .png, properties: [:]) else {
         throw NSError(domain: "render", code: 1, userInfo: [NSLocalizedDescriptionKey: "PNG encode failed for \(url.lastPathComponent)"])
     }
     try data.write(to: url, options: .atomic)
-    fputs("wrote \(url.path) (\(rep.pixelsWide)x\(rep.pixelsHigh))\n", stderr)
-}
-
-/// Renders at exact pixel dimensions regardless of the screen's Retina backing
-/// scale — `NSImage.lockFocus()` silently doubles output on Retina displays,
-/// which previously made every "size N" export come out as N*2 pixels.
-func renderPixels(_ pixels: Int, draw: (CGContext) -> Void) -> NSBitmapImageRep {
-    let rep = NSBitmapImageRep(
-        bitmapDataPlanes: nil,
-        pixelsWide: pixels,
-        pixelsHigh: pixels,
-        bitsPerSample: 8,
-        samplesPerPixel: 4,
-        hasAlpha: true,
-        isPlanar: false,
-        colorSpaceName: .deviceRGB,
-        bytesPerRow: 0,
-        bitsPerPixel: 0
-    )!
-    let ctx = NSGraphicsContext(bitmapImageRep: rep)!
-    NSGraphicsContext.saveGraphicsState()
-    NSGraphicsContext.current = ctx
-    ctx.cgContext.interpolationQuality = .high
-    draw(ctx.cgContext)
-    NSGraphicsContext.restoreGraphicsState()
-    return rep
+    fputs("wrote \(url.path) (\(Int(image.size.width))x\(Int(image.size.height)))\n", stderr)
 }
 
 func heartPath(in rect: CGRect) -> CGPath {
@@ -125,50 +102,25 @@ func drawLogo(size: CGFloat, cornerRadius: CGFloat? = nil) -> NSImage {
     return image
 }
 
-func scaledSquare(_ image: NSImage, size: Int, opaqueBackground: NSColor? = nil) -> NSBitmapImageRep {
-    guard let bg = opaqueBackground else {
-        return renderPixels(size) { ctx in
-            image.draw(
-                in: NSRect(x: 0, y: 0, width: size, height: size),
-                from: .zero,
-                operation: .copy,
-                fraction: 1
-            )
-        }
-    }
-    // App Store icon: no alpha *plane* at all (not just opaque pixels) — an
-    // NSBitmapImageRep can't be a no-alpha NSGraphicsContext target, so render
-    // into a raw CGContext(.noneSkipLast) instead, which supports it.
-    let ctx = CGContext(
-        data: nil,
-        width: size,
-        height: size,
-        bitsPerComponent: 8,
-        bytesPerRow: 0,
-        space: CGColorSpaceCreateDeviceRGB(),
-        bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
-    )!
-    ctx.interpolationQuality = .high
-    NSGraphicsContext.saveGraphicsState()
-    NSGraphicsContext.current = NSGraphicsContext(cgContext: ctx, flipped: false)
-    ctx.setFillColor(bg.cgColor)
-    ctx.fill(CGRect(x: 0, y: 0, width: size, height: size))
+func scaledSquare(_ image: NSImage, size: CGFloat) -> NSImage {
+    let out = NSImage(size: NSSize(width: size, height: size))
+    out.lockFocus()
+    defer { out.unlockFocus() }
+    NSGraphicsContext.current?.imageInterpolation = .high
     image.draw(
         in: NSRect(x: 0, y: 0, width: size, height: size),
         from: .zero,
-        operation: .sourceOver,
+        operation: .copy,
         fraction: 1
     )
-    NSGraphicsContext.restoreGraphicsState()
-    return NSBitmapImageRep(cgImage: ctx.makeImage()!)
+    return out
 }
 
-func drawWordmark(logo: NSImage, height: Int, darkBackground: Bool) -> NSBitmapImageRep {
-    let heightF = CGFloat(height)
-    let logoSize = heightF * 0.84
-    let padding = heightF * 0.08
-    let gap = heightF * 0.22
-    let fontSize = heightF * 0.48
+func drawWordmark(logo: NSImage, height: CGFloat, darkBackground: Bool) -> NSImage {
+    let logoSize = height * 0.84
+    let padding = height * 0.08
+    let gap = height * 0.22
+    let fontSize = height * 0.48
 
     let font = NSFont.systemFont(ofSize: fontSize, weight: .bold)
     let redAttrs: [NSAttributedString.Key: Any] = [
@@ -192,24 +144,12 @@ func drawWordmark(logo: NSImage, height: Int, darkBackground: Bool) -> NSBitmapI
     text.append(med)
 
     let textSize = text.size()
-    let width = Int(ceil(padding + logoSize + gap + textSize.width + padding))
+    let width = padding + logoSize + gap + textSize.width + padding
+    let image = NSImage(size: NSSize(width: ceil(width), height: ceil(height)))
+    image.lockFocus()
+    defer { image.unlockFocus() }
 
-    let rep = NSBitmapImageRep(
-        bitmapDataPlanes: nil,
-        pixelsWide: width,
-        pixelsHigh: height,
-        bitsPerSample: 8,
-        samplesPerPixel: 4,
-        hasAlpha: true,
-        isPlanar: false,
-        colorSpaceName: .deviceRGB,
-        bytesPerRow: 0,
-        bitsPerPixel: 0
-    )!
-    let gctx = NSGraphicsContext(bitmapImageRep: rep)!
-    NSGraphicsContext.saveGraphicsState()
-    NSGraphicsContext.current = gctx
-    let ctx = gctx.cgContext
+    let ctx = NSGraphicsContext.current!.cgContext
     ctx.setShouldAntialias(true)
     ctx.interpolationQuality = .high
 
@@ -218,19 +158,16 @@ func drawWordmark(logo: NSImage, height: Int, darkBackground: Bool) -> NSBitmapI
         ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
     }
 
-    let mark = scaledSquare(logo, size: Int(logoSize.rounded()))
-    let logoY = (heightF - logoSize) / 2
-    if let markImage = mark.cgImage {
-        ctx.draw(markImage, in: CGRect(x: padding, y: logoY, width: logoSize, height: logoSize))
-    }
+    let mark = scaledSquare(logo, size: logoSize)
+    let logoY = (height - logoSize) / 2
+    mark.draw(in: NSRect(x: padding, y: logoY, width: logoSize, height: logoSize))
 
     let textOrigin = NSPoint(
         x: padding + logoSize + gap,
-        y: (heightF - textSize.height) / 2 - heightF * 0.02
+        y: (height - textSize.height) / 2 - height * 0.02
     )
     text.draw(at: textOrigin)
-    NSGraphicsContext.restoreGraphicsState()
-    return rep
+    return image
 }
 
 do {
@@ -247,7 +184,7 @@ do {
     try ensureDir(logoDir)
     try ensureDir(wordDir)
 
-    let logoScales: [(String, Int)] = [
+    let logoScales: [(String, CGFloat)] = [
         ("BrandLogo.png", 180),
         ("BrandLogo@2x.png", 360),
         ("BrandLogo@3x.png", 540)
@@ -256,7 +193,7 @@ do {
         try savePNG(scaledSquare(pheart, size: px), to: logoDir.appendingPathComponent(name))
     }
 
-    let wordScales: [(String, Int)] = [
+    let wordScales: [(String, CGFloat)] = [
         ("BrandWordmark.png", 159),
         ("BrandWordmark@2x.png", 318),
         ("BrandWordmark@3x.png", 477)
@@ -265,12 +202,7 @@ do {
         try savePNG(drawWordmark(logo: pheart, height: h, darkBackground: false), to: wordDir.appendingPathComponent(name))
     }
 
-    // App Store marketing icon: must be exactly 1024x1024 with no alpha channel.
-    let redmedCream = NSColor(calibratedRed: 1, green: 0.969, blue: 0.969, alpha: 1) // #fff7f7
-    try savePNG(
-        scaledSquare(pheart, size: 1024, opaqueBackground: redmedCream),
-        to: iconDir.appendingPathComponent("AppIcon-1024.png")
-    )
+    try savePNG(scaledSquare(pheart, size: 1024), to: iconDir.appendingPathComponent("AppIcon-1024.png"))
 
     // Web display is 72 CSS px → 216 @3x; keep Pages / SW payloads small.
     let sharedLogo = repoRoot.appendingPathComponent("assets/BrandLogo.png")
