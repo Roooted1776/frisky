@@ -55,7 +55,7 @@ enum BiometricAuth {
             return
         }
 
-        cancelInFlight()
+        let cancelledLiveContext = cancelInFlight()
 
         let context = makeContext(
             allowPasscode: allowPasscode,
@@ -90,12 +90,7 @@ enum BiometricAuth {
         }
 
         setInFlight(context)
-        // Wait a beat before evaluatePolicy — a Proceed tap right after a
-        // cancelled/leftover sheet needs real wall-clock time for that
-        // LAContext to tear down, not just the next run loop turn. Too
-        // short and evaluatePolicy fails immediately with no sheet shown
-        // (dead Proceed, no Face ID prompt, no system success animation).
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) {
+        let runEvaluate = {
             context.evaluatePolicy(policy, localizedReason: reason) { success, evalError in
                 DispatchQueue.main.async {
                     clearInFlight(ifSame: context)
@@ -112,15 +107,31 @@ enum BiometricAuth {
                 }
             }
         }
+        if cancelledLiveContext {
+            // Only a retry right behind a cancelled/leftover sheet needs
+            // this wait — that LAContext needs real wall-clock time to tear
+            // down, not just the next run loop turn. Too short and
+            // evaluatePolicy fails immediately with no sheet shown (dead
+            // Proceed, no Face ID prompt, no system success animation). A
+            // fresh first attempt (nothing was in flight) has no such
+            // leftover to wait out, so it runs immediately.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.28, execute: runEvaluate)
+        } else {
+            runEvaluate()
+        }
     }
 
     /// Kill a hung / leftover Face ID sheet so Proceed can start a fresh one.
-    static func cancelInFlight() {
+    /// Returns whether a live context was actually cancelled — callers only
+    /// need to wait out the teardown when this is true.
+    @discardableResult
+    static func cancelInFlight() -> Bool {
         parkLock.lock()
         let ctx = inFlightContext
         inFlightContext = nil
         parkLock.unlock()
         ctx?.invalidate()
+        return ctx != nil
     }
 
     /// LAContext from the latest successful evaluate, if still valid for SecItem.

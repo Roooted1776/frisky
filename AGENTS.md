@@ -110,10 +110,12 @@ The app has no backend, database, or web service.
   passcode, login, or any page in front of the card. No glyph, no Help on
   `LockEntryPage`. After cancel / mismatch, **Face** (`FacePage`) with a
   **Proceed** CTA replaces that shell (not a bottom dock) — cream + Proceed,
-  no hanging mark. Proceed must cancel any hung / leftover `LAContext` and
-  wait a beat (~0.28s wall clock, not just the next run loop turn) before
-  `evaluatePolicy` — a same-turn retry after userCancel fails immediately with
-  no sheet and no system success animation (dead button). After a successful
+  no hanging mark. Proceed must cancel any hung / leftover `LAContext` and,
+  only when one was actually live, wait a beat (~0.28s wall clock, not just
+  the next run loop turn) before `evaluatePolicy` — a same-turn retry after
+  userCancel fails immediately with no sheet and no system success animation
+  (dead button). A fresh first attempt with nothing in flight skips the wait.
+  After a successful
   Face ID, Edit / NFC / vault skip Face ID this process. Erase still
   prompts. Do not re-lock into a second Face ID on background. Do **not** play
   `LockOpen.mp4` or `FaceIDFrame.mp4`. Clip never gates Face ID. Fresh install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
