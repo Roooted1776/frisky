@@ -49,11 +49,11 @@ enum KeychainStore {
     /// Attach parked LAContext so ACL items can update/read without a second prompt.
     private static func withAuthContext(_ query: inout [String: Any]) {
         if let ctx = BiometricAuth.peekAuthenticationContext() {
+            // Modern replacement for the deprecated kSecUseAuthenticationUIFail
+            ctx.interactionNotAllowed = true
             query[kSecUseAuthenticationContext as String] = ctx
-            query[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUIFail
         }
     }
-
     // MARK: - Save
 
     @discardableResult
@@ -159,14 +159,23 @@ enum KeychainStore {
         var query = baseQuery(account: account, service: service)
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
+
         if let context {
+            // Use the provided context and force no UI
+            context.interactionNotAllowed = true
             query[kSecUseAuthenticationContext as String] = context
-            query[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUIFail
         } else if interactive {
-            query[kSecUseOperationPrompt as String] = "Unlock your RedMed profile"
+            // Allow UI – create a fresh context and set the reason
+            let ctx = LAContext()
+            ctx.localizedReason = "Unlock your RedMed profile"
+            query[kSecUseAuthenticationContext as String] = ctx
         } else {
-            query[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUIFail
+            // Non-interactive – fail if any UI would be required
+            let ctx = LAContext()
+            ctx.interactionNotAllowed = true
+            query[kSecUseAuthenticationContext as String] = ctx
         }
+
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
         guard status == errSecSuccess else { return nil }
@@ -177,7 +186,12 @@ enum KeychainStore {
         var query = baseQuery(account: account, service: service)
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
-        query[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUIFail
+
+        // Non-interactive legacy path
+        let ctx = LAContext()
+        ctx.interactionNotAllowed = true
+        query[kSecUseAuthenticationContext as String] = ctx
+
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
         guard status == errSecSuccess else { return nil }
@@ -190,8 +204,9 @@ enum KeychainStore {
         var query = baseQuery(account: account, service: service)
         query[kSecReturnData as String] = false
         query[kSecMatchLimit as String] = kSecMatchLimitOne
-        query[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUIFail
-        let status = SecItemCopyMatching(query as CFDictionary, nil)
+        let ctx = LAContext()
+        ctx.interactionNotAllowed = true
+        query[kSecUseAuthenticationContext as String] = ctx;        let status = SecItemCopyMatching(query as CFDictionary, nil)
         switch status {
         case errSecSuccess, errSecInteractionNotAllowed, errSecAuthFailed:
             return true
