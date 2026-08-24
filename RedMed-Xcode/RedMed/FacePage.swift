@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Lock retry page after Face ID cancel / mismatch. Title **Face**.
 /// Single **Proceed** CTA. Cream user-page fill. Not a dock over LockEntryPage.
-/// Static medical mark — never gates Face ID.
+/// No hanging mark — never gates Face ID.
 struct FacePage: View {
     var screenCaptured: Bool
     var biometryFailed: Bool
@@ -28,14 +28,6 @@ struct FacePage: View {
                     .fill(Color.redmedDivider)
                     .frame(height: 1)
 
-                Spacer(minLength: 0)
-                LockMedGlyph()
-                    .frame(
-                        width: RedMedChrome.unlockFrameSize,
-                        height: RedMedChrome.unlockFrameSize
-                    )
-                    .allowsHitTesting(false)
-                    .accessibilityHidden(true)
                 Spacer(minLength: 0)
 
                 VStack(spacing: 14) {
@@ -72,7 +64,6 @@ struct FacePage: View {
                     ) {
                         onProceed()
                     }
-                    .zIndex(1)
                 }
                 .padding(.horizontal, 22)
                 .padding(.bottom, 36)

@@ -141,10 +141,8 @@ struct OwnerAppLock<Content: View>: View {
         if isAuto {
             didAutoPromptThisLock = true
             showUnlockControl = false
-            unlockWithFaceID()
-        } else {
-            beginManualUnlock()
         }
+        unlockWithFaceID()
         profile.beginUnlockPrefetch()
         // String warm only during Face ID — WK waits until after unlock.
         Task.detached(priority: .userInitiated) {
@@ -152,38 +150,13 @@ struct OwnerAppLock<Content: View>: View {
         }
     }
 
-    /// Proceed retry. Cancel any leftover Face ID sheet, then wait a beat —
-    /// `evaluatePolicy` in the same turn as userCancel fails immediately with
-    /// another cancel, so the button looks dead.
-    private func beginManualUnlock() {
-        guard gate == .locked else { return }
-        BiometricAuth.cancelInFlight()
+    private func unlockWithFaceID() {
+        guard gate == .locked, !isAuthenticating else { return }
         isAuthenticating = true
         biometryFailed = false
         profileLoadFailed = false
         authGeneration &+= 1
         let generation = authGeneration
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 280_000_000)
-            guard gate == .locked, generation == authGeneration else { return }
-            unlockWithFaceID(continueGeneration: generation)
-        }
-    }
-
-    private func unlockWithFaceID(continueGeneration: Int? = nil) {
-        guard gate == .locked else { return }
-        let generation: Int
-        if let continueGeneration {
-            guard continueGeneration == authGeneration else { return }
-            generation = continueGeneration
-        } else {
-            guard !isAuthenticating else { return }
-            isAuthenticating = true
-            biometryFailed = false
-            profileLoadFailed = false
-            authGeneration &+= 1
-            generation = authGeneration
-        }
         BiometricAuth.authenticate(
             reason: "Unlock RedMed",
             allowPasscode: false
@@ -202,8 +175,7 @@ struct OwnerAppLock<Content: View>: View {
                     profileLoadFailed = false
                     gate = .locked
                     didAutoPromptThisLock = false
-                    // Leave showUnlockControl as-is. Hiding Face after a
-                    // Proceed tap looks like a dead button.
+                    showUnlockControl = false
                 case .unavailable, .notVerified:
                     RedMedHaptics.error()
                     isAuthenticating = false
