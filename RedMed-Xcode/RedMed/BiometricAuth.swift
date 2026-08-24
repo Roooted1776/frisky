@@ -90,9 +90,12 @@ enum BiometricAuth {
         }
 
         setInFlight(context)
-        // Next main turn so a Proceed tap after userCancel is not the same
-        // run loop as the leftover sheet (that race fails with no prompt).
-        DispatchQueue.main.async {
+        // Wait a beat before evaluatePolicy — a Proceed tap right after a
+        // cancelled/leftover sheet needs real wall-clock time for that
+        // LAContext to tear down, not just the next run loop turn. Too
+        // short and evaluatePolicy fails immediately with no sheet shown
+        // (dead Proceed, no Face ID prompt, no system success animation).
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) {
             context.evaluatePolicy(policy, localizedReason: reason) { success, evalError in
                 DispatchQueue.main.async {
                     clearInFlight(ifSame: context)

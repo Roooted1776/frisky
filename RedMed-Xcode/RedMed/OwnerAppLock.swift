@@ -175,7 +175,8 @@ struct OwnerAppLock<Content: View>: View {
                     profileLoadFailed = false
                     gate = .locked
                     didAutoPromptThisLock = false
-                    showUnlockControl = false
+                    // Leave showUnlockControl as-is. Hiding Face after a
+                    // Proceed tap looks like a dead button.
                 case .unavailable, .notVerified:
                     RedMedHaptics.error()
                     isAuthenticating = false
