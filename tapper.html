@@ -12,7 +12,7 @@
      blob: URL; default-src 'self' alone blocks it and the alarm goes silent. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; media-src 'self' blob: data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; worker-src 'self'; connect-src 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="no-referrer">
-<!-- Favicon wired in resolveLogo from pheart.png (preset src + fallbacks). -->
+<!-- Favicon wired in resolveLogo from BrandLogo.png (preset src + fallbacks). -->
 <title>RedMed — tap to scan</title>
 <style>html,body{background:#fff7f7!important;margin:0}</style>
 <script>
@@ -27,11 +27,11 @@ function redmedAssetURL(file) {
   return file;
 }
 </script>
-<link rel="preload" as="image" href="pheart.png" fetchpriority="high" id="redmedLogoPreload">
+<link rel="preload" as="image" href="BrandLogo.png" fetchpriority="high" id="redmedLogoPreload">
 <script>
 (function () {
   var link = document.getElementById('redmedLogoPreload');
-  if (link) link.href = redmedAssetURL('pheart.png');
+  if (link) link.href = redmedAssetURL('BrandLogo.png');
 })();
 </script>
 <script>
@@ -104,7 +104,7 @@ function redmedAssetURL(file) {
        walk-by ~6–8″ does not fire, reliable coupling dies past ~4″,
        passive 13.56 MHz HF NFC (not Bluetooth) → Safari opens this page
        (apple-mobile-web-app-capable=no so iOS BTR is not a Home Screen web app)
-     - Logo: pheart.png only on YOU-card — cream #fff7f7 watermark tile (216px).
+     - Logo: BrandLogo.png only on YOU-card — cream #fff7f7 watermark tile (216px).
        Not transparent BrandLogo (NFC / wordmark only). Bundle /tapper/ + assets/
        header mark stays next to the name on empty and named cards. Deferred
        until after profile paint (in-app Preview / owner embed included).
@@ -318,7 +318,7 @@ function redmedAssetURL(file) {
     flex-shrink: 0;
     display: block;
     object-fit: cover;
-    background: transparent; /* cream #fff7f7 is baked into pheart.png watermark tile */
+    background: transparent; /* cream #fff7f7 is baked into BrandLogo.png watermark tile */
     opacity: 1;
   }
   /* Preset src on #rmLogo; resolveLogo falls back on error. */
@@ -1293,7 +1293,7 @@ function redmedAssetURL(file) {
       <div class="rm-header">
         <p class="rm-note">Tap to scan · no login · no server · no app</p>
         <div class="rm-title-row">
-          <img class="rm-logo" id="rmLogo" src="pheart.png" width="72" height="72" alt="RedMed" decoding="async" fetchpriority="high">
+          <img class="rm-logo" id="rmLogo" src="BrandLogo.png" width="72" height="72" alt="RedMed" decoding="async" fetchpriority="high">
           <div>
             <h1 class="rm-name" id="name">RedMed</h1>
             <div class="rm-meta">
@@ -1571,7 +1571,7 @@ function redmedAssetURL(file) {
       return;
     }
     var candidates = [
-      redmedAssetURL('pheart.png'),
+      redmedAssetURL('BrandLogo.png'),
       '../assets/pheart.png',
       'assets/pheart.png'
     ];
