@@ -1,14 +1,19 @@
 import SwiftUI
 
 /// Lock retry page after Face ID cancel / mismatch. Title **Face**.
-/// Single **Proceed** CTA. Cream user-page fill. Not a dock over LockEntryPage.
+/// Single CTA — **Proceed** normally, **Open Settings** when
+/// `unavailableReason` is set (retrying evaluatePolicy the same way can't
+/// fix a lockout / not-enrolled / no-passcode state; no sheet even shows
+/// for those). Cream user-page fill. Not a dock over LockEntryPage.
 /// No hanging mark — never gates Face ID.
 struct FacePage: View {
     var screenCaptured: Bool
     var biometryFailed: Bool
+    var unavailableReason: BiometricAuth.UnavailableReason?
     var profileLoadFailed: Bool
     var isAuthenticating: Bool
     var onProceed: () -> Void
+    var onOpenSettings: () -> Void
 
     var body: some View {
         ZStack {
@@ -18,16 +23,6 @@ struct FacePage: View {
                 .accessibilityHidden(true)
 
             VStack(spacing: 0) {
-                Text("Face")
-                    .font(RedMedChrome.navTitleFont)
-                    .foregroundColor(.redmedDark)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: RedMedChrome.modalBarHeight)
-                    .accessibilityAddTraits(.isHeader)
-                Rectangle()
-                    .fill(Color.redmedDivider)
-                    .frame(height: 1)
-
                 Spacer(minLength: 0)
 
                 VStack(spacing: 14) {
@@ -44,6 +39,12 @@ struct FacePage: View {
                             .foregroundColor(.redmedMuted)
                             .multilineTextAlignment(.center)
                             .accessibilityAddTraits(.updatesFrequently)
+                    } else if let unavailableReason {
+                        Text(unavailableReason.message)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.redmedAccent)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
                     } else if biometryFailed {
                         Text("Couldn't verify it's you. Try again.")
                             .font(.system(size: 14, weight: .semibold))
@@ -57,12 +58,21 @@ struct FacePage: View {
                             .multilineTextAlignment(.center)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    UnlockScreenButton(
-                        title: "Proceed",
-                        disabled: isAuthenticating,
-                        accessibilityHintText: "Face ID or Touch ID"
-                    ) {
-                        onProceed()
+                    if let unavailableReason {
+                        UnlockScreenButton(
+                            title: "Open Settings",
+                            accessibilityHintText: unavailableReason.message
+                        ) {
+                            onOpenSettings()
+                        }
+                    } else {
+                        UnlockScreenButton(
+                            title: "Proceed",
+                            disabled: isAuthenticating,
+                            accessibilityHintText: "Face ID or Touch ID"
+                        ) {
+                            onProceed()
+                        }
                     }
                 }
                 .padding(.horizontal, 22)

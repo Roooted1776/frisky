@@ -24,6 +24,7 @@ struct OwnerAppLock<Content: View>: View {
     @State private var gate: Gate = .locked
     @State private var isAuthenticating = false
     @State private var biometryFailed = false
+    @State private var faceIDUnavailableReason: BiometricAuth.UnavailableReason?
     @State private var profileLoadFailed = false
     @State private var keychainHasProfile = ProfileData.prefersLockOnLaunch
     @State private var authGeneration = 0
@@ -41,9 +42,14 @@ struct OwnerAppLock<Content: View>: View {
                     FacePage(
                         screenCaptured: screenCaptured,
                         biometryFailed: biometryFailed,
+                        unavailableReason: faceIDUnavailableReason,
                         profileLoadFailed: profileLoadFailed,
                         isAuthenticating: isAuthenticating,
-                        onProceed: { startUnlockPipeline(isAuto: false) }
+                        onProceed: { startUnlockPipeline(isAuto: false) },
+                        onOpenSettings: {
+                            guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+                            UIApplication.shared.open(url)
+                        }
                     )
                 } else {
                     LockEntryPage()
@@ -119,6 +125,7 @@ struct OwnerAppLock<Content: View>: View {
         .onReceive(NotificationCenter.default.publisher(for: .redMedDidEraseLocalData)) { _ in
             keychainHasProfile = false
             biometryFailed = false
+            faceIDUnavailableReason = nil
             profileLoadFailed = false
             isAuthenticating = false
             didAutoPromptThisLock = false
@@ -154,6 +161,7 @@ struct OwnerAppLock<Content: View>: View {
         guard gate == .locked, !isAuthenticating else { return }
         isAuthenticating = true
         biometryFailed = false
+        faceIDUnavailableReason = nil
         profileLoadFailed = false
         authGeneration &+= 1
         let generation = authGeneration
@@ -167,22 +175,38 @@ struct OwnerAppLock<Content: View>: View {
                 case .declined:
                     isAuthenticating = false
                     biometryFailed = false
+                    faceIDUnavailableReason = nil
                     showUnlockControl = true
                     gate = .locked
                 case .notInteractive:
                     isAuthenticating = false
                     biometryFailed = false
+                    faceIDUnavailableReason = nil
                     profileLoadFailed = false
                     gate = .locked
                     didAutoPromptThisLock = false
-                    showUnlockControl = false
-                case .unavailable, .notVerified:
+                    // Leave showUnlockControl as-is. Hiding Face after a
+                    // Proceed tap looks like a dead button.
+                case .notVerified:
                     RedMedHaptics.error()
                     isAuthenticating = false
                     biometryFailed = true
+                    faceIDUnavailableReason = nil
                     showUnlockControl = true
                     gate = .locked
                     VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock")
+                case .unavailable(let reason):
+                    // Retrying evaluatePolicy the same way never resolves
+                    // this — no system Face ID sheet even shows for it. Tell
+                    // the user which specific thing to fix instead of a
+                    // generic "try again" that can't ever succeed.
+                    RedMedHaptics.error()
+                    isAuthenticating = false
+                    biometryFailed = false
+                    faceIDUnavailableReason = reason
+                    showUnlockControl = true
+                    gate = .locked
+                    VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock-unavailable")
                 case .success:
                     guard generation == authGeneration else { return }
                     // Bound Keychain needs the parked LAContext. Restart the
@@ -248,6 +272,7 @@ struct OwnerAppLock<Content: View>: View {
             gate = .unlocked
             profile.commitUnlockProfile()
             biometryFailed = false
+            faceIDUnavailableReason = nil
             profileLoadFailed = false
             showUnlockControl = false
             // Live RedMed tab loads from the Face ID string cache. A pooled
@@ -258,6 +283,7 @@ struct OwnerAppLock<Content: View>: View {
             profile.prepareEmptyUnlockShell()
             gate = .unlocked
             biometryFailed = false
+            faceIDUnavailableReason = nil
             profileLoadFailed = false
             showUnlockControl = false
             RedMedHaptics.success()
@@ -265,6 +291,7 @@ struct OwnerAppLock<Content: View>: View {
             RedMedHaptics.error()
             gate = .locked
             biometryFailed = false
+            faceIDUnavailableReason = nil
             profileLoadFailed = true
             showUnlockControl = true
             BiometricAuth.clearAuthenticationContext()

@@ -19,8 +19,32 @@ enum BiometricAuth {
         case notVerified
         case declined
         case notInteractive
-        /// Face ID / Touch ID cannot run (lockout, not enrolled, not available).
-        case unavailable
+        /// Face ID / Touch ID cannot run right now. Retrying the same way
+        /// never fixes this — each reason needs a different user action.
+        case unavailable(UnavailableReason)
+    }
+
+    /// Why `canEvaluatePolicy` / `evaluatePolicy` reports biometrics can't
+    /// run. Distinct from `.notVerified` (a scan that failed to match) —
+    /// these are states no amount of tapping Proceed will resolve.
+    enum UnavailableReason: Equatable {
+        case notEnrolled
+        case lockout
+        case passcodeNotSet
+        case notAvailable
+
+        var message: String {
+            switch self {
+            case .notEnrolled:
+                return "Face ID isn't set up on this iPhone. Add it in Settings, then reopen RedMed."
+            case .lockout:
+                return "Face ID is locked after too many attempts. Unlock your iPhone with its passcode, then reopen RedMed."
+            case .passcodeNotSet:
+                return "Set a device passcode in Settings to use Face ID."
+            case .notAvailable:
+                return "Face ID isn't available on this device."
+            }
+        }
     }
 
     private static let notInteractiveLACode = -1004
@@ -55,7 +79,7 @@ enum BiometricAuth {
             return
         }
 
-        cancelInFlight()
+        let cancelledLiveContext = cancelInFlight()
 
         let context = makeContext(
             allowPasscode: allowPasscode,
@@ -79,8 +103,8 @@ enum BiometricAuth {
             let failOutcome: Outcome
             if isNotInteractive(error) {
                 failOutcome = .notInteractive
-            } else if isUnavailable(error) {
-                failOutcome = .unavailable
+            } else if let reason = unavailableReason(error) {
+                failOutcome = .unavailable(reason)
             } else {
                 failOutcome = .declined
             }
@@ -90,9 +114,7 @@ enum BiometricAuth {
         }
 
         setInFlight(context)
-        // Next main turn so a Proceed tap after userCancel is not the same
-        // run loop as the leftover sheet (that race fails with no prompt).
-        DispatchQueue.main.async {
+        let runEvaluate = {
             context.evaluatePolicy(policy, localizedReason: reason) { success, evalError in
                 DispatchQueue.main.async {
                     clearInFlight(ifSame: context)
@@ -109,15 +131,31 @@ enum BiometricAuth {
                 }
             }
         }
+        if cancelledLiveContext {
+            // Only a retry right behind a cancelled/leftover sheet needs
+            // this wait — that LAContext needs real wall-clock time to tear
+            // down, not just the next run loop turn. Too short and
+            // evaluatePolicy fails immediately with no sheet shown (dead
+            // Proceed, no Face ID prompt, no system success animation). A
+            // fresh first attempt (nothing was in flight) has no such
+            // leftover to wait out, so it runs immediately.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.28, execute: runEvaluate)
+        } else {
+            runEvaluate()
+        }
     }
 
     /// Kill a hung / leftover Face ID sheet so Proceed can start a fresh one.
-    static func cancelInFlight() {
+    /// Returns whether a live context was actually cancelled — callers only
+    /// need to wait out the teardown when this is true.
+    @discardableResult
+    static func cancelInFlight() -> Bool {
         parkLock.lock()
         let ctx = inFlightContext
         inFlightContext = nil
         parkLock.unlock()
         ctx?.invalidate()
+        return ctx != nil
     }
 
     /// LAContext from the latest successful evaluate, if still valid for SecItem.
@@ -184,33 +222,36 @@ enum BiometricAuth {
         return ns.domain == LAErrorDomain && ns.code == notInteractiveLACode
     }
 
-    private static func isUnavailable(_ error: Error?) -> Bool {
-        guard let error else { return false }
+    private static func unavailableReason(_ error: Error?) -> UnavailableReason? {
+        guard let error else { return nil }
         let ns = error as NSError
-        guard ns.domain == LAErrorDomain else { return false }
+        guard ns.domain == LAErrorDomain else { return nil }
         switch ns.code {
-        case LAError.biometryNotAvailable.rawValue,
-             LAError.biometryNotEnrolled.rawValue,
-             LAError.biometryLockout.rawValue,
-             LAError.passcodeNotSet.rawValue:
-            return true
+        case LAError.biometryNotEnrolled.rawValue:
+            return .notEnrolled
+        case LAError.biometryLockout.rawValue:
+            return .lockout
+        case LAError.passcodeNotSet.rawValue:
+            return .passcodeNotSet
+        case LAError.biometryNotAvailable.rawValue:
+            return .notAvailable
         default:
-            return false
+            return nil
         }
     }
 
     private static func outcome(for error: Error?) -> Outcome {
+        if let reason = unavailableReason(error) {
+            return .unavailable(reason)
+        }
         guard let la = error as? LAError else {
-            return isUnavailable(error) ? .unavailable : .declined
+            return .declined
         }
         if la.code == .authenticationFailed {
             return .notVerified
         }
         if isNotInteractive(la) {
             return .notInteractive
-        }
-        if isUnavailable(la) {
-            return .unavailable
         }
         return .declined
     }
@@ -224,7 +265,7 @@ enum BiometricAuth {
         guard let top = topViewController() else {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 guard let retry = topViewController() else {
-                    completion(.unavailable)
+                    completion(.unavailable(.notAvailable))
                     return
                 }
                 presentAlert(
