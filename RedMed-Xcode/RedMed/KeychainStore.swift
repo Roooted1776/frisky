@@ -206,7 +206,8 @@ enum KeychainStore {
         query[kSecMatchLimit as String] = kSecMatchLimitOne
         let ctx = LAContext()
         ctx.interactionNotAllowed = true
-        query[kSecUseAuthenticationContext as String] = ctx;        let status = SecItemCopyMatching(query as CFDictionary, nil)
+        query[kSecUseAuthenticationContext as String] = ctx
+        let status = SecItemCopyMatching(query as CFDictionary, nil)
         switch status {
         case errSecSuccess, errSecInteractionNotAllowed, errSecAuthFailed:
             return true
