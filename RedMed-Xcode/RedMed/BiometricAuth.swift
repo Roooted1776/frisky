@@ -90,18 +90,22 @@ enum BiometricAuth {
         }
 
         setInFlight(context)
-        context.evaluatePolicy(policy, localizedReason: reason) { success, evalError in
-            DispatchQueue.main.async {
-                clearInFlight(ifSame: context)
-                if success {
-                    didUnlockThisLaunch = true
-                    // Keep context alive for Keychain SecItem (do not invalidate yet).
-                    park(context)
-                    completion(.success)
-                } else {
-                    context.invalidate()
-                    clearPark()
-                    completion(outcome(for: evalError))
+        // Next main turn so a Proceed tap after userCancel is not the same
+        // run loop as the leftover sheet (that race fails with no prompt).
+        DispatchQueue.main.async {
+            context.evaluatePolicy(policy, localizedReason: reason) { success, evalError in
+                DispatchQueue.main.async {
+                    clearInFlight(ifSame: context)
+                    if success {
+                        didUnlockThisLaunch = true
+                        // Keep context alive for Keychain SecItem (do not invalidate yet).
+                        park(context)
+                        completion(.success)
+                    } else {
+                        context.invalidate()
+                        clearPark()
+                        completion(outcome(for: evalError))
+                    }
                 }
             }
         }
