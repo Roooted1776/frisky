@@ -2,11 +2,12 @@ import SwiftUI
 import WebKit
 import UIKit
 
-/// Bundled owner Help: one HTML file, three policy anchors. Offline. No network.
+/// Bundled owner Help: one HTML file, a get-started guide + three policy anchors. Offline. No network.
 enum HelpDocument {
     static let bundledFile = "Help"
 
     enum Policy: String, CaseIterable, Identifiable {
+        case guide = "faq"
         case privacy
         case terms
         case security
@@ -15,6 +16,7 @@ enum HelpDocument {
 
         var title: String {
             switch self {
+            case .guide: return "Get Started"
             case .privacy: return "Privacy"
             case .terms: return "Terms"
             case .security: return "Security"

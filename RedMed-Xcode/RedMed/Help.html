@@ -12,7 +12,7 @@
 <div class="legal-sheet">
   <header class="legal-letterhead">
     <p class="legal-firm">RedMed</p>
-    <p class="legal-tagline">Help · Privacy, Terms, and Security</p>
+    <p class="legal-tagline">Help · Setup, FAQ, Privacy, Terms, and Security</p>
     <p class="legal-entity">RedMed · Local medical ID on your iPhone and band</p>
   </header>
 
@@ -23,11 +23,54 @@
     · <a href="tapper.html">Emergency card (any phone)</a>
   </aside>
 
-  <nav class="legal-nav legal-nav-sticky" aria-label="Policies">
+  <nav class="legal-nav legal-nav-sticky" aria-label="Help sections">
+    <a href="#faq">Get started</a>
     <a href="#privacy">Privacy</a>
     <a href="#terms">Terms</a>
     <a href="#security">Security</a>
   </nav>
+
+  <section id="faq" class="legal-policy">
+    <hr class="legal-rule-thin" aria-hidden="true">
+    <h1 class="legal-doc-title">Get started</h1>
+    <p class="legal-parties">How to set up and use RedMed, and what to do if something isn't working</p>
+    <article class="legal-body">
+
+    <h2>What is RedMed?</h2>
+    <p>RedMed is a local emergency medical ID. You fill in your own name, blood type, allergies, medications, conditions, and emergency contacts on your iPhone. You can then write that same information to a passive NFC band. Anyone — EMS, a bystander, a hospital — who taps the band with a phone sees your card in their browser, with no app to install and no account to create.</p>
+    <p>RedMed also has a <strong>Find Help</strong> screen for calling your regional emergency number and reading coordinates aloud, and an <strong>Aid</strong> screen with general first-aid guidance for while you wait. Everything above runs on your phone; RedMed does not operate a server that stores your profile.</p>
+
+    <h2>Setting up your profile</h2>
+    <ol>
+      <li>Open RedMed and unlock with Face ID or Touch ID.</li>
+      <li>Go to <strong>Edit</strong> and fill in the fields you want responders to see. Every field is optional — leave anything blank you'd rather not share.</li>
+      <li>Save. Your profile is stored in this iPhone's Keychain only; it is not uploaded anywhere.</li>
+    </ol>
+
+    <h2>Writing your NFC band</h2>
+    <ol>
+      <li>From Help, choose <strong>Write to NFC tag</strong> (or from the NFC tab).</li>
+      <li>Hold the band to the top of your iPhone until it registers, following the on-screen prompt.</li>
+      <li>Rewrite the band any time your profile changes — the band only ever holds the last thing you wrote to it.</li>
+    </ol>
+    <p>Anyone who deliberately taps the band with their phone can open the card. That's intentional, so a responder doesn't need the RedMed app. See <a href="#security">Security</a> for how that works.</p>
+
+    <h2>Using Find Help</h2>
+    <p>Find Help shows your coordinates so you can read them to a 911 dispatcher, and a one-tap call to your regional emergency number. The first time it needs your location, iOS will show its own permission prompt — allow it if you want coordinates on screen. Nothing from Find Help is sent to RedMed.</p>
+
+    <h2>Erasing your data</h2>
+    <p>Help → <strong>Erase all RedMed data</strong> (Face ID required) removes your profile and local history from this iPhone. It does not erase a physical band — overwrite it with a new write, or dispose of it, if you want the old card gone.</p>
+
+    <h2>Troubleshooting</h2>
+    <p><strong>The band doesn't open a card when tapped.</strong> Hold it flatter against the phone and closer to the top edge — NFC needs the tag within about an inch of the antenna. Confirm the band was actually written (NFC tab shows its last-write status). A phone with NFC reading turned off in Settings, or a case that's too thick, can also block the tap.</p>
+    <p><strong>Location won't turn on.</strong> Check Help → Settings has Location enabled, then check iOS Settings → RedMed → Location if you previously denied the system permission prompt — RedMed can't re-trigger that prompt itself.</p>
+    <p><strong>Face ID keeps failing.</strong> Use the on-screen retry, or your passcode if biometrics are unavailable. If Face ID is failing system-wide, check iOS Settings → Face ID & Passcode.</p>
+    <p><strong>I don't see my changes on the band after tapping it.</strong> The band holds whatever was written to it last — rewrite it after editing your profile; edits in the app don't update a band automatically.</p>
+
+    <h2>Contact</h2>
+    <p>Something not covered here? Email <a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a>.</p>
+    </article>
+  </section>
 
   <section id="privacy" class="legal-policy">
     <hr class="legal-rule-thin" aria-hidden="true">
@@ -295,10 +338,10 @@
 </div>
 <script>
 (function () {
-  var ids = ["privacy", "terms", "security"];
+  var ids = ["faq", "privacy", "terms", "security"];
   function currentId() {
-    var id = (location.hash || "#privacy").replace("#", "");
-    return ids.indexOf(id) === -1 ? "privacy" : id;
+    var id = (location.hash || "#faq").replace("#", "");
+    return ids.indexOf(id) === -1 ? "faq" : id;
   }
   function sync() {
     var id = currentId();

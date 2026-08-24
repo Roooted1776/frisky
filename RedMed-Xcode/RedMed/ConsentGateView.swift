@@ -43,11 +43,6 @@ struct ConsentGateView<Content: View>: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.top, 24)
 
-                    Text("Before you use RedMed")
-                        .font(.system(size: 22, weight: .heavy))
-                        .foregroundColor(.redmedDark)
-                        .frame(maxWidth: .infinity, alignment: .center)
-
                     VStack(alignment: .leading, spacing: 10) {
                         Text("RedMed is a local emergency medical ID and EMS assist. It is **not** a medical device, does not provide medical advice, and does not promise any medical outcome. Always call 911 first in a real emergency.")
                         Text("Your profile stays on this iPhone, and on a band if you write one — RedMed runs no server for it. Please read the full Terms, Privacy, and Security pages below before continuing.")
