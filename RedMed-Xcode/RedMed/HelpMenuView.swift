@@ -324,7 +324,7 @@ struct HelpMenuView: View {
                         helpSectionLabel("Policies")
                         helpCard {
                             ForEach(HelpDocument.Policy.allCases) { policy in
-                                if policy != .privacy {
+                                if policy != .guide {
                                     Divider().padding(.leading, Metrics.rowHPad)
                                 }
                                 policyLink(policy)
