@@ -194,8 +194,11 @@ struct OwnerAppLock<Content: View>: View {
                     notInteractive = true
                     gate = .locked
                     didAutoPromptThisLock = false
-                    // Leave showUnlockControl as-is. Hiding Face after a
-                    // Proceed tap looks like a dead button.
+                    // Force Face on screen. The cold-launch auto attempt
+                    // starts with showUnlockControl already false — "leave
+                    // as-is" there means LockEntryPage (no button, no text)
+                    // stays up forever with nothing left to retry it.
+                    showUnlockControl = true
                 case .notVerified:
                     RedMedHaptics.error()
                     isAuthenticating = false
