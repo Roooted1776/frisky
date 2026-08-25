@@ -58,6 +58,7 @@
 		AABB00000000000000000053 /* FacePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000053 /* FacePage.swift */; };
 		AABB00000000000000000054 /* pheart.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000054 /* pheart.png */; };
 		AABB00000000000000000055 /* ConsentGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000055 /* ConsentGateView.swift */; };
+		AABB00000000000000000056 /* CountryDialCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000056 /* CountryDialCode.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -115,6 +116,7 @@
 		AAAA00000000000000000053 /* FacePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacePage.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000054 /* pheart.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = pheart.png; sourceTree = "<group>"; };
 		AAAA00000000000000000055 /* ConsentGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsentGateView.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000056 /* CountryDialCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryDialCode.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -136,6 +138,7 @@
 				AAAA00000000000000000002 /* ContentView.swift */,
 				AAAA00000000000000000033 /* OwnerAppLock.swift */,
 				AAAA00000000000000000055 /* ConsentGateView.swift */,
+				AAAA00000000000000000056 /* CountryDialCode.swift */,
 				AAAA00000000000000000052 /* LockEntryPage.swift */,
 				AAAA00000000000000000053 /* FacePage.swift */,
 				AAAA00000000000000000003 /* Theme.swift */,
@@ -408,6 +411,7 @@
 				AABB00000000000000000032 /* SatelliteFieldUI.swift in Sources */,
 				AABB00000000000000000033 /* OwnerAppLock.swift in Sources */,
 				AABB00000000000000000055 /* ConsentGateView.swift in Sources */,
+				AABB00000000000000000056 /* CountryDialCode.swift in Sources */,
 				AABB00000000000000000034 /* SecurePasteboard.swift in Sources */,
 				AABB00000000000000000020 /* EmergencyNumber.swift in Sources */,
 				AABB0000000000000000001C /* AppConfig.swift in Sources */,

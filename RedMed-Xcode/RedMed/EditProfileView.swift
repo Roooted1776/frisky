@@ -587,6 +587,10 @@ private struct ContactDraftRow: View {
     @Binding var contact: EmergencyContact
     var onDelete: () -> Void
 
+    @State private var country: CountryDialCode
+    @State private var localNumber: String
+    @State private var showCountryPicker = false
+
     private enum Metrics {
         static let font: CGFloat = 15
         static let icon: CGFloat = 18
@@ -595,6 +599,14 @@ private struct ContactDraftRow: View {
     }
 
     private var contactID: String { contact.id.uuidString }
+
+    init(contact: Binding<EmergencyContact>, onDelete: @escaping () -> Void) {
+        self._contact = contact
+        self.onDelete = onDelete
+        let parsed = CountryDialCode.parse(contact.wrappedValue.phone)
+        self._country = State(initialValue: parsed.country)
+        self._localNumber = State(initialValue: parsed.localNumber)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -607,16 +619,6 @@ private struct ContactDraftRow: View {
                 )
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                IdentifiedTextField(
-                    fieldID: "edit-contact-\(contactID)-phone",
-                    placeholder: "Phone",
-                    text: $contact.phone,
-                    keyboardType: .phonePad,
-                    autocapitalization: .none,
-                    textAlignment: .right
-                )
-                .frame(maxWidth: .infinity, alignment: .trailing)
-
                 Button(action: onDelete) {
                     Text("✕")
                         .font(.system(size: Metrics.icon))
@@ -624,6 +626,39 @@ private struct ContactDraftRow: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+            }
+            .padding(.horizontal, Metrics.rowHPad)
+            .padding(.vertical, Metrics.rowVPad)
+
+            Divider().padding(.leading, Metrics.rowHPad)
+
+            HStack(spacing: 10) {
+                Button {
+                    showCountryPicker = true
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(country.flag)
+                        Text(country.dialCode)
+                            .font(.system(size: Metrics.font, weight: .medium))
+                            .foregroundColor(.redmedDark)
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(.redmedAccent)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Country code: \(country.name) \(country.dialCode)")
+
+                IdentifiedTextField(
+                    fieldID: "edit-contact-\(contactID)-phone",
+                    placeholder: "Phone number",
+                    text: $localNumber,
+                    keyboardType: .phonePad,
+                    autocapitalization: .none,
+                    onChange: syncPhone
+                )
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.horizontal, Metrics.rowHPad)
             .padding(.vertical, Metrics.rowVPad)
@@ -642,6 +677,17 @@ private struct ContactDraftRow: View {
             Divider().padding(.leading, Metrics.rowHPad)
         }
         .id("edit-contact-row-\(contactID)")
+        .sheet(isPresented: $showCountryPicker) {
+            CountryDialCodePicker(selected: country) { picked in
+                country = picked
+                syncPhone(number: localNumber)
+            }
+        }
+    }
+
+    private func syncPhone(number: String) {
+        let trimmed = number.trimmingCharacters(in: .whitespaces)
+        contact.phone = trimmed.isEmpty ? "" : "\(country.dialCode) \(trimmed)"
     }
 }
 
