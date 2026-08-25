@@ -81,7 +81,10 @@ struct EditProfileView: View {
         VStack(spacing: 0) {
             OwnerModalActionBar(
                 leadingTitle: "Cancel",
-                leadingAction: { dismiss() },
+                leadingAction: {
+                    Self.dismissKeyboard()
+                    dismiss()
+                },
                 trailingTitle: "Save",
                 trailingAction: save
             ) {
@@ -462,7 +465,16 @@ struct EditProfileView: View {
         contacts = profile.contacts
     }
 
+    /// Custom `UIViewRepresentable` text fields never resign first responder
+    /// on their own. Dismissing the sheet (Save/Cancel) while one still holds
+    /// the keyboard fights the modal teardown and freezes the UI for several
+    /// seconds — resign before every dismiss path.
+    private static func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+
     private func save() {
+        Self.dismissKeyboard()
         guard !isScannerSession else {
             dismiss()
             return
