@@ -23,15 +23,14 @@ struct FacePage: View {
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
 
+            Image("BrandLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 56, height: 56)
+                .accessibilityHidden(true)
+
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
-
-                Image("BrandLogo")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 56, height: 56)
-                    .accessibilityHidden(true)
-                    .padding(.bottom, 24)
 
                 VStack(spacing: 14) {
                     if screenCaptured {
