@@ -8,13 +8,13 @@ struct LockEntryPage: View {
     var body: some View {
         ZStack {
             Color.redmedBg
-                .ignoresSafeArea()
 
             Image("BrandLogo")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 64, height: 64)
         }
+        .ignoresSafeArea()
         .allowsHitTesting(false)
         .accessibilityElement()
         .accessibilityLabel("RedMed is locked")

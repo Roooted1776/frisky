@@ -23,15 +23,19 @@ struct FacePage: View {
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
 
+            // Centered on the full screen (not just the safe-area rect the
+            // rest of this ZStack is laid out in) so it lines up with the
+            // logo on LockEntryPage instead of sitting off-center.
+            Image("BrandLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 56, height: 56)
+                .accessibilityHidden(true)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
+
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
-
-                Image("BrandLogo")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 56, height: 56)
-                    .accessibilityHidden(true)
-                    .padding(.bottom, 24)
 
                 VStack(spacing: 14) {
                     if screenCaptured {
