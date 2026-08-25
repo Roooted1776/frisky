@@ -333,7 +333,7 @@ function redmedAssetURL(file) {
     overflow-wrap: anywhere;
     word-break: break-word;
   }
-  /* Linked / Not linked + Updated share one row under the name. */
+  /* Linked / Not linked row under the name. */
   .rm-meta {
     display: flex;
     flex-wrap: wrap;
@@ -351,13 +351,6 @@ function redmedAssetURL(file) {
   }
   .rm-status.linked {
     color: rgba(225,29,72,0.9);
-  }
-  .rm-updated:not([hidden])::before {
-    content: '·';
-    display: inline-block;
-    margin: 0 8px;
-    color: rgba(120,113,108,0.45);
-    font-weight: 700;
   }
   /* Owner RedMed embed only — status opens native NFC tab (Write / Scan). */
   html.app-embed .rm-status.rm-status-link,
@@ -421,16 +414,6 @@ function redmedAssetURL(file) {
     z-index: 1;
     pointer-events: auto;
   }
-  .rm-updated {
-    margin: 0;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.2px;
-    color: rgba(120,113,108,0.72);
-    text-align: left;
-    line-height: 1.3;
-  }
-  .rm-updated[hidden] { display: none; }
   .row {
     display: flex;
     justify-content: space-between;
@@ -1298,7 +1281,6 @@ function redmedAssetURL(file) {
             <h1 class="rm-name" id="name">RedMed</h1>
             <div class="rm-meta">
               <p class="rm-status" id="statusLine">Not linked</p>
-              <p class="rm-updated" id="updatedLine" hidden></p>
             </div>
           </div>
         </div>
@@ -2061,17 +2043,6 @@ function redmedAssetURL(file) {
     if (donorRow) {
       if (p.donor) donorRow.classList.add('has-donor');
       else donorRow.classList.remove('has-donor');
-    }
-    var updatedEl = document.getElementById('updatedLine');
-    if (updatedEl) {
-      var upd = (p.updated || '').trim();
-      if (upd) {
-        updatedEl.hidden = false;
-        updatedEl.textContent = 'Updated ' + formatDob(upd);
-      } else {
-        updatedEl.hidden = true;
-        updatedEl.textContent = '';
-      }
     }
     list(document.getElementById('allergies'), p.allergies, 'countAllergies', 'dropAllergies');
     list(document.getElementById('meds'), p.meds, 'countMedications', 'dropMedications');
