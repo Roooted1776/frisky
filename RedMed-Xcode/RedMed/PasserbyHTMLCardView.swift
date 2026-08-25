@@ -595,14 +595,6 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         var forceReload: ((WKWebView) -> Void)?
         /// Bounded recovery if didFinish / probe never completes (blank RedMed).
         private var loadDeadlineTask: Task<Void, Never>?
-        /// Fires `.redMedEmbedShellDidLoad` once per coordinator, embed shell only.
-        private var announcedEmbedLoad = false
-
-        private func announceEmbedLoadIfNeeded() {
-            guard appEmbed, !announcedEmbedLoad else { return }
-            announcedEmbedLoad = true
-            NotificationCenter.default.post(name: .redMedEmbedShellDidLoad, object: nil)
-        }
 
         func adoptLoadIdentity(
             loadKey: String,
@@ -683,7 +675,6 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
                 }
                 self.cancelLoadDeadline()
                 self.shellLoaded = true
-                self.announceEmbedLoadIfNeeded()
                 if let pending = self.pendingProfileJS {
                     self.pendingProfileJS = nil
                     webView.evaluateJavaScript(pending, completionHandler: nil)
@@ -707,7 +698,6 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             cancelLoadDeadline()
             shellLoaded = true
-            announceEmbedLoadIfNeeded()
             loadAttempts = 0
             if let pending = pendingProfileJS {
                 pendingProfileJS = nil

@@ -111,30 +111,17 @@ struct OwnerAppLock<Content: View>: View {
                     CrashMotionGuard.shared.startMonitoring()
                 }
                 // Distinct WKWebView from the RedMed tab's own load (which
-                // uses the string cache, not a pool) — deferred past that
-                // first paint so NFC Scan / Preview stops paying full
+                // uses the string cache, not a pool) — deferred well past
+                // that first paint so NFC Scan / Preview stops paying full
                 // cold-start cost on its first open. Never during Face ID.
-                // Waits for RedMed's own embed shell to actually confirm
-                // loaded (not a guessed delay) so this never contends with
-                // a first paint that is slower than expected on a given
-                // device/simulator; 800ms remains a ceiling for the case
-                // that signal never arrives (e.g. empty-profile unlock,
-                // which paints RedMed without a WKWebView load at all).
+                // Tried gating this on a "RedMed shell didFinish" signal
+                // instead of a flat delay — didFinish fires before RedMed's
+                // JS has actually settled the first paint, so warming a
+                // second WKWebView right then still stole MainActor and
+                // produced the same white/stuck-first-page hang this delay
+                // exists to avoid. Back to the flat delay.
                 Task(priority: .utility) { @MainActor in
-                    await withTaskGroup(of: Void.self) { group in
-                        group.addTask {
-                            for await _ in NotificationCenter.default.notifications(
-                                named: .redMedEmbedShellDidLoad
-                            ) {
-                                return
-                            }
-                        }
-                        group.addTask {
-                            try? await Task.sleep(nanoseconds: 800_000_000)
-                        }
-                        await group.next()
-                        group.cancelAll()
-                    }
+                    try? await Task.sleep(nanoseconds: 800_000_000)
                     PasserbyWebViewPool.warmFullShell()
                 }
             }

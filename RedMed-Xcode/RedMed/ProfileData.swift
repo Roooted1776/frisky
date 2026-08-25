@@ -565,10 +565,6 @@ extension Notification.Name {
     static let redMedOpenNFCTab = Notification.Name("redMedOpenNFCTab")
     /// Preview / Scan tap card presented — PrivacySnapshotGuard must not cover it.
     static let redMedTapCardPresentationDidChange = Notification.Name("redMedTapCardPresentationDidChange")
-    /// Owner RedMed tab's own embed WKWebView confirmed loaded (first time only). Lets
-    /// OwnerAppLock start the NFC full-shell pre-warm as soon as RedMed's own first paint is
-    /// actually done, instead of guessing with a flat delay that can still race a slow cold start.
-    static let redMedEmbedShellDidLoad = Notification.Name("redMedEmbedShellDidLoad")
 }
 
 struct EmergencyContact: Identifiable, Equatable {
