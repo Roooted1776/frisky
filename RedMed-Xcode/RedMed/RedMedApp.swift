@@ -26,8 +26,9 @@ struct RedMedApp: App {
             .preferredColorScheme(.light)
             .task {
                 // Shell string during Face ID window. Vault I/O waits — do not fight SecItem/LA.
-                // CoreMotion still starts after unlock (OwnerAppLock).
-                Task.detached(priority: .userInitiated) {
+                // CoreMotion still starts after unlock (OwnerAppLock). .utility so this
+                // does not compete with the Face ID sheet for CPU on cold launch.
+                Task.detached(priority: .utility) {
                     PasserbyHTMLCardView.warmShellCache()
                 }
                 Task.detached(priority: .utility) {
