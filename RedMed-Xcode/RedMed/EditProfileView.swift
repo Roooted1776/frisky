@@ -590,7 +590,6 @@ private struct ContactDraftRow: View {
 
     @State private var country: CountryDialCode
     @State private var localNumber: String
-    @State private var showCountryPicker = false
 
     private enum Metrics {
         static let font: CGFloat = 15
@@ -634,8 +633,19 @@ private struct ContactDraftRow: View {
             Divider().padding(.leading, Metrics.rowHPad)
 
             HStack(spacing: 10) {
-                Button {
-                    showCountryPicker = true
+                Menu {
+                    ForEach(CountryDialCode.all) { c in
+                        Button {
+                            country = c
+                            syncPhone(number: localNumber)
+                        } label: {
+                            if c.iso == country.iso {
+                                Label("\(c.flag) \(c.name) \(c.dialCode)", systemImage: "checkmark")
+                            } else {
+                                Text("\(c.flag) \(c.name) \(c.dialCode)")
+                            }
+                        }
+                    }
                 } label: {
                     HStack(spacing: 4) {
                         Text(country.flag)
@@ -648,7 +658,6 @@ private struct ContactDraftRow: View {
                     }
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
                 .accessibilityLabel("Country code: \(country.name) \(country.dialCode)")
 
                 IdentifiedTextField(
@@ -678,12 +687,6 @@ private struct ContactDraftRow: View {
             Divider().padding(.leading, Metrics.rowHPad)
         }
         .id("edit-contact-row-\(contactID)")
-        .sheet(isPresented: $showCountryPicker) {
-            CountryDialCodePicker(selected: country) { picked in
-                country = picked
-                syncPhone(number: localNumber)
-            }
-        }
     }
 
     private func syncPhone(number: String) {

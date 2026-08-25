@@ -94,7 +94,7 @@ struct FacePage: View {
                     }
                 }
                 .padding(.horizontal, 22)
-                .padding(.bottom, 36)
+                .padding(.bottom, 16)
             }
         }
         .accessibilityElement(children: .contain)

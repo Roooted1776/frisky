@@ -32,10 +32,7 @@ struct CountryDialCode: Identifiable, Hashable {
         return (match, rest)
     }
 
-    static let defaultCountry: CountryDialCode = {
-        let region = Locale.current.region?.identifier
-        return all.first { $0.iso == region } ?? unitedStates
-    }()
+    static let defaultCountry: CountryDialCode = unitedStates
 
     private static let unitedStates = CountryDialCode(iso: "US", name: "United States", dialCode: "+1")
 
@@ -140,59 +137,4 @@ struct CountryDialCode: Identifiable, Hashable {
         CountryDialCode(iso: "SV", name: "El Salvador", dialCode: "+503"),
         CountryDialCode(iso: "NI", name: "Nicaragua", dialCode: "+505")
     ]
-}
-
-/// Searchable country + dial code sheet, presented from the Emergency Contacts phone row.
-struct CountryDialCodePicker: View {
-    let selected: CountryDialCode
-    let onSelect: (CountryDialCode) -> Void
-
-    @Environment(\.dismiss) private var dismiss
-    @State private var query = ""
-
-    private var filtered: [CountryDialCode] {
-        let q = query.trimmingCharacters(in: .whitespaces).lowercased()
-        guard !q.isEmpty else { return CountryDialCode.all }
-        return CountryDialCode.all.filter {
-            $0.name.lowercased().contains(q) || $0.dialCode.contains(q)
-        }
-    }
-
-    var body: some View {
-        NavigationStack {
-            List(filtered) { country in
-                Button {
-                    onSelect(country)
-                    dismiss()
-                } label: {
-                    HStack(spacing: 10) {
-                        Text(country.flag)
-                        Text(country.name)
-                            .foregroundColor(.redmedDark)
-                        Spacer()
-                        Text(country.dialCode)
-                            .foregroundColor(.redmedMuted)
-                        if country.iso == selected.iso {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.redmedAccent)
-                        }
-                    }
-                }
-                .buttonStyle(.plain)
-            }
-            .listStyle(.plain)
-            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always))
-            .navigationTitle("Country code")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundColor(.redmedAccent)
-                }
-            }
-            .background { RedMedPageBackground() }
-        }
-        .presentationBackground(Color.redmedBg)
-    }
 }
