@@ -1,9 +1,9 @@
 // Owner-only NFC bracelet setup. Ped/EMS scanner shells never mount this tab —
 // see ContentView.showsNFC / scannerSafeTab.
-// One page: Write (blank unlocked NXP NTAG216, ISO 14443A Type 2) + Scan + Preview (under
-// Scan) → full-page tap card (what first responders see).
-// When `AppConfig.nfcHardwareEnabled` is true, Write/Scan start real CoreNFC
-// sessions. Pack-only simulate stays for offline/dev when the flag is off —
+// One page: Write (blank unlocked NXP NTAG216, ISO 14443A Type 2) + Preview (under
+// Write) → full-page tap card (what first responders see).
+// When `AppConfig.nfcHardwareEnabled` is true, Write starts a real CoreNFC
+// session. Pack-only simulate stays for offline/dev when the flag is off —
 // it never flips Linked / Not linked (that needs a real bracelet write).
 // Pipeline (hardware): silicone band tap → CoreNFC → strip NDEF → CryptoKit → local card
 // via `NFCBandManager`.
@@ -48,8 +48,7 @@ struct NFCView: View {
                     factsCard
                     setupCard
                         .padding(.top, 4)
-                    scanCard
-                    // Under the Scan box — same tap card first responders get.
+                    // Under Write — same tap card first responders get.
                     firstResponderPreviewLink
                 }
                 .padding(.horizontal, RedMedChrome.pagePadX)
@@ -59,15 +58,6 @@ struct NFCView: View {
             .scrollIndicators(.visible)
         }
         .background { RedMedPageBackground() }
-        // Band Scan → same one-page tap card a real band tap opens.
-        .fullScreenCover(item: $band.scannedCard) { session in
-            PasserbyHTMLCardView(
-                payloadOrURL: session.payload,
-                braceletLinked: profile.showsBraceletAsLinked,
-                embedProfileJSON: session.embedJSON
-            )
-            .presentationBackground(Color.redmedBg)
-        }
         .fullScreenCover(item: $previewSession) { session in
             PasserbyHTMLCardView(
                 payloadOrURL: session.payload,
@@ -211,76 +201,9 @@ struct NFCView: View {
         .redmedBox()
     }
 
-    // MARK: - Scan (bottom of page)
+    // MARK: - First-responder Preview (under Write box)
 
-    /// Always show Scan on the owner NFC tab. Linked is write-status only —
-    /// hiding Scan behind it left no button after simulate packs (never link)
-    /// and when CoreNFC write had not succeeded yet.
-    private var scanCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("SCAN")
-                .font(.system(size: 11, weight: .semibold))
-                .kerning(0.6)
-                .foregroundColor(.redmedMuted)
-
-            Text(scanGuidance)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(.redmedMuted)
-                .lineSpacing(3)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Button {
-                band.verifyBand(from: profile)
-            } label: {
-                HStack(spacing: 8) {
-                    if band.isReading {
-                        ProgressView().tint(.redmedAccent)
-                    } else {
-                        Image(systemName: "wave.3.right.circle")
-                    }
-                    Text(scanButtonTitle)
-                }
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.redmedAccent)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(Color.redmedBg)
-                .clipShape(RoundedRectangle(cornerRadius: boxRadius))
-                .overlay(
-                    RoundedRectangle(cornerRadius: boxRadius)
-                        .strokeBorder(Color.redmedAccent.opacity(0.45), lineWidth: 1.5)
-                )
-            }
-            // Hardware Scan reads any band. Simulate packs live RedMed — needs data.
-            .disabled(band.isBusy || (!AppConfig.nfcHardwareEnabled && !profile.hasData))
-            .opacity(AppConfig.nfcHardwareEnabled || profile.hasData ? 1 : 0.55)
-            .buttonStyle(.plain)
-
-            if band.isReading, !band.statusMessage.isEmpty {
-                Text(band.statusMessage)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(.redmedMuted)
-            }
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .redmedBox()
-    }
-
-    private var scanGuidance: String {
-        if AppConfig.nfcHardwareEnabled {
-            return profile.braceletLinked
-                ? "Tap to scan: hold near the band — card opens in their browser. Quick. No login. No server. No app."
-                : "Hold near any RedMed band to open the same tap card helpers see. Write above first to link this bracelet."
-        }
-        return profile.hasData
-            ? "Simulate scan opens the same tap card helpers get — quick, no login, no server, no app."
-            : "Add your name on RedMed before a simulate scan."
-    }
-
-    // MARK: - First-responder Preview (under Scan box)
-
-    /// Same card chrome as SET UP / SCAN — Preview sits even with the rest of the page.
+    /// Same card chrome as SET UP — Preview sits even with the rest of the page.
     private var firstResponderPreviewLink: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("PREVIEW")
@@ -349,13 +272,6 @@ struct NFCView: View {
             return AppConfig.nfcHardwareEnabled ? "Hold near tag…" : "Packing…"
         }
         return AppConfig.nfcHardwareEnabled ? "Write to NFC tag" : "Write (simulate)"
-    }
-
-    private var scanButtonTitle: String {
-        if band.isReading {
-            return AppConfig.nfcHardwareEnabled ? "Hold near tag…" : "Opening…"
-        }
-        return AppConfig.nfcHardwareEnabled ? "Scan your bracelet" : "Simulate scan"
     }
 
     private var statusIsError: Bool {
