@@ -2321,10 +2321,20 @@ function redmedAssetURL(file) {
 
       root.addEventListener('click', function (ev) {
         var btn = ev.target && ev.target.closest ? ev.target.closest('.aid-topic') : null;
-        if (!btn) return;
+        if (btn) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          openTopic(btn.getAttribute('data-topic'));
+          return;
+        }
+        // Single-topic category (CPR, Choking, Shock, Seizure, Nearby Hospitals) —
+        // skip the expand step and jump straight to the instructions in one tap.
+        var summary = ev.target && ev.target.closest ? ev.target.closest('details.aid > summary') : null;
+        if (!summary) return;
+        var onlyTopic = summary.parentElement.querySelectorAll('.aid-topic');
+        if (onlyTopic.length !== 1) return;
         ev.preventDefault();
-        ev.stopPropagation();
-        openTopic(btn.getAttribute('data-topic'));
+        openTopic(onlyTopic[0].getAttribute('data-topic'));
       });
       back.addEventListener('click', function () { closeSheet(); });
     })();
