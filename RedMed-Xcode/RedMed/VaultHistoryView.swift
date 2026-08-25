@@ -173,7 +173,8 @@ struct VaultHistoryView: View {
         authGeneration &+= 1
         let generation = authGeneration
         BiometricAuth.authenticate(
-            reason: "Unlock local history stored in the on-device vault."
+            reason: "Unlock local history stored in the on-device vault.",
+            force: true
         ) { outcome in
             guard generation == authGeneration else { return }
             authenticating = false

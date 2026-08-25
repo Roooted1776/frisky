@@ -9,8 +9,8 @@ enum HelpDocument {
     enum Policy: String, CaseIterable, Identifiable {
         case guide = "faq"
         case privacy
-        case terms
         case security
+        case terms
 
         var id: String { rawValue }
 
@@ -18,8 +18,8 @@ enum HelpDocument {
             switch self {
             case .guide: return "Get Started"
             case .privacy: return "Privacy"
-            case .terms: return "Terms"
             case .security: return "Security"
+            case .terms: return "Terms"
             }
         }
 
@@ -235,6 +235,7 @@ struct HelpMenuView: View {
     @State private var isErasing = false
     @State private var eraseAuthFailed = false
     @State private var eraseDone = false
+    @State private var didAppear = false
 
     /// Same metrics as Edit — even horizontal rhythm across Help / Edit.
     private enum Metrics {
@@ -324,7 +325,7 @@ struct HelpMenuView: View {
                         helpSectionLabel("Policies")
                         helpCard {
                             ForEach(HelpDocument.Policy.allCases) { policy in
-                                if policy != .privacy {
+                                if policy != .guide {
                                     Divider().padding(.leading, Metrics.rowHPad)
                                 }
                                 policyLink(policy)
@@ -368,7 +369,13 @@ struct HelpMenuView: View {
             }
             .background { RedMedPageBackground() }
             .toolbar(.hidden, for: .navigationBar)
+            .opacity(didAppear ? 1 : 0)
+            .scaleEffect(didAppear ? 1 : 0.97)
+            .offset(y: didAppear ? 0 : 10)
             .onAppear {
+                withAnimation(.spring(response: 0.40, dampingFraction: 0.86)) {
+                    didAppear = true
+                }
                 guard showsOwnerTools, locationEnabled else { return }
                 locationSuggester.refresh()
             }

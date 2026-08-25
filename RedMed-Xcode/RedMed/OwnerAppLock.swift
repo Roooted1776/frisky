@@ -66,8 +66,9 @@ struct OwnerAppLock<Content: View>: View {
             screenCaptured = UIScreen.main.isCaptured
             tryAutoUnlockIfActive()
             profile.beginUnlockPrefetch()
-            // String cache only — not WK — during Face ID window.
-            Task.detached(priority: .userInitiated) {
+            // String cache only — not WK — during Face ID window. .utility so it
+            // does not contend with the Face ID sheet for CPU on cold launch.
+            Task.detached(priority: .utility) {
                 PasserbyHTMLCardView.warmShellCache()
             }
         }
@@ -171,8 +172,9 @@ struct OwnerAppLock<Content: View>: View {
         }
         unlockWithFaceID()
         profile.beginUnlockPrefetch()
-        // String warm only during Face ID — WK waits until after unlock.
-        Task.detached(priority: .userInitiated) {
+        // String warm only during Face ID — WK waits until after unlock. .utility
+        // so it does not compete with the Face ID sheet itself for CPU.
+        Task.detached(priority: .utility) {
             PasserbyHTMLCardView.warmShellCache()
         }
     }

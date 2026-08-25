@@ -213,7 +213,8 @@ struct RedMedView: View {
             return
         }
         BiometricAuth.authenticate(
-            reason: "Unlock with Face ID, Touch ID, or passcode to edit your RedMed profile."
+            reason: "Unlock with Face ID, Touch ID, or passcode to edit your RedMed profile.",
+            force: true
         ) { outcome in
             if outcome == .success {
                 requireAuthOnSave = false

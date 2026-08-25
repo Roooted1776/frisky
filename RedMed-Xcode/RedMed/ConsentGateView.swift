@@ -52,7 +52,7 @@ struct ConsentGateView<Content: View>: View {
 
                     VStack(spacing: 0) {
                         ForEach(HelpDocument.Policy.allCases) { policy in
-                            if policy != .privacy {
+                            if policy != .guide {
                                 Divider().padding(.leading, 16)
                             }
                             Button {

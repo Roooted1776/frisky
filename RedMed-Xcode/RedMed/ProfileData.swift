@@ -276,7 +276,11 @@ class ProfileData: ObservableObject {
         let account = Self.keychainAccount
         let box = unlockPrefetchBox
         box.clear()
-        let blobTask = Task.detached(priority: .userInitiated) { () -> PersistedProfile? in
+        // .utility: this fires at cold launch alongside the Face ID prompt itself —
+        // userInitiated contended with the system Face ID sheet for CPU and delayed
+        // it showing. The overlap window (Face ID prompt + user glance) is long
+        // enough that utility still finishes well before unlock succeeds.
+        let blobTask = Task.detached(priority: .utility) { () -> PersistedProfile? in
             guard let data = KeychainStore.load(account: account),
                   let decoded = try? JSONDecoder().decode(PersistedProfile.self, from: data) else {
                 box.store(nil)
@@ -287,7 +291,7 @@ class ProfileData: ObservableObject {
         }
         unlockBlobTask = blobTask
         // JSON first (warm caches during Face ID), then AES separately so unlock never waits on seal.
-        let jsonTask = Task.detached(priority: .userInitiated) { () -> String? in
+        let jsonTask = Task.detached(priority: .utility) { () -> String? in
             guard let decoded = await blobTask.value else { return nil }
             guard !Task.isCancelled else { return nil }
             return Self.previewArtifactsJSONOnly(from: decoded)

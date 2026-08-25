@@ -50,13 +50,28 @@ body {
 /* Letterhead */
 .legal-letterhead {
   margin-bottom: 28px;
+  position: relative;
+  padding-top: 4px;
+}
+.legal-letterhead::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), rgba(225, 29, 72, 0.35));
 }
 .legal-firm {
   font-family: var(--font);
   font-size: var(--fs-xl);
   font-weight: var(--fw-black);
   letter-spacing: -0.6px;
-  color: var(--accent);
+  background: linear-gradient(120deg, var(--accent) 0%, #ff5470 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   margin-bottom: 4px;
 }
 .legal-tagline {
@@ -89,37 +104,48 @@ body {
 }
 .legal-nav a {
   font-family: var(--font);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: var(--text-muted);
   text-decoration: none;
-  padding: 7px 12px;
-  border-radius: 10px;
-  border: 1px solid transparent;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  padding: 7px 14px 7px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  transition: color 0.15s, background 0.15s, border-color 0.15s, transform 0.15s;
 }
 .legal-nav a:hover {
   color: var(--text);
-  background: var(--surface);
-  border-color: var(--border);
+  border-color: rgba(225, 29, 72, 0.2);
+  transform: translateY(-1px);
 }
 .legal-nav a:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 .legal-nav a[aria-current="page"] {
-  color: var(--accent);
+  color: #fff;
   font-weight: var(--fw-semi);
-  background: var(--accent-soft);
-  border-color: rgba(225, 29, 72, 0.18);
+  background: linear-gradient(120deg, var(--accent) 0%, #ff5470 100%);
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.28);
 }
-.legal-nav span[aria-hidden] { display: none; }
+.legal-nav-ico {
+  font-size: 12px;
+  line-height: 1;
+  opacity: 0.8;
+}
+.legal-nav a[aria-current="page"] .legal-nav-ico { opacity: 1; }
+.legal-nav span[aria-hidden]:not(.legal-nav-ico) { display: none; }
 
 .legal-nav-sticky {
   position: sticky;
   top: 0;
   z-index: 2;
-  padding: 8px 0 12px;
+  padding: 10px 0 14px;
   background:
-    linear-gradient(var(--bg) 70%, transparent);
+    linear-gradient(var(--bg) 72%, transparent);
 }
 .legal-policy {
   scroll-margin-top: 64px;
@@ -132,7 +158,9 @@ body {
 /* Rule */
 .legal-rule-thin {
   border: none;
-  border-top: 1px solid var(--divider);
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--divider) 0%, transparent 85%);
   margin: 0 0 28px;
 }
 
@@ -165,8 +193,10 @@ body {
 /* Notice box — matches MainInfoView accent callout */
 .legal-notice {
   font-family: var(--font);
+  position: relative;
   background: var(--accent-soft);
   border: 1px solid rgba(225, 29, 72, 0.14);
+  border-left: 3px solid var(--accent);
   border-radius: var(--radius);
   padding: 14px 16px;
   font-size: var(--fs-sm);
@@ -205,6 +235,8 @@ body {
 /* Body */
 .legal-body h2 {
   font-family: var(--font);
+  display: flex;
+  align-items: center;
   font-size: var(--fs-md);
   font-weight: var(--fw-bold);
   letter-spacing: -0.3px;
@@ -213,9 +245,19 @@ body {
 }
 .legal-body h2:first-child { margin-top: 0; }
 .sec-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 3px;
+  margin-right: 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
   color: var(--accent);
+  font-size: var(--fs-xs);
   font-weight: var(--fw-black);
-  margin-right: 6px;
+  vertical-align: 2px;
 }
 .legal-body p {
   font-family: var(--font);
@@ -356,9 +398,19 @@ body {
   font-size: var(--fs-sm);
   color: var(--text-dim);
   line-height: 1.8;
+  text-align: center;
 }
-.legal-footer a { color: var(--text-muted); text-decoration: none; }
+.legal-footer a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: var(--fw-medium);
+}
 .legal-footer a:hover { color: var(--accent); }
+.legal-footer p:first-child {
+  font-weight: var(--fw-semi);
+  color: var(--text-muted);
+  letter-spacing: 0.2px;
+}
 .legal-footer-disclaimer {
   font-family: var(--font);
   font-size: var(--fs-xs) !important;
