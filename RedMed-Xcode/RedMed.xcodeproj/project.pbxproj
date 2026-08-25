@@ -31,7 +31,6 @@
 		AABB0000000000000000001E /* NFCWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001E /* NFCWriter.swift */; };
 		AABB0000000000000000001F /* NFCReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001F /* NFCReader.swift */; };
 		AABB00000000000000000020 /* EmergencyNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000020 /* EmergencyNumber.swift */; };
-		AABB00000000000000000021 /* card.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000021 /* card.html */; };
 		AABB00000000000000000022 /* BrandLogo.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000022 /* BrandLogo.png */; };
 		AABB00000000000000000023 /* Main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000023 /* Main.swift */; };
 		AABB00000000000000000024 /* tapper.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000024 /* tapper.html */; };
@@ -89,7 +88,6 @@
 		AAAA0000000000000000001E /* NFCWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFCWriter.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000001F /* NFCReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFCReader.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000020 /* EmergencyNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyNumber.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000021 /* card.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = card.html; sourceTree = "<group>"; };
 		AAAA00000000000000000022 /* BrandLogo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BrandLogo.png; sourceTree = "<group>"; };
 		AAAA00000000000000000023 /* Main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Main.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000024 /* tapper.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = tapper.html; sourceTree = "<group>"; };
@@ -249,7 +247,6 @@
 			isa = PBXGroup;
 			children = (
 				AAAA00000000000000000024 /* tapper.html */,
-				AAAA00000000000000000021 /* card.html */,
 				AAAA00000000000000000025 /* sw.js */,
 				AAAA00000000000000000022 /* BrandLogo.png */,
 				AAAA00000000000000000054 /* pheart.png */,
@@ -363,7 +360,6 @@
 			files = (
 				AABB0000000000000000000C /* Assets.xcassets in Resources */,
 				AABB00000000000000000050 /* Help.html in Resources */,
-				AABB00000000000000000021 /* card.html in Resources */,
 				AABB00000000000000000024 /* tapper.html in Resources */,
 				AABB00000000000000000025 /* sw.js in Resources */,
 				AABB00000000000000000022 /* BrandLogo.png in Resources */,
