@@ -11,6 +11,9 @@ import SwiftUI
 /// Face ID. Do **not** create a WKWebView during Face ID (cream hang). After
 /// unlock, the live RedMed tab loads from that string cache — do not start a
 /// second pooled WK on the same turn (it races first paint).
+/// `PasserbyWebViewPool.warmFullShell()` (NFC Scan / Preview's non-embed
+/// shell) is a *separate* WKWebView pool from the RedMed tab's — it is safe
+/// to warm shortly after unlock and does not touch that first-paint path.
 struct OwnerAppLock<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
@@ -105,6 +108,14 @@ struct OwnerAppLock<Content: View>: View {
                 Task { @MainActor in
                     await Task.yield()
                     CrashMotionGuard.shared.startMonitoring()
+                }
+                // Distinct WKWebView from the RedMed tab's own load (which
+                // uses the string cache, not a pool) — deferred well past
+                // that first paint so NFC Scan / Preview stops paying full
+                // cold-start cost on its first open. Never during Face ID.
+                Task(priority: .utility) { @MainActor in
+                    try? await Task.sleep(nanoseconds: 800_000_000)
+                    PasserbyWebViewPool.warmFullShell()
                 }
             }
         }

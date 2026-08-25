@@ -177,38 +177,63 @@ private enum PasserbyShellCache {
 
 @MainActor
 enum PasserbyWebViewPool {
-    private static var warmedEmbed: WKWebView?
-    private static var warmTask: Task<WKWebView?, Never>?
-    private static var warmingEmbed: WKWebView?
+    /// Warm-webview state for one shell kind (embed vs. full/preview). A
+    /// class so two independent slots can share the same warm/take logic
+    /// without one kind's webview ever being confused for the other's.
+    private final class Slot {
+        var warmed: WKWebView?
+        var warmTask: Task<WKWebView?, Never>?
+        var warming: WKWebView?
+    }
+
+    private static let embedSlot = Slot()
+    /// NFC Scan / Preview tap card (`appEmbed: false`) — a separate WKWebView
+    /// from `embedSlot` so warming it can never race the RedMed tab's own
+    /// first paint (that race is why embed pre-warm was disabled — #see
+    /// "Faster post-auth paint" history).
+    private static let fullSlot = Slot()
 
     static func warmEmbedShell() {
-        _ = ensureWarmTask()
+        _ = ensureWarmTask(slot: embedSlot, embed: true)
+    }
+
+    /// Pre-warms a spare non-embed shell so the first NFC Scan / Preview tap
+    /// doesn't pay full WKWebView cold-start cost. Call only well after the
+    /// RedMed tab has painted (e.g. shortly after unlock) — never during
+    /// Face ID or on the same turn as the RedMed tab's own load.
+    static func warmFullShell() {
+        _ = ensureWarmTask(slot: fullSlot, embed: false)
     }
 
     static func cancelWarm() {
-        guard warmedEmbed == nil else {
-            warmTask = nil
+        cancelWarm(slot: embedSlot)
+        cancelWarm(slot: fullSlot)
+    }
+
+    private static func cancelWarm(slot: Slot) {
+        guard slot.warmed == nil else {
+            slot.warmTask = nil
             return
         }
-        warmTask?.cancel()
-        warmTask = nil
-        if let warmingEmbed {
-            warmingEmbed.stopLoading()
-            warmingEmbed.navigationDelegate = nil
-            self.warmingEmbed = nil
+        slot.warmTask?.cancel()
+        slot.warmTask = nil
+        if let warming = slot.warming {
+            warming.stopLoading()
+            warming.navigationDelegate = nil
+            slot.warming = nil
         }
     }
 
     static func ensureWarmEmbedShell() async {
-        if warmedEmbed != nil { return }
-        _ = await ensureWarmTask().value
+        if embedSlot.warmed != nil { return }
+        _ = await ensureWarmTask(slot: embedSlot, embed: true).value
     }
 
-    private static func ensureWarmTask() -> Task<WKWebView?, Never> {
-        if let warmedEmbed {
-            return Task { @MainActor in warmedEmbed }
+    private static func ensureWarmTask(slot: Slot, embed: Bool) -> Task<WKWebView?, Never> {
+        if let warmed = slot.warmed {
+            return Task { @MainActor in warmed }
         }
-        if let warmTask { return warmTask }
+        if let warmTask = slot.warmTask { return warmTask }
         let task = Task<WKWebView?, Never> { @MainActor in
             if Task.isCancelled { return .none }
 
@@ -218,16 +243,26 @@ enum PasserbyWebViewPool {
                     return nil
                 }
 
-                let boot = """
-                <style>html,body{background:#fff7f7!important;margin:0}</style>
-                <script>
-                window.__REDMED_APP_PREVIEW=1;
-                window.__REDMED_APP_EMBED=1;
-                window.__REDMED_BRACELET_LINKED=false;
-                try{document.documentElement.classList.add('app-embed');}catch(e0){}
-                </script>
+                let boot = embed
+                    ? """
+                      <style>html,body{background:#fff7f7!important;margin:0}</style>
+                      <script>
+                      window.__REDMED_APP_PREVIEW=1;
+                      window.__REDMED_APP_EMBED=1;
+                      window.__REDMED_BRACELET_LINKED=false;
+                      try{document.documentElement.classList.add('app-embed');}catch(e0){}
+                      </script>
 
-                """
+                      """
+                    : """
+                      <style>html,body{background:#fff7f7!important;margin:0}</style>
+                      <script>
+                      window.__REDMED_APP_PREVIEW=1;
+                      window.__REDMED_BRACELET_LINKED=false;
+                      try{document.documentElement.classList.add('app-preview');}catch(e1){}
+                      </script>
+
+                      """
                 if let range = html.range(of: "<head>") {
                     html.replaceSubrange(range, with: "<head>\n" + boot)
                 } else {
@@ -240,22 +275,22 @@ enum PasserbyWebViewPool {
             if Task.isCancelled { return .none }
 
             let webView = makeConfiguredWebView(navigationDelegate: nil)
-            warmingEmbed = webView
+            slot.warming = webView
             webView.loadHTMLString(html, baseURL: URL(fileURLWithPath: filePath))
             if Task.isCancelled {
                 webView.stopLoading()
                 webView.navigationDelegate = nil
-                if warmingEmbed === webView { warmingEmbed = nil }
+                if slot.warming === webView { slot.warming = nil }
                 return .none
             }
-            warmingEmbed = nil
-            warmedEmbed = webView
+            slot.warming = nil
+            slot.warmed = webView
             return webView
         }
-        warmTask = task
+        slot.warmTask = task
         Task { @MainActor in
             _ = await task.value
-            if warmTask == task { warmTask = nil }
+            if slot.warmTask == task { slot.warmTask = nil }
         }
         return task
     }
@@ -263,14 +298,21 @@ enum PasserbyWebViewPool {
     /// Owner RedMed tab takes a *finished* warmed view once (nil after).
     /// Mid-load handoff can miss didFinish after delegate attach and leave
     /// RedMed permanently cream — only return when parse has a real document.
-    static func takeEmbed() -> WKWebView? {
-        guard let view = warmedEmbed else { return nil }
+    static func takeEmbed() -> WKWebView? { take(slot: embedSlot) }
+
+    /// NFC Scan / Preview takes a *finished* warmed view once (nil after).
+    /// Same finished-only guard as `takeEmbed` — a mid-load handoff would
+    /// leave the tap card blank instead of showing the RedMed·911·Aid shell.
+    static func takeFull() -> WKWebView? { take(slot: fullSlot) }
+
+    private static func take(slot: Slot) -> WKWebView? {
+        guard let view = slot.warmed else { return nil }
         guard !view.isLoading, view.url != nil else {
             // Still parsing — first paint uses a fresh webview with a live delegate.
             return nil
         }
-        warmedEmbed = nil
-        warmTask = nil
+        slot.warmed = nil
+        slot.warmTask = nil
         return view
     }
 
@@ -316,6 +358,19 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
             pooled.scrollView.isScrollEnabled = true
             context.coordinator.usingPooledShell = true
             context.coordinator.loadedShellKind = "embed"
+            context.coordinator.loadedPayload = ""
+            context.coordinator.loadedContentKey = ""
+            context.coordinator.shellLoaded = false
+            return pooled
+        }
+        // Same finished-only handoff for NFC Scan / Preview — a distinct
+        // pool from the embed one above, so it never competes with RedMed
+        // tab's own load for first paint.
+        if !appEmbed, let pooled = PasserbyWebViewPool.takeFull() {
+            pooled.navigationDelegate = context.coordinator
+            pooled.scrollView.isScrollEnabled = false
+            context.coordinator.usingPooledShell = true
+            context.coordinator.loadedShellKind = "full"
             context.coordinator.loadedPayload = ""
             context.coordinator.loadedContentKey = ""
             context.coordinator.shellLoaded = false
