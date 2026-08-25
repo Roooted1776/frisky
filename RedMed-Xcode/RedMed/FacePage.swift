@@ -4,8 +4,8 @@ import SwiftUI
 /// Single CTA — **Proceed** normally, **Open Settings** when
 /// `unavailableReason` is set (retrying evaluatePolicy the same way can't
 /// fix a lockout / not-enrolled / no-passcode state; no sheet even shows
-/// for those). Cream user-page fill. Not a dock over LockEntryPage.
-/// No hanging mark — never gates Face ID.
+/// for those). Cream user-page fill with the brand mark. Not a dock over
+/// LockEntryPage. The mark is decorative — never gates Face ID.
 struct FacePage: View {
     var screenCaptured: Bool
     var biometryFailed: Bool
@@ -25,6 +25,13 @@ struct FacePage: View {
 
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
+
+                Image("BrandLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 56, height: 56)
+                    .accessibilityHidden(true)
+                    .padding(.bottom, 24)
 
                 VStack(spacing: 14) {
                     if screenCaptured {
