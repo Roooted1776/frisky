@@ -32,10 +32,7 @@ struct CountryDialCode: Identifiable, Hashable {
         return (match, rest)
     }
 
-    static let defaultCountry: CountryDialCode = {
-        let region = Locale.current.region?.identifier
-        return all.first { $0.iso == region } ?? unitedStates
-    }()
+    static let defaultCountry: CountryDialCode = unitedStates
 
     private static let unitedStates = CountryDialCode(iso: "US", name: "United States", dialCode: "+1")
 
