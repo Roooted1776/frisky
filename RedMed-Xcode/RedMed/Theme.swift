@@ -27,7 +27,7 @@ extension Color {
     static let redmedAccent   = Color(red: 0.882, green: 0.114, blue: 0.282) // #e11d48
     static let redmedBg       = Color(red: 1.000, green: 0.969, blue: 0.969) // #fff7f7
     /// Heading / primary ink — same on owner chrome + passerby `--dark` / legal `--text`.
-    static let redmedDark     = Color(red: 0.110, green: 0.098, blue: 0.086) // #1c1917
+    static let redmedDark     = Color(red: 0.094, green: 0.082, blue: 0.078) // #181514
     static let redmedMuted    = Color(red: 0.471, green: 0.443, blue: 0.424) // #78716c
     /// Cream-lift panel fill — not pure white (white boxes on `redmedBg`).
     static let redmedSurface  = Color(red: 1.000, green: 0.953, blue: 0.957) // #fff3f4
