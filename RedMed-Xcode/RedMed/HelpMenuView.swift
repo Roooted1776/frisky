@@ -9,8 +9,8 @@ enum HelpDocument {
     enum Policy: String, CaseIterable, Identifiable {
         case guide = "faq"
         case privacy
-        case terms
         case security
+        case terms
 
         var id: String { rawValue }
 
@@ -18,8 +18,8 @@ enum HelpDocument {
             switch self {
             case .guide: return "Get Started"
             case .privacy: return "Privacy"
-            case .terms: return "Terms"
             case .security: return "Security"
+            case .terms: return "Terms"
             }
         }
 
