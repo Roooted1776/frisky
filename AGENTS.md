@@ -121,9 +121,9 @@ The app has no backend, database, or web service.
   `.notVerified` (a scan that just didn't match) — retrying `evaluatePolicy`
   never fixes an unavailable state (no sheet even shows), so `FacePage`
   swaps its CTA to **Open Settings** with a reason-specific message instead
-  of a **Proceed** that can only ever fail the same way again. After a successful
-  Face ID, Edit / NFC / vault skip Face ID this process. Erase still
-  prompts. Do not re-lock into a second Face ID on background. Do **not** play
+  of a **Proceed** that can only ever fail the same way again. Edit, Save, NFC
+  write, vault unlock, and Erase all re-prompt Face ID every time (`force: true`)
+  — only the initial app unlock reuses this-process success. Do not re-lock into a second Face ID on background. Do **not** play
   `LockOpen.mp4` or `FaceIDFrame.mp4`. Clip never gates Face ID. Fresh install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
   Owner pages + passerby tapper: cream fill only (no page BrandLogo). **No hanging
   decorative brand marks** anywhere (no lock watermark, no Aid pane wordmarks, no

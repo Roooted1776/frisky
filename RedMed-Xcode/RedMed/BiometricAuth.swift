@@ -6,9 +6,9 @@ import UIKit
 /// (no Face ID, no passcode, no login).
 ///
 /// App unlock is Face ID / Touch ID only (`allowPasscode: false`) so no
-/// password pad sits in front of Main / the YOU card. Erase still allows
-/// device passcode (`force: true`, default `allowPasscode`). After the first
-/// success this process, Edit / NFC / vault skip LA unless `force`.
+/// password pad sits in front of Main / the YOU card. Edit, Save, NFC write,
+/// vault unlock, and Erase all pass `force: true` and re-prompt every time —
+/// only the initial app unlock reuses `didUnlockThisLaunch`.
 ///
 /// On success the `LAContext` is **parked** (not invalidated) so
 /// `KeychainStore.load(context:)` can use `kSecUseAuthenticationContext`

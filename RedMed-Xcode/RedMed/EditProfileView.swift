@@ -481,7 +481,8 @@ struct EditProfileView: View {
         }
         if requireAuthOnSave {
             BiometricAuth.authenticate(
-                reason: "Confirm with Face ID, Touch ID, or passcode to save your RedMed profile."
+                reason: "Confirm with Face ID, Touch ID, or passcode to save your RedMed profile.",
+                force: true
             ) { outcome in
                 if outcome == .success {
                     commitSave()

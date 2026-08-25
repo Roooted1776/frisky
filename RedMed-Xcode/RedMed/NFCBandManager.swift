@@ -59,7 +59,8 @@ final class NFCBandManager: ObservableObject {
         writeAuthInFlight = true
 
         BiometricAuth.authenticate(
-            reason: "Confirm with Face ID, Touch ID, or passcode to write your RedMed card to the bracelet."
+            reason: "Confirm with Face ID, Touch ID, or passcode to write your RedMed card to the bracelet.",
+            force: true
         ) { [weak self] outcome in
             guard let self else { return }
             if outcome == .success {
