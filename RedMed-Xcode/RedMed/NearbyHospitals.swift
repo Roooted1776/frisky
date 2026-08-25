@@ -18,8 +18,12 @@ class NearbyHospitalFinder: NSObject, ObservableObject, CLLocationManagerDelegat
     @Published var errorMessage: String? = nil
 
     private var manager: CLLocationManager?
+    /// Bumped on every search() so a stale watchdog timeout can't clobber a later search's result.
+    private var searchGeneration = 0
 
     func search() {
+        searchGeneration += 1
+        let generation = searchGeneration
         let begin = {
             self.isLoading = true
             self.errorMessage = nil
@@ -41,8 +45,10 @@ class NearbyHospitalFinder: NSObject, ObservableObject, CLLocationManagerDelegat
         switch m.authorizationStatus {
         case .notDetermined:
             m.requestWhenInUseAuthorization()
+            scheduleTimeout(generation: generation)
         case .authorizedWhenInUse, .authorizedAlways:
             m.requestLocation()
+            scheduleTimeout(generation: generation)
         case .denied, .restricted:
             let fail = {
                 self.isLoading = false
@@ -51,6 +57,17 @@ class NearbyHospitalFinder: NSObject, ObservableObject, CLLocationManagerDelegat
             if Thread.isMainThread { fail() } else { DispatchQueue.main.async(execute: fail) }
         @unknown default:
             break
+        }
+    }
+
+    /// Safety net: CLLocationManager / MKLocalSearch can hang without ever calling a delegate
+    /// method back (e.g. GPS signal never resolves, simulator with no location set, a stuck
+    /// permission prompt) — without this the spinner spins forever with no way to retry.
+    private func scheduleTimeout(generation: Int) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 15) { [weak self] in
+            guard let self, self.searchGeneration == generation, self.isLoading else { return }
+            self.isLoading = false
+            self.errorMessage = "Couldn't find hospitals nearby. Try again."
         }
     }
 
