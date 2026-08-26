@@ -135,6 +135,19 @@ struct OwnerAppLock<Content: View>: View {
                 SecurePasteboard.clear()
                 // Drop SecItem auth session — next read needs Face ID again.
                 BiometricAuth.clearAuthenticationContext()
+                // Kill any Face ID sheet the OS is about to cancel anyway
+                // (backgrounding mid-scan) and bump authGeneration so that
+                // cancelled evaluate's completion (which the OS still calls,
+                // usually as `.declined`) cannot land after we reset below —
+                // without this, that stale completion set `showUnlockControl
+                // = true`, which then blocked `tryAutoUnlockIfActive`'s guard
+                // on the very next foreground and left the user stuck on the
+                // static Proceed page instead of an automatic Face ID prompt.
+                BiometricAuth.cancelInFlight()
+                authGeneration &+= 1
+                isAuthenticating = false
+                showUnlockControl = false
+                didAutoPromptThisLock = false
                 if gate == .unlocked {
                     // Re-lock on background — Home / app switcher / a real
                     // backgrounding all require Face ID again on return, not
