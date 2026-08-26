@@ -140,6 +140,13 @@ struct OwnerAppLock<Content: View>: View {
                     // must not trip this. Purge PHI from memory now so
                     // nothing lingers behind the lock screen while backgrounded.
                     profile.purgeFromMemory()
+                    // Without this, BiometricAuth's own "already unlocked this
+                    // launch" fast-path silently short-circuits the next
+                    // unlockWithFaceID() call to .success with no Face ID
+                    // sheet at all (unlockWithFaceID never passes force:true
+                    // by design) — the re-lock would then have no real way
+                    // back in.
+                    BiometricAuth.resetLaunchUnlock()
                     gate = .locked
                 }
                 profile.discardUnlockPrefetch()
