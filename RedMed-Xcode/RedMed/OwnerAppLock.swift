@@ -131,10 +131,19 @@ struct OwnerAppLock<Content: View>: View {
                 SecurePasteboard.clear()
                 // Drop SecItem auth session — next read needs Face ID again.
                 BiometricAuth.clearAuthenticationContext()
-                if gate == .locked {
-                    profile.discardUnlockPrefetch()
-                    PasserbyWebViewPool.cancelWarm()
+                if gate == .unlocked {
+                    // Re-lock on background — Home / app switcher / a real
+                    // backgrounding all require Face ID again on return, not
+                    // just at cold launch. `.background` only (never
+                    // `.inactive`, same rule as the vault): a Face ID /
+                    // system auth sheet also puts the scene `.inactive` and
+                    // must not trip this. Purge PHI from memory now so
+                    // nothing lingers behind the lock screen while backgrounded.
+                    profile.purgeFromMemory()
+                    gate = .locked
                 }
+                profile.discardUnlockPrefetch()
+                PasserbyWebViewPool.cancelWarm()
             } else if phase == .active, gate == .locked {
                 tryAutoUnlockIfActive()
             }
