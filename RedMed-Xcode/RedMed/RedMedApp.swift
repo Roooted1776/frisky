@@ -43,6 +43,15 @@ struct RedMedApp: App {
                     NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
                 }
             }
+            // Associated Domains (applinks:roooted1776.github.io, /tapper/* only —
+            // see RedMed.entitlements). A device with RedMed installed taps its own
+            // band → iOS hands the URL here instead of opening it in Safari. There is
+            // nothing to render: the owner already has full access through the app
+            // itself. Deliberately drop the tapped #d= payload rather than adopt it —
+            // this brings the app to the front only, same as tapping the icon. A
+            // passerby's phone (no RedMed installed) is unaffected and still opens
+            // the hosted tapper card in Safari as normal.
+            .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { _ in }
         }
     }
 }
