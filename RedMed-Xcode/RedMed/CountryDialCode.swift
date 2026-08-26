@@ -36,6 +36,26 @@ struct CountryDialCode: Identifiable, Hashable {
 
     private static let unitedStates = CountryDialCode(iso: "US", name: "United States", dialCode: "+1")
 
+    /// Live-typing NANP layout (`(XXX) XXX-XXXX`) for +1 (US/Canada) numbers —
+    /// the same area-code grouping Apple's own Phone/Contacts apps use.
+    /// There's no public modern replacement for this: the old AddressBook
+    /// framework's `ABPhoneNumberCopyFormattedDigits` did locale-aware phone
+    /// formatting, but that framework has no Contacts.framework equivalent,
+    /// so this mirrors NANP directly rather than calling a nonexistent API.
+    static func formattedNANP(digits: String) -> String {
+        let d = Array(digits.filter(\.isNumber).prefix(10))
+        switch d.count {
+        case 0:
+            return ""
+        case 1...3:
+            return "(\(String(d)))"
+        case 4...6:
+            return "(\(String(d[0..<3]))) \(String(d[3...]))"
+        default:
+            return "(\(String(d[0..<3]))) \(String(d[3..<6]))-\(String(d[6...]))"
+        }
+    }
+
     /// Common-use subset, not exhaustive — every entry here is unambiguous;
     /// an unlisted country falls back to the device region (or US).
     static let all: [CountryDialCode] = [
