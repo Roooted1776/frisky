@@ -123,8 +123,13 @@ The app has no backend, database, or web service.
   swaps its CTA to **Open Settings** with a reason-specific message instead
   of a **Proceed** that can only ever fail the same way again. Edit, Save, NFC
   write, vault unlock, and Erase all re-prompt Face ID every time (`force: true`)
-  — only the initial app unlock reuses this-process success. Do not re-lock into a second Face ID on background. Do **not** play
-  `LockOpen.mp4` or `FaceIDFrame.mp4`. Clip never gates Face ID. Fresh install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
+  — only the initial app unlock reuses this-process success, until the app
+  actually backgrounds. **Re-lock on true `.background`** (purge PHI +
+  `gate = .locked`; app switcher / Home require Face ID again on return) —
+  never on `.inactive` (a Face ID / system auth sheet also puts the scene
+  `.inactive` and must not trip a relock, same as `VaultHistoryView`). Do
+  **not** play `LockOpen.mp4` or `FaceIDFrame.mp4`. Clip never gates Face ID.
+  Fresh install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
   Owner pages + passerby tapper: cream fill only (no page BrandLogo). **No hanging
   decorative brand marks** anywhere (no lock watermark, no Aid pane wordmarks, no
   privacy-cover logo) — page BrandWordmark headers on NFC / topic sheets only;
