@@ -175,6 +175,15 @@ enum BiometricAuth {
         clearPark()
     }
 
+    /// Clears the "already unlocked this launch" fast-path. Call when the app
+    /// re-locks (background) so the next `authenticate` call does a real
+    /// Face ID evaluate instead of silently short-circuiting to `.success`
+    /// from the very first unlock this process — that stale flag otherwise
+    /// left the re-lock's own Face ID prompt never presenting at all.
+    static func resetLaunchUnlock() {
+        didUnlockThisLaunch = false
+    }
+
     private static func setInFlight(_ context: LAContext) {
         parkLock.lock()
         inFlightContext = context
