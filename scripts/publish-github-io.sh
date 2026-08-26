@@ -30,10 +30,11 @@ if ! cmp -s tapper.html tapper/index.html; then
   exit 1
 fi
 
-mkdir -p "$DEST/tapper" "$DEST/get" "$DEST/assets" "$DEST/.github/workflows"
+mkdir -p "$DEST/tapper" "$DEST/get" "$DEST/assets" "$DEST/.github/workflows" "$DEST/.well-known"
 cp -f index.html tapper.html card.html get.html sw.js \
-  _headers _redirects \
+  _headers _redirects apple-app-site-association \
   "$DEST/"
+cp -f .well-known/apple-app-site-association "$DEST/.well-known/apple-app-site-association"
 cp -f get/index.html "$DEST/get/index.html"
 cp -f tapper/index.html tapper/sw.js \
   tapper/pheart.png tapper/BrandLogo.png tapper/BrandWordmark.png \

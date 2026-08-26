@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "33F9FQ4VBU.com.redmed.app",
+        "paths": ["/tapper/*"]
+      }
+    ]
+  }
+}
