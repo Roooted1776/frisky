@@ -34,8 +34,10 @@ enum HealthKitProfileImport {
         }
     }
 
+    /// Gated on `AppConfig.healthKitImportEnabled` — parked while the HealthKit
+    /// entitlement is out of `RedMed.entitlements` (personal-team signing).
     static var isAvailable: Bool {
-        HKHealthStore.isHealthDataAvailable()
+        AppConfig.healthKitImportEnabled && HKHealthStore.isHealthDataAvailable()
     }
 
     private static let birthDateFormatter: DateFormatter = {

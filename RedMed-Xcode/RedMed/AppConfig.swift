@@ -83,6 +83,15 @@ enum AppConfig {
     /// stay on the pack-only simulate path until entitlement is restored.
     static let nfcHardwareEnabled = false
 
+    /// Product kill switch for the optional Apple Health import on the empty-profile
+    /// funnel / Edit. `true` = `HealthKitProfileImport` may call HealthKit.
+    /// Requires the HealthKit capability on App ID `com.redmed.app` + paid Apple
+    /// Developer — see `docs/healthkit-restore.md`. Parked (`false`): personal/free
+    /// teams cannot provision HealthKit (same class of problem as NFC Tag Reading
+    /// and Associated Domains), so the entitlement stays out of `RedMed.entitlements`
+    /// and the "Fill from Apple Health" button stays hidden until restored.
+    static let healthKitImportEnabled = false
+
     /// Hardware RF contract for the RedMed bracelet.
     /// - Band is **passive**: no battery, no BLE/Wi‑Fi radio. RedMed only starts
     ///   CoreNFC on explicit Write/Scan. Separately, iOS Background Tag Reading

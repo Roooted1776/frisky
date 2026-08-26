@@ -151,7 +151,12 @@ The app has no backend, database, or web service.
   reads birth date and blood type into Edit draft. Read-only. Never writes
   to Health. Never runs on passerby / scanner. Persist still requires Save
   (Face ID on first fill). Do not add Health write, clinical records, or
-  background delivery.
+  background delivery. Currently **parked**
+  (`AppConfig.healthKitImportEnabled = false`, no HealthKit key in
+  `RedMed.entitlements`) — personal/free Apple Developer teams cannot
+  provision the HealthKit capability, so it failed automatic signing the
+  same way CoreNFC and Associated Domains did. See
+  `docs/healthkit-restore.md`.
 
 **Cold launch:** Do **not** create `CLLocationManager`, start GPS / MapKit /
 trauma JSON, or show a Location banner at `@main`. First launch opens a cream
