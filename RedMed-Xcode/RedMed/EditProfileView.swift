@@ -482,7 +482,7 @@ struct EditProfileView: View {
 
     @ViewBuilder
     private var healthImportCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 0) {
             Button {
                 Task { await importFromHealth() }
             } label: {
@@ -491,13 +491,17 @@ struct EditProfileView: View {
                         ProgressView().tint(.redmedAccent)
                     } else {
                         Image(systemName: "heart.text.square")
-                            .font(.system(size: Metrics.icon))
+                            .font(.system(size: Metrics.icon, weight: .semibold))
                     }
                     Text(healthImportBusy ? "Reading Apple Health…" : "Fill from Apple Health")
                         .font(.system(size: Metrics.font, weight: .semibold))
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.redmedMuted.opacity(0.55))
+                        .opacity(healthImportBusy ? 0 : 1)
                 }
                 .foregroundColor(.redmedAccent)
-                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, Metrics.rowHPad)
                 .padding(.vertical, Metrics.rowVPad)
                 .contentShape(Rectangle())
@@ -505,18 +509,21 @@ struct EditProfileView: View {
             .buttonStyle(.plain)
             .disabled(healthImportBusy)
 
+            Divider().padding(.leading, Metrics.rowHPad)
+
             Text("Birth date and blood type only. Empty fields are filled; existing values stay. RedMed never writes back to Health.")
                 .font(.system(size: 12, weight: .medium))
                 .foregroundColor(.redmedMuted)
                 .padding(.horizontal, Metrics.rowHPad)
-                .padding(.bottom, 12)
+                .padding(.vertical, 12)
 
             if let healthImportMessage, !healthImportMessage.isEmpty {
+                Divider().padding(.leading, Metrics.rowHPad)
                 Text(healthImportMessage)
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(.redmedMuted)
                     .padding(.horizontal, Metrics.rowHPad)
-                    .padding(.bottom, 12)
+                    .padding(.vertical, 12)
             }
         }
         .redmedBox()

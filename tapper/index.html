@@ -417,7 +417,7 @@ function redmedAssetURL(file) {
   .rm-empty {
     display: none;
     margin: 8px var(--page-pad-x) 0;
-    padding: 16px 16px 14px;
+    padding: 18px 16px 16px;
     background: var(--surface);
     border-radius: var(--box);
     box-shadow: var(--shadow);
@@ -427,11 +427,25 @@ function redmedAssetURL(file) {
   html.is-unlinked .list-grid { display: none !important; }
   /* Owner embed uses the native setup funnel — keep the shell quiet. */
   html.app-embed.is-unlinked .rm-empty { display: none; }
+  html.is-unlinked .rm-status { color: var(--accent); }
+  .rm-empty-pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(225,29,72,0.1);
+    border-radius: var(--chip);
+    padding: 4px 9px;
+    margin: 0 0 10px;
+  }
   .rm-empty h2 {
     margin: 0 0 8px;
-    font-size: 17px;
+    font-size: 18px;
     font-weight: 700;
-    letter-spacing: -0.3px;
+    letter-spacing: -0.4px;
+    line-height: 1.2;
     color: var(--dark);
   }
   .rm-empty p {
@@ -442,6 +456,13 @@ function redmedAssetURL(file) {
     line-height: 1.4;
   }
   .rm-empty p:last-child { margin-bottom: 0; }
+  .rm-empty-foot {
+    margin: 12px 0 0 !important;
+    padding-top: 12px;
+    border-top: 1px solid var(--divider);
+    font-weight: 600 !important;
+    color: var(--dark) !important;
+  }
   .row {
     display: flex;
     justify-content: space-between;
@@ -1316,9 +1337,10 @@ function redmedAssetURL(file) {
       </div>
 
       <div class="rm-empty" id="rmEmpty" hidden>
-        <h2>No patient on this page</h2>
-        <p>A written MED ID band opens the person's name, blood type, allergies, and contacts here. This open has no card payload.</p>
-        <p>911 and Aid still work on this phone.</p>
+        <div class="rm-empty-pill">No patient</div>
+        <h2>No medical ID on this page</h2>
+        <p>A written MED ID band opens the person's name, blood type, allergies, and contacts here.</p>
+        <p class="rm-empty-foot">911 and Aid still work on this phone.</p>
       </div>
 
       <div class="card you-card">
@@ -2054,12 +2076,8 @@ function redmedAssetURL(file) {
     nameEl.textContent = noPatient ? 'RedMed' : displayName;
     // Empty-state status note only — hide once a named / band card paints, or on the unlinked shell.
     if (noteEl) {
-      if (noPatient) {
-        noteEl.textContent = 'No medical ID on this page';
-        noteEl.classList.remove('is-filled');
-      } else {
-        noteEl.classList.toggle('is-filled', !!(rawName || fromBand));
-      }
+      // Unlinked shell: the vacant card carries the message — hide the status note.
+      noteEl.classList.toggle('is-filled', noPatient || !!(rawName || fromBand));
     }
     // Real band tap: decode ⇒ fromBand. In-app embed: Swift sets __REDMED_BRACELET_LINKED
     // so Linked still requires a verified write + YOU card (name, birth, blood).

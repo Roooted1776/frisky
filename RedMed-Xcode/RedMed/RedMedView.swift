@@ -157,6 +157,7 @@ struct RedMedView: View {
     private var ownerNextStepBanner: some View {
         if !profile.isEmergencyProfileConfigured {
             OwnerNextStepBanner(
+                icon: "square.and.pencil",
                 title: "Finish your medical ID",
                 detail: "Add birth date and blood type so a band tap can show Linked.",
                 actionTitle: "Edit",
@@ -164,6 +165,7 @@ struct RedMedView: View {
             )
         } else if !profile.showsBraceletAsLinked {
             OwnerNextStepBanner(
+                icon: "wave.3.right",
                 title: "Write your band",
                 detail: "A passerby tap opens this card. NFC tab writes the chip.",
                 actionTitle: "NFC",
@@ -306,57 +308,16 @@ private struct OwnerSetupFunnel: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("GET STARTED")
-                        .font(.system(size: 12, weight: .semibold))
-                        .kerning(0.6)
-                        .foregroundColor(.redmedMuted)
-                    Text("Three steps so a passerby tap can open your card.")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(.redmedDark)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                VStack(alignment: .leading, spacing: 0) {
-                    stepRow(number: "1", title: "Fill your medical ID", detail: "Name, birth date, blood type. Allergies and contacts help EMS.")
-                    Divider().overlay(Color.redmedDivider)
-                    stepRow(number: "2", title: "Save", detail: "Face ID writes it to this iPhone's Keychain. Nothing leaves the phone.")
-                    Divider().overlay(Color.redmedDivider)
-                    stepRow(number: "3", title: "Write the band", detail: "NFC tab packs the card onto the chip. Helpers tap — no app, no login.")
-                }
-                .redmedBox()
-
+                header
+                ghostYouCard
+                stepsCard
                 PrimaryButton(title: "Fill medical ID", action: onFill)
-
                 if HealthKitProfileImport.isAvailable {
-                    Button {
-                        onHealthImport()
-                    } label: {
-                        HStack(spacing: 8) {
-                            if healthBusy {
-                                ProgressView().tint(.redmedAccent)
-                            }
-                            Text(healthBusy ? "Reading Apple Health…" : "Fill from Apple Health")
-                                .font(.system(size: 15, weight: .semibold))
-                        }
-                        .foregroundColor(.redmedAccent)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color.redmedBg)
-                        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                                .strokeBorder(Color.redmedAccent.opacity(0.45), lineWidth: 1.5)
-                        )
-                    }
-                    .disabled(healthBusy)
-                    .buttonStyle(.plain)
-
+                    healthButton
                     Text("Birth date and blood type only. RedMed never writes back to Health.")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.redmedMuted)
                 }
-
                 if let healthMessage, !healthMessage.isEmpty {
                     Text(healthMessage)
                         .font(.system(size: 13, weight: .medium))
@@ -365,18 +326,125 @@ private struct OwnerSetupFunnel: View {
                 }
             }
             .padding(.horizontal, RedMedChrome.pagePadX)
-            .padding(.top, 8)
+            .padding(.top, 4)
             .padding(.bottom, 28)
         }
+        .scrollIndicators(.visible)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var header: some View {
+        HStack(alignment: .center, spacing: 10) {
+            Image("BrandLogo")
+                .resizable()
+                .scaledToFill()
+                .frame(width: RedMedChrome.logoSize, height: RedMedChrome.logoSize)
+                .clipShape(Circle())
+                .shadow(color: Color.redmedAccent.opacity(0.18), radius: 10, y: 3)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("RedMed")
+                    .font(.system(size: 22, weight: .bold))
+                    .kerning(-0.5)
+                    .foregroundColor(.redmedDark)
+                Text("Not linked")
+                    .font(.system(size: 12, weight: .bold))
+                    .kerning(0.5)
+                    .textCase(.uppercase)
+                    .foregroundColor(.redmedAccent)
+            }
+            Spacer(minLength: 0)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("RedMed, not linked")
+    }
+
+    /// Same YOU-card chrome as tapper — empty slots plus the fill CTA below.
+    private var ghostYouCard: some View {
+        VStack(spacing: 0) {
+            ghostRow(label: "Name", value: "—")
+            Divider().overlay(Color.redmedDivider)
+            ghostRow(label: "Birth date", value: "—")
+            Divider().overlay(Color.redmedDivider)
+            ghostRow(label: "Blood type", value: "—")
+            Divider().overlay(Color.redmedDivider)
+            ghostRow(label: "Organ donor", value: "—")
+        }
+        .redmedBox()
+        .accessibilityHidden(true)
+    }
+
+    private func ghostRow(label: String, value: String) -> some View {
+        HStack {
+            Text(label)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.redmedMuted)
+            Spacer(minLength: 12)
+            Text(value)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(Color.redmedDark.opacity(0.4))
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 11)
+    }
+
+    private var stepsCard: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("GET STARTED")
+                .font(.system(size: 12, weight: .semibold))
+                .kerning(0.6)
+                .foregroundColor(.redmedMuted)
+                .padding(.horizontal, 14)
+                .padding(.top, 14)
+                .padding(.bottom, 8)
+            stepRow(number: "1", title: "Fill your medical ID", detail: "Name, birth date, blood type. Allergies and contacts help EMS.")
+            Divider().overlay(Color.redmedDivider).padding(.leading, 54)
+            stepRow(number: "2", title: "Save", detail: "Face ID writes it to this iPhone's Keychain. Nothing leaves the phone.")
+            Divider().overlay(Color.redmedDivider).padding(.leading, 54)
+            stepRow(number: "3", title: "Write the band", detail: "NFC tab packs the card onto the chip. Helpers tap. No app, no login.")
+        }
+        .redmedBox()
+    }
+
+    private var healthButton: some View {
+        Button {
+            onHealthImport()
+        } label: {
+            HStack(spacing: 8) {
+                if healthBusy {
+                    ProgressView().tint(.redmedAccent)
+                } else {
+                    Image(systemName: "heart.text.square")
+                        .font(.system(size: 17, weight: .semibold))
+                }
+                Text(healthBusy ? "Reading Apple Health…" : "Fill from Apple Health")
+                    .font(.system(size: 16, weight: .bold))
+            }
+            .foregroundColor(.redmedAccent)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(Color.redmedBg)
+            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
+                    .strokeBorder(Color.redmedAccent.opacity(0.45), lineWidth: 1.5)
+            )
+        }
+        .disabled(healthBusy)
+        .buttonStyle(RedMedPressStyle(scale: 0.97, haptic: nil))
+        .opacity(healthBusy ? 0.72 : 1)
     }
 
     private func stepRow(number: String, title: String, detail: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            Text(number)
-                .font(.system(size: 15, weight: .bold))
-                .foregroundColor(.redmedAccent)
-                .frame(width: 22, alignment: .center)
+            ZStack {
+                Circle()
+                    .fill(Color.redmedAccent.opacity(0.12))
+                Text(number)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(.redmedAccent)
+            }
+            .frame(width: 28, height: 28)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.system(size: 15, weight: .semibold))
@@ -395,37 +463,47 @@ private struct OwnerSetupFunnel: View {
 
 /// Compact next-step chip above the YOU card. Sibling of the WKWebView — not an overlay.
 private struct OwnerNextStepBanner: View {
+    let icon: String
     let title: String
     let detail: String
     let actionTitle: String
     let action: () -> Void
 
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.redmedDark)
-                Text(detail)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.redmedMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Spacer(minLength: 8)
-            Button(action: action) {
-                Text(actionTitle)
-                    .font(.system(size: 14, weight: .bold))
+        Button(action: action) {
+            HStack(alignment: .center, spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.redmedAccent)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
+                    .frame(width: 28, alignment: .center)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(.redmedDark)
+                    Text(detail)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.redmedMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 8)
+                HStack(spacing: 2) {
+                    Text(actionTitle)
+                        .font(.system(size: 14, weight: .bold))
+                    Text("›")
+                        .font(.system(size: 16, weight: .bold))
+                }
+                .foregroundColor(.redmedAccent)
             }
-            .buttonStyle(RedMedPressStyle(scale: 0.96))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .buttonStyle(RedMedPressStyle(scale: 0.98))
         .redmedBox()
         .padding(.horizontal, RedMedChrome.pagePadX)
         .padding(.bottom, 8)
+        .accessibilityHint("Opens \(actionTitle)")
     }
 }
