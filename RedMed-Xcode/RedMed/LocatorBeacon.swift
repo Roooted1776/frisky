@@ -223,6 +223,23 @@ private final class SirenPlayerBox: @unchecked Sendable {
     var player: AVAudioPlayer?
 }
 
+/// Written on MainActor, read from `AudioSessionGate.queue` — lock-guarded so a
+/// stale-epoch check on that queue always sees the latest arm/end, not a torn
+/// or cached read (matches `TapCardPresentation`'s cross-thread bool pattern).
 private final class EpochBox: @unchecked Sendable {
-    var value: UInt64 = 0
+    private let lock = NSLock()
+    private var _value: UInt64 = 0
+
+    var value: UInt64 {
+        get {
+            lock.lock()
+            defer { lock.unlock() }
+            return _value
+        }
+        set {
+            lock.lock()
+            _value = newValue
+            lock.unlock()
+        }
+    }
 }
