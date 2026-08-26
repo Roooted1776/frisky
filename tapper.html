@@ -414,6 +414,34 @@ function redmedAssetURL(file) {
     z-index: 1;
     pointer-events: auto;
   }
+  .rm-empty {
+    display: none;
+    margin: 8px var(--page-pad-x) 0;
+    padding: 16px 16px 14px;
+    background: var(--surface);
+    border-radius: var(--box);
+    box-shadow: var(--shadow);
+  }
+  html.is-unlinked .rm-empty { display: block; }
+  html.is-unlinked .you-card,
+  html.is-unlinked .list-grid { display: none !important; }
+  /* Owner embed uses the native setup funnel — keep the shell quiet. */
+  html.app-embed.is-unlinked .rm-empty { display: none; }
+  .rm-empty h2 {
+    margin: 0 0 8px;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--dark);
+  }
+  .rm-empty p {
+    margin: 0 0 8px;
+    font-size: var(--fs-row);
+    font-weight: 500;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .rm-empty p:last-child { margin-bottom: 0; }
   .row {
     display: flex;
     justify-content: space-between;
@@ -1287,6 +1315,12 @@ function redmedAssetURL(file) {
         </div>
       </div>
 
+      <div class="rm-empty" id="rmEmpty" hidden>
+        <h2>No patient on this page</h2>
+        <p>A written MED ID band opens the person's name, blood type, allergies, and contacts here. This open has no card payload.</p>
+        <p>911 and Aid still work on this phone.</p>
+      </div>
+
       <div class="card you-card">
         <div class="row" id="rowNameRow"><span class="k">Name</span><span class="v empty" id="rowName">—</span></div>
         <div class="row"><span class="k">Birth date</span><span class="v empty" id="rowDob">—</span></div>
@@ -2006,9 +2040,27 @@ function redmedAssetURL(file) {
     var nameEl = document.getElementById('name');
     var statusEl = document.getElementById('statusLine');
     var noteEl = document.querySelector('.rm-note');
-    nameEl.textContent = displayName;
-    // Empty-state status note only — hide once a named / band card paints.
-    if (noteEl) noteEl.classList.toggle('is-filled', !!(rawName || fromBand));
+    var emptyEl = document.getElementById('rmEmpty');
+    var hasIdentity = !!(rawName || rawDob || rawBlood);
+    // Bare /tapper/ with no #d= — not a blank patient chart. Owner embed keeps the YOU card
+    // (native funnel replaces it). Preview/Scan of an empty pack still shows the YOU card.
+    var noPatient = !fromBand && !hasIdentity && !isAppEmbed() && !isAppPreview();
+    try {
+      document.documentElement.classList.toggle('is-unlinked', noPatient);
+      if (emptyEl) {
+        emptyEl.hidden = !noPatient;
+      }
+    } catch (eUn) {}
+    nameEl.textContent = noPatient ? 'RedMed' : displayName;
+    // Empty-state status note only — hide once a named / band card paints, or on the unlinked shell.
+    if (noteEl) {
+      if (noPatient) {
+        noteEl.textContent = 'No medical ID on this page';
+        noteEl.classList.remove('is-filled');
+      } else {
+        noteEl.classList.toggle('is-filled', !!(rawName || fromBand));
+      }
+    }
     // Real band tap: decode ⇒ fromBand. In-app embed: Swift sets __REDMED_BRACELET_LINKED
     // so Linked still requires a verified write + YOU card (name, birth, blood).
     // Owner embed: status is a link to the native NFC tab (redmed://nfc).
@@ -2017,7 +2069,7 @@ function redmedAssetURL(file) {
       var linked = isAppPreview()
         ? (!!window.__REDMED_BRACELET_LINKED && youComplete)
         : (!!fromBand && youComplete);
-      statusEl.textContent = linked ? 'Linked bracelet' : 'Not linked';
+      statusEl.textContent = noPatient ? 'No patient' : (linked ? 'Linked bracelet' : 'Not linked');
       statusEl.classList.toggle('linked', linked);
       if (isAppEmbed()) {
         statusEl.classList.add('rm-status-link');

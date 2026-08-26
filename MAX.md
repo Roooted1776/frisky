@@ -124,6 +124,9 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
 - Emergency contacts: phone + relation layout through persistence, card, mirrors.
 - Face ID on first Save / edit / NFC write; AppLock design overlay; BiometricAuth Simulator Authenticate prompt.
 - Keychain profile; no demo patient filler.
+- Empty-install funnel on owner RedMed tab (Fill ID → Save → Write band) instead
+  of an empty YOU card. Optional Apple Health read of birth date + blood type
+  into Edit draft (never writes Health, never passerby).
 - Edit list fields no longer type into Name (#287). RedMed tab load + post–Face
   ID crash fixes (#291, #296). NFC setup card lowered and text bumped (#295).
 
@@ -137,6 +140,7 @@ Compressed from merged PRs / `main` history. Agents should treat these as **done
   YOU-card identity (name, birth, blood) is filled.
 - Compact NTAG213 `#d=` codec; AES-GCM seal; legacy zlib + pre-AES decode restored.
 - `tapper.html` single passerby shell; `card.html` / `get.html` / `/get/` legacy redirects preserving `#d=`.
+- Bare `/tapper/` without `#d=` shows **No patient** (not a blank medical chart); 911 / Aid remain; SOS does not auto-arm.
 - Offline service worker; HTTP cache bypass; stale-shell fixes; Pages `/tapper/` deploy path.
 - Simulate scan from current profile; fail closed when pack/decode breaks.
 - Band engraving copy + hardware sourcing notes.

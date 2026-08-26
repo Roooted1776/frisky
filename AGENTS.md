@@ -129,7 +129,10 @@ The app has no backend, database, or web service.
   never on `.inactive` (a Face ID / system auth sheet also puts the scene
   `.inactive` and must not trip a relock, same as `VaultHistoryView`). Do
   **not** play `LockOpen.mp4` or `FaceIDFrame.mp4`. Clip never gates Face ID.
-  Fresh install unlocks into empty tabs after auth. Do **not** re-prompt on `.inactive`.
+  Fresh install unlocks into empty tabs after auth. Owner RedMed tab then
+  shows a native **setup funnel** (Fill medical ID → Save → Write the band)
+  instead of an empty YOU card. Not an extra page before Face ID. Not on
+  passerby tapper. Do **not** re-prompt on `.inactive`.
   Owner pages + passerby tapper: cream fill only (no page BrandLogo). **No hanging
   decorative brand marks** anywhere (no lock watermark, no Aid pane wordmarks, no
   privacy-cover logo) — page BrandWordmark headers on NFC / topic sheets only;
@@ -144,6 +147,11 @@ The app has no backend, database, or web service.
   “Profile hidden”.
 - `HIPAAOfflineVault`: complete file protection + backup exclusion; history
   events are timestamps/kind only (no field values).
+- **Apple Health import (optional, owner only):** `HealthKitProfileImport`
+  reads birth date and blood type into Edit draft. Read-only. Never writes
+  to Health. Never runs on passerby / scanner. Persist still requires Save
+  (Face ID on first fill). Do not add Health write, clinical records, or
+  background delivery.
 
 **Cold launch:** Do **not** create `CLLocationManager`, start GPS / MapKit /
 trauma JSON, or show a Location banner at `@main`. First launch opens a cream
@@ -215,8 +223,9 @@ bundled copy on every SW / decrypt deploy. Register the SW ASAP in `tapper.html`
 (not on `window.load`). Legacy zlib inflate is bounded (64 KiB) in Swift +
 streaming bound in `tapper.html`. Passerby HTML **arms local SOS only on a real
 bracelet NFC open with `#d=`** (hardware-local on that phone; no server). Bare
-`/tapper/` and in-app preview do not auto-arm. Explicit Stop / SOS toggle and
-DeviceMotion crash share that on-device alarm. iOS may need a gesture to unmute
+`/tapper/` and in-app preview do not auto-arm. Bare `/tapper/` without `#d=`
+shows a **No patient** empty state (not a blank YOU chart); 911 / Aid remain.
+Explicit Stop / SOS toggle and DeviceMotion crash share that on-device alarm. iOS may need a gesture to unmute
 AudioContext / grant motion. Native still owns system volume / brightness boost.
 
 **Repo hygiene:** `main` is the only long-lived branch. After merges, delete

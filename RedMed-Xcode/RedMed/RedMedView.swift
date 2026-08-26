@@ -5,6 +5,9 @@ import SwiftUI
 /// Scanners keep Back top chrome. Help lives on Edit / 911 / Aid / NFC.
 /// First-responder Preview lives on the NFC tab under Scan — not here.
 /// Native 911 / Aid / NFC tabs stay separate (HTML tab bar hidden in app-embed).
+///
+/// Fresh install (owner, empty profile): native setup funnel instead of an empty
+/// YOU card — Fill ID → Save → Write band. Passerby tapper is unchanged.
 struct RedMedView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
@@ -23,6 +26,10 @@ struct RedMedView: View {
     @State private var packGeneration = 0
     /// True after the first pack attempt finishes — avoids a mid-screen Edit under chrome while packing.
     @State private var packFinished = false
+    @State private var healthImportBusy = false
+    @State private var healthImportMessage: String?
+    /// HealthKit characteristics to seed Edit. Not written to ProfileData until Save.
+    @State private var healthSeed: HealthKitProfileImport.Draft?
 
     /// Durable profile fields only — ignores `holdsEditingSession` so Edit open/close
     /// does not rebuild the shell.
@@ -58,6 +65,11 @@ struct RedMedView: View {
         cachedEmbedJSON ?? profile.unlockEmbedProfileJSON
     }
 
+    /// Owner empty profile — native steps instead of a blank YOU card.
+    private var showsOwnerSetupFunnel: Bool {
+        !isScannerSession && !profile.hasSensitiveProfileData
+    }
+
     var body: some View {
         // Chrome is a sibling of the WKWebView — never an overlay. Overlaying
         // Edit on UIKit WebView lets the web view steal taps (Edit looks dead).
@@ -79,15 +91,27 @@ struct RedMedView: View {
             .redmedTopChromeFill()
 
             Group {
-                if let shellPayload {
-                    PasserbyHTMLShell(
-                        encodedPayload: shellPayload,
-                        braceletLinked: profile.showsBraceletAsLinked,
-                        embedProfileJSON: shellEmbedJSON,
-                        pageVisible: isVisible
+                if showsOwnerSetupFunnel {
+                    OwnerSetupFunnel(
+                        healthBusy: healthImportBusy,
+                        healthMessage: healthImportMessage,
+                        onFill: { requestEdit() },
+                        onHealthImport: { Task { await importFromHealthThenEdit() } }
                     )
-                    // Opacity tab swaps must not animate WKWebView (jank + flash).
-                    .transaction { $0.animation = nil }
+                } else if let shellPayload {
+                    VStack(spacing: 0) {
+                        if !isScannerSession {
+                            ownerNextStepBanner
+                        }
+                        PasserbyHTMLShell(
+                            encodedPayload: shellPayload,
+                            braceletLinked: profile.showsBraceletAsLinked,
+                            embedProfileJSON: shellEmbedJSON,
+                            pageVisible: isVisible
+                        )
+                        // Opacity tab swaps must not animate WKWebView (jank + flash).
+                        .transaction { $0.animation = nil }
+                    }
                 } else if packFinished {
                     VStack(spacing: 12) {
                         Text("Couldn't pack tapper.html#d= from RedMed.")
@@ -117,7 +141,7 @@ struct RedMedView: View {
             get: { showEdit && !isScannerSession },
             set: { showEdit = $0 && !isScannerSession }
         )) {
-            EditProfileView(requireAuthOnSave: requireAuthOnSave)
+            EditProfileView(requireAuthOnSave: requireAuthOnSave, healthSeed: healthSeed)
                 .environmentObject(profile)
                 .presentationBackground(Color.redmedBg)
         }
@@ -125,6 +149,28 @@ struct RedMedView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text("Face ID or passcode is required to edit your RedMed profile.")
+        }
+    }
+
+    /// Sibling above the YOU card — never an overlay on the tap card.
+    @ViewBuilder
+    private var ownerNextStepBanner: some View {
+        if !profile.isEmergencyProfileConfigured {
+            OwnerNextStepBanner(
+                title: "Finish your medical ID",
+                detail: "Add birth date and blood type so a band tap can show Linked.",
+                actionTitle: "Edit",
+                action: { requestEdit() }
+            )
+        } else if !profile.showsBraceletAsLinked {
+            OwnerNextStepBanner(
+                title: "Write your band",
+                detail: "A passerby tap opens this card. NFC tab writes the chip.",
+                actionTitle: "NFC",
+                action: {
+                    NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
+                }
+            )
         }
     }
 
@@ -224,5 +270,162 @@ struct RedMedView: View {
                 VaultHistoryStore.shared.record(.unlockFailed, detail: "edit")
             }
         }
+    }
+
+    /// Optional Health fill on the empty funnel, then Edit so Save still Face ID gates persist.
+    @MainActor
+    private func importFromHealthThenEdit() async {
+        guard !isScannerSession, !healthImportBusy else { return }
+        healthImportBusy = true
+        healthImportMessage = nil
+        defer { healthImportBusy = false }
+        do {
+            let draft = try await HealthKitProfileImport.readCharacteristics()
+            healthSeed = draft
+            healthImportMessage = draft.filledCount == 2
+                ? "Birth date and blood type ready. Add your name, then Save."
+                : "Copied from Apple Health. Add your name, then Save."
+            requireAuthOnSave = true
+            showEdit = true
+        } catch {
+            healthImportMessage = error.localizedDescription
+        }
+    }
+}
+
+// MARK: - First-fill funnel (owner empty profile)
+
+/// Native setup on the owner RedMed tab. Replaces the empty YOU card — not an overlay
+/// on a live tap card. Scanners never see this.
+private struct OwnerSetupFunnel: View {
+    var healthBusy: Bool
+    var healthMessage: String?
+    var onFill: () -> Void
+    var onHealthImport: () -> Void
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("GET STARTED")
+                        .font(.system(size: 12, weight: .semibold))
+                        .kerning(0.6)
+                        .foregroundColor(.redmedMuted)
+                    Text("Three steps so a passerby tap can open your card.")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(.redmedDark)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                VStack(alignment: .leading, spacing: 0) {
+                    stepRow(number: "1", title: "Fill your medical ID", detail: "Name, birth date, blood type. Allergies and contacts help EMS.")
+                    Divider().overlay(Color.redmedDivider)
+                    stepRow(number: "2", title: "Save", detail: "Face ID writes it to this iPhone's Keychain. Nothing leaves the phone.")
+                    Divider().overlay(Color.redmedDivider)
+                    stepRow(number: "3", title: "Write the band", detail: "NFC tab packs the card onto the chip. Helpers tap — no app, no login.")
+                }
+                .redmedBox()
+
+                PrimaryButton(title: "Fill medical ID", action: onFill)
+
+                if HealthKitProfileImport.isAvailable {
+                    Button {
+                        onHealthImport()
+                    } label: {
+                        HStack(spacing: 8) {
+                            if healthBusy {
+                                ProgressView().tint(.redmedAccent)
+                            }
+                            Text(healthBusy ? "Reading Apple Health…" : "Fill from Apple Health")
+                                .font(.system(size: 15, weight: .semibold))
+                        }
+                        .foregroundColor(.redmedAccent)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.redmedBg)
+                        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
+                                .strokeBorder(Color.redmedAccent.opacity(0.45), lineWidth: 1.5)
+                        )
+                    }
+                    .disabled(healthBusy)
+                    .buttonStyle(.plain)
+
+                    Text("Birth date and blood type only. RedMed never writes back to Health.")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.redmedMuted)
+                }
+
+                if let healthMessage, !healthMessage.isEmpty {
+                    Text(healthMessage)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.redmedMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(.horizontal, RedMedChrome.pagePadX)
+            .padding(.top, 8)
+            .padding(.bottom, 28)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func stepRow(number: String, title: String, detail: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Text(number)
+                .font(.system(size: 15, weight: .bold))
+                .foregroundColor(.redmedAccent)
+                .frame(width: 22, alignment: .center)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.redmedDark)
+                Text(detail)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.redmedMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+    }
+}
+
+/// Compact next-step chip above the YOU card. Sibling of the WKWebView — not an overlay.
+private struct OwnerNextStepBanner: View {
+    let title: String
+    let detail: String
+    let actionTitle: String
+    let action: () -> Void
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.redmedDark)
+                Text(detail)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.redmedMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 8)
+            Button(action: action) {
+                Text(actionTitle)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.redmedAccent)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+            }
+            .buttonStyle(RedMedPressStyle(scale: 0.96))
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .redmedBox()
+        .padding(.horizontal, RedMedChrome.pagePadX)
+        .padding(.bottom, 8)
     }
 }
