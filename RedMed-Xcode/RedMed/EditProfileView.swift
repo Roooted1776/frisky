@@ -605,7 +605,10 @@ private struct ContactDraftRow: View {
         self.onDelete = onDelete
         let parsed = CountryDialCode.parse(contact.wrappedValue.phone)
         self._country = State(initialValue: parsed.country)
-        self._localNumber = State(initialValue: parsed.localNumber)
+        let initialDisplay = parsed.country.dialCode == "+1"
+            ? CountryDialCode.formattedNANP(digits: parsed.localNumber)
+            : parsed.localNumber
+        self._localNumber = State(initialValue: initialDisplay)
     }
 
     var body: some View {
@@ -690,8 +693,14 @@ private struct ContactDraftRow: View {
     }
 
     private func syncPhone(number: String) {
-        let trimmed = number.trimmingCharacters(in: .whitespaces)
-        contact.phone = trimmed.isEmpty ? "" : "\(country.dialCode) \(trimmed)"
+        // +1 (US/Canada, NANP): reformat live to (XXX) XXX-XXXX with the area
+        // code grouped — other countries keep the raw digits as typed since
+        // NANP grouping doesn't apply to their numbering plans.
+        let display = country.dialCode == "+1"
+            ? CountryDialCode.formattedNANP(digits: number)
+            : number.trimmingCharacters(in: .whitespaces)
+        if display != localNumber { localNumber = display }
+        contact.phone = display.isEmpty ? "" : "\(country.dialCode) \(display)"
     }
 }
 
