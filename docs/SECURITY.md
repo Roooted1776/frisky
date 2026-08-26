@@ -17,6 +17,7 @@ RedMed is a local-only iOS medical ID + emergency assist app. There is no RedMed
 | Passerby `#d=` payload | Any phone that taps the band | Safe DOM render (`textContent`), length caps, phone sanitization, CSP + security headers on Pages. **No Face ID / biometrics / login / passcode** on `tapper.html` — tap-to-view is ungated |
 | AES-GCM on the band | Packing / obfuscation only | Public client key by design — EMS must decrypt with no account. Not confidentiality against a deliberate tap |
 | GPS | On-device display only | When-In-Use; never uploaded to RedMed |
+| Apple Health characteristics | Owner opt-in read of birth date + blood type | HealthKit read-only; never written back; never uploaded; never on passerby tapper |
 
 ## Reporting a vulnerability
 

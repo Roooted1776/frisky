@@ -28,6 +28,9 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | Snapshot / pasteboard | Privacy cover + secure pasteboard clear on background |
 | Live github.io | `/tapper/`, assets, SW return 200 (interim host) |
 | First-launch consent | After Face ID only (`ConsentGateView` v4.1); never before lock, never on tapper |
+| Empty-install funnel | Owner RedMed tab: Fill ID → Save → Write band (native, not an empty YOU card) |
+| Bare `/tapper/` | No `#d=` → “No patient” empty state; 911 / Aid remain; SOS does not auto-arm |
+| Apple Health import | Owner Edit / funnel only: birth date + blood type, read-only; not a ship-stopper if HealthKit signing is parked |
 | Policies | Help.html v4.1 — crash-alarm disclosure, NJ venue, arbitration opt-out, clickwrap |
 | Open PRs | Must be none before ship; squash only into `main` |
 

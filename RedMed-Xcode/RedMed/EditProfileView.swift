@@ -8,6 +8,8 @@ struct EditProfileView: View {
 
     /// True when Edit opened without Face ID (first fill). Save then requires biometrics.
     var requireAuthOnSave: Bool = false
+    /// Optional Apple Health seed (birth date / blood type). Applied to empty draft fields only.
+    var healthSeed: HealthKitProfileImport.Draft? = nil
 
     @State private var youFullName = ""
     @State private var birthDate = ""
@@ -26,6 +28,8 @@ struct EditProfileView: View {
     /// No FocusState — sheet-wide focus tracking hung Edit between sections.
     @State private var suggestionLineID: UUID?
     @State private var suggestionMatches: [String] = []
+    @State private var healthImportBusy = false
+    @State private var healthImportMessage: String?
 
     private static let bloodTypeChoices = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
 
@@ -114,6 +118,10 @@ struct EditProfileView: View {
                         .tint(.redmedAccent)
                         .padding(.horizontal, Metrics.rowHPad)
                         .padding(.vertical, Metrics.rowVPad)
+                    }
+
+                    if HealthKitProfileImport.isAvailable {
+                        healthImportCard
                     }
 
                     editSectionLabel("Allergies")
@@ -463,6 +471,90 @@ struct EditProfileView: View {
         medications = profile.medications.map { DraftLine(text: $0) }
         conditions = profile.conditions.map { DraftLine(text: $0) }
         contacts = profile.contacts
+        applyHealthSeed()
+    }
+
+    private func applyHealthSeed() {
+        guard let seed = healthSeed else { return }
+        if birthDate.isEmpty, let dob = seed.birthDate { birthDate = dob }
+        if bloodType.isEmpty, let blood = seed.bloodType { bloodType = blood }
+    }
+
+    @ViewBuilder
+    private var healthImportCard: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Button {
+                Task { await importFromHealth() }
+            } label: {
+                HStack(spacing: 8) {
+                    if healthImportBusy {
+                        ProgressView().tint(.redmedAccent)
+                    } else {
+                        Image(systemName: "heart.text.square")
+                            .font(.system(size: Metrics.icon, weight: .semibold))
+                    }
+                    Text(healthImportBusy ? "Reading Apple Health…" : "Fill from Apple Health")
+                        .font(.system(size: Metrics.font, weight: .semibold))
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.redmedMuted.opacity(0.55))
+                        .opacity(healthImportBusy ? 0 : 1)
+                }
+                .foregroundColor(.redmedAccent)
+                .padding(.horizontal, Metrics.rowHPad)
+                .padding(.vertical, Metrics.rowVPad)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(healthImportBusy)
+
+            Divider().padding(.leading, Metrics.rowHPad)
+
+            Text("Birth date and blood type only. Empty fields are filled; existing values stay. RedMed never writes back to Health.")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.redmedMuted)
+                .padding(.horizontal, Metrics.rowHPad)
+                .padding(.vertical, 12)
+
+            if let healthImportMessage, !healthImportMessage.isEmpty {
+                Divider().padding(.leading, Metrics.rowHPad)
+                Text(healthImportMessage)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.redmedMuted)
+                    .padding(.horizontal, Metrics.rowHPad)
+                    .padding(.vertical, 12)
+            }
+        }
+        .redmedBox()
+        .padding(.top, 12)
+    }
+
+    @MainActor
+    private func importFromHealth() async {
+        guard !isScannerSession, !healthImportBusy else { return }
+        healthImportBusy = true
+        healthImportMessage = nil
+        defer { healthImportBusy = false }
+        do {
+            let draft = try await HealthKitProfileImport.readCharacteristics()
+            var filled: [String] = []
+            if birthDate.isEmpty, let dob = draft.birthDate {
+                birthDate = dob
+                filled.append("birth date")
+            }
+            if bloodType.isEmpty, let blood = draft.bloodType {
+                bloodType = blood
+                filled.append("blood type")
+            }
+            if filled.isEmpty {
+                healthImportMessage = "Those fields are already filled."
+            } else {
+                healthImportMessage = "Filled \(filled.joined(separator: " and ")). Save to keep them."
+            }
+        } catch {
+            healthImportMessage = error.localizedDescription
+        }
     }
 
     /// Custom `UIViewRepresentable` text fields never resign first responder

@@ -58,6 +58,8 @@
 		AABB00000000000000000054 /* pheart.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000054 /* pheart.png */; };
 		AABB00000000000000000055 /* ConsentGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000055 /* ConsentGateView.swift */; };
 		AABB00000000000000000056 /* CountryDialCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000056 /* CountryDialCode.swift */; };
+		AABB00000000000000000057 /* HealthKitProfileImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000057 /* HealthKitProfileImport.swift */; };
+		AABB00000000000000000058 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000058 /* HealthKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -115,6 +117,8 @@
 		AAAA00000000000000000054 /* pheart.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = pheart.png; sourceTree = "<group>"; };
 		AAAA00000000000000000055 /* ConsentGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsentGateView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000056 /* CountryDialCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryDialCode.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000057 /* HealthKitProfileImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitProfileImport.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000058 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -122,6 +126,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AABB00000000000000000058 /* HealthKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -150,6 +155,7 @@
 			children = (
 				AAAA00000000000000000005 /* RedMedView.swift */,
 				AAAA00000000000000000006 /* EditProfileView.swift */,
+				AAAA00000000000000000057 /* HealthKitProfileImport.swift */,
 				AAAA00000000000000000004 /* ProfileData.swift */,
 				AAAA00000000000000000011 /* MedicationData.swift */,
 			);
@@ -261,6 +267,7 @@
 				AAAA0000000000000000000C /* Assets.xcassets */,
 				AAAA0000000000000000000B /* Info.plist */,
 				AAAA0000000000000000000F /* RedMed.entitlements */,
+				AAAA00000000000000000058 /* HealthKit.framework */,
 			);
 			name = Support;
 			sourceTree = "<group>";
@@ -408,6 +415,7 @@
 				AABB00000000000000000033 /* OwnerAppLock.swift in Sources */,
 				AABB00000000000000000055 /* ConsentGateView.swift in Sources */,
 				AABB00000000000000000056 /* CountryDialCode.swift in Sources */,
+				AABB00000000000000000057 /* HealthKitProfileImport.swift in Sources */,
 				AABB00000000000000000034 /* SecurePasteboard.swift in Sources */,
 				AABB00000000000000000020 /* EmergencyNumber.swift in Sources */,
 				AABB0000000000000000001C /* AppConfig.swift in Sources */,
