@@ -75,7 +75,11 @@ struct OwnerAppLock<Content: View>: View {
         .task(id: authGeneration) {
             guard gate == .locked else { return }
             let generation = authGeneration
-            try? await Task.sleep(nanoseconds: 15_000_000_000)
+            // Was 15s — that read as a hard hang (blank cream, nothing to tap)
+            // on a cold launch where the system sheet never presents. 8s still
+            // gives a real Face ID prompt (and a slower human) room to resolve
+            // normally without cutting it off mid-interaction.
+            try? await Task.sleep(nanoseconds: 8_000_000_000)
             guard gate == .locked, generation == authGeneration else { return }
             if isAuthenticating {
                 // Hung Face ID sheet — kill it so Proceed can start a new one.
