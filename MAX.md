@@ -1,17 +1,3 @@
-# Max — personal profile (agent memory)
-
-**Load this for every agent run on this repo.** Product/engineering invariants stay in `AGENTS.md`; this file is who Max is, how to work with him, and what he has already shipped.
-
-## Identity
-
-| Field | Value |
-|-------|--------|
-| Name | Max (Max Aguilar-Aasted) |
-| GitHub | [`Roooted1776`](https://github.com/Roooted1776) |
-| Repo | [`Roooted1776/frisky`](https://github.com/Roooted1776/frisky) (product name **RedMed**) |
-| Cursor | Cloud / mobile-heavy; owns agents as `m.aguilar-aasted@students.mccc.edu` |
-| Git author emails seen | `maxaguilaraasted@gmail.com`, `Roooted1776@users.noreply.github.com` |
-| Linear | Workspace `redmed1122`, team **RedMed** |
 
 ## How to talk / work with Max
 
