@@ -43,22 +43,14 @@ struct RedMedApp: App {
                     NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
                 }
             }
-            // Associated Domains (applinks:roooted1776.github.io, /tapper/* only) is
-            // currently PARKED — personal/free Apple Developer teams cannot provision
-            // that capability, so it is out of RedMed.entitlements (see
-            // docs/NFC-RESTORE.md for the same personal-team pattern; restore steps
-            // below). While parked this handler never fires and a device with RedMed
-            // installed opens its own band tap in Safari like any passerby. Once
-            // restored: a device with RedMed installed taps its own band → iOS hands
-            // the URL here instead of opening it in Safari. There is nothing to
-            // render: the owner already has full access through the app itself.
-            // Deliberately drop the tapped #d= payload rather than adopt it — this
-            // brings the app to the front only, same as tapping the icon. A
+            // Associated Domains (applinks:roooted1776.github.io, /tapper/* only —
+            // see RedMed.entitlements). A device with RedMed installed taps its own
+            // band → iOS hands the URL here instead of opening it in Safari. There is
+            // nothing to render: the owner already has full access through the app
+            // itself. Deliberately drop the tapped #d= payload rather than adopt it —
+            // this brings the app to the front only, same as tapping the icon. A
             // passerby's phone (no RedMed installed) is unaffected and still opens
             // the hosted tapper card in Safari as normal.
-            // Restore (paid Program): add com.apple.developer.associated-domains =
-            // [applinks:roooted1776.github.io] back to RedMed.entitlements, then
-            // confirm apple-app-site-association is served at the domain root.
             .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { _ in }
         }
     }
