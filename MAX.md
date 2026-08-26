@@ -54,7 +54,9 @@ See also `AGENTS.md`. High-signal recap:
    Main. No hanging mark / lock watermark. No passcode pad on that Face ID. Passerby tapper
    has no Face ID / password / login in front of the card. After cancel /
    mismatch, **Face** page with Proceed (cream, no hanging mark). No second Face ID this process after
-   success (Edit / NFC / vault skip). Erase still prompts. No background re-lock Face ID.
+   success unless the app actually backgrounds (Edit / NFC / vault always re-prompt regardless).
+   Erase still prompts. **Re-locks on true `.background`** (purge PHI + relock) so app switcher /
+   Home require Face ID again — never on `.inactive` (Face ID's own system sheet).
    Fresh install
    unlocks into empty tabs after auth. Owner pages + tapper: cream fill only —
    no page BrandLogo. **No hanging decorative brand marks** (lock watermark, Aid
