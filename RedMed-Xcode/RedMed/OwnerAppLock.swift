@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Owner app lock — Face ID / Touch ID / device passcode before PHI is published.
 /// Passerby tapper / Main stay ungated. Every time the owner opens the app
@@ -83,6 +84,7 @@ struct OwnerAppLock<Content: View>: View {
             RedMedSignpost.begin(.coldLaunchWindow)
             screenCaptured = UIScreen.main.isCaptured
             lockCycleStartedAt = Date()
+            logLock("onAppear hasKeyWindow=\(hasKeyWindow)")
             scheduleHardWatchdog()
             tryAutoUnlockIfActive()
             profile.beginUnlockPrefetch()
@@ -95,20 +97,25 @@ struct OwnerAppLock<Content: View>: View {
         .task(id: authGeneration) {
             guard gate == .locked else { return }
             let generation = authGeneration
-            // Was 15s — that read as a hard hang (blank cream, nothing to tap)
-            // on a cold launch where the system sheet never presents. 8s still
-            // gives a real Face ID prompt (and a slower human) room to resolve
-            // normally without cutting it off mid-interaction.
+            // Was 15s, then 8s — both still read as a hard hang (blank cream,
+            // nothing to tap) on a cold launch where the system sheet never
+            // presents at all. When that happens there is no in-progress
+            // Face ID / passcode sheet to interrupt (the user sees nothing,
+            // full stop), so a shorter timeout does not risk cutting off a
+            // real, slower human mid-interaction the way it would if a sheet
+            // were actually up — it only shortens the blank-cream wait for
+            // the no-sheet failure mode this watchdog exists to catch.
             //
             // Budgeted from `lockCycleStartedAt`, not from this generation's
             // own start — the fast-fail-then-retry path bumps authGeneration
             // (restarting this `.task`) partway through the cycle, and a
-            // fresh 8s here on top of the first attempt's time already spent
-            // stacked into a ~9s+ wait before the fallback screen ever
-            // appeared. Counting down from the shared start caps the whole
-            // cycle at 8s regardless of how many retries happen inside it.
+            // fresh window here on top of the first attempt's time already
+            // spent would stack into a longer wait than intended before the
+            // fallback screen ever appeared. Counting down from the shared
+            // start caps the whole cycle regardless of how many retries
+            // happen inside it.
             let elapsed = Date().timeIntervalSince(lockCycleStartedAt ?? Date())
-            let remaining = max(0, 8.0 - elapsed)
+            let remaining = max(0, 4.5 - elapsed)
             RedMedSignpost.trace("task watchdog armed: generation=\(generation) remaining=\(remaining)")
             try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
             RedMedSignpost.trace("task watchdog woke: generation=\(generation) currentGen=\(authGeneration) gate=\(gate)")
@@ -198,6 +205,16 @@ struct OwnerAppLock<Content: View>: View {
         .onReceive(NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)) { _ in
             screenCaptured = UIScreen.main.isCaptured
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIWindow.didBecomeKeyNotification)) { _ in
+            // Cold launch: `onAppear` can fire before any window is key yet,
+            // and `tryAutoUnlockIfActive` no-ops in that case rather than
+            // calling `evaluatePolicy` early (see its doc comment). This is
+            // the retry that actually starts Face ID once a window exists —
+            // usually only milliseconds behind `onAppear`, not the unbounded
+            // `.active` wait that caused the earlier version of this bug.
+            logLock("windowDidBecomeKey")
+            tryAutoUnlockIfActive()
+        }
         .onReceive(NotificationCenter.default.publisher(for: .redMedDidEraseLocalData)) { _ in
             keychainHasProfile = false
             biometryFailed = false
@@ -263,9 +280,10 @@ struct OwnerAppLock<Content: View>: View {
         lockCycleID &+= 1
         let cycleID = lockCycleID
         RedMedSignpost.trace("GCD watchdog armed: cycleID=\(cycleID)")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 8.5) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
             RedMedSignpost.trace("GCD watchdog woke: cycleID=\(cycleID) currentCycle=\(lockCycleID) gate=\(gate)")
             guard gate == .locked, cycleID == lockCycleID else { return }
+            logLock("hard watchdog fired isAuthenticating=\(isAuthenticating)")
             if isAuthenticating {
                 BiometricAuth.cancelInFlight()
                 isAuthenticating = false
@@ -274,6 +292,15 @@ struct OwnerAppLock<Content: View>: View {
             RedMedSignpost.trace("GCD watchdog forced showUnlockControl=true")
         }
     }
+
+    #if DEBUG
+    private func logLock(_ message: String) {
+        let elapsed = Date().timeIntervalSince(lockCycleStartedAt ?? Date())
+        print(String(format: "[OwnerAppLock] +%.3fs %@", elapsed, message))
+    }
+    #else
+    private func logLock(_ message: String) {}
+    #endif
 
     private func tryAutoUnlockIfActive() {
         RedMedSignpost.trace("tryAutoUnlockIfActive: gate=\(gate) didAutoPrompt=\(didAutoPromptThisLock) showUnlockControl=\(showUnlockControl) scenePhase=\(scenePhase)")
@@ -285,14 +312,32 @@ struct OwnerAppLock<Content: View>: View {
         // `.notInteractive` evaluate (system genuinely can't present yet) still
         // recovers via a bounded retry / Proceed, so it costs nothing to try early.
         guard scenePhase != .background else { return }
+        // But do not call evaluatePolicy before any window is key — on cold
+        // launch `onAppear` can fire that early, and unlike `.notInteractive`
+        // (a synchronous, fast rejection this file already retries), a call
+        // made before a key window exists has been observed to just sit —
+        // no success, no error — until the 8s/8.5s watchdogs below kill it,
+        // which reads as this app's "cream hang" on every single launch
+        // rather than only occasionally. `UIWindow.didBecomeKeyNotification`
+        // above retries this the moment a window exists, normally only
+        // milliseconds behind this earliest attempt.
+        guard hasKeyWindow else { return }
         didAutoPromptThisLock = true
         startUnlockPipeline()
+    }
+
+    private var hasKeyWindow: Bool {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .contains(where: \.isKeyWindow)
     }
 
     private func startUnlockPipeline() {
         guard gate == .locked else { return }
         didAutoPromptThisLock = true
         showUnlockControl = false
+        logLock("startUnlockPipeline")
         unlockWithFaceID()
         profile.beginUnlockPrefetch()
         // String warm only during Face ID — WK waits until after unlock. .utility
@@ -313,6 +358,7 @@ struct OwnerAppLock<Content: View>: View {
         authGeneration &+= 1
         let generation = authGeneration
         let attemptStartedAt = Date()
+        logLock("unlockWithFaceID calling BiometricAuth.authenticate generation=\(generation)")
         RedMedSignpost.begin(.faceIDEvaluate)
         BiometricAuth.authenticate(
             reason: "Unlock RedMed",
@@ -331,6 +377,7 @@ struct OwnerAppLock<Content: View>: View {
             }
             Task { @MainActor in
                 guard generation == authGeneration else { return }
+                logLock("unlockWithFaceID completion outcome=\(outcome) elapsed=\(Date().timeIntervalSince(attemptStartedAt))")
                 switch outcome {
                 case .declined:
                     isAuthenticating = false
