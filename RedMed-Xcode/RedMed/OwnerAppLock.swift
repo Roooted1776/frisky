@@ -34,6 +34,9 @@ struct OwnerAppLock<Content: View>: View {
     @State private var authGeneration = 0
     @State private var screenCaptured = false
     @State private var didAutoPromptThisLock = false
+    /// Guards the single automatic retry after a `.notInteractive` result —
+    /// see the retry block in `unlockWithFaceID()`'s completion handler.
+    @State private var notInteractiveRetried = false
     @State private var showUnlockControl = false
 
     var body: some View {
@@ -106,6 +109,7 @@ struct OwnerAppLock<Content: View>: View {
         .onChange(of: gate) { _, newGate in
             if newGate == .locked {
                 didAutoPromptThisLock = false
+                notInteractiveRetried = false
                 showUnlockControl = false
                 BiometricAuth.clearAuthenticationContext()
                 tryAutoUnlockIfActive()
@@ -148,6 +152,7 @@ struct OwnerAppLock<Content: View>: View {
                 isAuthenticating = false
                 showUnlockControl = false
                 didAutoPromptThisLock = false
+                notInteractiveRetried = false
                 if gate == .unlocked {
                     // Re-lock on background — Home / app switcher / a real
                     // backgrounding all require Face ID again on return, not
@@ -183,6 +188,7 @@ struct OwnerAppLock<Content: View>: View {
             notInteractive = false
             isAuthenticating = false
             didAutoPromptThisLock = false
+            notInteractiveRetried = false
             showUnlockControl = false
             profile.discardUnlockPrefetch()
             BiometricAuth.clearAuthenticationContext()
@@ -246,17 +252,33 @@ struct OwnerAppLock<Content: View>: View {
                     biometryFailed = false
                     faceIDUnavailableReason = nil
                     profileLoadFailed = false
-                    // System couldn't present the Face ID sheet (backgrounded,
-                    // interrupted, another modal in flight). Tell the user
-                    // so Proceed doesn't look like a dead button.
-                    notInteractive = true
                     gate = .locked
-                    didAutoPromptThisLock = false
-                    // Force Face on screen. The cold-launch auto attempt
-                    // starts with showUnlockControl already false — "leave
-                    // as-is" there means LockEntryPage (no button, no text)
-                    // stays up forever with nothing left to retry it.
-                    showUnlockControl = true
+                    if !notInteractiveRetried {
+                        // The cold-launch auto attempt fires from onAppear, which can
+                        // land a beat before the scene actually finishes activating —
+                        // Face ID reports that as .notInteractive even though the
+                        // sheet would present a moment later. Retry once on a short
+                        // fixed delay (not by waiting on a scenePhase transition,
+                        // which may have already happened and never fire again — see
+                        // the "stays up forever" note this replaced) before falling
+                        // back to the manual Proceed screen below. The 8s watchdog
+                        // in `.task(id: authGeneration)` still guarantees Proceed
+                        // shows even if this retry itself never resolves.
+                        notInteractiveRetried = true
+                        let retryGeneration = generation
+                        Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: 400_000_000)
+                            guard retryGeneration == authGeneration, gate == .locked else { return }
+                            unlockWithFaceID()
+                        }
+                    } else {
+                        // System still couldn't present the Face ID sheet on a real
+                        // retry (backgrounded, interrupted, another modal in
+                        // flight). Tell the user so Proceed doesn't look dead.
+                        notInteractive = true
+                        didAutoPromptThisLock = false
+                        showUnlockControl = true
+                    }
                 case .notVerified:
                     RedMedHaptics.error()
                     isAuthenticating = false
