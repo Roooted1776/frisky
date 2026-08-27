@@ -267,20 +267,28 @@ class ProfileData: ObservableObject {
             unlockAESTask = nil
             unlockPrefetchBox.clear()
         }
-        beginUnlockPrefetch()
+        // Face ID is done — this read is cream-to-Main. `.utility` here
+        // left the Keychain blob racing a low-priority queue after the sheet
+        // dismissed (blank cream until SecItem returned).
+        beginUnlockPrefetch(priority: .userInitiated)
     }
 
     func beginUnlockPrefetch() {
+        beginUnlockPrefetch(priority: .utility)
+    }
+
+    /// Single-flight off-main Keychain decode + JSON + AES while biometrics run.
+    /// Does not publish PHI — `commitUnlockProfile` applies only after Face ID + gate unlock.
+    /// Re-calling while in flight is a no-op (keeps the Face ID overlap intact).
+    /// `.utility` during Face ID so prefetch doesn't contend with the sheet;
+    /// `.userInitiated` after auth so Main isn't waiting on a background QoS.
+    private func beginUnlockPrefetch(priority: TaskPriority) {
         guard persists else { return }
         if unlockBlobTask != nil { return }
         let account = Self.keychainAccount
         let box = unlockPrefetchBox
         box.clear()
-        // .utility: this fires at cold launch alongside the Face ID prompt itself —
-        // userInitiated contended with the system Face ID sheet for CPU and delayed
-        // it showing. The overlap window (Face ID prompt + user glance) is long
-        // enough that utility still finishes well before unlock succeeds.
-        let blobTask = Task.detached(priority: .utility) { () -> PersistedProfile? in
+        let blobTask = Task.detached(priority: priority) { () -> PersistedProfile? in
             guard let data = KeychainStore.load(account: account),
                   let decoded = try? JSONDecoder().decode(PersistedProfile.self, from: data) else {
                 box.store(nil)
@@ -291,13 +299,13 @@ class ProfileData: ObservableObject {
         }
         unlockBlobTask = blobTask
         // JSON first (warm caches during Face ID), then AES separately so unlock never waits on seal.
-        let jsonTask = Task.detached(priority: .utility) { () -> String? in
+        let jsonTask = Task.detached(priority: priority) { () -> String? in
             guard let decoded = await blobTask.value else { return nil }
             guard !Task.isCancelled else { return nil }
             return Self.previewArtifactsJSONOnly(from: decoded)
         }
         unlockJSONTask = jsonTask
-        unlockAESTask = Task.detached(priority: .utility) { () -> String? in
+        unlockAESTask = Task.detached(priority: priority) { () -> String? in
             guard let decoded = await blobTask.value else { return nil }
             guard !Task.isCancelled else { return nil }
             return Self.previewArtifacts(from: decoded).payload

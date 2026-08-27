@@ -97,7 +97,11 @@ struct ConsentGateView<Content: View>: View {
                     PrimaryButton(title: "Agree and continue", disabled: !checked) {
                         ConsentSettings.recordAcceptance()
                         RedMedHaptics.success()
-                        withAnimation(RedMedMotion.snappy) {
+                        // No spring into Main — that animation kept cream on
+                        // screen after Face ID while the tab tree mounted.
+                        var t = Transaction()
+                        t.animation = nil
+                        withTransaction(t) {
                             hasAccepted = true
                         }
                     }
