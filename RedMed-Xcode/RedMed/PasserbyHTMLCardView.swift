@@ -185,6 +185,17 @@ private enum PasserbyShellCache {
         _ = ProfileNFCCodec.placeholderPreviewPayload
     }
 
+    /// Returns the cached shell without touching disk. Nil until `warm()` (or a
+    /// prior `shellFileURL()`/`shellHTML()` call) has populated the cache — callers
+    /// on the main thread should prefer this over `shellFileURL()`/`shellHTML()`
+    /// to avoid a synchronous file read during a SwiftUI view update.
+    static func peek() -> (url: URL, html: String)? {
+        cacheLock.lock()
+        defer { cacheLock.unlock() }
+        guard let url = cachedShellFileURL, let html = cachedShellHTML else { return nil }
+        return (url, html)
+    }
+
     static func shellFileURL() -> URL? {
         cacheLock.lock()
         defer { cacheLock.unlock() }
@@ -512,29 +523,15 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         )
     }
 
-    private static func performFullLoad(
-        into webView: WKWebView,
-        coordinator: Coordinator,
+    private static func bootedShellHTML(
+        shellHTML: String,
         encodedPayload: String,
         braceletLinked: Bool,
         appEmbed: Bool,
         embedProfileJSON: String?
-    ) {
-        let shellKind = appEmbed ? "embed" : "full"
-        let contentKey = "\(braceletLinked)|\(embedProfileJSON ?? "")"
-        let payloadKey = encodedPayload
-        let loadKey = "\(payloadKey)|\(contentKey)|\(shellKind)"
-        guard let fileURL = PasserbyShellCache.shellFileURL(),
-              var html = PasserbyShellCache.shellHTML(),
-              let lit = jsStringLiteral(encodedPayload) else { return }
-        coordinator.adoptLoadIdentity(
-            loadKey: loadKey,
-            payloadKey: payloadKey,
-            contentKey: contentKey,
-            shellKind: shellKind
-        )
-        coordinator.shellLoaded = false
-        coordinator.loadAttempts += 1
+    ) -> String? {
+        guard let lit = jsStringLiteral(encodedPayload) else { return nil }
+        var html = shellHTML
         let linkedJS = braceletLinked ? "true" : "false"
         let embedJS = appEmbed
             ? "window.__REDMED_APP_EMBED=1;try{document.documentElement.classList.add('app-embed');}catch(e0){}"
@@ -569,8 +566,70 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         } else {
             html = boot + html
         }
-        webView.loadHTMLString(html, baseURL: fileURL)
-        coordinator.scheduleLoadDeadline(for: webView)
+        return html
+    }
+
+    /// Builds the boot-wrapped shell HTML and loads it. When the shell string is
+    /// already cached in memory (the common case — `PasserbyShellCache.warm()`
+    /// runs at cold launch) this happens synchronously on this same SwiftUI
+    /// update pass. On a cache miss the disk read + decode is hopped to a
+    /// background task instead of blocking `updateUIView`'s main-thread pass —
+    /// `loadedKey` is re-checked before the deferred load fires so a newer call
+    /// (a fresh `payloadOrURL` / visibility flip) that landed in the meantime
+    /// wins instead of the stale one.
+    private static func performFullLoad(
+        into webView: WKWebView,
+        coordinator: Coordinator,
+        encodedPayload: String,
+        braceletLinked: Bool,
+        appEmbed: Bool,
+        embedProfileJSON: String?
+    ) {
+        let shellKind = appEmbed ? "embed" : "full"
+        let contentKey = "\(braceletLinked)|\(embedProfileJSON ?? "")"
+        let payloadKey = encodedPayload
+        let loadKey = "\(payloadKey)|\(contentKey)|\(shellKind)"
+        coordinator.adoptLoadIdentity(
+            loadKey: loadKey,
+            payloadKey: payloadKey,
+            contentKey: contentKey,
+            shellKind: shellKind
+        )
+        coordinator.shellLoaded = false
+        coordinator.loadAttempts += 1
+
+        if let cached = PasserbyShellCache.peek() {
+            guard let html = bootedShellHTML(
+                shellHTML: cached.html,
+                encodedPayload: encodedPayload,
+                braceletLinked: braceletLinked,
+                appEmbed: appEmbed,
+                embedProfileJSON: embedProfileJSON
+            ) else { return }
+            webView.loadHTMLString(html, baseURL: cached.url)
+            coordinator.scheduleLoadDeadline(for: webView)
+            return
+        }
+
+        Task { @MainActor [weak webView, weak coordinator] in
+            let prepared: (URL, String)? = await Task.detached(priority: .userInitiated) {
+                guard let fileURL = PasserbyShellCache.shellFileURL(),
+                      let shellHTML = PasserbyShellCache.shellHTML() else { return nil }
+                return (fileURL, shellHTML)
+            }.value
+            guard let webView, let coordinator, coordinator.loadedKey == loadKey,
+                  let (fileURL, shellHTML) = prepared,
+                  let html = bootedShellHTML(
+                      shellHTML: shellHTML,
+                      encodedPayload: encodedPayload,
+                      braceletLinked: braceletLinked,
+                      appEmbed: appEmbed,
+                      embedProfileJSON: embedProfileJSON
+                  )
+            else { return }
+            webView.loadHTMLString(html, baseURL: fileURL)
+            coordinator.scheduleLoadDeadline(for: webView)
+        }
     }
 
     private static func profilePushJS(

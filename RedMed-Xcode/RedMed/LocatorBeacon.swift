@@ -159,7 +159,7 @@ enum LocatorBeacon {
             }
         }
 
-        return pcm16MonoWAV(samples: samples, sampleRate: sampleRate)
+        return PCMAudio.wavData(samples: samples, sampleRate: sampleRate)
     }
 
     nonisolated private static func tone(frequency: Double, seconds: Double, sampleRate: Int) -> [Int16] {
@@ -183,38 +183,6 @@ enum LocatorBeacon {
             out.append(Int16(max(-1, min(1, sample)) * Double(Int16.max)))
         }
         return out
-    }
-
-    nonisolated private static func pcm16MonoWAV(samples: [Int16], sampleRate: Int) -> Data {
-        let dataSize = samples.count * 2
-        var data = Data()
-        func appendUInt32(_ v: UInt32) {
-            var le = v.littleEndian
-            withUnsafeBytes(of: &le) { data.append(contentsOf: $0) }
-        }
-        func appendUInt16(_ v: UInt16) {
-            var le = v.littleEndian
-            withUnsafeBytes(of: &le) { data.append(contentsOf: $0) }
-        }
-
-        data.append(contentsOf: [0x52, 0x49, 0x46, 0x46]) // RIFF
-        appendUInt32(UInt32(36 + dataSize))
-        data.append(contentsOf: [0x57, 0x41, 0x56, 0x45]) // WAVE
-        data.append(contentsOf: [0x66, 0x6D, 0x74, 0x20]) // fmt
-        appendUInt32(16)
-        appendUInt16(1) // PCM
-        appendUInt16(1) // mono
-        appendUInt32(UInt32(sampleRate))
-        appendUInt32(UInt32(sampleRate * 2))
-        appendUInt16(2)
-        appendUInt16(16)
-        data.append(contentsOf: [0x64, 0x61, 0x74, 0x61]) // data
-        appendUInt32(UInt32(dataSize))
-        for s in samples {
-            var le = s.littleEndian
-            withUnsafeBytes(of: &le) { data.append(contentsOf: $0) }
-        }
-        return data
     }
 }
 

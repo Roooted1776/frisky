@@ -8,7 +8,8 @@ import Foundation
 /// - `URLResourceValues.isExcludedFromBackup = true` — never copied to consumer
 ///   iCloud / iTunes / Finder backups.
 ///
-/// Profile PHI remains in Keychain (`WhenUnlockedThisDeviceOnly`). This vault holds
+/// Profile PHI remains in Keychain (`WhenPasscodeSetThisDeviceOnly` + `biometryCurrentSet`,
+/// see `KeychainStore`). This vault holds
 /// the local history / audit database and any future sandbox files that need the
 /// same hardware protection + backup exclusion.
 enum HIPAAOfflineVault {

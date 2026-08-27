@@ -1809,12 +1809,14 @@ function redmedAssetURL(file) {
       if (window.__REDMED_PROFILE) return;
       if (!secureCryptoOk()) return;
       var hash = location.hash || '';
-      if (hash.indexOf('d=') < 0) return;
+      if (!/^#d=/.test(hash)) return;
       getAesKey();
     } catch (e) {}
   })();
 
   function b64urlToBytes(raw) {
+    // Reject clearly-oversized input before paying the atob() decode cost.
+    if (raw.length > Math.ceil((MAX_PAYLOAD + 4) * 4 / 3)) return null;
     var b64 = raw.replace(/-/g, '+').replace(/_/g, '/');
     while (b64.length % 4) b64 += '=';
     var bin = atob(b64);
@@ -1985,9 +1987,8 @@ function redmedAssetURL(file) {
         return Promise.resolve(sanitizeProfile(window.__REDMED_PROFILE));
       }
       var hash = location.hash || '';
-      var idx = hash.indexOf('d=');
-      if (idx < 0) return Promise.resolve(null);
-      var raw = decodeURIComponent(hash.slice(idx + 2).split('&')[0] || '');
+      if (!/^#d=/.test(hash)) return Promise.resolve(null);
+      var raw = decodeURIComponent(hash.slice(3).split('&')[0] || '');
       var bytes = b64urlToBytes(raw);
       if (!bytes || !bytes.length) return Promise.resolve(null);
       if (bytes[0] === AES_VERSION) {
@@ -2558,8 +2559,6 @@ function redmedAssetURL(file) {
   var num = byRegion[region] || '112';
   var spans = document.querySelectorAll('.emg');
   for (var i = 0; i < spans.length; i++) { spans[i].textContent = num; }
-  var call = document.getElementById('callEmergency');
-  if (call) { call.setAttribute('href', 'tel:' + num); }
   var call911 = document.getElementById('callEmergency911');
   if (call911) { call911.setAttribute('href', 'tel:' + num); }
 })();

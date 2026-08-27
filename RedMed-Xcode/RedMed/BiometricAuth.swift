@@ -66,9 +66,13 @@ enum BiometricAuth {
     /// Covers unlock → Keychain load → first persist; background clears earlier.
     private static let secItemReuseDuration: TimeInterval = 60
 
+    /// `force` has no default: every call site must state whether it wants the
+    /// `didUnlockThisLaunch` fast path or a fresh prompt. Today every caller
+    /// (unlock, Edit, Save, NFC write, vault, Erase) passes `true` — a future
+    /// caller that forgets it would otherwise silently skip re-authentication.
     static func authenticate(
         reason: String,
-        force: Bool = false,
+        force: Bool,
         allowPasscode: Bool = true,
         allowableReuseDuration: TimeInterval = 0,
         completion: @escaping (Outcome) -> Void
@@ -364,4 +368,13 @@ enum BiometricAuth {
         return top
     }
     #endif
+
+    /// Shared "Authentication Failed" alert copy for `.declined` / `.notVerified`
+    /// outcomes on Edit / Save (and similar owner-gated actions) — kept in one
+    /// place so the wording can't drift between call sites.
+    static let deniedAlertTitle = "Authentication Failed"
+
+    static func deniedAlertMessage(action: String) -> String {
+        "Face ID or passcode is required to \(action) your RedMed profile."
+    }
 }
