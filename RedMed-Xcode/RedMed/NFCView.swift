@@ -196,6 +196,12 @@ struct NFCView: View {
             ) {
                 openFirstResponderPreview()
             }
+
+            if !profile.hasData {
+                Text("Add your name on RedMed before previewing the band.")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.redmedAccent)
+            }
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
