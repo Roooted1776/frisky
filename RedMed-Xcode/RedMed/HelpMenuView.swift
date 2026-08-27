@@ -285,7 +285,12 @@ struct HelpMenuView: View {
 
                         if showsOwnerTools {
                             helpSectionLabel("Settings")
-                            helpCard {
+                            // flatten: false — these Toggles are live-editing
+                            // content; `.drawingGroup()` (the flattened
+                            // default) can leave a Toggle inside it visible
+                            // but unresponsive to taps (see redmedBox's doc
+                            // comment in Theme.swift).
+                            helpCard(flatten: false) {
                                 Toggle("Haptic feedback", isOn: $hapticsEnabled)
                                     .font(.system(size: Metrics.font, weight: .medium))
                                     .tint(.redmedAccent)
@@ -404,9 +409,12 @@ struct HelpMenuView: View {
     }
 
     @ViewBuilder
-    private func helpCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+    private func helpCard<Content: View>(
+        flatten: Bool = true,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
         VStack(spacing: 0) { content() }
-            .redmedBox()
+            .redmedBox(flatten: flatten)
     }
 
     @ViewBuilder
