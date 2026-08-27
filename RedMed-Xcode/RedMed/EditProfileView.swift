@@ -440,8 +440,10 @@ struct EditProfileView: View {
 
     @ViewBuilder
     private func editCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        // flatten: false — wraps live TextFields; re-rasterizing on every
+        // keystroke would cost more than the GPU flatten saves.
         VStack(spacing: 0) { content() }
-            .redmedBox()
+            .redmedBox(flatten: false)
     }
 
     // MARK: - Persistence

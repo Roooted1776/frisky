@@ -173,6 +173,10 @@ struct NFCView: View {
                 )
                 .clipShape(RoundedRectangle(cornerRadius: boxRadius))
                 .shadow(color: Color.redmedAccent.opacity(profile.hasData ? 0.28 : 0), radius: 7, y: 4)
+                // Same GPU-flattening as the other gradient CTAs (Theme.swift,
+                // EmergencyView's Call button) — one Metal composite for the
+                // gradient + shadow instead of a CPU recomposite per frame.
+                .drawingGroup()
             }
             .disabled(!profile.hasData || band.isBusy)
             .opacity(profile.hasData ? 1 : 0.55)
