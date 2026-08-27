@@ -187,10 +187,10 @@ struct EditProfileView: View {
             loadDraft()
             SuggestionCatalog.warmUp()
         }
-        .alert("Authentication Failed", isPresented: $showAuthFailedAlert) {
+        .alert(BiometricAuth.deniedAlertTitle, isPresented: $showAuthFailedAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Face ID or passcode is required to save your RedMed profile.")
+            Text(BiometricAuth.deniedAlertMessage(action: "save"))
         }
         .alert("Couldn't Save", isPresented: $showSaveFailedAlert) {
             Button("OK", role: .cancel) {}
@@ -723,6 +723,11 @@ private struct ContactDraftRow: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(
+                    contact.name.isEmpty
+                        ? "Delete contact"
+                        : "Delete contact \(contact.name)"
+                )
             }
             .padding(.horizontal, Metrics.rowHPad)
             .padding(.vertical, Metrics.rowVPad)
@@ -880,6 +885,11 @@ private struct DraftLineRow: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(
+                    line.text.isEmpty
+                        ? "Delete \(placeholder.lowercased())"
+                        : "Delete \(placeholder.lowercased()) \(line.text)"
+                )
             }
             .padding(.horizontal, Metrics.rowHPad)
             .padding(.vertical, Metrics.rowVPad)

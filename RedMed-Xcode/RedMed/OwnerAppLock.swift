@@ -564,9 +564,11 @@ struct OwnerAppLock<Content: View>: View {
         guard let didLoad = profile.tryPrepareUnlockPrefetchSync() else {
             return false
         }
-        if !didLoad, !keychainHasProfile { return false }
-        // Bound item may have parked empty before LAContext existed — do not fail closed.
-        if !didLoad, keychainHasProfile { return false }
+        // Bound item may have parked empty before LAContext existed, or there may
+        // genuinely be no profile yet — either way defer to the slower async path in
+        // applyUnlockSuccess, which re-checks `ProfileData.hasStoredProfile()` off-main
+        // instead of trusting this synchronous parked read alone.
+        if !didLoad { return false }
         finishUnlockAfterAuth(
             generation: generation,
             didLoad: didLoad,

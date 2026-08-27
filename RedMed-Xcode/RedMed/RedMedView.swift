@@ -156,10 +156,10 @@ struct RedMedView: View {
                 .environmentObject(profile)
                 .presentationBackground(Color.redmedBg)
         }
-        .alert("Authentication Failed", isPresented: $showAuthFailedAlert) {
+        .alert(BiometricAuth.deniedAlertTitle, isPresented: $showAuthFailedAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Face ID or passcode is required to edit your RedMed profile.")
+            Text(BiometricAuth.deniedAlertMessage(action: "edit"))
         }
     }
 

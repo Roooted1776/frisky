@@ -126,9 +126,9 @@ enum KeychainStore {
         if allowInteractive {
             return loadBound(account: account, service: service, context: nil, interactive: true)
         }
-        if ctx != nil {
-            return loadBound(account: account, service: service, context: nil, interactive: false)
-        }
+        // A fresh, never-authenticated LAContext cannot succeed non-interactively
+        // against a biometryCurrentSet-protected item once the parked `ctx` attempt
+        // above has already failed the identical query — nothing left to try.
         return nil
     }
 
