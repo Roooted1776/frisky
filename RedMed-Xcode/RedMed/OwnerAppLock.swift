@@ -332,6 +332,21 @@ struct OwnerAppLock<Content: View>: View {
 
     private func startUnlockPipeline() {
         guard gate == .locked else { return }
+        if showUnlockControl {
+            // Manual retry from the Proceed screen — give this attempt its
+            // own fresh watchdog budget. Both watchdogs otherwise still
+            // count down from the *original* cold-launch `lockCycleStartedAt`
+            // / `lockCycleID`, which can already be exhausted (clamped to 0
+            // remaining) by the time the user taps Proceed. Without this
+            // reset, the `.task(id: authGeneration)` watchdog restarted by
+            // `unlockWithFaceID()` below fires almost instantly and calls
+            // `BiometricAuth.cancelInFlight()`, killing the fresh Face ID
+            // sheet before it can even present — every subsequent Proceed
+            // tap repeats this and reads as an indefinite stuck cream
+            // screen, since Face ID never gets a real chance to show.
+            lockCycleStartedAt = Date()
+            scheduleHardWatchdog()
+        }
         didAutoPromptThisLock = true
         showUnlockControl = false
         logLock("startUnlockPipeline")
