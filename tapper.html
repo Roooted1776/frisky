@@ -690,8 +690,7 @@ function redmedAssetURL(file) {
   #panel-911 .page-pad > .gps-card,
   #panel-911 .page-pad > .gps-actions,
   #panel-911 .page-pad > .seizure-strip,
-  #panel-911 .page-pad > .info,
-  #panel-911 .page-pad > .no-cell {
+  #panel-911 .page-pad > .info {
     margin: 0;
   }
   .btn {
@@ -886,38 +885,6 @@ function redmedAssetURL(file) {
     border-radius: var(--box);
     padding: 12px 14px;
     box-shadow: var(--shadow);
-  }
-  /* NoCellSignalCard — compact, not Roadside InfoCard chrome */
-  .no-cell {
-    background: var(--surface);
-    border: none;
-    border-radius: var(--box);
-    padding: 10px 14px;
-    box-shadow: var(--shadow);
-  }
-  .no-cell-head {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 4px;
-  }
-  .no-cell-head .no-cell-title {
-    margin: 0;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--accent);
-  }
-  .no-cell-icon {
-    font-size: 12px;
-    line-height: 1;
-    color: var(--accent);
-  }
-  .no-cell-body {
-    margin: 0;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--muted);
-    line-height: 1.35;
   }
   .info-head {
     display: flex;
@@ -1411,16 +1378,6 @@ function redmedAssetURL(file) {
             <button class="seizure-btn seizure-btn-reset" type="button" id="seizureResetBtn">Reset</button>
             <button class="seizure-btn" type="button" id="seizureBtn">Start</button>
           </div>
-        </div>
-
-        <div class="no-cell">
-          <div class="no-cell-head">
-            <span class="no-cell-icon" aria-hidden="true">📡</span>
-            <h2 class="no-cell-title">No cell signal?</h2>
-          </div>
-          <p class="no-cell-body">
-            T-Mobile (US) + Starlink Direct-to-Cell partners — plan/region required; not a coverage promise.
-          </p>
         </div>
 
         <div class="info">

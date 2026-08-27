@@ -213,9 +213,5 @@ enum AppConfig {
         /// Permanent product rule — do not soften or time-box.
         static let localOnlyLine =
             "Local only once tap — everyone and everything. No servers · no online. No Bluetooth · passive HF NFC. No PII or PHI leaves this device through RedMed."
-
-        /// Compact Find Help line — full partner roster lives in legal copy, not the field UI.
-        static let directToCellCarriersLine =
-            "T-Mobile (US) + Starlink Direct-to-Cell partners — plan/region required; not a coverage promise."
     }
 }

@@ -192,13 +192,13 @@ struct OwnerAppLock<Content: View>: View {
 
     private func tryAutoUnlockIfActive() {
         guard gate == .locked, !didAutoPromptThisLock, !showUnlockControl else { return }
-        // Must be truly `.active`, not just non-background: firing while the
-        // scene is still `.inactive` (the moment onAppear/the cold-launch
-        // .task run) makes evaluatePolicy fail immediately as .notInteractive
-        // — no Face ID sheet ever shows, and the user lands straight on the
-        // retry screen instead of seeing a prompt. Waiting for `.active`
-        // (via onChange(of: scenePhase) on cold launch) lets it present.
-        guard scenePhase == .active else { return }
+        // Fire immediately, including on cold-start `.inactive` — per AGENTS.md,
+        // waiting for `.active` is itself the cream-hang bug: the scene reaches
+        // `.active` a beat after `.inactive`, and a blank cream LockEntryPage
+        // with no Face ID sheet yet reads as a hang for that whole gap. A
+        // `.notInteractive` evaluate (system genuinely can't present yet) still
+        // recovers via the Proceed screen, so it costs nothing to try early.
+        guard scenePhase != .background else { return }
         didAutoPromptThisLock = true
         startUnlockPipeline(isAuto: true)
     }
