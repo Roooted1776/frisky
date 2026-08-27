@@ -103,7 +103,7 @@ The app has no backend, database, or web service.
   lock on `.inactive` — LAContext / system auth sheets put the scene inactive
   and would discard a successful unlock via `authGeneration`.
 - Owner app lock is **Face ID / Touch ID with device passcode fallback** before Main (`allowPasscode: true`, `force: true` — every open prompts, never skip via this-process success). Front page is
-  `LockEntryPage`: user-page cream only. Path: open →
+  `LockEntryPage`: flat cream only (no BrandLogo, no spinner, no hangtime chrome). Path: open →
   Face ID or passcode → Main. No hanging mark / lock watermark / FaceIDFrame clip on
   that shell. Passerby `tapper.html` never has Face ID,
   passcode, login, or any page in front of the card. No glyph, no Help on

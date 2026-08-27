@@ -38,7 +38,7 @@ extension Color {
 }
 
 /// Cream page with rose wash only (fill color — no BrandLogo).
-/// Lock front (`LockEntryPage`) shows the brand mark over static `redmedBg`;
+/// Lock front (`LockEntryPage`) is flat `redmedBg` with no mark / spinner;
 /// passerby tapper matches cream fill.
 struct RedMedPageBackground: View {
     var body: some View {
