@@ -87,12 +87,7 @@ struct OwnerAppLock<Content: View>: View {
             logLock("onAppear hasKeyWindow=\(hasKeyWindow)")
             scheduleHardWatchdog()
             tryAutoUnlockIfActive()
-            profile.beginUnlockPrefetch()
-            // String cache only — not WK — during Face ID window. Deduped
-            // across callers (see PasserbyHTMLCardView.scheduleShellWarmOnce)
-            // so cold launch doesn't spawn several redundant .utility tasks
-            // racing the same cache lock.
-            PasserbyHTMLCardView.scheduleShellWarmOnce()
+            deferredWarmUp()
         }
         .task(id: authGeneration) {
             guard gate == .locked else { return }
@@ -129,9 +124,11 @@ struct OwnerAppLock<Content: View>: View {
             RedMedSignpost.trace("task watchdog forced showUnlockControl=true")
         }
         .task {
-            // .utility: this fires at cold launch alongside the Face ID prompt
-            // itself — userInitiated contends with the system Face ID sheet for
-            // CPU and delays it showing (same rule as ProfileData.beginUnlockPrefetch).
+            // .utility priority alone wasn't enough to rule out contention
+            // with the system Face ID sheet's very first presentation tick —
+            // also stagger this off the exact instant evaluatePolicy fires,
+            // same as `deferredWarmUp()` below.
+            try? await Task.sleep(nanoseconds: 300_000_000)
             let hasProfile = await Task.detached(priority: .utility) {
                 ProfileData.hasStoredProfile()
             }.value
@@ -316,7 +313,7 @@ struct OwnerAppLock<Content: View>: View {
         // launch `onAppear` can fire that early, and unlike `.notInteractive`
         // (a synchronous, fast rejection this file already retries), a call
         // made before a key window exists has been observed to just sit —
-        // no success, no error — until the 8s/8.5s watchdogs below kill it,
+        // no success, no error — until the watchdogs below kill it,
         // which reads as this app's "cream hang" on every single launch
         // rather than only occasionally. `UIWindow.didBecomeKeyNotification`
         // above retries this the moment a window exists, normally only
@@ -339,11 +336,30 @@ struct OwnerAppLock<Content: View>: View {
         showUnlockControl = false
         logLock("startUnlockPipeline")
         unlockWithFaceID()
-        profile.beginUnlockPrefetch()
-        // String warm only during Face ID — WK waits until after unlock.
-        // Deduped across callers so this doesn't add another redundant
-        // .utility task alongside the one from onAppear / RedMedApp.task.
-        PasserbyHTMLCardView.scheduleShellWarmOnce()
+        deferredWarmUp()
+    }
+
+    /// String cache + profile prefetch during the Face ID window — `.utility`
+    /// priority alone did not rule out contending with the system sheet's
+    /// very first presentation tick on cold launch, so both also wait 300ms
+    /// past the `evaluatePolicy` call before starting, giving Face ID a
+    /// clear first shot. The Keychain prefetch is the more suspect of the
+    /// two — it is a SecItem query, closer to whatever subsystem Face ID
+    /// itself uses, unlike the shell cache's plain bundled-file read. Still
+    /// finishes well before a real Face ID / human interaction completes in
+    /// the common case, so the Face-ID-overlap speedup these exist for is
+    /// barely affected. Shell warm goes through `scheduleShellWarmOnce()` so
+    /// this call and the one from `onAppear` (both of which reach
+    /// `deferredWarmUp()`) don't each spawn their own redundant task.
+    private func deferredWarmUp() {
+        Task.detached(priority: .utility) {
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            PasserbyHTMLCardView.scheduleShellWarmOnce()
+        }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            profile.beginUnlockPrefetch()
+        }
     }
 
     private func unlockWithFaceID() {
