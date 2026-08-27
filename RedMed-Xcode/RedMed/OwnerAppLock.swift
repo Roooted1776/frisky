@@ -44,6 +44,10 @@ struct OwnerAppLock<Content: View>: View {
     /// `authGeneration` bump, so a fast-fail + retry can't stack a second
     /// full 8s window on top of the first and read as a ~9s+ hang.
     @State private var lockCycleStartedAt: Date?
+    /// Bumped once per lock cycle (cold launch or re-lock). Identifies which
+    /// cycle a scheduled `hardWatchdog` GCD block belongs to, independent of
+    /// `authGeneration` (which bumps per Face ID attempt, not per cycle).
+    @State private var lockCycleID = 0
 
     var body: some View {
         ZStack {
@@ -78,6 +82,7 @@ struct OwnerAppLock<Content: View>: View {
             RedMedSignpost.begin(.coldLaunchWindow)
             screenCaptured = UIScreen.main.isCaptured
             lockCycleStartedAt = Date()
+            scheduleHardWatchdog()
             tryAutoUnlockIfActive()
             profile.beginUnlockPrefetch()
             // String cache only — not WK — during Face ID window. .utility so it
@@ -230,9 +235,37 @@ struct OwnerAppLock<Content: View>: View {
             BiometricAuth.resetLaunchUnlock()
             lockCycleStartedAt = Date()
             gate = .locked
+            scheduleHardWatchdog()
         }
         profile.discardUnlockPrefetch()
         PasserbyWebViewPool.cancelWarm()
+    }
+
+    /// Plain-GCD fallback for the `.task(id: authGeneration)` watchdog above.
+    ///
+    /// That watchdog is Swift's structured concurrency `Task` machinery —
+    /// this app's "cream hang" bug has resurfaced enough times across enough
+    /// different fixes (see file header / git history) that it is worth not
+    /// trusting a single mechanism to always resolve the lock screen. A
+    /// `DispatchQueue.main.asyncAfter` timer is not a `Task`: it cannot be
+    /// cancelled by view-identity churn, structured-concurrency cancellation
+    /// propagation, or actor hops, so it fires on a completely independent
+    /// path even if the `Task`-based watchdog is ever skipped or silently
+    /// cancelled for a reason this file's many prior fixes did not cover.
+    /// Keyed to `lockCycleID` (bumped once per lock cycle), not
+    /// `authGeneration` (bumped once per Face ID attempt), so a fast-fail
+    /// retry inside the same cycle does not rearm a second overlapping timer.
+    private func scheduleHardWatchdog() {
+        lockCycleID &+= 1
+        let cycleID = lockCycleID
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8.5) {
+            guard gate == .locked, cycleID == lockCycleID else { return }
+            if isAuthenticating {
+                BiometricAuth.cancelInFlight()
+                isAuthenticating = false
+            }
+            showUnlockControl = true
+        }
     }
 
     private func tryAutoUnlockIfActive() {
