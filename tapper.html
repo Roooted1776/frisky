@@ -395,10 +395,15 @@ function redmedAssetURL(file) {
     html.app-embed .rm-status.rm-status-link,
     body.app-embed .rm-status.rm-status-link { transition: none; }
   }
-  /* Owner embed: status note gone — tighten header → YOU card. */
+  /* Owner embed: native RedMedUserHeader is the YOU-card mark (logo + name +
+     Linked) plus Edit. Hide the HTML twin so the card is not double-headed. */
   html.app-embed .rm-header,
   body.app-embed .rm-header {
-    padding: 2px var(--page-pad-x) 4px;
+    display: none !important;
+  }
+  html.app-embed .card.you-card,
+  body.app-embed .card.you-card {
+    margin-top: 4px;
   }
   .card {
     margin: 0 var(--page-pad-x);
