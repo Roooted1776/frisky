@@ -40,6 +40,13 @@ struct OwnerAppLock<Content: View>: View {
     /// see the retry block in `unlockWithFaceID()`'s completion handler.
     @State private var notInteractiveRetried = false
     @State private var showUnlockControl = false
+    /// True from the moment Face ID/passcode succeeds until the profile
+    /// finishes decoding and `gate` flips to `.unlocked`. Distinct from
+    /// `isAuthenticating` (LAContext evaluate in flight) — conflating the
+    /// two made a stuck Keychain decode look like a hung Face ID sheet to
+    /// both watchdogs below, and made Proceed re-prompt an already-passed
+    /// Face ID instead of retrying the actual stuck step.
+    @State private var isLoadingProfile = false
     /// When the current lock cycle actually started (cold launch or re-lock) —
     /// the watchdog below counts down from this, not from each retry's own
     /// `authGeneration` bump, so a fast-fail + retry can't stack a second
@@ -119,6 +126,11 @@ struct OwnerAppLock<Content: View>: View {
                 // Hung Face ID sheet — kill it so Proceed can start a new one.
                 BiometricAuth.cancelInFlight()
                 isAuthenticating = false
+            } else if isLoadingProfile {
+                // Face ID already succeeded — only the Keychain/profile
+                // decode is stuck. Say so specifically so Proceed retries
+                // that instead of re-prompting an already-passed Face ID.
+                profileLoadFailed = true
             }
             showUnlockControl = true
             RedMedSignpost.trace("task watchdog forced showUnlockControl=true")
@@ -219,6 +231,7 @@ struct OwnerAppLock<Content: View>: View {
             profileLoadFailed = false
             notInteractive = false
             isAuthenticating = false
+            isLoadingProfile = false
             didAutoPromptThisLock = false
             notInteractiveRetried = false
             showUnlockControl = false
@@ -245,6 +258,7 @@ struct OwnerAppLock<Content: View>: View {
         }
         authGeneration &+= 1
         isAuthenticating = false
+        isLoadingProfile = false
         showUnlockControl = false
         didAutoPromptThisLock = false
         notInteractiveRetried = false
@@ -284,6 +298,8 @@ struct OwnerAppLock<Content: View>: View {
             if isAuthenticating {
                 BiometricAuth.cancelInFlight()
                 isAuthenticating = false
+            } else if isLoadingProfile {
+                profileLoadFailed = true
             }
             showUnlockControl = true
             RedMedSignpost.trace("GCD watchdog forced showUnlockControl=true")
@@ -347,11 +363,37 @@ struct OwnerAppLock<Content: View>: View {
             lockCycleStartedAt = Date()
             scheduleHardWatchdog()
         }
+        if isLoadingProfile {
+            // Face ID already succeeded on the abandoned attempt — the
+            // profile decode was the stuck step, so retry that instead of
+            // re-prompting an already-passed Face ID (which would also
+            // orphan the first attempt's in-flight `applyUnlockSuccess`).
+            retryStuckProfileLoad()
+            return
+        }
         didAutoPromptThisLock = true
         showUnlockControl = false
         logLock("startUnlockPipeline")
         unlockWithFaceID()
         deferredWarmUp()
+    }
+
+    /// Re-attempts the profile decode after a watchdog flagged it stuck —
+    /// never re-runs Face ID here, since biometrics already succeeded for
+    /// the generation this is resuming.
+    private func retryStuckProfileLoad() {
+        profileLoadFailed = false
+        showUnlockControl = false
+        let generation = authGeneration
+        Task { @MainActor in
+            await applyUnlockSuccess(generation: generation)
+            guard generation == authGeneration, gate == .locked else { return }
+            // Still stuck — surface it again rather than leaving a blank
+            // cream screen with no live watchdog left to catch it.
+            isLoadingProfile = false
+            profileLoadFailed = true
+            showUnlockControl = true
+        }
     }
 
     /// String cache + profile prefetch during the Face ID window — `.utility`
@@ -381,6 +423,10 @@ struct OwnerAppLock<Content: View>: View {
         RedMedSignpost.trace("unlockWithFaceID: gate=\(gate) isAuthenticating=\(isAuthenticating)")
         guard gate == .locked, !isAuthenticating else { return }
         isAuthenticating = true
+        // Clear any stale flag from an abandoned prior generation (e.g. a
+        // Proceed retry started here while that generation's profile decode
+        // was still stuck) — this attempt's own success sets it fresh.
+        isLoadingProfile = false
         biometryFailed = false
         faceIDUnavailableReason = nil
         profileLoadFailed = false
@@ -462,6 +508,10 @@ struct OwnerAppLock<Content: View>: View {
                     VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock-unavailable")
                 case .success:
                     guard generation == authGeneration else { return }
+                    // Face ID/passcode is done — from here on a stall is the
+                    // profile decode, not the sheet. Let the watchdogs know.
+                    isAuthenticating = false
+                    isLoadingProfile = true
                     // Prefetch already kicked off in the authenticate
                     // callback (before this hop). Adopt it here.
                     await applyUnlockSuccess(generation: generation)
@@ -538,6 +588,7 @@ struct OwnerAppLock<Content: View>: View {
             return
         }
         isAuthenticating = false
+        isLoadingProfile = false
         if didLoad {
             keychainHasProfile = true
             gate = .unlocked

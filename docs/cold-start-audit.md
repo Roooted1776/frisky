@@ -41,6 +41,31 @@ doc. If the cream hang recurs, the next step is still the Instruments trace desc
 now with `RedMedSignpost`'s `coldLaunchWindow` / `faceIDEvaluate` intervals and the `DEBUG`-only
 `[OwnerAppLock]` console logging (added alongside fix 1) available to localize it precisely.
 
+## Stuck cream screen after Face ID succeeds (this pass)
+
+A user report of a stuck cold-launch screen (initially described as black, confirmed to actually
+be flat cream — the `LockEntryPage` shell) where the Face ID sheet visibly appeared and dismissed
+but the app never proceeded past it. Root cause: `OwnerAppLock`'s `isAuthenticating` flag was
+overloaded to mean both "LAContext evaluate in flight" (its documented purpose, read by both
+watchdogs and the FacePage-vs-LockEntryPage switch) *and*, implicitly, "still busy after Face ID
+succeeded" — it was left `true` for the entire async profile-decode/Keychain-read phase between a
+successful `evaluatePolicy` and `gate` flipping to `.unlocked`. Two consequences:
+
+1. If that decode phase ran long, the watchdogs (`.task(id: authGeneration)` / the GCD fallback)
+   treated it as a hung Face ID sheet and called `BiometricAuth.cancelInFlight()` — a no-op by then
+   since the live context was already cleared, but the intent was wrong and left no distinct
+   diagnostic for "profile load stalled" vs. "Face ID never got a sheet."
+2. Tapping the resulting **Proceed** button called `unlockWithFaceID()` again — re-prompting an
+   already-passed Face ID and abandoning the first attempt's still-in-flight `applyUnlockSuccess`
+   task rather than retrying the actual stuck step.
+
+Fixed by adding a separate `isLoadingProfile` flag, set the moment Face ID succeeds and cleared
+when the decode finishes (or a fresh Face ID attempt starts). The watchdogs now flag a stall during
+this window as `profileLoadFailed` instead of a Face ID hang, and Proceed calls a dedicated
+`retryStuckProfileLoad()` that re-awaits the decode instead of restarting biometrics. Not confirmed
+with a profiler/device repro — same caveat as the rest of this doc — but the prior behavior was a
+readable logic bug independent of timing.
+
 ## GPU/CPU render-load follow-up (this pass)
 
 A related report asked for a general CPU/GPU load pass. Checked every `.drawingGroup()` call in
