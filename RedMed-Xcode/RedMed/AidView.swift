@@ -60,6 +60,10 @@ struct AidView: View {
         VStack(spacing: 0) {
             PageHelpChrome()
 
+            Rectangle()
+                .fill(Color.redmedDivider)
+                .frame(height: 1)
+
             GeometryReader { geo in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 10) {
