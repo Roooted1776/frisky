@@ -34,6 +34,17 @@ enum RedMedSignpost {
     private static let lock = NSLock()
     private static var states: [String: OSSignpostIntervalState] = [:]
 
+    /// Persistent breadcrumb for diagnosing a stuck cold-launch lock screen
+    /// after the fact — `os_log` output (unlike Instruments) is visible live
+    /// in Console.app (device connected, filter subsystem "com.redmed.app",
+    /// category "AppLock") without an attached Xcode debug session. Cheap
+    /// enough to leave in permanently; only fires on the lock/unlock path.
+    private static let log = os.Logger(subsystem: "com.redmed.app", category: "AppLock")
+
+    static func trace(_ message: String) {
+        log.notice("\(message, privacy: .public)")
+    }
+
     /// No-ops if already begun — callers don't need to track their own state.
     static func begin(_ interval: Interval) {
         lock.lock()
