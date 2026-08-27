@@ -14,6 +14,9 @@
 /get/ /tapper/ 302
 /get/index.html /tapper/ 302
 
+# App Store 5.1.1 — Connect privacy-policy URL (do not send this to /tapper/).
+/privacy /privacy/ 301
+
 # Legacy root brand URLs → assets/
 /BrandLogo.png /assets/BrandLogo.png 301
 /BrandWordmark.png /assets/BrandWordmark.png 301
