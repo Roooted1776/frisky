@@ -113,6 +113,10 @@ struct PrimaryButton: View {
                 )
                 .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                 .shadow(color: disabled ? .clear : RedMedChrome.accentShadow, radius: 10, y: 5)
+                // Flatten gradient + shadow to one GPU texture so the press-scale
+                // spring (RedMedPressStyle) transforms a bitmap instead of
+                // recompositing the gradient and shadow every animation frame.
+                .drawingGroup()
         }
         .buttonStyle(RedMedPressStyle(haptic: nil))
         .disabled(disabled)
@@ -165,6 +169,9 @@ struct UnlockScreenButton: View {
                             y: 6
                         )
                 }
+                // Same GPU-flattening as PrimaryButton — the press-scale spring
+                // then transforms one rasterized texture, not the live gradient stack.
+                .drawingGroup()
         }
         .buttonStyle(RedMedPressStyle(haptic: nil))
         .disabled(disabled)
@@ -432,7 +439,9 @@ struct LockMedGlyph: View {
                 .opacity(spark > 0.05 ? 1 : 0)
         }
         .frame(width: size, height: size)
-        .compositingGroup()
+        // GPU-rasterize the heart/EKG/spark stack once so the pop-in spring and
+        // spark fade transform a single Metal-backed texture, not four live shapes.
+        .drawingGroup()
         .scaleEffect(popped ? 1 : 0.76)
         .opacity(popped ? 1 : 0)
         .onAppear {
