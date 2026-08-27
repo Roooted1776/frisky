@@ -82,8 +82,11 @@ The app has no backend, database, or web service.
   (`BraceletRF.backgroundTagReadingSummary`).
 
 **Settings vs automatic (permanent):**
-- Help → Settings exposes **only** haptic feedback + Location (`AppSettings` /
-  `HapticEngine.enabledKey`). No other toggles there.
+- Haptic feedback + Location toggles (`AppSettings` / `HapticEngine.enabledKey`)
+  live on `ConsentGateView`'s "Before you continue" screen, not Help — moved
+  there so they're set on the screen the owner already sees every unlock
+  instead of a separate Help → Settings trip. No other toggles there, and
+  Help no longer has a Settings section at all.
 - **Brightness + sound are survival-alarm only (not Settings):**
   arm `BrightnessBoost` + `VolumeBoost` + `LocatorBeacon` only when (1) on-device crash /
   hard-impact detection (`CrashMotionGuard`) fires for **vehicle crash /
