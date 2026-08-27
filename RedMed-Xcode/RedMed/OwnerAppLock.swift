@@ -68,6 +68,9 @@ struct OwnerAppLock<Content: View>: View {
         }
         .transaction { $0.animation = nil }
         .onAppear {
+            // Diagnostic only — see RedMedSignpost.swift. Ended below wherever
+            // the lock screen first resolves (unlocked, or Proceed shown).
+            RedMedSignpost.begin(.coldLaunchWindow)
             screenCaptured = UIScreen.main.isCaptured
             tryAutoUnlockIfActive()
             profile.beginUnlockPrefetch()
@@ -119,6 +122,7 @@ struct OwnerAppLock<Content: View>: View {
                 BiometricAuth.clearAuthenticationContext()
                 tryAutoUnlockIfActive()
             } else {
+                RedMedSignpost.end(.coldLaunchWindow)
                 Task { @MainActor in
                     await Task.yield()
                     CrashMotionGuard.shared.startMonitoring()
@@ -137,6 +141,13 @@ struct OwnerAppLock<Content: View>: View {
                     try? await Task.sleep(nanoseconds: 800_000_000)
                     PasserbyWebViewPool.warmFullShell()
                 }
+            }
+        }
+        .onChange(of: showUnlockControl) { _, shown in
+            // Lock screen resolved into the manual Proceed screen — the other
+            // resolution (unlocked) is handled in the gate onChange above.
+            if shown {
+                RedMedSignpost.end(.coldLaunchWindow)
             }
         }
         .onChange(of: scenePhase) { _, phase in
@@ -243,11 +254,16 @@ struct OwnerAppLock<Content: View>: View {
         authGeneration &+= 1
         let generation = authGeneration
         let attemptStartedAt = Date()
+        RedMedSignpost.begin(.faceIDEvaluate)
         BiometricAuth.authenticate(
             reason: "Unlock RedMed",
             force: true,
             allowPasscode: true
         ) { outcome in
+            // Ends right where the system call actually returns — isolates
+            // Apple's own LocalAuthentication cost from anything RedMed does
+            // afterward in this same completion.
+            RedMedSignpost.end(.faceIDEvaluate)
             if case .success = outcome {
                 // Start the parked-context Keychain read before the MainActor
                 // hop so SecItem overlaps the SwiftUI turn instead of following it.
