@@ -115,6 +115,8 @@ The app has no backend, database, or web service.
   userCancel fails immediately with no sheet and no system success animation
   (dead button). A fresh first attempt with nothing in flight skips the wait.
   `FacePage` has no visible "Face" title text — cream + status line + CTA only.
+  Never show a "Looking for Face ID" hang line; while evaluating, keep the
+  flat cream shell so the system Face ID / passcode sheet is the only UI.
   `BiometricAuth.Outcome.unavailable(UnavailableReason)` (lockout / not
   enrolled / no device passcode / biometry not available) is distinct from
   `.notVerified` (a scan that just didn't match) — retrying `evaluatePolicy`
