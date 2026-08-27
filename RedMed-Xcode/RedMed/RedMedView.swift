@@ -367,7 +367,7 @@ private struct RedMedUserHeader: View {
         .padding(.horizontal, RedMedChrome.pagePadX)
         .padding(.top, 16)
         .padding(.bottom, 8)
-        .redmedTopChromeFill()
+        .redmedTopChromeWash()
         .accessibilityElement(children: .contain)
     }
 }
