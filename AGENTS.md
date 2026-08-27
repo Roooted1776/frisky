@@ -102,11 +102,10 @@ The app has no backend, database, or web service.
   prompt on appear); relock on `.background` only. Do **not**
   lock on `.inactive` — LAContext / system auth sheets put the scene inactive
   and would discard a successful unlock via `authGeneration`.
-- Owner app lock is **biometrics only before Main**. Front page is
+- Owner app lock is **Face ID / Touch ID with device passcode fallback** before Main (`allowPasscode: true`, `force: true` — every open prompts, never skip via this-process success). Front page is
   `LockEntryPage`: user-page cream only. Path: open →
-  first Face ID → Main. No hanging mark / lock watermark / FaceIDFrame clip on
-  that shell. No passcode / password pad on that Face ID (no
-  `Enter Passcode` fallback). Passerby `tapper.html` never has Face ID,
+  Face ID or passcode → Main. No hanging mark / lock watermark / FaceIDFrame clip on
+  that shell. Passerby `tapper.html` never has Face ID,
   passcode, login, or any page in front of the card. No glyph, no Help on
   `LockEntryPage`. After cancel / mismatch, **Face** (`FacePage`) with a
   **Proceed** CTA replaces that shell (not a bottom dock) — cream + Proceed,
@@ -122,17 +121,18 @@ The app has no backend, database, or web service.
   never fixes an unavailable state (no sheet even shows), so `FacePage`
   swaps its CTA to **Open Settings** with a reason-specific message instead
   of a **Proceed** that can only ever fail the same way again. Edit, Save, NFC
-  write, vault unlock, and Erase all re-prompt Face ID every time (`force: true`)
-  — only the initial app unlock reuses this-process success, until the app
-  actually backgrounds. **Re-lock on true `.background`** (purge PHI +
-  `gate = .locked`; app switcher / Home require Face ID again on return) —
-  never on `.inactive` (a Face ID / system auth sheet also puts the scene
-  `.inactive` and must not trip a relock, same as `VaultHistoryView`). Do
+  write, vault unlock, and Erase all re-prompt Face ID every time (`force: true`).
+  **Re-lock whenever the owner leaves** so the next open always prompts:
+  true `.background` always (purge PHI + `gate = .locked`); also `.inactive`
+  when currently **unlocked** and no `LAContext` is evaluating. Never relock
+  on `.inactive` while Face ID / a system auth sheet is up (`BiometricAuth.isEvaluating`
+  or `isAuthenticating`) — that sheet itself puts the scene `.inactive` and
+  must not kill the prompt. VaultHistoryView stays `.background`-only. Do
   **not** play `LockOpen.mp4` or `FaceIDFrame.mp4`. Clip never gates Face ID.
   Fresh install unlocks into empty tabs after auth. Owner RedMed tab then
   shows a native **setup funnel** (Fill medical ID → Save → Write the band)
   instead of an empty YOU card. Not an extra page before Face ID. Not on
-  passerby tapper. Do **not** re-prompt on `.inactive`.
+  passerby tapper.
   Owner pages + passerby tapper: cream fill only (no page BrandLogo). **No hanging
   decorative brand marks** anywhere (no lock watermark, no Aid pane wordmarks, no
   privacy-cover logo) — page BrandWordmark headers on NFC / topic sheets only;

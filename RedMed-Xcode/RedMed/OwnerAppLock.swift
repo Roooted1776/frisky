@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Owner app lock — Face ID / Touch ID before PHI is published into profile fields.
-/// No passcode / password pad on this gate (tapper / Main are next).
+/// Owner app lock — Face ID / Touch ID / device passcode before PHI is published.
+/// Passerby tapper / Main stay ungated. Every time the owner opens the app
+/// (cold launch, Home, app switcher) this gate prompts again.
 ///
 /// Keychain profile is biometry-bound (`KeychainStore`); Face ID parks an
 /// `LAContext` so SecItem can read without a second sheet. Background clears
@@ -138,46 +139,23 @@ struct OwnerAppLock<Content: View>: View {
             }
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .background {
-                SecurePasteboard.clear()
-                // Drop SecItem auth session — next read needs Face ID again.
-                BiometricAuth.clearAuthenticationContext()
-                // Kill any Face ID sheet the OS is about to cancel anyway
-                // (backgrounding mid-scan) and bump authGeneration so that
-                // cancelled evaluate's completion (which the OS still calls,
-                // usually as `.declined`) cannot land after we reset below —
-                // without this, that stale completion set `showUnlockControl
-                // = true`, which then blocked `tryAutoUnlockIfActive`'s guard
-                // on the very next foreground and left the user stuck on the
-                // static Proceed page instead of an automatic Face ID prompt.
-                BiometricAuth.cancelInFlight()
-                authGeneration &+= 1
-                isAuthenticating = false
-                showUnlockControl = false
-                didAutoPromptThisLock = false
-                notInteractiveRetried = false
-                if gate == .unlocked {
-                    // Re-lock on background — Home / app switcher / a real
-                    // backgrounding all require Face ID again on return, not
-                    // just at cold launch. `.background` only (never
-                    // `.inactive`, same rule as the vault): a Face ID /
-                    // system auth sheet also puts the scene `.inactive` and
-                    // must not trip this. Purge PHI from memory now so
-                    // nothing lingers behind the lock screen while backgrounded.
-                    profile.purgeFromMemory()
-                    // Without this, BiometricAuth's own "already unlocked this
-                    // launch" fast-path silently short-circuits the next
-                    // unlockWithFaceID() call to .success with no Face ID
-                    // sheet at all (unlockWithFaceID never passes force:true
-                    // by design) — the re-lock would then have no real way
-                    // back in.
-                    BiometricAuth.resetLaunchUnlock()
-                    gate = .locked
+            switch phase {
+            case .inactive:
+                // Face ID / system auth sheets also drive `.inactive`. Relocking
+                // then kills the sheet and loops. Only relock when the owner
+                // actually left an unlocked session (app switcher, Control
+                // Center, incoming overlay) so the next open always prompts.
+                if gate == .unlocked, !isAuthenticating, !BiometricAuth.isEvaluating {
+                    relockAfterLeavingApp(cancelEvaluate: false)
                 }
-                profile.discardUnlockPrefetch()
-                PasserbyWebViewPool.cancelWarm()
-            } else if phase == .active, gate == .locked {
-                tryAutoUnlockIfActive()
+            case .background:
+                relockAfterLeavingApp(cancelEvaluate: true)
+            case .active:
+                if gate == .locked {
+                    tryAutoUnlockIfActive()
+                }
+            @unknown default:
+                break
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)) { _ in
@@ -197,6 +175,35 @@ struct OwnerAppLock<Content: View>: View {
             BiometricAuth.clearAuthenticationContext()
             gate = .unlocked
         }
+    }
+
+    /// Lock + purge so the next open always gets a Face ID / passcode prompt.
+    private func relockAfterLeavingApp(cancelEvaluate: Bool) {
+        SecurePasteboard.clear()
+        BiometricAuth.clearAuthenticationContext()
+        if cancelEvaluate {
+            // Kill any Face ID sheet the OS is about to cancel anyway
+            // (backgrounding mid-scan) and bump authGeneration so that
+            // cancelled evaluate's completion (which the OS still calls,
+            // usually as `.declined`) cannot land after we reset below —
+            // without this, that stale completion set `showUnlockControl
+            // = true`, which then blocked `tryAutoUnlockIfActive`'s guard
+            // on the very next foreground and left the user stuck on the
+            // static Proceed page instead of an automatic Face ID prompt.
+            BiometricAuth.cancelInFlight()
+        }
+        authGeneration &+= 1
+        isAuthenticating = false
+        showUnlockControl = false
+        didAutoPromptThisLock = false
+        notInteractiveRetried = false
+        if gate == .unlocked {
+            profile.purgeFromMemory()
+            BiometricAuth.resetLaunchUnlock()
+            gate = .locked
+        }
+        profile.discardUnlockPrefetch()
+        PasserbyWebViewPool.cancelWarm()
     }
 
     private func tryAutoUnlockIfActive() {
@@ -239,7 +246,8 @@ struct OwnerAppLock<Content: View>: View {
         let attemptStartedAt = Date()
         BiometricAuth.authenticate(
             reason: "Unlock RedMed",
-            allowPasscode: false
+            force: true,
+            allowPasscode: true
         ) { outcome in
             if case .success = outcome {
                 // Start the parked-context Keychain read before the MainActor
