@@ -175,9 +175,14 @@ hangs with no sheet; that wait was the cream hang), but **not** before a
 window is key — `tryAutoUnlockIfActive` also gates on `hasKeyWindow` and
 retries from `UIWindow.didBecomeKeyNotification` if `onAppear` fires too
 early, because an `evaluatePolicy` call made before any window is key has
-been observed to never complete (no success, no error) until the 8s/8.5s
+been observed to never complete (no success, no error) until the 4.5s/5s
 watchdogs kill it — a *different* cream hang than the `.active`-wait one,
-now seen on every cold launch instead of occasionally.
+now seen on every cold launch instead of occasionally. Watchdogs were
+15s → 8s/8.5s → 4.5s/5s: when the failure mode is no sheet ever
+presenting, there is nothing in-progress to interrupt, so a shorter
+timeout only shortens the blank-cream wait — it does not risk cutting off
+a real, slower Face ID / passcode interaction the way it would if a
+sheet were actually up.
 `didAutoPromptThisLock` blocks re-prompt while the Face ID sheet holds
 `.inactive`). Prefetch still starts in the same `onAppear` tick and inside the
 unlock pipeline (single-flight overlap with Face ID). After cancel / mismatch

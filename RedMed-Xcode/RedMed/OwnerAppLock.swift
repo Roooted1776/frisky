@@ -96,20 +96,25 @@ struct OwnerAppLock<Content: View>: View {
         .task(id: authGeneration) {
             guard gate == .locked else { return }
             let generation = authGeneration
-            // Was 15s — that read as a hard hang (blank cream, nothing to tap)
-            // on a cold launch where the system sheet never presents. 8s still
-            // gives a real Face ID prompt (and a slower human) room to resolve
-            // normally without cutting it off mid-interaction.
+            // Was 15s, then 8s — both still read as a hard hang (blank cream,
+            // nothing to tap) on a cold launch where the system sheet never
+            // presents at all. When that happens there is no in-progress
+            // Face ID / passcode sheet to interrupt (the user sees nothing,
+            // full stop), so a shorter timeout does not risk cutting off a
+            // real, slower human mid-interaction the way it would if a sheet
+            // were actually up — it only shortens the blank-cream wait for
+            // the no-sheet failure mode this watchdog exists to catch.
             //
             // Budgeted from `lockCycleStartedAt`, not from this generation's
             // own start — the fast-fail-then-retry path bumps authGeneration
             // (restarting this `.task`) partway through the cycle, and a
-            // fresh 8s here on top of the first attempt's time already spent
-            // stacked into a ~9s+ wait before the fallback screen ever
-            // appeared. Counting down from the shared start caps the whole
-            // cycle at 8s regardless of how many retries happen inside it.
+            // fresh window here on top of the first attempt's time already
+            // spent would stack into a longer wait than intended before the
+            // fallback screen ever appeared. Counting down from the shared
+            // start caps the whole cycle regardless of how many retries
+            // happen inside it.
             let elapsed = Date().timeIntervalSince(lockCycleStartedAt ?? Date())
-            let remaining = max(0, 8.0 - elapsed)
+            let remaining = max(0, 4.5 - elapsed)
             try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
             guard gate == .locked, generation == authGeneration else { return }
             if isAuthenticating {
@@ -270,7 +275,7 @@ struct OwnerAppLock<Content: View>: View {
     private func scheduleHardWatchdog() {
         lockCycleID &+= 1
         let cycleID = lockCycleID
-        DispatchQueue.main.asyncAfter(deadline: .now() + 8.5) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
             guard gate == .locked, cycleID == lockCycleID else { return }
             logLock("hard watchdog fired isAuthenticating=\(isAuthenticating)")
             if isAuthenticating {
