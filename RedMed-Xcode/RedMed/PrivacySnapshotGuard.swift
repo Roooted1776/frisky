@@ -118,3 +118,71 @@ struct PrivacySnapshotGuard<Content: View>: View {
         .accessibilityHidden(true)
     }
 }
+
+/// Covers the key window with cream **synchronously** on `willResignActive` —
+/// before iOS captures the app-switcher thumbnail — so PHI can never leak
+/// into that snapshot during the gap before SwiftUI's own state-driven cream
+/// (`OwnerAppLock`'s relock, `PrivacySnapshotGuard`'s `.background` cover
+/// above) repaints on the next run-loop turn. `profile.purgeFromMemory()`
+/// clearing the model on relock does not retroactively erase pixels SwiftUI
+/// already composited from the prior frame — only a same-turn UIKit view
+/// added directly to the window can guarantee the switcher snapshot sees
+/// cream regardless of that render timing. Fires on **every** app switch
+/// (`.inactive` included — Control Center, app switcher, an incoming call —
+/// not just true `.background`), unlike the SwiftUI cover above, because the
+/// snapshot risk exists at every one of those transitions, not only
+/// backgrounding.
+///
+/// Removed on `didBecomeActive`, handing off to whatever SwiftUI is already
+/// showing by then — always cream while locked, since Face ID gates
+/// re-entry on every foreground (`AGENTS.md`: prompt on every open).
+final class SnapshotSafeCover {
+    static let shared = SnapshotSafeCover()
+
+    private var coverView: UIView?
+
+    private init() {
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.willResignActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.cover()
+        }
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.uncover()
+        }
+    }
+
+    /// No-op besides triggering `shared`'s lazy init — call once at app
+    /// start so the observers are registered before the first resign.
+    static func activate() {
+        _ = shared
+    }
+
+    private func cover() {
+        // Passerby tap card (Preview / Scan / band-style shell) is the public
+        // EMT view — never veil it, matching PrivacySnapshotGuard's own rule.
+        guard !TapCardPresentation.isVisible, coverView == nil,
+              let window = UIApplication.shared.connectedScenes
+                .compactMap({ $0 as? UIWindowScene })
+                .flatMap(\.windows)
+                .first(where: \.isKeyWindow)
+        else { return }
+        let view = UIView(frame: window.bounds)
+        view.backgroundColor = UIColor(Color.redmedBg)
+        view.isUserInteractionEnabled = false
+        view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        window.addSubview(view)
+        coverView = view
+    }
+
+    private func uncover() {
+        coverView?.removeFromSuperview()
+        coverView = nil
+    }
+}
