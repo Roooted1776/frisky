@@ -670,4 +670,23 @@ extension View {
                 .ignoresSafeArea(edges: .top)
         }
     }
+
+    /// Same opaque cream + rose radial wash as `RedMedPageBackground` / passerby
+    /// `tapper.html` body — owner RedMed top chrome uses this (not the flat
+    /// `redmedTopChromeFill`) so the header reads as one themed surface with
+    /// the rest of the page instead of a flat cream band cutting off the wash.
+    func redmedTopChromeWash() -> some View {
+        self.background(alignment: .top) {
+            ZStack {
+                Color.redmedBg
+                RadialGradient(
+                    colors: [Color.redmedWash.opacity(0.85), Color.redmedBg.opacity(0)],
+                    center: .top,
+                    startRadius: 20,
+                    endRadius: 420
+                )
+            }
+            .ignoresSafeArea(edges: .top)
+        }
+    }
 }
