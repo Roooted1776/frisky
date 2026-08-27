@@ -1,3 +1,4 @@
+import Foundation
 import os
 
 /// Diagnostic-only `os_signpost` markers for the cold-launch / Face ID unlock
