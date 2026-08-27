@@ -1,4 +1,7 @@
-# App Store audit — RedMed (complete)
+# App Store audit — RedMed (parked)
+
+**Not submitting.** No paid App Store listing / Connect app yet. Leave NFC and HealthKit parked. Do not encode a fake `apps.apple.com` URL. Restore this checklist when a paid Program and app ID exist.
+
 
 **Privacy Policy URL (public, live):** https://cdn.jsdelivr.net/gh/Roooted1776/redmed-privacy@main/index.html
 

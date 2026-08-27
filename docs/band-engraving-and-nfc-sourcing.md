@@ -81,7 +81,7 @@ Do not substitute slogans, URLs, or vendor names.
 | RF | 13.56 MHz HF, ISO 14443A Type 2, NDEF **blank unlocked** — no factory pre-encode, no lock |
 | Avoid | NTAG213, MIFARE, LF 125 kHz, UHF, pre-encoded vendor URLs, password-locked UID products you cannot overwrite from CoreNFC |
 | Factory NDEF | Leave **empty** (or a harmless stub). Owner overwrites on first Write in the NFC tab (`OwnerBandURI` / `#d=` only). |
-| QR (optional, outer only) | App Store listing URL only (`AppConfig.appStoreURL`). **Do not** QR-encode `tapper/#d=…`. If the plate only fits one mark, **`MED ID` wins** — omit QR. |
+| QR (optional, outer only) | Only a live App Store URL (`AppConfig.appStoreURL`). Currently `nil` — **omit QR** until a listing exists. **Do not** QR-encode `tapper/#d=…`. If the plate only fits one mark, **`MED ID` wins**. |
 | Chip (NDEF) | `AppConfig.medicalCardBaseURL#d=<base64url>` — currently `https://roooted1776.github.io/tapper/#d=` (`OwnerBandURI`). `getredmed.com` after domain cutover. |
 
 **Do not** pair the band with a third-party QR/NFC “profile” SaaS (Seritag Linking,
