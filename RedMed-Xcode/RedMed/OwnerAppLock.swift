@@ -79,6 +79,7 @@ struct OwnerAppLock<Content: View>: View {
         .onAppear {
             // Diagnostic only — see RedMedSignpost.swift. Ended below wherever
             // the lock screen first resolves (unlocked, or Proceed shown).
+            RedMedSignpost.trace("onAppear: gate=\(gate)")
             RedMedSignpost.begin(.coldLaunchWindow)
             screenCaptured = UIScreen.main.isCaptured
             lockCycleStartedAt = Date()
@@ -108,7 +109,9 @@ struct OwnerAppLock<Content: View>: View {
             // cycle at 8s regardless of how many retries happen inside it.
             let elapsed = Date().timeIntervalSince(lockCycleStartedAt ?? Date())
             let remaining = max(0, 8.0 - elapsed)
+            RedMedSignpost.trace("task watchdog armed: generation=\(generation) remaining=\(remaining)")
             try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
+            RedMedSignpost.trace("task watchdog woke: generation=\(generation) currentGen=\(authGeneration) gate=\(gate)")
             guard gate == .locked, generation == authGeneration else { return }
             if isAuthenticating {
                 // Hung Face ID sheet — kill it so Proceed can start a new one.
@@ -116,6 +119,7 @@ struct OwnerAppLock<Content: View>: View {
                 isAuthenticating = false
             }
             showUnlockControl = true
+            RedMedSignpost.trace("task watchdog forced showUnlockControl=true")
         }
         .task {
             // .utility: this fires at cold launch alongside the Face ID prompt
@@ -258,17 +262,21 @@ struct OwnerAppLock<Content: View>: View {
     private func scheduleHardWatchdog() {
         lockCycleID &+= 1
         let cycleID = lockCycleID
+        RedMedSignpost.trace("GCD watchdog armed: cycleID=\(cycleID)")
         DispatchQueue.main.asyncAfter(deadline: .now() + 8.5) {
+            RedMedSignpost.trace("GCD watchdog woke: cycleID=\(cycleID) currentCycle=\(lockCycleID) gate=\(gate)")
             guard gate == .locked, cycleID == lockCycleID else { return }
             if isAuthenticating {
                 BiometricAuth.cancelInFlight()
                 isAuthenticating = false
             }
             showUnlockControl = true
+            RedMedSignpost.trace("GCD watchdog forced showUnlockControl=true")
         }
     }
 
     private func tryAutoUnlockIfActive() {
+        RedMedSignpost.trace("tryAutoUnlockIfActive: gate=\(gate) didAutoPrompt=\(didAutoPromptThisLock) showUnlockControl=\(showUnlockControl) scenePhase=\(scenePhase)")
         guard gate == .locked, !didAutoPromptThisLock, !showUnlockControl else { return }
         // Fire immediately, including on cold-start `.inactive` — per AGENTS.md,
         // waiting for `.active` is itself the cream-hang bug: the scene reaches
@@ -295,6 +303,7 @@ struct OwnerAppLock<Content: View>: View {
     }
 
     private func unlockWithFaceID() {
+        RedMedSignpost.trace("unlockWithFaceID: gate=\(gate) isAuthenticating=\(isAuthenticating)")
         guard gate == .locked, !isAuthenticating else { return }
         isAuthenticating = true
         biometryFailed = false
@@ -314,6 +323,7 @@ struct OwnerAppLock<Content: View>: View {
             // Apple's own LocalAuthentication cost from anything RedMed does
             // afterward in this same completion.
             RedMedSignpost.end(.faceIDEvaluate)
+            RedMedSignpost.trace("BiometricAuth.authenticate completion: outcome=\(outcome) generation=\(generation) thread=\(Thread.isMainThread ? "main" : "bg")")
             if case .success = outcome {
                 // Start the parked-context Keychain read before the MainActor
                 // hop so SecItem overlaps the SwiftUI turn instead of following it.
