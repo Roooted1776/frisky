@@ -171,7 +171,13 @@ A UserDefaults gate (`ProfileData.storedProfileGateKey`, set on persist /
 Keychain presence) hints whether a blob is expected for prefetch / fail-closed
 load; SecItem confirms off-main. Auto Face ID on every owner launch **immediately**
 (including cold-start `.inactive` — do **not** wait for `.active` or the cream
-hangs with no sheet; that wait was the cream hang.
+hangs with no sheet; that wait was the cream hang), but **not** before a
+window is key — `tryAutoUnlockIfActive` also gates on `hasKeyWindow` and
+retries from `UIWindow.didBecomeKeyNotification` if `onAppear` fires too
+early, because an `evaluatePolicy` call made before any window is key has
+been observed to never complete (no success, no error) until the 8s/8.5s
+watchdogs kill it — a *different* cream hang than the `.active`-wait one,
+now seen on every cold launch instead of occasionally.
 `didAutoPromptThisLock` blocks re-prompt while the Face ID sheet holds
 `.inactive`). Prefetch still starts in the same `onAppear` tick and inside the
 unlock pipeline (single-flight overlap with Face ID). After cancel / mismatch
