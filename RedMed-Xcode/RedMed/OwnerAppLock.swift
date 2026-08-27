@@ -243,30 +243,24 @@ struct OwnerAppLock<Content: View>: View {
             Task { @MainActor in
                 guard generation == authGeneration else { return }
                 switch outcome {
-                case .declined:
-                    isAuthenticating = false
-                    biometryFailed = false
-                    faceIDUnavailableReason = nil
-                    notInteractive = false
-                    showUnlockControl = true
-                    gate = .locked
-                case .notInteractive:
+                case .declined, .notInteractive:
                     isAuthenticating = false
                     biometryFailed = false
                     faceIDUnavailableReason = nil
                     profileLoadFailed = false
                     gate = .locked
                     if !notInteractiveRetried {
-                        // The cold-launch auto attempt fires from onAppear, which can
-                        // land a beat before the scene actually finishes activating —
-                        // Face ID reports that as .notInteractive even though the
-                        // sheet would present a moment later. Retry once on a short
-                        // fixed delay (not by waiting on a scenePhase transition,
-                        // which may have already happened and never fire again — see
-                        // the "stays up forever" note this replaced) before falling
-                        // back to the manual Proceed screen below. The 8s watchdog
-                        // in `.task(id: authGeneration)` still guarantees Proceed
-                        // shows even if this retry itself never resolves.
+                        // Either result can mean the sheet never actually presented:
+                        // the cold-launch auto attempt fires from onAppear, which can
+                        // land a beat before the scene finishes activating, and LA
+                        // reports that race as .declined (silently, no sheet, no
+                        // message) just as often as the documented .notInteractive.
+                        // Retry once on a short fixed delay — not by waiting on a
+                        // scenePhase transition, which may have already happened and
+                        // never fire again (see the "stays up forever" note this
+                        // replaced) — before falling back to the manual Proceed
+                        // screen below. The 8s watchdog in `.task(id: authGeneration)`
+                        // still guarantees Proceed shows if this retry never resolves.
                         notInteractiveRetried = true
                         let retryGeneration = generation
                         Task { @MainActor in
@@ -275,9 +269,9 @@ struct OwnerAppLock<Content: View>: View {
                             unlockWithFaceID()
                         }
                     } else {
-                        // System still couldn't present the Face ID sheet on a real
-                        // retry (backgrounded, interrupted, another modal in
-                        // flight). Tell the user so Proceed doesn't look dead.
+                        // Real retry still didn't produce a Face ID sheet
+                        // (backgrounded, interrupted, another modal in flight, or a
+                        // genuine cancel). Tell the user so Proceed doesn't look dead.
                         notInteractive = true
                         didAutoPromptThisLock = false
                         showUnlockControl = true
