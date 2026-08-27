@@ -29,7 +29,7 @@ The app has no backend, database, or web service.
   write/read sessions, never tab chrome. Owner writes the passive HF NFC band
   from the NFC tab (Face ID gated) as `medicalCardBaseURL#d=` only
   (`AppConfig.OwnerBandURI`) — no vendor cloud, no social/short URL, no BLE.
-  Launch path is Face ID lock then Main (those tabs). No extra pages before Face ID. After unlock, a first-launch clickwrap (`ConsentGateView`, versioned in UserDefaults) may appear once before Main — never in front of Face ID, never on passerby tapper.
+  Launch path is Face ID lock then Main (those tabs). No extra pages before Face ID. After unlock, a clickwrap (`ConsentGateView`) appears before Main on **every** Face ID unlock (boot, and any re-lock/re-unlock) — never in front of Face ID, never on passerby tapper.
 - **Scanner / passerby shell** (`PublicCardView` / bracelet tap → `tapper.html#d=…`,
   `isScannerSession == true`): tabs are **RedMed · 911 · Aid** only — **no Edit**,
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain or
