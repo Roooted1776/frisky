@@ -11,6 +11,7 @@ import Security
 ///
 /// **Legacy items:** plain accessibility with no ACL. `load` still reads them;
 /// a successful read then **migrates** to the bound form (best-effort).
+/// Migration uses bound `save` only — it never writes a new unbound item.
 ///
 /// `load` / `save` use `BiometricAuth.peekAuthenticationContext()` when present
 /// so post–Face ID SecItem work does not present a second sheet.
@@ -56,10 +57,12 @@ enum KeychainStore {
     }
     // MARK: - Save
 
+    /// Writes a biometry-bound item only. Returns false instead of storing an
+    /// unbound blob — Edit Save must surface failure rather than drop the ACL.
     @discardableResult
     static func save(_ data: Data, account: String, service: String = defaultService) -> Bool {
         guard let access = makeAccessControl() else {
-            return saveLegacyUnbound(data, account: account, service: service)
+            return false
         }
 
         var query = baseQuery(account: account, service: service)
@@ -81,8 +84,7 @@ enum KeychainStore {
             return replaceWithBound(data, account: account, service: service, access: access)
         }
 
-        // Last resort unbound so Edit Save never silently drops PHI.
-        return saveLegacyUnbound(data, account: account, service: service)
+        return false
     }
 
     private static func replaceWithBound(
@@ -101,30 +103,7 @@ enum KeychainStore {
         add[kSecValueData as String] = data
         add[kSecAttrAccessControl as String] = access
         // Never set kSecAttrAccessible alongside kSecAttrAccessControl.
-        let addStatus = SecItemAdd(add as CFDictionary, nil)
-        if addStatus == errSecSuccess {
-            return true
-        }
-        return saveLegacyUnbound(data, account: account, service: service)
-    }
-
-    private static func saveLegacyUnbound(
-        _ data: Data,
-        account: String,
-        service: String
-    ) -> Bool {
-        let query = baseQuery(account: account, service: service)
-        let update: [String: Any] = [
-            kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
-        ]
-        let updateStatus = SecItemUpdate(query as CFDictionary, update as CFDictionary)
-        if updateStatus == errSecSuccess { return true }
-        guard updateStatus == errSecItemNotFound else { return false }
-        var attributes = query
-        attributes[kSecValueData as String] = data
-        attributes[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
-        return SecItemAdd(attributes as CFDictionary, nil) == errSecSuccess
+        return SecItemAdd(add as CFDictionary, nil) == errSecSuccess
     }
 
     // MARK: - Load
