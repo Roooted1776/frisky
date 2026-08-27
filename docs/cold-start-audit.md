@@ -57,18 +57,14 @@ is already correct and flags a couple of low-risk, low-value items for later.
   `MapKit`) is a system framework, so dyld has little extra to resolve at launch beyond what the
   feature set requires.
 
-## Minor, low-risk items (not acted on)
+## Minor, low-risk items
 
-These are not cold-start blockers and were left alone rather than "fixed" without the ability to
-measure the actual effect on-device:
-
-1. **`pheart.png` is 659 KB.** It's a WebView-only asset (`tapper.html`'s YOU-card watermark tile),
-   loaded by the page's own `<img>`/background-image resolution, not decoded by native code during
-   app launch — so it does not block first paint. It does add to on-disk app size and to what the
-   embedded WKWebView has to fetch/decode the first time the RedMed tab paints its watermark. If a
-   future pass revisits this, recompressing it (this repo has no PNG optimizer installed to do it
-   safely from this environment) or serving a smaller tile size would be a reasonable, contained
-   change to make on macOS where the result can be visually checked.
+1. **Fixed: bundled `pheart.png` was 1024x1024 truecolor (659 KB)** — the `<img id="rmLogo">`
+   fallback shown only if `BrandLogo.png` fails to resolve, displayed at 72 CSS px (216 @3x). The
+   bundled copy was ~4.7x the linear resolution (~22x the pixels) that ever paints on screen,
+   forcing WKWebView to decode a needlessly large RGBA bitmap on any load that hits the fallback.
+   Resized to 216x216 (44 KB), matching the web-served copies' target size; `render_brand_assets.swift`
+   updated so a future asset regen doesn't reintroduce the oversized copy.
 2. **`tapper.html` is ~113 KB of markup/CSS/JS**, string-cached in RAM once
    (`PasserbyShellCache.warm()`) but still parsed by WebKit on every WKWebView load (pool warm-up
    included). This is unavoidable given the shared owner/passerby shell architecture and is already

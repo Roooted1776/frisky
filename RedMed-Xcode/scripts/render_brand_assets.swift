@@ -303,8 +303,13 @@ do {
             try savePNG(scaledSquare(brandLogo, size: 216), to: target)
             quantizePNG(at: target)
         }
-        // Bundled app copy: not web-served, kept truecolor for sharpest in-app decode.
-        try savePNG(scaledSquare(brandLogo, size: 1024), to: root.appendingPathComponent("RedMed/pheart.png"))
+        // Bundled app copy: not web-served, kept truecolor (unquantized) for sharpest
+        // in-app decode. Still sized to the actual 72 CSS px -> 216 @3x display size
+        // (WKWebView `<img id="rmLogo" width="72" height="72">` fallback) — a 1024px
+        // truecolor RGBA copy decoded ~22x more pixels than ever painted on screen,
+        // for no visible gain, and cost real WKWebView decode time on every load that
+        // hit this fallback.
+        try savePNG(scaledSquare(brandLogo, size: 216), to: root.appendingPathComponent("RedMed/pheart.png"))
     }
 } catch {
     fputs("error: \(error)\n", stderr)
