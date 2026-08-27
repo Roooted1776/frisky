@@ -92,6 +92,10 @@ struct TopicDetailView: View {
                                     .scaleEffect(cprPulse ? 1.14 : 1.0)
                                     .animation(.easeOut(duration: 0.16), value: cprPulse)
                                     .shadow(color: Color.redmedAccent.opacity(0.32), radius: 10, y: 4)
+                                    // Pulses continuously at the CPR metronome rate — flatten
+                                    // fill+shadow to one GPU texture so each beat just scales
+                                    // a bitmap instead of recompositing a soft shadow on CPU.
+                                    .drawingGroup()
                                 Text("\(cprCount)")
                                     .font(.system(size: 32, weight: .heavy))
                                     .foregroundColor(.white)

@@ -166,6 +166,11 @@ struct CustomTabBar: View {
                     barShape.strokeBorder(Color.redmedDivider, lineWidth: 0.5)
                 }
                 .shadow(color: Color.black.opacity(0.05), radius: 10, y: -2)
+                // This bar is on-screen behind every tab's scroll content —
+                // flatten its static fill/stroke/shadow to one GPU texture so
+                // scrolling underneath doesn't force a CPU shadow recompute
+                // on every frame.
+                .drawingGroup()
                 .allowsHitTesting(false)
         }
         // Bar bounds only — upward shadow must not eat YOU-card / list taps.

@@ -545,11 +545,24 @@ extension BrandWordmarkHeader where Trailing == EmptyView {
 extension View {
     /// Surface card chrome used on RedMed / 911 / Aid / NFC (owner + scanner).
     /// No outer stroke — fill + radius + optional shadow only.
-    func redmedBox(elevated: Bool = true) -> some View {
-        self
+    ///
+    /// `flatten` rasterizes the fill/shadow into one GPU-backed texture so a
+    /// static card costs one Metal composite instead of a per-frame CPU
+    /// shadow recompute while its page scrolls. Pass `false` for a card that
+    /// wraps live-editing content (e.g. a focused `TextField`) — re-flattening
+    /// on every keystroke would cost more than it saves.
+    func redmedBox(elevated: Bool = true, flatten: Bool = true) -> some View {
+        let card = self
             .background(Color.redmedSurface)
             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
             .shadow(color: elevated ? RedMedChrome.cardShadow : .clear, radius: 8, y: 3)
+        return Group {
+            if flatten {
+                card.drawingGroup()
+            } else {
+                card
+            }
+        }
     }
 
     /// Opaque cream behind top Help / Edit / Back chrome.

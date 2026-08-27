@@ -37,6 +37,10 @@ struct EmergencyView: View {
                         )
                         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
                         .shadow(color: RedMedChrome.accentShadow, radius: 12, y: 5)
+                        // GPU-flatten so the press-scale spring transforms one
+                        // texture instead of recompositing gradient + shadow
+                        // every frame — same treatment as Theme.swift's CTAs.
+                        .drawingGroup()
                     }
                     .buttonStyle(RedMedPressStyle(haptic: nil))
 
