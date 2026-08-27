@@ -1,8 +1,9 @@
 import SwiftUI
 
 /// Owner / scanner RedMed tab — same bundled `tapper.html` medical panel helpers see
-/// on a band tap. Owner keeps Edit top chrome only (no bottom Help dock).
-/// Scanners keep Back top chrome. Help lives on Edit / 911 / Aid / NFC.
+/// on a band tap. Owner top chrome is the tapper YOU-card header (logo + name +
+/// Linked) with Edit trailing (no bottom Help dock). Scanners keep Back top chrome.
+/// Help lives on Edit / 911 / Aid / NFC.
 /// First-responder Preview lives on the NFC tab under Scan — not here.
 /// Native 911 / Aid / NFC tabs stay separate (HTML tab bar hidden in app-embed).
 ///
@@ -74,21 +75,26 @@ struct RedMedView: View {
         // Chrome is a sibling of the WKWebView — never an overlay. Overlaying
         // Edit on UIKit WebView lets the web view steal taps (Edit looks dead).
         VStack(spacing: 0) {
-            HStack(alignment: .center, spacing: 12) {
-                if isScannerSession {
+            if isScannerSession {
+                HStack(alignment: .center, spacing: 12) {
                     ScannerBackButton()
                     Spacer(minLength: 0)
-                } else {
-                    ChromeTextAction(title: "Edit") { requestEdit() }
-                    Spacer(minLength: 0)
                 }
+                .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
+                .padding(.horizontal, RedMedChrome.pagePadX)
+                .padding(.top, 16)
+                .padding(.bottom, 8)
+                .redmedTopChromeFill()
+            } else {
+                RedMedUserHeader(
+                    name: profile.name,
+                    linked: profile.showsBraceletAsLinked,
+                    onEdit: { requestEdit() },
+                    onStatus: {
+                        NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
+                    }
+                )
             }
-            .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
-            .padding(.horizontal, RedMedChrome.pagePadX)
-            .padding(.top, 16)
-            .padding(.bottom, 8)
-            // Opaque cream through status bar — covers white cutoff above the WKWebView.
-            .redmedTopChromeFill()
 
             Group {
                 if showsOwnerSetupFunnel {
@@ -300,6 +306,72 @@ struct RedMedView: View {
     }
 }
 
+// MARK: - Tapper header (owner RedMed)
+
+/// Same YOU-card header as passerby `tapper.html` `.rm-header` — logo, name,
+/// Linked / Not linked — with Edit as trailing chrome. Sibling of the WKWebView,
+/// never an overlay. Scanner / Preview keep HTML header + Back.
+private struct RedMedUserHeader: View {
+    let name: String
+    let linked: Bool
+    var onEdit: () -> Void
+    var onStatus: () -> Void
+
+    private var displayName: String {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "RedMed" : trimmed
+    }
+
+    private var statusTitle: String {
+        linked ? "Linked bracelet" : "Not linked"
+    }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 10) {
+            Image("BrandLogo")
+                .resizable()
+                .scaledToFill()
+                .frame(width: RedMedChrome.logoSize, height: RedMedChrome.logoSize)
+                .clipShape(Circle())
+                .shadow(color: Color.redmedAccent.opacity(0.18), radius: 10, y: 3)
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(displayName)
+                    .font(.system(size: 22, weight: .bold))
+                    .kerning(-0.5)
+                    .foregroundColor(.redmedDark)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.7)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button(action: onStatus) {
+                    HStack(spacing: 2) {
+                        Text(statusTitle)
+                            .font(.system(size: 12, weight: .bold))
+                            .kerning(0.5)
+                            .textCase(.uppercase)
+                        Text("›")
+                            .font(.system(size: 15, weight: .bold))
+                    }
+                    .foregroundColor(.redmedAccent)
+                }
+                .buttonStyle(RedMedPressStyle(scale: 0.98, haptic: nil))
+                .accessibilityLabel(statusTitle)
+                .accessibilityHint("Opens NFC")
+            }
+
+            Spacer(minLength: 8)
+
+            ChromeTextAction(title: "Edit", action: onEdit)
+        }
+        .padding(.horizontal, RedMedChrome.pagePadX)
+        .padding(.top, 16)
+        .padding(.bottom, 8)
+        .redmedTopChromeFill()
+        .accessibilityElement(children: .contain)
+    }
+}
+
 // MARK: - First-fill funnel (owner empty profile)
 
 /// Native setup on the owner RedMed tab. Replaces the empty YOU card — not an overlay
@@ -313,7 +385,6 @@ private struct OwnerSetupFunnel: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                header
                 ghostYouCard
                 stepsCard
                 PrimaryButton(title: "Fill medical ID", action: onFill)
@@ -336,32 +407,6 @@ private struct OwnerSetupFunnel: View {
         }
         .scrollIndicators(.visible)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private var header: some View {
-        HStack(alignment: .center, spacing: 10) {
-            Image("BrandLogo")
-                .resizable()
-                .scaledToFill()
-                .frame(width: RedMedChrome.logoSize, height: RedMedChrome.logoSize)
-                .clipShape(Circle())
-                .shadow(color: Color.redmedAccent.opacity(0.18), radius: 10, y: 3)
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 4) {
-                Text("RedMed")
-                    .font(.system(size: 22, weight: .bold))
-                    .kerning(-0.5)
-                    .foregroundColor(.redmedDark)
-                Text("Not linked")
-                    .font(.system(size: 12, weight: .bold))
-                    .kerning(0.5)
-                    .textCase(.uppercase)
-                    .foregroundColor(.redmedAccent)
-            }
-            Spacer(minLength: 0)
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("RedMed, not linked")
     }
 
     /// Same YOU-card chrome as tapper — empty slots plus the fill CTA below.

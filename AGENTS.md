@@ -138,7 +138,9 @@ The app has no backend, database, or web service.
   Owner pages + passerby tapper: cream fill only (no page BrandLogo). **No hanging
   decorative brand marks** anywhere (no lock watermark, no Aid pane wordmarks, no
   privacy-cover logo) — page BrandWordmark headers on NFC / topic sheets only;
-  YOU-card BrandLogo in tapper stays as the medical header mark.
+  YOU-card BrandLogo is the medical header mark (tapper `.rm-header`; owner RedMed
+  tab uses the same row natively — logo + name + Linked/Not linked — with Edit
+  trailing, HTML header hidden in `app-embed` so it is not double-headed).
 - `PrivacySnapshotGuard` cover must appear opaque with **no** opacity fade;
   app-switcher snapshots can capture mid-transition PHI. Capture cover **only
   while PHI is in RAM**. Non-capture cover is true **`.background` only** (with
