@@ -28,9 +28,7 @@ struct RedMedApp: App {
                 // Shell string during Face ID window. Vault I/O waits — do not fight SecItem/LA.
                 // CoreMotion still starts after unlock (OwnerAppLock). .utility so this
                 // does not compete with the Face ID sheet for CPU on cold launch.
-                Task.detached(priority: .utility) {
-                    PasserbyHTMLCardView.warmShellCache()
-                }
+                PasserbyHTMLCardView.scheduleShellWarmOnce()
                 Task.detached(priority: .utility) {
                     try? await Task.sleep(nanoseconds: 1_500_000_000)
                     _ = HIPAAOfflineVault.prepare()

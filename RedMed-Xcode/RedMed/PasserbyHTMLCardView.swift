@@ -70,6 +70,19 @@ struct PasserbyHTMLCardView: View {
         PasserbyShellCache.warm()
     }
 
+    /// Cold launch calls this from several independent spots (app `.task`,
+    /// `OwnerAppLock.onAppear`, `startUnlockPipeline`) so at least one of
+    /// them fires regardless of view-lifecycle timing. `PasserbyShellCache.warm()`
+    /// itself is idempotent, but each caller was still spawning its own
+    /// `Task.detached` — up to three separate GCD thread-pool entries all
+    /// racing the same `NSLock` in the same instant, alongside the Face ID
+    /// sheet and Keychain prefetch. This collapses that to a single
+    /// scheduled task so cold-launch CPU load doesn't spike from redundant
+    /// scheduling.
+    nonisolated static func scheduleShellWarmOnce() {
+        PasserbyShellWarmScheduler.scheduleOnce()
+    }
+
     nonisolated static func extractPayload(_ raw: String) -> String? {
         ProfileNFCCodec.extractPayload(fromURLString: raw)
     }
@@ -131,6 +144,25 @@ struct PasserbyHTMLShell: View {
 
     static func warmShellCache() {
         PasserbyHTMLCardView.warmShellCache()
+    }
+}
+
+private enum PasserbyShellWarmScheduler {
+    private static let lock = NSLock()
+    private static var scheduled = false
+
+    /// Reset per lock cycle isn't needed — the shell string cache itself
+    /// never needs re-warming after the first successful read, so once
+    /// scheduled for this process, later callers are no-ops.
+    nonisolated static func scheduleOnce() {
+        lock.lock()
+        let alreadyScheduled = scheduled
+        scheduled = true
+        lock.unlock()
+        guard !alreadyScheduled else { return }
+        Task.detached(priority: .utility) {
+            PasserbyHTMLCardView.warmShellCache()
+        }
     }
 }
 
