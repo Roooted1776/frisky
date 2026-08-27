@@ -84,7 +84,7 @@ struct RedMedView: View {
                 }
             }
             .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
-            .padding(.horizontal, 16)
+            .padding(.horizontal, RedMedChrome.pagePadX)
             .padding(.top, 16)
             .padding(.bottom, 8)
             // Opaque cream through status bar — covers white cutoff above the WKWebView.
@@ -113,11 +113,16 @@ struct RedMedView: View {
                         .transaction { $0.animation = nil }
                     }
                 } else if packFinished {
-                    VStack(spacing: 12) {
-                        Text("Couldn't pack tapper.html#d= from RedMed.")
+                    VStack(spacing: 14) {
+                        Text("Couldn't load your medical card.")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.redmedMuted)
                             .multilineTextAlignment(.center)
+                        PrimaryButton(title: "Try again") {
+                            packFinished = false
+                            packedPayload = nil
+                            syncPackedPayload()
+                        }
                     }
                     .padding(24)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -159,7 +164,7 @@ struct RedMedView: View {
             OwnerNextStepBanner(
                 icon: "square.and.pencil",
                 title: "Finish your medical ID",
-                detail: "Add birth date and blood type so a band tap can show Linked.",
+                detail: "Add birth date and blood type so helpers see a complete ID.",
                 actionTitle: "Edit",
                 action: { requestEdit() }
             )
@@ -167,7 +172,7 @@ struct RedMedView: View {
             OwnerNextStepBanner(
                 icon: "wave.3.right",
                 title: "Write your band",
-                detail: "A passerby tap opens this card. NFC tab writes the chip.",
+                detail: "Write the band on the NFC tab so a passerby tap opens this card.",
                 actionTitle: "NFC",
                 action: {
                     NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
@@ -384,19 +389,16 @@ private struct OwnerSetupFunnel: View {
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(Color.redmedDark.opacity(0.4))
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, RedMedChrome.pagePadX)
         .padding(.vertical, 11)
     }
 
     private var stepsCard: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("GET STARTED")
-                .font(.system(size: 12, weight: .semibold))
-                .kerning(0.6)
-                .foregroundColor(.redmedMuted)
-                .padding(.horizontal, 14)
-                .padding(.top, 14)
-                .padding(.bottom, 8)
+            SectionLabel(text: "Get started")
+                .padding(.horizontal, 10)
+                .padding(.top, 8)
+                .padding(.bottom, 2)
             stepRow(number: "1", title: "Fill your medical ID", detail: "Name, birth date, blood type. Allergies and contacts help EMS.")
             Divider().overlay(Color.redmedDivider).padding(.leading, 54)
             stepRow(number: "2", title: "Save", detail: "Face ID writes it to this iPhone's Keychain. Nothing leaves the phone.")
@@ -407,32 +409,13 @@ private struct OwnerSetupFunnel: View {
     }
 
     private var healthButton: some View {
-        Button {
+        OutlineButton(
+            title: healthBusy ? "Reading Apple Health…" : "Fill from Apple Health",
+            systemImage: healthBusy ? nil : "heart.text.square",
+            busy: healthBusy
+        ) {
             onHealthImport()
-        } label: {
-            HStack(spacing: 8) {
-                if healthBusy {
-                    ProgressView().tint(.redmedAccent)
-                } else {
-                    Image(systemName: "heart.text.square")
-                        .font(.system(size: 17, weight: .semibold))
-                }
-                Text(healthBusy ? "Reading Apple Health…" : "Fill from Apple Health")
-                    .font(.system(size: 16, weight: .bold))
-            }
-            .foregroundColor(.redmedAccent)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
-            .background(Color.redmedBg)
-            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-            .overlay(
-                RoundedRectangle(cornerRadius: RedMedChrome.boxRadius)
-                    .strokeBorder(Color.redmedAccent.opacity(0.45), lineWidth: 1.5)
-            )
         }
-        .disabled(healthBusy)
-        .buttonStyle(RedMedPressStyle(scale: 0.97, haptic: nil))
-        .opacity(healthBusy ? 0.72 : 1)
     }
 
     private func stepRow(number: String, title: String, detail: String) -> some View {

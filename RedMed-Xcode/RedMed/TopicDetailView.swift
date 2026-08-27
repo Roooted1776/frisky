@@ -108,13 +108,7 @@ struct TopicDetailView: View {
                                 .foregroundColor(.redmedMuted)
                                 .multilineTextAlignment(.center)
                             if cprRunning {
-                                Button("Stop") { stopCPR() }
-                                    .font(.system(size: 15, weight: .bold))
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 14)
-                                    .background(Color.redmedAccent)
-                                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                                PrimaryButton(title: "Stop") { stopCPR() }
                             } else {
                                 PrimaryButton(title: "Start beat") { startCPR() }
                             }
@@ -139,7 +133,7 @@ struct TopicDetailView: View {
                         ForEach(Array(topic.symptoms.enumerated()), id: \.offset) { i, sym in
                             Text(sym)
                                 .font(.system(size: 15))
-                                .foregroundColor(.redmedAccent)
+                                .foregroundColor(.redmedDark)
                                 .lineSpacing(3)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -170,7 +164,7 @@ struct TopicDetailView: View {
                                     .padding(.top, 4)
                                 Text(step)
                                     .font(.system(size: 15))
-                                    .foregroundColor(.redmedAccent)
+                                    .foregroundColor(.redmedDark)
                                     .lineSpacing(3)
                                     .fixedSize(horizontal: false, vertical: true)
                                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -189,7 +183,7 @@ struct TopicDetailView: View {
                         LiveNearbyHospitalsSection()
                     }
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, RedMedChrome.pagePadX)
                 .padding(.bottom, 32)
             }
             .scrollIndicators(.visible)
@@ -246,13 +240,7 @@ private struct LiveNearbyHospitalsSection: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.redmedAccent)
             } else if hospitalFinder.hospitals.isEmpty {
-                Button("Find hospitals near me") { hospitalFinder.search() }
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(Color.redmedAccent)
-                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+                PrimaryButton(title: "Find hospitals near me") { hospitalFinder.search() }
             } else {
                 VStack(spacing: 0) {
                     ForEach(Array(hospitalFinder.hospitals.enumerated()), id: \.element.id) { i, hosp in

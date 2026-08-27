@@ -218,7 +218,7 @@ struct EditProfileView: View {
     private var suggestionStrip: some View {
         if !suggestionMatches.isEmpty {
             VStack(spacing: 0) {
-                Divider().overlay(Color.black.opacity(0.12))
+                Divider().overlay(Color.redmedDivider)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(suggestionMatches, id: \.self) { suggestion in
@@ -231,7 +231,7 @@ struct EditProfileView: View {
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 8)
                                     .background(Color.redmedAccent.opacity(0.10))
-                                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius, style: .continuous))
                             }
                             .buttonStyle(.plain)
                         }

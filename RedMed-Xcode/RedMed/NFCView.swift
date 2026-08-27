@@ -17,8 +17,6 @@ struct NFCView: View {
     /// `item:` presentation so the cover always binds a complete payload (no empty race).
     @State private var previewSession: PreviewSession?
 
-    private let boxRadius = RedMedChrome.boxRadius
-
     /// One-shot Preview open — payload + embed JSON must both be set before present.
     private struct PreviewSession: Identifiable {
         let id = UUID()
@@ -71,7 +69,7 @@ struct NFCView: View {
         } message: {
             Text("Face ID or passcode is required to write your emergency card to the bracelet.")
         }
-        .alert("NFC", isPresented: Binding(
+        .alert("Bracelet", isPresented: Binding(
             get: { band.alertMessage != nil },
             set: { if !$0 { band.alertMessage = nil } }
         )) {
@@ -144,45 +142,19 @@ struct NFCView: View {
 
     private var setupCard: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("SET UP")
-                .font(.system(size: 12, weight: .semibold))
-                .kerning(0.6)
-                .foregroundColor(.redmedMuted)
+            SectionLabel(text: "Set up")
 
-            Button {
+            PrimaryButton(
+                title: writeButtonTitle,
+                systemImage: band.isWriting ? nil : "wave.3.right",
+                busy: band.isWriting,
+                disabled: !profile.hasData || band.isBusy
+            ) {
                 band.writeBand(from: profile, isScannerSession: isScannerSession)
-            } label: {
-                HStack(spacing: 8) {
-                    if band.isWriting {
-                        ProgressView().tint(.white)
-                    } else {
-                        Image(systemName: "wave.3.right")
-                    }
-                    Text(writeButtonTitle)
-                }
-                .font(.system(size: 17, weight: .bold))
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(
-                    LinearGradient(
-                        colors: [Color(red: 1, green: 0.447, blue: 0.537), .redmedAccent],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .clipShape(RoundedRectangle(cornerRadius: boxRadius))
-                .shadow(color: Color.redmedAccent.opacity(profile.hasData ? 0.28 : 0), radius: 7, y: 4)
-                // Same GPU-flattening as the other gradient CTAs (Theme.swift,
-                // EmergencyView's Call button) — one Metal composite for the
-                // gradient + shadow instead of a CPU recomposite per frame.
-                .drawingGroup()
             }
-            .disabled(!profile.hasData || band.isBusy)
-            .opacity(profile.hasData ? 1 : 0.55)
 
             if !profile.hasData {
-                Text("Add your name on RedMed before writing a tag.")
+                Text("Add your name on RedMed before writing the band.")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.redmedAccent)
             }
@@ -210,10 +182,7 @@ struct NFCView: View {
     /// Same card chrome as SET UP — Preview sits even with the rest of the page.
     private var firstResponderPreviewLink: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("PREVIEW")
-                .font(.system(size: 11, weight: .semibold))
-                .kerning(0.6)
-                .foregroundColor(.redmedMuted)
+            SectionLabel(text: "Preview")
 
             Text("What first responders see when they tap your band.")
                 .font(.system(size: 13, weight: .medium))
@@ -221,24 +190,12 @@ struct NFCView: View {
                 .lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Button {
+            OutlineButton(
+                title: "Preview",
+                disabled: !profile.hasData || band.isBusy || previewSession != nil
+            ) {
                 openFirstResponderPreview()
-            } label: {
-                Text("Preview")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.redmedAccent)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(Color.redmedBg)
-                    .clipShape(RoundedRectangle(cornerRadius: boxRadius))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: boxRadius)
-                            .strokeBorder(Color.redmedAccent.opacity(0.45), lineWidth: 1.5)
-                    )
             }
-            .disabled(!profile.hasData || band.isBusy || previewSession != nil)
-            .opacity(profile.hasData ? 1 : 0.55)
-            .buttonStyle(.plain)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -273,9 +230,9 @@ struct NFCView: View {
 
     private var writeButtonTitle: String {
         if band.isWriting {
-            return AppConfig.nfcHardwareEnabled ? "Hold near tag…" : "Packing…"
+            return "Hold near the band…"
         }
-        return AppConfig.nfcHardwareEnabled ? "Write to NFC tag" : "Write (simulate)"
+        return "Write the band"
     }
 
     private var statusIsError: Bool {
