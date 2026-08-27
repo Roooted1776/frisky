@@ -49,9 +49,6 @@ struct EmergencyView: View {
 
                     SeizureTimerStrip(isVisible: isVisible)
 
-                    // NO CELL SIGNAL — carriers only (no satellite coach UI)
-                    NoCellSignalCard()
-
                     // ROADSIDE FIRST RESPONSE
                     InfoCard(
                         icon: "cross.fill",
@@ -392,33 +389,6 @@ struct InfoCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .redmedBox()
-    }
-}
-
-// MARK: - No Cell Signal
-struct NoCellSignalCard: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 6) {
-                Image(systemName: "antenna.radiowaves.left.and.right")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(.redmedAccent)
-                Text("No cell signal?")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.redmedAccent)
-                Spacer(minLength: 0)
-            }
-
-            // Compact field line — Call button is pinned above GPS.
-            Text(AppConfig.Satellite.directToCellCarriersLine)
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundColor(.redmedMuted)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
         .redmedBox()
     }
 }
