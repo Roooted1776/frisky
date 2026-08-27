@@ -39,7 +39,7 @@ struct FacePage: View {
 
                 VStack(spacing: 14) {
                     if screenCaptured {
-                        Text("Screen sharing is on. Unlock with Face ID — your profile stays hidden on the share until you stop sharing.")
+                        Text("Screen sharing is on. Unlock with Face ID or your passcode — your profile stays hidden on the share until you stop sharing.")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.redmedMuted)
                             .multilineTextAlignment(.center)
@@ -87,7 +87,7 @@ struct FacePage: View {
                         UnlockScreenButton(
                             title: "Proceed",
                             disabled: isAuthenticating,
-                            accessibilityHintText: "Face ID or Touch ID"
+                            accessibilityHintText: "Face ID, Touch ID, or passcode"
                         ) {
                             onProceed()
                         }

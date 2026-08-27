@@ -5,10 +5,10 @@ import UIKit
 /// `PublicCardView`, or NFC Preview / Scan — tap-to-view stays ungated
 /// (no Face ID, no passcode, no login).
 ///
-/// App unlock is Face ID / Touch ID only (`allowPasscode: false`) so no
-/// password pad sits in front of Main / the YOU card. Edit, Save, NFC write,
-/// vault unlock, and Erase all pass `force: true` and re-prompt every time —
-/// only the initial app unlock reuses `didUnlockThisLaunch`.
+/// App unlock is Face ID / Touch ID with device passcode fallback
+/// (`allowPasscode: true`, `force: true`) so every open prompts — never
+/// skip via `didUnlockThisLaunch`. Edit, Save, NFC write, vault unlock,
+/// and Erase also pass `force: true` and re-prompt every time.
 ///
 /// On success the `LAContext` is **parked** (not invalidated) so
 /// `KeychainStore.load(context:)` can use `kSecUseAuthenticationContext`
@@ -147,6 +147,14 @@ enum BiometricAuth {
         }
     }
 
+    /// Live `evaluatePolicy` in progress (including the teardown wait).
+    /// Scene `.inactive` during this is the Face ID sheet — do not relock.
+    static var isEvaluating: Bool {
+        parkLock.lock()
+        defer { parkLock.unlock() }
+        return inFlightContext != nil
+    }
+
     /// Kill a hung / leftover Face ID sheet so Proceed can start a fresh one.
     /// Returns whether a live context was actually cancelled — callers only
     /// need to wait out the teardown when this is true.
@@ -236,7 +244,9 @@ enum BiometricAuth {
         let context = LAContext()
         context.touchIDAuthenticationAllowableReuseDuration = allowableReuseDuration
         context.localizedCancelTitle = "Cancel"
-        if !allowPasscode {
+        if allowPasscode {
+            context.localizedFallbackTitle = "Enter Passcode"
+        } else {
             context.localizedFallbackTitle = ""
         }
         return context
