@@ -199,10 +199,6 @@ struct OwnerAppLock<Content: View>: View {
         }
     }
 
-    private var sceneIsInteractive: Bool {
-        scenePhase == .active || UIApplication.shared.applicationState == .active
-    }
-
     private func tryAutoUnlockIfActive() {
         guard gate == .locked, !didAutoPromptThisLock, !showUnlockControl else { return }
         // Fire immediately, including on cold-start `.inactive` — per AGENTS.md,
@@ -312,26 +308,20 @@ struct OwnerAppLock<Content: View>: View {
 
     /// One bounded retry for the cold-launch `.notInteractive` race.
     ///
-    /// If the scene is already interactive, retry on the next turn — a flat
-    /// 400ms sleep here was itself a cream hang when Face ID was ready.
-    /// If still `.inactive`, drop `didAutoPromptThisLock` so the `.active`
-    /// transition can retry, and cap the wait at 150ms in case that
-    /// transition already fired (the stall-forever bug a scenePhase wait
-    /// without a timeout caused).
+    /// Never retry on the same turn as the failed evaluate — LAContext
+    /// teardown needs ~0.28s wall clock (AGENTS.md). A same-turn retry
+    /// fails immediately with no Face ID sheet (dead prompt). Do not treat
+    /// `UIApplication.shared.applicationState == .active` as ready either;
+    /// that can be true while the scene still isn't interactive for LA.
     private func scheduleFastNotInteractiveRetry(generation: Int) {
         notInteractiveRetried = true
-        if sceneIsInteractive {
-            didAutoPromptThisLock = true
-            unlockWithFaceID()
-            return
-        }
-        didAutoPromptThisLock = false
+        didAutoPromptThisLock = true
         let retryGeneration = generation
         Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 150_000_000)
+            try? await Task.sleep(nanoseconds: 280_000_000)
             guard retryGeneration == authGeneration, gate == .locked else { return }
             guard !isAuthenticating, !showUnlockControl else { return }
-            didAutoPromptThisLock = true
+            guard scenePhase != .background else { return }
             unlockWithFaceID()
         }
     }
