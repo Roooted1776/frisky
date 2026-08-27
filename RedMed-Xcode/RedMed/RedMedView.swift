@@ -345,25 +345,17 @@ private struct RedMedUserHeader: View {
                     .minimumScaleFactor(0.7)
                     .fixedSize(horizontal: false, vertical: true)
                 Button(action: onStatus) {
-                    HStack(spacing: 5) {
-                        Image(systemName: linked ? "checkmark.seal.fill" : "wave.3.right")
-                            .font(.system(size: 11, weight: .bold))
+                    HStack(spacing: 2) {
                         Text(statusTitle)
                             .font(.system(size: 12, weight: .bold))
                             .kerning(0.5)
                             .textCase(.uppercase)
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 9, weight: .bold))
+                        Text("›")
+                            .font(.system(size: 15, weight: .bold))
                     }
-                    .foregroundColor(linked ? .redmedAccent : .white)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background {
-                        Capsule()
-                            .fill(linked ? Color.redmedAccent.opacity(0.12) : Color.redmedAccent)
-                    }
+                    .foregroundColor(.redmedAccent)
                 }
-                .buttonStyle(RedMedPressStyle(scale: 0.96, haptic: nil))
+                .buttonStyle(RedMedPressStyle(scale: 0.98, haptic: nil))
                 .accessibilityLabel(statusTitle)
                 .accessibilityHint("Opens NFC")
             }
