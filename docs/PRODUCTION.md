@@ -1,6 +1,6 @@
 # Production readiness — RedMed
 
-Last audited against `main` after #416–#419. App Store Review sign-off: `docs/APP-STORE.md`.
+Last audited against `main`. App Store submit is **parked** (no paid listing / Connect app yet). Keep `docs/APP-STORE.md` for later; do not treat it as a current ship checklist.
 
 ## Permanent rule: local, always loadable
 
@@ -31,21 +31,15 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | App Store package | `PrivacyInfo.xcprivacy` + export flag + `docs/APP-STORE.md` |
 | Open PRs | Squash only into `main` |
 
-## Blockers before live NFC / listing ID
+## Parked until paid Apple Developer + listing
 
-These cannot be finished in git alone.
+Not doing these in git until you have the Program and an app ID:
 
-1. **Paid Apple Developer + NFC Tag Reading** — entitlements empty; `nfcHardwareEnabled = false`.
-2. **App Store listing ID** — `AppConfig.appStoreURL` placeholder `id0000000000` (setup QR only).
-3. **Signing** — Archive from Xcode on team `33F9FQ4VBU`.
-4. **Custom HTML domain** — still TBD; bands stay on github.io until HTTPS is green (`docs/domain.md`).
+1. NFC Tag Reading entitlement — keep `nfcHardwareEnabled = false` and empty `RedMed.entitlements`.
+2. HealthKit entitlement — keep `healthKitImportEnabled = false`.
+3. `AppConfig.appStoreURL` is `nil` (no placeholder listing).
+4. App Store Connect package / Archive.
 
-## Ship sequence
+Legal policies stay in Help.html. User acknowledgments stay on `ConsentGateView` after Face ID.
 
-1. Pull `main` into `/Users/claude/Documents/frisky`.
-2. Tick `PrivacyInfo.xcprivacy` on the RedMed target.
-3. Archive on the paid team.
-4. Fill Connect from `docs/APP-STORE.md` (including **not** a regulated medical device).
-5. Flip NFC / Health flags only after those capabilities exist on the App ID.
-6. Set real `appStoreURL` after Connect assigns an ID.
-7. Tag release on `main`.
+Custom HTML domain is still TBD (`docs/domain.md`); bands stay on github.io until HTTPS is green.
