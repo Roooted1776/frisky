@@ -46,15 +46,16 @@ struct OwnerAppLock<Content: View>: View {
             case .unlocked:
                 content()
             case .locked:
-                if showUnlockControl {
+                // Face ID / passcode sheet is the only chrome while evaluating.
+                // FacePage (Proceed) only after cancel / mismatch / timeout.
+                if showUnlockControl, !isAuthenticating {
                     FacePage(
                         screenCaptured: screenCaptured,
                         biometryFailed: biometryFailed,
                         unavailableReason: faceIDUnavailableReason,
                         profileLoadFailed: profileLoadFailed,
                         notInteractive: notInteractive,
-                        isAuthenticating: isAuthenticating,
-                        onProceed: { startUnlockPipeline(isAuto: false) },
+                        onProceed: { startUnlockPipeline() },
                         onOpenSettings: {
                             guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
                             UIApplication.shared.open(url)
@@ -216,15 +217,13 @@ struct OwnerAppLock<Content: View>: View {
         // recovers via a bounded retry / Proceed, so it costs nothing to try early.
         guard scenePhase != .background else { return }
         didAutoPromptThisLock = true
-        startUnlockPipeline(isAuto: true)
+        startUnlockPipeline()
     }
 
-    private func startUnlockPipeline(isAuto: Bool) {
+    private func startUnlockPipeline() {
         guard gate == .locked else { return }
-        if isAuto {
-            didAutoPromptThisLock = true
-            showUnlockControl = false
-        }
+        didAutoPromptThisLock = true
+        showUnlockControl = false
         unlockWithFaceID()
         profile.beginUnlockPrefetch()
         // String warm only during Face ID — WK waits until after unlock. .utility

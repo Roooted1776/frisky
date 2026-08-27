@@ -4,15 +4,14 @@ import SwiftUI
 /// Single CTA — **Proceed** normally, **Open Settings** when
 /// `unavailableReason` is set (retrying evaluatePolicy the same way can't
 /// fix a lockout / not-enrolled / no-passcode state; no sheet even shows
-/// for those). Cream user-page fill with the brand mark. Not a dock over
-/// LockEntryPage. The mark is decorative — never gates Face ID.
+/// for those). Cream + CTA only — no "Looking for Face ID" hang line.
+/// Not shown while the system sheet is up.
 struct FacePage: View {
     var screenCaptured: Bool
     var biometryFailed: Bool
     var unavailableReason: BiometricAuth.UnavailableReason?
     var profileLoadFailed: Bool
     var notInteractive: Bool
-    var isAuthenticating: Bool
     var onProceed: () -> Void
     var onOpenSettings: () -> Void
 
@@ -22,17 +21,6 @@ struct FacePage: View {
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
-
-            // Centered on the full screen (not just the safe-area rect the
-            // rest of this ZStack is laid out in) so it lines up with the
-            // logo on LockEntryPage instead of sitting off-center.
-            Image("BrandLogo")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 56, height: 56)
-                .accessibilityHidden(true)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .ignoresSafeArea()
 
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
@@ -45,13 +33,7 @@ struct FacePage: View {
                             .multilineTextAlignment(.center)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    if isAuthenticating {
-                        Text("Looking for Face ID…")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(.redmedMuted)
-                            .multilineTextAlignment(.center)
-                            .accessibilityAddTraits(.updatesFrequently)
-                    } else if let unavailableReason {
+                    if let unavailableReason {
                         Text(unavailableReason.message)
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.redmedAccent)
@@ -86,7 +68,6 @@ struct FacePage: View {
                     } else {
                         UnlockScreenButton(
                             title: "Proceed",
-                            disabled: isAuthenticating,
                             accessibilityHintText: "Face ID, Touch ID, or passcode"
                         ) {
                             onProceed()
