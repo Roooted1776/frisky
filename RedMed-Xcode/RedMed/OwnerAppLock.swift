@@ -39,6 +39,11 @@ struct OwnerAppLock<Content: View>: View {
     /// see the retry block in `unlockWithFaceID()`'s completion handler.
     @State private var notInteractiveRetried = false
     @State private var showUnlockControl = false
+    /// When the current lock cycle actually started (cold launch or re-lock) —
+    /// the watchdog below counts down from this, not from each retry's own
+    /// `authGeneration` bump, so a fast-fail + retry can't stack a second
+    /// full 8s window on top of the first and read as a ~9s+ hang.
+    @State private var lockCycleStartedAt: Date?
 
     var body: some View {
         ZStack {
@@ -72,6 +77,7 @@ struct OwnerAppLock<Content: View>: View {
             // the lock screen first resolves (unlocked, or Proceed shown).
             RedMedSignpost.begin(.coldLaunchWindow)
             screenCaptured = UIScreen.main.isCaptured
+            lockCycleStartedAt = Date()
             tryAutoUnlockIfActive()
             profile.beginUnlockPrefetch()
             // String cache only — not WK — during Face ID window. .utility so it
@@ -87,7 +93,17 @@ struct OwnerAppLock<Content: View>: View {
             // on a cold launch where the system sheet never presents. 8s still
             // gives a real Face ID prompt (and a slower human) room to resolve
             // normally without cutting it off mid-interaction.
-            try? await Task.sleep(nanoseconds: 8_000_000_000)
+            //
+            // Budgeted from `lockCycleStartedAt`, not from this generation's
+            // own start — the fast-fail-then-retry path bumps authGeneration
+            // (restarting this `.task`) partway through the cycle, and a
+            // fresh 8s here on top of the first attempt's time already spent
+            // stacked into a ~9s+ wait before the fallback screen ever
+            // appeared. Counting down from the shared start caps the whole
+            // cycle at 8s regardless of how many retries happen inside it.
+            let elapsed = Date().timeIntervalSince(lockCycleStartedAt ?? Date())
+            let remaining = max(0, 8.0 - elapsed)
+            try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
             guard gate == .locked, generation == authGeneration else { return }
             if isAuthenticating {
                 // Hung Face ID sheet — kill it so Proceed can start a new one.
@@ -212,6 +228,7 @@ struct OwnerAppLock<Content: View>: View {
         if gate == .unlocked {
             profile.purgeFromMemory()
             BiometricAuth.resetLaunchUnlock()
+            lockCycleStartedAt = Date()
             gate = .locked
         }
         profile.discardUnlockPrefetch()
