@@ -1,25 +1,26 @@
 import SwiftUI
 
-/// First-launch legal consent, shown only after Face ID unlock.
+/// Legal consent, shown every time after a successful Face ID unlock.
 /// Never mounts in front of the lock shell (AGENTS.md: no extra pages before Face ID).
-/// Never shown on passerby tapper. Re-shown when `currentVersion` bumps.
+/// Never shown on passerby tapper. `ConsentGateView` is recreated (fresh
+/// `@State`) on every unlock because it lives inside `OwnerAppLock`'s
+/// `.unlocked` branch, which SwiftUI tears down and rebuilds on every
+/// re-lock — so starting `hasAccepted` at `false` re-gates on every auth.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
     /// Bump with the Version line in Help.html Terms / Privacy / Security
     /// whenever a change is material enough to require re-consent.
     static let currentVersion = "4.1"
 
-    static var hasAccepted: Bool {
-        UserDefaults.standard.string(forKey: acceptedVersionKey) == currentVersion
-    }
-
+    /// Timestamp of the most recent acceptance — record-keeping only, not
+    /// used to gate the screen (that always starts unaccepted per unlock).
     static func recordAcceptance() {
         UserDefaults.standard.set(currentVersion, forKey: acceptedVersionKey)
     }
 }
 
 struct ConsentGateView<Content: View>: View {
-    @State private var hasAccepted = ConsentSettings.hasAccepted
+    @State private var hasAccepted = false
     @State private var checked = false
     @State private var showPolicy: HelpDocument.Policy?
     @ViewBuilder var content: () -> Content
