@@ -25,6 +25,9 @@ struct RedMedApp: App {
             // Main.dc / cream chrome is light-only — keep phone + Xcode/sim identical.
             .preferredColorScheme(.light)
             .task {
+                // Registers the willResignActive/didBecomeActive observers before
+                // the app can possibly resign active for the first time.
+                SnapshotSafeCover.activate()
                 // Shell string during Face ID window. Vault I/O waits — do not fight SecItem/LA.
                 // CoreMotion still starts after unlock (OwnerAppLock). .utility so this
                 // does not compete with the Face ID sheet for CPU on cold launch.
