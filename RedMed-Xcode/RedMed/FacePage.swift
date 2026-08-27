@@ -17,10 +17,7 @@ struct FacePage: View {
 
     var body: some View {
         ZStack {
-            Color.redmedBg
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
-                .accessibilityHidden(true)
+            RedMedPageBackground()
 
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
@@ -74,9 +71,10 @@ struct FacePage: View {
                         }
                     }
                 }
-                .padding(.horizontal, 22)
-                .padding(.bottom, 16)
+                .padding(.horizontal, RedMedChrome.pagePadX)
+                .padding(.bottom, 12)
             }
+            .safeAreaPadding(.bottom, 8)
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Face")

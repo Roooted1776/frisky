@@ -322,27 +322,31 @@ struct OwnerAppLock<Content: View>: View {
             Task { @MainActor in
                 guard generation == authGeneration else { return }
                 switch outcome {
-                case .declined, .notInteractive:
+                case .declined:
                     isAuthenticating = false
                     biometryFailed = false
                     faceIDUnavailableReason = nil
                     profileLoadFailed = false
                     gate = .locked
-                    // The onAppear-before-scene-activates race fails near-instantly —
-                    // LA rejects the request without ever doing real work. A failure
-                    // that took real wall-clock time is a slower, likely persistent
-                    // condition (system busy, another modal, genuine cancel); retrying
-                    // that just stacks a second multi-second wait behind blank cream
-                    // instead of fixing anything, so only retry the fast case.
                     let failedFast = Date().timeIntervalSince(attemptStartedAt) < 1.0
                     if !notInteractiveRetried, failedFast {
                         scheduleFastNotInteractiveRetry(generation: generation)
                     } else {
-                        // Either the fast retry is already spent, or this failure took
-                        // real time to arrive (backgrounded, interrupted, another modal
-                        // in flight, or a genuine cancel) and retrying it would just add
-                        // another slow wait for no benefit. Tell the user so Proceed
-                        // doesn't look dead.
+                        // User cancelled — Proceed with no error line.
+                        notInteractive = false
+                        didAutoPromptThisLock = false
+                        showUnlockControl = true
+                    }
+                case .notInteractive:
+                    isAuthenticating = false
+                    biometryFailed = false
+                    faceIDUnavailableReason = nil
+                    profileLoadFailed = false
+                    gate = .locked
+                    let failedFast = Date().timeIntervalSince(attemptStartedAt) < 1.0
+                    if !notInteractiveRetried, failedFast {
+                        scheduleFastNotInteractiveRetry(generation: generation)
+                    } else {
                         notInteractive = true
                         didAutoPromptThisLock = false
                         showUnlockControl = true

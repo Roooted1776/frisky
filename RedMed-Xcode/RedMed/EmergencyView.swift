@@ -16,33 +16,12 @@ struct EmergencyView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 10) {
                     // Call first — EMS dial is the primary action on this tab.
-                    Button {
-                        RedMedHaptics.medium()
+                    PrimaryButton(
+                        title: "Call \(EmergencyNumber.current)",
+                        systemImage: "phone.fill"
+                    ) {
                         PublicEmergencyAid.dial()
-                    } label: {
-                        HStack(spacing: 10) {
-                            Image(systemName: "phone.fill")
-                            Text("Call \(EmergencyNumber.current)")
-                        }
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 17)
-                        .background(
-                            LinearGradient(
-                                colors: [Color(red: 1, green: 0.447, blue: 0.537), .redmedAccent],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-                        .shadow(color: RedMedChrome.accentShadow, radius: 12, y: 5)
-                        // GPU-flatten so the press-scale spring transforms one
-                        // texture instead of recompositing gradient + shadow
-                        // every frame — same treatment as Theme.swift's CTAs.
-                        .drawingGroup()
                     }
-                    .buttonStyle(RedMedPressStyle(haptic: nil))
 
                     // GPS observes LocationManager alone — SOS / cards must not
                     // rebuild on every coordinate tick.
@@ -100,24 +79,17 @@ private struct FindHelpLocationBlock: View {
             GPSCard(location: locationEnabled ? locationManager.location : nil)
                 .opacity(locationEnabled ? 1 : 0.45)
 
-            Button {
+            CompactFillButton(
+                title: locationEnabled ? "Copy coordinates" : "Location off — enable in Help → Settings",
+                disabled: !locationEnabled || locationManager.location == nil
+            ) {
                 if locationEnabled, let loc = locationManager.location {
                     SecurePasteboard.copyEphemeral(
                         "\(loc.coordinate.latitude), \(loc.coordinate.longitude)"
                     )
                     RedMedHaptics.light()
                 }
-            } label: {
-                Text(locationEnabled ? "Copy coordinates" : "Location off — enable in Help → Settings")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(Color.redmedDark)
-                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
             }
-            .buttonStyle(RedMedPressStyle(haptic: nil))
-            .disabled(!locationEnabled || locationManager.location == nil)
         }
         .task(id: isVisible) {
             // First paint of Find Help before Core Location work.
@@ -150,9 +122,11 @@ private struct FindHelpSOSButton: View {
     @ObservedObject private var survivalAlarm = CrashMotionGuard.shared
 
     var body: some View {
-        Button {
-            // Discrete chrome swap — spring / symbol replace on this control
-            // competed with the arm/disarm paint and felt like SOS lag.
+        CompactFillButton(
+            title: survivalAlarm.isArmed ? "Stop the alarm" : "SOS · Locate me",
+            systemImage: survivalAlarm.isArmed ? "speaker.slash.fill" : "sos.circle.fill",
+            fill: survivalAlarm.isArmed ? .redmedAccent : .redmedDark
+        ) {
             var t = Transaction()
             t.animation = nil
             withTransaction(t) {
@@ -164,23 +138,8 @@ private struct FindHelpSOSButton: View {
                     survivalAlarm.armSOS()
                 }
             }
-        } label: {
-            HStack(spacing: 8) {
-                Image(systemName: survivalAlarm.isArmed
-                      ? "speaker.slash.fill"
-                      : "sos.circle.fill")
-                Text(survivalAlarm.isArmed ? "Stop SOS alarm" : "SOS · Locate me")
-            }
-            .font(.system(size: 13, weight: .bold))
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
-            .background(survivalAlarm.isArmed ? Color.redmedAccent : Color.redmedDark)
-            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-            .transaction { $0.animation = nil }
         }
-        .buttonStyle(RedMedPressStyle(haptic: nil))
-        .accessibilityLabel(survivalAlarm.isArmed ? "Stop SOS alarm" : "SOS Locate me")
+        .accessibilityLabel(survivalAlarm.isArmed ? "Stop the alarm" : "SOS Locate me")
     }
 }
 

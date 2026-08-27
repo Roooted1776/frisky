@@ -235,7 +235,6 @@ struct HelpMenuView: View {
     @State private var isErasing = false
     @State private var eraseAuthFailed = false
     @State private var eraseDone = false
-    @State private var didAppear = false
 
     /// Same metrics as Edit — even horizontal rhythm across Help / Edit.
     private enum Metrics {
@@ -272,7 +271,7 @@ struct HelpMenuView: View {
                                     dismiss()
                                     DispatchQueue.main.async { onOpenNFC() }
                                 } label: {
-                                    Text("Write to NFC tag")
+                                    Text("Write the band")
                                         .font(.system(size: Metrics.font, weight: .medium))
                                         .foregroundColor(.redmedDark)
                                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -288,13 +287,13 @@ struct HelpMenuView: View {
                             helpSectionLabel("Settings")
                             helpCard {
                                 Toggle("Haptic feedback", isOn: $hapticsEnabled)
-                                    .font(.system(size: Metrics.font))
+                                    .font(.system(size: Metrics.font, weight: .medium))
                                     .tint(.redmedAccent)
                                     .padding(.horizontal, Metrics.rowHPad)
                                     .padding(.vertical, Metrics.rowVPad)
                                 Divider().padding(.leading, Metrics.rowHPad)
                                 Toggle("Location", isOn: $locationEnabled)
-                                    .font(.system(size: Metrics.font))
+                                    .font(.system(size: Metrics.font, weight: .medium))
                                     .tint(.redmedAccent)
                                     .padding(.horizontal, Metrics.rowHPad)
                                     .padding(.vertical, Metrics.rowVPad)
@@ -324,8 +323,8 @@ struct HelpMenuView: View {
 
                         helpSectionLabel("Policies")
                         helpCard {
-                            ForEach(HelpDocument.Policy.allCases) { policy in
-                                if policy != .guide {
+                            ForEach(HelpDocument.Policy.allCases.filter { $0 != .guide }) { policy in
+                                if policy != .privacy {
                                     Divider().padding(.leading, Metrics.rowHPad)
                                 }
                                 policyLink(policy)
@@ -369,13 +368,7 @@ struct HelpMenuView: View {
             }
             .background { RedMedPageBackground() }
             .toolbar(.hidden, for: .navigationBar)
-            .opacity(didAppear ? 1 : 0)
-            .scaleEffect(didAppear ? 1 : 0.97)
-            .offset(y: didAppear ? 0 : 10)
             .onAppear {
-                withAnimation(.spring(response: 0.40, dampingFraction: 0.86)) {
-                    didAppear = true
-                }
                 guard showsOwnerTools, locationEnabled else { return }
                 locationSuggester.refresh()
             }
