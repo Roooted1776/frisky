@@ -38,9 +38,12 @@ struct ConsentGateView<Content: View>: View {
             RedMedPageBackground()
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    LockMedGlyph(size: 64)
+                    Text("Before you continue")
+                        .font(.system(size: 22, weight: .bold))
+                        .kerning(-0.4)
+                        .foregroundColor(.redmedDark)
                         .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.top, 24)
+                        .padding(.top, 28)
 
                     VStack(alignment: .leading, spacing: 10) {
                         Text("RedMed is a local emergency medical ID and EMS assist. It is not a medical device, does not provide medical advice, and does not promise any medical outcome. Always call 911 first in a real emergency.")
@@ -48,31 +51,31 @@ struct ConsentGateView<Content: View>: View {
                     }
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.redmedMuted)
-                    .padding(12)
+                    .padding(14)
                     .redmedBox()
 
                     VStack(spacing: 0) {
-                        ForEach(HelpDocument.Policy.allCases) { policy in
-                            if policy != .guide {
-                                Divider().padding(.leading, 16)
+                        ForEach(HelpDocument.Policy.allCases.filter { $0 != .guide }) { policy in
+                            if policy != .privacy {
+                                Divider().overlay(Color.redmedDivider).padding(.leading, 16)
                             }
                             Button {
                                 showPolicy = policy
                             } label: {
                                 HStack {
                                     Text(policy.title)
-                                        .font(.system(size: 15, weight: .medium))
+                                        .font(.system(size: RedMedChrome.rowFont, weight: .medium))
                                         .foregroundColor(.redmedDark)
                                     Spacer()
                                     Image(systemName: "chevron.right")
                                         .font(.system(size: 13, weight: .semibold))
                                         .foregroundColor(.redmedMuted.opacity(0.55))
                                 }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 13)
+                                .padding(.horizontal, RedMedChrome.pagePadX)
+                                .padding(.vertical, RedMedChrome.rowVPad)
                                 .contentShape(Rectangle())
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(RedMedPressStyle(scale: 0.98, haptic: nil))
                         }
                     }
                     .redmedBox()
@@ -83,22 +86,22 @@ struct ConsentGateView<Content: View>: View {
                     } label: {
                         HStack(alignment: .top, spacing: 10) {
                             Image(systemName: checked ? "checkmark.square.fill" : "square")
-                                .font(.system(size: 20))
+                                .font(.system(size: 22))
                                 .foregroundColor(checked ? .redmedAccent : .redmedMuted)
                             Text("I have read and agree to the RedMed Terms, Privacy, and Security pages, including the medical-device disclaimer, liability limits, and binding arbitration / class-action waiver in Terms.")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(.redmedDark)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
+                        .padding(.vertical, 4)
+                        .contentShape(Rectangle())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
                     .accessibilityAddTraits(checked ? [.isButton, .isSelected] : .isButton)
 
                     PrimaryButton(title: "Agree and continue", disabled: !checked) {
                         ConsentSettings.recordAcceptance()
                         RedMedHaptics.success()
-                        // No spring into Main — that animation kept cream on
-                        // screen after Face ID while the tab tree mounted.
                         var t = Transaction()
                         t.animation = nil
                         withTransaction(t) {
@@ -111,16 +114,14 @@ struct ConsentGateView<Content: View>: View {
             }
         }
         .sheet(item: $showPolicy) { policy in
-            NavigationStack {
+            VStack(spacing: 0) {
+                OwnerModalChrome(title: policy.title, leadingTitle: "Done") {
+                    showPolicy = nil
+                }
                 LocalWebView(filename: HelpDocument.bundledFile, fragment: policy.fragment)
-                    .navigationTitle(policy.title)
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Done") { showPolicy = nil }
-                        }
-                    }
             }
+            .background(Color.redmedBg.ignoresSafeArea())
+            .presentationBackground(Color.redmedBg)
         }
     }
 }

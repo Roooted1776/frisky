@@ -25,6 +25,8 @@ struct RedMedPressStyle: ButtonStyle {
 
 extension Color {
     static let redmedAccent   = Color(red: 0.882, green: 0.114, blue: 0.282) // #e11d48
+    /// CTA gradient lift — pairs with `redmedAccent`, never a raw hex at call sites.
+    static let redmedAccentLift = Color(red: 1.000, green: 0.447, blue: 0.537)
     static let redmedBg       = Color(red: 1.000, green: 0.969, blue: 0.969) // #fff7f7
     /// Heading / primary ink — same on owner chrome + passerby `--dark` / legal `--text`.
     static let redmedDark     = Color(red: 0.110, green: 0.098, blue: 0.086) // #1c1917
@@ -94,6 +96,8 @@ struct SectionLabel: View {
 
 struct PrimaryButton: View {
     let title: String
+    var systemImage: String? = nil
+    var busy: Bool = false
     var disabled: Bool = false
     let action: () -> Void
 
@@ -102,25 +106,113 @@ struct PrimaryButton: View {
             RedMedHaptics.medium()
             action()
         } label: {
+            primaryLabel
+        }
+        .buttonStyle(RedMedPressStyle(haptic: nil))
+        .disabled(disabled || busy)
+        .opacity(disabled ? RedMedChrome.disabledOpacity : 1)
+        .accessibilityAddTraits(.isButton)
+    }
+
+    @ViewBuilder
+    private var primaryLabel: some View {
+        let core = HStack(spacing: 8) {
+            if busy {
+                ProgressView().tint(.white)
+            } else if let systemImage {
+                Image(systemName: systemImage)
+            }
             Text(title)
-                .font(.system(size: 15, weight: .bold))
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(
-                    LinearGradient(colors: [Color(red:1, green:0.447, blue:0.537), .redmedAccent],
-                                   startPoint: .top, endPoint: .bottom)
-                )
-                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
-                .shadow(color: disabled ? .clear : RedMedChrome.accentShadow, radius: 10, y: 5)
-                // Flatten gradient + shadow to one GPU texture so the press-scale
-                // spring (RedMedPressStyle) transforms a bitmap instead of
-                // recompositing the gradient and shadow every animation frame.
-                .drawingGroup()
+        }
+        .font(.system(size: 16, weight: .bold))
+        .foregroundColor(.white)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 15)
+        .background(
+            LinearGradient(
+                colors: [.redmedAccentLift, .redmedAccent],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius, style: .continuous))
+        .shadow(color: disabled ? .clear : RedMedChrome.accentShadow, radius: 10, y: 5)
+        if busy {
+            core
+        } else {
+            core.drawingGroup()
+        }
+    }
+}
+
+/// Cream fill, accent stroke — Health import, NFC Preview.
+struct OutlineButton: View {
+    let title: String
+    var systemImage: String? = nil
+    var busy: Bool = false
+    var disabled: Bool = false
+    let action: () -> Void
+
+    var body: some View {
+        Button {
+            RedMedHaptics.medium()
+            action()
+        } label: {
+            HStack(spacing: 8) {
+                if busy {
+                    ProgressView().tint(.redmedAccent)
+                } else if let systemImage {
+                    Image(systemName: systemImage)
+                        .font(.system(size: 17, weight: .semibold))
+                }
+                Text(title)
+                    .font(.system(size: 16, weight: .bold))
+            }
+            .foregroundColor(.redmedAccent)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 15)
+            .background(Color.redmedBg)
+            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: RedMedChrome.boxRadius, style: .continuous)
+                    .strokeBorder(Color.redmedAccent.opacity(0.45), lineWidth: 1.5)
+            )
+        }
+        .buttonStyle(RedMedPressStyle(haptic: nil))
+        .disabled(disabled || busy)
+        .opacity(disabled ? RedMedChrome.disabledOpacity : (busy ? 0.72 : 1))
+        .accessibilityAddTraits(.isButton)
+    }
+}
+
+/// Compact dark/accent fill — Copy coordinates, SOS.
+struct CompactFillButton: View {
+    let title: String
+    var systemImage: String? = nil
+    var fill: Color = .redmedDark
+    var disabled: Bool = false
+    let action: () -> Void
+
+    var body: some View {
+        Button {
+            action()
+        } label: {
+            HStack(spacing: 8) {
+                if let systemImage {
+                    Image(systemName: systemImage)
+                }
+                Text(title)
+            }
+            .font(.system(size: 13, weight: .bold))
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 11)
+            .background(fill)
+            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius, style: .continuous))
         }
         .buttonStyle(RedMedPressStyle(haptic: nil))
         .disabled(disabled)
-        .opacity(disabled ? 0.48 : 1)
+        .opacity(disabled ? RedMedChrome.disabledOpacity : 1)
         .accessibilityAddTraits(.isButton)
     }
 }
@@ -152,7 +244,7 @@ struct UnlockScreenButton: View {
                         .fill(
                             LinearGradient(
                                 colors: [
-                                    Color(red: 1, green: 0.447, blue: 0.537).opacity(0.75),
+                                    Color.redmedAccentLift.opacity(0.75),
                                     Color.redmedAccent.opacity(0.75)
                                 ],
                                 startPoint: .topLeading,
@@ -177,7 +269,7 @@ struct UnlockScreenButton: View {
         .disabled(disabled)
         .opacity(disabled ? 0.48 : 1)
         .accessibilityLabel(title)
-        .accessibilityHint(disabled ? "Waiting for Face ID" : (accessibilityHintText ?? ""))
+        .accessibilityHint(accessibilityHintText ?? "")
         .accessibilityAddTraits(.isButton)
     }
 }
@@ -387,8 +479,8 @@ enum RedMedChrome {
     static let modalActionSize: CGFloat = 17
     static let modalBarHeight: CGFloat = 52
     static let modalSideMinWidth: CGFloat = 64
-    static let boxRadius: CGFloat = 10
-    static let chipRadius: CGFloat = 7
+    static let boxRadius: CGFloat = 12
+    static let chipRadius: CGFloat = 8
     /// Proceed CTA — continuous pill-ish.
     static let unlockButtonRadius: CGFloat = 20
     /// Small lock-load medical mark (not BrandLogo asset, not Apple Face ID).
@@ -402,6 +494,11 @@ enum RedMedChrome {
     static let pagePadX: CGFloat = 16
     static let wordmarkTop: CGFloat = 6
     static let wordmarkBottom: CGFloat = 4
+    static let rowFont: CGFloat = 15
+    static let rowVPad: CGFloat = 13
+    static let tabBarHeight: CGFloat = 56
+    static let tabTopRadius: CGFloat = 18
+    static let disabledOpacity: Double = 0.48
     static let cardShadow = Color.black.opacity(0.045)
     static let accentShadow = Color.redmedAccent.opacity(0.18)
 }
@@ -554,7 +651,7 @@ extension View {
     func redmedBox(elevated: Bool = true, flatten: Bool = true) -> some View {
         let card = self
             .background(Color.redmedSurface)
-            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
+            .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius, style: .continuous))
             .shadow(color: elevated ? RedMedChrome.cardShadow : .clear, radius: 8, y: 3)
         return Group {
             if flatten {

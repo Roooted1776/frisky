@@ -60,10 +60,6 @@ struct AidView: View {
         VStack(spacing: 0) {
             PageHelpChrome()
 
-            Rectangle()
-                .fill(Color.redmedDivider)
-                .frame(height: 1)
-
             GeometryReader { geo in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 10) {
@@ -92,7 +88,7 @@ struct AidView: View {
                             Text("\"\(AppConfig.QuietPrayer.text)\"")
                                 .font(.system(size: AppConfig.QuietPrayer.fontSize, weight: .regular))
                                 .italic()
-                                .foregroundColor(.redmedMuted.opacity(0.55))
+                                .foregroundColor(.redmedMuted.opacity(0.72))
                                 .multilineTextAlignment(.center)
                                 .lineSpacing(1)
                                 .frame(maxWidth: .infinity)
