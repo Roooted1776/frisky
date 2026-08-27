@@ -66,7 +66,6 @@ struct ContentView: View {
             .clipped()
 
             CustomTabBar(tab: scannerSafeTab, showsNFC: showsNFC)
-                .padding(.bottom, 3)
         }
         .ignoresSafeArea(edges: .bottom)
         .onAppear {
