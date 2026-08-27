@@ -57,6 +57,10 @@ enum BiometricAuth {
     /// Live `evaluatePolicy` context. Invalidate before starting a new one —
     /// a second evaluate while the first is up fails immediately (dead Proceed).
     private static var inFlightContext: LAContext?
+    /// Last time an evaluate ended or was cancelled. A new evaluate inside
+    /// `evaluateCooldown` of this fails with no sheet (dead Face ID).
+    private static var lastSessionEndedAt: Date?
+    private static let evaluateCooldown: TimeInterval = 0.28
 
     /// Seconds the parked context may satisfy SecItem without a new Face ID.
     /// Covers unlock → Keychain load → first persist; background clears earlier.
@@ -118,6 +122,7 @@ enum BiometricAuth {
             context.evaluatePolicy(policy, localizedReason: reason) { success, evalError in
                 DispatchQueue.main.async {
                     clearInFlight(ifSame: context)
+                    markSessionEnded()
                     if success {
                         didUnlockThisLaunch = true
                         // Keep context alive for Keychain SecItem (do not invalidate yet).
@@ -131,15 +136,12 @@ enum BiometricAuth {
                 }
             }
         }
-        if cancelledLiveContext {
-            // Only a retry right behind a cancelled/leftover sheet needs
-            // this wait — that LAContext needs real wall-clock time to tear
-            // down, not just the next run loop turn. Too short and
-            // evaluatePolicy fails immediately with no sheet shown (dead
-            // Proceed, no Face ID prompt, no system success animation). A
-            // fresh first attempt (nothing was in flight) has no such
-            // leftover to wait out, so it runs immediately.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.28, execute: runEvaluate)
+        // Wait out leftover LAContext teardown — same-turn retry after
+        // userCancel / .notInteractive / cancelInFlight fails immediately
+        // with no Face ID sheet and no system success animation (dead prompt).
+        let wait = max(cancelledLiveContext ? evaluateCooldown : 0, remainingEvaluateCooldown())
+        if wait > 0.01 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + wait, execute: runEvaluate)
         } else {
             runEvaluate()
         }
@@ -155,6 +157,7 @@ enum BiometricAuth {
         inFlightContext = nil
         parkLock.unlock()
         ctx?.invalidate()
+        if ctx != nil { markSessionEnded() }
         return ctx != nil
     }
 
@@ -182,6 +185,20 @@ enum BiometricAuth {
     /// left the re-lock's own Face ID prompt never presenting at all.
     static func resetLaunchUnlock() {
         didUnlockThisLaunch = false
+    }
+
+    private static func markSessionEnded() {
+        parkLock.lock()
+        lastSessionEndedAt = Date()
+        parkLock.unlock()
+    }
+
+    private static func remainingEvaluateCooldown() -> TimeInterval {
+        parkLock.lock()
+        let ended = lastSessionEndedAt
+        parkLock.unlock()
+        guard let ended else { return 0 }
+        return max(0, evaluateCooldown - Date().timeIntervalSince(ended))
     }
 
     private static func setInFlight(_ context: LAContext) {
@@ -272,7 +289,7 @@ enum BiometricAuth {
         completion: @escaping (Outcome) -> Void
     ) {
         guard let top = topViewController() else {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 guard let retry = topViewController() else {
                     completion(.unavailable(.notAvailable))
                     return
