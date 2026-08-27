@@ -92,7 +92,10 @@ struct OwnerAppLock<Content: View>: View {
             showUnlockControl = true
         }
         .task {
-            let hasProfile = await Task.detached(priority: .userInitiated) {
+            // .utility: this fires at cold launch alongside the Face ID prompt
+            // itself — userInitiated contends with the system Face ID sheet for
+            // CPU and delays it showing (same rule as ProfileData.beginUnlockPrefetch).
+            let hasProfile = await Task.detached(priority: .utility) {
                 ProfileData.hasStoredProfile()
             }.value
             ProfileData.setStoredProfileGate(hasProfile)

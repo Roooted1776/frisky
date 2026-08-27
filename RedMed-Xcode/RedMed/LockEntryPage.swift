@@ -5,18 +5,37 @@ import SwiftUI
 /// Cream user-page fill with the brand mark. No Unlock retry, no Help, no
 /// other tabs. Face ID is the only chrome.
 struct LockEntryPage: View {
+    // Face ID's system sheet is usually up well before this — only shown if
+    // the sheet is slow to present, so a normal launch never sees it.
+    @State private var showActivity = false
+
     var body: some View {
         ZStack {
             Color.redmedBg
 
-            Image("BrandLogo")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 64, height: 64)
+            VStack(spacing: 16) {
+                Image("BrandLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 64, height: 64)
+
+                if showActivity {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .transition(.opacity)
+                }
+            }
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
         .accessibilityElement()
         .accessibilityLabel("RedMed is locked")
+        .task {
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeIn(duration: 0.2)) {
+                showActivity = true
+            }
+        }
     }
 }
