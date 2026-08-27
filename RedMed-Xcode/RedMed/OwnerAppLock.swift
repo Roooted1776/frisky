@@ -199,6 +199,10 @@ struct OwnerAppLock<Content: View>: View {
         }
     }
 
+    private var sceneIsInteractive: Bool {
+        scenePhase == .active || UIApplication.shared.applicationState == .active
+    }
+
     private func tryAutoUnlockIfActive() {
         guard gate == .locked, !didAutoPromptThisLock, !showUnlockControl else { return }
         // Fire immediately, including on cold-start `.inactive` — per AGENTS.md,
@@ -206,7 +210,7 @@ struct OwnerAppLock<Content: View>: View {
         // `.active` a beat after `.inactive`, and a blank cream LockEntryPage
         // with no Face ID sheet yet reads as a hang for that whole gap. A
         // `.notInteractive` evaluate (system genuinely can't present yet) still
-        // recovers via the Proceed screen, so it costs nothing to try early.
+        // recovers via a bounded retry / Proceed, so it costs nothing to try early.
         guard scenePhase != .background else { return }
         didAutoPromptThisLock = true
         startUnlockPipeline(isAuto: true)
@@ -241,6 +245,11 @@ struct OwnerAppLock<Content: View>: View {
             reason: "Unlock RedMed",
             allowPasscode: false
         ) { outcome in
+            if case .success = outcome {
+                // Start the parked-context Keychain read before the MainActor
+                // hop so SecItem overlaps the SwiftUI turn instead of following it.
+                profile.beginUnlockPrefetchWithParkedContext()
+            }
             Task { @MainActor in
                 guard generation == authGeneration else { return }
                 switch outcome {
@@ -258,19 +267,7 @@ struct OwnerAppLock<Content: View>: View {
                     // instead of fixing anything, so only retry the fast case.
                     let failedFast = Date().timeIntervalSince(attemptStartedAt) < 1.0
                     if !notInteractiveRetried, failedFast {
-                        // Retry once on a short fixed delay — not by waiting on a
-                        // scenePhase transition, which may have already happened and
-                        // never fire again (see the "stays up forever" note this
-                        // replaced) — before falling back to the manual Proceed
-                        // screen below. The 8s watchdog in `.task(id: authGeneration)`
-                        // still guarantees Proceed shows if this retry never resolves.
-                        notInteractiveRetried = true
-                        let retryGeneration = generation
-                        Task { @MainActor in
-                            try? await Task.sleep(nanoseconds: 400_000_000)
-                            guard retryGeneration == authGeneration, gate == .locked else { return }
-                            unlockWithFaceID()
-                        }
+                        scheduleFastNotInteractiveRetry(generation: generation)
                     } else {
                         // Either the fast retry is already spent, or this failure took
                         // real time to arrive (backgrounded, interrupted, another modal
@@ -305,13 +302,37 @@ struct OwnerAppLock<Content: View>: View {
                     VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock-unavailable")
                 case .success:
                     guard generation == authGeneration else { return }
-                    // Bound Keychain needs the parked LAContext. Restart the
-                    // Face ID-overlapped load now — the pre-park attempt fails
-                    // closed without a sheet (kSecUseAuthenticationUIFail).
-                    profile.beginUnlockPrefetchWithParkedContext()
+                    // Prefetch already kicked off in the authenticate
+                    // callback (before this hop). Adopt it here.
                     await applyUnlockSuccess(generation: generation)
                 }
             }
+        }
+    }
+
+    /// One bounded retry for the cold-launch `.notInteractive` race.
+    ///
+    /// If the scene is already interactive, retry on the next turn — a flat
+    /// 400ms sleep here was itself a cream hang when Face ID was ready.
+    /// If still `.inactive`, drop `didAutoPromptThisLock` so the `.active`
+    /// transition can retry, and cap the wait at 150ms in case that
+    /// transition already fired (the stall-forever bug a scenePhase wait
+    /// without a timeout caused).
+    private func scheduleFastNotInteractiveRetry(generation: Int) {
+        notInteractiveRetried = true
+        if sceneIsInteractive {
+            didAutoPromptThisLock = true
+            unlockWithFaceID()
+            return
+        }
+        didAutoPromptThisLock = false
+        let retryGeneration = generation
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 150_000_000)
+            guard retryGeneration == authGeneration, gate == .locked else { return }
+            guard !isAuthenticating, !showUnlockControl else { return }
+            didAutoPromptThisLock = true
+            unlockWithFaceID()
         }
     }
 

@@ -31,9 +31,12 @@ struct LockEntryPage: View {
         .accessibilityElement()
         .accessibilityLabel("RedMed is locked")
         .task {
-            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            // 280ms — long enough that a fast Face ID sheet never shows this,
+            // short enough that a slow present doesn't read as a hung cream page
+            // (was 1.2s, which left the lock looking frozen).
+            try? await Task.sleep(nanoseconds: 280_000_000)
             guard !Task.isCancelled else { return }
-            withAnimation(.easeIn(duration: 0.2)) {
+            withAnimation(.easeIn(duration: 0.15)) {
                 showActivity = true
             }
         }

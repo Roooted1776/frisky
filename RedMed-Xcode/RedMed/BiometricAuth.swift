@@ -272,7 +272,7 @@ enum BiometricAuth {
         completion: @escaping (Outcome) -> Void
     ) {
         guard let top = topViewController() else {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
                 guard let retry = topViewController() else {
                     completion(.unavailable(.notAvailable))
                     return
