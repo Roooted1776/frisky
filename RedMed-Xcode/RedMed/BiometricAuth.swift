@@ -94,7 +94,9 @@ enum BiometricAuth {
             ? .deviceOwnerAuthentication
             : .deviceOwnerAuthenticationWithBiometrics
 
-        guard context.canEvaluatePolicy(policy, error: &error) else {
+        let canEvaluate = context.canEvaluatePolicy(policy, error: &error)
+        RedMedSignpost.trace("canEvaluatePolicy=\(canEvaluate) error=\(String(describing: error))")
+        guard canEvaluate else {
             #if targetEnvironment(simulator)
             DispatchQueue.main.async {
                 presentSimulatorPrompt(
@@ -119,7 +121,9 @@ enum BiometricAuth {
 
         setInFlight(context)
         let runEvaluate = {
+            RedMedSignpost.trace("evaluatePolicy calling now")
             context.evaluatePolicy(policy, localizedReason: reason) { success, evalError in
+                RedMedSignpost.trace("evaluatePolicy raw callback: success=\(success) error=\(String(describing: evalError))")
                 DispatchQueue.main.async {
                     clearInFlight(ifSame: context)
                     markSessionEnded()
