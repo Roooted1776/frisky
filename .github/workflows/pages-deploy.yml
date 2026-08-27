@@ -91,9 +91,17 @@ jobs:
       - name: Smoke live github.io /tapper/
         run: |
           set -euo pipefail
+          # roooted1776.github.io is a SEPARATE repo (Roooted1776.github.io),
+          # published by hand via scripts/publish-github-io.sh — this workflow
+          # has no push access to it and cannot deploy it. When that repo's
+          # Pages build lags or breaks, this smoke check has nothing to fix,
+          # so it warns instead of failing every unrelated push to main.
           # GitHub Contents API rewrites drop the +x bit (file is 100644).
           # Always invoke through bash so Permission denied (126) cannot recur.
-          BASE=https://roooted1776.github.io bash scripts/smoke-pages.sh
+          if BASE=https://roooted1776.github.io bash scripts/smoke-pages.sh; then
+            exit 0
+          fi
+          echo "::warning::https://roooted1776.github.io/tapper/ smoke failed — that site is published manually (scripts/publish-github-io.sh) from a separate repo (Roooted1776.github.io), not by this workflow. Re-run scripts/publish-github-io.sh against that repo's checkout and push it there."
 
       - name: Smoke redmed.pages.dev after CF deploy
         if: steps.cf.outputs.skip != 'true'
