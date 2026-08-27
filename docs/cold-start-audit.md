@@ -10,9 +10,48 @@ frame, cross-checked against the cold-launch invariants already documented in `A
 ## Summary
 
 The cold-launch path is already heavily tuned — the current code and its comments reflect several
-prior optimization passes (`main-setup-funnel`, `xcode-sim-start-lag`, and others merged into
-`main`). No blocking bug was found. This audit did not change any `.swift` file; it documents what
-is already correct and flags a couple of low-risk, low-value items for later.
+prior optimization passes (`main-setup-funnel`, `xcode-sim-start-lag`, PRs #407–#409, and others
+merged into `main`). No blocking bug was found. This audit did not change any `.swift` file; it
+documents what is already correct and flags a couple of low-risk, low-value items for later.
+
+## Fixed since the first pass of this audit (PRs #407–#409)
+
+A real user report of a consistent ~8-9s cream-screen wait on every cold launch (not just
+occasionally) motivated a second look, since the state below described the launch path as already
+correct. Three issues were found and fixed:
+
+1. **`evaluatePolicy` could be called before any window was key.** `OwnerAppLock.onAppear` fired
+   Face ID immediately (correctly, per the `.active`-wait history below), but on cold launch that
+   can happen before `UIWindowScene` has a key window — and a call made that early has been
+   observed to never complete (no success, no error) until the watchdog kills it, on every launch
+   rather than occasionally. Fixed by gating the call on `hasKeyWindow` and retrying from
+   `UIWindow.didBecomeKeyNotification`.
+2. **Watchdog timeout was long for the no-sheet failure mode.** 8s (`.task`) / 8.5s (GCD fallback)
+   assumed a real Face ID/passcode interaction might be in progress and shouldn't be interrupted.
+   When the actual failure is "no sheet ever presented" there's nothing in-progress to interrupt,
+   so both were shortened to 4.5s / 5s.
+3. **Redundant warm-up `Task.detached` spawns landed in the same instant as `evaluatePolicy`.**
+   `.utility` priority didn't rule out contention with the system Face ID sheet's very first
+   presentation tick. Deduped the shell-cache warm-up to one scheduled task
+   (`PasserbyHTMLCardView.scheduleShellWarmOnce()`) and staggered both it and the Keychain
+   prefetch 300ms past the `evaluatePolicy` call.
+
+None of these were confirmed with a profiler — same static-analysis caveat as the rest of this
+doc. If the cream hang recurs, the next step is still the Instruments trace described below,
+now with `RedMedSignpost`'s `coldLaunchWindow` / `faceIDEvaluate` intervals and the `DEBUG`-only
+`[OwnerAppLock]` console logging (added alongside fix 1) available to localize it precisely.
+
+## GPU/CPU render-load follow-up (this pass)
+
+A related report asked for a general CPU/GPU load pass. Checked every `.drawingGroup()` call in
+the app (7 total: `Theme.swift` ×4, `ContentView.swift`, `TopicDetailView.swift`,
+`ConsentGateView.swift`) against a bug class found in `HelpMenuView`'s Settings toggles: a live
+`Toggle` inside a `redmedBox()`'s flattened default rendered correctly but stopped responding to
+taps. Confirmed that was the only occurrence — `PrimaryButton`, `OutlineButton`'s unlock button,
+the tab bar background, the CPR pulse circle, and the animated heart mark all flatten purely
+static/decorative content with the actual tap target (a `Button`) outside the flattened boundary,
+which is the correct, safe pattern. No further GPU-load bug of that kind found; no other CPU/GPU
+load issue surfaced by static reading beyond what's already itemized below.
 
 ## What's already right
 
