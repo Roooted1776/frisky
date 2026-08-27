@@ -23,6 +23,9 @@ struct ConsentGateView<Content: View>: View {
     @State private var hasAccepted = false
     @State private var checked = false
     @State private var showPolicy: HelpDocument.Policy?
+    @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
+    @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
+    @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
     @ViewBuilder var content: () -> Content
 
     var body: some View {
@@ -53,6 +56,45 @@ struct ConsentGateView<Content: View>: View {
                     .foregroundColor(.redmedMuted)
                     .padding(14)
                     .redmedBox()
+
+                    VStack(spacing: 0) {
+                        Toggle("Haptic feedback", isOn: $hapticsEnabled)
+                            .font(.system(size: RedMedChrome.rowFont, weight: .medium))
+                            .tint(.redmedAccent)
+                            .padding(.horizontal, RedMedChrome.pagePadX)
+                            .padding(.vertical, RedMedChrome.rowVPad)
+                        Divider().overlay(Color.redmedDivider).padding(.leading, RedMedChrome.pagePadX)
+                        Toggle("Location", isOn: $locationEnabled)
+                            .font(.system(size: RedMedChrome.rowFont, weight: .medium))
+                            .tint(.redmedAccent)
+                            .padding(.horizontal, RedMedChrome.pagePadX)
+                            .padding(.vertical, RedMedChrome.rowVPad)
+                            .onChange(of: locationEnabled) { _, on in
+                                // Pref only — never call requestWhenInUseAuthorization here.
+                                // Find Help prompts the system sheet once when GPS is actually needed.
+                                if on { locationSuggester.refresh() }
+                            }
+                        if locationEnabled && locationSuggester.mustOpenSettings {
+                            Divider().overlay(Color.redmedDivider).padding(.leading, RedMedChrome.pagePadX)
+                            Button("Open iOS Location Settings") {
+                                locationSuggester.openSettings()
+                            }
+                            .font(.system(size: RedMedChrome.rowFont, weight: .medium))
+                            .foregroundColor(.redmedAccent)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, RedMedChrome.pagePadX)
+                            .padding(.vertical, RedMedChrome.rowVPad)
+                        }
+                    }
+                    // flatten: false — these Toggles are live-editing content;
+                    // `.drawingGroup()` (redmedBox's flattened default) can
+                    // leave a Toggle inside it visible but unresponsive to
+                    // taps (see redmedBox's doc comment in Theme.swift).
+                    .redmedBox(flatten: false)
+                    Text("Location defaults on. No RedMed popup — iOS may ask Allow once the first time Find Help needs GPS (Apple requires that tap). Siren / max volume / brightness arm on crash or SOS only.")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.redmedMuted)
+                        .padding(.horizontal, 4)
 
                     VStack(spacing: 0) {
                         ForEach(HelpDocument.Policy.allCases.filter { $0 != .guide }) { policy in
@@ -112,6 +154,10 @@ struct ConsentGateView<Content: View>: View {
                 }
                 .padding(.horizontal, RedMedChrome.pagePadX)
             }
+        }
+        .onAppear {
+            guard locationEnabled else { return }
+            locationSuggester.refresh()
         }
         .sheet(item: $showPolicy) { policy in
             VStack(spacing: 0) {
