@@ -88,11 +88,11 @@ struct OwnerAppLock<Content: View>: View {
             scheduleHardWatchdog()
             tryAutoUnlockIfActive()
             profile.beginUnlockPrefetch()
-            // String cache only — not WK — during Face ID window. .utility so it
-            // does not contend with the Face ID sheet for CPU on cold launch.
-            Task.detached(priority: .utility) {
-                PasserbyHTMLCardView.warmShellCache()
-            }
+            // String cache only — not WK — during Face ID window. Deduped
+            // across callers (see PasserbyHTMLCardView.scheduleShellWarmOnce)
+            // so cold launch doesn't spawn several redundant .utility tasks
+            // racing the same cache lock.
+            PasserbyHTMLCardView.scheduleShellWarmOnce()
         }
         .task(id: authGeneration) {
             guard gate == .locked else { return }
@@ -340,11 +340,10 @@ struct OwnerAppLock<Content: View>: View {
         logLock("startUnlockPipeline")
         unlockWithFaceID()
         profile.beginUnlockPrefetch()
-        // String warm only during Face ID — WK waits until after unlock. .utility
-        // so it does not compete with the Face ID sheet itself for CPU.
-        Task.detached(priority: .utility) {
-            PasserbyHTMLCardView.warmShellCache()
-        }
+        // String warm only during Face ID — WK waits until after unlock.
+        // Deduped across callers so this doesn't add another redundant
+        // .utility task alongside the one from onAppear / RedMedApp.task.
+        PasserbyHTMLCardView.scheduleShellWarmOnce()
     }
 
     private func unlockWithFaceID() {
