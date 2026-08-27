@@ -236,6 +236,7 @@ struct OwnerAppLock<Content: View>: View {
         notInteractive = false
         authGeneration &+= 1
         let generation = authGeneration
+        let attemptStartedAt = Date()
         BiometricAuth.authenticate(
             reason: "Unlock RedMed",
             allowPasscode: false
@@ -249,12 +250,14 @@ struct OwnerAppLock<Content: View>: View {
                     faceIDUnavailableReason = nil
                     profileLoadFailed = false
                     gate = .locked
-                    if !notInteractiveRetried {
-                        // Either result can mean the sheet never actually presented:
-                        // the cold-launch auto attempt fires from onAppear, which can
-                        // land a beat before the scene finishes activating, and LA
-                        // reports that race as .declined (silently, no sheet, no
-                        // message) just as often as the documented .notInteractive.
+                    // The onAppear-before-scene-activates race fails near-instantly —
+                    // LA rejects the request without ever doing real work. A failure
+                    // that took real wall-clock time is a slower, likely persistent
+                    // condition (system busy, another modal, genuine cancel); retrying
+                    // that just stacks a second multi-second wait behind blank cream
+                    // instead of fixing anything, so only retry the fast case.
+                    let failedFast = Date().timeIntervalSince(attemptStartedAt) < 1.0
+                    if !notInteractiveRetried, failedFast {
                         // Retry once on a short fixed delay — not by waiting on a
                         // scenePhase transition, which may have already happened and
                         // never fire again (see the "stays up forever" note this
@@ -269,9 +272,11 @@ struct OwnerAppLock<Content: View>: View {
                             unlockWithFaceID()
                         }
                     } else {
-                        // Real retry still didn't produce a Face ID sheet
-                        // (backgrounded, interrupted, another modal in flight, or a
-                        // genuine cancel). Tell the user so Proceed doesn't look dead.
+                        // Either the fast retry is already spent, or this failure took
+                        // real time to arrive (backgrounded, interrupted, another modal
+                        // in flight, or a genuine cancel) and retrying it would just add
+                        // another slow wait for no benefit. Tell the user so Proceed
+                        // doesn't look dead.
                         notInteractive = true
                         didAutoPromptThisLock = false
                         showUnlockControl = true
