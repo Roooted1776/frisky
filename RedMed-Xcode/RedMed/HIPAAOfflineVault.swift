@@ -8,10 +8,10 @@ import Foundation
 /// - `URLResourceValues.isExcludedFromBackup = true` — never copied to consumer
 ///   iCloud / iTunes / Finder backups.
 ///
-/// Profile PHI remains in Keychain (`WhenPasscodeSetThisDeviceOnly` + `biometryCurrentSet`,
-/// see `KeychainStore`). This vault holds
-/// the local history / audit database and any future sandbox files that need the
-/// same hardware protection + backup exclusion.
+/// Profile PHI remains in Keychain (`WhenPasscodeSetThisDeviceOnly` +
+/// `biometryCurrentSet` via `KeychainStore`). This vault holds the local
+/// history / audit database and any future sandbox files that need the same
+/// hardware protection + backup exclusion.
 enum HIPAAOfflineVault {
     private static let folderName = "HIPAAOfflineVault"
     private static let protection: FileProtectionType = .complete
@@ -111,7 +111,7 @@ enum HIPAAOfflineVault {
         case invalidPath
     }
 
-    /// Basename only — reject `/`, `\`, and `..` so callers cannot escape the vault root.
+    /// Basename only — reject `/`, `\\`, and `..` so callers cannot escape the vault root.
     private static func validatedFileName(_ fileName: String) throws -> String {
         let trimmed = fileName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { throw VaultError.invalidPath }

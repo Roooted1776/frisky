@@ -48,6 +48,8 @@ private enum CrashMotionThresholds {
 /// Face ID / first tabs stay responsive. UI + brightness/volume/siren hop to main.
 /// Arm/disarm uses a generation token so a late arm Task cannot restart the alarm
 /// after Stop / disarm.
+/// OwnerAppLock starts monitoring after unlock and stops it on re-lock. SOS /
+/// survival hold is separate — stopMonitoring does not cancel an armed siren.
 @MainActor
 final class CrashMotionGuard: ObservableObject {
     static let shared = CrashMotionGuard()
@@ -59,7 +61,7 @@ final class CrashMotionGuard: ObservableObject {
 
     private init() {}
 
-    /// Start after first paint so cold launch stays light.
+    /// Start after Face ID unlock (OwnerAppLock). Cold launch stays light.
     func startMonitoring() {
         LocatorBeacon.warmAlarmCache()
         engine.startMonitoring { [weak self] generation in
@@ -69,6 +71,7 @@ final class CrashMotionGuard: ObservableObject {
         }
     }
 
+    /// Stop CoreMotion on re-lock. Does not disarm an in-progress SOS hold.
     func stopMonitoring() {
         engine.stopMonitoring()
     }
