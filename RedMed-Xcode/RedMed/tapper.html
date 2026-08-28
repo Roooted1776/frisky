@@ -1378,7 +1378,7 @@ function redmedAssetURL(file) {
             <div class="seizure-label">SEIZURE</div>
             <div class="seizure-time" id="seizureTime">0:00</div>
           </div>
-          <div class="seizure-hint" id="seizureHint">→ <span class="emg">112</span> at 5:00</div>
+          <div class="seizure-hint" id="seizureHint">Call <span class="emg">112</span> at 5:00</div>
           <div class="seizure-actions">
             <button class="seizure-btn seizure-btn-reset" type="button" id="seizureResetBtn">Reset</button>
             <button class="seizure-btn" type="button" id="seizureBtn">Start</button>
@@ -1470,6 +1470,7 @@ function redmedAssetURL(file) {
 
         <button class="aid-stop-alarm" type="button" id="aidStopAlarm">Stop the alarm <span class="x" aria-hidden="true">✕</span></button>
 
+        <p class="foot-note">First-aid reference only. Not medical advice and not a substitute for emergency dispatch. Call emergency services and follow their instructions.</p>
         <p class="foot-note">Local only once tap — everyone and everything. No servers · no online. No Bluetooth · passive HF NFC. No PII or PHI leaves this device through RedMed.</p>
       </div>
     </div>
@@ -2456,7 +2457,7 @@ function redmedAssetURL(file) {
     }
   });
 
-  // Seizure stopwatch — mirrors owner Find Help; auto-dials at 5:00.
+  // Seizure stopwatch — mirrors owner Find Help. Never auto-dials.
   scheduleIdle(function initSeizureStopwatch() {
     var CALL_AT = 5 * 60;
     var running = false;
@@ -2484,14 +2485,27 @@ function redmedAssetURL(file) {
       timeEl.textContent = format(elapsed);
       timeEl.classList.toggle('hot', past);
       hintEl.classList.toggle('hot', past);
+      var num = ((document.querySelector('.emg') || {}).textContent || '112');
+      hintEl.textContent = '';
+      var existingCall = document.getElementById('seizureCallBtn');
       if (past) {
-        hintEl.textContent = '5:00 — call';
+        hintEl.appendChild(document.createTextNode('5:00 — tap Call'));
+        if (!existingCall && btn && btn.parentNode) {
+          var callBtn = document.createElement('a');
+          callBtn.id = 'seizureCallBtn';
+          callBtn.className = 'seizure-btn';
+          callBtn.setAttribute('href', emergencyTel());
+          callBtn.textContent = 'Call';
+          btn.parentNode.insertBefore(callBtn, btn);
+        } else if (existingCall) {
+          existingCall.setAttribute('href', emergencyTel());
+        }
       } else {
-        hintEl.textContent = '';
-        hintEl.appendChild(document.createTextNode('→ '));
+        if (existingCall && existingCall.parentNode) existingCall.parentNode.removeChild(existingCall);
+        hintEl.appendChild(document.createTextNode('Call '));
         var emg = document.createElement('span');
         emg.className = 'emg';
-        emg.textContent = ((document.querySelector('.emg') || {}).textContent || '112');
+        emg.textContent = num;
         hintEl.appendChild(emg);
         hintEl.appendChild(document.createTextNode(' at 5:00'));
       }
@@ -2512,8 +2526,7 @@ function redmedAssetURL(file) {
     function tick() {
       elapsed = (Date.now() - startedAt) / 1000;
       if (elapsed >= CALL_AT) {
-        stop(false);
-        location.href = emergencyTel();
+        paint();
         return;
       }
       paint();
