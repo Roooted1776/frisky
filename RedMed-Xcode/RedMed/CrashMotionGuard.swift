@@ -182,16 +182,9 @@ final class CrashMotionGuard: ObservableObject {
             }
         }
 
-        func requestArm(onArm: @escaping (UInt64) -> Void) {
-            queue.addOperation { [weak self] in
-                guard let self else { return }
-                self.onArm = onArm
-                self.armNow()
-            }
-        }
-
         /// Explicit SOS — claim generation on the caller (MainActor) without
-        /// waiting for the motion queue. Crash path still uses `requestArm`.
+        /// waiting for the motion queue. Crash path arms via `startMonitoring`'s
+        /// `onArm` callback instead.
         func claimArmGeneration() -> UInt64 {
             lock.lock()
             defer { lock.unlock() }

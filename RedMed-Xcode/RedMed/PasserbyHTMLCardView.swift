@@ -776,6 +776,19 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
             }
         }
 
+        /// Normalizes a `document.body.childElementCount > 0 ? 1 : 0` JS result
+        /// (may come back as NSNumber, Int, or Bool depending on WebKit version).
+        private static func jsTruthyResult(_ result: Any?) -> Bool {
+            if let n = result as? NSNumber {
+                return n.intValue > 0
+            } else if let n = result as? Int {
+                return n > 0
+            } else if let b = result as? Bool {
+                return b
+            }
+            return false
+        }
+
         func recoverIfNeeded(_ webView: WKWebView) {
             if webView.isLoading || isRecovering || loadAttempts >= 2 { return }
             if webView.url == nil {
@@ -786,16 +799,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
                 "(document.body && document.body.childElementCount > 0) ? 1 : 0"
             ) { [weak self] result, error in
                 guard let self else { return }
-                let ok: Bool
-                if let n = result as? NSNumber {
-                    ok = n.intValue > 0
-                } else if let n = result as? Int {
-                    ok = n > 0
-                } else if let b = result as? Bool {
-                    ok = b
-                } else {
-                    ok = false
-                }
+                let ok = Self.jsTruthyResult(result)
                 if error != nil || !ok {
                     self.scheduleRecovery(into: webView)
                 }
@@ -811,16 +815,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
                 "(document.body && document.body.childElementCount > 0) ? 1 : 0"
             ) { [weak self, weak webView] result, error in
                 guard let self, let webView else { return }
-                let ok: Bool
-                if let n = result as? NSNumber {
-                    ok = n.intValue > 0
-                } else if let n = result as? Int {
-                    ok = n > 0
-                } else if let b = result as? Bool {
-                    ok = b
-                } else {
-                    ok = false
-                }
+                let ok = Self.jsTruthyResult(result)
                 guard error == nil, ok else {
                     self.scheduleRecovery(into: webView)
                     return
