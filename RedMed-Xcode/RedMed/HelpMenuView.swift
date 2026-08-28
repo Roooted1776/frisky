@@ -2,12 +2,11 @@ import SwiftUI
 import WebKit
 import UIKit
 
-/// Bundled owner Help: one HTML file, a get-started guide + three policy anchors. Offline. No network.
+/// Bundled owner Help: one HTML file, three policy anchors. Offline. No network.
 enum HelpDocument {
     static let bundledFile = "Help"
 
     enum Policy: String, CaseIterable, Identifiable {
-        case guide = "faq"
         case privacy
         case security
         case terms
@@ -16,7 +15,6 @@ enum HelpDocument {
 
         var title: String {
             switch self {
-            case .guide: return "Get Started"
             case .privacy: return "Privacy"
             case .security: return "Security"
             case .terms: return "Terms"
@@ -108,17 +106,20 @@ struct LocalWebView: UIViewRepresentable {
             let safe = id.filter { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" }
             guard safe == id, !safe.isEmpty else { return }
             // replaceState, not location.hash — assigning hash can reload the file.
+            // window.__rmShowPolicy (defined in Help.html) switches the colored
+            // tab and hides the other three sections; fall back to a plain
+            // scroll if the page's own script hasn't run yet for some reason.
             webView.evaluateJavaScript(
                 """
                 (function(){
                   var id = '\(safe)';
-                  var el = document.getElementById(id);
-                  if (el) el.scrollIntoView({block:'start'});
+                  if (typeof window.__rmShowPolicy === 'function') {
+                    window.__rmShowPolicy(id, true);
+                  } else {
+                    var el = document.getElementById(id);
+                    if (el) el.scrollIntoView({block:'start'});
+                  }
                   try { history.replaceState(null, '', '#' + id); } catch (e) {}
-                  document.querySelectorAll('.legal-nav a').forEach(function (a) {
-                    if (a.getAttribute('href') === '#' + id) a.setAttribute('aria-current', 'page');
-                    else a.removeAttribute('aria-current');
-                  });
                 })();
                 """
             )
@@ -196,7 +197,7 @@ struct LocalWebView: UIViewRepresentable {
             return URL(string: raw)
         }
 
-        private static let helpFragments: Set<String> = ["faq", "privacy", "terms", "security"]
+        private static let helpFragments: Set<String> = ["privacy", "terms", "security"]
 
         private static func policyDestination(file: String, fragment: String?) -> String? {
             guard file == "Help.html", let fragment, helpFragments.contains(fragment) else {
@@ -286,7 +287,7 @@ struct HelpMenuView: View {
 
                         helpSectionLabel("Policies")
                         helpCard {
-                            ForEach(HelpDocument.Policy.allCases.filter { $0 != .guide }) { policy in
+                            ForEach(HelpDocument.Policy.allCases) { policy in
                                 if policy != .privacy {
                                     Divider().padding(.leading, Metrics.rowHPad)
                                 }
