@@ -505,6 +505,22 @@ struct OwnerAppLock<Content: View>: View {
                 guard generation == authGeneration else { return }
                 logLock("unlockWithFaceID completion outcome=\(outcome) elapsed=\(Date().timeIntervalSince(attemptStartedAt))")
                 switch outcome {
+                case .timedOut:
+                    // 45s already elapsed with no callback at all — this is
+                    // OwnerAppLock's own much faster watchdogs' territory and
+                    // they almost always win the race first; this branch only
+                    // matters if they're somehow disarmed. No fast-retry
+                    // escalation (unlike `.declined`/`.notInteractive` below):
+                    // that much time has already passed, so just let Proceed
+                    // start a fresh attempt.
+                    isAuthenticating = false
+                    biometryFailed = false
+                    faceIDUnavailableReason = nil
+                    profileLoadFailed = false
+                    notInteractive = false
+                    didAutoPromptThisLock = false
+                    gate = .locked
+                    showUnlockControl = true
                 case .declined:
                     isAuthenticating = false
                     biometryFailed = false

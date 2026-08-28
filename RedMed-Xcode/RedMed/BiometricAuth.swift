@@ -22,6 +22,11 @@ enum BiometricAuth {
         /// Face ID / Touch ID cannot run right now. Retrying the same way
         /// never fixes this — each reason needs a different user action.
         case unavailable(UnavailableReason)
+        /// `evaluatePolicy` never called back at all within `evaluateHangTimeout`
+        /// — the same "no sheet ever presents" OS-level hang documented for
+        /// cold launch (see AGENTS.md) can in principle hit any caller. Treat
+        /// like `.declined`: quietly reset and let the user retry.
+        case timedOut
     }
 
     /// Why `canEvaluatePolicy` / `evaluatePolicy` reports biometrics can't
@@ -61,6 +66,17 @@ enum BiometricAuth {
     /// `evaluateCooldown` of this fails with no sheet (dead Face ID).
     private static var lastSessionEndedAt: Date?
     private static let evaluateCooldown: TimeInterval = 0.28
+
+    /// Backstop for a hung `evaluatePolicy` that never calls back at all.
+    /// Deliberately generous — several callers (Vault History unlock, Erase,
+    /// NFC write) hard-guard against re-entrancy on their own busy flag, so a
+    /// completion that never fires would brick that action until the app is
+    /// force-quit. Long enough that a real, slow Face ID retry + manual
+    /// passcode fallback (which only resolves once, at the very end) never
+    /// trips it — unlike `OwnerAppLock`'s own much shorter cold-launch
+    /// watchdogs, which are safe at 4.5–5s only because that specific bug
+    /// shape is "no sheet ever presents" (nothing in-progress to interrupt).
+    private static let evaluateHangTimeout: TimeInterval = 45
 
     /// `force` has no default: every call site must state whether it wants the
     /// `didUnlockThisLaunch` fast path or a fresh prompt. Today every caller
@@ -126,25 +142,44 @@ enum BiometricAuth {
         }
 
         setInFlight(context)
+        // Only one of {real callback, hang timeout} may ever act — whichever
+        // reaches this guard first on the (serial) main queue wins outright,
+        // so a very late real callback after a timeout can't re-park an
+        // already-invalidated context or double-fire the caller's completion.
+        var didComplete = false
+        let finish: (Outcome) -> Void = { result in
+            guard !didComplete else { return }
+            didComplete = true
+            completion(result)
+        }
         let runEvaluate = {
             RedMedSignpost.trace("evaluatePolicy calling now")
             context.evaluatePolicy(policy, localizedReason: reason) { success, evalError in
                 RedMedSignpost.trace("evaluatePolicy raw callback: success=\(success) error=\(String(describing: evalError))")
                 DispatchQueue.main.async {
+                    guard !didComplete else { return }
                     clearInFlight(ifSame: context)
                     markSessionEnded()
                     if success {
                         didUnlockThisLaunch = true
                         // Keep context alive for Keychain SecItem (do not invalidate yet).
                         park(context)
-                        completion(.success)
+                        finish(.success)
                     } else {
                         context.invalidate()
                         clearPark()
-                        completion(outcome(for: evalError))
+                        finish(outcome(for: evalError))
                     }
                 }
             }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + evaluateHangTimeout) {
+            guard !didComplete else { return }
+            clearInFlight(ifSame: context)
+            context.invalidate()
+            clearPark()
+            markSessionEnded()
+            finish(.timedOut)
         }
         // Wait out leftover LAContext teardown — same-turn retry after
         // userCancel / .notInteractive / cancelInFlight fails immediately
