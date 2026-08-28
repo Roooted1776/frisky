@@ -130,8 +130,8 @@ struct PrivacySnapshotGuard<Content: View>: View {
 /// chrome. `OwnerAppLock` no longer swaps the tab tree for `LockEntryPage`
 /// on `.inactive` (that painted cream on top of pages). Face ID runs on
 /// the next `.active` (re-entry). The cover stays up across that handoff
-/// (`holdSwitcherCover`) so `didBecomeActive` cannot flash one frame of PHI
-/// before the lock shell + Face ID sheet take over.
+/// (`holdSwitcherCover`) so pages stay cream-over until Face ID succeeds
+/// (or Proceed / Open Settings must be tappable).
 ///
 /// Removed once Face ID unlocks (or if the owner never left). Fires on
 /// every app switch (`.inactive` included — Control Center, app switcher,
@@ -225,8 +225,8 @@ enum OwnerLockPresentation {
         lock.unlock()
     }
 
-    /// Keep the UIKit switcher cream up until Face ID re-entry takes the
-    /// lock shell. Prevents a PHI flash on `didBecomeActive`.
+    /// Keep the UIKit switcher cream up until Face ID succeeds (or
+    /// Proceed). Prevents a PHI flash on `didBecomeActive`.
     static var holdSwitcherCover: Bool {
         get {
             lock.lock()

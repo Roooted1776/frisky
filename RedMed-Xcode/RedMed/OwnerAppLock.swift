@@ -213,10 +213,9 @@ struct OwnerAppLock<Content: View>: View {
         .onChange(of: gate) { _, newGate in
             if newGate == .locked {
                 OwnerLockPresentation.setLocked(true)
-                if OwnerLockPresentation.holdSwitcherCover {
-                    OwnerLockPresentation.holdSwitcherCover = false
-                    SnapshotSafeCover.shared.reveal()
-                }
+                // Keep the switcher cream over the pages until Face ID
+                // succeeds. Revealing here dropped the veil before the
+                // system sheet was up and could flash one tab frame.
                 didAutoPromptThisLock = false
                 notInteractiveRetried = false
                 showUnlockControl = false
@@ -225,8 +224,7 @@ struct OwnerAppLock<Content: View>: View {
             } else {
                 RedMedSignpost.end(.coldLaunchWindow)
                 OwnerLockPresentation.setLocked(false)
-                OwnerLockPresentation.holdSwitcherCover = false
-                SnapshotSafeCover.shared.reveal()
+                revealSwitcherCover()
                 // CoreMotion + vault file I/O on the same turn as consent
                 // first paint (and right after Face ID's Neural Engine) was
                 // a post-unlock hitch. Yield is not enough — wait a beat
@@ -260,6 +258,9 @@ struct OwnerAppLock<Content: View>: View {
             // resolution (unlocked) is handled in the gate onChange above.
             if shown {
                 RedMedSignpost.end(.coldLaunchWindow)
+                // Proceed / Open Settings must be tappable. The UIKit
+                // cream veil sat on top of that button if left up.
+                revealSwitcherCover()
             }
         }
         .onChange(of: scenePhase) { _, phase in
@@ -281,12 +282,11 @@ struct OwnerAppLock<Content: View>: View {
                 if OwnerLockPresentation.holdSwitcherCover {
                     if gate == .unlocked, !isAuthenticating, !BiometricAuth.isEvaluating {
                         relockAfterLeavingApp(cancelEvaluate: false)
-                        // Cover stays until onChange(gate==.locked) so PHI
-                        // cannot flash a frame before LockEntryPage commits.
-                    } else {
-                        OwnerLockPresentation.holdSwitcherCover = false
-                        SnapshotSafeCover.shared.reveal()
                     }
+                    // Cream stays over the pages until Face ID succeeds
+                    // (or Proceed). Do not reveal here — background
+                    // already locked, and dropping the veil flashed tabs
+                    // under the incoming sheet.
                 }
                 if gate == .locked {
                     tryAutoUnlockIfActive()
@@ -321,11 +321,18 @@ struct OwnerAppLock<Content: View>: View {
             showUnlockControl = false
             profile.discardUnlockPrefetch()
             BiometricAuth.clearAuthenticationContext()
-            OwnerLockPresentation.holdSwitcherCover = false
             OwnerLockPresentation.setLocked(false)
-            SnapshotSafeCover.shared.reveal()
+            revealSwitcherCover()
             gate = .unlocked
         }
+    }
+
+    /// Drop the app-switcher cream veil. Call on Face ID success or when
+    /// Proceed / Open Settings must receive taps. Do not call on lock
+    /// commit — cream stays over the pages until then.
+    private func revealSwitcherCover() {
+        OwnerLockPresentation.holdSwitcherCover = false
+        SnapshotSafeCover.shared.reveal()
     }
 
     /// Lock + purge so the next open always gets a Face ID / passcode prompt.

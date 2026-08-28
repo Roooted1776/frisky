@@ -136,8 +136,8 @@ The app has no backend, database, or web service.
   true `.background` always (purge PHI + `gate = .locked`). Do **not**
   relock on `.inactive` — that swapped live pages for `LockEntryPage`
   cream under Control Center / app-switcher peek. `SnapshotSafeCover`
-  is the switcher thumbnail only (`holdSwitcherCover` until re-entry).
-  On the next `.active`, relock if still unlocked, drop the cover, Face ID.
+  is the switcher thumbnail only (`holdSwitcherCover` until Face ID succeeds).
+  On the next `.active`, relock if still unlocked; keep cream over the pages until Face ID succeeds (or Proceed). Do not drop the cover on lock-shell commit.
   Never relock on `.inactive` while Face ID / a system auth sheet is up
   (`BiometricAuth.isEvaluating` or `isAuthenticating`) — that sheet itself
   puts the scene `.inactive` and must not kill the prompt. VaultHistoryView
