@@ -420,7 +420,7 @@ struct HelpMenuView: View {
                 isErasing = false
                 eraseAuthFailed = true
                 VaultHistoryStore.shared.record(.unlockFailed, detail: "erase")
-            case .declined, .notInteractive:
+            case .declined, .notInteractive, .timedOut:
                 isErasing = false
             }
         }
