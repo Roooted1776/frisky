@@ -1,6 +1,24 @@
 import SwiftUI
 import WebKit
 
+/// Owner-only, shown once ever before the *first* NFC Preview/Scan — a plain
+/// heads-up that this view renders exactly what a stranger's tap unlocks (no
+/// Face ID, no login). Never applies to a real bracelet tap: that opens the
+/// hosted `/tapper/#d=…` page directly in Safari and never touches this file
+/// or any Swift code, so the acknowledgment can't add a step to the actual
+/// emergency path.
+enum NFCPreviewAcknowledgment {
+    private static let acknowledgedKey = "redmed.nfcPreviewAcknowledged"
+
+    static var hasAcknowledged: Bool {
+        UserDefaults.standard.bool(forKey: acknowledgedKey)
+    }
+
+    static func recordAcknowledged() {
+        UserDefaults.standard.set(true, forKey: acknowledgedKey)
+    }
+}
+
 /// NFC Preview / NFC Scan — same bundled `tapper.html#d=` shell a stranger
 /// gets on band tap (HTML RedMed · 911 · Aid tabs visible). Loads with
 /// `?src=app` / `__REDMED_APP_PREVIEW` so SOS does **not** auto-arm (real
@@ -12,9 +30,12 @@ import WebKit
 /// Sets `html.app-preview` and disables WKWebView UIScrollView scrolling so
 /// flex tabbar taps work (fixed + dual-scroll ate RedMed · 911 · Aid switches).
 /// Never calls `BiometricAuth` — passerby / Preview tap-to-view stays ungated.
-/// Nothing covers this shell (no privacy veil, no Face ID, no native overlay).
+/// Nothing covers this shell (no privacy veil, no Face ID, no native overlay)
+/// — the one-time `NFCPreviewAcknowledgment` screen below is owner-only
+/// framing shown before the shell mounts, not a gate on the shell itself.
 struct PasserbyHTMLCardView: View {
     @Environment(\.dismiss) private var dismiss
+    @State private var acknowledged = NFCPreviewAcknowledgment.hasAcknowledged
     /// Raw `#d=` payload (no prefix), or full band URL containing `#d=`.
     let payloadOrURL: String
     /// Owner Linked state — passed into the shell so Preview matches native rules.
@@ -42,7 +63,9 @@ struct PasserbyHTMLCardView: View {
             .padding(.bottom, 8)
 
             Group {
-                if let encodedPayload {
+                if !acknowledged {
+                    acknowledgmentGate
+                } else if let encodedPayload {
                     PasserbyHTMLShell(
                         encodedPayload: encodedPayload,
                         braceletLinked: braceletLinked,
@@ -65,6 +88,33 @@ struct PasserbyHTMLCardView: View {
         .onDisappear { TapCardPresentation.setVisible(false) }
         .environment(\.isScannerSession, true)
         .presentsOwnerHelp()
+    }
+
+    private var acknowledgmentGate: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Before you preview")
+                    .font(.system(size: 20, weight: .bold))
+                    .kerning(-0.4)
+                    .foregroundColor(.redmedDark)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 12)
+
+                Text("This shows exactly what a stranger sees the instant they tap your bracelet — no Face ID, no login, no lock screen. Only what you've filled in on RedMed, 911, and Aid is visible.")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.redmedMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(14)
+                    .redmedBox()
+
+                PrimaryButton(title: "Continue") {
+                    NFCPreviewAcknowledgment.recordAcknowledged()
+                    acknowledged = true
+                }
+                .padding(.bottom, 12)
+            }
+            .padding(.horizontal, RedMedChrome.pagePadX)
+        }
     }
 
     nonisolated static func warmShellCache() {
