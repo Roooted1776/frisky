@@ -14,9 +14,9 @@ private enum AuthBudget {
     /// real cold-launch `evaluatePolicy` round trip so a genuine sheet isn't
     /// cancelled mid-presentation, but short enough that "no sheet at all"
     /// reads as fast, not frozen.
-    static let noSheetSeconds: TimeInterval = 0.35
+    static let noSheetSeconds: TimeInterval = 1.0
     /// GCD twin of `noSheetSeconds` (independent of Task cancellation).
-    static let noSheetGCDSeconds: TimeInterval = 0.5
+    static let noSheetGCDSeconds: TimeInterval = 1.5
     /// Total wait from lock-cycle start when scene is `.inactive`
     /// (live passcode or ghost sheet) before cancel.
     static let inactiveSheetTotalSeconds: TimeInterval = 60.0

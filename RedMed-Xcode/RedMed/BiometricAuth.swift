@@ -98,19 +98,15 @@ enum BiometricAuth {
         // with no sheet (blank cream LockEntryPage on cold start).
         #if targetEnvironment(simulator)
         _ = cancelInFlight()
-        // Same turn as the cream lock's first frame — an extra main.async
-        // was a blank cream beat before Face ID.
-        let present = {
+        // Next turn — presenting on the cream lock's first frame puts the
+        // alert on a VC that is not in the window yet (invisible prompt,
+        // watchdog thinks Face ID is up, stuck heart forever).
+        DispatchQueue.main.async {
             presentSimulatorPrompt(
                 reason: reason,
                 allowPasscode: allowPasscode,
                 completion: completion
             )
-        }
-        if Thread.isMainThread {
-            present()
-        } else {
-            DispatchQueue.main.async(execute: present)
         }
         #else
         let cancelledLiveContext = cancelInFlight()
@@ -353,9 +349,6 @@ enum BiometricAuth {
         allowPasscode: Bool,
         completion: @escaping (Outcome) -> Void
     ) {
-        parkLock.lock()
-        simulatorPromptUp = true
-        parkLock.unlock()
         presentSimulatorPrompt(reason: reason, allowPasscode: allowPasscode, attempt: 0, completion: completion)
     }
 
@@ -365,7 +358,7 @@ enum BiometricAuth {
         attempt: Int,
         completion: @escaping (Outcome) -> Void
     ) {
-        if let top = topViewController() {
+        if let top = topViewController(), top.view.window != nil {
             presentAlert(
                 on: top,
                 reason: reason,
@@ -374,8 +367,7 @@ enum BiometricAuth {
             )
             return
         }
-        // Next run loop, not a timed sleep — cream before Face ID was this wait.
-        guard attempt < 8 else {
+        guard attempt < 20 else {
             parkLock.lock()
             simulatorPromptUp = false
             parkLock.unlock()
@@ -421,6 +413,9 @@ enum BiometricAuth {
             completion(.success)
         })
         simulatorAlert = alert
+        parkLock.lock()
+        simulatorPromptUp = true
+        parkLock.unlock()
         top.present(alert, animated: false)
     }
 
