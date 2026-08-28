@@ -108,17 +108,20 @@ struct LocalWebView: UIViewRepresentable {
             let safe = id.filter { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" }
             guard safe == id, !safe.isEmpty else { return }
             // replaceState, not location.hash — assigning hash can reload the file.
+            // window.__rmShowPolicy (defined in Help.html) switches the colored
+            // tab and hides the other three sections; fall back to a plain
+            // scroll if the page's own script hasn't run yet for some reason.
             webView.evaluateJavaScript(
                 """
                 (function(){
                   var id = '\(safe)';
-                  var el = document.getElementById(id);
-                  if (el) el.scrollIntoView({block:'start'});
+                  if (typeof window.__rmShowPolicy === 'function') {
+                    window.__rmShowPolicy(id, true);
+                  } else {
+                    var el = document.getElementById(id);
+                    if (el) el.scrollIntoView({block:'start'});
+                  }
                   try { history.replaceState(null, '', '#' + id); } catch (e) {}
-                  document.querySelectorAll('.legal-nav a').forEach(function (a) {
-                    if (a.getAttribute('href') === '#' + id) a.setAttribute('aria-current', 'page');
-                    else a.removeAttribute('aria-current');
-                  });
                 })();
                 """
             )

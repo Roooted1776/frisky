@@ -26,14 +26,14 @@
     · <a href="tapper.html">Emergency card (any phone)</a>
   </aside>
 
-  <nav class="legal-nav legal-nav-sticky" aria-label="Help sections">
-    <a href="#faq"><span class="legal-nav-ico" aria-hidden="true">✦</span>Get started</a>
-    <a href="#privacy"><span class="legal-nav-ico" aria-hidden="true">🔒</span>Privacy</a>
-    <a href="#security"><span class="legal-nav-ico" aria-hidden="true">🛡</span>Security</a>
-    <a href="#terms"><span class="legal-nav-ico" aria-hidden="true">📜</span>Terms</a>
+  <nav class="legal-nav legal-nav-sticky" role="tablist" aria-label="Help sections">
+    <a href="#faq" role="tab" id="tab-faq" aria-controls="faq" aria-selected="true" tabindex="0"><span class="legal-nav-ico" aria-hidden="true">✦</span>Get started</a>
+    <a href="#privacy" role="tab" id="tab-privacy" aria-controls="privacy" aria-selected="false" tabindex="-1"><span class="legal-nav-ico" aria-hidden="true">🔒</span>Privacy</a>
+    <a href="#security" role="tab" id="tab-security" aria-controls="security" aria-selected="false" tabindex="-1"><span class="legal-nav-ico" aria-hidden="true">🛡</span>Security</a>
+    <a href="#terms" role="tab" id="tab-terms" aria-controls="terms" aria-selected="false" tabindex="-1"><span class="legal-nav-ico" aria-hidden="true">📜</span>Terms</a>
   </nav>
 
-  <section id="faq" class="legal-policy">
+  <section id="faq" class="legal-policy active" role="tabpanel" aria-labelledby="tab-faq" aria-hidden="false">
     <hr class="legal-rule-thin" aria-hidden="true">
     <h1 class="legal-doc-title">Get started</h1>
     <p class="legal-parties">How to set up and use RedMed, and what to do if something isn't working</p>
@@ -76,7 +76,7 @@
     </article>
   </section>
 
-  <section id="privacy" class="legal-policy">
+  <section id="privacy" class="legal-policy" role="tabpanel" aria-labelledby="tab-privacy" aria-hidden="true">
     <hr class="legal-rule-thin" aria-hidden="true">
     <h1 class="legal-doc-title">Privacy</h1>
     <p class="legal-meta">
@@ -169,7 +169,7 @@
     </article>
   </section>
 
-  <section id="security" class="legal-policy">
+  <section id="security" class="legal-policy" role="tabpanel" aria-labelledby="tab-security" aria-hidden="true">
     <hr class="legal-rule-thin" aria-hidden="true">
     <h1 class="legal-doc-title">Security</h1>
     <p class="legal-meta">
@@ -224,7 +224,7 @@
     </article>
   </section>
 
-  <section id="terms" class="legal-policy">
+  <section id="terms" class="legal-policy" role="tabpanel" aria-labelledby="tab-terms" aria-hidden="true">
     <hr class="legal-rule-thin" aria-hidden="true">
     <h1 class="legal-doc-title">Terms</h1>
     <p class="legal-meta">
@@ -345,19 +345,78 @@
 <script>
 (function () {
   var ids = ["faq", "privacy", "security", "terms"];
-  function currentId() {
-    var id = (location.hash || "#faq").replace("#", "");
-    return ids.indexOf(id) === -1 ? "faq" : id;
-  }
-  function sync() {
-    var id = currentId();
+  // Every element id inside a section maps back to that section, so a
+  // cross-reference like #crash-alarm (inside Terms) opens the right tab.
+  var sectionOf = {};
+  ids.forEach(function (id) {
+    var sec = document.getElementById(id);
+    if (!sec) return;
+    sectionOf[id] = id;
+    sec.querySelectorAll("[id]").forEach(function (el) {
+      sectionOf[el.id] = id;
+    });
+  });
+
+  function showSection(sec) {
+    ids.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var on = id === sec;
+      el.classList.toggle("active", on);
+      el.setAttribute("aria-hidden", on ? "false" : "true");
+    });
     document.querySelectorAll(".legal-nav a").forEach(function (a) {
-      if (a.getAttribute("href") === "#" + id) a.setAttribute("aria-current", "page");
+      var on = a.getAttribute("href") === "#" + sec;
+      a.setAttribute("aria-selected", on ? "true" : "false");
+      a.tabIndex = on ? 0 : -1;
+      if (on) a.setAttribute("aria-current", "page");
       else a.removeAttribute("aria-current");
     });
   }
-  window.addEventListener("hashchange", sync);
-  sync();
+
+  // Switches tabs and, when scroll is true, jumps to the exact target
+  // (which may be a sub-heading inside the active section). Exposed on
+  // window so the native app's WKWebView bridge (HelpMenuView.swift) can
+  // drive the same tab-filtering instead of duplicating this logic.
+  function goTo(id, scroll) {
+    var target = sectionOf[id] ? id : "faq";
+    var sec = sectionOf[target] || "faq";
+    showSection(sec);
+    if (scroll) {
+      var el = document.getElementById(target) || document.getElementById(sec);
+      if (el) el.scrollIntoView({ block: "start" });
+    }
+  }
+  window.__rmShowPolicy = goTo;
+
+  function currentId() {
+    return (location.hash || "#faq").replace("#", "");
+  }
+  window.addEventListener("hashchange", function () {
+    goTo(currentId(), true);
+  });
+  goTo(currentId(), false);
+
+  var order = ids.slice();
+  document.querySelectorAll(".legal-nav a").forEach(function (a) {
+    a.addEventListener("keydown", function (e) {
+      var id = a.getAttribute("href").replace("#", "");
+      var i = order.indexOf(id);
+      if (i < 0) return;
+      var next = i;
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") next = (i + 1) % order.length;
+      else if (e.key === "ArrowLeft" || e.key === "ArrowUp") next = (i + order.length - 1) % order.length;
+      else if (e.key === "Home") next = 0;
+      else if (e.key === "End") next = order.length - 1;
+      else return;
+      e.preventDefault();
+      var link = document.querySelector('.legal-nav a[href="#' + order[next] + '"]');
+      if (link) {
+        link.focus();
+        location.hash = "#" + order[next];
+      }
+    });
+  });
 })();
 </script>
 </body>
