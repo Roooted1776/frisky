@@ -40,6 +40,8 @@ enum AppConfig {
     /// Live App Store listing URL. `nil` until a paid Apple Developer account
     /// has a real app ID — never write a placeholder onto QR or NFC.
     static let appStoreURL: String? = nil
+    static let supportURL = "https://cdn.jsdelivr.net/gh/Roooted1776/redmed-privacy@main/support.html"
+    static let privacyPolicyURL = "https://cdn.jsdelivr.net/gh/Roooted1776/redmed-privacy@main/index.html"
 
     /// Owner band NDEF contract (permanent): write only
     /// `medicalCardBaseURL + "#d=" + base64url`. Profile stays in the fragment —
@@ -198,6 +200,10 @@ enum AppConfig {
 
         /// Alias for NFC / sourcing copy — band is never a BLE device.
         static var noBluetoothSummary: String { carrierVsBluetoothSummary }
+
+        static var hardwareParkedSummary: String {
+            "Band write is preview-only in this build. NFC Tag Reading is parked until a paid Apple Developer team can provision it. Preview packed card shows the same HTML helpers would see. Linked still requires a real CoreNFC write."
+        }
     }
 
     /// Quiet prayer on owner Aid only (`AidView`, not scanner / tapper shells).
@@ -205,6 +211,11 @@ enum AppConfig {
         static let fontSize: CGFloat = 11
         static let text =
             "Control your fear. Control the moment.\nYou have what it takes to save a life."
+    }
+
+    enum AidCopy {
+        static let referenceDisclaimer =
+            "First-aid reference only. Not medical advice and not a substitute for emergency dispatch. Call emergency services and follow their instructions."
     }
 
     /// Carrier notes + local-only rule for Find Help.

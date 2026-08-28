@@ -81,6 +81,14 @@ struct AidView: View {
                             CrashSurvivalCancelCard()
                         }
 
+                        Text(AppConfig.AidCopy.referenceDisclaimer)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.redmedMuted)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 8)
+                            .padding(.top, 8)
+
                         // Quiet prayer — owner Aid only (not scanner / passerby shells).
                         Spacer(minLength: 28)
 

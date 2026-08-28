@@ -219,7 +219,7 @@ monitoring starts after unlock; do not construct
 tab mounting mounts RedMed only on cold start (911 / Aid / NFC on first visit,
 kept alive after with opacity). Opacity keep-alive **does not** fire
 `onDisappear` on tab switch — any side effect that must stop when leaving a
-tab (Find Help GPS, seizure autodial, etc.) needs an explicit `isVisible`
+tab (Find Help GPS, seizure timer, etc.) needs an explicit `isVisible`
 (or equivalent) hook from `ContentView`, not `onDisappear` alone. Keychain
 profile decode runs off-main (prefetched during Face ID) and must **fail closed**
 (stay locked) if a stored blob was expected but decode returns false — never

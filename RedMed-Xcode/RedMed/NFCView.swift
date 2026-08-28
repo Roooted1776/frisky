@@ -99,7 +99,7 @@ struct NFCView: View {
             Text("Preview only")
                 .font(.system(size: 13, weight: .bold))
                 .foregroundColor(.redmedAccent)
-            Text("Band write is preview-only in this build. NFC Tag Reading is parked until a paid Apple Developer team can provision it. Preview packed card shows the same HTML helpers would see. Linked still requires a real CoreNFC write.")
+            Text(AppConfig.BraceletRF.hardwareParkedSummary)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundColor(.redmedMuted)
                 .fixedSize(horizontal: false, vertical: true)

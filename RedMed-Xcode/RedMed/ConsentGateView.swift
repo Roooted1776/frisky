@@ -49,7 +49,7 @@ struct ConsentGateView<Content: View>: View {
                         .padding(.top, 28)
 
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("RedMed is a local emergency medical ID and EMS assist. It is not a medical device, does not provide medical advice, and does not promise any medical outcome. Always call 911 first in a real emergency.")
+                        Text("RedMed is a personal medical ID and first-aid reference on this iPhone. It is not a medical device, does not diagnose or treat, and does not replace emergency dispatch. Always call emergency services first in a real emergency.")
                         Text("Your profile stays on this iPhone, and on a band if you write one — RedMed runs no server for it. Read the full Terms, Privacy, and Security pages below before continuing.")
                     }
                     .font(.system(size: 14, weight: .medium))
@@ -91,7 +91,7 @@ struct ConsentGateView<Content: View>: View {
                     // leave a Toggle inside it visible but unresponsive to
                     // taps (see redmedBox's doc comment in Theme.swift).
                     .redmedBox(flatten: false)
-                    Text("Location defaults on. No RedMed popup — iOS may ask Allow once the first time Find Help needs GPS (Apple requires that tap). Siren / max volume / brightness arm on crash or SOS only.")
+                    Text("Location defaults on. No RedMed popup — iOS may ask Allow once the first time Find Help needs GPS (Apple requires that tap). Siren / max volume / brightness arm on crash or SOS only while this app is open — not Apple Crash Detection, and not a background dispatch service.")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.redmedMuted)
                         .padding(.horizontal, 4)

@@ -15,11 +15,12 @@ Connect App Privacy nutrition label: **Data Not Collected**. Tracking: No.
 ## Sign-off
 
 Ready to Archive as a local medical ID. No diagnosis, dispatch, or vital-sign claims.
+Listing must not promise live bracelet write until NFC entitlement is restored.
 
 | Field | Value |
 |-------|--------|
 | Name | RedMed |
-| Subtitle | Medical ID on your iPhone and band |
+| Subtitle | Medical ID on your iPhone |
 | Category | Medical |
 | Age | 12+ |
 | Sign-in | No |
@@ -27,9 +28,10 @@ Ready to Archive as a local medical ID. No diagnosis, dispatch, or vital-sign cl
 | Tracking | No |
 | App Privacy | Data Not Collected |
 | Privacy Policy URL | https://cdn.jsdelivr.net/gh/Roooted1776/redmed-privacy@main/index.html |
+| Support | help.RedMed@gmail.com + `support/index.html` |
 | Regulated medical device | No |
 | Contact | help.RedMed@gmail.com |
 
 ## Review notes (paste)
 
-RedMed is a personal medical ID on this iPhone (Keychain, Face ID). No RedMed server, no login. Privacy: https://cdn.jsdelivr.net/gh/Roooted1776/redmed-privacy@main/index.html and Help → Privacy. 911 uses tel:; GPS stays on-screen. Aid is first-aid reference. NFC write parked. Not a regulated medical device.
+RedMed is a personal medical ID on this iPhone (Keychain, Face ID). No RedMed server, no login. Privacy: https://cdn.jsdelivr.net/gh/Roooted1776/redmed-privacy@main/index.html and Help → Privacy. 911 uses tel:; GPS stays on-screen. Aid is first-aid reference — follow the dispatcher. Seizure timer does not auto-dial; it shows a Call button at 5:00. NFC write is parked in this build (preview uses bundled HTML). Not a regulated medical device. Review device: enroll Face ID or a passcode so Unlock can complete.
