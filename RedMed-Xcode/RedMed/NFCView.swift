@@ -37,6 +37,7 @@ struct NFCView: View {
                         parkedBanner
                     }
                     factsCard
+                        .padding(.top, 4)
                     setupCard
                         .padding(.top, 4)
                     firstResponderPreviewLink
@@ -78,9 +79,9 @@ struct NFCView: View {
             Text(band.alertMessage ?? "")
         }
         .onChange(of: band.isWriting) { _, writing in
-            guard !writing, band.writeSucceeded, AppConfig.nfcHardwareEnabled else { return }
-            let detail = band.writeVerified ? "NFC write verified" : "NFC write"
-            band.linkBracelet(on: profile, detail: detail)
+            // Linked only after a matching read-back. Written-but-unverified stays Not linked.
+            guard !writing, band.writeSucceeded, band.writeVerified, AppConfig.nfcHardwareEnabled else { return }
+            band.linkBracelet(on: profile, detail: "NFC write verified")
         }
     }
 
@@ -146,6 +147,8 @@ struct NFCView: View {
             factRow(icon: "lock.open.fill", text: rf.backgroundTagReadingSummary)
             thinRule
             factRow(icon: "person.2.fill", text: rf.passerbyTapSummary)
+            thinRule
+            factRow(icon: "key.horizontal", text: AppConfig.OwnerBandURI.packingHonestySummary)
         }
         .redmedBox()
     }
@@ -188,6 +191,7 @@ struct NFCView: View {
                     tipRow("Write once after RedMed is filled — blank unlocked NXP NTAG216 (ISO 14443A Type 2).")
                     tipRow("Write packs #d= onto the chip only — never a vendor cloud or social/short link.")
                     tipRow("Scan / Preview: same HTML card helpers get — quick, no login, no server, no app.")
+                    tipRow("Linked only after write + matching read-back.")
                 } else {
                     tipRow("This build cannot write a physical band (NFC Tag Reading is parked).")
                     tipRow("Preview packed card opens the same HTML helpers would see — no Linked flag.")
