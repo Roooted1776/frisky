@@ -10,7 +10,7 @@
 <meta name="color-scheme" content="light">
 <!-- media-src needs blob: — the SOS siren WAV is built in JS and played from a
      blob: URL; default-src 'self' alone blocks it and the alarm goes silent. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; media-src 'self' blob: data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; worker-src 'self'; connect-src 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; media-src 'self' blob: data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; worker-src 'self'; connect-src 'self' https://overpass-api.de; upgrade-insecure-requests">
 <meta name="referrer" content="no-referrer">
 <!-- Favicon wired in resolveLogo from BrandLogo.png (preset src + fallbacks). -->
 <title>RedMed — tap to scan</title>
@@ -1210,6 +1210,85 @@ function redmedAssetURL(file) {
     min-width: 0;
     overflow-wrap: anywhere;
   }
+  /* Live hospital list — TopicDetailView's LiveNearbyHospitalsSection, web equivalent */
+  .aid-hosp-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 4px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+  .aid-hosp-spinner {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    border: 2px solid var(--divider);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: aidHospSpin 0.8s linear infinite;
+  }
+  @keyframes aidHospSpin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .aid-hosp-spinner { animation: none; }
+  }
+  .aid-hosp-retry {
+    display: block;
+    border: none;
+    background: transparent;
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 4px;
+    margin: 0 0 22px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .aid-hosp-list { margin-bottom: 22px; }
+  .aid-hosp-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--divider);
+    text-decoration: none;
+    color: inherit;
+  }
+  .aid-hosp-row:last-child { border-bottom: none; }
+  .aid-hosp-idx {
+    flex-shrink: 0;
+    width: 18px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .aid-hosp-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .aid-hosp-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    overflow-wrap: anywhere;
+  }
+  .aid-hosp-sub {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+  }
+  .aid-hosp-go {
+    flex-shrink: 0;
+    font-size: 15px;
+    color: var(--accent);
+    margin-top: 1px;
+  }
   body.aid-topic-open .tabbar { visibility: hidden; pointer-events: none; }
   body.aid-topic-open .app { visibility: hidden; }
 
@@ -2371,7 +2450,133 @@ function redmedAssetURL(file) {
           .replace(/>/g, '&gt;')
           .replace(/"/g, '&quot;');
       }
+
+      // Live nearby hospitals — web equivalent of TopicDetailView's
+      // LiveNearbyHospitalsSection (NearbyHospitals.swift uses MapKit;
+      // the browser has no MapKit, so this queries OpenStreetMap/Overpass
+      // for amenity=hospital instead). `hospGen` invalidates a search that
+      // is still in flight when the sheet is closed or another topic opens.
+      var hospGen = 0;
+      var HOSP_RADIUS_M = 40000;
+
+      function milesBetween(lat1, lon1, lat2, lon2) {
+        var R = 3958.8;
+        var dLat = (lat2 - lat1) * Math.PI / 180;
+        var dLon = (lon2 - lon1) * Math.PI / 180;
+        var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+          Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      }
+
+      function overpassElementToHospital(el, lat, lon) {
+        var elat = el.type === 'node' ? el.lat : (el.center && el.center.lat);
+        var elon = el.type === 'node' ? el.lon : (el.center && el.center.lon);
+        if (!isFinite(elat) || !isFinite(elon)) return null;
+        var tags = el.tags || {};
+        var addrParts = [];
+        if (tags['addr:housenumber'] && tags['addr:street']) {
+          addrParts.push(tags['addr:housenumber'] + ' ' + tags['addr:street']);
+        } else if (tags['addr:street']) {
+          addrParts.push(tags['addr:street']);
+        }
+        if (tags['addr:city']) addrParts.push(tags['addr:city']);
+        return {
+          name: tags.name || 'Hospital',
+          address: addrParts.join(', '),
+          miles: milesBetween(lat, lon, elat, elon),
+          lat: elat,
+          lon: elon
+        };
+      }
+
+      function renderHospitals(bodyEl, state) {
+        var html;
+        if (state === 'loading') {
+          html = '<div class="aid-hosp-status"><span class="aid-hosp-spinner" aria-hidden="true"></span>Finding hospitals near you…</div>';
+        } else if (state.error) {
+          html = '<div class="aid-hosp-status">' + esc(state.error) + '</div><button type="button" class="aid-hosp-retry">Try again</button>';
+        } else if (!state.list.length) {
+          html = '<div class="aid-hosp-status">No hospitals found nearby.</div><button type="button" class="aid-hosp-retry">Try again</button>';
+        } else {
+          html = '<div class="aid-sec-card aid-hosp-list">';
+          state.list.forEach(function (h, i) {
+            var dest = 'https://www.google.com/maps/dir/?api=1&destination=' + h.lat + ',' + h.lon;
+            var sub = h.address
+              ? (esc(h.address) + ' · ' + h.miles.toFixed(1) + ' mi')
+              : (h.miles.toFixed(1) + ' mi away');
+            html += '<a class="aid-hosp-row" href="' + esc(dest) + '" target="_blank" rel="noopener">' +
+              '<span class="aid-hosp-idx">' + (i + 1) + '</span>' +
+              '<span class="aid-hosp-info"><span class="aid-hosp-name">' + esc(h.name) + '</span>' +
+              '<span class="aid-hosp-sub">' + sub + '</span></span>' +
+              '<span class="aid-hosp-go" aria-hidden="true">&#8599;</span></a>';
+          });
+          html += '</div>';
+        }
+        bodyEl.innerHTML = html;
+        var retry = bodyEl.querySelector('.aid-hosp-retry');
+        if (retry) retry.addEventListener('click', function () { startHospitalSearch(bodyEl); });
+      }
+
+      function startHospitalSearch(bodyEl) {
+        if (!bodyEl) return;
+        var gen = ++hospGen;
+        renderHospitals(bodyEl, 'loading');
+
+        var settled = false;
+        var timeoutId = setTimeout(function () {
+          finish({ error: "Couldn't find hospitals nearby. Try again." });
+        }, 15000);
+
+        function finish(state) {
+          if (settled || gen !== hospGen) return;
+          settled = true;
+          clearTimeout(timeoutId);
+          renderHospitals(bodyEl, state);
+        }
+
+        function search(lat, lon) {
+          var q = '[out:json][timeout:15];(' +
+            'node["amenity"="hospital"](around:' + HOSP_RADIUS_M + ',' + lat + ',' + lon + ');' +
+            'way["amenity"="hospital"](around:' + HOSP_RADIUS_M + ',' + lat + ',' + lon + ');' +
+            'relation["amenity"="hospital"](around:' + HOSP_RADIUS_M + ',' + lat + ',' + lon + ');' +
+            ');out center 20;';
+          var url = 'https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(q);
+          fetch(url).then(function (res) {
+            if (!res.ok) throw new Error('bad status');
+            return res.json();
+          }).then(function (data) {
+            var list = (data.elements || [])
+              .map(function (el) { return overpassElementToHospital(el, lat, lon); })
+              .filter(Boolean)
+              .sort(function (a, b) { return a.miles - b.miles; })
+              .slice(0, 8);
+            finish({ list: list });
+          }).catch(function () {
+            finish({ error: "Couldn't find hospitals nearby. Try again." });
+          });
+        }
+
+        if (window.__redmedLoc) {
+          search(window.__redmedLoc.latitude, window.__redmedLoc.longitude);
+          return;
+        }
+        // App-embed: native tabs own location/Aid (see isAppEmbed comment above) —
+        // never trigger a browser geolocation prompt from this passerby/preview sheet.
+        if (isAppEmbed() || !navigator.geolocation) {
+          finish({ error: "Couldn't get your location. Check Location permission." });
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(function (pos) {
+          window.__redmedLoc = { latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy: pos.coords.accuracy };
+          search(pos.coords.latitude, pos.coords.longitude);
+        }, function () {
+          finish({ error: "Couldn't get your location. Check Location permission." });
+        }, { enableHighAccuracy: false, timeout: 12000, maximumAge: 60000 });
+      }
+
       function closeSheet() {
+        hospGen++;
         sheet.classList.remove('open');
         sheet.hidden = true;
         sheet.setAttribute('aria-hidden', 'true');
@@ -2381,6 +2586,7 @@ function redmedAssetURL(file) {
       function openTopic(key) {
         var topic = AID_TOPICS[key];
         if (!topic) return;
+        hospGen++; // invalidate any live search left over from a previous open
         var html = '';
         html += '<div class="aid-sec-label spaced">Recognize</div><div class="aid-sec-card">';
         topic.symptoms.forEach(function (sym) {
@@ -2391,12 +2597,18 @@ function redmedAssetURL(file) {
           html += '<div class="aid-sec-row care-row"><span class="care-mark" aria-hidden="true"></span><span class="care-text">' + esc(fillEmg(step)) + '</span></div>';
         });
         html += '</div>';
+        if (key === 'trauma-hospitals') {
+          html += '<div class="aid-sec-label">Nearest Hospitals — Live</div><div id="aidHospBody"></div>';
+        }
         scroll.innerHTML = html;
         scroll.scrollTop = 0;
         sheet.hidden = false;
         sheet.classList.add('open');
         sheet.setAttribute('aria-hidden', 'false');
         document.body.classList.add('aid-topic-open');
+        if (key === 'trauma-hospitals') {
+          startHospitalSearch(document.getElementById('aidHospBody'));
+        }
       }
 
       root.addEventListener('click', function (ev) {
