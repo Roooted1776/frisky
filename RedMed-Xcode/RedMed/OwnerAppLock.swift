@@ -10,10 +10,13 @@ import UIKit
 /// `OwnerAppLock<Content>` they inherit the generic parameter, and Swift
 /// rejects static stored properties on generic types.
 private enum AuthBudget {
-    /// Hung evaluate with no system UI (scene `.active`).
-    static let noSheetSeconds: TimeInterval = 4.5
+    /// Hung evaluate with no system UI (scene `.active`). Kept just above a
+    /// real cold-launch `evaluatePolicy` round trip so a genuine sheet isn't
+    /// cancelled mid-presentation, but short enough that "no sheet at all"
+    /// reads as fast, not frozen.
+    static let noSheetSeconds: TimeInterval = 1.0
     /// GCD twin of `noSheetSeconds` (independent of Task cancellation).
-    static let noSheetGCDSeconds: TimeInterval = 5.0
+    static let noSheetGCDSeconds: TimeInterval = 1.5
     /// Total wait from lock-cycle start when scene is `.inactive`
     /// (live passcode or ghost sheet) before cancel.
     static let inactiveSheetTotalSeconds: TimeInterval = 60.0
@@ -147,15 +150,15 @@ struct OwnerAppLock<Content: View>: View {
         .task(id: authGeneration) {
             guard gate == .locked else { return }
             let generation = authGeneration
-            // Was 15s, then 8s — both still read as a hard hang (blank cream,
-            // nothing to tap) on a cold launch where the system sheet never
-            // presents at all. The short budget only kills a hung evaluate
-            // with no system UI (scene `.active`). A live Face ID / passcode
-            // sheet drives `.inactive`; that path waits until
-            // `AuthBudget.inactiveSheetTotalSeconds` (60s) before cancel
-            // so a slow passcode fallback is not torn down at 4.5s, but a
-            // ghost sheet (inactive, no UI) cannot hang forever.
-            // Apple has no evaluatePolicy timeout — 60s is ours.
+            // Was 15s, then 8s, then 4.5s — all still read as a hard hang
+            // (blank cream, nothing to tap) on a cold launch where the
+            // system sheet never presents at all. The short budget only
+            // kills a hung evaluate with no system UI (scene `.active`). A
+            // live Face ID / passcode sheet drives `.inactive`; that path
+            // waits until `AuthBudget.inactiveSheetTotalSeconds` (60s)
+            // before cancel so a slow passcode fallback is not torn down at
+            // `noSheetSeconds`, but a ghost sheet (inactive, no UI) cannot
+            // hang forever. Apple has no evaluatePolicy timeout — 60s is ours.
             //
             // Budgeted from `lockCycleStartedAt`, not from this generation's
             // own start — the fast-fail-then-retry path bumps authGeneration
@@ -178,9 +181,10 @@ struct OwnerAppLock<Content: View>: View {
                 if BiometricAuth.isEvaluating { return }
                 #endif
                 // A live Face ID / passcode sheet puts the scene `.inactive`.
-                // Do not tear that down at 4.5s — passcode after a Face ID
-                // miss routinely takes longer. Wait out the 60s inactive
-                // budget, then cancel so a ghost sheet cannot hang forever.
+                // Do not tear that down at `noSheetSeconds` — passcode after
+                // a Face ID miss routinely takes longer. Wait out the 60s
+                // inactive budget, then cancel so a ghost sheet cannot hang
+                // forever.
                 if BiometricAuth.isEvaluating, scenePhase != .active {
                     let elapsedNow = Date().timeIntervalSince(lockCycleStartedAt ?? Date())
                     let extra = max(0, AuthBudget.inactiveSheetTotalSeconds - elapsedNow)
@@ -433,7 +437,7 @@ struct OwnerAppLock<Content: View>: View {
     }
 
     /// Face ID already succeeded. If Keychain/profile decode hangs, cream
-    /// with nothing to tap — do not wait out the 4.5s no-sheet budget.
+    /// with nothing to tap — do not wait out the no-sheet budget above.
     private func scheduleProfileLoadWatchdog(generation: Int) {
         DispatchQueue.main.asyncAfter(deadline: .now() + AuthBudget.profileLoadSeconds) {
             guard generation == authGeneration, gate == .locked, isLoadingProfile else { return }

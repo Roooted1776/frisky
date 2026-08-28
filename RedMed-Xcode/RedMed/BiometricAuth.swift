@@ -73,7 +73,7 @@ enum BiometricAuth {
     /// their own busy flag, so a completion that never fires would brick
     /// that action until force-quit. Must stay **above** `OwnerAppLock`'s
     /// 60s inactive passcode budget or this fires first and cuts off a
-    /// slow typist. `OwnerAppLock`'s 4.5s/5s watchdogs only kill a hung
+    /// slow typist. `OwnerAppLock`'s 1s/1.5s watchdogs only kill a hung
     /// evaluate with **no system UI** (scene `.active`).
     private static let evaluateHangTimeout: TimeInterval = 90
 

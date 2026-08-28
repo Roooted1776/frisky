@@ -24,7 +24,7 @@ RedMed is a **native iOS/SwiftUI** medical ID (`RedMed-Xcode/`). Local only: Key
 
 ## Shipped (Aug 2026, keep this current)
 
-- Face ID lock: file-level `AuthBudget` (generic types cannot nest `static let`). 4.5s/5s no-sheet, 60s inactive passcode, 90s hang clock.
+- Face ID lock: file-level `AuthBudget` (generic types cannot nest `static let`). 1s/1.5s no-sheet, 60s inactive passcode, 90s hang clock.
 - Debug-on-device: Main Thread Checker / TPC / view+queue debug / Metal validation / `ENABLE_DEBUG_DYLIB` off. `print()` → `os.Logger`. Log streaming. No SwiftUI preview dylib.
 - Load: no `CLLocationManager` retained on consent; crash-motion + vault after Before you continue paints; tapper.html string warm 300ms after first paint, WKWebView only after unlock.
 - App Store honesty on `main`: parked NFC copy, no autodial (native + all three `tapper.html`), Aid first-aid disclaimer, support page.
