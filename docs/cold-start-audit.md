@@ -66,6 +66,34 @@ this window as `profileLoadFailed` instead of a Face ID hang, and Proceed calls 
 with a profiler/device repro — same caveat as the rest of this doc — but the prior behavior was a
 readable logic bug independent of timing.
 
+## Broader cold-start / cream-page sweep (this pass)
+
+Following the fix above, re-read the full cold-launch chain end to end (`RedMedApp` →
+`PrivacySnapshotGuard` → `OwnerAppLock` → `ConsentGateView` → `Main` → `ContentView` →
+`RedMedView` → the `tapper.html` WKWebView shell) looking specifically for the same bug shape —
+a boolean doing double duty across two different phases, or a screen that can end up blank with no
+watchdog to recover it. Nothing else at that severity turned up:
+
+- `ConsentGateView` is a synchronous, user-driven gate (no `await`, no hang surface).
+- `ContentView` / `RedMedView` mount is fully synchronous; `RedMedView`'s own async paths
+  (`syncPackedPayload` / `refreshDurablePayload`) always paint a placeholder immediately and
+  already have a "Couldn't load your medical card — Try again" fallback (`packFinished`) if the
+  AES pack never resolves.
+- `PrivacySnapshotGuard`'s cover logic (`mustCover`) is gated on `hasBeenActive`, so it cannot
+  paint over the pre-first-frame gap the way the historical cream-hang bugs did.
+
+One smaller, lower-confidence item found and **left as-is**: `PasserbyHTMLWebView.Coordinator`
+(`PasserbyHTMLCardView.swift`) retries a failed shell load up to twice
+(`scheduleRecovery`/`loadAttempts < 2`) but has no user-facing fallback if both retries fail —
+the WKWebView (already colored cream via `webView.backgroundColor`) is simply left as-is with no
+"Try again" affordance, unlike `RedMedView`'s own `packFinished` fallback for a failed AES pack.
+This only triggers on a genuine repeated local WKWebView load failure (e.g. the WebContent process
+dying twice in a row), not the Keychain/Face ID path — much rarer than the bug above, and there is
+no reported symptom matching it. Not fixed this pass: doing so safely needs a small plumbing change
+(a closure/binding from the coordinator up to `RedMedView` to trigger the same kind of fallback UI),
+and in an environment with no Xcode/Simulator to build against, that's not worth the added risk
+without a concrete report to fix against.
+
 ## GPU/CPU render-load follow-up (this pass)
 
 A related report asked for a general CPU/GPU load pass. Checked every `.drawingGroup()` call in
