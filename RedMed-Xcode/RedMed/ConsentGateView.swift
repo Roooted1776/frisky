@@ -21,8 +21,8 @@ enum ConsentSettings {
 
 struct ConsentGateView<Content: View>: View {
     @State private var hasAccepted = ConsentSettings.hasAcceptedCurrent
-    /// First launch keeps Main off until Agree. Arming it on the first
-    /// turn let WKWebView hold a blank cream splash over the acknowledgment.
+    /// First launch keeps Main off until the gate has painted. Arm after
+    /// Task.yield so Agree is a cover-drop, not a cold WKWebView first paint.
     @State private var contentArmed = ConsentSettings.hasAcceptedCurrent
     @State private var checked = false
     @State private var openPolicy: HelpDocument.Policy?
@@ -32,8 +32,8 @@ struct ConsentGateView<Content: View>: View {
     @ViewBuilder var content: () -> Content
 
     var body: some View {
-        // Page 1 (this gate) is the first SwiftUI frame. Main stays off
-        // until Agree so WKWebView cannot hold a blank cream splash.
+        // Page 1 (this gate) must paint first. Then arm Main underneath so
+        // Agree is a cover-drop, not a cold first paint of WKWebView / tabs.
         ZStack {
             if contentArmed {
                 content()
@@ -42,6 +42,13 @@ struct ConsentGateView<Content: View>: View {
             }
             if !hasAccepted {
                 gate
+            }
+        }
+        .onAppear {
+            guard !contentArmed else { return }
+            Task { @MainActor in
+                await Task.yield()
+                contentArmed = true
             }
         }
     }
