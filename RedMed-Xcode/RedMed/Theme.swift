@@ -530,7 +530,6 @@ enum RedMedChrome {
 /// One-shot squash-settle; not Apple Face ID scan rings, not `BrandLogo`.
 struct LockMedGlyph: View {
     var size: CGFloat = RedMedChrome.unlockGlyphSize
-    @State private var popped = false
     @State private var spark: CGFloat = 0
 
     var body: some View {
@@ -558,15 +557,10 @@ struct LockMedGlyph: View {
                 .opacity(spark > 0.05 ? 1 : 0)
         }
         .frame(width: size, height: size)
-        // GPU-rasterize the heart/EKG/spark stack once so the pop-in spring and
-        // spark fade transform a single Metal-backed texture, not four live shapes.
+        // Visible on the first frame — fading in from opacity 0 was the
+        // blank cream start.
         .drawingGroup()
-        .scaleEffect(popped ? 1 : 0.76)
-        .opacity(popped ? 1 : 0)
         .onAppear {
-            withAnimation(.spring(response: 0.40, dampingFraction: 0.70)) {
-                popped = true
-            }
             withAnimation(.easeOut(duration: 0.28).delay(0.20)) {
                 spark = 1
             }

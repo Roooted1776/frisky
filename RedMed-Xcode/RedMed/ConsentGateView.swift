@@ -42,9 +42,12 @@ struct ConsentGateView<Content: View>: View {
                     .accessibilityHidden(!hasAccepted)
                     .allowsHitTesting(hasAccepted)
             } else {
-                Color.redmedBg.ignoresSafeArea()
-                    .allowsHitTesting(false)
-                    .accessibilityHidden(true)
+                ZStack {
+                    Color.redmedBg.ignoresSafeArea()
+                    LockMedGlyph(size: RedMedChrome.unlockFrameSize)
+                }
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
             }
             if !hasAccepted {
                 gate
