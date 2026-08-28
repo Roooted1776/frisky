@@ -8,7 +8,6 @@ struct AidPane: Identifiable {
     let topics: [(label: String, key: String)]
 }
 
-/// Pane chrome only — topic bodies stay in AidTopicCatalog until a topic opens.
 enum AidPaneCatalog {
     static let panes: [AidPane] = [
         AidPane(id: "hospitals", emoji: "🏥", title: "Nearby Hospitals", iconFilled: false,
@@ -32,8 +31,6 @@ enum AidPaneCatalog {
     ]
 
     #if DEBUG
-    /// Pane keys and topic bodies live in separate catalogs — keep them in lockstep.
-    /// Missing catalog entry → topic tap silently no-ops in AidView.
     static func assertTopicCoverage() {
         for pane in panes {
             for topic in pane.topics {
@@ -53,10 +50,6 @@ struct AidView: View {
     @State private var activeTopic: AidTopic? = nil
 
     var body: some View {
-        // Full-width accordion — life-saving: big targets, text always fits, no
-        // 2-col reflow when a pane opens. Same pattern as passerby tapper.html Aid.
-        // No page header / pane BrandWordmark — content-first, nothing hanging.
-        // Help is a sibling row (same as RedMed) so Aid panes sit below it.
         VStack(spacing: 0) {
             PageHelpChrome()
 
@@ -69,7 +62,6 @@ struct AidView: View {
                                 PaneCard(pane: pane, isOpen: isOpen) { key in
                                     if key == nil {
                                         RedMedHaptics.selection()
-                                        // Instant expand — spring accordion fights first Aid paint.
                                         openPane = isOpen ? nil : pane.id
                                     } else if let k = key, let topic = AidTopicCatalog.topics[k] {
                                         RedMedHaptics.light()
@@ -81,7 +73,14 @@ struct AidView: View {
                             CrashSurvivalCancelCard()
                         }
 
-                        // Quiet prayer — owner Aid only (not scanner / passerby shells).
+                        Text(AppConfig.AidCopy.referenceDisclaimer)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.redmedMuted)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 8)
+                            .padding(.top, 8)
+
                         Spacer(minLength: 28)
 
                         if !isScannerSession {
@@ -125,11 +124,10 @@ struct AidView: View {
     }
 }
 
-// MARK: - Pane Card
 struct PaneCard: View {
     let pane: AidPane
     let isOpen: Bool
-    let onTap: (String?) -> Void // nil = toggle, string = open topic
+    let onTap: (String?) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
