@@ -8,6 +8,7 @@ struct RedMedApp: App {
     /// screen for ~1s. This stays true for the rest of that session so Agree
     /// does not then Face ID.
     @State private var skipLockThisLaunch = !ConsentSettings.hasAcceptedCurrent
+    @State private var sessionAccepted = ConsentSettings.hasAcceptedCurrent
 
     var body: some Scene {
         WindowGroup {
@@ -16,10 +17,12 @@ struct RedMedApp: App {
             // First launch: acknowledgment only. After Agree, later opens
             // Face ID then Main. Consent never on passerby tapper.
             PrivacySnapshotGuard {
-                if skipLockThisLaunch {
-                    ConsentGateView {
-                        Main()
+                if skipLockThisLaunch, !sessionAccepted {
+                    ConsentGateView(onAccepted: { sessionAccepted = true }) {
+                        Color.redmedBg.ignoresSafeArea()
                     }
+                } else if skipLockThisLaunch {
+                    Main()
                 } else {
                     OwnerAppLock {
                         ConsentGateView {
@@ -39,8 +42,12 @@ struct RedMedApp: App {
                 // Registers the willResignActive/didBecomeActive observers before
                 // the app can possibly resign active for the first time.
                 SnapshotSafeCover.activate()
+                if skipLockThisLaunch {
+                    OwnerLockPresentation.setLocked(false)
+                    SnapshotSafeCover.shared.reveal()
+                }
                 // First-launch acknowledgment must paint before tapper.html warm.
-                let delay: UInt64 = ConsentSettings.hasAcceptedCurrent ? 300_000_000 : 800_000_000
+                let delay: UInt64 = sessionAccepted ? 300_000_000 : 800_000_000
                 try? await Task.sleep(nanoseconds: delay)
                 PasserbyHTMLCardView.scheduleShellWarmOnce()
                 // Vault directory create used to run ~1.5s after first paint,
