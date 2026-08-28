@@ -395,8 +395,8 @@ struct OwnerModalChrome<Trailing: View>: View {
     }
 }
 
-/// Edit modal bar: Cancel (left), Help (center), Save (right).
-/// Same type size and bar height so Help stays level with both actions.
+/// Edit modal bar: Cancel (left), Save (right).
+/// Same type size and bar height as the owner Help modal's Done bar.
 struct OwnerModalActionBar<Center: View>: View {
     let leadingTitle: String
     var leadingWeight: Font.Weight = .regular
@@ -455,6 +455,28 @@ struct OwnerModalActionBar<Center: View>: View {
     }
 }
 
+extension OwnerModalActionBar where Center == EmptyView {
+    /// Cancel / Save only — no center Help button.
+    init(
+        leadingTitle: String,
+        leadingWeight: Font.Weight = .regular,
+        leadingAction: @escaping () -> Void,
+        trailingTitle: String,
+        trailingWeight: Font.Weight = .bold,
+        trailingAction: @escaping () -> Void
+    ) {
+        self.init(
+            leadingTitle: leadingTitle,
+            leadingWeight: leadingWeight,
+            leadingAction: leadingAction,
+            trailingTitle: trailingTitle,
+            trailingWeight: trailingWeight,
+            trailingAction: trailingAction,
+            center: { EmptyView() }
+        )
+    }
+}
+
 extension OwnerModalChrome where Trailing == EmptyView {
     /// Leading-only bar (Help Done) — empty trailing keeps title centered
     /// via the shared `modalSideMinWidth` frame on the trailing slot.
@@ -475,7 +497,7 @@ enum RedMedChrome {
     static let navTitleFont: Font = .system(size: 17, weight: .semibold)
     /// Help / Edit (RedMed), Help on 911 / Aid / NFC, Back (Preview / scanner / topic).
     static let chromeActionSize: CGFloat = 18
-    /// Cancel / Help / Save / Done inside owner Help · Edit modals.
+    /// Cancel / Save / Done inside owner Help · Edit modals.
     static let modalActionSize: CGFloat = 17
     static let modalBarHeight: CGFloat = 52
     static let modalSideMinWidth: CGFloat = 64

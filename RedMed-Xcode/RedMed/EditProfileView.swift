@@ -34,7 +34,7 @@ struct EditProfileView: View {
     private static let bloodTypeChoices = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
 
     /// One body size across the edit form (labels, fields, prompts).
-    /// Nav bar metrics live in `RedMedChrome` so Help / Edit stay even.
+    /// Nav bar metrics live in `RedMedChrome` so Cancel / Save stay even.
     private enum Metrics {
         static let font: CGFloat = 15
         static let icon: CGFloat = 18
@@ -91,9 +91,7 @@ struct EditProfileView: View {
                 },
                 trailingTitle: "Save",
                 trailingAction: save
-            ) {
-                OwnerModalHelpButton()
-            }
+            )
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -182,7 +180,6 @@ struct EditProfileView: View {
         // Once on the sheet — per-field `.privacySensitive()` made SwiftUI
         // reuse the first TextField coordinator (list typing landed in Name).
         .privacySensitive()
-        .presentsOwnerHelp()
         .onAppear {
             loadDraft()
             SuggestionCatalog.warmUp()
