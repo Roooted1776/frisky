@@ -194,10 +194,15 @@ struct OwnerAppLock<Content: View>: View {
                 BiometricAuth.cancelInFlight()
                 isAuthenticating = false
             } else if isLoadingProfile {
-                // Face ID already succeeded — only the Keychain/profile
-                // decode is stuck. Say so specifically so Proceed retries
-                // that instead of re-prompting an already-passed Face ID.
-                profileLoadFailed = true
+                // Face ID already succeeded and the Keychain/profile decode
+                // is still in flight. This budget is anchored to
+                // `lockCycleStartedAt`, which includes real Face ID
+                // interaction time, so it can already be exhausted before a
+                // normal decode even starts — do not misreport a live
+                // decode as failed. `scheduleProfileLoadWatchdog`, started
+                // only once Face ID actually succeeds, owns declaring this
+                // stuck.
+                return
             }
             showUnlockControl = true
             RedMedSignpost.trace("task watchdog forced showUnlockControl=true")
@@ -420,7 +425,9 @@ struct OwnerAppLock<Content: View>: View {
                             BiometricAuth.cancelInFlight()
                             isAuthenticating = false
                         } else if isLoadingProfile {
-                            profileLoadFailed = true
+                            // Owned by `scheduleProfileLoadWatchdog` — see
+                            // the Task watchdog's matching comment above.
+                            return
                         }
                         showUnlockControl = true
                     }
@@ -429,7 +436,9 @@ struct OwnerAppLock<Content: View>: View {
                 BiometricAuth.cancelInFlight()
                 isAuthenticating = false
             } else if isLoadingProfile {
-                profileLoadFailed = true
+                // Owned by `scheduleProfileLoadWatchdog` — see the Task
+                // watchdog's matching comment above.
+                return
             }
             showUnlockControl = true
             RedMedSignpost.trace("GCD watchdog forced showUnlockControl=true")
