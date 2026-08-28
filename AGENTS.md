@@ -198,8 +198,7 @@ frame after biometrics. WKWebView warm starts **only after** `gate = .unlocked`
 leaves a blank cream / white hang after auth. Parked Face ID decode unlocks
 on the same MainActor turn (no deferred `Task` hop). Do not call Keychain in
 `@State` defaults.
-Location defaults on in Help →
-Settings with **no RedMed location gate / banner / Allow popup** — Help must not
+Location defaults on (Before you continue) with **no RedMed location gate / banner / Allow popup** — Help must not
 call `requestWhenInUseAuthorization`. When-In-Use + GPS start on Find Help only
 when Location is enabled (`AppSettings.locationEnabled` + `LocationManager.start`);
 iOS may show its system Allow sheet once (cannot auto-accept). Passerby
