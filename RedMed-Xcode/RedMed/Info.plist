@@ -47,8 +47,13 @@
 	<string>RedMed uses your location on the 911 tab to show coordinates you can read to emergency services. Location stays on this iPhone and is never uploaded by RedMed.</string>
 	<key>UIBackgroundModes</key>
 	<array/>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>LaunchBackground</string>
+		<key>UIImageName</key>
+		<string>LaunchAck</string>
+	</dict>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
