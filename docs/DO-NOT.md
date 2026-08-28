@@ -6,3 +6,4 @@ Permanent product rules. Do not ship copy or URLs that break these.
 - **Do not** call RedMed HIPAA-certified or a medical device. Local-only ≠ certification. ICE card ≠ FDA device.
 - **Do not** encode `apps.apple.com/id0000000000` (or any fake listing ID) on a QR, band, or in `AppConfig.appStoreURL`. That value is `nil` until Connect assigns a real ID.
 - **Do not** open a second clone of this repo. Only `/Users/claude/Documents/frisky` → `Roooted1776/frisky` → `main`.
+- **Do not** call the bracelet "encrypted" or "locked to your phone." `#d=` packing uses a public client key so any phone can open the card. The band is the credential.
