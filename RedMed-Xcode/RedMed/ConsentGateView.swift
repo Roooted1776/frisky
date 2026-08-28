@@ -51,7 +51,7 @@ struct ConsentGateView<Content: View>: View {
         .onAppear {
             guard !contentArmed else { return }
             Task { @MainActor in
-                try? await Task.sleep(nanoseconds: 350_000_000)
+                await Task.yield()
                 contentArmed = true
             }
         }

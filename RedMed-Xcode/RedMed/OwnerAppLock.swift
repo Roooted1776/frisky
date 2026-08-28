@@ -437,7 +437,13 @@ struct OwnerAppLock<Content: View>: View {
     /// with nothing to tap — do not wait out the no-sheet budget above.
     private func scheduleProfileLoadWatchdog(generation: Int) {
         DispatchQueue.main.asyncAfter(deadline: .now() + AuthBudget.profileLoadSeconds) {
-            guard generation == authGeneration, gate == .locked, isLoadingProfile else { return }
+            // Already showing consent / Main — do not yank back to cream.
+            guard generation == authGeneration, isLoadingProfile else { return }
+            if gate == .unlocked {
+                isLoadingProfile = false
+                return
+            }
+            guard gate == .locked else { return }
             logLock("profile-load watchdog fired")
             profileLoadFailed = true
             isLoadingProfile = false
@@ -693,16 +699,16 @@ struct OwnerAppLock<Content: View>: View {
                     VaultHistoryStore.shared.record(.unlockFailed, detail: "appLock-unavailable")
                 case .success:
                     guard generation == authGeneration else { return }
-                    // Face ID/passcode is done — from here on a stall is the
-                    // profile decode, not the sheet. Let the watchdogs know.
+                    // Face ID/passcode is done. Drop the cream lock now —
+                    // waiting on Keychain here was hangtime (blank/heart
+                    // LockEntryPage after the sheet). Consent does not need
+                    // PHI; profile decode continues underneath.
                     isAuthenticating = false
                     isLoadingProfile = true
-                    // Face ID is done — do not keep the switcher cream over
-                    // pages (or over Proceed if decode stalls).
                     revealSwitcherCover()
+                    showUnlockControl = false
+                    gate = .unlocked
                     scheduleProfileLoadWatchdog(generation: generation)
-                    // Prefetch already kicked off in the authenticate
-                    // callback (before this hop). Adopt it here.
                     await applyUnlockSuccess(generation: generation)
                 }
             }

@@ -73,12 +73,12 @@ struct ContentView: View {
             // Warm the other pages under the current one so the first tap
             // is not a cream-only mount. GPS / WK still gated on isVisible.
             Task { @MainActor in
-                try? await Task.sleep(nanoseconds: 450_000_000)
+                await Task.yield()
                 mountedTabs.insert(.emergency)
-                try? await Task.sleep(nanoseconds: 200_000_000)
+                await Task.yield()
                 mountedTabs.insert(.aid)
                 if showsNFC {
-                    try? await Task.sleep(nanoseconds: 200_000_000)
+                    await Task.yield()
                     mountedTabs.insert(.nfc)
                 }
             }
