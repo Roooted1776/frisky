@@ -21,6 +21,9 @@ struct FacePage: View {
 
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
+                LockMedGlyph(size: RedMedChrome.unlockFrameSize)
+                    .padding(.bottom, 28)
+                    .accessibilityHidden(true)
 
                 VStack(spacing: 14) {
                     if screenCaptured {
