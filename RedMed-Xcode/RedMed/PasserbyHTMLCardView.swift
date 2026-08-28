@@ -790,6 +790,9 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         }
 
         func recoverIfNeeded(_ webView: WKWebView) {
+            // Already painted — coming back from 911/Aid must not reload
+            // into cream. Process death still recovers via didTerminate.
+            if shellLoaded { return }
             if webView.isLoading || isRecovering || loadAttempts >= 2 { return }
             if webView.url == nil {
                 scheduleRecovery(into: webView)

@@ -46,24 +46,23 @@ struct ContentView: View {
             Color.redmedBg.ignoresSafeArea()
                 .allowsHitTesting(false)
 
-            GeometryReader { geo in
-                let slide = geo.size.width > 8 ? geo.size.width : 10_000
-                ZStack {
-                    mountedTab(.redmed, slide: slide) {
-                        RedMedView(isVisible: activeTab == .redmed)
-                    }
-                    mountedTab(.emergency, slide: slide) {
-                        EmergencyView(isVisible: activeTab == .emergency)
-                    }
-                    mountedTab(.aid, slide: slide) { AidView() }
-                    if showsNFC {
-                        mountedTab(.nfc, slide: slide) { NFCView() }
-                    }
+            // Stack at origin — do not offset/clip inactive tabs offscreen.
+            // Offset + clipped dropped the WKWebView compositor (same cream
+            // hang opacity 0 used to cause) between RedMed · 911 · Aid · NFC.
+            ZStack {
+                mountedTab(.redmed) {
+                    RedMedView(isVisible: activeTab == .redmed)
+                }
+                mountedTab(.emergency) {
+                    EmergencyView(isVisible: activeTab == .emergency)
+                }
+                mountedTab(.aid) { AidView() }
+                if showsNFC {
+                    mountedTab(.nfc) { NFCView() }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(.bottom, RedMedChrome.tabBarHeight)
-            .clipped()
 
             CustomTabBar(tab: scannerSafeTab, showsNFC: showsNFC)
         }
@@ -71,6 +70,18 @@ struct ContentView: View {
         .onAppear {
             mountedTabs.insert(activeTab)
             clampScannerTab()
+            // Warm the other pages under the current one so the first tap
+            // is not a cream-only mount. GPS / WK still gated on isVisible.
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 450_000_000)
+                mountedTabs.insert(.emergency)
+                try? await Task.sleep(nanoseconds: 200_000_000)
+                mountedTabs.insert(.aid)
+                if showsNFC {
+                    try? await Task.sleep(nanoseconds: 200_000_000)
+                    mountedTabs.insert(.nfc)
+                }
+            }
         }
         .onChange(of: tab) { _, newTab in
             mountedTabs.insert(newTab)
@@ -94,16 +105,13 @@ struct ContentView: View {
     @ViewBuilder
     private func mountedTab<Content: View>(
         _ tab: AppTab,
-        slide: CGFloat,
         @ViewBuilder content: () -> Content
     ) -> some View {
         if mountedTabs.contains(tab) {
             content()
-                // Opacity 0 on a live WKWebView drops the compositor layer —
-                // RedMed came back cream after 911 / Aid / NFC. Keep the layer;
-                // slide inactive tabs offscreen (clipped by the parent).
-                .offset(x: activeTab == tab ? 0 : slide)
-                // Discrete swap — spring/fade on a live WKWebView is visible jank.
+                // Stay on-screen under the active page. Opacity 0 and
+                // offscreen offset both blanked WKWebView into cream.
+                .zIndex(activeTab == tab ? 1 : 0)
                 .transaction { $0.animation = nil }
                 .allowsHitTesting(activeTab == tab)
                 .accessibilityHidden(activeTab != tab)
