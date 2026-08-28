@@ -110,7 +110,7 @@ struct PrimaryButton: View {
         }
         .buttonStyle(RedMedPressStyle(haptic: nil))
         .disabled(disabled || busy)
-        .opacity(disabled ? RedMedChrome.disabledOpacity : 1)
+        .opacity(busy ? 0.72 : (disabled ? RedMedChrome.disabledOpacity : 1))
         .accessibilityAddTraits(.isButton)
     }
 
@@ -180,7 +180,7 @@ struct OutlineButton: View {
         }
         .buttonStyle(RedMedPressStyle(haptic: nil))
         .disabled(disabled || busy)
-        .opacity(disabled ? RedMedChrome.disabledOpacity : (busy ? 0.72 : 1))
+        .opacity(busy ? 0.72 : (disabled ? RedMedChrome.disabledOpacity : 1))
         .accessibilityAddTraits(.isButton)
     }
 }
