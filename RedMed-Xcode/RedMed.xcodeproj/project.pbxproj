@@ -62,7 +62,6 @@
 		AABB00000000000000000057 /* HealthKitProfileImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000057 /* HealthKitProfileImport.swift */; };
 		AABB00000000000000000058 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000058 /* HealthKit.framework */; };
 		AABB0000000000000000005A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000005A /* PrivacyInfo.xcprivacy */; };
-		AABB0000000000000000005B /* ConsentPolicyCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000005B /* ConsentPolicyCopy.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -124,7 +123,6 @@
 		AAAA00000000000000000057 /* HealthKitProfileImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitProfileImport.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000058 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 		AAAA0000000000000000005A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		AAAA0000000000000000005B /* ConsentPolicyCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsentPolicyCopy.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -148,7 +146,6 @@
 				AAAA00000000000000000033 /* OwnerAppLock.swift */,
 				AAAA00000000000000000059 /* RedMedSignpost.swift */,
 				AAAA00000000000000000055 /* ConsentGateView.swift */,
-				AAAA0000000000000000005B /* ConsentPolicyCopy.swift */,
 				AAAA00000000000000000056 /* CountryDialCode.swift */,
 				AAAA00000000000000000052 /* LockEntryPage.swift */,
 				AAAA00000000000000000053 /* FacePage.swift */,
@@ -425,7 +422,6 @@
 				AABB00000000000000000033 /* OwnerAppLock.swift in Sources */,
 				AABB00000000000000000059 /* RedMedSignpost.swift in Sources */,
 				AABB00000000000000000055 /* ConsentGateView.swift in Sources */,
-				AABB0000000000000000005B /* ConsentPolicyCopy.swift in Sources */,
 				AABB00000000000000000056 /* CountryDialCode.swift in Sources */,
 				AABB00000000000000000057 /* HealthKitProfileImport.swift in Sources */,
 				AABB00000000000000000034 /* SecurePasteboard.swift in Sources */,
