@@ -8,14 +8,21 @@ struct RedMedApp: App {
         WindowGroup {
             // Owner UI lives in Main.swift — not HTML.
             // Privacy cover hides PHI from iOS app-switcher snapshots.
-            // Face ID first (no extra pages before the lock). Consent is
-            // first-launch only, after unlock, never on passerby tapper.
+            // Simulator: no Face ID lock. That path was cream/heart/Proceed
+            // loops and never reliably reached the app. Device still locks.
+            // Consent is first-launch only, never on passerby tapper.
             PrivacySnapshotGuard {
+                #if targetEnvironment(simulator)
+                ConsentGateView {
+                    Main()
+                }
+                #else
                 OwnerAppLock {
                     ConsentGateView {
                         Main()
                     }
                 }
+                #endif
             }
             // On the guard (not only the lock) so capture cover can see purged vs PHI-in-RAM.
             .environmentObject(profile)
@@ -28,8 +35,10 @@ struct RedMedApp: App {
                 // Registers the willResignActive/didBecomeActive observers before
                 // the app can possibly resign active for the first time.
                 SnapshotSafeCover.activate()
-                // 112KB tapper.html + Face ID on the same tick was the Instruments
-                // "CPU during Face ID" spike. Match OwnerAppLock.deferredWarmUp.
+                #if targetEnvironment(simulator)
+                OwnerLockPresentation.setLocked(false)
+                SnapshotSafeCover.shared.reveal()
+                #endif
                 try? await Task.sleep(nanoseconds: 300_000_000)
                 PasserbyHTMLCardView.scheduleShellWarmOnce()
                 // Vault directory create used to run ~1.5s after first paint,

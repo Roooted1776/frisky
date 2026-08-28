@@ -21,10 +21,13 @@ enum ConsentSettings {
 
 struct ConsentGateView<Content: View>: View {
     @State private var hasAccepted = ConsentSettings.hasAcceptedCurrent
-    /// Returning owners skip the gate — arm Main on the same turn so Face ID
-    /// success is not a cream placeholder. First launch still yields once
-    /// so Before you continue paints before WKWebView.
+    /// Returning owners skip the gate. Simulator always arms Main so Agree
+    /// is a cover-drop, not a cream hang into an unmounted tab tree.
+    #if targetEnvironment(simulator)
+    @State private var contentArmed = true
+    #else
     @State private var contentArmed = ConsentSettings.hasAcceptedCurrent
+    #endif
     @State private var checked = false
     @State private var openPolicy: HelpDocument.Policy?
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
