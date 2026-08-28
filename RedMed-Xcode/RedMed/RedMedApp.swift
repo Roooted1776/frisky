@@ -8,15 +8,11 @@ struct RedMedApp: App {
         WindowGroup {
             // Owner UI lives in Main.swift — not HTML.
             // Privacy cover hides PHI from iOS app-switcher snapshots.
-            // Face ID lock on simulator and device. Simulator auto-succeeds
-            // in BiometricAuth (no Authenticate alert). Device uses real Face ID.
-            // Consent is first-launch only, never on passerby tapper.
+            // First open: Face ID on Before you continue, then the ack, then Main.
+            // Later opens: Face ID lock, then Main. Consent is first-launch only,
+            // never on passerby tapper.
             PrivacySnapshotGuard {
-                OwnerAppLock {
-                    ConsentGateView {
-                        Main()
-                    }
-                }
+                LaunchRoot()
             }
             // On the guard (not only the lock) so capture cover can see purged vs PHI-in-RAM.
             .environmentObject(profile)
@@ -60,6 +56,29 @@ struct RedMedApp: App {
             // [applinks:roooted1776.github.io] back to RedMed.entitlements, then
             // confirm apple-app-site-association is served at the domain root.
             .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { _ in }
+        }
+    }
+}
+
+/// First process: Face ID on Before you continue, then acknowledgment, then Main.
+/// Same session stays on this tree after Agree so we do not remount OwnerAppLock
+/// and Face ID again. Next cold start uses the lock (consent already accepted).
+private struct LaunchRoot: View {
+    @State private var needsConsent = !ConsentSettings.hasAcceptedCurrent
+
+    var body: some View {
+        Group {
+            if needsConsent {
+                ConsentGateView { Main() }
+            } else {
+                OwnerAppLock { Main() }
+            }
+        }
+        .onAppear {
+            guard needsConsent else { return }
+            // Do not leave the switcher cream veil over the first page.
+            OwnerLockPresentation.setLocked(false)
+            SnapshotSafeCover.shared.reveal()
         }
     }
 }
