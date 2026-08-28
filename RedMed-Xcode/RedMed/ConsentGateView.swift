@@ -97,7 +97,7 @@ struct ConsentGateView<Content: View>: View {
                         .padding(.horizontal, 4)
 
                     VStack(spacing: 0) {
-                        ForEach(Array(HelpDocument.Policy.allCases.filter { $0 != .guide }.enumerated()), id: \.element.id) { index, policy in
+                        ForEach(Array(HelpDocument.Policy.allCases.enumerated()), id: \.element.id) { index, policy in
                             if index > 0 {
                                 Divider().overlay(Color.redmedDivider).padding(.leading, RedMedChrome.pagePadX)
                             }
