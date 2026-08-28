@@ -19,7 +19,7 @@ Only what must live at the deploy / GitHub surface:
 
 ```text
 frisky/
-├── README.md · AGENTS.md
+├── README.md · AGENTS.md · MAX.md
 ├── RedMed-Xcode/          # native owner app
 ├── tapper/                # passerby shell + shell-relative PNGs
 ├── assets/                # canonical brand PNGs / SVG
@@ -33,7 +33,7 @@ frisky/
 
 | File | Role |
 |------|------|
-| `docs/MAX.md` | Max profile + shipped history (agent memory) |
+| `../MAX.md` | Max profile + shipped history (agent memory; linked from `AGENTS.md`) |
 | `docs/SECURITY.md` | Threat model / reporting |
 | `docs/STRUCTURE.md` | This map |
 | `docs/domain.md` | getredmed.com cutover |
