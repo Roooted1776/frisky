@@ -94,19 +94,15 @@ enum BiometricAuth {
     ) {
         _ = force
 
-        // Simulator: never evaluatePolicy. Enrolled-sim Face ID hangs
-        // with no sheet (blank cream LockEntryPage on cold start).
+        // Simulator: never evaluatePolicy and never a UIKit alert. The
+        // Authenticate alert sat on a hidden window / inactive scene and
+        // left the cream heart with no Proceed (start stuck). Auto-succeed
+        // so cold start can reach Main. Device still uses real Face ID.
         #if targetEnvironment(simulator)
         _ = cancelInFlight()
-        // Next turn — presenting on the cream lock's first frame puts the
-        // alert on a VC that is not in the window yet (invisible prompt,
-        // watchdog thinks Face ID is up, stuck heart forever).
         DispatchQueue.main.async {
-            presentSimulatorPrompt(
-                reason: reason,
-                allowPasscode: allowPasscode,
-                completion: completion
-            )
+            markSessionEnded()
+            completion(.success)
         }
         #else
         let cancelledLiveContext = cancelInFlight()
