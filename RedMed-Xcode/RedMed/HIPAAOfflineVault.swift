@@ -97,7 +97,7 @@ enum HIPAAOfflineVault {
         guard let items = try? fm.contentsOfDirectory(
             at: dir,
             includingPropertiesForKeys: nil,
-            options: [.skipsHiddenFiles]
+            options: []
         ) else { return }
         for url in items {
             guard url.standardizedFileURL.path.hasPrefix(dir.standardizedFileURL.path + "/") else { continue }

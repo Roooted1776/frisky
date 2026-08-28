@@ -287,14 +287,18 @@ class ProfileData: ObservableObject {
         if unlockBlobTask != nil { return }
         let account = Self.keychainAccount
         let box = unlockPrefetchBox
-        box.clear()
+        let generation = box.beginGeneration()
         let blobTask = Task.detached(priority: priority) { () -> PersistedProfile? in
-            guard let data = KeychainStore.load(account: account),
+            // Prefetch must not read legacy unbound blobs — those have no ACL
+            // and would decode PHI before Face ID succeeds. Post-auth load
+            // still migrates them.
+            guard let data = KeychainStore.load(account: account, allowLegacy: false),
                   let decoded = try? JSONDecoder().decode(PersistedProfile.self, from: data) else {
-                box.store(nil)
+                if !Task.isCancelled { box.store(nil, generation: generation) }
                 return nil
             }
-            box.store(decoded)
+            guard !Task.isCancelled else { return decoded }
+            box.store(decoded, generation: generation)
             return decoded
         }
         unlockBlobTask = blobTask
@@ -651,15 +655,30 @@ private final class UnlockPrefetchBox: @unchecked Sendable {
         return ready && blob != nil
     }
 
-    func store(_ value: PersistedProfile?) {
+    private var generation: UInt64 = 0
+
+    /// Bump so a cancelled prefetch cannot overwrite a newer box.
+    func beginGeneration() -> UInt64 {
         lock.lock()
+        generation &+= 1
+        blob = nil
+        ready = false
+        let token = generation
+        lock.unlock()
+        return token
+    }
+
+    func store(_ value: PersistedProfile?, generation: UInt64) {
+        lock.lock()
+        defer { lock.unlock() }
+        guard generation == self.generation else { return }
         blob = value
         ready = true
-        lock.unlock()
     }
 
     func clear() {
         lock.lock()
+        generation &+= 1
         blob = nil
         ready = false
         lock.unlock()

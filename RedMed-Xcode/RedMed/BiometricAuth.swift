@@ -62,14 +62,16 @@ enum BiometricAuth {
     private static var lastSessionEndedAt: Date?
     private static let evaluateCooldown: TimeInterval = 0.28
 
-    /// Seconds the parked context may satisfy SecItem without a new Face ID.
-    /// Covers unlock → Keychain load → first persist; background clears earlier.
-    private static let secItemReuseDuration: TimeInterval = 60
-
     /// `force` has no default: every call site must state whether it wants the
     /// `didUnlockThisLaunch` fast path or a fresh prompt. Today every caller
     /// (unlock, Edit, Save, NFC write, vault, Erase) passes `true` — a future
     /// caller that forgets it would otherwise silently skip re-authentication.
+    ///
+    /// `touchIDAuthenticationAllowableReuseDuration` stays 0 (Apple default).
+    /// A non-zero value lets `evaluatePolicy` succeed off a recent *device*
+    /// unlock with no new Face ID sheet — which would skip the owner gate.
+    /// The parked `LAContext` is what lets SecItem skip a second sheet after
+    /// a successful evaluate; that does not need this property.
     static func authenticate(
         reason: String,
         force: Bool,
@@ -91,7 +93,7 @@ enum BiometricAuth {
 
         let context = makeContext(
             allowPasscode: allowPasscode,
-            allowableReuseDuration: max(allowableReuseDuration, secItemReuseDuration)
+            allowableReuseDuration: allowableReuseDuration
         )
         var error: NSError?
         let policy: LAPolicy = allowPasscode

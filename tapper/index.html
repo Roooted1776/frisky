@@ -2015,8 +2015,12 @@ function redmedAssetURL(file) {
   }
 
   var firstPhone = '';
+  /// True only after a successful `decodeProfile()` (or native embed). Used to
+  /// refuse SOS auto-arm on garbage `#d=` that paints the No patient empty state.
+  var paintedFromBand = false;
 
   function renderProfile(p, fromBand) {
+    paintedFromBand = !!fromBand;
     p = p || {};
     var rawName = (p.name || '').trim();
     var rawDob = (p.dob || '').trim();
@@ -3045,22 +3049,25 @@ function redmedAssetURL(file) {
     }
   });
 
-  // Real HF NFC band tap brings #d= — arm local SOS on this phone only.
-  // No auto-arm for bare /tapper/ or in-app Preview/Scan (?src=app). No server / no online.
+  // Real HF NFC band tap brings #d= that decrypts — arm local SOS on this phone only.
+  // No auto-arm for bare /tapper/, garbage `#d=`, or in-app Preview/Scan (?src=app).
   function hasBandPayload() {
     // Require non-empty fragment after #d= — bare "#d=" is not a real band tap.
     var h = location.hash || '';
     return /^#d=.+/.test(h) && !appPreview();
   }
+  function shouldAutoArm() {
+    return hasBandPayload() && paintedFromBand && !appPreview();
+  }
   // Band tap: wait for profile paint before arm/siren so decrypt is not fighting PCM.
-  // Crash / explicit SOS still call arm() directly (post-paint). Fallback if paint never fires.
+  // Crash / explicit SOS still call arm() directly (post-paint). Do not arm on a
+  // hash that failed to decode (No patient empty state).
   document.addEventListener('redmed-profile-painted', function () {
-    if (hasBandPayload()) arm();
+    if (shouldAutoArm()) arm();
     else paint();
   }, { once: true });
   setTimeout(function () {
-    if (hasBandPayload() && !armed) arm();
-    else if (!hasBandPayload()) paint();
+    if (!hasBandPayload() && !armed) paint();
   }, 900);
 })();
 </script>
