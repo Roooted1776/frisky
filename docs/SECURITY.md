@@ -32,7 +32,7 @@ Out of scope: cloning a passive NFC band (same as photocopying a wallet medical 
 ## Hardening checklist (repo)
 
 - Passerby HTML: `textContent` for PHI fields; no `eval`; zlib inflate capped; CSP + `nosniff` / `frame-ancestors` / referrer policy via `_headers` (live on Pages paths) + matching meta CSP (`upgrade-insecure-requests`).
-- Owner: `OwnerAppLock` + `BiometricAuth` (reuse duration 0 for UI; parked LAContext for SecItem only, cleared on background / erase / lock); scanner snapshots use `ProfileData(persisting: false)`.
+- Owner: `OwnerAppLock` + `BiometricAuth` (reuse duration 0 for UI; parked LAContext for SecItem only, cleared on background / erase / lock); scanner snapshots use `ProfileData(persisting: false)`. `BiometricAuth.authenticate` has a 45s backstop (`.timedOut`) if `evaluatePolicy` never calls back at all — without it, a hung sheet permanently bricks any caller that hard-guards re-entrancy on its own busy flag (Vault History unlock, Erase, NFC write) until the app is force-quit.
 - Passerby `tapper.html` / in-app Preview: never call `BiometricAuth`, WebAuthn, or any login gate — band tap must open RedMed · 911 · Aid with zero authentication.
 - Keychain profile: `SecAccessControl` with `WhenPasscodeSetThisDeviceOnly` + `biometryCurrentSet` (re-enroll invalidates). `KeychainStore.save` writes bound items only — it does not fall back to an unbound `WhenUnlockedThisDeviceOnly` blob if the ACL write fails (Edit Save returns false). Legacy unbound items still load, then migrate best-effort via bound save. Never synchronizable.
 - Edit fields: no autocorrect / spellcheck / smart dashes / content type; smart insert-delete off; password rules nil; input assistant bar groups cleared — reduce system dictionary / autofill learning of PHI.
