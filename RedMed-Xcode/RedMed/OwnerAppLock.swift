@@ -80,7 +80,10 @@ struct OwnerAppLock<Content: View>: View {
     /// whether the main thread/run loop is even alive — if this stops
     /// advancing, the hang is a true main-thread freeze, not a state-machine
     /// bug in this file (which would still let SwiftUI redraw the clock).
+    /// Armed only after 2s still locked — a fast Face ID must not pay a
+    /// Combine timer + yellow overlay on every launch.
     @State private var debugTickerNow = Date()
+    @State private var debugOverlayArmed = false
     #endif
 
     var body: some View {
@@ -110,14 +113,20 @@ struct OwnerAppLock<Content: View>: View {
             }
         }
         #if DEBUG
-        .overlay(alignment: .top) { debugStateOverlay }
-        #endif
-        .transaction { $0.animation = nil }
-        #if DEBUG
-        .onReceive(Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()) { now in
-            debugTickerNow = now
+        .overlay(alignment: .top) {
+            if debugOverlayArmed, gate == .locked { debugStateOverlay }
+        }
+        .task {
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            guard gate == .locked else { return }
+            debugOverlayArmed = true
+            while !Task.isCancelled, gate == .locked {
+                debugTickerNow = Date()
+                try? await Task.sleep(nanoseconds: 500_000_000)
+            }
         }
         #endif
+        .transaction { $0.animation = nil }
         .onAppear {
             // Diagnostic only — see RedMedSignpost.swift. Ended below wherever
             // the lock screen first resolves (unlocked, or Proceed shown).
@@ -375,7 +384,9 @@ struct OwnerAppLock<Content: View>: View {
     #if DEBUG
     private func logLock(_ message: String) {
         let elapsed = Date().timeIntervalSince(lockCycleStartedAt ?? Date())
-        print(String(format: "[OwnerAppLock] +%.3fs %@", elapsed, message))
+        // os.Logger, not print — print() is synchronous through LLDB and
+        // stalls cold launch / Face ID on a physical iPhone.
+        RedMedSignpost.trace(String(format: "+%.3fs %@", elapsed, message))
     }
     #else
     private func logLock(_ message: String) {}

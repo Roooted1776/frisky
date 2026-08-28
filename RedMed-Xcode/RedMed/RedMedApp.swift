@@ -28,12 +28,12 @@ struct RedMedApp: App {
                 // Registers the willResignActive/didBecomeActive observers before
                 // the app can possibly resign active for the first time.
                 SnapshotSafeCover.activate()
-                // Shell string during Face ID window. Vault I/O waits — do not fight SecItem/LA.
-                // CoreMotion still starts after unlock (OwnerAppLock). .utility so this
-                // does not compete with the Face ID sheet for CPU on cold launch.
+                // 112KB tapper.html + Face ID on the same tick was the Instruments
+                // "CPU during Face ID" spike. Match OwnerAppLock.deferredWarmUp.
+                try? await Task.sleep(nanoseconds: 300_000_000)
                 PasserbyHTMLCardView.scheduleShellWarmOnce()
                 Task.detached(priority: .utility) {
-                    try? await Task.sleep(nanoseconds: 1_500_000_000)
+                    try? await Task.sleep(nanoseconds: 1_200_000_000)
                     _ = HIPAAOfflineVault.prepare()
                 }
             }
