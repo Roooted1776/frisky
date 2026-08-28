@@ -361,8 +361,15 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     /// Created only in `start()` — never at view/`@main` init.
     private var manager: CLLocationManager?
     @Published var location: CLLocation?
+    /// Set while a request is outstanding (including a pending authorization
+    /// prompt); cleared by `stop()`. Guards `locationManagerDidChangeAuthorization`
+    /// so a permission callback that lands after the owner has left the 911 tab
+    /// (`stop()` already called) can't still fire a one-shot GPS read — matches
+    /// `NearbyHospitalFinder`'s `isLoading` guard on the same delegate callback.
+    private var wantsLocation = false
 
     func start() {
+        wantsLocation = true
         let m: CLLocationManager
         if let existing = manager {
             m = existing
@@ -390,10 +397,12 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
 
     func stop() {
+        wantsLocation = false
         manager?.stopUpdatingLocation()
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        guard wantsLocation else { return }
         switch manager.authorizationStatus {
         case .authorizedAlways, .authorizedWhenInUse:
             manager.requestLocation()

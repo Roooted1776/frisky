@@ -37,9 +37,9 @@ enum AppConfig {
     /// Owner RedMed embed status line → native NFC tab (`ContentView` / WK intercept).
     static let nfcTabURL = "redmed://nfc"
 
-    /// Update when the App Store listing is live (App Store Connect app ID).
-    /// Setup QR only — never written to the NFC band (band carries `#d=` only).
-    static let appStoreURL = "https://apps.apple.com/app/redmed/id0000000000"
+    /// Live App Store listing URL. `nil` until a paid Apple Developer account
+    /// has a real app ID — never write a placeholder onto QR or NFC.
+    static let appStoreURL: String? = nil
 
     /// Owner band NDEF contract (permanent): write only
     /// `medicalCardBaseURL + "#d=" + base64url`. Profile stays in the fragment —

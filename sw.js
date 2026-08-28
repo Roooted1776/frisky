@@ -21,8 +21,9 @@
  * putShell is HTML-only. Optional assets use putAsset so logos / sw.js never
  * overwrite shell keys (that poison served PNG/JS as /tapper/).
  */
-var CACHE = 'redmed-tapper-v123';
+var CACHE = 'redmed-tapper-v124';
 var ASSETS = [
+  './pheart.png',
   './BrandLogo.png',
   './BrandWordmark.png',
   '../assets/pheart.png',
