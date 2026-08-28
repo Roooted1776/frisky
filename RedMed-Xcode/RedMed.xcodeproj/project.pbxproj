@@ -63,6 +63,7 @@
 		AABB00000000000000000057 /* HealthKitProfileImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000057 /* HealthKitProfileImport.swift */; };
 		AABB00000000000000000058 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000058 /* HealthKit.framework */; };
 		AABB0000000000000000005A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000005A /* PrivacyInfo.xcprivacy */; };
+		AABB0000000000000000005C /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000005C /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -125,6 +126,7 @@
 		AAAA00000000000000000057 /* HealthKitProfileImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitProfileImport.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000058 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 		AAAA0000000000000000005A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		AAAA0000000000000000005C /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -273,6 +275,7 @@
 			isa = PBXGroup;
 			children = (
 				AAAA0000000000000000000C /* Assets.xcassets */,
+				AAAA0000000000000000005C /* LaunchScreen.storyboard */,
 				AAAA0000000000000000000B /* Info.plist */,
 				AAAA0000000000000000005A /* PrivacyInfo.xcprivacy */,
 				AAAA0000000000000000000F /* RedMed.entitlements */,
@@ -383,6 +386,7 @@
 				AABB00000000000000000036 /* BrandWordmark.png in Resources */,
 				AABB0000000000000000001A /* legal-doc.css in Resources */,
 				AABB0000000000000000005A /* PrivacyInfo.xcprivacy in Resources */,
+				AABB0000000000000000005C /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

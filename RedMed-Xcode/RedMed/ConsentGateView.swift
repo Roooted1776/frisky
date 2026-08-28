@@ -21,13 +21,9 @@ enum ConsentSettings {
 
 struct ConsentGateView<Content: View>: View {
     @State private var hasAccepted = ConsentSettings.hasAcceptedCurrent
-    /// Returning owners skip the gate. Simulator always arms Main so Agree
-    /// is a cover-drop, not a cream hang into an unmounted tab tree.
-    #if targetEnvironment(simulator)
-    @State private var contentArmed = true
-    #else
+    /// First launch keeps Main off until Before you continue has painted.
+    /// Arming it on the first turn held the cream launch screen.
     @State private var contentArmed = ConsentSettings.hasAcceptedCurrent
-    #endif
     @State private var checked = false
     @State private var openPolicy: HelpDocument.Policy?
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
@@ -53,6 +49,7 @@ struct ConsentGateView<Content: View>: View {
             guard !contentArmed else { return }
             Task { @MainActor in
                 await Task.yield()
+                try? await Task.sleep(nanoseconds: 80_000_000)
                 contentArmed = true
             }
         }
