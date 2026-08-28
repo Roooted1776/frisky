@@ -29,7 +29,6 @@ struct ConsentGateView<Content: View>: View {
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
-    var onAccepted: () -> Void = {}
     @ViewBuilder var content: () -> Content
 
     var body: some View {
@@ -81,7 +80,7 @@ struct ConsentGateView<Content: View>: View {
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.redmedMuted)
                     .padding(14)
-                    .redmedBox(flatten: false)
+                    .redmedBox()
 
                     VStack(spacing: 0) {
                         Toggle("Haptic feedback", isOn: $hapticsEnabled)
@@ -159,7 +158,6 @@ struct ConsentGateView<Content: View>: View {
                         withTransaction(t) {
                             hasAccepted = true
                         }
-                        onAccepted()
                         // NFC Preview pool — after page 2 is already on screen.
                         // Warming it on unlock raced RedMed's first paint.
                         Task { @MainActor in
