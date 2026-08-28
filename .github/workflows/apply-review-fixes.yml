@@ -1,0 +1,34 @@
+name: Apply App Store review HTML/copy patches
+
+on:
+  push:
+    branches: [app-store-review-fixes]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: app-store-review-fixes
+      - name: Apply idempotent patches
+        run: python3 scripts/apply-app-store-review-fixes.py
+      - name: Commit if needed
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add RedMed-Xcode/RedMed/NFCView.swift \
+                  RedMed-Xcode/RedMed/RedMedView.swift \
+                  RedMed-Xcode/RedMed/tapper.html \
+                  tapper.html tapper/index.html
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
+            exit 0
+          fi
+          git commit -m "App Store: strip seizure autodial, parked NFC copy, HTML Call button"
+          git push
