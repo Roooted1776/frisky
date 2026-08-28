@@ -98,12 +98,19 @@ enum BiometricAuth {
         // with no sheet (blank cream LockEntryPage on cold start).
         #if targetEnvironment(simulator)
         _ = cancelInFlight()
-        DispatchQueue.main.async {
+        // Same turn as the cream lock's first frame — an extra main.async
+        // was a blank cream beat before Face ID.
+        let present = {
             presentSimulatorPrompt(
                 reason: reason,
                 allowPasscode: allowPasscode,
                 completion: completion
             )
+        }
+        if Thread.isMainThread {
+            present()
+        } else {
+            DispatchQueue.main.async(execute: present)
         }
         #else
         let cancelledLiveContext = cancelInFlight()
@@ -358,7 +365,7 @@ enum BiometricAuth {
         attempt: Int,
         completion: @escaping (Outcome) -> Void
     ) {
-        if let top = topViewController(), top.presentedViewController == nil {
+        if let top = topViewController() {
             presentAlert(
                 on: top,
                 reason: reason,
@@ -367,16 +374,15 @@ enum BiometricAuth {
             )
             return
         }
-        // Cold start: SwiftUI host / key window can lag evaluate by a
-        // few hundred ms. Retry instead of leaving blank cream.
-        guard attempt < 10 else {
+        // Next run loop, not a timed sleep — cream before Face ID was this wait.
+        guard attempt < 8 else {
             parkLock.lock()
             simulatorPromptUp = false
             parkLock.unlock()
             completion(.notInteractive)
             return
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.04) {
+        DispatchQueue.main.async {
             presentSimulatorPrompt(
                 reason: reason,
                 allowPasscode: allowPasscode,
@@ -420,10 +426,10 @@ enum BiometricAuth {
 
     private static func topViewController() -> UIViewController? {
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-        let window = scenes
-            .flatMap(\.windows)
-            .first(where: \.isKeyWindow)
-            ?? scenes.flatMap(\.windows).first
+        let windows = scenes.flatMap(\.windows)
+        let window = windows.first(where: { $0.isKeyWindow && $0.rootViewController != nil })
+            ?? windows.first(where: { $0.rootViewController != nil })
+            ?? windows.first
         guard var top = window?.rootViewController else { return nil }
         while let presented = top.presentedViewController {
             top = presented

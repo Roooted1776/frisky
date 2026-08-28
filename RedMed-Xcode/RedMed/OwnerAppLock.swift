@@ -142,10 +142,12 @@ struct OwnerAppLock<Content: View>: View {
             screenCaptured = UIScreen.main.isCaptured
             lockCycleStartedAt = Date()
             OwnerLockPresentation.setLocked(gate == .locked)
-            logLock("onAppear hasKeyWindow=\(hasKeyWindow)")
+            logLock("onAppear hasKeyWindow=\(hasKeyWindow) hasHostWindow=\(hasHostWindow)")
             scheduleHardWatchdog()
+            // Face ID on this first frame — deferredWarmUp waits inside
+            // startUnlockPipeline so cream before the sheet is not competing
+            // with shell/Keychain work.
             tryAutoUnlockIfActive()
-            deferredWarmUp()
         }
         .task(id: authGeneration) {
             guard gate == .locked else { return }
@@ -500,25 +502,31 @@ struct OwnerAppLock<Content: View>: View {
         // `.notInteractive` evaluate (system genuinely can't present yet) still
         // recovers via a bounded retry / Proceed, so it costs nothing to try early.
         guard scenePhase != .background else { return }
-        // But do not call evaluatePolicy before any window is key — on cold
-        // launch `onAppear` can fire that early, and unlike `.notInteractive`
-        // (a synchronous, fast rejection this file already retries), a call
-        // made before a key window exists has been observed to just sit —
-        // no success, no error — until the watchdogs below kill it,
-        // which reads as this app's "cream hang" on every single launch
-        // rather than only occasionally. `UIWindow.didBecomeKeyNotification`
-        // above retries this the moment a window exists, normally only
-        // milliseconds behind this earliest attempt.
+        // Real evaluatePolicy still needs a key window or it can sit with
+        // no callback. Simulator Authenticate alert only needs a host
+        // window. Either way, do not wait for scene `.active` — that wait
+        // is cream before Face ID.
+        #if targetEnvironment(simulator)
+        guard hasHostWindow else { return }
+        #else
         guard hasKeyWindow else { return }
+        #endif
         didAutoPromptThisLock = true
         startUnlockPipeline()
     }
 
-    private var hasKeyWindow: Bool {
+    private var hostWindows: [UIWindow] {
         UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .flatMap(\.windows)
-            .contains(where: \.isKeyWindow)
+    }
+
+    private var hasKeyWindow: Bool {
+        hostWindows.contains(where: \.isKeyWindow)
+    }
+
+    private var hasHostWindow: Bool {
+        hostWindows.contains { $0.rootViewController != nil }
     }
 
     private func startUnlockPipeline() {
