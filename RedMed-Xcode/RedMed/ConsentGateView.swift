@@ -1,28 +1,30 @@
 import SwiftUI
 
-/// Legal consent, shown every time after a successful Face ID unlock.
-/// Never mounts in front of the lock shell (AGENTS.md: no extra pages before Face ID).
-/// Never shown on passerby tapper. `ConsentGateView` is recreated (fresh
-/// `@State`) on every unlock because it lives inside `OwnerAppLock`'s
-/// `.unlocked` branch, which SwiftUI tears down and rebuilds on every
-/// re-lock — so starting `hasAccepted` at `false` re-gates on every auth.
+/// Legal consent after Face ID. First launch (or after a material policy
+/// version bump) only — re-showing it on every unlock was hangtime cream
+/// between lock and Main. Never in front of the lock shell. Never on
+/// passerby tapper.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
     /// Bump with the Version line in Help.html Terms / Privacy / Security
     /// whenever a change is material enough to require re-consent.
     static let currentVersion = "4.1"
 
-    /// Timestamp of the most recent acceptance — record-keeping only, not
-    /// used to gate the screen (that always starts unaccepted per unlock).
+    static var hasAcceptedCurrent: Bool {
+        UserDefaults.standard.string(forKey: acceptedVersionKey) == currentVersion
+    }
+
     static func recordAcceptance() {
         UserDefaults.standard.set(currentVersion, forKey: acceptedVersionKey)
     }
 }
 
 struct ConsentGateView<Content: View>: View {
-    @State private var hasAccepted = false
-    /// Arm Main after consent has painted so this page is not fighting WKWebView.
-    @State private var contentArmed = false
+    @State private var hasAccepted = ConsentSettings.hasAcceptedCurrent
+    /// Returning owners skip the gate — arm Main on the same turn so Face ID
+    /// success is not a cream placeholder. First launch still yields once
+    /// so Before you continue paints before WKWebView.
+    @State private var contentArmed = ConsentSettings.hasAcceptedCurrent
     @State private var checked = false
     @State private var openPolicy: HelpDocument.Policy?
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true

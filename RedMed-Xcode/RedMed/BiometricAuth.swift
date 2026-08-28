@@ -376,7 +376,7 @@ enum BiometricAuth {
             completion(.notInteractive)
             return
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.04) {
             presentSimulatorPrompt(
                 reason: reason,
                 allowPasscode: allowPasscode,
