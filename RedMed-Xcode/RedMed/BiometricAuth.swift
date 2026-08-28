@@ -6,9 +6,9 @@ import UIKit
 /// (no Face ID, no passcode, no login).
 ///
 /// App unlock is Face ID / Touch ID with device passcode fallback
-/// (`allowPasscode: true`, `force: true`) so every open prompts — never
-/// skip via `didUnlockThisLaunch`. Edit, Save, NFC write, vault unlock,
-/// and Erase also pass `force: true` and re-prompt every time.
+/// (`allowPasscode: true`, `force: true`) so every open prompts.
+/// Edit, Save, NFC write, vault unlock, and Erase also pass `force: true`.
+/// There is no process-wide skip flag.
 ///
 /// On success the `LAContext` is **parked** (not invalidated) so
 /// `KeychainStore.load(context:)` can use `kSecUseAuthenticationContext`
@@ -54,8 +54,6 @@ enum BiometricAuth {
 
     private static let notInteractiveLACode = -1004
 
-    private static var didUnlockThisLaunch = false
-
     /// Authenticated context for SecItem after a successful evaluate.
     private static let parkLock = NSLock()
     private static var parkedContext: LAContext?
@@ -79,10 +77,8 @@ enum BiometricAuth {
     /// evaluate with **no system UI** (scene `.active`).
     private static let evaluateHangTimeout: TimeInterval = 90
 
-    /// `force` has no default: every call site must state whether it wants the
-    /// `didUnlockThisLaunch` fast path or a fresh prompt. Today every caller
-    /// (unlock, Edit, Save, NFC write, vault, Erase) passes `true` — a future
-    /// caller that forgets it would otherwise silently skip re-authentication.
+    /// `force` is kept so every call site stays explicit. There is no
+    /// process-wide skip — every call evaluates a fresh policy.
     ///
     /// `touchIDAuthenticationAllowableReuseDuration` is always 0. Apple's
     /// max is 300s (`LATouchIDAuthenticationMaximumAllowableReuseDuration`);
@@ -96,15 +92,7 @@ enum BiometricAuth {
         allowPasscode: Bool = true,
         completion: @escaping (Outcome) -> Void
     ) {
-        if didUnlockThisLaunch, !force {
-            let finish = { completion(.success) }
-            if Thread.isMainThread {
-                finish()
-            } else {
-                DispatchQueue.main.async(execute: finish)
-            }
-            return
-        }
+        _ = force
 
         // Simulator: never evaluatePolicy. Enrolled-sim Face ID hangs
         // with no sheet (blank cream LockEntryPage on cold start).
@@ -170,7 +158,6 @@ enum BiometricAuth {
                     clearInFlight(ifSame: context)
                     markSessionEnded()
                     if success {
-                        didUnlockThisLaunch = true
                         // Keep context alive for Keychain SecItem (do not invalidate yet).
                         park(context)
                         finish(.success)
@@ -253,14 +240,8 @@ enum BiometricAuth {
         clearPark()
     }
 
-    /// Clears the "already unlocked this launch" fast-path. Call when the app
-    /// re-locks (background) so the next `authenticate` call does a real
-    /// Face ID evaluate instead of silently short-circuiting to `.success`
-    /// from the very first unlock this process — that stale flag otherwise
-    /// left the re-lock's own Face ID prompt never presenting at all.
-    static func resetLaunchUnlock() {
-        didUnlockThisLaunch = false
-    }
+    /// Kept for OwnerAppLock call sites. No process-wide skip flag remains.
+    static func resetLaunchUnlock() {}
 
     private static func markSessionEnded() {
         parkLock.lock()
@@ -429,7 +410,6 @@ enum BiometricAuth {
             simulatorPromptUp = false
             simulatorAlert = nil
             parkLock.unlock()
-            didUnlockThisLaunch = true
             markSessionEnded()
             // Simulator has no real ACL biometry — empty park; Keychain uses legacy path.
             completion(.success)

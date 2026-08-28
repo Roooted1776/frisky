@@ -29,6 +29,7 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<!-- Exempt: CryptoKit AES-GCM pack + public client key. Do not set true without an Apple ITSEncryptionExportComplianceCode. -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
@@ -42,12 +43,8 @@
 	</dict>
 	<key>NSFaceIDUsageDescription</key>
 	<string>RedMed uses Face ID or Touch ID to unlock your profile, authorize writing to your bracelet, and open the on-device local history vault. Device passcode is only used for erase or lockout recovery. Scanned cards are read-only and cannot be changed without your app and authentication.</string>
-	<key>NSHealthShareUsageDescription</key>
-	<string>RedMed reads birth date and blood type from Apple Health to fill your medical ID. Nothing is written back to Health, and nothing is sent off this iPhone.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>RedMed uses your location on the 911 tab to show coordinates you can read to emergency services. Location stays on this iPhone and is never uploaded by RedMed.</string>
-	<key>NFCReaderUsageDescription</key>
-	<string>RedMed writes your medical ID onto your NFC bracelet and can scan a band you hold to the phone. Tag reading starts only when you tap Write or Scan.</string>
 	<key>UIBackgroundModes</key>
 	<array/>
 	<key>UILaunchScreen</key>

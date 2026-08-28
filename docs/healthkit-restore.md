@@ -20,13 +20,15 @@ While parked, `HealthKitProfileImport.isAvailable` is always `false`, so the
 "Fill from Apple Health" button never renders on the empty-profile funnel and
 `readCharacteristics()` is unreachable from the UI. `HealthKit.framework`
 stays linked in `project.pbxproj` (framework linking does not require the
-entitlement) and `NSHealthShareUsageDescription` stays in `Info.plist`, so no
-other change is needed to restore.
+entitlement). `NSHealthShareUsageDescription` is **omitted** from `Info.plist`
+while parked so Review does not see an unused Health purpose string.
 
 ## Restore (paid Program)
 
 1. Add `com.apple.developer.healthkit` = `true` back to
    `RedMed-Xcode/RedMed/RedMed.entitlements`.
 2. Flip `AppConfig.healthKitImportEnabled` to `true`.
-3. Build with a paid Apple Developer Program team selected (not a personal /
+3. Add `NSHealthShareUsageDescription` to `Info.plist`:
+   `RedMed reads birth date and blood type from Apple Health to fill your medical ID. Nothing is written back to Health, and nothing is sent off this iPhone.`
+4. Build with a paid Apple Developer Program team selected (not a personal /
    free team) so automatic signing can provision the capability.

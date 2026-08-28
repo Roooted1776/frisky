@@ -51,7 +51,7 @@ final class NFCBandManager: ObservableObject {
     // MARK: - Write (owner band setup)
 
     /// Face ID → AES-GCM pack (off-main) → CoreNFC write (or pack-only simulate when hardware is parked).
-    /// Linked / Not linked flips only after a real verified-or-written CoreNFC session — never simulate.
+    /// Linked / Not linked flips only after a real verified CoreNFC session — never simulate.
     func writeBand(from profile: ProfileData, isScannerSession: Bool) {
         guard !isScannerSession else { return }
         guard !writeAuthInFlight, !isBusy else { return }
@@ -141,9 +141,9 @@ final class NFCBandManager: ObservableObject {
         scannedCard = nil
     }
 
-    /// Mark owner bracelet paired after a real CoreNFC write (hardware only).
+    /// Mark owner bracelet paired after a real CoreNFC write **and** matching read-back.
     func linkBracelet(on profile: ProfileData, detail: String) {
-        guard AppConfig.nfcHardwareEnabled else { return }
+        guard AppConfig.nfcHardwareEnabled, writeVerified else { return }
         profile.setBraceletPaired(true)
         VaultHistoryStore.shared.record(.braceletWritten, detail: detail)
     }

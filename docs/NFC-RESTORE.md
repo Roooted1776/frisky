@@ -14,6 +14,9 @@ still simulates Write/Scan by packing the compact `tapper.html#d=` URL. Real
 CoreNFC has **no** Simulator fake-success: if hardware is enabled and NFC is
 unavailable, write fails and the band is not marked linked.
 
+**Linked** only after a real CoreNFC write **and** matching read-back
+(`writeVerified`). Written-but-unverified stays Not linked.
+
 ## Currently parked (personal team signing)
 
 `AppConfig.nfcHardwareEnabled = false` and
@@ -22,6 +25,9 @@ Automatic Signing strips comments and can rewrite a mismatched file
 mid-build). Free / personal Apple teams cannot provision **NFC Tag
 Reading**, so device builds fail while the entitlement is present. Keep
 flag and entitlements in lockstep.
+
+`Info.plist` must **not** include `NFCReaderUsageDescription` while the
+entitlement is absent (unused purpose string). Add the key on restore.
 
 **Do not hide the owner NFC tab** — owners always get RedMed · 911 · Aid ·
 NFC; scanners never get NFC. The flag only blocks `NFCWriter` / `NFCReader`
@@ -43,6 +49,8 @@ Owner NFC page keeps **both** capabilities on one screen: Write and Scan
   `docs/domain.md` cutover is green. No vendor tag-management cloud, no
   social/short-link redirect, no App Store URL on the chip, no BLE. Profile
   lives in `#d=` only; Pages serves the shell.
+- `#d=` packing uses a public client key shared with `tapper.html`. The band
+  is the credential — any phone that taps it can read the card.
 - “Paired phone” means this iPhone wrote + verified the chip and stored a local
   link flag. RedMed does **not** keep an active RF session or background-scan
   the band (different from Bluetooth pairing on ~2.4 GHz). iOS Background Tag
@@ -72,9 +80,10 @@ Owner NFC page keeps **both** capabilities on one screen: Write and Scan
    `RedMed.entitlements`
 3. Developer portal → App ID `com.redmed.app` → enable **NFC Tag Reading**
 4. Xcode → Signing & Capabilities → **Near Field Communication Tag Reading**
-5. Confirm `Info.plist` has `NFCReaderUsageDescription` (kept while parked)
+5. Add `NFCReaderUsageDescription` to `Info.plist`:
+   `RedMed writes your medical ID onto your NFC bracelet and can scan a band you hold to the phone. Tag reading starts only when you tap Write or Scan.`
 6. Device test on **verified blank NTAG216** stock: Write → second phone Safari
-   tap → emergency card
+   tap → emergency card. Linked only if read-back matches.
 
 Free Apple Developer teams cannot ship the NFC entitlement — paid Program required.
 
@@ -86,4 +95,5 @@ Linear RED-19.
 
 1. Set `AppConfig.nfcHardwareEnabled = false`
 2. Set `RedMed.entitlements` to a bare `<dict/>` (no NFC key, no XML comments)
-3. Keep `NFCReaderUsageDescription` and the CoreNFC source files
+3. Remove `NFCReaderUsageDescription` from `Info.plist`
+4. Keep the CoreNFC source files
