@@ -2760,7 +2760,8 @@ function redmedAssetURL(file) {
           callBtn.className = 'seizure-btn';
           callBtn.setAttribute('href', emergencyTel());
           callBtn.textContent = 'Call';
-          btn.parentNode.insertBefore(callBtn, btn);
+          // Call, Reset, Start — matches owner SeizureTimerStrip button order.
+          btn.parentNode.insertBefore(callBtn, resetBtn || btn);
         } else if (existingCall) {
           existingCall.setAttribute('href', emergencyTel());
         }
@@ -2919,7 +2920,8 @@ function redmedAssetURL(file) {
   var audioNeedsGesture = false;
 
   function paint() {
-    var label = armed ? 'Stop SOS alarm' : 'SOS · Locate me';
+    // Matches owner FindHelpSOSButton / this page's own Aid "Stop the alarm" copy.
+    var label = armed ? 'Stop the alarm' : 'SOS · Locate me';
     if (armed && audioNeedsGesture) label = 'Tap to play siren · Stop';
     sosBtn.textContent = label;
     sosBtn.classList.toggle('armed', armed);

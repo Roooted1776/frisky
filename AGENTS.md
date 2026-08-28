@@ -44,9 +44,10 @@ The app has no backend, database, or web service.
   **Nothing blocks the tap card** (YOU card / Preview / Scan / band tap): no
   privacy veil, no native overlay stealing taps, no login. Safari opens
   `tapper.html#d=` immediately.
-  Native **Help** chrome is on Edit, 911, Aid, NFC, and in-app scanner screens.
-  Not on the Face ID lock shell. Not a bottom dock on the owner RedMed tab
-  (that dock was removed). Scanner Help is **policies only** (no Settings,
+  Native **Help** chrome is on 911, Aid, NFC, and in-app scanner screens.
+  Not on the Face ID lock shell, not on Edit (that modal bar is Cancel / Save
+  only), and not a bottom dock on the owner RedMed tab (that dock was
+  removed). Scanner Help is **policies only** (no Settings,
   Erase, or Write to NFC) so it cannot mutate owner Keychain or `@AppStorage`.
   Passerby `tapper.html` has no Help button.
 - Product HTML is only (1) one passerby file `tapper.html` (identical in `tapper/index.html`,
@@ -58,8 +59,9 @@ The app has no backend, database, or web service.
   app; they do not host owner edit UI. Do not reintroduce repo-root copies of
   the policy HTML. Owner Help menu is Settings + Privacy / TOS / Security only (no
   in-app How It Works / MainInfoView, no Local History row, no local tapper.html
-  WebView). Help is on Edit (modal bar) plus 911 / Aid / NFC (top chrome).
-  Owner RedMed tab is Edit-only — no bottom Help dock. Scanner Help is
+  WebView). Help is on 911 / Aid / NFC (top chrome) — not on Edit, whose
+  modal bar is Cancel / Save only. Owner RedMed tab is Edit-only — no bottom
+  Help dock. Scanner Help is
   policies only. NFC Preview (under Scan) / NFC Scan open bundled
   `tapper.html#d=` (`?src=app`, no SOS auto-arm);
   live band taps use `AppConfig.medicalCardBaseURL#d=` (currently
@@ -98,7 +100,7 @@ The app has no backend, database, or web service.
   siren by itself. Do not add Settings off switches for the survival alarm.
 - **LocatorBeacon** / **BrightnessBoost** / **VolumeBoost** survival hold may keep sounding /
   max brightness / max system volume in background until the user taps “Stop the alarm” on Aid
-  (or Stop SOS alarm on Find Help).
+  or Find Help (same copy both places, owner and `tapper.html`).
 
 **Vault / privacy (permanent):**
 - `VaultHistoryView` Face ID unlock: explicit **Accept** tap first (no auto
