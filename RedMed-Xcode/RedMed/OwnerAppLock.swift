@@ -813,14 +813,19 @@ struct OwnerAppLock<Content: View>: View {
             showUnlockControl = false
             RedMedHaptics.success()
         } else {
-            RedMedHaptics.error()
-            gate = .locked
+            // Face ID already succeeded. Relocking here painted the cream
+            // "Couldn't load your profile" page after the heart. Continue
+            // with an empty shell — first launch and sim have no bound blob.
+            keychainHasProfile = false
+            ProfileData.setStoredProfileGate(false)
+            profile.prepareEmptyUnlockShell()
+            gate = .unlocked
             biometryFailed = false
             faceIDUnavailableReason = nil
-            profileLoadFailed = true
+            profileLoadFailed = false
             notInteractive = false
-            showUnlockControl = true
-            BiometricAuth.clearAuthenticationContext()
+            showUnlockControl = false
+            RedMedHaptics.success()
         }
     }
 }
