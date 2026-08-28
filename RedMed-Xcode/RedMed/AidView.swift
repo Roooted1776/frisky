@@ -56,7 +56,7 @@ struct AidView: View {
         // Full-width accordion — life-saving: big targets, text always fits, no
         // 2-col reflow when a pane opens. Same pattern as passerby tapper.html Aid.
         // No page header / pane BrandWordmark — content-first, nothing hanging.
-        // Scanner Preview keeps Back; owner Aid has no Help row.
+        // Help is a sibling row (same as RedMed) so Aid panes sit below it.
         VStack(spacing: 0) {
             PageHelpChrome()
 

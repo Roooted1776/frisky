@@ -26,7 +26,7 @@ extension EnvironmentValues {
     }
 
     /// Presents `HelpMenuView` from the nearest `presentsOwnerHelp()` root.
-    /// Used on the tap / Preview card so policies stay one tap away.
+    /// Sheets and full-screen covers need their own root or Help opens behind them.
     var ownerHelpOpen: Binding<Bool>? {
         get { self[OwnerHelpOpenKey.self] }
         set { self[OwnerHelpOpenKey.self] = newValue }
@@ -57,7 +57,7 @@ struct PublicCardView: View {
 }
 
 /// Dismisses the Preview scanner / ped shell. Shown on RedMed, 911, and Aid.
-/// Same `ChromeTextAction` as owner Edit — accent red text, no chip box.
+/// Same `ChromeTextAction` as owner Help/Edit — accent red text, no chip box.
 struct ScannerBackButton: View {
     @Environment(\.scannerDismiss) private var scannerDismiss
 
@@ -68,8 +68,8 @@ struct ScannerBackButton: View {
     }
 }
 
-/// Opens Help from chrome that opted into `presentsOwnerHelp()`.
-/// Owner tabs do not show this. The tap / Preview card does.
+/// Opens Help from any native chrome that opted into `presentsOwnerHelp()`.
+/// Hidden when that modifier is missing (lock shell, previews).
 struct OwnerHelpButton: View {
     @Environment(\.ownerHelpOpen) private var ownerHelpOpen
 
@@ -83,26 +83,58 @@ struct OwnerHelpButton: View {
     }
 }
 
-/// Sibling top chrome. Scanner sessions keep Back so Preview / Scan can
-/// leave 911 and Aid. Owner pages have no Help row — content starts
-/// under the status bar.
+/// Help in the Edit modal bar — same 17pt metrics as Cancel and Save.
+struct OwnerModalHelpButton: View {
+    @Environment(\.ownerHelpOpen) private var ownerHelpOpen
+
+    var body: some View {
+        if let ownerHelpOpen {
+            OwnerModalBarButton(title: "Help", fillWidth: true) {
+                ownerHelpOpen.wrappedValue = true
+            }
+            .accessibilityIdentifier("owner-help")
+        }
+    }
+}
+
+/// RedMed user-page Help — original unlock-dock CTA, pinned at the bottom.
+struct OwnerHelpDockButton: View {
+    @Environment(\.ownerHelpOpen) private var ownerHelpOpen
+
+    var body: some View {
+        if let ownerHelpOpen {
+            UnlockScreenButton(title: "Help") {
+                ownerHelpOpen.wrappedValue = true
+            }
+            .accessibilityIdentifier("owner-help")
+        }
+    }
+}
+
+/// Sibling Help row (same metrics as RedMed). Used on 911 / Aid / NFC so
+/// page sections sit below Help instead of under an overlay. RedMed owns its own bar.
 struct PageHelpChrome<Trailing: View>: View {
     @Environment(\.isScannerSession) private var isScannerSession
     @ViewBuilder var trailing: () -> Trailing
 
     var body: some View {
-        if isScannerSession {
-            HStack(alignment: .center, spacing: 12) {
+        HStack(alignment: .center, spacing: 12) {
+            if isScannerSession {
                 ScannerBackButton()
+                Spacer(minLength: 0)
+                OwnerHelpButton()
+            } else {
+                OwnerHelpButton()
                 Spacer(minLength: 0)
                 trailing()
             }
-            .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
-            .padding(.horizontal, RedMedChrome.pagePadX)
-            .padding(.top, 16)
-            .padding(.bottom, 8)
-            .redmedTopChromeFill()
         }
+        .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
+        .padding(.horizontal, RedMedChrome.pagePadX)
+        .padding(.top, 16)
+        .padding(.bottom, 8)
+        // Opaque cream through status bar — covers white cutoff above every tab page.
+        .redmedTopChromeFill()
     }
 }
 
@@ -112,7 +144,7 @@ extension PageHelpChrome where Trailing == EmptyView {
     }
 }
 
-/// Local Help cover so the tap-page Help button can present policies.
+/// Local Help cover so the button works on tab roots and on sheets / full-screen covers.
 private struct PresentsOwnerHelp: ViewModifier {
     @State private var showHelp = false
     @Environment(\.isScannerSession) private var isScannerSession
@@ -122,15 +154,21 @@ private struct PresentsOwnerHelp: ViewModifier {
         content
             .environment(\.ownerHelpOpen, $showHelp)
             .fullScreenCover(isPresented: $showHelp) {
-                HelpMenuView(onOpenNFC: nil)
-                    .environmentObject(profile)
-                    .environment(\.isScannerSession, isScannerSession)
-                    .presentationBackground(Color.redmedBg)
+                HelpMenuView(
+                    onOpenNFC: isScannerSession ? nil : {
+                        showHelp = false
+                        NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
+                    }
+                )
+                .environmentObject(profile)
+                .environment(\.isScannerSession, isScannerSession)
+                .presentationBackground(Color.redmedBg)
             }
     }
 }
 
 extension View {
+    /// Help button target for this presentation root. Apply again on sheets and covers.
     func presentsOwnerHelp() -> some View {
         modifier(PresentsOwnerHelp())
     }

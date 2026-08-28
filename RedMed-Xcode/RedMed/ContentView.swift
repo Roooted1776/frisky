@@ -88,6 +88,7 @@ struct ContentView: View {
             tab = .nfc
             mountedTabs.insert(.nfc)
         }
+        .presentsOwnerHelp()
     }
 
     @ViewBuilder

@@ -65,10 +65,11 @@ struct TopicDetailView: View {
         VStack(spacing: 0) {
             BrandWordmarkHeader()
 
-            // Pane-style chrome — Back leading.
+            // Pane-style chrome — Back leading, Help trailing.
             HStack(alignment: .center, spacing: 12) {
                 ChromeTextAction(title: "Back", weight: .bold) { dismiss() }
                 Spacer(minLength: 0)
+                OwnerHelpButton()
             }
             .padding(.horizontal, RedMedChrome.pagePadX)
             .padding(.top, 2)
@@ -188,6 +189,7 @@ struct TopicDetailView: View {
             .scrollIndicators(.visible)
         }
         .background { RedMedPageBackground() }
+        .presentsOwnerHelp()
         .onAppear {
             if isCPR { hapticEngine.prepare() }
         }
