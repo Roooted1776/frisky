@@ -43,7 +43,7 @@ enum BiometricAuth {
             case .notEnrolled:
                 return "Face ID isn't set up on this iPhone. Add it in Settings, then reopen RedMed."
             case .lockout:
-                return "Face ID is locked after too many attempts. Unlock your iPhone with its passcode, then reopen RedMed."
+                return "Face ID locked after 5 failed attempts. Unlock this iPhone with its passcode, then reopen RedMed."
             case .passcodeNotSet:
                 return "Set a device passcode in Settings to use Face ID."
             case .notAvailable:
@@ -68,23 +68,25 @@ enum BiometricAuth {
     private static let evaluateCooldown: TimeInterval = 0.28
 
     /// Backstop for a hung `evaluatePolicy` that never calls back at all.
-    /// Deliberately generous — several callers (Vault History unlock, Erase,
-    /// NFC write) hard-guard against re-entrancy on their own busy flag, so a
-    /// completion that never fires would brick that action until the app is
-    /// force-quit. Long enough that a real, slow Face ID retry + manual
-    /// passcode fallback (which only resolves once, at the very end) never
-    /// trips it — unlike `OwnerAppLock`'s own much shorter cold-launch
-    /// watchdogs, which are safe at 4.5–5s only because that specific bug
-    /// shape is "no sheet ever presents" (nothing in-progress to interrupt).
-    private static let evaluateHangTimeout: TimeInterval = 45
+    /// Apple does **not** timeout the system sheet — there is no LA API for
+    /// it. This clock is ours, started when `evaluatePolicy` is actually
+    /// invoked (not at `authenticate` entry / cooldown). Several callers
+    /// (Vault History unlock, Erase, NFC write) hard-guard re-entrancy on
+    /// their own busy flag, so a completion that never fires would brick
+    /// that action until force-quit. Must stay **above** `OwnerAppLock`'s
+    /// 60s inactive passcode budget or this fires first and cuts off a
+    /// slow typist. `OwnerAppLock`'s 4.5s/5s watchdogs only kill a hung
+    /// evaluate with **no system UI** (scene `.active`).
+    private static let evaluateHangTimeout: TimeInterval = 90
 
     /// `force` has no default: every call site must state whether it wants the
     /// `didUnlockThisLaunch` fast path or a fresh prompt. Today every caller
     /// (unlock, Edit, Save, NFC write, vault, Erase) passes `true` — a future
     /// caller that forgets it would otherwise silently skip re-authentication.
     ///
-    /// `touchIDAuthenticationAllowableReuseDuration` stays 0 (Apple default).
-    /// A non-zero value lets `evaluatePolicy` succeed off a recent *device*
+    /// `touchIDAuthenticationAllowableReuseDuration` is always 0. Apple's
+    /// max is 300s (`LATouchIDAuthenticationMaximumAllowableReuseDuration`);
+    /// a non-zero value lets `evaluatePolicy` succeed off a recent *device*
     /// unlock with no new Face ID sheet — which would skip the owner gate.
     /// The parked `LAContext` is what lets SecItem skip a second sheet after
     /// a successful evaluate; that does not need this property.
@@ -92,7 +94,6 @@ enum BiometricAuth {
         reason: String,
         force: Bool,
         allowPasscode: Bool = true,
-        allowableReuseDuration: TimeInterval = 0,
         completion: @escaping (Outcome) -> Void
     ) {
         if didUnlockThisLaunch, !force {
@@ -107,10 +108,7 @@ enum BiometricAuth {
 
         let cancelledLiveContext = cancelInFlight()
 
-        let context = makeContext(
-            allowPasscode: allowPasscode,
-            allowableReuseDuration: allowableReuseDuration
-        )
+        let context = makeContext(allowPasscode: allowPasscode)
         var error: NSError?
         let policy: LAPolicy = allowPasscode
             ? .deviceOwnerAuthentication
@@ -154,6 +152,16 @@ enum BiometricAuth {
         }
         let runEvaluate = {
             RedMedSignpost.trace("evaluatePolicy calling now")
+            // Clock starts at the actual system call, not at authenticate()
+            // entry — the 0.28s teardown cooldown must not eat this budget.
+            DispatchQueue.main.asyncAfter(deadline: .now() + evaluateHangTimeout) {
+                guard !didComplete else { return }
+                clearInFlight(ifSame: context)
+                context.invalidate()
+                clearPark()
+                markSessionEnded()
+                finish(.timedOut)
+            }
             context.evaluatePolicy(policy, localizedReason: reason) { success, evalError in
                 RedMedSignpost.trace("evaluatePolicy raw callback: success=\(success) error=\(String(describing: evalError))")
                 DispatchQueue.main.async {
@@ -172,14 +180,6 @@ enum BiometricAuth {
                     }
                 }
             }
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + evaluateHangTimeout) {
-            guard !didComplete else { return }
-            clearInFlight(ifSame: context)
-            context.invalidate()
-            clearPark()
-            markSessionEnded()
-            finish(.timedOut)
         }
         // Wait out leftover LAContext teardown — same-turn retry after
         // userCancel / .notInteractive / cancelInFlight fails immediately
@@ -282,12 +282,9 @@ enum BiometricAuth {
         parkLock.unlock()
     }
 
-    private static func makeContext(
-        allowPasscode: Bool,
-        allowableReuseDuration: TimeInterval
-    ) -> LAContext {
+    private static func makeContext(allowPasscode: Bool) -> LAContext {
         let context = LAContext()
-        context.touchIDAuthenticationAllowableReuseDuration = allowableReuseDuration
+        context.touchIDAuthenticationAllowableReuseDuration = 0
         context.localizedCancelTitle = "Cancel"
         if allowPasscode {
             context.localizedFallbackTitle = "Enter Passcode"

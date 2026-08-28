@@ -125,7 +125,12 @@ The app has no backend, database, or web service.
   `.notVerified` (a scan that just didn't match) — retrying `evaluatePolicy`
   never fixes an unavailable state (no sheet even shows), so `FacePage`
   swaps its CTA to **Open Settings** with a reason-specific message instead
-  of a **Proceed** that can only ever fail the same way again. Edit, Save, NFC
+  of a **Proceed** that can only ever fail the same way again. Apple locks
+  Face ID after **5 unsuccessful matches** until the device passcode succeeds
+  (system-wide). `.deviceOwnerAuthentication` should still offer passcode;
+  `unavailable(.lockout)` is for `canEvaluatePolicy` failing outright.
+  Reuse duration stays **0** (Apple max is 300s — a non-zero value would skip
+  the owner gate off a recent device unlock). Edit, Save, NFC
   write, vault unlock, and Erase all re-prompt Face ID every time (`force: true`).
   **Re-lock whenever the owner leaves** so the next open always prompts:
   true `.background` always (purge PHI + `gate = .locked`); also `.inactive`
@@ -180,12 +185,14 @@ retries from `UIWindow.didBecomeKeyNotification` if `onAppear` fires too
 early, because an `evaluatePolicy` call made before any window is key has
 been observed to never complete (no success, no error) until the 4.5s/5s
 watchdogs kill it — a *different* cream hang than the `.active`-wait one,
-now seen on every cold launch instead of occasionally. Watchdogs were
-15s → 8s/8.5s → 4.5s/5s: when the failure mode is no sheet ever
-presenting, there is nothing in-progress to interrupt, so a shorter
-timeout only shortens the blank-cream wait — it does not risk cutting off
-a real, slower Face ID / passcode interaction the way it would if a
-sheet were actually up.
+now seen on every cold launch instead of occasionally. Apple does **not**
+timeout `evaluatePolicy` (no LA API for it). RedMed backstops: **4.5s/5s**
+only when the scene is `.active` (no sheet — nothing to interrupt);
+**60s total** when `.inactive` while evaluating so a slow passcode after a
+Face ID miss is not torn down at 4.5s, but a ghost sheet cannot hang
+forever; **90s** `BiometricAuth.timedOut` if the callback never fires
+(Erase / vault / NFC write) — must stay above the 60s unlock budget.
+Apple's passcode sheet has no OS timeout — 60s is ours.
 `didAutoPromptThisLock` blocks re-prompt while the Face ID sheet holds
 `.inactive`). Prefetch still starts in the same `onAppear` tick and inside the
 unlock pipeline (single-flight overlap with Face ID). After cancel / mismatch
