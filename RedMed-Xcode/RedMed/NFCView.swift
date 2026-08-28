@@ -168,6 +168,7 @@ struct NFCView: View {
 
             OutlineButton(
                 title: band.isReading ? "Opening…" : "Scan",
+                busy: band.isReading,
                 disabled: !profile.hasData || band.isBusy || band.scannedCard != nil
             ) {
                 band.verifyBand(from: profile)
