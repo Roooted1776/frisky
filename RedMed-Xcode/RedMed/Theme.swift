@@ -99,6 +99,7 @@ struct PrimaryButton: View {
     var systemImage: String? = nil
     var busy: Bool = false
     var disabled: Bool = false
+    var flatten: Bool = true
     let action: () -> Void
 
     var body: some View {
@@ -137,7 +138,7 @@ struct PrimaryButton: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius, style: .continuous))
         .shadow(color: disabled ? .clear : RedMedChrome.accentShadow, radius: 10, y: 5)
-        if busy {
+        if busy || !flatten {
             core
         } else {
             core.drawingGroup()

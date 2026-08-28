@@ -21,8 +21,8 @@ enum ConsentSettings {
 
 struct ConsentGateView<Content: View>: View {
     @State private var hasAccepted = ConsentSettings.hasAcceptedCurrent
-    /// First launch keeps Main off until Before you continue has painted.
-    /// Arming it on the first turn held the cream launch screen.
+    /// First launch keeps Main off until Agree. Arming it on the first
+    /// turn let WKWebView hold a blank cream splash over the acknowledgment.
     @State private var contentArmed = ConsentSettings.hasAcceptedCurrent
     @State private var checked = false
     @State private var openPolicy: HelpDocument.Policy?
@@ -32,9 +32,8 @@ struct ConsentGateView<Content: View>: View {
     @ViewBuilder var content: () -> Content
 
     var body: some View {
-        // Page 1 (this gate) must paint first. Then arm Main underneath so
-        // Agree is a cover-drop, not a cold first paint of WKWebView / tabs
-        // (that was the hang between page 1 and page 2).
+        // Page 1 (this gate) is the first SwiftUI frame. Main stays off
+        // until Agree so WKWebView cannot hold a blank cream splash.
         ZStack {
             if contentArmed {
                 content()
@@ -43,14 +42,6 @@ struct ConsentGateView<Content: View>: View {
             }
             if !hasAccepted {
                 gate
-            }
-        }
-        .onAppear {
-            guard !contentArmed else { return }
-            Task { @MainActor in
-                await Task.yield()
-                try? await Task.sleep(nanoseconds: 80_000_000)
-                contentArmed = true
             }
         }
     }
@@ -74,7 +65,7 @@ struct ConsentGateView<Content: View>: View {
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.redmedMuted)
                     .padding(14)
-                    .redmedBox()
+                    .redmedBox(flatten: false)
 
                     VStack(spacing: 0) {
                         Toggle("Haptic feedback", isOn: $hapticsEnabled)
@@ -144,7 +135,7 @@ struct ConsentGateView<Content: View>: View {
                     .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
                     .accessibilityAddTraits(checked ? [.isButton, .isSelected] : .isButton)
 
-                    PrimaryButton(title: "Agree and continue") {
+                    PrimaryButton(title: "Agree and continue", flatten: false) {
                         // One tap — the pink button looked tappable while
                         // disabled behind the checkbox, so Agree did nothing.
                         checked = true
@@ -153,6 +144,7 @@ struct ConsentGateView<Content: View>: View {
                         var t = Transaction()
                         t.animation = nil
                         withTransaction(t) {
+                            contentArmed = true
                             hasAccepted = true
                         }
                         // NFC Preview pool — after page 2 is already on screen.
