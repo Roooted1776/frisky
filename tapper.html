@@ -1382,20 +1382,20 @@ function redmedAssetURL(file) {
     <div class="panel" id="panel-911" data-panel="911" role="tabpanel" aria-labelledby="tab-911" aria-hidden="true">
       <div class="page-pad">
         <a class="btn btn-call" id="callEmergency911" href="tel:112">Call <span class="emg">112</span></a>
-        <div class="gps-card">
+        <div class="gps-card" role="status" aria-live="polite">
           <div class="gps-pill">LIVE GPS</div>
           <div class="coords" id="coords">–––</div>
           <div class="gps-acc" id="gpsAcc">Accuracy ––</div>
         </div>
         <div class="gps-actions">
-          <button class="btn btn-ink" type="button" id="copyCoordsBtn">Copy coordinates</button>
+          <button class="btn btn-ink" type="button" id="copyCoordsBtn" aria-label="Copy GPS coordinates">Copy coordinates</button>
         </div>
         <button class="btn btn-sos" type="button" id="sosBtn" aria-pressed="false">SOS · Locate me</button>
 
         <div class="seizure-strip" id="seizureStrip">
           <div>
             <div class="seizure-label">SEIZURE</div>
-            <div class="seizure-time" id="seizureTime">0:00</div>
+            <div class="seizure-time" id="seizureTime" aria-live="polite">0:00</div>
           </div>
           <div class="seizure-hint" id="seizureHint">Call <span class="emg">112</span> at 5:00</div>
           <div class="seizure-actions">
@@ -1985,16 +1985,13 @@ function redmedAssetURL(file) {
       p.classList.toggle('active', on);
       // Animate tab switches only — cold open must not start at opacity 0.
       p.classList.toggle('anim-in', on && tabAnimReady);
-    });
-    document.querySelectorAll('.tab').forEach(function (t) {
-      var on = t.getAttribute('data-tab') === id;
-      t.classList.toggle('active', on);
-      t.setAttribute('aria-selected', on ? 'true' : 'false');
-      t.tabIndex = on ? 0 : -1;
-    });
-    document.querySelectorAll('.panel').forEach(function (p) {
-      var on = p.getAttribute('data-panel') === id;
       p.setAttribute('aria-hidden', on ? 'false' : 'true');
+    });
+    document.querySelectorAll('.tab').forEach(function (tab) {
+      var on = tab.getAttribute('data-tab') === id;
+      tab.classList.toggle('active', on);
+      tab.setAttribute('aria-selected', on ? 'true' : 'false');
+      tab.tabIndex = on ? 0 : -1;
     });
     window.scrollTo(0, 0);
     // Preview/Scan: scroll lives on `.app`, not the window.
@@ -2492,13 +2489,23 @@ function redmedAssetURL(file) {
   }
 
   document.getElementById('copyCoordsBtn').addEventListener('click', function () {
+    var btn = document.getElementById('copyCoordsBtn');
     var loc = window.__redmedLoc;
-    if (!loc) { alert('Location not available yet.'); return; }
+    function paintCopy(ok) {
+      if (!btn) return;
+      var prev = btn.getAttribute('data-label') || 'Copy coordinates';
+      if (!btn.getAttribute('data-label')) btn.setAttribute('data-label', btn.textContent);
+      btn.textContent = ok ? 'Copied' : 'Not available yet';
+      window.setTimeout(function () { btn.textContent = prev; }, 1600);
+    }
+    if (!loc) { paintCopy(false); return; }
     var text = loc.latitude.toFixed(6) + ', ' + loc.longitude.toFixed(6);
+    var done = function () { paintCopy(true); };
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text);
+      navigator.clipboard.writeText(text).then(done).catch(function () { prompt('Copy coordinates', text); done(); });
     } else {
       prompt('Copy coordinates', text);
+      done();
     }
   });
 
