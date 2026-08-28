@@ -213,6 +213,10 @@ struct OwnerAppLock<Content: View>: View {
         .onChange(of: gate) { _, newGate in
             if newGate == .locked {
                 OwnerLockPresentation.setLocked(true)
+                if OwnerLockPresentation.holdSwitcherCover {
+                    OwnerLockPresentation.holdSwitcherCover = false
+                    SnapshotSafeCover.shared.reveal()
+                }
                 didAutoPromptThisLock = false
                 notInteractiveRetried = false
                 showUnlockControl = false
@@ -221,6 +225,8 @@ struct OwnerAppLock<Content: View>: View {
             } else {
                 RedMedSignpost.end(.coldLaunchWindow)
                 OwnerLockPresentation.setLocked(false)
+                OwnerLockPresentation.holdSwitcherCover = false
+                SnapshotSafeCover.shared.reveal()
                 // CoreMotion + vault file I/O on the same turn as consent
                 // first paint (and right after Face ID's Neural Engine) was
                 // a post-unlock hitch. Yield is not enough — wait a beat
@@ -260,15 +266,28 @@ struct OwnerAppLock<Content: View>: View {
             switch phase {
             case .inactive:
                 // Face ID / system auth sheets also drive `.inactive`. Relocking
-                // then kills the sheet and loops. Only relock when the owner
-                // actually left an unlocked session (app switcher, Control
-                // Center, incoming overlay) so the next open always prompts.
+                // then kills the sheet and loops. Do not swap live pages for
+                // LockEntryPage here either — that painted cream on top of
+                // tabs under Control Center / app-switcher peek. The UIKit
+                // switcher veil (`SnapshotSafeCover`) is the overlay; Face ID
+                // runs on the next `.active` re-entry.
                 if gate == .unlocked, !isAuthenticating, !BiometricAuth.isEvaluating {
-                    relockAfterLeavingApp(cancelEvaluate: false)
+                    OwnerLockPresentation.holdSwitcherCover = true
                 }
             case .background:
+                OwnerLockPresentation.holdSwitcherCover = true
                 relockAfterLeavingApp(cancelEvaluate: true)
             case .active:
+                if OwnerLockPresentation.holdSwitcherCover {
+                    if gate == .unlocked, !isAuthenticating, !BiometricAuth.isEvaluating {
+                        relockAfterLeavingApp(cancelEvaluate: false)
+                        // Cover stays until onChange(gate==.locked) so PHI
+                        // cannot flash a frame before LockEntryPage commits.
+                    } else {
+                        OwnerLockPresentation.holdSwitcherCover = false
+                        SnapshotSafeCover.shared.reveal()
+                    }
+                }
                 if gate == .locked {
                     tryAutoUnlockIfActive()
                 }
@@ -302,7 +321,9 @@ struct OwnerAppLock<Content: View>: View {
             showUnlockControl = false
             profile.discardUnlockPrefetch()
             BiometricAuth.clearAuthenticationContext()
+            OwnerLockPresentation.holdSwitcherCover = false
             OwnerLockPresentation.setLocked(false)
+            SnapshotSafeCover.shared.reveal()
             gate = .unlocked
         }
     }

@@ -133,11 +133,15 @@ The app has no backend, database, or web service.
   the owner gate off a recent device unlock). Edit, Save, NFC
   write, vault unlock, and Erase all re-prompt Face ID every time (`force: true`).
   **Re-lock whenever the owner leaves** so the next open always prompts:
-  true `.background` always (purge PHI + `gate = .locked`); also `.inactive`
-  when currently **unlocked** and no `LAContext` is evaluating. Never relock
-  on `.inactive` while Face ID / a system auth sheet is up (`BiometricAuth.isEvaluating`
-  or `isAuthenticating`) — that sheet itself puts the scene `.inactive` and
-  must not kill the prompt. VaultHistoryView stays `.background`-only. Do
+  true `.background` always (purge PHI + `gate = .locked`). Do **not**
+  relock on `.inactive` — that swapped live pages for `LockEntryPage`
+  cream under Control Center / app-switcher peek. `SnapshotSafeCover`
+  is the switcher thumbnail only (`holdSwitcherCover` until re-entry).
+  On the next `.active`, relock if still unlocked, drop the cover, Face ID.
+  Never relock on `.inactive` while Face ID / a system auth sheet is up
+  (`BiometricAuth.isEvaluating` or `isAuthenticating`) — that sheet itself
+  puts the scene `.inactive` and must not kill the prompt. VaultHistoryView
+  stays `.background`-only. Do
   **not** play `LockOpen.mp4` or `FaceIDFrame.mp4`. Clip never gates Face ID.
   Fresh install unlocks into empty tabs after auth. Owner RedMed tab then
   shows a native **setup funnel** (Fill medical ID → Save → Write the band)
