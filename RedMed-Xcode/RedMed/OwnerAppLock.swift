@@ -56,6 +56,13 @@ struct OwnerAppLock<Content: View>: View {
     /// cycle a scheduled `hardWatchdog` GCD block belongs to, independent of
     /// `authGeneration` (which bumps per Face ID attempt, not per cycle).
     @State private var lockCycleID = 0
+    #if DEBUG
+    /// Ticks every 0.5s so a screenshot of a "stuck" screen also proves
+    /// whether the main thread/run loop is even alive — if this stops
+    /// advancing, the hang is a true main-thread freeze, not a state-machine
+    /// bug in this file (which would still let SwiftUI redraw the clock).
+    @State private var debugTickerNow = Date()
+    #endif
 
     var body: some View {
         ZStack {
@@ -83,7 +90,15 @@ struct OwnerAppLock<Content: View>: View {
                 }
             }
         }
+        #if DEBUG
+        .overlay(alignment: .top) { debugStateOverlay }
+        #endif
         .transaction { $0.animation = nil }
+        #if DEBUG
+        .onReceive(Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()) { now in
+            debugTickerNow = now
+        }
+        #endif
         .onAppear {
             // Diagnostic only — see RedMedSignpost.swift. Ended below wherever
             // the lock screen first resolves (unlocked, or Proceed shown).
@@ -313,6 +328,33 @@ struct OwnerAppLock<Content: View>: View {
     }
     #else
     private func logLock(_ message: String) {}
+    #endif
+
+    #if DEBUG
+    /// Debug-build-only readout of every flag that decides what the lock
+    /// screen shows — added so a screenshot of a stuck screen is itself the
+    /// diagnostic (no Xcode console access needed). `debugTickerNow` proves
+    /// the main run loop is still alive even if every other value is frozen.
+    private var debugStateOverlay: some View {
+        let elapsed = Date().timeIntervalSince(lockCycleStartedAt ?? Date())
+        return VStack(alignment: .leading, spacing: 1) {
+            Text("DEBUG tick=\(debugTickerNow.timeIntervalSinceReferenceDate, specifier: "%.1f")")
+            Text("gate=\(gate == .locked ? "locked" : "unlocked") elapsed=\(elapsed, specifier: "%.1f")s")
+            Text("isAuthenticating=\(isAuthenticating) isLoadingProfile=\(isLoadingProfile)")
+            Text("showUnlockControl=\(showUnlockControl) didAutoPrompt=\(didAutoPromptThisLock)")
+            Text("hasKeyWindow=\(hasKeyWindow) scenePhase=\(String(describing: scenePhase))")
+            Text("biometryFailed=\(biometryFailed) notInteractive=\(notInteractive)")
+            Text("profileLoadFailed=\(profileLoadFailed) unavailable=\(faceIDUnavailableReason != nil)")
+            Text("authGen=\(authGeneration) lockCycleID=\(lockCycleID)")
+        }
+        .font(.system(size: 9, weight: .medium, design: .monospaced))
+        .foregroundColor(.black)
+        .padding(6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.yellow.opacity(0.85))
+        .padding(.top, 50)
+        .allowsHitTesting(false)
+    }
     #endif
 
     private func tryAutoUnlockIfActive() {
