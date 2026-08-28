@@ -22,6 +22,7 @@ enum ConsentSettings {
 struct ConsentGateView<Content: View>: View {
     @State private var hasAccepted = false
     @State private var checked = false
+    @State private var expandedPolicy: String?
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
@@ -95,12 +96,15 @@ struct ConsentGateView<Content: View>: View {
                         .foregroundColor(.redmedMuted)
                         .padding(.horizontal, 4)
 
-                    Text(ConsentPolicyCopy.text)
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(14)
-                        .redmedBox(flatten: false)
+                    VStack(spacing: 0) {
+                        ForEach(Array(ConsentPolicyCopy.policies.enumerated()), id: \.element.id) { index, policy in
+                            if index > 0 {
+                                Divider().overlay(Color.redmedDivider).padding(.leading, RedMedChrome.pagePadX)
+                            }
+                            policyRow(policy)
+                        }
+                    }
+                    .redmedBox(flatten: false)
 
                     Button {
                         RedMedHaptics.light()
@@ -144,6 +148,49 @@ struct ConsentGateView<Content: View>: View {
                 try? await Task.sleep(nanoseconds: 200_000_000)
                 guard locationEnabled else { return }
                 locationSuggester.refresh()
+            }
+        }
+    }
+
+    /// One collapsible policy row (title + chevron); tapping expands/collapses
+    /// its body text in place. Only one row's expansion state is tracked at a
+    /// time via `expandedPolicy` (tapping a second row swaps which is open).
+    @ViewBuilder
+    private func policyRow(_ policy: ConsentPolicyCopy.Policy) -> some View {
+        let isExpanded = expandedPolicy == policy.title
+        VStack(spacing: 0) {
+            Button {
+                RedMedHaptics.light()
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    expandedPolicy = isExpanded ? nil : policy.title
+                }
+            } label: {
+                HStack {
+                    Text(policy.title)
+                        .font(.system(size: RedMedChrome.rowFont, weight: .semibold))
+                        .foregroundColor(.redmedDark)
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.redmedMuted)
+                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                }
+                .padding(.horizontal, RedMedChrome.pagePadX)
+                .padding(.vertical, RedMedChrome.rowVPad)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
+            .accessibilityAddTraits(.isHeader)
+            .accessibilityValue(isExpanded ? "Expanded" : "Collapsed")
+
+            if isExpanded {
+                Text(policy.body)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.redmedMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, RedMedChrome.pagePadX)
+                    .padding(.bottom, RedMedChrome.rowVPad)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
     }

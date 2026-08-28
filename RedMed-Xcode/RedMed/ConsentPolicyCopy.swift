@@ -1,11 +1,18 @@
 import Foundation
 
-/// Privacy, Security, and Terms shown as one block on Before you continue.
+/// Privacy, Security, and Terms shown as three collapsible sections on
+/// Before you continue (see `ConsentGateView`'s policy dropdown list).
 /// Keep in lockstep with Help.html Version 4.1.
 enum ConsentPolicyCopy {
-    static let text = #"""
-Privacy
+    /// One policy document: `title` is the collapsed row label (dropdown
+    /// header), `body` is the full text revealed on expand.
+    struct Policy: Identifiable {
+        let title: String
+        let body: String
+        var id: String { title }
+    }
 
+    static let privacy = #"""
 Effective August 2026
 
 Version 4.1 (United States)
@@ -130,9 +137,9 @@ We may update this page. The Effective date above shows the latest revision. Mat
 15. Contact
 
 help.RedMed@gmail.com
+"""#
 
-Security
-
+    static let security = #"""
 Effective August 2026
 
 Version 4.1 (United States)
@@ -197,9 +204,9 @@ There is no RedMed profile server. The trust root is the owner's iPhone: Keychai
 9. Contact
 
 help.RedMed@gmail.com
+"""#
 
-Terms
-
+    static let terms = #"""
 Effective August 2026
 
 Version 4.1 (United States)
@@ -351,4 +358,11 @@ If any provision is held invalid or unenforceable, the rest stays in effect.
 
 help.RedMed@gmail.com
 """#
+
+    /// Rows for the "Before you continue" policy dropdown, in display order.
+    static let policies: [Policy] = [
+        Policy(title: "Privacy", body: privacy),
+        Policy(title: "Security", body: security),
+        Policy(title: "Terms", body: terms),
+    ]
 }
