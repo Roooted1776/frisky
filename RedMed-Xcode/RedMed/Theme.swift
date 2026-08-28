@@ -395,8 +395,7 @@ struct OwnerModalChrome<Trailing: View>: View {
     }
 }
 
-/// Edit modal bar: Cancel (left), Help (center), Save (right).
-/// Same type size and bar height so Help stays level with both actions.
+/// Edit modal bar: Cancel (left), Save (right).
 struct OwnerModalActionBar<Center: View>: View {
     let leadingTitle: String
     var leadingWeight: Font.Weight = .regular

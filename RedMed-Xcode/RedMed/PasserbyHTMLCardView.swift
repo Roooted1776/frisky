@@ -34,7 +34,6 @@ struct PasserbyHTMLCardView: View {
                     dismiss()
                 }
                 Spacer(minLength: 0)
-                OwnerHelpButton()
             }
             .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
             .padding(.horizontal, RedMedChrome.pagePadX)
@@ -64,7 +63,6 @@ struct PasserbyHTMLCardView: View {
         .onAppear { TapCardPresentation.setVisible(true) }
         .onDisappear { TapCardPresentation.setVisible(false) }
         .environment(\.isScannerSession, true)
-        .presentsOwnerHelp()
     }
 
     nonisolated static func warmShellCache() {

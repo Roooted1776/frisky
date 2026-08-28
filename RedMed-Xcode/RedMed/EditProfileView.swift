@@ -92,7 +92,7 @@ struct EditProfileView: View {
                 trailingTitle: "Save",
                 trailingAction: save
             ) {
-                OwnerModalHelpButton()
+                EmptyView()
             }
 
             ScrollView {
@@ -182,7 +182,6 @@ struct EditProfileView: View {
         // Once on the sheet — per-field `.privacySensitive()` made SwiftUI
         // reuse the first TextField coordinator (list typing landed in Name).
         .privacySensitive()
-        .presentsOwnerHelp()
         .onAppear {
             loadDraft()
             SuggestionCatalog.warmUp()
