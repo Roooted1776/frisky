@@ -74,36 +74,62 @@ enum KeychainStore {
             return true
         }
 
-        // Missing, ACL mismatch, or auth — replace with a single bound item.
-        if updateStatus == errSecItemNotFound
-            || updateStatus == errSecAuthFailed
-            || updateStatus == errSecInteractionNotAllowed
-            || updateStatus == errSecNoSuchAttr
-            || updateStatus == errSecParam
-        {
-            return replaceWithBound(data, account: account, service: service, access: access)
+        // No row yet — add. Do not delete-then-add on auth misses: that
+        // window can drop the only copy if SecItemAdd then fails.
+        if updateStatus == errSecItemNotFound {
+            return addBound(data, account: account, service: service, access: access)
+        }
+        if updateStatus == errSecAuthFailed || updateStatus == errSecInteractionNotAllowed {
+            return false
+        }
+        if updateStatus == errSecNoSuchAttr || updateStatus == errSecParam {
+            return replaceViaStaging(data, account: account, service: service, access: access)
         }
 
         return false
     }
 
-    private static func replaceWithBound(
+    /// Staging account used only while migrating an existing row to the ACL form.
+    /// `load` falls back here if the process dies between delete and re-add.
+    private static func stagingAccount(_ account: String) -> String {
+        account + ".migrating"
+    }
+
+    private static func addBound(
         _ data: Data,
         account: String,
         service: String,
         access: SecAccessControl
     ) -> Bool {
-        var del = baseQuery(account: account, service: service)
-        withAuthContext(&del)
-        SecItemDelete(del as CFDictionary)
-        // Also delete without context (legacy row).
-        SecItemDelete(baseQuery(account: account, service: service) as CFDictionary)
-
         var add = baseQuery(account: account, service: service)
         add[kSecValueData as String] = data
         add[kSecAttrAccessControl as String] = access
         // Never set kSecAttrAccessible alongside kSecAttrAccessControl.
         return SecItemAdd(add as CFDictionary, nil) == errSecSuccess
+    }
+
+    /// Add the new bound item first, then delete the old row. Kill/crash
+    /// between those steps leaves PHI on the staging account, which `load`
+    /// still reads.
+    private static func replaceViaStaging(
+        _ data: Data,
+        account: String,
+        service: String,
+        access: SecAccessControl
+    ) -> Bool {
+        let staging = stagingAccount(account)
+        delete(account: staging, service: service)
+        guard addBound(data, account: staging, service: service, access: access) else {
+            return false
+        }
+        delete(account: account, service: service)
+        let restored = addBound(data, account: account, service: service, access: access)
+        if restored {
+            delete(account: staging, service: service)
+            return true
+        }
+        // Original add failed — leave staging so load can still find PHI.
+        return true
     }
 
     // MARK: - Load
@@ -112,15 +138,26 @@ enum KeychainStore {
         account: String,
         service: String = defaultService,
         context: LAContext? = nil,
-        allowInteractive: Bool = false
+        allowInteractive: Bool = false,
+        allowLegacy: Bool = true
     ) -> Data? {
         let ctx = context ?? BiometricAuth.peekAuthenticationContext()
         if let data = loadBound(account: account, service: service, context: ctx, interactive: false) {
             return data
         }
-        if let data = loadLegacy(account: account, service: service) {
+        if allowLegacy, let data = loadLegacy(account: account, service: service) {
             // Upgrade unbound → biometry ACL while we hold auth (best-effort).
             _ = save(data, account: account, service: service)
+            return data
+        }
+        if let data = loadBound(
+            account: stagingAccount(account),
+            service: service,
+            context: ctx,
+            interactive: false
+        ) {
+            _ = save(data, account: account, service: service)
+            delete(account: stagingAccount(account), service: service)
             return data
         }
         if allowInteractive {

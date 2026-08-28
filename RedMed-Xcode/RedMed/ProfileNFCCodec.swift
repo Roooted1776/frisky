@@ -205,7 +205,13 @@ enum ProfileNFCCodec {
         guard JSONSerialization.isValidJSONObject(obj),
               let data = try? JSONSerialization.data(withJSONObject: obj, options: []),
               let json = String(data: data, encoding: .utf8) else { return nil }
+        // Safe to splice into a <script> (WKWebView loadHTMLString). Raw
+        // JSONSerialization does not escape `<`, so a field containing
+        // `</script>` would break out of the boot script.
         return json
+            .replacingOccurrences(of: "<", with: "\\u003c")
+            .replacingOccurrences(of: "\u{2028}", with: "\\u2028")
+            .replacingOccurrences(of: "\u{2029}", with: "\\u2029")
     }
 
     static func embedProfileJSON(from profile: ProfileData) -> String? {
