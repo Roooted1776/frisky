@@ -33,6 +33,9 @@ struct NFCView: View {
 
             ScrollView {
                 VStack(spacing: 16) {
+                    if !AppConfig.nfcHardwareEnabled {
+                        parkedBanner
+                    }
                     factsCard
                     setupCard
                         .padding(.top, 4)
@@ -89,6 +92,22 @@ struct NFCView: View {
             return ("Band written", "Finish name, birth date, and blood type on RedMed", false)
         }
         return ("Not linked", "Write once to set up the bracelet", false)
+    }
+
+    private var parkedBanner: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Preview only")
+                .font(.system(size: 13, weight: .bold))
+                .foregroundColor(.redmedAccent)
+            Text("Band write is preview-only in this build. NFC Tag Reading is parked until a paid Apple Developer team can provision it. Preview packed card shows the same HTML helpers would see. Linked still requires a real CoreNFC write.")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.redmedMuted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .redmedBox()
+        .accessibilityLabel("Band write is preview-only in this build")
     }
 
     private var factsCard: some View {
@@ -165,9 +184,15 @@ struct NFCView: View {
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                tipRow("Write once after RedMed is filled — blank unlocked NXP NTAG216 (ISO 14443A Type 2).")
-                tipRow("Write packs #d= onto the chip only — never a vendor cloud or social/short link.")
-                tipRow("Scan / Preview: same HTML card helpers get — quick, no login, no server, no app.")
+                if AppConfig.nfcHardwareEnabled {
+                    tipRow("Write once after RedMed is filled — blank unlocked NXP NTAG216 (ISO 14443A Type 2).")
+                    tipRow("Write packs #d= onto the chip only — never a vendor cloud or social/short link.")
+                    tipRow("Scan / Preview: same HTML card helpers get — quick, no login, no server, no app.")
+                } else {
+                    tipRow("This build cannot write a physical band (NFC Tag Reading is parked).")
+                    tipRow("Preview packed card opens the same HTML helpers would see — no Linked flag.")
+                    tipRow("Live write ships when NFC Tag Reading is on the App ID. See docs/NFC-RESTORE.md.")
+                }
             }
             .padding(.top, 2)
         }
@@ -226,9 +251,9 @@ struct NFCView: View {
 
     private var writeButtonTitle: String {
         if band.isWriting {
-            return "Hold near the band…"
+            return AppConfig.nfcHardwareEnabled ? "Hold near the band…" : "Packing…"
         }
-        return "Write the band"
+        return AppConfig.nfcHardwareEnabled ? "Write the band" : "Preview packed card"
     }
 
     private var statusIsError: Bool {
