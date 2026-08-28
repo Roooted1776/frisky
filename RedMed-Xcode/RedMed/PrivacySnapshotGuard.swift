@@ -14,11 +14,15 @@ import UIKit
 /// fields until after `gate = .unlocked`, so capture never paints a cover over
 /// the lock shell.
 ///
-/// Non-capture cover is **`.background` only** (with PHI). Face ID / LAContext
-/// put the scene `.inactive` — covering then blanks the UI mid-unlock and
-/// painted a second cover over the cream lock. App-switcher snapshots
+/// Non-capture SwiftUI cover is **`.background` only** (with PHI). Face ID /
+/// LAContext put the scene `.inactive` — covering then blanks the UI mid-unlock
+/// and painted a second cover over the cream lock. App-switcher snapshots
 /// still get a cover on true background while PHI is in RAM; after
 /// `OwnerAppLock` purges, the lock shell itself has no PHI to leak.
+///
+/// In-app pages stay uncovered while the owner is using them. The cream
+/// overlay is the app-switcher thumbnail (`SnapshotSafeCover`) plus this
+/// background/capture veil — never a persistent layer on live tabs.
 struct PrivacySnapshotGuard<Content: View>: View {
     @EnvironmentObject private var profile: ProfileData
     @Environment(\.scenePhase) private var scenePhase
@@ -121,21 +125,22 @@ struct PrivacySnapshotGuard<Content: View>: View {
 
 /// Covers the key window with cream **synchronously** on `willResignActive` —
 /// before iOS captures the app-switcher thumbnail — so PHI can never leak
-/// into that snapshot during the gap before SwiftUI's own state-driven cream
-/// (`OwnerAppLock`'s relock, `PrivacySnapshotGuard`'s `.background` cover
-/// above) repaints on the next run-loop turn. `profile.purgeFromMemory()`
-/// clearing the model on relock does not retroactively erase pixels SwiftUI
-/// already composited from the prior frame — only a same-turn UIKit view
-/// added directly to the window can guarantee the switcher snapshot sees
-/// cream regardless of that render timing. Fires on **every** app switch
-/// (`.inactive` included — Control Center, app switcher, an incoming call —
-/// not just true `.background`), unlike the SwiftUI cover above, because the
-/// snapshot risk exists at every one of those transitions, not only
-/// backgrounding.
+/// into that snapshot. This is the **only** cream overlay while the owner
+/// is still on live pages: it is a switcher snapshot veil, not a page
+/// chrome. `OwnerAppLock` no longer swaps the tab tree for `LockEntryPage`
+/// on `.inactive` (that painted cream on top of pages). Face ID runs on
+/// the next `.active` (re-entry). The cover stays up across that handoff
+/// (`holdSwitcherCover`) so `didBecomeActive` cannot flash one frame of PHI
+/// before the lock shell + Face ID sheet take over.
 ///
-/// Removed on `didBecomeActive`, handing off to whatever SwiftUI is already
-/// showing by then — always cream while locked, since Face ID gates
-/// re-entry on every foreground (`AGENTS.md`: prompt on every open).
+/// Removed once Face ID unlocks (or if the owner never left). Fires on
+/// every app switch (`.inactive` included — Control Center, app switcher,
+/// an incoming call) because the snapshot risk exists at every one of
+/// those transitions, not only true `.background`.
+///
+/// Skip covering while already locked — the cream lock shell is opaque
+/// and has no PHI, and a UIKit cover on `willResignActive` (Face ID puts
+/// the scene inactive) sat on top of **Proceed**.
 final class SnapshotSafeCover {
     static let shared = SnapshotSafeCover()
 
@@ -164,6 +169,13 @@ final class SnapshotSafeCover {
         _ = shared
     }
 
+    /// Drop the switcher veil after Face ID succeeds (or erase). Safe to
+    /// call when no cover is up.
+    func reveal() {
+        coverView?.removeFromSuperview()
+        coverView = nil
+    }
+
     private func cover() {
         // Passerby tap card (Preview / Scan / band-style shell) is the public
         // EMT view — never veil it, matching PrivacySnapshotGuard's own rule.
@@ -184,8 +196,11 @@ final class SnapshotSafeCover {
     }
 
     private func uncover() {
-        coverView?.removeFromSuperview()
-        coverView = nil
+        // Stay cream across the switcher → foreground handoff until
+        // Face ID owns the lock shell. Dropping the cover on
+        // didBecomeActive would flash PHI under the incoming tabs.
+        if OwnerLockPresentation.holdSwitcherCover { return }
+        reveal()
     }
 }
 
@@ -196,6 +211,7 @@ final class SnapshotSafeCover {
 enum OwnerLockPresentation {
     private static let lock = NSLock()
     private static var locked = true
+    private static var holdCover = false
 
     static var isLocked: Bool {
         lock.lock()
@@ -207,5 +223,20 @@ enum OwnerLockPresentation {
         lock.lock()
         self.locked = locked
         lock.unlock()
+    }
+
+    /// Keep the UIKit switcher cream up until Face ID re-entry takes the
+    /// lock shell. Prevents a PHI flash on `didBecomeActive`.
+    static var holdSwitcherCover: Bool {
+        get {
+            lock.lock()
+            defer { lock.unlock() }
+            return holdCover
+        }
+        set {
+            lock.lock()
+            holdCover = newValue
+            lock.unlock()
+        }
     }
 }
