@@ -365,14 +365,14 @@ struct OwnerAppLock<Content: View>: View {
     private var debugStateOverlay: some View {
         let elapsed = Date().timeIntervalSince(lockCycleStartedAt ?? Date())
         return VStack(alignment: .leading, spacing: 1) {
-            Text("DEBUG tick=\(debugTickerNow.timeIntervalSinceReferenceDate, specifier: "%.1f")")
-            Text("gate=\(gate == .locked ? "locked" : "unlocked") elapsed=\(elapsed, specifier: "%.1f")s")
-            Text("isAuthenticating=\(isAuthenticating) isLoadingProfile=\(isLoadingProfile)")
-            Text("showUnlockControl=\(showUnlockControl) didAutoPrompt=\(didAutoPromptThisLock)")
-            Text("hasKeyWindow=\(hasKeyWindow) scenePhase=\(String(describing: scenePhase))")
-            Text("biometryFailed=\(biometryFailed) notInteractive=\(notInteractive)")
-            Text("profileLoadFailed=\(profileLoadFailed) unavailable=\(faceIDUnavailableReason != nil)")
-            Text("authGen=\(authGeneration) lockCycleID=\(lockCycleID)")
+            Text(verbatim: String(format: "DEBUG tick=%.1f", debugTickerNow.timeIntervalSinceReferenceDate))
+            Text(verbatim: String(format: "gate=%@ elapsed=%.1fs", gate == .locked ? "locked" : "unlocked", elapsed))
+            Text(verbatim: "isAuthenticating=\(isAuthenticating) isLoadingProfile=\(isLoadingProfile)")
+            Text(verbatim: "showUnlockControl=\(showUnlockControl) didAutoPrompt=\(didAutoPromptThisLock)")
+            Text(verbatim: "hasKeyWindow=\(hasKeyWindow) scenePhase=\(String(describing: scenePhase))")
+            Text(verbatim: "biometryFailed=\(biometryFailed) notInteractive=\(notInteractive)")
+            Text(verbatim: "profileLoadFailed=\(profileLoadFailed) unavailable=\(faceIDUnavailableReason != nil)")
+            Text(verbatim: "authGen=\(authGeneration) lockCycleID=\(lockCycleID)")
         }
         .font(.system(size: 9, weight: .medium, design: .monospaced))
         .foregroundColor(.black)
