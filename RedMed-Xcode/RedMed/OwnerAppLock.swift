@@ -178,9 +178,9 @@ struct OwnerAppLock<Content: View>: View {
             guard gate == .locked, generation == authGeneration else { return }
             if isAuthenticating {
                 #if targetEnvironment(simulator)
-                // Simulator Authenticate alert stays `.active` and is the
-                // only tappable UI. Do not convert it into Proceed.
-                if BiometricAuth.isEvaluating { return }
+                // Only skip Proceed if the Authenticate alert is actually
+                // on the key window. A ghost isEvaluating was the stuck heart.
+                if BiometricAuth.isSimulatorAlertVisible { return }
                 #endif
                 // A live Face ID / passcode sheet puts the scene `.inactive`.
                 // Do not tear that down at `noSheetSeconds` — passcode after
@@ -403,7 +403,7 @@ struct OwnerAppLock<Content: View>: View {
             logLock("hard watchdog fired isAuthenticating=\(isAuthenticating)")
             if isAuthenticating {
                 #if targetEnvironment(simulator)
-                if BiometricAuth.isEvaluating { return }
+                if BiometricAuth.isSimulatorAlertVisible { return }
                 #endif
                 if BiometricAuth.isEvaluating, scenePhase != .active {
                     let elapsedNow = Date().timeIntervalSince(lockCycleStartedAt ?? Date())
@@ -506,11 +506,7 @@ struct OwnerAppLock<Content: View>: View {
         // no callback. Simulator Authenticate alert only needs a host
         // window. Either way, do not wait for scene `.active` — that wait
         // is cream before Face ID.
-        #if targetEnvironment(simulator)
-        guard hasHostWindow else { return }
-        #else
         guard hasKeyWindow else { return }
-        #endif
         didAutoPromptThisLock = true
         startUnlockPipeline()
     }

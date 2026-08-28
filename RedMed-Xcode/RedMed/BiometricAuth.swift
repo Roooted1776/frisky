@@ -198,6 +198,20 @@ enum BiometricAuth {
         #endif
     }
 
+    #if targetEnvironment(simulator)
+    /// True only if the Authenticate alert is on the key window.
+    static var isSimulatorAlertVisible: Bool {
+        parkLock.lock()
+        let up = simulatorPromptUp
+        parkLock.unlock()
+        guard up else { return false }
+        guard let top = topViewController(), top.view.window?.isKeyWindow == true else {
+            return false
+        }
+        return top is UIAlertController || top.presentedViewController is UIAlertController
+    }
+    #endif
+
     /// Kill a hung / leftover Face ID sheet so Proceed can start a fresh one.
     /// Returns whether a live context was actually cancelled — callers only
     /// need to wait out the teardown when this is true.
@@ -420,11 +434,10 @@ enum BiometricAuth {
     }
 
     private static func topViewController() -> UIViewController? {
+        // Key window only. Presenting on a hidden host window leaves the
+        // cream lock tappable-dead while isEvaluating stays true.
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-        let windows = scenes.flatMap(\.windows)
-        let window = windows.first(where: { $0.isKeyWindow && $0.rootViewController != nil })
-            ?? windows.first(where: { $0.rootViewController != nil })
-            ?? windows.first
+        let window = scenes.flatMap(\.windows).first(where: { $0.isKeyWindow && $0.rootViewController != nil })
         guard var top = window?.rootViewController else { return nil }
         while let presented = top.presentedViewController {
             top = presented
