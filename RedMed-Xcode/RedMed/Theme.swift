@@ -40,7 +40,7 @@ extension Color {
 }
 
 /// Cream page with rose wash only (fill color — no BrandLogo).
-/// Lock front (`LockEntryPage`) is flat `redmedBg` with no mark / spinner;
+/// Lock front (`LockEntryPage`) is flat `redmedBg` + mark + title;
 /// passerby tapper matches cream fill.
 struct RedMedPageBackground: View {
     var body: some View {
@@ -528,10 +528,9 @@ enum RedMedChrome {
 
 /// Original medical lock mark — heart + static EKG, Face ID–sized.
 /// Face-page static mark — heart + EKG. Not Apple Face ID scan rings.
-/// One-shot squash-settle; not Apple Face ID scan rings, not `BrandLogo`.
+/// First frame already matches launch (no delayed spark).
 struct LockMedGlyph: View {
     var size: CGFloat = RedMedChrome.unlockGlyphSize
-    @State private var spark: CGFloat = 0
 
     var body: some View {
         ZStack {
@@ -550,25 +549,10 @@ struct LockMedGlyph: View {
                     )
                 )
                 .padding(size * 0.18)
-            LockMedPlus()
-                .stroke(Color.white.opacity(0.95), style: StrokeStyle(lineWidth: 2.2, lineCap: .round))
-                .frame(width: size * 0.20, height: size * 0.20)
-                .offset(x: size * 0.36, y: -size * 0.36)
-                .scaleEffect(spark)
-                .opacity(spark > 0.05 ? 1 : 0)
         }
         .frame(width: size, height: size)
-        // Visible on the first frame — fading in from opacity 0 was the
-        // blank cream start.
+        // Visible on the first frame — delayed spark / fade was lag after launch.
         .drawingGroup()
-        .onAppear {
-            withAnimation(.easeOut(duration: 0.28).delay(0.20)) {
-                spark = 1
-            }
-            withAnimation(.easeIn(duration: 0.22).delay(0.52)) {
-                spark = 0
-            }
-        }
     }
 }
 
@@ -606,21 +590,6 @@ private struct LockMedECG: Shape {
             let pt = CGPoint(x: rect.minX + xy.0 * sx, y: rect.minY + xy.1 * sy)
             if i == 0 { p.move(to: pt) } else { p.addLine(to: pt) }
         }
-        return p
-    }
-}
-
-/// Tiny medical-plus sparkle — original pickup cue, not Face ID rings.
-private struct LockMedPlus: Shape {
-    func path(in rect: CGRect) -> Path {
-        let cx = rect.midX
-        let cy = rect.midY
-        let arm = min(rect.width, rect.height) * 0.42
-        var p = Path()
-        p.move(to: CGPoint(x: cx, y: cy - arm))
-        p.addLine(to: CGPoint(x: cx, y: cy + arm))
-        p.move(to: CGPoint(x: cx - arm, y: cy))
-        p.addLine(to: CGPoint(x: cx + arm, y: cy))
         return p
     }
 }

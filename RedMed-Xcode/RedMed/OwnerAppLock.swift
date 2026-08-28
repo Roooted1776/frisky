@@ -176,12 +176,12 @@ struct OwnerAppLock<Content: View>: View {
             try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
             RedMedSignpost.trace("task watchdog woke: generation=\(generation) currentGen=\(authGeneration) gate=\(gate)")
             guard gate == .locked, generation == authGeneration else { return }
+            #if targetEnvironment(simulator)
+            // Auto-succeed — Proceed here is a tap/hang. Keep cream until success.
+            RedMedSignpost.trace("task watchdog skipped Proceed on simulator")
+            return
+            #else
             if isAuthenticating {
-                #if targetEnvironment(simulator)
-                // Only skip Proceed if the Authenticate alert is actually
-                // on the key window. A ghost isEvaluating was the stuck heart.
-                if BiometricAuth.isSimulatorAlertVisible { return }
-                #endif
                 // A live Face ID / passcode sheet puts the scene `.inactive`.
                 // Do not tear that down at `noSheetSeconds` — passcode after
                 // a Face ID miss routinely takes longer. Wait out the 60s
@@ -208,6 +208,7 @@ struct OwnerAppLock<Content: View>: View {
             }
             showUnlockControl = true
             RedMedSignpost.trace("task watchdog forced showUnlockControl=true")
+            #endif
         }
         .task {
             // .utility priority alone wasn't enough to rule out contention
@@ -401,10 +402,11 @@ struct OwnerAppLock<Content: View>: View {
             RedMedSignpost.trace("GCD watchdog woke: cycleID=\(cycleID) currentCycle=\(lockCycleID) gate=\(gate)")
             guard gate == .locked, cycleID == lockCycleID else { return }
             logLock("hard watchdog fired isAuthenticating=\(isAuthenticating)")
+            #if targetEnvironment(simulator)
+            RedMedSignpost.trace("GCD watchdog skipped Proceed on simulator")
+            return
+            #else
             if isAuthenticating {
-                #if targetEnvironment(simulator)
-                if BiometricAuth.isSimulatorAlertVisible { return }
-                #endif
                 if BiometricAuth.isEvaluating, scenePhase != .active {
                     let elapsedNow = Date().timeIntervalSince(lockCycleStartedAt ?? Date())
                     let extra = max(0, AuthBudget.inactiveSheetTotalSeconds - elapsedNow)
@@ -432,6 +434,7 @@ struct OwnerAppLock<Content: View>: View {
             }
             showUnlockControl = true
             RedMedSignpost.trace("GCD watchdog forced showUnlockControl=true")
+            #endif
         }
     }
 
@@ -502,11 +505,12 @@ struct OwnerAppLock<Content: View>: View {
         // `.notInteractive` evaluate (system genuinely can't present yet) still
         // recovers via a bounded retry / Proceed, so it costs nothing to try early.
         guard scenePhase != .background else { return }
-        // Real evaluatePolicy still needs a key window or it can sit with
-        // no callback. Simulator Authenticate alert only needs a host
-        // window. Either way, do not wait for scene `.active` — that wait
-        // is cream before Face ID.
+        // Device evaluatePolicy needs a key window or it can sit with
+        // no callback. Simulator auto-succeeds — do not wait on a window
+        // (that wait is extra cream before the acknowledgment).
+        #if !targetEnvironment(simulator)
         guard hasKeyWindow else { return }
+        #endif
         didAutoPromptThisLock = true
         startUnlockPipeline()
     }
@@ -630,7 +634,26 @@ struct OwnerAppLock<Content: View>: View {
                 // hop so SecItem overlaps the SwiftUI turn instead of following it.
                 profile.beginUnlockPrefetchWithParkedContext()
             }
-            Task { @MainActor in
+            let apply = {
+                self.handleUnlockOutcome(
+                    outcome,
+                    generation: generation,
+                    attemptStartedAt: attemptStartedAt
+                )
+            }
+            if Thread.isMainThread {
+                apply()
+            } else {
+                Task { @MainActor in apply() }
+            }
+        }
+    }
+
+    private func handleUnlockOutcome(
+        _ outcome: BiometricAuth.Outcome,
+        generation: Int,
+        attemptStartedAt: Date
+    ) {
                 guard generation == authGeneration else { return }
                 logLock("unlockWithFaceID completion outcome=\(outcome) elapsed=\(Date().timeIntervalSince(attemptStartedAt))")
                 switch outcome {
@@ -713,10 +736,10 @@ struct OwnerAppLock<Content: View>: View {
                     showUnlockControl = false
                     gate = .unlocked
                     scheduleProfileLoadWatchdog(generation: generation)
-                    await applyUnlockSuccess(generation: generation)
+                    Task { @MainActor in
+                        await applyUnlockSuccess(generation: generation)
+                    }
                 }
-            }
-        }
     }
 
     /// One bounded retry for the cold-launch `.notInteractive` race.

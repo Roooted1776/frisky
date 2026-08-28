@@ -100,9 +100,13 @@ enum BiometricAuth {
         // so cold start can reach Main. Device still uses real Face ID.
         #if targetEnvironment(simulator)
         _ = cancelInFlight()
-        DispatchQueue.main.async {
-            markSessionEnded()
+        markSessionEnded()
+        // Same-turn success — main.async let the 1s watchdog win and
+        // paint Proceed (a tap) over the cream lock on cold start.
+        if Thread.isMainThread {
             completion(.success)
+        } else {
+            DispatchQueue.main.async { completion(.success) }
         }
         #else
         let cancelledLiveContext = cancelInFlight()
