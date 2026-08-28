@@ -22,6 +22,7 @@ enum ConsentSettings {
 struct ConsentGateView<Content: View>: View {
     @State private var hasAccepted = false
     @State private var checked = false
+    @State private var openPolicy: HelpDocument.Policy?
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
@@ -95,12 +96,15 @@ struct ConsentGateView<Content: View>: View {
                         .foregroundColor(.redmedMuted)
                         .padding(.horizontal, 4)
 
-                    Text(ConsentPolicyCopy.text)
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(14)
-                        .redmedBox(flatten: false)
+                    VStack(spacing: 0) {
+                        ForEach(Array(HelpDocument.Policy.allCases.filter { $0 != .guide }.enumerated()), id: \.element.id) { index, policy in
+                            if index > 0 {
+                                Divider().overlay(Color.redmedDivider).padding(.leading, RedMedChrome.pagePadX)
+                            }
+                            policyRow(policy)
+                        }
+                    }
+                    .redmedBox(flatten: false)
 
                     Button {
                         RedMedHaptics.light()
@@ -145,6 +149,57 @@ struct ConsentGateView<Content: View>: View {
                 guard locationEnabled else { return }
                 locationSuggester.refresh()
             }
+        }
+        .sheet(item: $openPolicy) { policy in
+            ConsentPolicySheet(policy: policy)
+                .presentationBackground(Color.redmedBg)
+        }
+    }
+
+    /// One policy link row (title + chevron.right). Tapping opens the real
+    /// Help.html section for that policy in a sheet — keeps this screen a
+    /// short, clean acknowledgment instead of a second copy of Help's text.
+    @ViewBuilder
+    private func policyRow(_ policy: HelpDocument.Policy) -> some View {
+        Button {
+            RedMedHaptics.light()
+            openPolicy = policy
+        } label: {
+            HStack {
+                Text(policy.title)
+                    .font(.system(size: RedMedChrome.rowFont, weight: .semibold))
+                    .foregroundColor(.redmedDark)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.redmedMuted.opacity(0.55))
+            }
+            .padding(.horizontal, RedMedChrome.pagePadX)
+            .padding(.vertical, RedMedChrome.rowVPad)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint("Opens \(policy.title)")
+    }
+}
+
+private struct ConsentPolicySheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let policy: HelpDocument.Policy
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                OwnerModalChrome(
+                    title: policy.title,
+                    leadingTitle: "Done",
+                    leadingAction: { dismiss() }
+                )
+                LocalWebView(filename: HelpDocument.bundledFile, fragment: policy.fragment)
+            }
+            .background { RedMedPageBackground() }
+            .toolbar(.hidden, for: .navigationBar)
         }
     }
 }

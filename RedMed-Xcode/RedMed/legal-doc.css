@@ -8,6 +8,18 @@
   --divider: rgba(28, 25, 23, 0.08);      /* Color.redmedDivider */
   --accent: #e11d48;                      /* Color.redmedAccent */
   --accent-soft: rgba(225, 29, 72, 0.10);
+
+  /* Per-category chip colors — Privacy / Security / Terms, kept out of the
+     brand red so the three tabs read as distinct at a glance. */
+  --cat-privacy:       #2563eb;
+  --cat-privacy-soft:  rgba(37, 99, 235, 0.10);
+  --cat-privacy-shadow: rgba(37, 99, 235, 0.35);
+  --cat-security:       #7c3aed;
+  --cat-security-soft:  rgba(124, 58, 237, 0.10);
+  --cat-security-shadow: rgba(124, 58, 237, 0.35);
+  --cat-terms:       #b45309;
+  --cat-terms-soft:  rgba(180, 83, 9, 0.10);
+  --cat-terms-shadow: rgba(180, 83, 9, 0.35);
   --text: #1c1917;                        /* Color.redmedDark — headings + primary ink */
   --text-muted: #78716c;                  /* Color.redmedMuted */
   --text-dim: rgba(28, 25, 23, 0.45);
@@ -102,34 +114,37 @@ body {
   color: var(--text-muted);
   margin-bottom: 16px;
 }
+.legal-nav a[href="#privacy"]  { --chip: var(--cat-privacy);  --chip-soft: var(--cat-privacy-soft);  --chip-shadow: var(--cat-privacy-shadow); }
+.legal-nav a[href="#security"] { --chip: var(--cat-security); --chip-soft: var(--cat-security-soft); --chip-shadow: var(--cat-security-shadow); }
+.legal-nav a[href="#terms"]    { --chip: var(--cat-terms);    --chip-soft: var(--cat-terms-soft);    --chip-shadow: var(--cat-terms-shadow); }
+
 .legal-nav a {
   font-family: var(--font);
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--text-muted);
+  color: var(--chip);
   text-decoration: none;
   padding: 7px 14px 7px 11px;
   border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  transition: color 0.15s, background 0.15s, border-color 0.15s, transform 0.15s;
+  border: 1px solid var(--chip-soft);
+  background: var(--chip-soft);
+  transition: color 0.15s, background 0.15s, border-color 0.15s, transform 0.15s, box-shadow 0.15s;
 }
 .legal-nav a:hover {
-  color: var(--text);
-  border-color: rgba(225, 29, 72, 0.2);
+  border-color: var(--chip);
   transform: translateY(-1px);
 }
 .legal-nav a:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--chip);
   outline-offset: 2px;
 }
 .legal-nav a[aria-current="page"] {
   color: #fff;
   font-weight: var(--fw-semi);
-  background: linear-gradient(120deg, var(--accent) 0%, #ff5470 100%);
+  background: var(--chip);
   border-color: transparent;
-  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.28);
+  box-shadow: 0 4px 14px var(--chip-shadow);
 }
 .legal-nav-ico {
   font-size: 12px;
@@ -149,7 +164,16 @@ body {
 }
 .legal-policy {
   scroll-margin-top: 64px;
+  display: none;
 }
+.legal-policy.active { display: block; }
+
+/* Section-scoped accent — the numbered badges, notice callout, and links
+   inside each tab pick up that tab's chip color instead of the flat brand
+   red, so the active color carries through the whole panel, not just the nav. */
+#privacy  { --accent: var(--cat-privacy);  --accent-soft: var(--cat-privacy-soft); }
+#security { --accent: var(--cat-security); --accent-soft: var(--cat-security-soft); }
+#terms    { --accent: var(--cat-terms);    --accent-soft: var(--cat-terms-soft); }
 
 @media (prefers-reduced-motion: reduce) {
   .legal-nav a { transition: none; }
@@ -450,5 +474,6 @@ html { scroll-padding-top: 72px; }
   .legal-nav, .skip-link { display: none !important; }
   body { background: #fff; }
   .legal-sheet { max-width: none; padding: 0; }
+  .legal-policy { display: block !important; }
   a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 11px; color: #444; }
 }
