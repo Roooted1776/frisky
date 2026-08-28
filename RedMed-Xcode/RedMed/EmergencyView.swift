@@ -3,7 +3,7 @@ import CoreLocation
 
 struct EmergencyView: View {
     /// Opacity keep-alive tabs never call `onDisappear` — ContentView passes
-    /// whether 911 is the front tab so GPS + seizure autodial can tear down.
+    /// whether 911 is the front tab so GPS + the seizure timer can tear down.
     var isVisible: Bool = true
 
     var body: some View {
@@ -92,7 +92,6 @@ private struct FindHelpLocationBlock: View {
             }
         }
         .task(id: isVisible) {
-            // First paint of Find Help before Core Location work.
             guard isVisible else {
                 locationManager.stop()
                 return
@@ -110,7 +109,6 @@ private struct FindHelpLocationBlock: View {
                 locationManager.stop()
             }
         }
-        // Visibility start/stop is owned by `.task(id: isVisible)` above.
         .onDisappear {
             locationManager.stop()
         }
@@ -143,15 +141,14 @@ private struct FindHelpSOSButton: View {
     }
 }
 
-/// Compact seizure stopwatch on Find Help — no aid copy. Auto-dials the local
-/// emergency number at 5:00.
+/// Compact seizure stopwatch on Find Help — no aid copy.
+/// At 5:00 the strip shows an explicit Call button. It never auto-dials.
 struct SeizureTimerStrip: View {
-    /// When Find Help is hidden under opacity keep-alive, cancel autodial.
+    /// When Find Help is hidden under opacity keep-alive, stop the timer.
     var isVisible: Bool = true
 
     @State private var running = false
     @State private var elapsed: TimeInterval = 0
-    /// Reference so hide/stop clears arming the tick Task can still see.
     @State private var engine = SeizureTimerEngine()
 
     private static let callAt: TimeInterval = 5 * 60
@@ -172,7 +169,7 @@ struct SeizureTimerStrip: View {
             }
             .frame(minWidth: 56, alignment: .leading)
 
-            Text(pastThreshold ? "5:00 — call" : "→ \(EmergencyNumber.current) at 5:00")
+            Text(pastThreshold ? "5:00 — tap Call" : "Call \(EmergencyNumber.current) at 5:00")
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundColor(pastThreshold ? .redmedAccent : .redmedMuted)
                 .lineLimit(1)
@@ -180,6 +177,22 @@ struct SeizureTimerStrip: View {
             Spacer(minLength: 4)
 
             HStack(spacing: 6) {
+                if pastThreshold {
+                    Button("Call") {
+                        RedMedHaptics.medium()
+                        PublicEmergencyAid.dial()
+                    }
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.redmedAccent)
+                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
+                    .buttonStyle(RedMedPressStyle(scale: 0.95, haptic: nil))
+                    .accessibilityLabel("Call \(EmergencyNumber.current)")
+                    .accessibilityHint("Opens the Phone app. RedMed never dials by itself.")
+                }
+
                 Button("Reset") {
                     RedMedHaptics.light()
                     stop(reset: true)
@@ -235,24 +248,11 @@ struct SeizureTimerStrip: View {
         guard isVisible else { return }
         stop(reset: true)
         running = true
-        engine.autodialArmed = true
         let started = Date()
-        let engine = self.engine
         engine.task = Task { @MainActor in
             while !Task.isCancelled {
                 elapsed = Date().timeIntervalSince(started)
-                if elapsed >= Self.callAt {
-                    let shouldDial = engine.autodialArmed
-                    stop(reset: false)
-                    if shouldDial, let url = EmergencyNumber.dialURL {
-                        // Call the completion-handler overload explicitly: bare
-                        // `open(_:)` resolves to the async one in here and would
-                        // need `await`.
-                        UIApplication.shared.open(url, options: [:], completionHandler: nil)
-                    }
-                    return
-                }
-                // Display is mm:ss — 1s ticks are enough (was 200ms).
+                // Keep counting after 5:00 so duration stays visible. Never dial.
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
             }
         }
@@ -261,7 +261,6 @@ struct SeizureTimerStrip: View {
     private func stop(reset: Bool) {
         engine.task?.cancel()
         engine.task = nil
-        engine.autodialArmed = false
         running = false
         if reset { elapsed = 0 }
     }
@@ -272,10 +271,9 @@ struct SeizureTimerStrip: View {
     }
 }
 
-/// Holds the seizure tick Task + autodial arm across opacity tab hides.
+/// Holds the seizure tick Task across opacity tab hides.
 private final class SeizureTimerEngine {
     var task: Task<Void, Never>?
-    var autodialArmed = false
 }
 
 // MARK: - GPS Card
@@ -358,14 +356,8 @@ struct InfoCard: View {
 
 // MARK: - Location Manager
 class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
-    /// Created only in `start()` — never at view/`@main` init.
     private var manager: CLLocationManager?
     @Published var location: CLLocation?
-    /// Set while a request is outstanding (including a pending authorization
-    /// prompt); cleared by `stop()`. Guards `locationManagerDidChangeAuthorization`
-    /// so a permission callback that lands after the owner has left the 911 tab
-    /// (`stop()` already called) can't still fire a one-shot GPS read — matches
-    /// `NearbyHospitalFinder`'s `isLoading` guard on the same delegate callback.
     private var wantsLocation = false
 
     func start() {
@@ -383,11 +375,8 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
         switch m.authorizationStatus {
         case .notDetermined:
-            // Prompt only — wait for authorization callback before GPS.
             m.requestWhenInUseAuthorization()
         case .authorizedAlways, .authorizedWhenInUse:
-            // One-shot fix is enough for EMS coordinate copy — continuous GPS
-            // stays for accuracy callbacks only if the first fix is stale/nil.
             m.requestLocation()
         case .denied, .restricted:
             break
@@ -413,23 +402,18 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let latest = locations.last else { return }
-        // Skip near-identical fixes — every @Published tick used to rebuild Find Help.
         if let prev = location,
            prev.distance(from: latest) < 8,
            abs(prev.horizontalAccuracy - latest.horizontalAccuracy) < 15 {
             return
         }
-        // Delegate runs on the thread that created the manager (main here).
         if Thread.isMainThread {
             location = latest
         } else {
             DispatchQueue.main.async { self.location = latest }
         }
-        // Keep the relaxed start settings — Best+5m used to rebuild Find Help constantly.
-        // HundredMeters + 25m (set in start) is enough for EMS coordinate copy.
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        // Keep listening — GPS can fail once then recover outdoors.
     }
 }
