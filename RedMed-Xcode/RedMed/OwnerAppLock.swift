@@ -145,11 +145,11 @@ struct OwnerAppLock<Content: View>: View {
             lockCycleStartedAt = Date()
             OwnerLockPresentation.setLocked(gate == .locked)
             logLock("onAppear hasKeyWindow=\(hasKeyWindow) hasHostWindow=\(hasHostWindow)")
-            scheduleHardWatchdog()
             if gate == .unlocked {
-                // First-launch consent: no cream lock in front of acknowledgment.
+                // First-launch consent: no cream lock, no Face ID watchdog.
                 revealSwitcherCover()
             } else {
+                scheduleHardWatchdog()
                 // Face ID on this first frame — deferredWarmUp waits inside
                 // startUnlockPipeline so cream before the sheet is not competing
                 // with shell/Keychain work.
@@ -217,6 +217,8 @@ struct OwnerAppLock<Content: View>: View {
             RedMedSignpost.trace("task watchdog forced showUnlockControl=true")
         }
         .task {
+            // First-launch acknowledgment: do not hit Keychain under the first page.
+            guard gate == .locked else { return }
             // .utility priority alone wasn't enough to rule out contention
             // with the system Face ID sheet's very first presentation tick —
             // also stagger this off the exact instant evaluatePolicy fires,
