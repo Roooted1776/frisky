@@ -51,7 +51,9 @@ struct OwnerAppLock<Content: View>: View {
         case unlocked
     }
 
-    @State private var gate: Gate = .locked
+    /// First launch (no consent yet) skips the lock so Before you continue
+    /// is the first page. After Agree, later opens still Face ID first.
+    @State private var gate: Gate = ConsentSettings.hasAcceptedCurrent ? .locked : .unlocked
     @State private var isAuthenticating = false
     @State private var biometryFailed = false
     @State private var faceIDUnavailableReason: BiometricAuth.UnavailableReason?
@@ -144,10 +146,15 @@ struct OwnerAppLock<Content: View>: View {
             OwnerLockPresentation.setLocked(gate == .locked)
             logLock("onAppear hasKeyWindow=\(hasKeyWindow) hasHostWindow=\(hasHostWindow)")
             scheduleHardWatchdog()
-            // Face ID on this first frame — deferredWarmUp waits inside
-            // startUnlockPipeline so cream before the sheet is not competing
-            // with shell/Keychain work.
-            tryAutoUnlockIfActive()
+            if gate == .unlocked {
+                // First-launch consent: no cream lock in front of acknowledgment.
+                revealSwitcherCover()
+            } else {
+                // Face ID on this first frame — deferredWarmUp waits inside
+                // startUnlockPipeline so cream before the sheet is not competing
+                // with shell/Keychain work.
+                tryAutoUnlockIfActive()
+            }
         }
         .task(id: authGeneration) {
             guard gate == .locked else { return }

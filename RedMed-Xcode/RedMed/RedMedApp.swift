@@ -8,8 +8,9 @@ struct RedMedApp: App {
         WindowGroup {
             // Owner UI lives in Main.swift — not HTML.
             // Privacy cover hides PHI from iOS app-switcher snapshots.
-            // Face ID first (no extra pages before the lock). Consent is
-            // first-launch only, after unlock, never on passerby tapper.
+            // First launch: acknowledgment (Before you continue) with no
+            // Face ID in front. After Agree, later opens Face ID then Main.
+            // Consent never on passerby tapper.
             PrivacySnapshotGuard {
                 OwnerAppLock {
                     ConsentGateView {

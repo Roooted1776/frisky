@@ -1,9 +1,8 @@
 import SwiftUI
 
-/// Legal consent after Face ID. First launch (or after a material policy
-/// version bump) only — re-showing it on every unlock was hangtime cream
-/// between lock and Main. Never in front of the lock shell. Never on
-/// passerby tapper.
+/// Legal consent. First page on first launch (or after a material policy
+/// version bump). Face ID is skipped until Agree so this is not behind
+/// cream. Returning owners skip it. Never on passerby tapper.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
     /// Bump with the Version line in Help.html Terms / Privacy / Security
