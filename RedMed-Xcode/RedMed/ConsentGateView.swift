@@ -22,7 +22,6 @@ enum ConsentSettings {
 struct ConsentGateView<Content: View>: View {
     @State private var hasAccepted = false
     @State private var checked = false
-    @State private var showPolicy: HelpDocument.Policy?
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
@@ -50,7 +49,7 @@ struct ConsentGateView<Content: View>: View {
 
                     VStack(alignment: .leading, spacing: 10) {
                         Text("RedMed is a personal medical ID and first-aid reference on this iPhone. It is not a medical device, does not diagnose or treat, and does not replace emergency dispatch. Always call emergency services first in a real emergency.")
-                        Text("Your profile stays on this iPhone, and on a band if you write one — RedMed runs no server for it. Read the full Terms, Privacy, and Security pages below before continuing.")
+                        Text("Your profile stays on this iPhone, and on a band if you write one — RedMed runs no server for it. Privacy, Security, and Terms are in the block below.")
                     }
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.redmedMuted)
@@ -96,31 +95,12 @@ struct ConsentGateView<Content: View>: View {
                         .foregroundColor(.redmedMuted)
                         .padding(.horizontal, 4)
 
-                    VStack(spacing: 0) {
-                        ForEach(HelpDocument.Policy.allCases.filter { $0 != .guide }) { policy in
-                            if policy != .privacy {
-                                Divider().overlay(Color.redmedDivider).padding(.leading, 16)
-                            }
-                            Button {
-                                showPolicy = policy
-                            } label: {
-                                HStack {
-                                    Text(policy.title)
-                                        .font(.system(size: RedMedChrome.rowFont, weight: .medium))
-                                        .foregroundColor(.redmedDark)
-                                    Spacer()
-                                    Image(systemName: "chevron.right")
-                                        .font(.system(size: 13, weight: .semibold))
-                                        .foregroundColor(.redmedMuted.opacity(0.55))
-                                }
-                                .padding(.horizontal, RedMedChrome.pagePadX)
-                                .padding(.vertical, RedMedChrome.rowVPad)
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(RedMedPressStyle(scale: 0.98, haptic: nil))
-                        }
-                    }
-                    .redmedBox()
+                    Text(ConsentPolicyCopy.text)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.redmedMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(14)
+                        .redmedBox(flatten: false)
 
                     Button {
                         RedMedHaptics.light()
@@ -165,16 +145,6 @@ struct ConsentGateView<Content: View>: View {
                 guard locationEnabled else { return }
                 locationSuggester.refresh()
             }
-        }
-        .sheet(item: $showPolicy) { policy in
-            VStack(spacing: 0) {
-                OwnerModalChrome(title: policy.title, leadingTitle: "Done") {
-                    showPolicy = nil
-                }
-                LocalWebView(filename: HelpDocument.bundledFile, fragment: policy.fragment)
-            }
-            .background(Color.redmedBg.ignoresSafeArea())
-            .presentationBackground(Color.redmedBg)
         }
     }
 }
