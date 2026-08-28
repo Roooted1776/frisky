@@ -308,7 +308,7 @@
     <ul>
       <li>Medical information is written to a <strong>passive NXP NTAG216</strong> at 13.56 MHz (ISO 14443A Type 2, NDEF blank unlocked). No battery, no Bluetooth, no sensors. Laser face: <strong>MED ID</strong> only.</li>
       <li>Any smartphone that deliberately taps it can read the card, including under iOS Background Tag Reading when the phone is off or locked. That is intentional so responders need no app.</li>
-      <li>The payload uses public-key AES packing. Treat the band like a printed medical ID.</li>
+      <li>The payload uses AES-GCM packing with a public client key (not confidentiality). Treat the band like a printed medical ID.</li>
       <li>Rewrite the band after you change your profile.</li>
       <li>Returns and refunds follow checkout terms and applicable state law. Overwrite or erase the chip before returning when you can — we cannot wipe it remotely.</li>
     </ul>

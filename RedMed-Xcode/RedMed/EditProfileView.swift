@@ -573,21 +573,20 @@ struct EditProfileView: View {
             dismiss()
             return
         }
-        if requireAuthOnSave {
-            BiometricAuth.authenticate(
-                reason: "Confirm with Face ID, Touch ID, or passcode to save your RedMed profile.",
-                force: true
-            ) { outcome in
-                if outcome == .success {
-                    commitSave()
-                } else if outcome == .notVerified {
-                    showAuthFailedAlert = true
-                    VaultHistoryStore.shared.record(.unlockFailed, detail: "editSave")
-                }
+        let reason = requireAuthOnSave
+            ? "Confirm with Face ID, Touch ID, or passcode to save your RedMed profile."
+            : "Confirm with Face ID, Touch ID, or passcode to update your RedMed profile."
+        BiometricAuth.authenticate(
+            reason: reason,
+            force: true
+        ) { outcome in
+            if outcome == .success {
+                commitSave()
+            } else if outcome == .notVerified {
+                showAuthFailedAlert = true
+                VaultHistoryStore.shared.record(.unlockFailed, detail: "editSave")
             }
-            return
         }
-        commitSave()
     }
 
     private func commitSave() {

@@ -3,9 +3,9 @@ import CoreHaptics
 import Foundation
 import UIKit
 
-/// Light UIKit taps shared by tabs / chrome / SOS / Aid. Respects Help → Settings.
+/// Light UIKit taps shared by tabs / chrome / SOS / Aid. Respects the haptic toggle.
 enum RedMedHaptics {
-    /// `@AppStorage` / Help → Settings toggle. Default on when unset.
+    /// `@AppStorage` / Before you continue toggle. Default on when unset.
     /// Lives here (not on `@MainActor` `HapticEngine`) so nonisolated callers stay clean under Swift 6.
     static let enabledKey = "redmed.hapticsEnabled"
 
@@ -69,7 +69,7 @@ final class HapticEngine: ObservableObject {
         #endif
     }
 
-    /// In-app preference (Help → Settings). iOS System Haptics also suppress playback.
+    /// In-app preference (Before you continue). iOS System Haptics also suppress playback.
     var isEnabled: Bool {
         if UserDefaults.standard.object(forKey: RedMedHaptics.enabledKey) == nil { return true }
         return UserDefaults.standard.bool(forKey: RedMedHaptics.enabledKey)

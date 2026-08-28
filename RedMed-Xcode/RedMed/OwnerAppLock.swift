@@ -7,7 +7,8 @@ import UIKit
 ///
 /// Keychain profile is biometry-bound (`KeychainStore`); Face ID parks an
 /// `LAContext` so SecItem can read without a second sheet. Background clears
-/// the park. Prefetch without context only resolves legacy unbound blobs.
+/// the park. Prefetch skips legacy unbound blobs so PHI is not decoded
+/// before Face ID succeeds.
 ///
 /// **Warm rules:** `PasserbyHTMLCardView.warmShellCache()` (string) may overlap
 /// Face ID. Do **not** create a WKWebView during Face ID (cream hang). After
@@ -101,12 +102,9 @@ struct OwnerAppLock<Content: View>: View {
             let generation = authGeneration
             // Was 15s, then 8s — both still read as a hard hang (blank cream,
             // nothing to tap) on a cold launch where the system sheet never
-            // presents at all. When that happens there is no in-progress
-            // Face ID / passcode sheet to interrupt (the user sees nothing,
-            // full stop), so a shorter timeout does not risk cutting off a
-            // real, slower human mid-interaction the way it would if a sheet
-            // were actually up — it only shortens the blank-cream wait for
-            // the no-sheet failure mode this watchdog exists to catch.
+            // presents at all. The short budget only kills a hung evaluate
+            // with no system UI (scene `.active`). A live Face ID / passcode
+            // sheet drives `.inactive`; that path returns without cancel.
             //
             // Budgeted from `lockCycleStartedAt`, not from this generation's
             // own start — the fast-fail-then-retry path bumps authGeneration
@@ -123,7 +121,13 @@ struct OwnerAppLock<Content: View>: View {
             RedMedSignpost.trace("task watchdog woke: generation=\(generation) currentGen=\(authGeneration) gate=\(gate)")
             guard gate == .locked, generation == authGeneration else { return }
             if isAuthenticating {
-                // Hung Face ID sheet — kill it so Proceed can start a new one.
+                // A live Face ID / passcode sheet puts the scene `.inactive`.
+                // Do not tear that down — passcode after a Face ID miss
+                // routinely takes longer than this 4.5s cream-hang budget.
+                // Kill only a hung evaluate with no system UI (scene `.active`).
+                if BiometricAuth.isEvaluating, scenePhase != .active {
+                    return
+                }
                 BiometricAuth.cancelInFlight()
                 isAuthenticating = false
             } else if isLoadingProfile {
@@ -265,6 +269,7 @@ struct OwnerAppLock<Content: View>: View {
         if gate == .unlocked {
             profile.purgeFromMemory()
             BiometricAuth.resetLaunchUnlock()
+            CrashMotionGuard.shared.stopMonitoring()
             lockCycleStartedAt = Date()
             gate = .locked
             scheduleHardWatchdog()
@@ -296,6 +301,9 @@ struct OwnerAppLock<Content: View>: View {
             guard gate == .locked, cycleID == lockCycleID else { return }
             logLock("hard watchdog fired isAuthenticating=\(isAuthenticating)")
             if isAuthenticating {
+                if BiometricAuth.isEvaluating, scenePhase != .active {
+                    return
+                }
                 BiometricAuth.cancelInFlight()
                 isAuthenticating = false
             } else if isLoadingProfile {
