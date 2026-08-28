@@ -144,7 +144,10 @@ struct ConsentGateView<Content: View>: View {
                     .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
                     .accessibilityAddTraits(checked ? [.isButton, .isSelected] : .isButton)
 
-                    PrimaryButton(title: "Agree and continue", disabled: !checked) {
+                    PrimaryButton(title: "Agree and continue") {
+                        // One tap — the pink button looked tappable while
+                        // disabled behind the checkbox, so Agree did nothing.
+                        checked = true
                         ConsentSettings.recordAcceptance()
                         RedMedHaptics.success()
                         var t = Transaction()
