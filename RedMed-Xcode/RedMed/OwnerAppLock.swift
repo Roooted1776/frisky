@@ -22,6 +22,19 @@ struct OwnerAppLock<Content: View>: View {
     @Environment(\.scenePhase) private var scenePhase
     @ViewBuilder var content: () -> Content
 
+    /// Apple does **not** timeout `evaluatePolicy`. These are RedMed backstops.
+    /// Do not raise `inactiveSheetExtraSeconds` without an explicit ask — Apple's
+    /// passcode sheet has no OS limit, so a longer budget is a product decision.
+    private enum AuthBudget {
+        /// Hung evaluate with no system UI (scene `.active`).
+        static let noSheetSeconds: TimeInterval = 4.5
+        /// GCD twin of `noSheetSeconds` (independent of Task cancellation).
+        static let noSheetGCDSeconds: TimeInterval = 5.0
+        /// Extra wait when scene is `.inactive` (live or ghost sheet) before
+        /// cancel. 4.5s + 25s ≈ 30s total from lock-cycle start.
+        static let inactiveSheetExtraSeconds: TimeInterval = 25.0
+    }
+
     private enum Gate {
         case locked
         case unlocked
@@ -120,9 +133,12 @@ struct OwnerAppLock<Content: View>: View {
             // nothing to tap) on a cold launch where the system sheet never
             // presents at all. The short budget only kills a hung evaluate
             // with no system UI (scene `.active`). A live Face ID / passcode
-            // sheet drives `.inactive`; that path is given 30s before cancel
-            // so a slow passcode fallback is not torn down at 4.5s, but a
-            // ghost sheet (inactive, no UI) cannot hang forever.
+            // sheet drives `.inactive`; that path is given
+            // `AuthBudget.inactiveSheetExtraSeconds` more (≈30s total) before
+            // cancel so a slow passcode fallback is not torn down at 4.5s,
+            // but a ghost sheet (inactive, no UI) cannot hang forever.
+            // Apple has no evaluatePolicy timeout — 30s is ours. Do not raise
+            // it without an explicit ask (slow typists vs ghost hangs).
             //
             // Budgeted from `lockCycleStartedAt`, not from this generation's
             // own start — the fast-fail-then-retry path bumps authGeneration
@@ -133,7 +149,7 @@ struct OwnerAppLock<Content: View>: View {
             // start caps the whole cycle regardless of how many retries
             // happen inside it.
             let elapsed = Date().timeIntervalSince(lockCycleStartedAt ?? Date())
-            let remaining = max(0, 4.5 - elapsed)
+            let remaining = max(0, AuthBudget.noSheetSeconds - elapsed)
             RedMedSignpost.trace("task watchdog armed: generation=\(generation) remaining=\(remaining)")
             try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
             RedMedSignpost.trace("task watchdog woke: generation=\(generation) currentGen=\(authGeneration) gate=\(gate)")
@@ -141,10 +157,11 @@ struct OwnerAppLock<Content: View>: View {
             if isAuthenticating {
                 // A live Face ID / passcode sheet puts the scene `.inactive`.
                 // Do not tear that down at 4.5s — passcode after a Face ID
-                // miss routinely takes longer. Wait 25s more, then cancel
+                // miss routinely takes longer. Wait
+                // `AuthBudget.inactiveSheetExtraSeconds` more, then cancel
                 // so a ghost sheet (inactive, no UI) cannot hang forever.
                 if BiometricAuth.isEvaluating, scenePhase != .active {
-                    try? await Task.sleep(nanoseconds: 25_000_000_000)
+                    try? await Task.sleep(nanoseconds: UInt64(AuthBudget.inactiveSheetExtraSeconds * 1_000_000_000))
                     guard gate == .locked, generation == authGeneration else { return }
                 }
                 BiometricAuth.cancelInFlight()
@@ -319,13 +336,13 @@ struct OwnerAppLock<Content: View>: View {
         lockCycleID &+= 1
         let cycleID = lockCycleID
         RedMedSignpost.trace("GCD watchdog armed: cycleID=\(cycleID)")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + AuthBudget.noSheetGCDSeconds) {
             RedMedSignpost.trace("GCD watchdog woke: cycleID=\(cycleID) currentCycle=\(lockCycleID) gate=\(gate)")
             guard gate == .locked, cycleID == lockCycleID else { return }
             logLock("hard watchdog fired isAuthenticating=\(isAuthenticating)")
             if isAuthenticating {
                 if BiometricAuth.isEvaluating, scenePhase != .active {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 25.0) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + AuthBudget.inactiveSheetExtraSeconds) {
                         guard gate == .locked, cycleID == lockCycleID else { return }
                         logLock("hard watchdog passcode budget fired")
                         if isAuthenticating {
