@@ -157,7 +157,14 @@ struct ConsentGateView<Content: View>: View {
         }
         .onAppear {
             guard locationEnabled else { return }
-            locationSuggester.refresh()
+            // Status read is cheap (no CLLocationManager), but still hop
+            // off the first consent paint so Face ID → Before you continue
+            // is not fighting a locationd ping.
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 200_000_000)
+                guard locationEnabled else { return }
+                locationSuggester.refresh()
+            }
         }
         .sheet(item: $showPolicy) { policy in
             VStack(spacing: 0) {

@@ -221,9 +221,17 @@ struct OwnerAppLock<Content: View>: View {
             } else {
                 RedMedSignpost.end(.coldLaunchWindow)
                 OwnerLockPresentation.setLocked(false)
-                Task { @MainActor in
-                    await Task.yield()
+                // CoreMotion + vault file I/O on the same turn as consent
+                // first paint (and right after Face ID's Neural Engine) was
+                // a post-unlock hitch. Yield is not enough — wait a beat
+                // so Before you continue can paint, then start hardware.
+                Task(priority: .utility) { @MainActor in
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    guard gate == .unlocked else { return }
                     CrashMotionGuard.shared.startMonitoring()
+                    Task.detached(priority: .utility) {
+                        _ = HIPAAOfflineVault.prepare()
+                    }
                 }
                 // Distinct WKWebView from the RedMed tab's own load (which
                 // uses the string cache, not a pool) — deferred well past

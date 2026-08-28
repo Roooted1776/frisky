@@ -35,14 +35,15 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "NO"
-      ignoresPersistentStateOnLaunch = "NO"
+      ignoresPersistentStateOnLaunch = "YES"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
-      enableGPUValidationMode = "1"
+      enableGPUValidationMode = "2"
       enableGPUFrameCaptureMode = "3"
       allowLocationSimulation = "YES"
       disableMainThreadChecker = "YES"
       disablePerformanceAntipatternChecker = "YES"
+      stopOnEveryMainThreadCheckerIssue = "NO"
       viewDebuggingEnabled = "No"
       queueDebuggingEnabled = "No"
       GPUProfilerEnabled = "No">
@@ -60,6 +61,21 @@
          <EnvironmentVariable
             key = "MTL_DEBUG_LAYER"
             value = "0"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "METAL_DEVICE_WRAPPER_TYPE"
+            value = "0"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "MTL_SHADER_VALIDATION"
+            value = "0"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "IDEPreferLogStreaming"
+            value = "YES"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>

@@ -32,10 +32,10 @@ struct RedMedApp: App {
                 // "CPU during Face ID" spike. Match OwnerAppLock.deferredWarmUp.
                 try? await Task.sleep(nanoseconds: 300_000_000)
                 PasserbyHTMLCardView.scheduleShellWarmOnce()
-                Task.detached(priority: .utility) {
-                    try? await Task.sleep(nanoseconds: 1_200_000_000)
-                    _ = HIPAAOfflineVault.prepare()
-                }
+                // Vault directory create used to run ~1.5s after first paint,
+                // which overlapped a slow Face ID / passcode sheet and hit
+                // complete-protection file I/O during the Neural Engine window.
+                // OwnerAppLock starts it after unlock instead.
             }
             .onOpenURL { url in
                 // Policies use redmed://main; owner embed status uses redmed://nfc.
