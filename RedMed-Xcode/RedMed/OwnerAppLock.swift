@@ -107,6 +107,7 @@ struct OwnerAppLock<Content: View>: View {
             RedMedSignpost.begin(.coldLaunchWindow)
             screenCaptured = UIScreen.main.isCaptured
             lockCycleStartedAt = Date()
+            OwnerLockPresentation.setLocked(gate == .locked)
             logLock("onAppear hasKeyWindow=\(hasKeyWindow)")
             scheduleHardWatchdog()
             tryAutoUnlockIfActive()
@@ -119,7 +120,9 @@ struct OwnerAppLock<Content: View>: View {
             // nothing to tap) on a cold launch where the system sheet never
             // presents at all. The short budget only kills a hung evaluate
             // with no system UI (scene `.active`). A live Face ID / passcode
-            // sheet drives `.inactive`; that path returns without cancel.
+            // sheet drives `.inactive`; that path is given 30s before cancel
+            // so a slow passcode fallback is not torn down at 4.5s, but a
+            // ghost sheet (inactive, no UI) cannot hang forever.
             //
             // Budgeted from `lockCycleStartedAt`, not from this generation's
             // own start — the fast-fail-then-retry path bumps authGeneration
@@ -137,11 +140,12 @@ struct OwnerAppLock<Content: View>: View {
             guard gate == .locked, generation == authGeneration else { return }
             if isAuthenticating {
                 // A live Face ID / passcode sheet puts the scene `.inactive`.
-                // Do not tear that down — passcode after a Face ID miss
-                // routinely takes longer than this 4.5s cream-hang budget.
-                // Kill only a hung evaluate with no system UI (scene `.active`).
+                // Do not tear that down at 4.5s — passcode after a Face ID
+                // miss routinely takes longer. Wait 25s more, then cancel
+                // so a ghost sheet (inactive, no UI) cannot hang forever.
                 if BiometricAuth.isEvaluating, scenePhase != .active {
-                    return
+                    try? await Task.sleep(nanoseconds: 25_000_000_000)
+                    guard gate == .locked, generation == authGeneration else { return }
                 }
                 BiometricAuth.cancelInFlight()
                 isAuthenticating = false
@@ -176,6 +180,7 @@ struct OwnerAppLock<Content: View>: View {
         }
         .onChange(of: gate) { _, newGate in
             if newGate == .locked {
+                OwnerLockPresentation.setLocked(true)
                 didAutoPromptThisLock = false
                 notInteractiveRetried = false
                 showUnlockControl = false
@@ -183,6 +188,7 @@ struct OwnerAppLock<Content: View>: View {
                 tryAutoUnlockIfActive()
             } else {
                 RedMedSignpost.end(.coldLaunchWindow)
+                OwnerLockPresentation.setLocked(false)
                 Task { @MainActor in
                     await Task.yield()
                     CrashMotionGuard.shared.startMonitoring()
@@ -256,6 +262,7 @@ struct OwnerAppLock<Content: View>: View {
             showUnlockControl = false
             profile.discardUnlockPrefetch()
             BiometricAuth.clearAuthenticationContext()
+            OwnerLockPresentation.setLocked(false)
             gate = .unlocked
         }
     }
@@ -285,6 +292,7 @@ struct OwnerAppLock<Content: View>: View {
             profile.purgeFromMemory()
             BiometricAuth.resetLaunchUnlock()
             CrashMotionGuard.shared.stopMonitoring()
+            OwnerLockPresentation.setLocked(true)
             lockCycleStartedAt = Date()
             gate = .locked
             scheduleHardWatchdog()
@@ -317,6 +325,17 @@ struct OwnerAppLock<Content: View>: View {
             logLock("hard watchdog fired isAuthenticating=\(isAuthenticating)")
             if isAuthenticating {
                 if BiometricAuth.isEvaluating, scenePhase != .active {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 25.0) {
+                        guard gate == .locked, cycleID == lockCycleID else { return }
+                        logLock("hard watchdog passcode budget fired")
+                        if isAuthenticating {
+                            BiometricAuth.cancelInFlight()
+                            isAuthenticating = false
+                        } else if isLoadingProfile {
+                            profileLoadFailed = true
+                        }
+                        showUnlockControl = true
+                    }
                     return
                 }
                 BiometricAuth.cancelInFlight()

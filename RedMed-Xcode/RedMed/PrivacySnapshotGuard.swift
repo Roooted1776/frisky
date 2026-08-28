@@ -167,7 +167,9 @@ final class SnapshotSafeCover {
     private func cover() {
         // Passerby tap card (Preview / Scan / band-style shell) is the public
         // EMT view — never veil it, matching PrivacySnapshotGuard's own rule.
-        guard !TapCardPresentation.isVisible, coverView == nil,
+        guard !TapCardPresentation.isVisible,
+              !OwnerLockPresentation.isLocked,
+              coverView == nil,
               let window = UIApplication.shared.connectedScenes
                 .compactMap({ $0 as? UIWindowScene })
                 .flatMap(\.windows)
@@ -184,5 +186,26 @@ final class SnapshotSafeCover {
     private func uncover() {
         coverView?.removeFromSuperview()
         coverView = nil
+    }
+}
+
+/// Cream lock shell is already opaque and has no PHI. A UIKit cover on
+/// `willResignActive` (Face ID puts the scene inactive) sat on top of
+/// **Proceed** and made a hung evaluate look indefinite — watchdogs
+/// showed the button, the cover hid it. Skip covering while locked.
+enum OwnerLockPresentation {
+    private static let lock = NSLock()
+    private static var locked = true
+
+    static var isLocked: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return locked
+    }
+
+    static func setLocked(_ locked: Bool) {
+        lock.lock()
+        self.locked = locked
+        lock.unlock()
     }
 }
