@@ -189,13 +189,16 @@ hangs with no sheet; that wait was the cream hang), but **not** before a
 window is key — `tryAutoUnlockIfActive` also gates on `hasKeyWindow` and
 retries from `UIWindow.didBecomeKeyNotification` if `onAppear` fires too
 early, because an `evaluatePolicy` call made before any window is key has
-been observed to never complete (no success, no error) until the 4.5s/5s
+been observed to never complete (no success, no error) until the 1s/1.5s
 watchdogs kill it — a *different* cream hang than the `.active`-wait one,
 now seen on every cold launch instead of occasionally. Apple does **not**
-timeout `evaluatePolicy` (no LA API for it). RedMed backstops: **4.5s/5s**
-only when the scene is `.active` (no sheet — nothing to interrupt);
+timeout `evaluatePolicy` (no LA API for it). RedMed backstops: **1s/1.5s**
+only when the scene is `.active` (no sheet — nothing to interrupt) — kept
+just above a real cold-launch `evaluatePolicy` round trip so a genuine
+sheet is not cancelled mid-presentation, but short enough that a true
+no-sheet hang reads as fast, not frozen;
 **60s total** when `.inactive` while evaluating so a slow passcode after a
-Face ID miss is not torn down at 4.5s, but a ghost sheet cannot hang
+Face ID miss is not torn down early, but a ghost sheet cannot hang
 forever; **90s** `BiometricAuth.timedOut` if the callback never fires
 (Erase / vault / NFC write) — must stay above the 60s unlock budget.
 Apple's passcode sheet has no OS timeout — 60s is ours.
