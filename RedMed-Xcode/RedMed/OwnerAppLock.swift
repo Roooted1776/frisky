@@ -169,6 +169,11 @@ struct OwnerAppLock<Content: View>: View {
             RedMedSignpost.trace("task watchdog woke: generation=\(generation) currentGen=\(authGeneration) gate=\(gate)")
             guard gate == .locked, generation == authGeneration else { return }
             if isAuthenticating {
+                #if targetEnvironment(simulator)
+                // Simulator Authenticate alert stays `.active` and is the
+                // only tappable UI. Do not convert it into Proceed.
+                if BiometricAuth.isEvaluating { return }
+                #endif
                 // A live Face ID / passcode sheet puts the scene `.inactive`.
                 // Do not tear that down at 4.5s — passcode after a Face ID
                 // miss routinely takes longer. Wait out the 60s inactive
@@ -395,6 +400,9 @@ struct OwnerAppLock<Content: View>: View {
             guard gate == .locked, cycleID == lockCycleID else { return }
             logLock("hard watchdog fired isAuthenticating=\(isAuthenticating)")
             if isAuthenticating {
+                #if targetEnvironment(simulator)
+                if BiometricAuth.isEvaluating { return }
+                #endif
                 if BiometricAuth.isEvaluating, scenePhase != .active {
                     let elapsedNow = Date().timeIntervalSince(lockCycleStartedAt ?? Date())
                     let extra = max(0, AuthBudget.inactiveSheetTotalSeconds - elapsedNow)

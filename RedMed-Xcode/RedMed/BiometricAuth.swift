@@ -106,8 +106,19 @@ enum BiometricAuth {
             return
         }
 
+        // Simulator: never evaluatePolicy. Enrolled-sim Face ID hangs
+        // with no sheet (blank cream LockEntryPage on cold start).
+        #if targetEnvironment(simulator)
+        _ = cancelInFlight()
+        DispatchQueue.main.async {
+            presentSimulatorPrompt(
+                reason: reason,
+                allowPasscode: allowPasscode,
+                completion: completion
+            )
+        }
+        #else
         let cancelledLiveContext = cancelInFlight()
-
         let context = makeContext(allowPasscode: allowPasscode)
         var error: NSError?
         let policy: LAPolicy = allowPasscode
@@ -117,15 +128,6 @@ enum BiometricAuth {
         let canEvaluate = context.canEvaluatePolicy(policy, error: &error)
         RedMedSignpost.trace("canEvaluatePolicy=\(canEvaluate) error=\(String(describing: error))")
         guard canEvaluate else {
-            #if targetEnvironment(simulator)
-            DispatchQueue.main.async {
-                presentSimulatorPrompt(
-                    reason: reason,
-                    allowPasscode: allowPasscode,
-                    completion: completion
-                )
-            }
-            #else
             let failOutcome: Outcome
             if isNotInteractive(error) {
                 failOutcome = .notInteractive
@@ -135,7 +137,6 @@ enum BiometricAuth {
                 failOutcome = .declined
             }
             DispatchQueue.main.async { completion(failOutcome) }
-            #endif
             return
         }
 
@@ -190,14 +191,21 @@ enum BiometricAuth {
         } else {
             runEvaluate()
         }
+        #endif
     }
 
     /// Live `evaluatePolicy` in progress (including the teardown wait).
     /// Scene `.inactive` during this is the Face ID sheet — do not relock.
+    /// Simulator Authenticate alert counts too, so watchdogs do not
+    /// swap in Proceed on top of a tappable prompt.
     static var isEvaluating: Bool {
         parkLock.lock()
         defer { parkLock.unlock() }
+        #if targetEnvironment(simulator)
+        return inFlightContext != nil || simulatorPromptUp
+        #else
         return inFlightContext != nil
+        #endif
     }
 
     /// Kill a hung / leftover Face ID sheet so Proceed can start a fresh one.
@@ -208,10 +216,24 @@ enum BiometricAuth {
         parkLock.lock()
         let ctx = inFlightContext
         inFlightContext = nil
+        #if targetEnvironment(simulator)
+        let simUp = simulatorPromptUp
+        simulatorPromptUp = false
+        let simAlert = simulatorAlert
+        simulatorAlert = nil
+        #endif
         parkLock.unlock()
         ctx?.invalidate()
+        #if targetEnvironment(simulator)
+        if let simAlert {
+            simAlert.dismiss(animated: false)
+        }
+        if ctx != nil || simUp { markSessionEnded() }
+        return ctx != nil || simUp
+        #else
         if ctx != nil { markSessionEnded() }
         return ctx != nil
+        #endif
     }
 
     /// LAContext from the latest successful evaluate, if still valid for SecItem.
@@ -335,32 +357,52 @@ enum BiometricAuth {
     }
 
     #if targetEnvironment(simulator)
+    private static var simulatorPromptUp = false
+    private static weak var simulatorAlert: UIAlertController?
+
     private static func presentSimulatorPrompt(
         reason: String,
         allowPasscode: Bool,
         completion: @escaping (Outcome) -> Void
     ) {
-        guard let top = topViewController() else {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                guard let retry = topViewController() else {
-                    completion(.unavailable(.notAvailable))
-                    return
-                }
-                presentAlert(
-                    on: retry,
-                    reason: reason,
-                    allowPasscode: allowPasscode,
-                    completion: completion
-                )
-            }
+        parkLock.lock()
+        simulatorPromptUp = true
+        parkLock.unlock()
+        presentSimulatorPrompt(reason: reason, allowPasscode: allowPasscode, attempt: 0, completion: completion)
+    }
+
+    private static func presentSimulatorPrompt(
+        reason: String,
+        allowPasscode: Bool,
+        attempt: Int,
+        completion: @escaping (Outcome) -> Void
+    ) {
+        if let top = topViewController(), top.presentedViewController == nil {
+            presentAlert(
+                on: top,
+                reason: reason,
+                allowPasscode: allowPasscode,
+                completion: completion
+            )
             return
         }
-        presentAlert(
-            on: top,
-            reason: reason,
-            allowPasscode: allowPasscode,
-            completion: completion
-        )
+        // Cold start: SwiftUI host / key window can lag evaluate by a
+        // few hundred ms. Retry instead of leaving blank cream.
+        guard attempt < 10 else {
+            parkLock.lock()
+            simulatorPromptUp = false
+            parkLock.unlock()
+            completion(.notInteractive)
+            return
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            presentSimulatorPrompt(
+                reason: reason,
+                allowPasscode: allowPasscode,
+                attempt: attempt + 1,
+                completion: completion
+            )
+        }
     }
 
     private static func presentAlert(
@@ -369,23 +411,30 @@ enum BiometricAuth {
         allowPasscode: Bool,
         completion: @escaping (Outcome) -> Void
     ) {
-        if top.presentedViewController != nil {
-            completion(.declined)
-            return
-        }
         let alert = UIAlertController(
             title: allowPasscode ? "Face ID or Passcode" : "Face ID",
             message: reason,
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "Don't Allow", style: .cancel) { _ in
+            parkLock.lock()
+            simulatorPromptUp = false
+            simulatorAlert = nil
+            parkLock.unlock()
+            markSessionEnded()
             completion(.declined)
         })
         alert.addAction(UIAlertAction(title: "Authenticate", style: .default) { _ in
+            parkLock.lock()
+            simulatorPromptUp = false
+            simulatorAlert = nil
+            parkLock.unlock()
             didUnlockThisLaunch = true
+            markSessionEnded()
             // Simulator has no real ACL biometry — empty park; Keychain uses legacy path.
             completion(.success)
         })
+        simulatorAlert = alert
         top.present(alert, animated: true)
     }
 
