@@ -429,9 +429,10 @@ class ProfileData: ObservableObject {
         }
     }
 
-    /// Embed JSON only (no AES) — unlock critical path.
-    private static func previewArtifactsJSONOnly(from blob: PersistedProfile) -> String? {
-        let chip = NFCChipProfile(
+    /// Shared `PersistedProfile` → `NFCChipProfile` mapping used by both the
+    /// JSON-only and full (payload + JSON) preview artifact builders below.
+    private static func chip(from blob: PersistedProfile) -> NFCChipProfile {
+        NFCChipProfile(
             name: blob.name,
             dob: blob.birthDate,
             blood: blob.bloodType,
@@ -444,7 +445,11 @@ class ProfileData: ObservableObject {
             },
             updated: blob.lastUpdated
         )
-        return ProfileNFCCodec.embedProfileJSON(from: chip)
+    }
+
+    /// Embed JSON only (no AES) — unlock critical path.
+    private static func previewArtifactsJSONOnly(from blob: PersistedProfile) -> String? {
+        ProfileNFCCodec.embedProfileJSON(from: chip(from: blob))
     }
 
     /// RedMed tab takes the Face ID–overlapped `#d=` once (nil after).
@@ -465,22 +470,10 @@ class ProfileData: ObservableObject {
 
     /// Off-main AES preview pack + embed JSON from a Keychain blob (no @Published writes).
     private static func previewArtifacts(from blob: PersistedProfile) -> (payload: String?, json: String?) {
-        let chip = NFCChipProfile(
-            name: blob.name,
-            dob: blob.birthDate,
-            blood: blob.bloodType,
-            donor: blob.isOrganDonor,
-            allergies: blob.allergies,
-            meds: blob.medications,
-            conditions: blob.conditions,
-            contacts: blob.contacts.map {
-                NFCChipContact(name: $0.name, rel: $0.relationship, phone: $0.phone)
-            },
-            updated: blob.lastUpdated
-        )
+        let builtChip = chip(from: blob)
         return (
-            ProfileNFCCodec.previewPayload(from: chip),
-            ProfileNFCCodec.embedProfileJSON(from: chip)
+            ProfileNFCCodec.previewPayload(from: builtChip),
+            ProfileNFCCodec.embedProfileJSON(from: builtChip)
         )
     }
 
