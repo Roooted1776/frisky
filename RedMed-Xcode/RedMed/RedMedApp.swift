@@ -29,9 +29,9 @@ struct RedMedApp: App {
                 // Registers the willResignActive/didBecomeActive observers before
                 // the app can possibly resign active for the first time.
                 SnapshotSafeCover.activate()
-                // First-launch acknowledgment must paint before tapper.html warm.
-                let delay: UInt64 = ConsentSettings.hasAcceptedCurrent ? 300_000_000 : 800_000_000
-                try? await Task.sleep(nanoseconds: delay)
+                // 112KB tapper.html + Face ID on the same tick was the Instruments
+                // "CPU during Face ID" spike. Match OwnerAppLock.deferredWarmUp.
+                try? await Task.sleep(nanoseconds: 300_000_000)
                 PasserbyHTMLCardView.scheduleShellWarmOnce()
                 // Vault directory create used to run ~1.5s after first paint,
                 // which overlapped a slow Face ID / passcode sheet and hit

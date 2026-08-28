@@ -20,9 +20,9 @@ enum ConsentSettings {
 
 struct ConsentGateView<Content: View>: View {
     @State private var hasAccepted = ConsentSettings.hasAcceptedCurrent
-    /// Returning owners skip the gate — Main is already armed. First launch
-    /// keeps Main off until Before you continue has painted, otherwise
-    /// WKWebView holds the launch heart on screen.
+    /// Returning owners skip the gate — arm Main on the same turn so Face ID
+    /// success is not a cream placeholder. First launch still yields once
+    /// so Before you continue paints before WKWebView.
     @State private var contentArmed = ConsentSettings.hasAcceptedCurrent
     @State private var checked = false
     @State private var openPolicy: HelpDocument.Policy?
@@ -52,10 +52,7 @@ struct ConsentGateView<Content: View>: View {
         .onAppear {
             guard !contentArmed else { return }
             Task { @MainActor in
-                // Let the acknowledgment replace the launch screen first.
-                // Arming Main on the same turn was the long heart.
                 await Task.yield()
-                try? await Task.sleep(nanoseconds: 180_000_000)
                 contentArmed = true
             }
         }
