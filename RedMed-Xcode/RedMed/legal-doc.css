@@ -9,11 +9,8 @@
   --accent: #e11d48;                      /* Color.redmedAccent */
   --accent-soft: rgba(225, 29, 72, 0.10);
 
-  /* Per-category chip colors — Get started / Privacy / Security / Terms,
-     kept out of the brand red so the four tabs read as distinct at a glance. */
-  --cat-faq:       #0d9488;
-  --cat-faq-soft:  rgba(13, 148, 136, 0.10);
-  --cat-faq-shadow: rgba(13, 148, 136, 0.35);
+  /* Per-category chip colors — Privacy / Security / Terms, kept out of the
+     brand red so the three tabs read as distinct at a glance. */
   --cat-privacy:       #2563eb;
   --cat-privacy-soft:  rgba(37, 99, 235, 0.10);
   --cat-privacy-shadow: rgba(37, 99, 235, 0.35);
@@ -117,7 +114,6 @@ body {
   color: var(--text-muted);
   margin-bottom: 16px;
 }
-.legal-nav a[href="#faq"]      { --chip: var(--cat-faq);      --chip-soft: var(--cat-faq-soft);      --chip-shadow: var(--cat-faq-shadow); }
 .legal-nav a[href="#privacy"]  { --chip: var(--cat-privacy);  --chip-soft: var(--cat-privacy-soft);  --chip-shadow: var(--cat-privacy-shadow); }
 .legal-nav a[href="#security"] { --chip: var(--cat-security); --chip-soft: var(--cat-security-soft); --chip-shadow: var(--cat-security-shadow); }
 .legal-nav a[href="#terms"]    { --chip: var(--cat-terms);    --chip-soft: var(--cat-terms-soft);    --chip-shadow: var(--cat-terms-shadow); }
@@ -175,7 +171,6 @@ body {
 /* Section-scoped accent — the numbered badges, notice callout, and links
    inside each tab pick up that tab's chip color instead of the flat brand
    red, so the active color carries through the whole panel, not just the nav. */
-#faq      { --accent: var(--cat-faq);      --accent-soft: var(--cat-faq-soft); }
 #privacy  { --accent: var(--cat-privacy);  --accent-soft: var(--cat-privacy-soft); }
 #security { --accent: var(--cat-security); --accent-soft: var(--cat-security-soft); }
 #terms    { --accent: var(--cat-terms);    --accent-soft: var(--cat-terms-soft); }

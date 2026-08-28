@@ -11,11 +11,11 @@
 <link rel="stylesheet" href="legal-doc.css">
 </head>
 <body class="legal-doc">
-<a class="skip-link" href="#faq">Skip to content</a>
+<a class="skip-link" href="#privacy">Skip to content</a>
 <div class="legal-sheet" id="top">
   <header class="legal-letterhead">
     <p class="legal-firm">RedMed</p>
-    <p class="legal-tagline">Help · Setup, FAQ, Privacy, Security, and Terms</p>
+    <p class="legal-tagline">Help · Privacy, Security, and Terms</p>
     <p class="legal-entity">RedMed · Local medical ID on your iPhone and band</p>
   </header>
 
@@ -27,56 +27,12 @@
   </aside>
 
   <nav class="legal-nav legal-nav-sticky" role="tablist" aria-label="Help sections">
-    <a href="#faq" role="tab" id="tab-faq" aria-controls="faq" aria-selected="true" tabindex="0"><span class="legal-nav-ico" aria-hidden="true">✦</span>Get started</a>
-    <a href="#privacy" role="tab" id="tab-privacy" aria-controls="privacy" aria-selected="false" tabindex="-1"><span class="legal-nav-ico" aria-hidden="true">🔒</span>Privacy</a>
+    <a href="#privacy" role="tab" id="tab-privacy" aria-controls="privacy" aria-selected="true" tabindex="0"><span class="legal-nav-ico" aria-hidden="true">🔒</span>Privacy</a>
     <a href="#security" role="tab" id="tab-security" aria-controls="security" aria-selected="false" tabindex="-1"><span class="legal-nav-ico" aria-hidden="true">🛡</span>Security</a>
     <a href="#terms" role="tab" id="tab-terms" aria-controls="terms" aria-selected="false" tabindex="-1"><span class="legal-nav-ico" aria-hidden="true">📜</span>Terms</a>
   </nav>
 
-  <section id="faq" class="legal-policy active" role="tabpanel" aria-labelledby="tab-faq" aria-hidden="false">
-    <hr class="legal-rule-thin" aria-hidden="true">
-    <h1 class="legal-doc-title">Get started</h1>
-    <p class="legal-parties">How to set up and use RedMed, and what to do if something isn't working</p>
-    <article class="legal-body">
-
-    <h2>What is RedMed?</h2>
-    <p>RedMed is a local emergency medical ID. You fill in your own name, blood type, allergies, medications, conditions, and emergency contacts on your iPhone. You can then write that same information to a passive NFC band. Anyone — EMS, a bystander, a hospital — who taps the band with a phone sees your card in their browser, with no app to install and no account to create.</p>
-    <p>RedMed also has a <strong>Find Help</strong> screen for calling your regional emergency number and reading coordinates aloud, and an <strong>Aid</strong> screen with general first-aid guidance for while you wait. Everything above runs on your phone; RedMed does not operate a server that stores your profile.</p>
-
-    <h2>Setting up your profile</h2>
-    <ol>
-      <li>Open RedMed and unlock with Face ID or Touch ID.</li>
-      <li>On a fresh install the RedMed tab shows three steps: fill your medical ID, Save, then write the band. Tap <strong>Fill medical ID</strong> (or Edit).</li>
-      <li>Fill in the fields you want responders to see. Every field is optional — leave anything blank you'd rather not share. Apple Health import is parked in this build (personal teams cannot provision HealthKit).</li>
-      <li>Save. Your profile is stored in this iPhone's Keychain only; it is not uploaded anywhere.</li>
-    </ol>
-
-    <h2>Writing your NFC band</h2>
-    <ol>
-      <li>Open the <strong>NFC</strong> tab and tap Write (Face ID). Owner Help also has Write to NFC.</li>
-      <li>Hold the band to the top of your iPhone (~1–2 inches) until it registers.</li>
-      <li>Rewrite the band any time your profile changes — the band only ever holds the last thing you wrote to it.</li>
-    </ol>
-    <p>Anyone who deliberately taps the band with their phone can open the card. That's intentional, so a responder doesn't need the RedMed app. See <a href="#security">Security</a> for how that works.</p>
-
-    <h2>Using Find Help</h2>
-    <p>Find Help shows coordinates on this iPhone so you can read them to dispatch, plus a one-tap call to your regional emergency number. Coordinates are not attached to the call and are not sent to 911 or to RedMed. The first time it needs location, iOS shows its own permission prompt.</p>
-
-    <h2>Erasing your data</h2>
-    <p>Help → <strong>Erase all RedMed data</strong> (Face ID required) removes your profile and local history from this iPhone. It does not erase a physical band — overwrite it with a new write, or dispose of it, if you want the old card gone.</p>
-
-    <h2>Troubleshooting</h2>
-    <p><strong>The band doesn't open a card when tapped.</strong> Hold it flatter against the phone and closer to the top edge — NFC needs the tag within about an inch of the antenna. Confirm the band was actually written (NFC tab shows its last-write status). A phone with NFC reading turned off in Settings, or a case that's too thick, can also block the tap.</p>
-    <p><strong>Location won't turn on.</strong> Check the Location toggle on the "Before you continue" screen shown after Face ID has Location enabled, then check iOS Settings → RedMed → Location if you previously denied the system permission prompt — RedMed can't re-trigger that prompt itself.</p>
-    <p><strong>Face ID keeps failing.</strong> Use the on-screen retry, or your passcode if biometrics are unavailable. If Face ID is failing system-wide, check iOS Settings → Face ID & Passcode.</p>
-    <p><strong>I don't see my changes on the band after tapping it.</strong> The band holds whatever was written to it last — rewrite it after editing your profile; edits in the app don't update a band automatically.</p>
-
-    <h2>Contact</h2>
-    <p>Something not covered here? Email <a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a>.</p>
-    </article>
-  </section>
-
-  <section id="privacy" class="legal-policy" role="tabpanel" aria-labelledby="tab-privacy" aria-hidden="true">
+  <section id="privacy" class="legal-policy active" role="tabpanel" aria-labelledby="tab-privacy" aria-hidden="false">
     <hr class="legal-rule-thin" aria-hidden="true">
     <h1 class="legal-doc-title">Privacy</h1>
     <p class="legal-meta">
@@ -344,7 +300,7 @@
 </div>
 <script>
 (function () {
-  var ids = ["faq", "privacy", "security", "terms"];
+  var ids = ["privacy", "security", "terms"];
   // Every element id inside a section maps back to that section, so a
   // cross-reference like #crash-alarm (inside Terms) opens the right tab.
   var sectionOf = {};
@@ -379,8 +335,8 @@
   // window so the native app's WKWebView bridge (HelpMenuView.swift) can
   // drive the same tab-filtering instead of duplicating this logic.
   function goTo(id, scroll) {
-    var target = sectionOf[id] ? id : "faq";
-    var sec = sectionOf[target] || "faq";
+    var target = sectionOf[id] ? id : "privacy";
+    var sec = sectionOf[target] || "privacy";
     showSection(sec);
     if (scroll) {
       var el = document.getElementById(target) || document.getElementById(sec);
@@ -390,7 +346,7 @@
   window.__rmShowPolicy = goTo;
 
   function currentId() {
-    return (location.hash || "#faq").replace("#", "");
+    return (location.hash || "#privacy").replace("#", "");
   }
   window.addEventListener("hashchange", function () {
     goTo(currentId(), true);
