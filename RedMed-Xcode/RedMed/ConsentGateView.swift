@@ -21,6 +21,8 @@ enum ConsentSettings {
 
 struct ConsentGateView<Content: View>: View {
     @State private var hasAccepted = false
+    /// Arm Main after consent has painted so this page is not fighting WKWebView.
+    @State private var contentArmed = false
     @State private var checked = false
     @State private var openPolicy: HelpDocument.Policy?
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
@@ -29,10 +31,29 @@ struct ConsentGateView<Content: View>: View {
     @ViewBuilder var content: () -> Content
 
     var body: some View {
-        if hasAccepted {
-            content()
-        } else {
-            gate
+        // Page 1 (this gate) must paint first. Then arm Main underneath so
+        // Agree is a cover-drop, not a cold first paint of WKWebView / tabs
+        // (that was the hang between page 1 and page 2).
+        ZStack {
+            if contentArmed {
+                content()
+                    .accessibilityHidden(!hasAccepted)
+                    .allowsHitTesting(hasAccepted)
+            } else {
+                Color.redmedBg.ignoresSafeArea()
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
+            if !hasAccepted {
+                gate
+            }
+        }
+        .onAppear {
+            guard !contentArmed else { return }
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 350_000_000)
+                contentArmed = true
+            }
         }
     }
 
@@ -132,6 +153,12 @@ struct ConsentGateView<Content: View>: View {
                         t.animation = nil
                         withTransaction(t) {
                             hasAccepted = true
+                        }
+                        // NFC Preview pool — after page 2 is already on screen.
+                        // Warming it on unlock raced RedMed's first paint.
+                        Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: 400_000_000)
+                            PasserbyWebViewPool.warmFullShell()
                         }
                     }
                     .padding(.bottom, 32)

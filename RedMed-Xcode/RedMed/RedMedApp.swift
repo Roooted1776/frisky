@@ -13,7 +13,7 @@ struct RedMedApp: App {
             PrivacySnapshotGuard {
                 OwnerAppLock {
                     ConsentGateView {
-                        RedMedOwnerShell()
+                        Main()
                     }
                 }
             }

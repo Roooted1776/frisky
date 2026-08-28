@@ -254,20 +254,8 @@ struct OwnerAppLock<Content: View>: View {
                         _ = HIPAAOfflineVault.prepare()
                     }
                 }
-                // Distinct WKWebView from the RedMed tab's own load (which
-                // uses the string cache, not a pool) — deferred well past
-                // that first paint so NFC Scan / Preview stops paying full
-                // cold-start cost on its first open. Never during Face ID.
-                // Tried gating this on a "RedMed shell didFinish" signal
-                // instead of a flat delay — didFinish fires before RedMed's
-                // JS has actually settled the first paint, so warming a
-                // second WKWebView right then still stole MainActor and
-                // produced the same white/stuck-first-page hang this delay
-                // exists to avoid. Back to the flat delay.
-                Task(priority: .utility) { @MainActor in
-                    try? await Task.sleep(nanoseconds: 800_000_000)
-                    PasserbyWebViewPool.warmFullShell()
-                }
+                // NFC Preview WK warm moved to ConsentGateView after Agree —
+                // an 800ms post-unlock warm raced page-2 first paint.
             }
         }
         .onChange(of: showUnlockControl) { _, shown in
