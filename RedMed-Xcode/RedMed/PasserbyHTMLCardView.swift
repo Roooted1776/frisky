@@ -63,6 +63,7 @@ struct PasserbyHTMLCardView: View {
         .background { RedMedPageBackground() }
         .onAppear { TapCardPresentation.setVisible(true) }
         .onDisappear { TapCardPresentation.setVisible(false) }
+        .environment(\.isScannerSession, true)
         .presentsOwnerHelp()
     }
 
@@ -538,7 +539,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
             : "try{document.documentElement.classList.add('app-preview');}catch(e1){}"
         let profileJS: String
         if let embedProfileJSON, !embedProfileJSON.isEmpty {
-            profileJS = "window.__redmedNativeProfile=true;window.__REDMED_PROFILE=\(embedProfileJSON);"
+            profileJS = "window.__redmedNativeProfile=true;window.__REDMED_PROFILE=\(Self.htmlSafeJSON(embedProfileJSON));"
         } else {
             profileJS = ""
         }
@@ -644,7 +645,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
           try {
             window.__redmedNativeProfile=true;
             window.__REDMED_BRACELET_LINKED=\(linkedJS);
-            window.__REDMED_PROFILE=\(embedProfileJSON);
+            window.__REDMED_PROFILE=\(htmlSafeJSON(embedProfileJSON));
             var d=\(payloadLit);
             try{
               var base=(location.pathname&&location.pathname!=='blank'&&location.pathname!=='/')
@@ -662,6 +663,16 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
           } catch (e) {}
         })();
         """
+    }
+
+    /// JSON that is safe to interpolate into HTML `<script>` (and into
+    /// `evaluateJavaScript`). Escapes `<` so `</script>` in a PHI field
+    /// cannot break out of the boot script tag.
+    private static func htmlSafeJSON(_ json: String) -> String {
+        json
+            .replacingOccurrences(of: "<", with: "\\u003c")
+            .replacingOccurrences(of: "\u{2028}", with: "\\u2028")
+            .replacingOccurrences(of: "\u{2029}", with: "\\u2029")
     }
 
     private static func jsStringLiteral(_ value: String) -> String? {

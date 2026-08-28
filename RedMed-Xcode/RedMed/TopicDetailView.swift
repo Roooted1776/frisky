@@ -7,7 +7,7 @@ struct TopicDetailView: View {
     let topic: AidTopic
     @Environment(\.dismiss) var dismiss
     /// Engine lives in the view hierarchy — prepared on appear, fired on tap / beat.
-    /// Enable/disable lives in Help → Settings only (not on this card).
+    /// Enable/disable lives on the Before you continue screen (not on this card).
     @StateObject private var hapticEngine = HapticEngine()
     @State private var cprRunning = false
     @State private var cprCount = 0
@@ -201,7 +201,7 @@ struct TopicDetailView: View {
 }
 
 /// Owns MapKit + CLLocationManager only when the trauma-hospitals topic is open
-/// and Location is enabled in Help → Settings.
+/// and Location is enabled.
 private struct LiveNearbyHospitalsSection: View {
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @StateObject private var hospitalFinder = NearbyHospitalFinder()
@@ -218,7 +218,7 @@ private struct LiveNearbyHospitalsSection: View {
                 .padding(.top, 24)
 
             if !locationEnabled {
-                Text("Location is off. Enable it in Help → Settings to find nearby hospitals.")
+                Text("Location is off. Enable it the next time you unlock (Before you continue) to find nearby hospitals.")
                     .font(.system(size: 13))
                     .foregroundColor(.redmedMuted)
                     .padding(.vertical, 12)

@@ -3,7 +3,7 @@ import CoreLocation
 import UIKit
 import Combine
 
-/// Help → Settings status only. Never prompts.
+/// Location-denied status only. Never prompts.
 /// `CLLocationManager.requestWhenInUseAuthorization` runs from Find Help /
 /// nearby hospitals when Location is enabled — not from Help chrome.
 final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManagerDelegate {

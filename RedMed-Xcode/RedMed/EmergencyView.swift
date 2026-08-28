@@ -80,7 +80,7 @@ private struct FindHelpLocationBlock: View {
                 .opacity(locationEnabled ? 1 : 0.45)
 
             CompactFillButton(
-                title: locationEnabled ? "Copy coordinates" : "Location off — enable in Help → Settings",
+                title: locationEnabled ? "Copy coordinates" : "Location off — enable it the next time you unlock",
                 disabled: !locationEnabled || locationManager.location == nil
             ) {
                 if locationEnabled, let loc = locationManager.location {

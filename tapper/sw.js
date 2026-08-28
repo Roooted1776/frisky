@@ -19,9 +19,11 @@
  * every decrypt/layout deploy.
  *
  * putShell is HTML-only. Optional assets use putAsset so logos / sw.js never
- * overwrite shell keys (that poison served PNG/JS as /tapper/).
+ * overwrite shell keys (that poison served PNG/JS as /tapper/). A response is
+ * only replicated onto SHELL_KEYS when the body contains data-tab="medical"
+ * — redirect stubs (card.html / get.html / index.html) must never land there.
  */
-var CACHE = 'redmed-tapper-v124';
+var CACHE = 'redmed-tapper-v125';
 var ASSETS = [
   './pheart.png',
   './BrandLogo.png',
@@ -46,11 +48,18 @@ function networkReload(reqOrUrl) {
 
 function putShell(cache, reqOrUrl, res) {
   if (!res || !res.ok || (res.type !== 'basic' && res.type !== 'cors')) return Promise.resolve();
-  var writes = [cache.put(reqOrUrl, res.clone())];
-  SHELL_KEYS.forEach(function (key) {
-    writes.push(cache.put(key, res.clone()));
-  });
-  return Promise.all(writes).catch(function () { /* quota / opaque */ });
+  var ct = (res.headers.get('content-type') || '').toLowerCase();
+  if (ct && ct.indexOf('text/html') === -1 && ct.indexOf('application/xhtml') === -1) {
+    return Promise.resolve();
+  }
+  return res.clone().text().then(function (body) {
+    if (body.indexOf('data-tab="medical"') === -1) return;
+    var writes = [cache.put(reqOrUrl, res.clone())];
+    SHELL_KEYS.forEach(function (key) {
+      writes.push(cache.put(key, res.clone()));
+    });
+    return Promise.all(writes).catch(function () { /* quota / opaque */ });
+  }).catch(function () { /* unreadable body */ });
 }
 
 function putAsset(cache, reqOrUrl, res) {
@@ -125,8 +134,7 @@ function isShellRequest(req) {
     return (
       path === '/tapper' ||
       path === '/tapper/' ||
-      path.endsWith('/tapper/index.html') ||
-      path.endsWith('/card.html')
+      path.endsWith('/tapper/index.html')
     );
   } catch (e) {
     return false;
@@ -146,7 +154,7 @@ self.addEventListener('activate', function (event) {
   event.waitUntil(
     caches.keys().then(function (keys) {
       return Promise.all(
-        keys.filter(function (k) { return k !== CACHE; }).map(function (k) {
+        keys.filter(function (k) { return /^redmed-tapper-v/.test(k) && k !== CACHE; }).map(function (k) {
           return caches.delete(k);
         })
       );
