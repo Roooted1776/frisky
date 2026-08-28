@@ -188,11 +188,11 @@ watchdogs kill it — a *different* cream hang than the `.active`-wait one,
 now seen on every cold launch instead of occasionally. Apple does **not**
 timeout `evaluatePolicy` (no LA API for it). RedMed backstops: **4.5s/5s**
 only when the scene is `.active` (no sheet — nothing to interrupt);
-**+25s (≈30s total)** when `.inactive` while evaluating so a ghost sheet
-cannot hang forever; **45s** `BiometricAuth.timedOut` if the callback never
-fires (Erase / vault / NFC write). Apple's passcode sheet has no OS timeout —
-30s is ours and can interrupt a slow typist; do not raise it without an
-explicit ask. Watchdogs were 15s → 8s/8.5s → 4.5s/5s for the no-sheet case.
+**60s total** when `.inactive` while evaluating so a slow passcode after a
+Face ID miss is not torn down at 4.5s, but a ghost sheet cannot hang
+forever; **90s** `BiometricAuth.timedOut` if the callback never fires
+(Erase / vault / NFC write) — must stay above the 60s unlock budget.
+Apple's passcode sheet has no OS timeout — 60s is ours.
 `didAutoPromptThisLock` blocks re-prompt while the Face ID sheet holds
 `.inactive`). Prefetch still starts in the same `onAppear` tick and inside the
 unlock pipeline (single-flight overlap with Face ID). After cancel / mismatch

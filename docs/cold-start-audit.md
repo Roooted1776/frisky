@@ -31,10 +31,10 @@ correct. Three issues were found and fixed:
    When the actual failure is "no sheet ever presented" there's nothing in-progress to interrupt,
    so both were shortened to 4.5s / 5s. Later (#427) those short budgets
    only fire when the scene is `.active` (no sheet); an `.inactive` evaluate
-   waits ≈30s more so a live passcode sheet is not torn down at 4.5s, then
-   cancels so a ghost sheet cannot hang forever. Apple has no
-   `evaluatePolicy` timeout — 30s is RedMed's. Do not raise it without an
-   explicit ask.
+   waits out a 60s total budget so a live passcode sheet is not torn down
+   at 4.5s, then cancels so a ghost sheet cannot hang forever. Apple has no
+   `evaluatePolicy` timeout — 60s is RedMed's. `BiometricAuth`'s hang clock
+   is 90s so it cannot undercut that unlock budget.
 3. **Redundant warm-up `Task.detached` spawns landed in the same instant as `evaluatePolicy`.**
    `.utility` priority didn't rule out contention with the system Face ID sheet's very first
    presentation tick. Deduped the shell-cache warm-up to one scheduled task
