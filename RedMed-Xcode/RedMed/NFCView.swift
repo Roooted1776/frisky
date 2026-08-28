@@ -1,23 +1,16 @@
 // Owner-only NFC bracelet setup. Ped/EMS scanner shells never mount this tab —
 // see ContentView.showsNFC / scannerSafeTab.
-// One page: Write (blank unlocked NXP NTAG216, ISO 14443A Type 2) + Preview (under
-// Write) → full-page tap card (what first responders see).
-// When `AppConfig.nfcHardwareEnabled` is true, Write starts a real CoreNFC
-// session. Pack-only simulate stays for offline/dev when the flag is off —
-// it never flips Linked / Not linked (that needs a real bracelet write).
-// Pipeline (hardware): silicone band tap → CoreNFC → strip NDEF → CryptoKit → local card
-// via `NFCBandManager`.
+// One page: Write + Scan + Preview → full-page tap card (what first responders see).
+// When `AppConfig.nfcHardwareEnabled` is true, Write/Scan start real CoreNFC.
+// Pack-only simulate stays when the flag is off — it never flips Linked.
 import SwiftUI
 
 struct NFCView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
     @StateObject private var band = NFCBandManager()
-    /// Full passerby shell from live RedMed — what first responders see on a band tap.
-    /// `item:` presentation so the cover always binds a complete payload (no empty race).
     @State private var previewSession: PreviewSession?
 
-    /// One-shot Preview open — payload + embed JSON must both be set before present.
     private struct PreviewSession: Identifiable {
         let id = UUID()
         let payload: String
@@ -34,9 +27,6 @@ struct NFCView: View {
     }
 
     private var ownerBody: some View {
-        // Fixed cream chrome (no NavigationView / system toolbar) — page
-        // BrandWordmark (911 / Aid are content-first; no hanging pane marks).
-        // Owner-only tab; scanners never mount this.
         VStack(spacing: 0) {
             PageHelpChrome()
             BrandWordmarkHeader(top: 0)
@@ -46,7 +36,6 @@ struct NFCView: View {
                     factsCard
                     setupCard
                         .padding(.top, 4)
-                    // Under Write — same tap card first responders get.
                     firstResponderPreviewLink
                 }
                 .padding(.horizontal, RedMedChrome.pagePadX)
@@ -64,6 +53,14 @@ struct NFCView: View {
             )
             .presentationBackground(Color.redmedBg)
         }
+        .fullScreenCover(item: $band.scannedCard) { session in
+            PasserbyHTMLCardView(
+                payloadOrURL: session.payload,
+                braceletLinked: profile.showsBraceletAsLinked,
+                embedProfileJSON: session.embedJSON
+            )
+            .presentationBackground(Color.redmedBg)
+        }
         .alert("Authentication Failed", isPresented: $band.authFailed) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -77,16 +74,12 @@ struct NFCView: View {
         } message: {
             Text(band.alertMessage ?? "")
         }
-        // Linked reacts to a finished real CoreNFC write only — never pack/simulate.
-        // Wait until isWriting clears so success + verified are both settled.
         .onChange(of: band.isWriting) { _, writing in
             guard !writing, band.writeSucceeded, AppConfig.nfcHardwareEnabled else { return }
             let detail = band.writeVerified ? "NFC write verified" : "NFC write"
             band.linkBracelet(on: profile, detail: detail)
         }
     }
-
-    // MARK: - Bracelet facts
 
     private var linkStatus: (title: String, detail: String, linked: Bool) {
         if profile.showsBraceletAsLinked {
@@ -138,8 +131,6 @@ struct NFCView: View {
         .redmedBox()
     }
 
-    // MARK: - Setup
-
     private var setupCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             SectionLabel(text: "Set up")
@@ -153,8 +144,15 @@ struct NFCView: View {
                 band.writeBand(from: profile, isScannerSession: isScannerSession)
             }
 
+            OutlineButton(
+                title: band.isReading ? "Opening…" : "Scan",
+                disabled: !profile.hasData || band.isBusy || band.scannedCard != nil
+            ) {
+                band.verifyBand(from: profile)
+            }
+
             if !profile.hasData {
-                Text("Add your name on RedMed before writing the band.")
+                Text("Add your name on RedMed before writing or scanning the band.")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.redmedAccent)
             }
@@ -169,7 +167,7 @@ struct NFCView: View {
             VStack(alignment: .leading, spacing: 8) {
                 tipRow("Write once after RedMed is filled — blank unlocked NXP NTAG216 (ISO 14443A Type 2).")
                 tipRow("Write packs #d= onto the chip only — never a vendor cloud or social/short link.")
-                tipRow("Tap to scan: same HTML card helpers get — quick, no login, no server, no app.")
+                tipRow("Scan / Preview: same HTML card helpers get — quick, no login, no server, no app.")
             }
             .padding(.top, 2)
         }
@@ -177,9 +175,6 @@ struct NFCView: View {
         .redmedBox()
     }
 
-    // MARK: - First-responder Preview (under Write box)
-
-    /// Same card chrome as SET UP — Preview sits even with the rest of the page.
     private var firstResponderPreviewLink: some View {
         VStack(alignment: .leading, spacing: 12) {
             SectionLabel(text: "Preview")
@@ -208,13 +203,10 @@ struct NFCView: View {
         .redmedBox()
     }
 
-    /// Pack `#d=` + embed JSON **before** presenting so the cover is never empty.
-    /// `fullScreenCover(item:)` binds the complete session (no isPresented race).
     private func openFirstResponderPreview() {
         guard !isScannerSession, profile.hasData, previewSession == nil else { return }
         let chip = ProfileNFCCodec.chipProfile(from: profile)
         let linked = profile.showsBraceletAsLinked
-        // AES pack is tiny (profile-scale) — do it off-main, then present once ready.
         Task { @MainActor in
             let packed = await Task.detached(priority: .userInitiated) {
                 (
@@ -231,8 +223,6 @@ struct NFCView: View {
             )
         }
     }
-
-    // MARK: - Pieces
 
     private var writeButtonTitle: String {
         if band.isWriting {

@@ -67,11 +67,14 @@ final class NFCBandManager: ObservableObject {
                 let chip = ProfileNFCCodec.chipProfile(from: profile)
                 Task { @MainActor [weak self] in
                     defer { self?.writeAuthInFlight = false }
-                    let urlString = await Task.detached(priority: .userInitiated) {
-                        ProfileNFCCodec.buildURLString(chip: chip)
+                    let packed = await Task.detached(priority: .userInitiated) {
+                        (
+                            ProfileNFCCodec.buildURLString(chip: chip),
+                            ProfileNFCCodec.embedProfileJSON(from: chip)
+                        )
                     }.value
                     guard let self else { return }
-                    guard let urlString,
+                    guard let urlString = packed.0,
                           AppConfig.OwnerBandURI.isValidWriteURL(urlString) else {
                         self.alertMessage = "Couldn't build a RedMed #d= tag payload (vendor/social URLs are blocked)."
                         return
@@ -82,7 +85,7 @@ final class NFCBandManager: ObservableObject {
                         self.writeVerified = false
                         self.writer.writeURL(urlString)
                     } else {
-                        self.simulateWrite(urlString, profile: profile)
+                        self.simulateWrite(urlString, embedJSON: packed.1, profile: profile)
                     }
                 }
             } else {
@@ -116,7 +119,6 @@ final class NFCBandManager: ObservableObject {
         let chip = ProfileNFCCodec.chipProfile(from: profile)
         isReading = true
         statusMessage = "Opening tap card…"
-        // Pack #d= + embed JSON first — present only when complete.
         Task { @MainActor [weak self] in
             let packed = await Task.detached(priority: .userInitiated) {
                 (
@@ -142,7 +144,6 @@ final class NFCBandManager: ObservableObject {
     /// Mark owner bracelet paired after a real CoreNFC write (hardware only).
     func linkBracelet(on profile: ProfileData, detail: String) {
         guard AppConfig.nfcHardwareEnabled else { return }
-        // Publishes + Keychain so RedMed Linked / Not linked flips immediately.
         profile.setBraceletPaired(true)
         VaultHistoryStore.shared.record(.braceletWritten, detail: detail)
     }
@@ -172,7 +173,6 @@ final class NFCBandManager: ObservableObject {
                 }
                 if !self.writer.isWriting, !self.writer.success, !msg.isEmpty, msg != "Cancelled." {
                     self.alertMessage = msg
-                    // Status string only — never pack URL / profile fields into the vault.
                     VaultHistoryStore.shared.record(.nfcWriteFailed, detail: String(msg.prefix(120)))
                 }
             }
@@ -210,19 +210,21 @@ final class NFCBandManager: ObservableObject {
     }
 
     /// Pack-only fallback when CoreNFC is parked — never marks Linked.
-    private func simulateWrite(_ urlString: String, profile: ProfileData) {
+    /// Opens the same passerby card Scan/Preview use so the owner loop is complete without hardware.
+    private func simulateWrite(_ urlString: String, embedJSON: String?, profile: ProfileData) {
         isWriting = true
         writeSucceeded = false
         writeVerified = false
         statusMessage = "Packing compact tap card…"
         lastPackedURL = urlString
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) { [weak self] in
+        let note = ProfileNFCCodec.capacityNote(for: profile)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { [weak self] in
             guard let self else { return }
-            let note = ProfileNFCCodec.capacityNote(for: profile)
             self.isWriting = false
             self.writeSucceeded = false
             self.writeVerified = false
             self.statusMessage = "Packed only (no band) — \(note.text). Linked needs a real NFC write."
+            self.presentHTMLCard(payloadOrURL: urlString, embedJSON: embedJSON)
         }
     }
 
