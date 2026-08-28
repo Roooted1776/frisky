@@ -17,6 +17,9 @@ private enum AuthBudget {
     /// Total wait from lock-cycle start when scene is `.inactive`
     /// (live passcode or ghost sheet) before cancel.
     static let inactiveSheetTotalSeconds: TimeInterval = 60.0
+    /// Hung Keychain/profile decode after Face ID already succeeded.
+    /// Blank cream here is not a live sheet — surface Proceed fast.
+    static let profileLoadSeconds: TimeInterval = 1.2
 }
 
 /// Owner app lock — Face ID / Touch ID / device passcode before PHI is published.
@@ -429,6 +432,19 @@ struct OwnerAppLock<Content: View>: View {
         }
     }
 
+    /// Face ID already succeeded. If Keychain/profile decode hangs, cream
+    /// with nothing to tap — do not wait out the 4.5s no-sheet budget.
+    private func scheduleProfileLoadWatchdog(generation: Int) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + AuthBudget.profileLoadSeconds) {
+            guard generation == authGeneration, gate == .locked, isLoadingProfile else { return }
+            logLock("profile-load watchdog fired")
+            profileLoadFailed = true
+            isLoadingProfile = false
+            showUnlockControl = true
+            revealSwitcherCover()
+        }
+    }
+
     #if DEBUG
     private func logLock(_ message: String) {
         let elapsed = Date().timeIntervalSince(lockCycleStartedAt ?? Date())
@@ -680,6 +696,10 @@ struct OwnerAppLock<Content: View>: View {
                     // profile decode, not the sheet. Let the watchdogs know.
                     isAuthenticating = false
                     isLoadingProfile = true
+                    // Face ID is done — do not keep the switcher cream over
+                    // pages (or over Proceed if decode stalls).
+                    revealSwitcherCover()
+                    scheduleProfileLoadWatchdog(generation: generation)
                     // Prefetch already kicked off in the authenticate
                     // callback (before this hop). Adopt it here.
                     await applyUnlockSuccess(generation: generation)

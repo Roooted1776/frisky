@@ -110,7 +110,7 @@ enum KeychainStore {
 
     /// Add the new bound item first, then delete the old row. Kill/crash
     /// between those steps leaves PHI on the staging account, which `load`
-    /// still reads.
+    /// still reads. Returns true only when the canonical account holds the blob.
     private static func replaceViaStaging(
         _ data: Data,
         account: String,
@@ -123,13 +123,18 @@ enum KeychainStore {
             return false
         }
         delete(account: account, service: service)
-        let restored = addBound(data, account: account, service: service, access: access)
-        if restored {
+        if addBound(data, account: account, service: service, access: access) {
             delete(account: staging, service: service)
             return true
         }
-        // Original add failed — leave staging so load can still find PHI.
-        return true
+        // One retry — transient SecItemAdd after delete.
+        if addBound(data, account: account, service: service, access: access) {
+            delete(account: staging, service: service)
+            return true
+        }
+        // Canonical account empty; staging still has PHI for the next `load`.
+        // Fail the save so Edit does not report OK.
+        return false
     }
 
     // MARK: - Load
@@ -231,7 +236,14 @@ enum KeychainStore {
         case errSecSuccess, errSecInteractionNotAllowed, errSecAuthFailed:
             return true
         case errSecItemNotFound:
-            return false
+            // Staging may hold the only copy mid-migrate.
+            let stagingQuery = baseQuery(account: stagingAccount(account), service: service)
+            var q = stagingQuery
+            q[kSecReturnData as String] = false
+            q[kSecMatchLimit as String] = kSecMatchLimitOne
+            q[kSecUseAuthenticationContext as String] = ctx
+            let staged = SecItemCopyMatching(q as CFDictionary, nil)
+            return staged == errSecSuccess || staged == errSecInteractionNotAllowed || staged == errSecAuthFailed
         default:
             return status != errSecItemNotFound
         }

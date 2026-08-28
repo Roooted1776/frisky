@@ -16,6 +16,7 @@ Connect App Privacy nutrition label: **Data Not Collected**. Tracking: No.
 
 Ready to Archive as a local medical ID. No diagnosis, dispatch, or vital-sign claims.
 Listing must not promise live bracelet write until NFC entitlement is restored.
+Do not promise secret encryption on the chip — tap-to-view is ungated by design.
 
 | Field | Value |
 |-------|--------|
@@ -24,7 +25,7 @@ Listing must not promise live bracelet write until NFC entitlement is restored.
 | Category | Medical |
 | Age | 12+ |
 | Sign-in | No |
-| Encryption | Exempt |
+| Encryption | Exempt (CryptoKit AES-GCM pack + public client key; `ITSAppUsesNonExemptEncryption` = false) |
 | Tracking | No |
 | App Privacy | Data Not Collected |
 | Privacy Policy URL | https://cdn.jsdelivr.net/gh/Roooted1776/redmed-privacy@main/index.html |
@@ -34,4 +35,4 @@ Listing must not promise live bracelet write until NFC entitlement is restored.
 
 ## Review notes (paste)
 
-RedMed is a personal medical ID on this iPhone (Keychain, Face ID). No RedMed server, no login. Privacy: https://cdn.jsdelivr.net/gh/Roooted1776/redmed-privacy@main/index.html and Help → Privacy. 911 uses tel:; GPS stays on-screen. Aid is first-aid reference — follow the dispatcher. Seizure timer does not auto-dial; it shows a Call button at 5:00. NFC write is parked in this build (preview uses bundled HTML). Not a regulated medical device. Review device: enroll Face ID or a passcode so Unlock can complete.
+RedMed is a personal medical ID on this iPhone (Keychain, Face ID). No RedMed server, no login. Privacy: https://cdn.jsdelivr.net/gh/Roooted1776/redmed-privacy@main/index.html and Help → Privacy. 911 uses tel:; GPS stays on-screen. Aid is first-aid reference — follow the dispatcher. Seizure timer does not auto-dial; it shows a Call button at 5:00. NFC write is parked in this build (preview uses bundled HTML). `#d=` on a written band is readable by any phone that taps it. Not a regulated medical device. Review device: enroll Face ID or a passcode so Unlock can complete.
