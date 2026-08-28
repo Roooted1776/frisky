@@ -3,7 +3,7 @@ import SwiftUI
 /// Owner / scanner RedMed tab — same bundled `tapper.html` medical panel helpers see
 /// on a band tap. Owner top chrome is the tapper YOU-card header (logo + name +
 /// Linked) with Edit trailing (no bottom Help dock). Scanners keep Back top chrome.
-/// Help lives on Edit / 911 / Aid / NFC.
+/// Help lives on 911 / Aid / NFC — not on Edit.
 /// First-responder Preview lives on the NFC tab under Scan — not here.
 /// Native 911 / Aid / NFC tabs stay separate (HTML tab bar hidden in app-embed).
 ///
@@ -140,8 +140,8 @@ struct RedMedView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             // Big bottom "Help" dock removed from the RedMed user page.
-            // Help remains available via other native chrome (e.g. Edit modal bar)
-            // and on the 911 / Aid / NFC tabs.
+            // Help remains available via other native chrome on the
+            // 911 / Aid / NFC tabs (not the Edit modal bar).
         }
         // Owner profile only — never redact the passerby / EMS scanner card.
         .privacySensitive(!isScannerSession)

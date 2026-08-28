@@ -83,20 +83,6 @@ struct OwnerHelpButton: View {
     }
 }
 
-/// Help in the Edit modal bar — same 17pt metrics as Cancel and Save.
-struct OwnerModalHelpButton: View {
-    @Environment(\.ownerHelpOpen) private var ownerHelpOpen
-
-    var body: some View {
-        if let ownerHelpOpen {
-            OwnerModalBarButton(title: "Help", fillWidth: true) {
-                ownerHelpOpen.wrappedValue = true
-            }
-            .accessibilityIdentifier("owner-help")
-        }
-    }
-}
-
 /// RedMed user-page Help — original unlock-dock CTA, pinned at the bottom.
 struct OwnerHelpDockButton: View {
     @Environment(\.ownerHelpOpen) private var ownerHelpOpen
