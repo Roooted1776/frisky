@@ -22,7 +22,7 @@ enum ConsentSettings {
 struct ConsentGateView<Content: View>: View {
     @State private var hasAccepted = false
     @State private var checked = false
-    @State private var expandedPolicy: String?
+    @State private var openPolicy: HelpDocument.Policy?
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
@@ -97,7 +97,7 @@ struct ConsentGateView<Content: View>: View {
                         .padding(.horizontal, 4)
 
                     VStack(spacing: 0) {
-                        ForEach(Array(ConsentPolicyCopy.policies.enumerated()), id: \.element.id) { index, policy in
+                        ForEach(Array(HelpDocument.Policy.allCases.filter { $0 != .guide }.enumerated()), id: \.element.id) { index, policy in
                             if index > 0 {
                                 Divider().overlay(Color.redmedDivider).padding(.leading, RedMedChrome.pagePadX)
                             }
@@ -150,48 +150,56 @@ struct ConsentGateView<Content: View>: View {
                 locationSuggester.refresh()
             }
         }
+        .sheet(item: $openPolicy) { policy in
+            ConsentPolicySheet(policy: policy)
+                .presentationBackground(Color.redmedBg)
+        }
     }
 
-    /// One collapsible policy row (title + chevron); tapping expands/collapses
-    /// its body text in place. Only one row's expansion state is tracked at a
-    /// time via `expandedPolicy` (tapping a second row swaps which is open).
+    /// One policy link row (title + chevron.right). Tapping opens the real
+    /// Help.html section for that policy in a sheet — keeps this screen a
+    /// short, clean acknowledgment instead of a second copy of Help's text.
     @ViewBuilder
-    private func policyRow(_ policy: ConsentPolicyCopy.Policy) -> some View {
-        let isExpanded = expandedPolicy == policy.title
-        VStack(spacing: 0) {
-            Button {
-                RedMedHaptics.light()
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    expandedPolicy = isExpanded ? nil : policy.title
-                }
-            } label: {
-                HStack {
-                    Text(policy.title)
-                        .font(.system(size: RedMedChrome.rowFont, weight: .semibold))
-                        .foregroundColor(.redmedDark)
-                    Spacer()
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.redmedMuted)
-                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
-                }
-                .padding(.horizontal, RedMedChrome.pagePadX)
-                .padding(.vertical, RedMedChrome.rowVPad)
-                .contentShape(Rectangle())
+    private func policyRow(_ policy: HelpDocument.Policy) -> some View {
+        Button {
+            RedMedHaptics.light()
+            openPolicy = policy
+        } label: {
+            HStack {
+                Text(policy.title)
+                    .font(.system(size: RedMedChrome.rowFont, weight: .semibold))
+                    .foregroundColor(.redmedDark)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.redmedMuted.opacity(0.55))
             }
-            .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
-            .accessibilityAddTraits(.isHeader)
-            .accessibilityValue(isExpanded ? "Expanded" : "Collapsed")
+            .padding(.horizontal, RedMedChrome.pagePadX)
+            .padding(.vertical, RedMedChrome.rowVPad)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint("Opens \(policy.title)")
+    }
+}
 
-            if isExpanded {
-                Text(policy.body)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(.redmedMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, RedMedChrome.pagePadX)
-                    .padding(.bottom, RedMedChrome.rowVPad)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+private struct ConsentPolicySheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let policy: HelpDocument.Policy
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                OwnerModalChrome(
+                    title: policy.title,
+                    leadingTitle: "Done",
+                    leadingAction: { dismiss() }
+                )
+                LocalWebView(filename: HelpDocument.bundledFile, fragment: policy.fragment)
             }
+            .background { RedMedPageBackground() }
+            .toolbar(.hidden, for: .navigationBar)
         }
     }
 }
