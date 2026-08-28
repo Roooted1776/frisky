@@ -48,6 +48,7 @@
 		AABB00000000000000000032 /* SatelliteFieldUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000032 /* SatelliteFieldUI.swift */; };
 		AABB00000000000000000033 /* OwnerAppLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000033 /* OwnerAppLock.swift */; };
 		AABB00000000000000000059 /* RedMedSignpost.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000059 /* RedMedSignpost.swift */; };
+		AABB0000000000000000005B /* RedMedOwnerShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000005B /* RedMedOwnerShell.swift */; };
 		AABB00000000000000000034 /* SecurePasteboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000034 /* SecurePasteboard.swift */; };
 		AABB00000000000000000035 /* VolumeBoost.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000035 /* VolumeBoost.swift */; };
 		AABB00000000000000000036 /* BrandWordmark.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000036 /* BrandWordmark.png */; };
@@ -109,6 +110,7 @@
 		AAAA00000000000000000032 /* SatelliteFieldUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatelliteFieldUI.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000033 /* OwnerAppLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwnerAppLock.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000059 /* RedMedSignpost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedMedSignpost.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000005B /* RedMedOwnerShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedMedOwnerShell.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000034 /* SecurePasteboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurePasteboard.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000035 /* VolumeBoost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeBoost.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000036 /* BrandWordmark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BrandWordmark.png; sourceTree = "<group>"; };
@@ -145,6 +147,7 @@
 				AAAA00000000000000000002 /* ContentView.swift */,
 				AAAA00000000000000000033 /* OwnerAppLock.swift */,
 				AAAA00000000000000000059 /* RedMedSignpost.swift */,
+				AAAA0000000000000000005B /* RedMedOwnerShell.swift */,
 				AAAA00000000000000000055 /* ConsentGateView.swift */,
 				AAAA00000000000000000056 /* CountryDialCode.swift */,
 				AAAA00000000000000000052 /* LockEntryPage.swift */,
@@ -421,6 +424,7 @@
 				AABB00000000000000000032 /* SatelliteFieldUI.swift in Sources */,
 				AABB00000000000000000033 /* OwnerAppLock.swift in Sources */,
 				AABB00000000000000000059 /* RedMedSignpost.swift in Sources */,
+				AABB0000000000000000005B /* RedMedOwnerShell.swift in Sources */,
 				AABB00000000000000000055 /* ConsentGateView.swift in Sources */,
 				AABB00000000000000000056 /* CountryDialCode.swift in Sources */,
 				AABB00000000000000000057 /* HealthKitProfileImport.swift in Sources */,
