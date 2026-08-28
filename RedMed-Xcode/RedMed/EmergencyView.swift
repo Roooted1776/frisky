@@ -8,7 +8,9 @@ struct EmergencyView: View {
         VStack(spacing: 0) {
             PageHelpChrome()
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 10) {
+                // Short, fixed page (~6 children). LazyVStack would estimate
+                // off-screen height and keep bookkeeping with no benefit.
+                VStack(alignment: .leading, spacing: 10) {
                     PrimaryButton(
                         title: "Call \(EmergencyNumber.current)",
                         systemImage: "phone.fill"
