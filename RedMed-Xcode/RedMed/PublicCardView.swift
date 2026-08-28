@@ -8,6 +8,10 @@ private struct ScannerDismissKey: EnvironmentKey {
     static let defaultValue: (() -> Void)? = nil
 }
 
+private struct OwnerHelpOpenKey: EnvironmentKey {
+    static let defaultValue: Binding<Bool>? = nil
+}
+
 extension EnvironmentValues {
     /// True when this tree is the first-responder / scan shell (no owner edit).
     var isScannerSession: Bool {
@@ -19,6 +23,13 @@ extension EnvironmentValues {
     var scannerDismiss: (() -> Void)? {
         get { self[ScannerDismissKey.self] }
         set { self[ScannerDismissKey.self] = newValue }
+    }
+
+    /// Presents `HelpMenuView` from the nearest `presentsOwnerHelp()` root.
+    /// Used on the tap / Preview card so policies stay one tap away.
+    var ownerHelpOpen: Binding<Bool>? {
+        get { self[OwnerHelpOpenKey.self] }
+        set { self[OwnerHelpOpenKey.self] = newValue }
     }
 }
 
@@ -57,6 +68,21 @@ struct ScannerBackButton: View {
     }
 }
 
+/// Opens Help from chrome that opted into `presentsOwnerHelp()`.
+/// Owner tabs do not show this. The tap / Preview card does.
+struct OwnerHelpButton: View {
+    @Environment(\.ownerHelpOpen) private var ownerHelpOpen
+
+    var body: some View {
+        if let ownerHelpOpen {
+            ChromeTextAction(title: "Help") {
+                ownerHelpOpen.wrappedValue = true
+            }
+            .accessibilityIdentifier("owner-help")
+        }
+    }
+}
+
 /// Sibling top chrome. Scanner sessions keep Back so Preview / Scan can
 /// leave 911 and Aid. Owner pages have no Help row — content starts
 /// under the status bar.
@@ -83,5 +109,29 @@ struct PageHelpChrome<Trailing: View>: View {
 extension PageHelpChrome where Trailing == EmptyView {
     init() {
         self.trailing = { EmptyView() }
+    }
+}
+
+/// Local Help cover so the tap-page Help button can present policies.
+private struct PresentsOwnerHelp: ViewModifier {
+    @State private var showHelp = false
+    @Environment(\.isScannerSession) private var isScannerSession
+    @EnvironmentObject private var profile: ProfileData
+
+    func body(content: Content) -> some View {
+        content
+            .environment(\.ownerHelpOpen, $showHelp)
+            .fullScreenCover(isPresented: $showHelp) {
+                HelpMenuView(onOpenNFC: nil)
+                    .environmentObject(profile)
+                    .environment(\.isScannerSession, isScannerSession)
+                    .presentationBackground(Color.redmedBg)
+            }
+    }
+}
+
+extension View {
+    func presentsOwnerHelp() -> some View {
+        modifier(PresentsOwnerHelp())
     }
 }
