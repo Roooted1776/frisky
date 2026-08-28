@@ -116,7 +116,8 @@ struct OwnerAppLock<Content: View>: View {
         .overlay(alignment: .top) {
             if debugOverlayArmed, gate == .locked { debugStateOverlay }
         }
-        .task {
+        .task(id: lockCycleID) {
+            debugOverlayArmed = false
             try? await Task.sleep(nanoseconds: 2_000_000_000)
             guard gate == .locked else { return }
             debugOverlayArmed = true
@@ -319,6 +320,9 @@ struct OwnerAppLock<Content: View>: View {
         showUnlockControl = false
         didAutoPromptThisLock = false
         notInteractiveRetried = false
+        #if DEBUG
+        debugOverlayArmed = false
+        #endif
         if gate == .unlocked {
             profile.purgeFromMemory()
             BiometricAuth.resetLaunchUnlock()
@@ -562,7 +566,6 @@ struct OwnerAppLock<Content: View>: View {
                 case .timedOut:
                     // Hang timeout already elapsed with no callback at all —
                     // this is OwnerAppLock's own much faster watchdogs' territory and
-                    // OwnerAppLock's own much faster watchdogs' territory and
                     // they almost always win the race first; this branch only
                     // matters if they're somehow disarmed. No fast-retry
                     // escalation (unlike `.declined`/`.notInteractive` below):
