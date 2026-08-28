@@ -3,28 +3,18 @@ import SwiftUI
 @main
 struct RedMedApp: App {
     @StateObject private var profile = ProfileData()
-    /// First process after install (or policy bump): do not mount the Face ID
-    /// lock at all. OwnerAppLock's modifiers were holding the cream launch
-    /// screen for ~1s. This stays true for the rest of that session so Agree
-    /// does not then Face ID.
-    @State private var skipLockThisLaunch = !ConsentSettings.hasAcceptedCurrent
 
     var body: some Scene {
         WindowGroup {
             // Owner UI lives in Main.swift — not HTML.
             // Privacy cover hides PHI from iOS app-switcher snapshots.
-            // First launch: acknowledgment only. After Agree, later opens
-            // Face ID then Main. Consent never on passerby tapper.
+            // First launch: acknowledgment (Before you continue) with no
+            // Face ID in front. After Agree, later opens Face ID then Main.
+            // Consent never on passerby tapper.
             PrivacySnapshotGuard {
-                if skipLockThisLaunch {
+                OwnerAppLock {
                     ConsentGateView {
                         Main()
-                    }
-                } else {
-                    OwnerAppLock {
-                        ConsentGateView {
-                            Main()
-                        }
                     }
                 }
             }
