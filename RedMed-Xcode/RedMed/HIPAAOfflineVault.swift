@@ -42,7 +42,7 @@ enum HIPAAOfflineVault {
             }
         }
         do {
-            try harden(url: dir, isDirectory: true)
+            try harden(url: dir)
         } catch {
             return nil
         }
@@ -63,7 +63,7 @@ enum HIPAAOfflineVault {
         }
         try data.write(to: url, options: [.atomic, .completeFileProtection])
         do {
-            try harden(url: url, isDirectory: false)
+            try harden(url: url)
             try verifyHardened(url: url)
         } catch {
             try? FileManager.default.removeItem(at: url)
@@ -127,7 +127,9 @@ enum HIPAAOfflineVault {
     }
 
     /// Re-applies complete protection + backup exclusion (idempotent).
-    private static func harden(url: URL, isDirectory: Bool) throws {
+    /// Same hardening steps apply to files and directories alike, so this
+    /// takes just the URL.
+    private static func harden(url: URL) throws {
         try FileManager.default.setAttributes(
             [.protectionKey: protection],
             ofItemAtPath: url.path
@@ -136,7 +138,6 @@ enum HIPAAOfflineVault {
         values.isExcludedFromBackup = true
         var mutable = url
         try mutable.setResourceValues(values)
-        _ = isDirectory
     }
 
     private static func verifyHardened(url: URL) throws {

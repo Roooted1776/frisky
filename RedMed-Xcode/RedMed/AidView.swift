@@ -146,7 +146,10 @@ struct PaneCard: View {
                     Text(pane.emoji)
                         .font(.system(size: 22))
                         .frame(width: 44, height: 44)
-                        .background(isOpen ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
+                        // iconFilled flags the most urgent panes (bleeding, not
+                        // breathing, choking) to stay solid-accent even at rest,
+                        // not just while open.
+                        .background((isOpen || pane.iconFilled) ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
                         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
                         .accessibilityHidden(true)
 

@@ -42,7 +42,7 @@ func quantizePNG(at url: URL) {
 /// scale — `NSImage.lockFocus()` silently doubles output on Retina displays,
 /// which previously made every "size N" export come out as N*2 pixels.
 func renderPixels(_ pixels: Int, draw: (CGContext) -> Void) -> NSBitmapImageRep {
-    let rep = NSBitmapImageRep(
+    guard let rep = NSBitmapImageRep(
         bitmapDataPlanes: nil,
         pixelsWide: pixels,
         pixelsHigh: pixels,
@@ -53,92 +53,18 @@ func renderPixels(_ pixels: Int, draw: (CGContext) -> Void) -> NSBitmapImageRep 
         colorSpaceName: .deviceRGB,
         bytesPerRow: 0,
         bitsPerPixel: 0
-    )!
-    let ctx = NSGraphicsContext(bitmapImageRep: rep)!
+    ) else {
+        fatalError("Failed to allocate \(pixels)x\(pixels) bitmap rep")
+    }
+    guard let ctx = NSGraphicsContext(bitmapImageRep: rep) else {
+        fatalError("Failed to create graphics context for bitmap rep")
+    }
     NSGraphicsContext.saveGraphicsState()
     NSGraphicsContext.current = ctx
     ctx.cgContext.interpolationQuality = .high
     draw(ctx.cgContext)
     NSGraphicsContext.restoreGraphicsState()
     return rep
-}
-
-func heartPath(in rect: CGRect) -> CGPath {
-    // Normalized from the brand SVG path (32 x ~30 design space).
-    let path = CGMutablePath()
-    let sx = rect.width / 32
-    let sy = rect.height / 30
-    let o = rect.origin
-    func P(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: o.x + x * sx, y: o.y + (30 - y) * sy) }
-
-    path.move(to: P(24, 0))
-    path.addCurve(to: P(16, 7), control1: P(19.6, 0), control2: P(17, 3.4))
-    path.addCurve(to: P(8, 0), control1: P(15, 3.4), control2: P(12.4, 0))
-    path.addCurve(to: P(0, 9), control1: P(3.2, 0), control2: P(0, 4))
-    path.addCurve(to: P(16, 28), control1: P(0, 19), control2: P(7, 26))
-    path.addCurve(to: P(32, 9), control1: P(25, 26), control2: P(32, 19))
-    path.addCurve(to: P(24, 0), control1: P(32, 4), control2: P(28.8, 0))
-    path.closeSubpath()
-    return path
-}
-
-func ecgPath(in heartRect: CGRect) -> CGPath {
-    // Original polyline in the 32x30 heart design space.
-    let pts: [(CGFloat, CGFloat)] = [
-        (7, 14), (12.15, 14), (14.3, 11), (16.8, 18), (18.97, 14), (25, 14)
-    ]
-    let sx = heartRect.width / 32
-    let sy = heartRect.height / 30
-    let o = heartRect.origin
-    let path = CGMutablePath()
-    for (i, p) in pts.enumerated() {
-        let pt = CGPoint(x: o.x + p.0 * sx, y: o.y + (30 - p.1) * sy)
-        if i == 0 { path.move(to: pt) } else { path.addLine(to: pt) }
-    }
-    return path
-}
-
-func drawLogo(size: CGFloat, cornerRadius: CGFloat? = nil) -> NSImage {
-    let image = NSImage(size: NSSize(width: size, height: size))
-    image.lockFocus()
-    defer { image.unlockFocus() }
-
-    let ctx = NSGraphicsContext.current!.cgContext
-    ctx.setShouldAntialias(true)
-    ctx.setAllowsAntialiasing(true)
-    ctx.interpolationQuality = .high
-
-    let bounds = CGRect(x: 0, y: 0, width: size, height: size)
-
-    // Flat solid tile — no gradient, no sheen, circular border.
-    let tileColor = NSColor(calibratedRed: 0.882, green: 0.114, blue: 0.180, alpha: 1) // #e11d2e
-    let tile = CGPath(ellipseIn: bounds, transform: nil)
-    ctx.addPath(tile)
-    ctx.clip()
-    ctx.setFillColor(tileColor.cgColor)
-    ctx.fill(bounds)
-
-    // Heart + ECG (centered, ~64% of tile so it clears the circular edge)
-    let heartW = size * 0.64
-    let heartH = heartW * (30.0 / 32.0)
-    let heartRect = CGRect(
-        x: (size - heartW) / 2,
-        y: (size - heartH) / 2 - size * 0.01,
-        width: heartW,
-        height: heartH
-    )
-    ctx.setFillColor(NSColor.white.cgColor)
-    ctx.addPath(heartPath(in: heartRect))
-    ctx.fillPath()
-
-    ctx.setStrokeColor(NSColor(calibratedRed: 0.949, green: 0.227, blue: 0.275, alpha: 1).cgColor)
-    ctx.setLineWidth(max(2, size * 0.045))
-    ctx.setLineCap(.round)
-    ctx.setLineJoin(.round)
-    ctx.addPath(ecgPath(in: heartRect))
-    ctx.strokePath()
-
-    return image
 }
 
 func scaledSquare(_ image: NSImage, size: Int, opaqueBackground: NSColor? = nil) -> NSBitmapImageRep {
@@ -155,7 +81,7 @@ func scaledSquare(_ image: NSImage, size: Int, opaqueBackground: NSColor? = nil)
     // App Store icon: no alpha *plane* at all (not just opaque pixels) — an
     // NSBitmapImageRep can't be a no-alpha NSGraphicsContext target, so render
     // into a raw CGContext(.noneSkipLast) instead, which supports it.
-    let ctx = CGContext(
+    guard let ctx = CGContext(
         data: nil,
         width: size,
         height: size,
@@ -163,7 +89,9 @@ func scaledSquare(_ image: NSImage, size: Int, opaqueBackground: NSColor? = nil)
         bytesPerRow: 0,
         space: CGColorSpaceCreateDeviceRGB(),
         bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
-    )!
+    ) else {
+        fatalError("Failed to create \(size)x\(size) no-alpha CGContext")
+    }
     ctx.interpolationQuality = .high
     NSGraphicsContext.saveGraphicsState()
     NSGraphicsContext.current = NSGraphicsContext(cgContext: ctx, flipped: false)
@@ -176,7 +104,10 @@ func scaledSquare(_ image: NSImage, size: Int, opaqueBackground: NSColor? = nil)
         fraction: 1
     )
     NSGraphicsContext.restoreGraphicsState()
-    return NSBitmapImageRep(cgImage: ctx.makeImage()!)
+    guard let cgImage = ctx.makeImage() else {
+        fatalError("Failed to produce CGImage from no-alpha context")
+    }
+    return NSBitmapImageRep(cgImage: cgImage)
 }
 
 func drawWordmark(logo: NSImage, height: Int, darkBackground: Bool) -> NSBitmapImageRep {
@@ -210,7 +141,7 @@ func drawWordmark(logo: NSImage, height: Int, darkBackground: Bool) -> NSBitmapI
     let textSize = text.size()
     let width = Int(ceil(padding + logoSize + gap + textSize.width + padding))
 
-    let rep = NSBitmapImageRep(
+    guard let rep = NSBitmapImageRep(
         bitmapDataPlanes: nil,
         pixelsWide: width,
         pixelsHigh: height,
@@ -221,8 +152,12 @@ func drawWordmark(logo: NSImage, height: Int, darkBackground: Bool) -> NSBitmapI
         colorSpaceName: .deviceRGB,
         bytesPerRow: 0,
         bitsPerPixel: 0
-    )!
-    let gctx = NSGraphicsContext(bitmapImageRep: rep)!
+    ) else {
+        fatalError("Failed to allocate \(width)x\(height) wordmark bitmap rep")
+    }
+    guard let gctx = NSGraphicsContext(bitmapImageRep: rep) else {
+        fatalError("Failed to create graphics context for wordmark bitmap rep")
+    }
     NSGraphicsContext.saveGraphicsState()
     NSGraphicsContext.current = gctx
     let ctx = gctx.cgContext
@@ -262,6 +197,7 @@ do {
     let iconDir = root.appendingPathComponent("RedMed/Assets.xcassets/AppIcon.appiconset")
     try ensureDir(logoDir)
     try ensureDir(wordDir)
+    try ensureDir(iconDir)
 
     let logoScales: [(String, Int)] = [
         ("BrandLogo.png", 180),
