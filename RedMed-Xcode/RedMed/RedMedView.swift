@@ -54,16 +54,19 @@ struct RedMedView: View {
 
     /// Prefer live cache; else Face ID–overlapped pack so unlock's first frame is not cream-only.
     /// Placeholder `#d=` is enough when embed JSON is present (app-embed skips WebCrypto).
+    /// Never return nil for a filled profile — that `else` was a cream hang after Face ID.
     private var shellPayload: String? {
         if let packedPayload { return packedPayload }
         if let pending = profile.unlockPreviewPayload { return pending }
-        if shellEmbedJSON != nil { return ProfileNFCCodec.placeholderPreviewPayload }
-        return nil
+        if showsOwnerSetupFunnel { return nil }
+        return ProfileNFCCodec.placeholderPreviewPayload
     }
 
-    /// Prefer live cache; else Face ID–overlapped plaintext JSON.
+    /// Prefer live cache; else Face ID–overlapped plaintext JSON; else live profile.
     private var shellEmbedJSON: String? {
-        cachedEmbedJSON ?? profile.unlockEmbedProfileJSON
+        cachedEmbedJSON
+            ?? profile.unlockEmbedProfileJSON
+            ?? ProfileNFCCodec.embedProfileJSON(from: profile)
     }
 
     /// Owner empty profile — native steps instead of a blank YOU card.

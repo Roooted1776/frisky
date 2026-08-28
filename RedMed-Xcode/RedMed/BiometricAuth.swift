@@ -415,7 +415,7 @@ enum BiometricAuth {
             completion(.success)
         })
         simulatorAlert = alert
-        top.present(alert, animated: true)
+        top.present(alert, animated: false)
     }
 
     private static func topViewController() -> UIViewController? {
