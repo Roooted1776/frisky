@@ -2,12 +2,10 @@ import LocalAuthentication
 import UIKit
 
 /// Strict owner authentication. Never call from passerby `tapper.html`,
-/// `PublicCardView`, or NFC Preview / Scan — tap-to-view stays ungated
+/// NFC Preview / Scan — tap-to-view stays ungated
 /// (no Face ID, no passcode, no login).
 ///
-/// App unlock is Face ID / Touch ID with device passcode fallback
-/// (`allowPasscode: true`, `force: true`) so every open prompts.
-/// Edit, Save, NFC write, vault unlock, and Erase also pass `force: true`.
+/// Edit, Save, and Erase pass `force: true`. NFC write and tapper do not.
 /// There is no process-wide skip flag.
 ///
 /// On success the `LAContext` is **parked** (not invalidated) so
@@ -256,9 +254,6 @@ enum BiometricAuth {
     static func clearAuthenticationContext() {
         clearPark()
     }
-
-    /// Kept for OwnerAppLock call sites. No process-wide skip flag remains.
-    static func resetLaunchUnlock() {}
 
     private static func markSessionEnded() {
         parkLock.lock()

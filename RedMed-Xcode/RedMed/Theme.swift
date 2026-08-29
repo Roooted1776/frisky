@@ -40,8 +40,7 @@ extension Color {
 }
 
 /// Cream page with rose wash only (fill color — no BrandLogo).
-/// Lock front (`LockEntryPage`) is flat `redmedBg` + mark + title;
-/// passerby tapper matches cream fill.
+/// Pages and passerby tapper share cream fill.
 struct RedMedPageBackground: View {
     var body: some View {
         ZStack {
@@ -214,63 +213,6 @@ struct CompactFillButton: View {
         .buttonStyle(RedMedPressStyle(haptic: nil))
         .disabled(disabled)
         .opacity(disabled ? RedMedChrome.disabledOpacity : 1)
-        .accessibilityAddTraits(.isButton)
-    }
-}
-
-/// Full-width CTA from the original Face ID unlock dock — gradient fill,
-/// continuous corners, white hairline. Face page **Proceed** still uses this.
-/// Owner RedMed tab no longer mounts a bottom Help dock.
-struct UnlockScreenButton: View {
-    let title: String
-    var disabled: Bool = false
-    var accessibilityHintText: String? = nil
-    let action: () -> Void
-
-    var body: some View {
-        Button {
-            RedMedHaptics.medium()
-            action()
-        } label: {
-            Text(title)
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .frame(minHeight: 52)
-                .padding(.horizontal, 22)
-                .padding(.vertical, 12)
-                .contentShape(RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous))
-                .background {
-                    RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color.redmedAccentLift.opacity(0.75),
-                                    Color.redmedAccent.opacity(0.75)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .overlay {
-                            RoundedRectangle(cornerRadius: RedMedChrome.unlockButtonRadius, style: .continuous)
-                                .strokeBorder(Color.white.opacity(0.32), lineWidth: 1)
-                        }
-                        .shadow(
-                            color: disabled ? .clear : RedMedChrome.accentShadow,
-                            radius: 12,
-                            y: 6
-                        )
-                }
-                // Same GPU-flattening as PrimaryButton — the press-scale spring
-                // then transforms one rasterized texture, not the live gradient stack.
-                .drawingGroup()
-        }
-        .buttonStyle(RedMedPressStyle(haptic: nil))
-        .disabled(disabled)
-        .opacity(disabled ? 0.48 : 1)
-        .accessibilityLabel(title)
-        .accessibilityHint(accessibilityHintText ?? "")
         .accessibilityAddTraits(.isButton)
     }
 }
@@ -504,12 +446,6 @@ enum RedMedChrome {
     static let modalSideMinWidth: CGFloat = 64
     static let boxRadius: CGFloat = 12
     static let chipRadius: CGFloat = 8
-    /// Proceed CTA — continuous pill-ish.
-    static let unlockButtonRadius: CGFloat = 20
-    /// Small lock-load medical mark (not BrandLogo asset, not Apple Face ID).
-    static let unlockGlyphSize: CGFloat = 56
-    /// Face-page square mark — same red medical circle as lock entry.
-    static let unlockFrameSize: CGFloat = 96
     /// Tapper / empty YOU-card BrandLogo diameter (`--logo` matches).
     static let logoSize: CGFloat = 72
     /// BrandWordmark lockup on NFC / topic pages (Aid + 911 are content-first).
@@ -524,74 +460,6 @@ enum RedMedChrome {
     static let disabledOpacity: Double = 0.48
     static let cardShadow = Color.black.opacity(0.045)
     static let accentShadow = Color.redmedAccent.opacity(0.18)
-}
-
-/// Original medical lock mark — heart + static EKG, Face ID–sized.
-/// Face-page static mark — heart + EKG. Not Apple Face ID scan rings.
-/// First frame already matches launch (no delayed spark).
-struct LockMedGlyph: View {
-    var size: CGFloat = RedMedChrome.unlockGlyphSize
-
-    var body: some View {
-        ZStack {
-            Circle()
-                .fill(Color(red: 0.882, green: 0.114, blue: 0.180))
-            LockMedHeart()
-                .fill(Color.white)
-                .padding(size * 0.18)
-            LockMedECG()
-                .stroke(
-                    Color(red: 0.949, green: 0.227, blue: 0.275),
-                    style: StrokeStyle(
-                        lineWidth: max(2, size * 0.045),
-                        lineCap: .round,
-                        lineJoin: .round
-                    )
-                )
-                .padding(size * 0.18)
-        }
-        .frame(width: size, height: size)
-        // Visible on the first frame — delayed spark / fade was lag after launch.
-        .drawingGroup()
-    }
-}
-
-/// Brand heart in 32×30 design space (SwiftUI y-down).
-private struct LockMedHeart: Shape {
-    func path(in rect: CGRect) -> Path {
-        let sx = rect.width / 32
-        let sy = rect.height / 30
-        func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
-            CGPoint(x: rect.minX + x * sx, y: rect.minY + y * sy)
-        }
-        var p = Path()
-        p.move(to: pt(24, 0))
-        p.addCurve(to: pt(16, 7), control1: pt(19.6, 0), control2: pt(17, 3.4))
-        p.addCurve(to: pt(8, 0), control1: pt(15, 3.4), control2: pt(12.4, 0))
-        p.addCurve(to: pt(0, 9), control1: pt(3.2, 0), control2: pt(0, 4))
-        p.addCurve(to: pt(16, 28), control1: pt(0, 19), control2: pt(7, 26))
-        p.addCurve(to: pt(32, 9), control1: pt(25, 26), control2: pt(32, 19))
-        p.addCurve(to: pt(24, 0), control1: pt(32, 4), control2: pt(28.8, 0))
-        p.closeSubpath()
-        return p
-    }
-}
-
-/// Static EKG polyline in the same 32×30 heart space — no pulse bump.
-private struct LockMedECG: Shape {
-    func path(in rect: CGRect) -> Path {
-        let sx = rect.width / 32
-        let sy = rect.height / 30
-        let pts: [(CGFloat, CGFloat)] = [
-            (7, 14), (12.15, 14), (14.3, 11), (16.8, 18), (18.97, 14), (25, 14)
-        ]
-        var p = Path()
-        for (i, xy) in pts.enumerated() {
-            let pt = CGPoint(x: rect.minX + xy.0 * sx, y: rect.minY + xy.1 * sy)
-            if i == 0 { p.move(to: pt) } else { p.addLine(to: pt) }
-        }
-        return p
-    }
 }
 
 /// Pinned BrandWordmark row — NFC / topic pages (not Aid or 911).
@@ -629,11 +497,12 @@ extension View {
     /// Surface card chrome used on RedMed / 911 / Aid / NFC (owner + scanner).
     /// No outer stroke — fill + radius + optional shadow only.
     ///
-    /// `flatten` rasterizes the fill/shadow into one GPU-backed texture so a
-    /// static card costs one Metal composite instead of a per-frame CPU
-    /// shadow recompute while its page scrolls. Pass `false` for a card that
-    /// wraps live-editing content (e.g. a focused `TextField`) — re-flattening
-    /// on every keystroke would cost more than it saves.
+    /// `flatten` groups fill+shadow so scrolling doesn't recompute the soft
+    /// shadow on every frame. Uses `compositingGroup` (layer) not
+    /// `drawingGroup` (offscreen Metal bitmap) so tall cards share GPU with
+    /// the tapper WKWebView instead of allocating a second huge texture.
+    /// Small chrome (tab bar, CTAs, CPR beat) still uses `drawingGroup`.
+    /// Pass `false` for live-editing content (focused `TextField`).
     func redmedBox(elevated: Bool = true, flatten: Bool = true) -> some View {
         let card = self
             .background(Color.redmedSurface)
@@ -641,7 +510,7 @@ extension View {
             .shadow(color: elevated ? RedMedChrome.cardShadow : .clear, radius: 8, y: 3)
         return Group {
             if flatten {
-                card.drawingGroup()
+                card.compositingGroup()
             } else {
                 card
             }
