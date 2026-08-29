@@ -4,30 +4,29 @@ struct AidPane: Identifiable {
     let id: String
     let emoji: String
     let title: String
-    let iconFilled: Bool
     let topics: [(label: String, key: String)]
 }
 
 /// Pane chrome only — topic bodies stay in AidTopicCatalog until a topic opens.
 enum AidPaneCatalog {
     static let panes: [AidPane] = [
-        AidPane(id: "hospitals", emoji: "🏥", title: "Nearby Hospitals", iconFilled: false,
+        AidPane(id: "hospitals", emoji: "🏥", title: "Nearby Hospitals",
                 topics: [("Find Nearby Hospitals", "trauma-hospitals")]),
-        AidPane(id: "crash", emoji: "🚗", title: "Crash & Head", iconFilled: false,
+        AidPane(id: "crash", emoji: "🚗", title: "Crash & Head",
                 topics: [("Car Crash", "car-crash"), ("Head & Pupils", "head-pupils"), ("Spinal", "spinal")]),
-        AidPane(id: "bleed", emoji: "🩸", title: "Bleeding", iconFilled: true,
+        AidPane(id: "bleed", emoji: "🩸", title: "Bleeding",
                 topics: [("Find Bleeding", "find-bleeding"), ("Bad Bleeding", "bad-bleeding"),
                          ("Belt Tourniquet", "belt-tourniquet"), ("Gunshot / Stab", "gunshot-stab")]),
-        AidPane(id: "breathing", emoji: "🫁", title: "Not Breathing", iconFilled: true,
+        AidPane(id: "breathing", emoji: "🫁", title: "Not Breathing",
                 topics: [("CPR", "cpr")]),
-        AidPane(id: "choking", emoji: "❤️", title: "Choking", iconFilled: true,
+        AidPane(id: "choking", emoji: "❤️", title: "Choking",
                 topics: [("Choking", "choking")]),
-        AidPane(id: "shock", emoji: "⚡", title: "Shock", iconFilled: false,
+        AidPane(id: "shock", emoji: "⚡", title: "Shock",
                 topics: [("Shock", "shock")]),
-        AidPane(id: "temp", emoji: "🌡️", title: "Burns · Cold · Heat", iconFilled: false,
+        AidPane(id: "temp", emoji: "🌡️", title: "Burns · Cold · Heat",
                 topics: [("Burn Care", "burn-care"), ("Electrical & Chemical", "electrical-chemical-burns"),
                          ("Cold (Hypothermia)", "cold-hypothermia"), ("Heat (Exhaustion & Stroke)", "heat-stroke")]),
-        AidPane(id: "seizure", emoji: "🧠", title: "Seizure", iconFilled: false,
+        AidPane(id: "seizure", emoji: "🧠", title: "Seizure",
                 topics: [("Seizure", "seizure")]),
     ]
 
@@ -146,10 +145,8 @@ struct PaneCard: View {
                     Text(pane.emoji)
                         .font(.system(size: 22))
                         .frame(width: 44, height: 44)
-                        // iconFilled flags the most urgent panes (bleeding, not
-                        // breathing, choking) to stay solid-accent even at rest,
-                        // not just while open.
-                        .background((isOpen || pane.iconFilled) ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
+                        // Cream at rest, solid accent while open — same for every pane.
+                        .background(isOpen ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
                         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
                         .accessibilityHidden(true)
 
