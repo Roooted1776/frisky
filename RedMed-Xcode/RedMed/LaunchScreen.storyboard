@@ -13,54 +13,19 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Before you continue" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ttl">
-                                <rect key="frame" x="16" y="48" width="343" height="28"/>
-                                <fontDescription key="fontDescription" type="boldSystem" pointSize="22"/>
-                                <color key="textColor" red="0.11000000000000001" green="0.09799999999999999" blue="0.086000000000000007" alpha="1" colorSpace="calibratedRGB"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="natural" lineBreakMode="wordWrap" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bdy">
-                                <rect key="frame" x="16" y="94" width="343" height="160"/>
-                                <string key="text">RedMed is a personal medical ID and first-aid reference on this iPhone. It is not a medical device, does not diagnose or treat, and does not replace emergency dispatch. Always call emergency services first in a real emergency.
-
-Your profile stays on this iPhone, and on a band if you write one — RedMed runs no server for it. Privacy, Security, and Terms are in the block below.</string>
-                                <fontDescription key="fontDescription" type="system" weight="medium" pointSize="14"/>
-                                <color key="textColor" red="0.47099999999999997" green="0.44299999999999995" blue="0.42400000000000004" alpha="1" colorSpace="calibratedRGB"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="agr">
-                                <rect key="frame" x="16" y="585" width="343" height="50"/>
-                                <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Agree and continue" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="agl">
-                                        <rect key="frame" x="0.0" y="0.0" width="343" height="50"/>
-                                        <fontDescription key="fontDescription" type="boldSystem" pointSize="16"/>
-                                        <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
-                                </subviews>
-                                <color key="backgroundColor" red="0.882" green="0.114" blue="0.28200000000000003" alpha="1" colorSpace="calibratedRGB"/>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" image="LaunchAck" translatesAutoresizingMaskIntoConstraints="NO" id="img">
+                                <rect key="frame" x="97.5" y="243.5" width="180" height="180"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="50" id="ag-h"/>
-                                    <constraint firstItem="agl" firstAttribute="leading" secondItem="agr" secondAttribute="leading" id="ag-l"/>
-                                    <constraint firstItem="agl" firstAttribute="trailing" secondItem="agr" secondAttribute="trailing" id="ag-r"/>
-                                    <constraint firstItem="agl" firstAttribute="top" secondItem="agr" secondAttribute="top" id="ag-t"/>
-                                    <constraint firstItem="agl" firstAttribute="bottom" secondItem="agr" secondAttribute="bottom" id="ag-b"/>
+                                    <constraint firstAttribute="width" constant="180" id="img-w"/>
+                                    <constraint firstAttribute="height" constant="180" id="img-h"/>
                                 </constraints>
-                            </view>
+                            </imageView>
                         </subviews>
                         <color key="backgroundColor" red="1" green="0.96862745098039216" blue="0.96862745098039216" alpha="1" colorSpace="calibratedRGB"/>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <constraints>
-                            <constraint firstItem="ttl" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="t-c"/>
-                            <constraint firstItem="ttl" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="28" id="t-t"/>
-                            <constraint firstItem="ttl" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" constant="16" id="t-l"/>
-                            <constraint firstItem="ttl" firstAttribute="trailing" secondItem="Ze5-6b-2t3" secondAttribute="trailing" constant="-16" id="t-r"/>
-                            <constraint firstItem="bdy" firstAttribute="top" secondItem="ttl" secondAttribute="bottom" constant="18" id="b-t"/>
-                            <constraint firstItem="bdy" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" constant="16" id="b-l"/>
-                            <constraint firstItem="bdy" firstAttribute="trailing" secondItem="Ze5-6b-2t3" secondAttribute="trailing" constant="-16" id="b-r"/>
-                            <constraint firstItem="agr" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" constant="16" id="a-l"/>
-                            <constraint firstItem="agr" firstAttribute="trailing" secondItem="Ze5-6b-2t3" secondAttribute="trailing" constant="-16" id="a-r"/>
-                            <constraint firstItem="agr" firstAttribute="bottom" secondItem="6Tk-OE-BBY" secondAttribute="bottom" constant="-32" id="a-b"/>
+                            <constraint firstItem="img" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="img-cx"/>
+                            <constraint firstItem="img" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="img-cy"/>
                         </constraints>
                     </view>
                 </viewController>
@@ -69,4 +34,7 @@ Your profile stays on this iPhone, and on a band if you write one — RedMed run
             <point key="canvasLocation" x="53" y="375"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="LaunchAck" width="180" height="180"/>
+    </resources>
 </document>
