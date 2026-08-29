@@ -15,7 +15,6 @@ struct RedMedApp: App {
             .preferredColorScheme(.light)
             .task {
                 SnapshotSafeCover.activate()
-                // After first frame — do not sleep 300ms on the launch path.
                 await Task.yield()
                 PasserbyHTMLCardView.scheduleShellWarmOnce()
             }
@@ -30,12 +29,23 @@ struct RedMedApp: App {
     }
 }
 
-/// System Face ID first (lock chrome hidden). After unlock: acknowledgment
-/// (first launch / policy bump), then Main. Later opens: Face ID, then Main.
-/// Simulator OwnerAppLock starts unlocked so the first SwiftUI frame is this
-/// tree, not cream. Device stays locked until Face ID succeeds.
+/// First open: Before you continue (no lock cream). Agree opens Main.
+/// Later opens: Face ID lock, then Main.
 private struct LaunchRoot: View {
+    @State private var needsConsent = !ConsentSettings.hasAcceptedCurrent
+
     var body: some View {
-        OwnerAppLock { ConsentGateView { Main() } }
+        Group {
+            if needsConsent {
+                ConsentGateView { Main() }
+            } else {
+                OwnerAppLock { Main() }
+            }
+        }
+        .onAppear {
+            guard needsConsent else { return }
+            OwnerLockPresentation.setLocked(false)
+            SnapshotSafeCover.shared.reveal()
+        }
     }
 }
