@@ -51,7 +51,13 @@ struct OwnerAppLock<Content: View>: View {
         case unlocked
     }
 
+    #if targetEnvironment(simulator)
+    /// Sim has no PHI to hide and no real Face ID sheet. Starting locked
+    /// painted cream Color.redmedBg as the first SwiftUI frame.
+    @State private var gate: Gate = .unlocked
+    #else
     @State private var gate: Gate = .locked
+    #endif
     @State private var isAuthenticating = false
     @State private var biometryFailed = false
     @State private var faceIDUnavailableReason: BiometricAuth.UnavailableReason?
@@ -130,6 +136,22 @@ struct OwnerAppLock<Content: View>: View {
             lockCycleStartedAt = Date()
             OwnerLockPresentation.setLocked(gate == .locked)
             logLock("onAppear hasKeyWindow=\(hasKeyWindow) hasHostWindow=\(hasHostWindow)")
+            #if targetEnvironment(simulator)
+            if gate == .unlocked {
+                // Already Consent/Main — do not arm Face ID watchdogs or cream.
+                RedMedSignpost.end(.coldLaunchWindow)
+                revealSwitcherCover()
+                Task(priority: .utility) { @MainActor in
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    guard gate == .unlocked else { return }
+                    CrashMotionGuard.shared.startMonitoring()
+                    Task.detached(priority: .utility) {
+                        _ = HIPAAOfflineVault.prepare()
+                    }
+                }
+                return
+            }
+            #endif
             scheduleHardWatchdog()
             // Face ID on this first frame — deferredWarmUp waits inside
             // startUnlockPipeline so cream before the sheet is not competing
@@ -198,10 +220,23 @@ struct OwnerAppLock<Content: View>: View {
             #endif
         }
         .task {
-            // .utility priority alone wasn't enough to rule out contention
-            // with the system Face ID sheet's very first presentation tick —
-            // also stagger this off the exact instant evaluatePolicy fires,
-            // same as `deferredWarmUp()` below.
+            #if targetEnvironment(simulator)
+            if gate == .unlocked {
+                // First frame is already content — skip the Face ID stagger
+                // and do not start authenticate / watchdogs.
+                let hasProfile = await Task.detached(priority: .utility) {
+                    ProfileData.hasStoredProfile()
+                }.value
+                ProfileData.setStoredProfileGate(hasProfile)
+                keychainHasProfile = hasProfile
+                if !hasProfile {
+                    profile.discardUnlockPrefetch()
+                }
+                return
+            }
+            #endif
+            // Device: stagger Keychain off evaluatePolicy (same as deferredWarmUp).
+            // Does not gate first paint — cream is already up until Face ID.
             try? await Task.sleep(nanoseconds: 300_000_000)
             let hasProfile = await Task.detached(priority: .utility) {
                 ProfileData.hasStoredProfile()
@@ -488,6 +523,7 @@ struct OwnerAppLock<Content: View>: View {
 
     private func tryAutoUnlockIfActive() {
         RedMedSignpost.trace("tryAutoUnlockIfActive: gate=\(gate) didAutoPrompt=\(didAutoPromptThisLock) showUnlockControl=\(showUnlockControl) scenePhase=\(scenePhase)")
+        // Sim cold start is already .unlocked — do not start Face ID / watchdogs.
         guard gate == .locked, !didAutoPromptThisLock, !showUnlockControl else { return }
         // Fire immediately, including on cold-start `.inactive` — per AGENTS.md,
         // waiting for `.active` is itself the cream-hang bug: the scene reaches

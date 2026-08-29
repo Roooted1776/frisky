@@ -27,6 +27,8 @@ struct ConsentGateView<Content: View>: View {
     @State private var checked = false
     @State private var selectedPolicy: HelpDocument.Policy = .privacy
     @State private var openPolicy: HelpDocument.Policy?
+    /// Help.html WKWebView is the ack hang. Mount after the first chrome frame.
+    @State private var policyWebArmed = false
     /// OwnerAppLock already did Face ID. This view is only the acknowledgment.
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
@@ -118,10 +120,12 @@ struct ConsentGateView<Content: View>: View {
                     VStack(spacing: 0) {
                         policyTabs
                         Divider().overlay(Color.redmedDivider)
-                        LocalWebView(filename: HelpDocument.bundledFile, fragment: selectedPolicy.fragment)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 440)
-                            .accessibilityLabel(selectedPolicy.title)
+                        if policyWebArmed {
+                            LocalWebView(filename: HelpDocument.bundledFile, fragment: selectedPolicy.fragment)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 440)
+                                .accessibilityLabel(selectedPolicy.title)
+                        }
                     }
                     .redmedBox(flatten: false)
 
@@ -156,10 +160,10 @@ struct ConsentGateView<Content: View>: View {
                             contentArmed = true
                             hasAccepted = true
                         }
-                        // NFC Preview pool — after page 2 is already on screen.
-                        // Warming it on unlock raced RedMed's first paint.
+                        // NFC Preview pool after Main is on screen. Do not
+                        // sleep before flipping hasAccepted.
                         Task { @MainActor in
-                            try? await Task.sleep(nanoseconds: 400_000_000)
+                            await Task.yield()
                             PasserbyWebViewPool.warmFullShell()
                         }
                     }
@@ -169,12 +173,8 @@ struct ConsentGateView<Content: View>: View {
             }
         }
         .onAppear {
-            guard locationEnabled else { return }
-            // Status read is cheap (no CLLocationManager), but still hop
-            // off the first consent paint so Face ID → Before you continue
-            // is not fighting a locationd ping.
             Task { @MainActor in
-                try? await Task.sleep(nanoseconds: 200_000_000)
+                await Task.yield()
                 guard locationEnabled else { return }
                 locationSuggester.refresh()
             }
@@ -199,6 +199,7 @@ struct ConsentGateView<Content: View>: View {
                 let isOn = selectedPolicy == policy
                 Button {
                     RedMedHaptics.selection()
+                    policyWebArmed = true
                     if isOn {
                         openPolicy = policy
                     } else {
