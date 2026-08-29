@@ -12,7 +12,7 @@ enum AppSettings {
         return UserDefaults.standard.bool(forKey: locationEnabledKey)
     }
 
-    /// Face ID / biometrics for Edit, Save, Erase. Default on.
+    /// Face ID / biometrics for owner open/return plus Edit, Save, Erase. Default on.
     static var faceIDEnabled: Bool {
         if UserDefaults.standard.object(forKey: faceIDEnabledKey) == nil { return true }
         return UserDefaults.standard.bool(forKey: faceIDEnabledKey)

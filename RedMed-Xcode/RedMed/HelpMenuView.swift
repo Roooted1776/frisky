@@ -352,7 +352,7 @@ struct HelpMenuView: View {
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Face ID or passcode is required. Profile and local history are removed from this phone. The bracelet still holds its last write until you overwrite or discard it.")
+                Text("Profile and local history are removed from this phone. The bracelet still holds its last write until you overwrite or discard it.")
             }
             .alert("Couldn't verify it's you", isPresented: $eraseAuthFailed) {
                 Button("OK", role: .cancel) {}

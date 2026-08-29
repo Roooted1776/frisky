@@ -5,8 +5,9 @@ import UIKit
 /// NFC Preview / Scan — tap-to-view stays ungated
 /// (no Face ID, no passcode, no login).
 ///
-/// Edit, Save, and Erase pass `force: true`. NFC write and tapper do not.
-/// There is no process-wide skip flag.
+/// Edit, Save, Erase, and owner open/return pass `force: true`. NFC write
+/// and tapper do not. `AppSettings.faceIDEnabled` (Before you continue,
+/// default on) is the only skip — there is no process-wide session flag.
 ///
 /// On success the `LAContext` is **parked** (not invalidated) so
 /// `KeychainStore.load(context:)` can use `kSecUseAuthenticationContext`
@@ -87,6 +88,19 @@ enum BiometricAuth {
         completion: @escaping (Outcome) -> Void
     ) {
         _ = force
+
+        // Before you continue Face ID toggle. Off skips the system sheet for
+        // owner open/return, Edit, Save, and Erase. Default is on.
+        if !AppSettings.faceIDEnabled {
+            _ = cancelInFlight()
+            markSessionEnded()
+            if Thread.isMainThread {
+                completion(.success)
+            } else {
+                DispatchQueue.main.async { completion(.success) }
+            }
+            return
+        }
 
         // Simulator: never evaluatePolicy and never a UIKit alert. The
         // Authenticate alert sat on a hidden window / inactive scene and

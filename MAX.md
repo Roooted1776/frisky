@@ -16,7 +16,8 @@ RedMed is a **native iOS/SwiftUI** medical ID (`RedMed-Xcode/`). Local only: Key
 
 - Owner tabs: **RedMed · 911 · Aid · NFC**. Scanner / tapper: **RedMed · 911 · Aid** (no Edit, no NFC).
 - Owner open/return is Face ID only (system prompt). First start: Face ID → Before you continue → Agree → Main. Later cold open / Home / app-switch: Face ID → Main. Edit / Save / Erase still Face ID. 911, Aid, NFC write, and tapper do not prompt. Tapper: no biometrics, no acknowledgement.
-- No LockEntryPage / FacePage / heart / Proceed. Cream cover while locked hides PHI. `ConsentGateView` on first start / policy bump only (`redmed.consentAcceptedVersion` == 4.1 skips ack). `SnapshotSafeCover` is the app-switcher cream.
+- Face ID toggle on Before you continue defaults on. Off skips the open/return gate and Edit / Save / Erase. Help has no Face ID switch.
+- No LockEntryPage / FacePage / heart / Proceed. Cream cover while locked hides PHI. `ConsentGateView` on first start / policy bump / after Erase only (`redmed.consentAcceptedVersion` == 4.1 skips ack). `SnapshotSafeCover` is the app-switcher cream.
 - Profile restores from Keychain on owner Main appear (device-unlocked Keychain — no Face ID to view). One Face ID is possible after this build to migrate an old biometry Keychain item, then never again to view.
 - NFC Tag Reading + HealthKit + Associated Domains are **parked** (personal/free Apple team). NFC tab stays visible; write is Preview packed card.
 - Seizure timer **never auto-dials**. At 5:00 it shows Call (`tel:`). GPS stays on-screen — never uploaded, never attached to `tel:`.
@@ -24,10 +25,14 @@ RedMed is a **native iOS/SwiftUI** medical ID (`RedMed-Xcode/`). Local only: Key
 
 ## Shipped (Aug 2026, keep this current)
 
-- Face ID lock: file-level `AuthBudget` (generic types cannot nest `static let`). 1s/1.5s no-sheet, 60s inactive passcode, 90s hang clock.
-- Debug-on-device: Main Thread Checker / TPC / view+queue debug / Metal validation / `ENABLE_DEBUG_DYLIB` off. `print()` → `os.Logger`. Log streaming. No SwiftUI preview dylib.
-- Load: no `CLLocationManager` retained on consent; crash-motion + vault after Before you continue paints; tapper.html string warm 300ms after first paint, WKWebView only after unlock.
-- App Store honesty on `main`: parked NFC copy, no autodial (native + all three `tapper.html`), Aid first-aid disclaimer, support page.
+- Owner Face ID: `OwnerAppLock` system prompt only. Relock on Home / app-switch. Simulator auto-succeeds same-turn; device never does. 90s hang clock still in `BiometricAuth`. No cream lock page, no Proceed.
+- Before you continue: first start / policy bump / after Erase. Haptic, Location, Face ID toggles default on. That page may present the iOS Location Allow sheet. Face ID toggle is actually read (`AppSettings.faceIDEnabled`).
+- Erase all user data is on owner Help, then ack, then Main. Scanner Help stays policies only.
+- ICE phones display US as `(XXX) XXX-XXXX`. Tab bar: labels scale to the slot; bar sits 3pt off the home indicator.
+- Load: lazy tabs (RedMed first; 911 / Aid / NFC on first visit). No second WKWebView on Agree. Crash-motion from owner Main appear. Keychain device-unlocked restore.
+- HealthKit + NFC Tag Reading + Associated Domains parked. NFC tab visible; write is Preview packed card.
+- App Store honesty: parked NFC copy, no autodial, Aid disclaimer, MapKit hospital search may leave the phone, siren may play in background.
+- Debug-on-device: Main Thread Checker / TPC / view+queue debug / Metal validation / `ENABLE_DEBUG_DYLIB` off. `print()` → `os.Logger`.
 - iOS CI is **workflow_dispatch only** (billing). Trigger it after Swift/scheme changes.
 
 ## Xcode on his Mac

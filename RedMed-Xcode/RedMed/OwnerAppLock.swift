@@ -81,6 +81,7 @@ struct OwnerAppLock<Content: View>: View {
             // Face ID / passcode sheets also drive `.inactive`. Do not relock
             // while evaluate is live — that kills the system prompt.
             inactiveLockTask?.cancel()
+            guard AppSettings.faceIDEnabled else { return }
             guard gate == .unlocked, !isAuthenticating, !BiometricAuth.isEvaluating else {
                 return
             }
@@ -95,10 +96,12 @@ struct OwnerAppLock<Content: View>: View {
                 guard scenePhase != .active else { return }
                 guard gate == .unlocked else { return }
                 guard !isAuthenticating, !BiometricAuth.isEvaluating else { return }
+                guard AppSettings.faceIDEnabled else { return }
                 relock(cancelEvaluate: false)
             }
         case .background:
             inactiveLockTask?.cancel()
+            guard AppSettings.faceIDEnabled else { return }
             OwnerLockPresentation.holdSwitcherCover = true
             relock(cancelEvaluate: true)
         case .active:
@@ -142,6 +145,10 @@ struct OwnerAppLock<Content: View>: View {
         guard gate == .locked else { return }
         guard !isAuthenticating else { return }
         guard scenePhase != .background else { return }
+        if !AppSettings.faceIDEnabled {
+            applyUnlocked()
+            return
+        }
         if !force, didPromptThisLock { return }
         // Device evaluatePolicy needs a key window or it can sit with no
         // callback (cream hang). Simulator auto-succeeds same-turn — do not
@@ -182,11 +189,7 @@ struct OwnerAppLock<Content: View>: View {
         isAuthenticating = false
         switch outcome {
         case .success:
-            OwnerLockPresentation.setLocked(false)
-            OwnerLockPresentation.holdSwitcherCover = false
-            SnapshotSafeCover.shared.reveal()
-            didUnlockOnce = true
-            gate = .unlocked
+            applyUnlocked()
         case .notInteractive:
             // Cold-launch race: scene not interactive for LA yet. One
             // bounded retry after LAContext teardown. Same-turn retry is a
@@ -202,6 +205,14 @@ struct OwnerAppLock<Content: View>: View {
             gate = .locked
             didPromptThisLock = true
         }
+    }
+
+    private func applyUnlocked() {
+        OwnerLockPresentation.setLocked(false)
+        OwnerLockPresentation.holdSwitcherCover = false
+        SnapshotSafeCover.shared.reveal()
+        didUnlockOnce = true
+        gate = .unlocked
     }
 
     private func scheduleNotInteractiveRetry(generation: Int) {

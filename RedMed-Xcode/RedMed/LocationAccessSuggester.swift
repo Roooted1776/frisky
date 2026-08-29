@@ -4,8 +4,8 @@ import UIKit
 import Combine
 
 /// Location-denied status only. Never prompts.
-/// `CLLocationManager.requestWhenInUseAuthorization` runs from Find Help /
-/// nearby hospitals when Location is enabled — not from Help chrome.
+/// `CLLocationManager.requestWhenInUseAuthorization` runs from Before you
+/// continue and Find Help / nearby hospitals — not from Help chrome.
 final class LocationAccessSuggester: ObservableObject {
     static let shared = LocationAccessSuggester()
 
