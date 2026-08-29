@@ -10,6 +10,7 @@ import UIKit
 /// then Main. Relock whenever the owner app leaves the foreground.
 struct OwnerAppLock<Content: View>: View {
     @Environment(\.scenePhase) private var scenePhase
+    @EnvironmentObject private var profile: ProfileData
     @ViewBuilder var content: () -> Content
 
     private enum Gate {
@@ -159,6 +160,11 @@ struct OwnerAppLock<Content: View>: View {
         didPromptThisLock = true
         authGeneration &+= 1
         let generation = authGeneration
+        // Overlap Keychain+JSON and the tapper.html string cache with the
+        // Face ID sheet so Main paints the YOU card on unlock instead of
+        // cream-while-restoring / cream-while-reading the shell.
+        profile.beginLaunchPrefetch()
+        PasserbyHTMLCardView.scheduleShellWarmOnce()
         RedMedSignpost.trace("OwnerAppLock evaluate generation=\(generation)")
         RedMedSignpost.begin(.faceIDEvaluate)
         BiometricAuth.authenticate(
