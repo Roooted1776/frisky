@@ -15,7 +15,7 @@
 <div class="legal-sheet" id="top">
   <header class="legal-letterhead">
     <p class="legal-firm">RedMed</p>
-    <p class="legal-tagline">Help · Privacy, Security, and Terms</p>
+    <p class="legal-tagline">Help · Privacy, Security, Terms, and Medical disclaimer</p>
     <p class="legal-entity">RedMed · Local medical ID on your iPhone and band</p>
   </header>
 
@@ -30,6 +30,7 @@
     <a href="#privacy" role="tab" id="tab-privacy" aria-controls="privacy" aria-selected="true" tabindex="0"><span class="legal-nav-ico" aria-hidden="true">🔒</span>Privacy</a>
     <a href="#security" role="tab" id="tab-security" aria-controls="security" aria-selected="false" tabindex="-1"><span class="legal-nav-ico" aria-hidden="true">🛡</span>Security</a>
     <a href="#terms" role="tab" id="tab-terms" aria-controls="terms" aria-selected="false" tabindex="-1"><span class="legal-nav-ico" aria-hidden="true">📜</span>Terms</a>
+    <a href="#medical-disclaimer" role="tab" id="tab-medical-disclaimer" aria-controls="medical-disclaimer" aria-selected="false" tabindex="-1"><span class="legal-nav-ico" aria-hidden="true">⚕️</span>Medical disclaimer</a>
   </nav>
 
   <section id="privacy" class="legal-policy active" role="tabpanel" aria-labelledby="tab-privacy" aria-hidden="false">
@@ -292,15 +293,42 @@
     </article>
   </section>
 
+  <section id="medical-disclaimer" class="legal-policy" role="tabpanel" aria-labelledby="tab-medical-disclaimer" aria-hidden="true">
+    <hr class="legal-rule-thin" aria-hidden="true">
+    <h1 class="legal-doc-title">Medical disclaimer</h1>
+    <p class="legal-meta">
+      <strong>Effective</strong> August 2026<br>
+      <strong>Version</strong> 4.1 (United States)<br>
+      <strong>Read with</strong> <a href="#terms">Terms</a> §8–§10
+    </p>
+    <p class="legal-parties">Applies to people in the United States who use the RedMed app or a RedMed NFC band</p>
+    <article class="legal-body">
+    <h2><span class="sec-num">8</span> No medical advice</h2>
+    <p>Aid content is general public information, similar to material from public-health sources. It is for education while you wait for EMS. It is not personalized medical advice and creates no clinician-patient relationship.</p>
+    <p>YOU ACKNOWLEDGE THAT REDMED DOES NOT PROMISE OR WARRANT ANY PARTICULAR RESULT — INCLUDING THAT HELP WILL BE REACHED, THAT RESPONDERS WILL USE THE INFORMATION, THAT TREATMENT WILL BE CORRECT, OR THAT HARM WILL BE AVOIDED. Use of Aid or Find Help is at your own risk and never replaces calling 911.</p>
+
+    <h2><span class="sec-num">9</span> Not a medical device</h2>
+    <p>The App and band are <strong>not medical devices</strong> under the Federal Food, Drug, and Cosmetic Act or FDA rules for their current purpose: consumer storage and display of self-reported emergency ID, plus a convenience assist for contacting emergency services. RedMed is not FDA-cleared, approved, or registered as a device for diagnosis, treatment, cure, mitigation, or prevention of disease.</p>
+    <p>RedMed does not diagnose, treat, monitor vitals, or provide clinical decision support. The band is a passive NFC tag — the digital equivalent of a wallet medical ID — not a therapeutic instrument. The crash/impact alarm in <a href="#crash-alarm">§7</a> is a local attention-getting signal, not a monitor, diagnostic tool, or treatment system.</p>
+    <p>Using RedMed as if it were a monitor, alarm, or treatment system is outside the intended purpose and at that person’s sole risk.</p>
+
+    <h2><span class="sec-num">10</span> Call 911 first</h2>
+    <p>Nothing in the App should delay calling <strong>911</strong>. Prefer calling before reading Aid or writing a band. If you are deaf, hard of hearing, or speech-impaired, use <strong>TTY 911</strong>, relay, or text-to-911 where available.</p>
+    </article>
+  </section>
+
   <footer class="legal-footer">
     <p>© 2026 RedMed · All rights reserved</p>
-    <p><a href="#privacy">Privacy</a> · <a href="#security">Security</a> · <a href="#terms">Terms</a></p>
+    <p><a href="#privacy">Privacy</a> · <a href="#security">Security</a> · <a href="#terms">Terms</a> · <a href="#medical-disclaimer">Medical disclaimer</a></p>
     <p class="legal-footer-disclaimer">This document is for information and is not legal advice. It has not yet been reviewed by qualified US counsel.</p>
   </footer>
 </div>
 <script>
 (function () {
-  var ids = ["privacy", "security", "terms"];
+  var ids = Array.prototype.map.call(
+    document.querySelectorAll("section.legal-policy[id]"),
+    function (el) { return el.id; }
+  );
   // Every element id inside a section maps back to that section, so a
   // cross-reference like #crash-alarm (inside Terms) opens the right tab.
   var sectionOf = {};

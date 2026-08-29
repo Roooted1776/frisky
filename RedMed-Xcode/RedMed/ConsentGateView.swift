@@ -69,7 +69,7 @@ struct ConsentGateView<Content: View>: View {
 
                     VStack(alignment: .leading, spacing: 10) {
                         Text("RedMed is a personal medical ID and first-aid reference on this iPhone. It is not a medical device, does not diagnose or treat, and does not replace emergency dispatch. Always call emergency services first in a real emergency.")
-                        Text("Your profile stays on this iPhone, and on a band if you write one — RedMed runs no server for it. Privacy, Security, and Terms are in the block below.")
+                        Text("Your profile stays on this iPhone, and on a band if you write one — RedMed runs no server for it. Privacy, Security, Terms, and the Medical disclaimer are in the block below.")
                     }
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.redmedMuted)
@@ -185,11 +185,16 @@ struct ConsentGateView<Content: View>: View {
         }
     }
 
-    /// Privacy / Security / Terms — same selected-tab tint as the dock.
+    /// Privacy / Security / Terms / Medical disclaimer — same selected-tab
+    /// tint as the dock. Four labels wrap to two rows so each stays readable.
     /// Tapping a title selects it and shows that Help.html section on this
     /// page. Tapping the already-selected title still opens the full sheet.
     private var policyTabs: some View {
-        HStack(spacing: 6) {
+        let columns = [
+            GridItem(.flexible(), spacing: 6),
+            GridItem(.flexible(), spacing: 6)
+        ]
+        return LazyVGrid(columns: columns, spacing: 6) {
             ForEach(HelpDocument.Policy.allCases) { policy in
                 let isOn = selectedPolicy == policy
                 Button {
@@ -203,6 +208,9 @@ struct ConsentGateView<Content: View>: View {
                     Text(policy.title)
                         .font(.system(size: RedMedChrome.rowFont, weight: isOn ? .semibold : .medium))
                         .foregroundColor(isOn ? .redmedAccent : .redmedMuted)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.85)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                         .background(

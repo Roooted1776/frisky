@@ -9,8 +9,8 @@
   --accent: #e11d48;                      /* Color.redmedAccent */
   --accent-soft: rgba(225, 29, 72, 0.10);
 
-  /* Per-category chip colors — Privacy / Security / Terms, kept out of the
-     brand red so the three tabs read as distinct at a glance. */
+  /* Per-category chip colors — Privacy / Security / Terms / Medical disclaimer,
+     kept out of the brand red so the tabs read as distinct at a glance. */
   --cat-privacy:       #2563eb;
   --cat-privacy-soft:  rgba(37, 99, 235, 0.10);
   --cat-privacy-shadow: rgba(37, 99, 235, 0.35);
@@ -20,6 +20,9 @@
   --cat-terms:       #b45309;
   --cat-terms-soft:  rgba(180, 83, 9, 0.10);
   --cat-terms-shadow: rgba(180, 83, 9, 0.35);
+  --cat-medical:       #0f766e;
+  --cat-medical-soft:  rgba(15, 118, 110, 0.10);
+  --cat-medical-shadow: rgba(15, 118, 110, 0.35);
   --text: #1c1917;                        /* Color.redmedDark — headings + primary ink */
   --text-muted: #78716c;                  /* Color.redmedMuted */
   --text-dim: rgba(28, 25, 23, 0.45);
@@ -117,6 +120,7 @@ body {
 .legal-nav a[href="#privacy"]  { --chip: var(--cat-privacy);  --chip-soft: var(--cat-privacy-soft);  --chip-shadow: var(--cat-privacy-shadow); }
 .legal-nav a[href="#security"] { --chip: var(--cat-security); --chip-soft: var(--cat-security-soft); --chip-shadow: var(--cat-security-shadow); }
 .legal-nav a[href="#terms"]    { --chip: var(--cat-terms);    --chip-soft: var(--cat-terms-soft);    --chip-shadow: var(--cat-terms-shadow); }
+.legal-nav a[href="#medical-disclaimer"] { --chip: var(--cat-medical); --chip-soft: var(--cat-medical-soft); --chip-shadow: var(--cat-medical-shadow); }
 
 .legal-nav a {
   font-family: var(--font);
@@ -174,6 +178,7 @@ body {
 #privacy  { --accent: var(--cat-privacy);  --accent-soft: var(--cat-privacy-soft); }
 #security { --accent: var(--cat-security); --accent-soft: var(--cat-security-soft); }
 #terms    { --accent: var(--cat-terms);    --accent-soft: var(--cat-terms-soft); }
+#medical-disclaimer { --accent: var(--cat-medical); --accent-soft: var(--cat-medical-soft); }
 
 @media (prefers-reduced-motion: reduce) {
   .legal-nav a { transition: none; }

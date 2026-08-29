@@ -2,7 +2,7 @@ import SwiftUI
 import WebKit
 import UIKit
 
-/// Bundled owner Help: one HTML file, three policy anchors. Offline. No network.
+/// Bundled owner Help: one HTML file, four policy anchors. Offline. No network.
 enum HelpDocument {
     static let bundledFile = "Help"
 
@@ -10,6 +10,7 @@ enum HelpDocument {
         case privacy
         case security
         case terms
+        case medicalDisclaimer
 
         var id: String { rawValue }
 
@@ -18,10 +19,16 @@ enum HelpDocument {
             case .privacy: return "Privacy"
             case .security: return "Security"
             case .terms: return "Terms"
+            case .medicalDisclaimer: return "Medical disclaimer"
             }
         }
 
-        var fragment: String { rawValue }
+        var fragment: String {
+            switch self {
+            case .medicalDisclaimer: return "medical-disclaimer"
+            default: return rawValue
+            }
+        }
     }
 }
 
@@ -197,7 +204,7 @@ struct LocalWebView: UIViewRepresentable {
             return URL(string: raw)
         }
 
-        private static let helpFragments: Set<String> = ["privacy", "terms", "security"]
+        private static let helpFragments: Set<String> = Set(HelpDocument.Policy.allCases.map(\.fragment))
 
         private static func policyDestination(file: String, fragment: String?) -> String? {
             guard file == "Help.html", let fragment, helpFragments.contains(fragment) else {
