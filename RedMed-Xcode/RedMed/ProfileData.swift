@@ -120,9 +120,9 @@ class ProfileData: ObservableObject {
 
     init(persisting: Bool = true) {
         self.persists = persisting
-        // If a blob is expected, start restoring so the empty funnel cannot flash.
-        // Presence check only (exists) — no JSON decode here.
-        if persisting && (Self.hasStoredProfile() || Self.prefersLockOnLaunch) {
+        // UserDefaults only. SecItem exists() here ran on the main thread
+        // before the first frame and delayed Face ID on the launch heart.
+        if persisting && Self.prefersLockOnLaunch {
             self.isRestoringFromKeychain = true
         }
     }
@@ -247,7 +247,6 @@ class ProfileData: ObservableObject {
         guard persists else { return }
         guard !didAttemptLaunchRestore else { return }
         guard launchPrefetchTask == nil else { return }
-        guard Self.hasStoredProfile() || Self.prefersLockOnLaunch else { return }
         let account = Self.keychainAccount
         launchPrefetchTask = Task.detached(priority: .utility) {
             Self.decodeBlob(KeychainStore.load(account: account, allowInteractive: false))

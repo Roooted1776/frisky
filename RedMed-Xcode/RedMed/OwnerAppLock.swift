@@ -2,7 +2,8 @@ import SwiftUI
 import UIKit
 
 /// Owner-app Face ID gate. System prompt only — no LockEntryPage, FacePage,
-/// heart, or Proceed. Never wraps passerby tapper / public NFC card.
+/// or Proceed. Locked layer is the launch heart (cream + BrandLogo) so Face
+/// ID sits on that same screen. Never wraps passerby tapper / public NFC card.
 ///
 /// First start (no stored consent, or policy version bump): Face ID, then
 /// Before you continue, then Agree → Main.
@@ -41,13 +42,20 @@ struct OwnerAppLock<Content: View>: View {
                     .allowsHitTesting(gate == .unlocked)
             }
             if gate == .locked {
-                // Cream only — hides PHI until Face ID succeeds. No chrome.
-                Color.redmedBg
-                    .ignoresSafeArea()
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        tryPromptFaceID(force: true)
-                    }
+                // Same layer as UILaunchScreen: cream + BrandLogo heart.
+                // Face ID sits on this, not after a blank cream hang.
+                ZStack {
+                    Color.redmedBg.ignoresSafeArea()
+                    Image("BrandLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 180, height: 180)
+                        .accessibilityHidden(true)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    tryPromptFaceID(force: true)
+                }
             }
         }
         .onAppear {
@@ -145,10 +153,11 @@ struct OwnerAppLock<Content: View>: View {
         guard !isAuthenticating else { return }
         guard scenePhase != .background else { return }
         if !force, didPromptThisLock { return }
-        // Device evaluatePolicy needs a key window or it can sit with no
-        // callback (cream hang). Simulator auto-succeeds same-turn — do not
-        // wait on a window.
+        // Device: wait for `.active` + key window. Evaluating during cold-start
+        // `.inactive` returns notInteractive, then a 280ms retry — that is the
+        // extra hang on the heart. Simulator auto-succeeds same-turn.
         #if !targetEnvironment(simulator)
+        guard scenePhase == .active else { return }
         guard hasKeyWindow else { return }
         #endif
         unlockWithFaceID()
@@ -160,13 +169,10 @@ struct OwnerAppLock<Content: View>: View {
         didPromptThisLock = true
         authGeneration &+= 1
         let generation = authGeneration
-        // Overlap Keychain+JSON and the tapper.html string cache with the
-        // Face ID sheet so Main paints the YOU card on unlock instead of
-        // cream-while-restoring / cream-while-reading the shell.
-        profile.beginLaunchPrefetch()
-        PasserbyHTMLCardView.scheduleShellWarmOnce()
         RedMedSignpost.trace("OwnerAppLock evaluate generation=\(generation)")
         RedMedSignpost.begin(.faceIDEvaluate)
+        // Face ID first. Prefetch after evaluate is in flight — Keychain.exists
+        // / shell warm on this turn delayed the sheet on the heart.
         BiometricAuth.authenticate(
             reason: "Unlock RedMed",
             force: true,
@@ -178,15 +184,11 @@ struct OwnerAppLock<Content: View>: View {
             // concurrency — same post–Face ID load crash as #296 / #307.
             Task { @MainActor in
                 guard generation == authGeneration else { return }
-                if case .success = outcome {
-                    // Let the system sheet finish tearing down before Main
-                    // mounts / ConsentGate paints.
-                    await Task.yield()
-                    guard generation == authGeneration else { return }
-                }
                 handleUnlockOutcome(outcome, generation: generation)
             }
         }
+        profile.beginLaunchPrefetch()
+        PasserbyHTMLCardView.scheduleShellWarmOnce()
     }
 
     private func handleUnlockOutcome(_ outcome: BiometricAuth.Outcome, generation: Int) {
