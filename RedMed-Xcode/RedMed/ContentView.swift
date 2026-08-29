@@ -70,6 +70,9 @@ struct ContentView: View {
         .onAppear {
             mountedTabs.insert(activeTab)
             clampScannerTab()
+            if !isScannerSession {
+                CrashMotionGuard.shared.startMonitoring()
+            }
             // Warm the other pages under the current one so the first tap
             // is not a cream-only mount. GPS / WK still gated on isVisible.
             Task { @MainActor in

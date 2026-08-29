@@ -25,7 +25,6 @@ final class NFCBandManager: ObservableObject {
     @Published var lastPackedURL: String?
     /// Scan / simulate → full passerby shell (item present; payload never empty).
     @Published var scannedCard: ScannedCardSession?
-    @Published var authFailed = false
     @Published var alertMessage: String?
 
     /// One-shot Scan open — same shape as NFCView.PreviewSession.
@@ -38,10 +37,6 @@ final class NFCBandManager: ObservableObject {
     private let writer = NFCWriter()
     private let reader = NFCReader()
     private var cancellables = Set<AnyCancellable>()
-    /// Face ID sheet is up — Write stays tappable because `isBusy` is only
-    /// CoreNFC, so a second tap used to start a second session.
-    private var writeAuthInFlight = false
-
     var isBusy: Bool { isWriting || isReading }
 
     init() {
@@ -50,53 +45,35 @@ final class NFCBandManager: ObservableObject {
 
     // MARK: - Write (owner band setup)
 
-    /// Face ID → AES-GCM pack (off-main) → CoreNFC write (or pack-only simulate when hardware is parked).
+    /// AES-GCM pack (off-main) → CoreNFC write (or pack-only simulate when hardware is parked).
+    /// No Face ID here — that lives on the owner RedMed page (Edit / Save).
     /// Linked / Not linked flips only after a real verified CoreNFC session — never simulate.
     func writeBand(from profile: ProfileData, isScannerSession: Bool) {
         guard !isScannerSession else { return }
-        guard !writeAuthInFlight, !isBusy else { return }
+        guard !isBusy else { return }
         guard profile.hasData else { return }
-        writeAuthInFlight = true
 
-        BiometricAuth.authenticate(
-            reason: "Confirm with Face ID, Touch ID, or passcode to write your RedMed card to the bracelet.",
-            force: true
-        ) { [weak self] outcome in
+        let chip = ProfileNFCCodec.chipProfile(from: profile)
+        Task { @MainActor [weak self] in
+            let packed = await Task.detached(priority: .userInitiated) {
+                (
+                    ProfileNFCCodec.buildURLString(chip: chip),
+                    ProfileNFCCodec.embedProfileJSON(from: chip)
+                )
+            }.value
             guard let self else { return }
-            if outcome == .success {
-                let chip = ProfileNFCCodec.chipProfile(from: profile)
-                Task { @MainActor [weak self] in
-                    defer { self?.writeAuthInFlight = false }
-                    let packed = await Task.detached(priority: .userInitiated) {
-                        (
-                            ProfileNFCCodec.buildURLString(chip: chip),
-                            ProfileNFCCodec.embedProfileJSON(from: chip)
-                        )
-                    }.value
-                    guard let self else { return }
-                    guard let urlString = packed.0,
-                          AppConfig.OwnerBandURI.isValidWriteURL(urlString) else {
-                        self.alertMessage = "Couldn't build a RedMed #d= tag payload (vendor/social URLs are blocked)."
-                        return
-                    }
-                    if AppConfig.nfcHardwareEnabled {
-                        self.statusMessage = ""
-                        self.writeSucceeded = false
-                        self.writeVerified = false
-                        self.writer.writeURL(urlString)
-                    } else {
-                        self.simulateWrite(urlString, embedJSON: packed.1, profile: profile)
-                    }
-                }
+            guard let urlString = packed.0,
+                  AppConfig.OwnerBandURI.isValidWriteURL(urlString) else {
+                self.alertMessage = "Couldn't build a RedMed #d= tag payload (vendor/social URLs are blocked)."
+                return
+            }
+            if AppConfig.nfcHardwareEnabled {
+                self.statusMessage = ""
+                self.writeSucceeded = false
+                self.writeVerified = false
+                self.writer.writeURL(urlString)
             } else {
-                Task { @MainActor [weak self] in
-                    guard let self else { return }
-                    self.writeAuthInFlight = false
-                    if outcome == .notVerified {
-                        self.authFailed = true
-                        VaultHistoryStore.shared.record(.unlockFailed, detail: "nfcWrite")
-                    }
-                }
+                self.simulateWrite(urlString, embedJSON: packed.1, profile: profile)
             }
         }
     }

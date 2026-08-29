@@ -23,11 +23,16 @@ set up a working runtime here:
 The app has no backend, database, or web service.
 
 **Roles / shells (permanent — do not regress):**
+- **Face ID (2026-08-29):** in-app Face ID is only on the **owner RedMed page**
+  (Edit / Save). Not app launch, not 911 / Aid / NFC write, not tapper.
+  Tapper has no biometrics and no acknowledgement page. Do not remount
+  `OwnerAppLock` as an app-wide cream lock. Crash monitor starts from owner
+  `Main`, not from that lock. The band is the product, not optional.
 - **Owner app** (`Main` → `ContentView`, `isScannerSession == false`): tabs are
   **RedMed · 911 · Aid · NFC**. Edit is available on RedMed. NFC tab is always
   visible for owners; `AppConfig.nfcHardwareEnabled` only gates CoreNFC
   write/read sessions, never tab chrome. Owner writes the passive HF NFC band
-  from the NFC tab (Face ID gated) as `medicalCardBaseURL#d=` only
+  from the NFC tab (no Face ID on write) as `medicalCardBaseURL#d=` only
   (`AppConfig.OwnerBandURI`) — no vendor cloud, no social/short URL, no BLE.
   Launch path is Face ID lock then Main (those tabs). No extra pages before Face ID. After unlock, a clickwrap (`ConsentGateView`) appears before Main on **every** Face ID unlock (boot, and any re-lock/re-unlock) — never in front of Face ID, never on passerby tapper.
 - **Scanner / passerby shell** (`PublicCardView` / bracelet tap → `tapper.html#d=…`,
