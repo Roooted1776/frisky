@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import SwiftUI
 
 /// Drop-in SwiftUI manager for the silicone NFC band pipeline:
 ///
