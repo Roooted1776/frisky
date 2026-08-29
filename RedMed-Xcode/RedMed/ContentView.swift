@@ -58,9 +58,7 @@ struct ContentView: View {
                 }
                 mountedTab(.aid) { AidView() }
                 if showsNFC {
-                    mountedTab(.nfc) {
-                        NFCView(isVisible: activeTab == .nfc)
-                    }
+                    mountedTab(.nfc) { NFCView() }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -76,28 +74,16 @@ struct ContentView: View {
         .onAppear {
             mountedTabs.insert(activeTab)
             clampScannerTab()
+            RedMedHaptics.prepare()
             // HTML string only — not a second WKWebView (that raced first paint).
             PasserbyHTMLCardView.scheduleShellWarmOnce()
             // Same-turn mount in scannerSafeTab already paints 911 / Aid / NFC
-            // on first tap. Do not stack those pages under RedMed on the first
-            // frame (that raced the live embed). After the YOU card's WKWebView
-            // has a beat to parse, mount them under the active page so the first
-            // tab hop is not a cold cream paint. GPS / WK warm stay gated on
-            // isVisible.
+            // on first tap. Pre-stacking those pages under RedMed kept three
+            // extra trees + LocationManager compositing for the whole session.
             if !isScannerSession {
                 Task { @MainActor in
                     await Task.yield()
-                    RedMedHaptics.prepare()
                     CrashMotionGuard.shared.startMonitoring()
-                    try? await Task.sleep(nanoseconds: 900_000_000)
-                    guard !Task.isCancelled else { return }
-                    mountedTabs.insert(.emergency)
-                    try? await Task.sleep(nanoseconds: 100_000_000)
-                    mountedTabs.insert(.aid)
-                    try? await Task.sleep(nanoseconds: 200_000_000)
-                    if showsNFC {
-                        mountedTabs.insert(.nfc)
-                    }
                 }
             }
         }
@@ -182,6 +168,7 @@ struct CustomTabBar: View {
                 .fill(Color.redmedDark.opacity(0.18))
                 .frame(width: 118, height: 4)
                 .padding(.top, 2)
+                .padding(.bottom, 3)
                 .accessibilityHidden(true)
         }
         .background {
@@ -232,19 +219,12 @@ struct TabBarItem: View {
     var body: some View {
         Button(action: action) {
             GeometryReader { geo in
-                // Label tracks the slot (W×H); shrink-to-fit so RedMed / 911 / Aid / NFC stay inside.
-                let labelSize = FittedType.size(
-                    in: geo.size,
-                    heightFraction: 0.26,
-                    widthFraction: 0.22,
-                    clamp: 9...13
-                )
+                let labelSize = min(geo.size.height * 0.26, geo.size.width * 0.22)
                 VStack(spacing: 2) {
                     Image(systemName: icon)
                         .font(.system(size: 18, weight: isOn ? .semibold : .regular))
                         .symbolRenderingMode(isCompass ? .hierarchical : .monochrome)
                         .foregroundStyle(tint)
-                        // Square W×H so each SF Symbol's glyph center matches the slot center.
                         .frame(width: 26, height: 26, alignment: .center)
                         .background(
                             RoundedRectangle(cornerRadius: RedMedChrome.chipRadius, style: .continuous)
