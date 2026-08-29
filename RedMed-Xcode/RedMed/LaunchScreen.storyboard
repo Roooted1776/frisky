@@ -13,7 +13,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" image="LaunchAck" translatesAutoresizingMaskIntoConstraints="NO" id="img">
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" image="BrandLogo" translatesAutoresizingMaskIntoConstraints="NO" id="img">
                                 <rect key="frame" x="97.5" y="243.5" width="180" height="180"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="180" id="img-w"/>
@@ -35,6 +35,6 @@
         </scene>
     </scenes>
     <resources>
-        <image name="LaunchAck" width="180" height="180"/>
+        <image name="BrandLogo" width="180" height="180"/>
     </resources>
 </document>
