@@ -21,6 +21,7 @@
 		AABB0000000000000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000000C /* Assets.xcassets */; };
 		AABB00000000000000000010 /* NearbyHospitals.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000010 /* NearbyHospitals.swift */; };
 		AABB00000000000000000011 /* MedicationData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000011 /* MedicationData.swift */; };
+		AABB00000000000000000012 /* PublicCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000012 /* PublicCardView.swift */; };
 		AABB00000000000000000013 /* LocationAccessSuggester.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000013 /* LocationAccessSuggester.swift */; };
 		AABB00000000000000000014 /* BiometricAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000014 /* BiometricAuth.swift */; };
 		AABB0000000000000000001A /* legal-doc.css in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001A /* legal-doc.css */; };
@@ -76,6 +77,7 @@
 		AAAA0000000000000000000F /* RedMed.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RedMed.entitlements; sourceTree = "<group>"; };
 		AAAA00000000000000000010 /* NearbyHospitals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyHospitals.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000011 /* MedicationData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationData.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000012 /* PublicCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicCardView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000013 /* LocationAccessSuggester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationAccessSuggester.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000014 /* BiometricAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuth.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000001A /* legal-doc.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = "legal-doc.css"; sourceTree = "<group>"; };
@@ -187,6 +189,7 @@
 		AAAA00000000000000000045 /* Scanner */ = {
 			isa = PBXGroup;
 			children = (
+				AAAA00000000000000000012 /* PublicCardView.swift */,
 				AAAA0000000000000000004C /* PasserbyHTMLCardView.swift */,
 			);
 			name = Scanner;
@@ -409,6 +412,7 @@
 				AABB00000000000000000009 /* TopicDetailView.swift in Sources */,
 				AABB00000000000000000010 /* NearbyHospitals.swift in Sources */,
 				AABB00000000000000000011 /* MedicationData.swift in Sources */,
+				AABB00000000000000000012 /* PublicCardView.swift in Sources */,
 				AABB0000000000000000004C /* PasserbyHTMLCardView.swift in Sources */,
 				AABB00000000000000000013 /* LocationAccessSuggester.swift in Sources */,
 				AABB00000000000000000014 /* BiometricAuth.swift in Sources */,
