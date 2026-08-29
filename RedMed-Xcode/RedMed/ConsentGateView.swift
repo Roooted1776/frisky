@@ -16,7 +16,7 @@ enum ConsentSettings {
         UserDefaults.standard.set(currentVersion, forKey: acceptedVersionKey)
     }
 
-    /// After Erase all data — next Face ID then Before you continue.
+    /// After Erase all data — Before you continue, then Main.
     static func clearAcceptance() {
         UserDefaults.standard.removeObject(forKey: acceptedVersionKey)
     }

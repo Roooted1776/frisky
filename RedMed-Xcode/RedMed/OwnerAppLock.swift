@@ -63,11 +63,15 @@ struct OwnerAppLock<Content: View>: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .redMedDidEraseLocalData)) { _ in
-            relock(cancelEvaluate: true)
-            Task { @MainActor in
-                try? await Task.sleep(nanoseconds: 350_000_000)
-                tryPromptFaceID(force: true)
-            }
+            // Wipe → acknowledgment → Main. Stay unlocked; do not Face ID again.
+            inactiveLockTask?.cancel()
+            isAuthenticating = false
+            didPromptThisLock = true
+            OwnerLockPresentation.setLocked(false)
+            OwnerLockPresentation.holdSwitcherCover = false
+            SnapshotSafeCover.shared.reveal()
+            didUnlockOnce = true
+            gate = .unlocked
         }
     }
 
