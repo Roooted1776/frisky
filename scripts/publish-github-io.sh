@@ -25,10 +25,6 @@ if grep -q 'Checking your phone' "$SHELL" \
   echo "$SHELL looks like the old band-setup page — abort." >&2
   exit 1
 fi
-if ! cmp -s tapper.html tapper/index.html; then
-  echo "tapper.html and tapper/index.html differ — sync before publish." >&2
-  exit 1
-fi
 
 mkdir -p "$DEST/tapper" "$DEST/get" "$DEST/support" "$DEST/assets" "$DEST/.github/workflows" "$DEST/.well-known"
 cp -f index.html tapper.html card.html get.html sw.js \

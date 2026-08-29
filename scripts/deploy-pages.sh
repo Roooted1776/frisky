@@ -33,14 +33,6 @@ if grep -q 'Checking your phone' "$SHELL" \
   echo "$SHELL looks like the old band-setup page — abort." >&2
   exit 1
 fi
-if ! cmp -s tapper.html tapper/index.html; then
-  echo "tapper.html and tapper/index.html differ — sync before deploy." >&2
-  exit 1
-fi
-if ! cmp -s tapper.html RedMed-Xcode/RedMed/tapper.html; then
-  echo "tapper.html and RedMed-Xcode/RedMed/tapper.html differ — sync before deploy." >&2
-  exit 1
-fi
 
 if [[ "${DEPLOY:-0}" == "1" ]]; then
   if [[ -z "${CLOUDFLARE_API_TOKEN:-}" || -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]]; then

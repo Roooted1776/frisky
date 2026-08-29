@@ -50,8 +50,7 @@ The app has no backend, database, or web service.
   removed). Scanner Help is **policies only** (no Settings,
   Erase, or Write to NFC) so it cannot mutate owner Keychain or `@AppStorage`.
   Passerby `tapper.html` has no Help button.
-- Product HTML is only (1) one passerby file `tapper.html` (identical in `tapper/index.html`,
-  repo root, and the app bundle; legacy `card.html` / `get.html` / `/get/` redirect to `/tapper/`, preserving `#d=`) and
+- Product HTML is only (1) one passerby file `tapper/index.html` (Xcode copies it into the app bundle as `tapper.html` at build; repo-root `tapper.html` is a `#d=`-preserving redirect to `/tapper/`; legacy `card.html` / `get.html` / `/get/` also redirect to `/tapper/`, preserving `#d=`) and
   (2) policy pages bundled solely under `RedMed-Xcode/RedMed/`: one `Help.html`
   (Privacy + TOS + Security, in-file anchors) plus `legal-doc.css`. Legacy
   `PrivacyPolicy.html` / `TOS.html` / `security.html` redirect into `Help.html`.

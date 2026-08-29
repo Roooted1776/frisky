@@ -33,7 +33,6 @@
 		AABB00000000000000000020 /* EmergencyNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000020 /* EmergencyNumber.swift */; };
 		AABB00000000000000000022 /* BrandLogo.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000022 /* BrandLogo.png */; };
 		AABB00000000000000000023 /* Main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000023 /* Main.swift */; };
-		AABB00000000000000000024 /* tapper.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000024 /* tapper.html */; };
 		AABB00000000000000000025 /* sw.js in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000025 /* sw.js */; };
 		AABB00000000000000000028 /* VaultHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000028 /* VaultHistoryView.swift */; };
 		AABB00000000000000000029 /* PrivacySnapshotGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000029 /* PrivacySnapshotGuard.swift */; };
@@ -96,7 +95,6 @@
 		AAAA00000000000000000020 /* EmergencyNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyNumber.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000022 /* BrandLogo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BrandLogo.png; sourceTree = "<group>"; };
 		AAAA00000000000000000023 /* Main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Main.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000024 /* tapper.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = tapper.html; sourceTree = "<group>"; };
 		AAAA00000000000000000025 /* sw.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = sw.js; sourceTree = "<group>"; };
 		AAAA00000000000000000028 /* VaultHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultHistoryView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000029 /* PrivacySnapshotGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacySnapshotGuard.swift; sourceTree = "<group>"; };
@@ -262,7 +260,6 @@
 		AAAA0000000000000000004A /* Passerby Bundle */ = {
 			isa = PBXGroup;
 			children = (
-				AAAA00000000000000000024 /* tapper.html */,
 				AAAA00000000000000000025 /* sw.js */,
 				AAAA00000000000000000022 /* BrandLogo.png */,
 				AAAA00000000000000000054 /* pheart.png */,
@@ -328,6 +325,7 @@
 			buildPhases = (
 				AAAA000000000000000000DD /* Sources */,
 				AAAA000000000000000000EE /* Resources */,
+				AAAA00000000000000000070 /* Bundle passerby tapper */,
 				AAAA000000000000000000FF /* Frameworks */,
 			);
 			buildRules = (
@@ -379,7 +377,6 @@
 			files = (
 				AABB0000000000000000000C /* Assets.xcassets in Resources */,
 				AABB00000000000000000050 /* Help.html in Resources */,
-				AABB00000000000000000024 /* tapper.html in Resources */,
 				AABB00000000000000000025 /* sw.js in Resources */,
 				AABB00000000000000000022 /* BrandLogo.png in Resources */,
 				AABB00000000000000000054 /* pheart.png in Resources */,
@@ -391,6 +388,31 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+
+/* Begin PBXShellScriptBuildPhase section */
+		AAAA00000000000000000070 /* Bundle passerby tapper */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/../tapper/index.html",
+			);
+			name = "Bundle passerby tapper";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/tapper.html",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -euo pipefail\nSRC=\"${SRCROOT}/../tapper/index.html\"\nDEST=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/tapper.html\"\ntest -f \"$SRC\" || { echo \"missing $SRC\" >&2; exit 1; }\nmkdir -p \"$(dirname \"$DEST\")\"\ncp -f \"$SRC\" \"$DEST\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		AAAA000000000000000000DD /* Sources */ = {

@@ -95,12 +95,16 @@ def check(path: str, *needles: str) -> bool:
 def main() -> int:
     ok = True
     # Static: band-tap shell never ships an auth gate (runs even if server is down).
-    for rel in (
-        "tapper.html",
-        "tapper/index.html",
-        "RedMed-Xcode/RedMed/tapper.html",
-    ):
-        ok &= check_tapper_no_auth(REPO / rel)
+    ok &= check_tapper_no_auth(REPO / "tapper/index.html")
+    root_tapper = (REPO / "tapper.html").read_text(encoding="utf-8")
+    if "data-tab=\"medical\"" in root_tapper:
+        print("FAIL tapper.html is a full shell copy — keep it a redirect")
+        ok = False
+    elif "tapper/" not in root_tapper:
+        print("FAIL tapper.html missing tapper/ redirect")
+        ok = False
+    else:
+        print("OK   redirect tapper.html")
 
     ok &= check("/tapper/", 'data-tab="medical"', 'data-tab="911"', 'data-tab="aid"')
     ok &= check("/tapper/index.html", 'data-tab="medical"')
