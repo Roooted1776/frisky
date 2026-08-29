@@ -217,29 +217,24 @@ struct TabBarItem: View {
 
     var body: some View {
         Button(action: action) {
-            GeometryReader { geo in
-                let labelSize = min(geo.size.height * 0.26, geo.size.width * 0.22)
-                VStack(spacing: 2) {
-                    Image(systemName: icon)
-                        .font(.system(size: 18, weight: isOn ? .semibold : .regular))
-                        .symbolRenderingMode(isCompass ? .hierarchical : .monochrome)
-                        .foregroundStyle(tint)
-                        .frame(width: 26, height: 26, alignment: .center)
-                        .background(
-                            RoundedRectangle(cornerRadius: RedMedChrome.chipRadius, style: .continuous)
-                                .fill(isOn ? Color.redmedAccent.opacity(0.12) : Color.clear)
-                        )
-                        .accessibilityHidden(true)
-                    Text(label)
-                        .font(.system(size: labelSize, weight: isOn ? .semibold : .medium))
-                        .foregroundColor(tint)
-                        .kerning(-0.1)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.65)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: geo.size.width, alignment: .center)
-                }
-                .frame(width: geo.size.width, height: geo.size.height, alignment: .center)
+            VStack(spacing: 2) {
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: isOn ? .semibold : .regular))
+                    .symbolRenderingMode(isCompass ? .hierarchical : .monochrome)
+                    .foregroundStyle(tint)
+                    // Square W×H so each SF Symbol's glyph center matches the slot center.
+                    .frame(width: 26, height: 26, alignment: .center)
+                    .background(
+                        RoundedRectangle(cornerRadius: RedMedChrome.chipRadius, style: .continuous)
+                            .fill(isOn ? Color.redmedAccent.opacity(0.12) : Color.clear)
+                    )
+                    .accessibilityHidden(true)
+                Text(label)
+                    .font(.system(size: 10, weight: isOn ? .semibold : .medium))
+                    .foregroundColor(tint)
+                    .kerning(-0.1)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
             .frame(maxWidth: .infinity, alignment: .center)
             .frame(minHeight: 44)
