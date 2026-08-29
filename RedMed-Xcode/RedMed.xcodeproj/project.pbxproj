@@ -53,6 +53,7 @@
 		AABB00000000000000000050 /* Help.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000050 /* Help.html */; };
 		AABB00000000000000000054 /* pheart.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000054 /* pheart.png */; };
 		AABB00000000000000000055 /* ConsentGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000055 /* ConsentGateView.swift */; };
+		AABB0000000000000000005D /* OwnerAppLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000005D /* OwnerAppLock.swift */; };
 		AABB00000000000000000056 /* CountryDialCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000056 /* CountryDialCode.swift */; };
 		AABB00000000000000000057 /* HealthKitProfileImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000057 /* HealthKitProfileImport.swift */; };
 		AABB0000000000000000005A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000005A /* PrivacyInfo.xcprivacy */; };
@@ -109,6 +110,7 @@
 		AAAA00000000000000000050 /* Help.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = Help.html; sourceTree = "<group>"; };
 		AAAA00000000000000000054 /* pheart.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = pheart.png; sourceTree = "<group>"; };
 		AAAA00000000000000000055 /* ConsentGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsentGateView.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000005D /* OwnerAppLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwnerAppLock.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000056 /* CountryDialCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryDialCode.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000057 /* HealthKitProfileImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitProfileImport.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000005A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -134,6 +136,7 @@
 				AAAA00000000000000000002 /* ContentView.swift */,
 				AAAA00000000000000000059 /* RedMedSignpost.swift */,
 				AAAA00000000000000000055 /* ConsentGateView.swift */,
+				AAAA0000000000000000005D /* OwnerAppLock.swift */,
 				AAAA00000000000000000056 /* CountryDialCode.swift */,
 				AAAA00000000000000000003 /* Theme.swift */,
 				AAAA0000000000000000001C /* AppConfig.swift */,
@@ -430,6 +433,7 @@
 				AABB00000000000000000032 /* SatelliteFieldUI.swift in Sources */,
 				AABB00000000000000000059 /* RedMedSignpost.swift in Sources */,
 				AABB00000000000000000055 /* ConsentGateView.swift in Sources */,
+				AABB0000000000000000005D /* OwnerAppLock.swift in Sources */,
 				AABB00000000000000000056 /* CountryDialCode.swift in Sources */,
 				AABB00000000000000000057 /* HealthKitProfileImport.swift in Sources */,
 				AABB00000000000000000034 /* SecurePasteboard.swift in Sources */,

@@ -1,14 +1,13 @@
 import SwiftUI
 import CoreLocation
 
-/// Legal consent. Every cold start of the owner app (fresh process), then
-/// Main after Agree this process. Stored version is the legal record only —
-/// it does not skip the page. Never a cream lock. Never on passerby tapper.
+/// Legal consent. First launch (or after a material policy version bump) only.
+/// Face ID runs first (OwnerAppLock). Never on passerby tapper.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
     static let currentVersion = "4.1"
 
-    /// Legal record only — does not hide the gate on cold start.
+    /// Skip ack when stored version matches. Recorded on Agree.
     static var hasAcceptedCurrent: Bool {
         UserDefaults.standard.string(forKey: acceptedVersionKey) == currentVersion
     }
@@ -16,15 +15,11 @@ enum ConsentSettings {
     static func recordAcceptance() {
         UserDefaults.standard.set(currentVersion, forKey: acceptedVersionKey)
     }
-
-    /// Set on Agree this process. Dies with the process so the next cold
-    /// start shows Before you continue even if the stored version matches.
-    static var acceptedThisProcess = false
 }
 
 struct ConsentGateView<Content: View>: View {
-    @State private var hasAccepted = ConsentSettings.acceptedThisProcess
-    @State private var contentArmed = ConsentSettings.acceptedThisProcess
+    @State private var hasAccepted = ConsentSettings.hasAcceptedCurrent
+    @State private var contentArmed = ConsentSettings.hasAcceptedCurrent
     @State private var checked = false
     @State private var openPolicy: HelpDocument.Policy?
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
@@ -46,11 +41,9 @@ struct ConsentGateView<Content: View>: View {
             }
         }
         .onAppear {
-            OwnerLockPresentation.setLocked(false)
-            OwnerLockPresentation.holdSwitcherCover = false
-            SnapshotSafeCover.shared.reveal()
             // First open: keep Main unmounted until Agree so the gate is the
             // first real page, not a cream hang over a loading WKWebView.
+            // Do not unlock here — OwnerAppLock owns Face ID / relock.
             if !hasAccepted {
                 locationEnabled = true
                 faceIDEnabled = true
@@ -162,7 +155,6 @@ struct ConsentGateView<Content: View>: View {
             locationPrompt.requestIfNeeded()
         }
         ConsentSettings.recordAcceptance()
-        ConsentSettings.acceptedThisProcess = true
         RedMedHaptics.success()
         OwnerLockPresentation.setLocked(false)
         OwnerLockPresentation.holdSwitcherCover = false

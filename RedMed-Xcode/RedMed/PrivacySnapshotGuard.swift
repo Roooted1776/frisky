@@ -208,8 +208,8 @@ final class SnapshotSafeCover {
 /// showed the button, the cover hid it. Skip covering while locked.
 enum OwnerLockPresentation {
     private static let lock = NSLock()
-    // Launch opens Main (Face ID gates Edit only).
-    private static var locked = false
+    // Owner Face ID gate is up — cream hide PHI until evaluate succeeds.
+    private static var locked = true
     private static var holdCover = false
 
     static var isLocked: Bool {

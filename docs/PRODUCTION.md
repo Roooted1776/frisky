@@ -16,7 +16,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 
 | Area | Status |
 |------|--------|
-| Owner Face ID gate | Edit / Save / Erase only. Profile restores on Main appear (device-unlocked Keychain, no Face ID to view) |
+| Owner Face ID gate | Open/return (system prompt) plus Edit / Save / Erase. Profile restores on Main appear (device-unlocked Keychain, no Face ID to view) |
 | Keychain profile | `WhenPasscodeSetThisDeviceOnly`, no biometry ACL; save fail-closed; never synchronizable |
 | Owner tabs | RedMed · 911 · Aid · NFC; scanners never see NFC |
 | NFC Preview + Scan | Both use `fullScreenCover(item:)` after pack — no empty-cover race |
@@ -26,7 +26,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | AES-GCM on chip | Public client key by design (EMS decrypts with no account) |
 | ATS | Arbitrary loads + local networking **false** |
 | Snapshot / pasteboard | Privacy cover + secure pasteboard clear on background |
-| Consent | `ConsentGateView` every cold start; stored version is legal record only; never a cream lock; never on tapper |
+| Consent | `ConsentGateView` first start / policy bump only; stored version 4.1 skips ack; Face ID still runs every owner entry; never on tapper |
 | Apple Health import | Parked (`healthKitImportEnabled = false`) |
 | App Store package | `PrivacyInfo.xcprivacy` + export flag + `docs/APP-STORE.md` |
 | Open PRs | Squash only into `main` |

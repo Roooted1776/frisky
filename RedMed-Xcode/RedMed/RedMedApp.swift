@@ -17,9 +17,8 @@ struct RedMedApp: App {
                 // Register snapshot observers only. Do not warm WKWebView here —
                 // that competed with the first Main frame and left cream on screen.
                 SnapshotSafeCover.activate()
-                OwnerLockPresentation.setLocked(false)
-                OwnerLockPresentation.holdSwitcherCover = false
-                SnapshotSafeCover.shared.reveal()
+                OwnerLockPresentation.setLocked(true)
+                OwnerLockPresentation.holdSwitcherCover = true
             }
             .onOpenURL { url in
                 if (url.scheme ?? "").lowercased() == "redmed",
@@ -32,15 +31,11 @@ struct RedMedApp: App {
     }
 }
 
-/// Cold start: Before you continue, then Main after Agree this process.
-/// Same session stays in Main. No cream lock page in front. Face ID still gates Edit.
+/// System Face ID first. After unlock: acknowledgment (first launch /
+/// policy bump), then Main. Later opens and returns: Face ID, then Main.
+/// Passerby tapper never goes through this root.
 private struct LaunchRoot: View {
     var body: some View {
-        ConsentGateView { Main() }
-            .onAppear {
-                OwnerLockPresentation.setLocked(false)
-                OwnerLockPresentation.holdSwitcherCover = false
-                SnapshotSafeCover.shared.reveal()
-            }
+        OwnerAppLock { ConsentGateView { Main() } }
     }
 }
