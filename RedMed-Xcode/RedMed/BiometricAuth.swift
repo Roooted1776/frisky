@@ -17,19 +17,10 @@ enum BiometricAuth {
         case notVerified
         case declined
         case notInteractive
-        /// Face ID / Touch ID cannot run right now. Retrying the same way
-        /// never fixes this — each reason needs a different user action.
         case unavailable(UnavailableReason)
-        /// `evaluatePolicy` never called back at all within `evaluateHangTimeout`
-        /// — the same "no sheet ever presents" OS-level hang documented for
-        /// cold launch (see AGENTS.md) can in principle hit any caller. Treat
-        /// like `.declined`: quietly reset and let the user retry.
         case timedOut
     }
 
-    /// Why `canEvaluatePolicy` / `evaluatePolicy` reports biometrics can't
-    /// run. Distinct from `.notVerified` (a scan that failed to match) —
-    /// these are states no amount of tapping Proceed will resolve.
     enum UnavailableReason: Equatable {
         case notEnrolled
         case lockout
@@ -51,35 +42,13 @@ enum BiometricAuth {
     }
 
     private static let notInteractiveLACode = -1004
-
-    /// Authenticated context for SecItem after a successful evaluate.
     private static let parkLock = NSLock()
     private static var parkedContext: LAContext?
-    /// Live `evaluatePolicy` context. Invalidate before starting a new one —
-    /// a second evaluate while the first is up fails immediately (dead Proceed).
     private static var inFlightContext: LAContext?
-    /// Last time an evaluate ended or was cancelled. A new evaluate inside
-    /// `evaluateCooldown` of this fails with no sheet (dead Face ID).
     private static var lastSessionEndedAt: Date?
     private static let evaluateCooldown: TimeInterval = 0.28
-
-    /// Backstop for a hung `evaluatePolicy` that never calls back at all.
-    /// Apple does **not** timeout the system sheet — there is no LA API for
-    /// it. This clock is ours, started when `evaluatePolicy` is actually
-    /// invoked (not at `authenticate` entry / cooldown). Callers (Erase,
-    /// Edit, Save) hard-guard re-entrancy on their own busy flag, so a
-    /// completion that never fires would brick that action until force-quit.
     private static let evaluateHangTimeout: TimeInterval = 90
 
-    /// `force` is kept so every call site stays explicit. There is no
-    /// process-wide skip — every call evaluates a fresh policy.
-    ///
-    /// `touchIDAuthenticationAllowableReuseDuration` is always 0. Apple's
-    /// max is 300s (`LATouchIDAuthenticationMaximumAllowableReuseDuration`);
-    /// a non-zero value lets `evaluatePolicy` succeed off a recent *device*
-    /// unlock with no new Face ID sheet — which would skip the owner gate.
-    /// The parked `LAContext` is what lets SecItem skip a second sheet after
-    /// a successful evaluate; that does not need this property.
     static func authenticate(
         reason: String,
         force: Bool,
@@ -87,16 +56,9 @@ enum BiometricAuth {
         completion: @escaping (Outcome) -> Void
     ) {
         _ = force
-
-        // Simulator: never evaluatePolicy and never a UIKit alert. The
-        // Authenticate alert sat on a hidden window / inactive scene and
-        // left the cream heart with no Proceed (start stuck). Auto-succeed
-        // so cold start can reach Main. Device still uses real Face ID.
         #if targetEnvironment(simulator)
         _ = cancelInFlight()
         markSessionEnded()
-        // Same-turn success — main.async let the 1s watchdog win and
-        // paint Proceed (a tap) over the cream lock on cold start.
         if Thread.isMainThread {
             completion(.success)
         } else {
@@ -126,10 +88,6 @@ enum BiometricAuth {
         }
 
         setInFlight(context)
-        // Only one of {real callback, hang timeout} may ever act — whichever
-        // reaches this guard first on the (serial) main queue wins outright,
-        // so a very late real callback after a timeout can't re-park an
-        // already-invalidated context or double-fire the caller's completion.
         var didComplete = false
         let finish: (Outcome) -> Void = { result in
             guard !didComplete else { return }
@@ -138,8 +96,6 @@ enum BiometricAuth {
         }
         let runEvaluate = {
             RedMedSignpost.trace("evaluatePolicy calling now")
-            // Clock starts at the actual system call, not at authenticate()
-            // entry — the 0.28s teardown cooldown must not eat this budget.
             DispatchQueue.main.asyncAfter(deadline: .now() + evaluateHangTimeout) {
                 guard !didComplete else { return }
                 clearInFlight(ifSame: context)
@@ -155,7 +111,6 @@ enum BiometricAuth {
                     clearInFlight(ifSame: context)
                     markSessionEnded()
                     if success {
-                        // Keep context alive for Keychain SecItem (do not invalidate yet).
                         park(context)
                         finish(.success)
                     } else {
@@ -166,9 +121,6 @@ enum BiometricAuth {
                 }
             }
         }
-        // Wait out leftover LAContext teardown — same-turn retry after
-        // userCancel / .notInteractive / cancelInFlight fails immediately
-        // with no Face ID sheet and no system success animation (dead prompt).
         let wait = max(cancelledLiveContext ? evaluateCooldown : 0, remainingEvaluateCooldown())
         if wait > 0.01 {
             DispatchQueue.main.asyncAfter(deadline: .now() + wait, execute: runEvaluate)
@@ -178,30 +130,6 @@ enum BiometricAuth {
         #endif
     }
 
-    /// Edit / Save / Erase. Honors the Before you continue Face ID toggle.
-    /// Owner open/return (`OwnerAppLock`) must call `authenticate` directly —
-    /// that gate is not optional.
-    static func authenticateForOwnerAction(
-        reason: String,
-        force: Bool,
-        completion: @escaping (Outcome) -> Void
-    ) {
-        if !AppSettings.faceIDEnabled {
-            let finish = { completion(.success) }
-            if Thread.isMainThread {
-                finish()
-            } else {
-                DispatchQueue.main.async(execute: finish)
-            }
-            return
-        }
-        authenticate(reason: reason, force: force, completion: completion)
-    }
-
-    /// Live `evaluatePolicy` in progress (including the teardown wait).
-    /// Scene `.inactive` during this is the Face ID sheet — do not relock.
-    /// Simulator Authenticate alert counts too, so watchdogs do not
-    /// swap in Proceed on top of a tappable prompt.
     static var isEvaluating: Bool {
         parkLock.lock()
         defer { parkLock.unlock() }
@@ -213,7 +141,6 @@ enum BiometricAuth {
     }
 
     #if targetEnvironment(simulator)
-    /// True only if the Authenticate alert is on the key window.
     static var isSimulatorAlertVisible: Bool {
         parkLock.lock()
         let up = simulatorPromptUp
@@ -226,9 +153,6 @@ enum BiometricAuth {
     }
     #endif
 
-    /// Kill a hung / leftover Face ID sheet so Proceed can start a fresh one.
-    /// Returns whether a live context was actually cancelled — callers only
-    /// need to wait out the teardown when this is true.
     @discardableResult
     static func cancelInFlight() -> Bool {
         parkLock.lock()
@@ -254,19 +178,16 @@ enum BiometricAuth {
         #endif
     }
 
-    /// LAContext from the latest successful evaluate, if still valid for SecItem.
     static func authenticationContext() -> LAContext? {
         parkLock.lock()
         defer { parkLock.unlock() }
         return parkedContext
     }
 
-    /// Take the parked context for a SecItem read (still left parked for reuse).
     static func peekAuthenticationContext() -> LAContext? {
         authenticationContext()
     }
 
-    /// Drop the parked context (background, erase, failed Keychain).
     static func clearAuthenticationContext() {
         clearPark()
     }
@@ -434,7 +355,6 @@ enum BiometricAuth {
             simulatorAlert = nil
             parkLock.unlock()
             markSessionEnded()
-            // Simulator has no real ACL biometry — empty park; Keychain uses legacy path.
             completion(.success)
         })
         simulatorAlert = alert
@@ -445,8 +365,6 @@ enum BiometricAuth {
     }
 
     private static func topViewController() -> UIViewController? {
-        // Key window only. Presenting on a hidden host window leaves the
-        // cream lock tappable-dead while isEvaluating stays true.
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
         let window = scenes.flatMap(\.windows).first(where: { $0.isKeyWindow && $0.rootViewController != nil })
         guard var top = window?.rootViewController else { return nil }
@@ -457,9 +375,6 @@ enum BiometricAuth {
     }
     #endif
 
-    /// Shared "Authentication Failed" alert copy for `.declined` / `.notVerified`
-    /// outcomes on Edit / Save (and similar owner-gated actions) — kept in one
-    /// place so the wording can't drift between call sites.
     static let deniedAlertTitle = "Authentication Failed"
 
     static func deniedAlertMessage(action: String) -> String {

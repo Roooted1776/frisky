@@ -86,7 +86,6 @@ struct AidView: View {
                         Text(AppConfig.AidCopy.referenceDisclaimer)
                             .font(.system(size: 11, weight: .medium))
                             .foregroundColor(.redmedMuted)
-                            .fitsContainer(lines: 4, minScale: 0.75, alignment: .center)
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: .infinity)
                             .padding(.horizontal, 8)
@@ -100,7 +99,6 @@ struct AidView: View {
                                 .font(.system(size: AppConfig.QuietPrayer.fontSize, weight: .regular))
                                 .italic()
                                 .foregroundColor(.redmedMuted.opacity(0.72))
-                                .fitsContainer(lines: 6, minScale: 0.75, alignment: .center)
                                 .multilineTextAlignment(.center)
                                 .lineSpacing(1)
                                 .frame(maxWidth: .infinity)
@@ -110,7 +108,6 @@ struct AidView: View {
                         Text(AppConfig.Satellite.localOnlyLine)
                             .font(.system(size: 9, weight: .medium))
                             .foregroundColor(.redmedMuted)
-                            .fitsContainer(lines: 2, minScale: 0.7, alignment: .center)
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: .infinity)
                             .padding(.top, 8)
@@ -142,7 +139,7 @@ struct AidView: View {
 struct PaneCard: View {
     let pane: AidPane
     let isOpen: Bool
-    let onTap: (String?) -> Void // nil = toggle, string = open topic
+    let onTap: (String?) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -151,7 +148,6 @@ struct PaneCard: View {
                     Text(pane.emoji)
                         .font(.system(size: 22))
                         .frame(width: 44, height: 44)
-                        // Cream at rest, solid accent while open — same for every pane.
                         .background(isOpen ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
                         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
                         .accessibilityHidden(true)
@@ -159,7 +155,6 @@ struct PaneCard: View {
                     Text(pane.title)
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.redmedAccent)
-                        .fitsContainer(lines: 2, minScale: 0.7, alignment: .leading)
                         .lineLimit(2)
                         .minimumScaleFactor(0.75)
                         .multilineTextAlignment(.leading)
@@ -189,7 +184,6 @@ struct PaneCard: View {
                                 Text(topic.label)
                                     .font(.system(size: 16, weight: .semibold))
                                     .foregroundColor(.redmedAccent)
-                                    .fitsContainer(lines: 2, minScale: 0.7, alignment: .leading)
                                     .multilineTextAlignment(.leading)
                                     .lineLimit(2)
                                     .minimumScaleFactor(0.75)
