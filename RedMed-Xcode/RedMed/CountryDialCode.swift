@@ -36,14 +36,22 @@ struct CountryDialCode: Identifiable, Hashable {
 
     private static let unitedStates = CountryDialCode(iso: "US", name: "United States", dialCode: "+1")
 
-    /// Live-typing NANP layout (`(XXX) XXX-XXXX`) for +1 (US/Canada) numbers —
-    /// the same area-code grouping Apple's own Phone/Contacts apps use.
+    /// Live-typing / display NANP layout (`(XXX) XXX-XXXX`) for +1 numbers —
+    /// the same area-code grouping Apple's Phone/Contacts apps use.
+    /// 911 stays "911" (do not wrap the emergency short number as an area code).
+    /// 11 digits starting with 1: strip the country code, then format 10.
+    /// Incomplete values format as far as they go. A complete number is 10
+    /// digits (area code + 7) or 911.
     /// There's no public modern replacement for this: the old AddressBook
     /// framework's `ABPhoneNumberCopyFormattedDigits` did locale-aware phone
     /// formatting, but that framework has no Contacts.framework equivalent,
     /// so this mirrors NANP directly rather than calling a nonexistent API.
     static func formattedNANP(digits: String) -> String {
-        let d = Array(digits.filter(\.isNumber).prefix(10))
+        let national = nanpNationalDigits(from: digits)
+        if national == "911" {
+            return "911"
+        }
+        let d = Array(national)
         switch d.count {
         case 0:
             return ""
@@ -54,6 +62,26 @@ struct CountryDialCode: Identifiable, Hashable {
         default:
             return "(\(String(d[0..<3]))) \(String(d[3..<6]))-\(String(d[6...]))"
         }
+    }
+
+    /// Persistable NANP digits. 911 stays 911. Leading country `1` is stripped
+    /// when 11+ digits. Caps at 10 national digits. Incomplete values are kept
+    /// (never silently dropped).
+    static func nanpNationalDigits(from raw: String) -> String {
+        var d = raw.filter(\.isNumber)
+        if d == "911" {
+            return "911"
+        }
+        if d.count >= 11, d.hasPrefix("1") {
+            d.removeFirst()
+        }
+        return String(d.prefix(10))
+    }
+
+    /// Complete US number: 10 digits (area code + 7) or the short emergency 911.
+    static func isCompleteNANP(_ raw: String) -> Bool {
+        let d = nanpNationalDigits(from: raw)
+        return d == "911" || d.count == 10
     }
 
     /// Common-use subset, not exhaustive — every entry here is unambiguous;

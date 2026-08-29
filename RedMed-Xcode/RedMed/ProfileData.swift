@@ -405,9 +405,19 @@ struct EmergencyContact: Identifiable, Equatable {
     }
 
     /// Combined subtitle for list rows (`Relationship · phone`).
+    /// US numbers display as `(XXX) XXX-XXXX`; 911 stays 911. Stored `phone`
+    /// digits are not rewritten here.
     var detail: String {
         get {
-            [relationship, phone].filter { !$0.isEmpty }.joined(separator: " · ")
+            let shownPhone: String = {
+                guard !phone.isEmpty else { return "" }
+                let parsed = CountryDialCode.parse(phone)
+                if parsed.country.dialCode == "+1" {
+                    return CountryDialCode.formattedNANP(digits: parsed.localNumber)
+                }
+                return phone
+            }()
+            return [relationship, shownPhone].filter { !$0.isEmpty }.joined(separator: " · ")
         }
         set {
             let parts = newValue

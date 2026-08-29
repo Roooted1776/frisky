@@ -1994,18 +1994,22 @@ function redmedAssetURL(file) {
     return months[mi] + ' ' + day + ', ' + m[1];
   }
 
-  /** Light US-ish tel display: +15551234567 → +1 555 123 4567. */
+  /** US NANP display: (XXX) XXX-XXXX. Store/dial digits unchanged.
+   *  911 stays 911. 11 digits starting with 1 strip country then format.
+   *  Incomplete numbers format as far as they go. Existing stored values
+   *  are never dropped — no digits means show the original string. */
   function formatPhoneDisplay(raw, digits) {
     var shown = (raw || '').trim();
-    if (!shown) return '';
-    var d = String(digits || '').replace(/\D/g, '');
-    if (d.length === 11 && d.charAt(0) === '1') {
-      return '+1 ' + d.slice(1, 4) + ' ' + d.slice(4, 7) + ' ' + d.slice(7);
-    }
-    if (d.length === 10) {
-      return d.slice(0, 3) + ' ' + d.slice(3, 6) + ' ' + d.slice(6);
-    }
-    return shown;
+    var d = String(digits || shown || '').replace(/\D/g, '');
+    if (!d) return shown;
+    if (d === '911') return '911';
+    if (d.length >= 11 && d.charAt(0) === '1') d = d.slice(1);
+    d = d.slice(0, 10);
+    if (!d) return shown;
+    if (d === '911') return '911';
+    if (d.length <= 3) return '(' + d + ')';
+    if (d.length <= 6) return '(' + d.slice(0, 3) + ') ' + d.slice(3);
+    return '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6);
   }
 
   function setListDropOpen(dropId, hasItems) {
@@ -2228,7 +2232,8 @@ function redmedAssetURL(file) {
         if (phone) {
           var a = document.createElement('a');
           a.className = 'cp';
-          a.href = 'tel:' + phone;
+          var nums = String(phone).replace(/\D/g, '');
+          a.href = 'tel:' + (nums === '911' ? '911' : phone);
           a.textContent = formatPhoneDisplay(c.phone || phone, phone);
           nameRow.appendChild(a);
         }

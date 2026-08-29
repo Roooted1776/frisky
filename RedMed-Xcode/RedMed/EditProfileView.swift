@@ -603,10 +603,17 @@ struct EditProfileView: View {
             let trimmedPhone = contact.phone.trimmingCharacters(in: .whitespacesAndNewlines)
             let trimmedRel = contact.relationship.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmedName.isEmpty || !trimmedPhone.isEmpty else { return nil }
+            let phoneToStore: String = {
+                let parsed = CountryDialCode.parse(trimmedPhone)
+                if parsed.country.dialCode == "+1" {
+                    return CountryDialCode.nanpNationalDigits(from: trimmedPhone)
+                }
+                return trimmedPhone
+            }()
             return EmergencyContact(
                 name: trimmedName,
                 relationship: trimmedRel,
-                phone: trimmedPhone
+                phone: phoneToStore
             )
         }
 
@@ -760,7 +767,7 @@ private struct ContactDraftRow: View {
 
                 IdentifiedTextField(
                     fieldID: "edit-contact-\(contactID)-phone",
-                    placeholder: "Phone number",
+                    placeholder: country.dialCode == "+1" ? "(555) 123-4567" : "Phone number",
                     text: $localNumber,
                     keyboardType: .phonePad,
                     autocapitalization: .none,
@@ -788,14 +795,18 @@ private struct ContactDraftRow: View {
     }
 
     private func syncPhone(number: String) {
-        // +1 (US/Canada, NANP): reformat live to (XXX) XXX-XXXX with the area
-        // code grouped — other countries keep the raw digits as typed since
-        // NANP grouping doesn't apply to their numbering plans.
-        let display = country.dialCode == "+1"
-            ? CountryDialCode.formattedNANP(digits: number)
-            : number.trimmingCharacters(in: .whitespaces)
-        if display != localNumber { localNumber = display }
-        contact.phone = display.isEmpty ? "" : "\(country.dialCode) \(display)"
+        // +1 (US/Canada, NANP): live (XXX) XXX-XXXX with area code. Store
+        // digits (911 stays 911). +1 is optional in display — the country
+        // chip already shows it. Other countries keep typed national digits.
+        if country.dialCode == "+1" {
+            let display = CountryDialCode.formattedNANP(digits: number)
+            if display != localNumber { localNumber = display }
+            contact.phone = CountryDialCode.nanpNationalDigits(from: number)
+        } else {
+            let display = number.trimmingCharacters(in: .whitespaces)
+            if display != localNumber { localNumber = display }
+            contact.phone = display.isEmpty ? "" : "\(country.dialCode) \(display)"
+        }
     }
 }
 
