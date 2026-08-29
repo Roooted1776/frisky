@@ -139,7 +139,7 @@ struct AidView: View {
 struct PaneCard: View {
     let pane: AidPane
     let isOpen: Bool
-    let onTap: (String?) -> Void
+    let onTap: (String?) -> Void // nil = toggle, string = open topic
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -148,6 +148,7 @@ struct PaneCard: View {
                     Text(pane.emoji)
                         .font(.system(size: 22))
                         .frame(width: 44, height: 44)
+                        // Cream at rest, solid accent while open — same for every pane.
                         .background(isOpen ? Color.redmedAccent : Color.redmedAccent.opacity(0.1))
                         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius))
                         .accessibilityHidden(true)
