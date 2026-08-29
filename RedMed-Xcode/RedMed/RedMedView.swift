@@ -272,12 +272,14 @@ struct RedMedView: View {
             reason: "Unlock with Face ID, Touch ID, or passcode to edit your RedMed profile.",
             force: true
         ) { outcome in
-            if outcome == .success {
-                requireAuthOnSave = false
-                showEdit = true
-            } else if outcome == .notVerified {
-                showAuthFailedAlert = true
-                VaultHistoryStore.shared.record(.unlockFailed, detail: "edit")
+            Task { @MainActor in
+                if outcome == .success {
+                    requireAuthOnSave = false
+                    showEdit = true
+                } else if outcome == .notVerified {
+                    showAuthFailedAlert = true
+                    VaultHistoryStore.shared.record(.unlockFailed, detail: "edit")
+                }
             }
         }
     }

@@ -166,13 +166,18 @@ struct OwnerAppLock<Content: View>: View {
             allowPasscode: true
         ) { outcome in
             RedMedSignpost.end(.faceIDEvaluate)
-            let apply = {
-                self.handleUnlockOutcome(outcome, generation: generation)
-            }
-            if Thread.isMainThread {
-                apply()
-            } else {
-                DispatchQueue.main.async { apply() }
+            // LA delivers on the main *queue*, not the MainActor *executor*.
+            // Sync `@State` writes here (Thread.isMainThread) trap under Swift
+            // concurrency — same post–Face ID load crash as #296 / #307.
+            Task { @MainActor in
+                guard generation == authGeneration else { return }
+                if case .success = outcome {
+                    // Let the system sheet finish tearing down before Main
+                    // mounts / ConsentGate paints.
+                    await Task.yield()
+                    guard generation == authGeneration else { return }
+                }
+                handleUnlockOutcome(outcome, generation: generation)
             }
         }
     }

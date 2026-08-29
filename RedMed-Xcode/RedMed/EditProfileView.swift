@@ -577,11 +577,13 @@ struct EditProfileView: View {
             reason: reason,
             force: true
         ) { outcome in
-            if outcome == .success {
-                commitSave()
-            } else if outcome == .notVerified {
-                showAuthFailedAlert = true
-                VaultHistoryStore.shared.record(.unlockFailed, detail: "editSave")
+            Task { @MainActor in
+                if outcome == .success {
+                    commitSave()
+                } else if outcome == .notVerified {
+                    showAuthFailedAlert = true
+                    VaultHistoryStore.shared.record(.unlockFailed, detail: "editSave")
+                }
             }
         }
     }
