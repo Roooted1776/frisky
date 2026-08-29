@@ -178,26 +178,6 @@ enum BiometricAuth {
         #endif
     }
 
-    /// Edit / Save / Erase. Honors the Before you continue Face ID toggle.
-    /// Owner open/return (`OwnerAppLock`) must call `authenticate` directly —
-    /// that gate is not optional.
-    static func authenticateForOwnerAction(
-        reason: String,
-        force: Bool,
-        completion: @escaping (Outcome) -> Void
-    ) {
-        if !AppSettings.faceIDEnabled {
-            let finish = { completion(.success) }
-            if Thread.isMainThread {
-                finish()
-            } else {
-                DispatchQueue.main.async(execute: finish)
-            }
-            return
-        }
-        authenticate(reason: reason, force: force, completion: completion)
-    }
-
     /// Live `evaluatePolicy` in progress (including the teardown wait).
     /// Scene `.inactive` during this is the Face ID sheet — do not relock.
     /// Simulator Authenticate alert counts too, so watchdogs do not

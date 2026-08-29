@@ -70,10 +70,6 @@ class ProfileData: ObservableObject {
     @Published var isRestoringFromKeychain: Bool = false
     /// One-shot so ContentView.task cannot Face ID twice in one process.
     private var didAttemptLaunchRestore = false
-    /// Non-interactive Keychain+JSON parked during Face ID. Unlock adopts
-    /// a finished result on the success turn so Main's first frame is the
-    /// YOU card, not cream-while-restoring.
-    private let launchPrefetch = LaunchPrefetchBox()
 
     private func setField<T: Equatable>(_ storage: inout T, _ newValue: T) {
         guard storage != newValue else { return }
@@ -121,9 +117,9 @@ class ProfileData: ObservableObject {
 
     init(persisting: Bool = true) {
         self.persists = persisting
-        // UserDefaults only. SecItem exists() here ran on the main thread
-        // before the first frame and delayed Face ID on the launch heart.
-        if persisting && Self.prefersLockOnLaunch {
+        // If a blob is expected, start restoring so the empty funnel cannot flash.
+        // Presence check only (exists) — no JSON decode here.
+        if persisting && (Self.hasStoredProfile() || Self.prefersLockOnLaunch) {
             self.isRestoringFromKeychain = true
         }
     }
@@ -240,30 +236,6 @@ class ProfileData: ObservableObject {
         return loadFromKeychain()
     }
 
-    /// Start a non-interactive Keychain read + JSON decode while Face ID is
-    /// up. Idempotent. Does not touch `@Published` fields until
-    /// `adoptLaunchPrefetch` / `restoreOnLaunch` — no PHI flash under the lock.
-    @MainActor
-    func beginLaunchPrefetch() {
-        guard persists else { return }
-        guard !didAttemptLaunchRestore else { return }
-        launchPrefetch.start(account: Self.keychainAccount)
-    }
-
-    /// Face ID success turn — wait for the in-flight prefetch (already
-    /// finished after a real sheet) and apply before Main mounts.
-    /// Does not run the interactive biometry migrate; `restoreOnLaunch` does.
-    @MainActor
-    func adoptLaunchPrefetch() async {
-        guard persists else { return }
-        guard !didAttemptLaunchRestore else { return }
-        guard let blob = await launchPrefetch.wait() else { return }
-        didAttemptLaunchRestore = true
-        apply(blob)
-        Self.setStoredProfileGate(true)
-        isRestoringFromKeychain = false
-    }
-
     /// Owner Main appear — load the Keychain blob into RAM. `allowInteractive`
     /// is true only here so an old biometryCurrentSet item can Face ID once
     /// and migrate to the unbound-when-unlocked ACL. Scanner sessions must
@@ -274,14 +246,6 @@ class ProfileData: ObservableObject {
         guard !didAttemptLaunchRestore else { return }
         didAttemptLaunchRestore = true
         isRestoringFromKeychain = true
-
-        if let blob = await launchPrefetch.wait() {
-            apply(blob)
-            Self.setStoredProfileGate(true)
-            isRestoringFromKeychain = false
-            return
-        }
-
         let ok = await reloadFromKeychainAsync(allowInteractive: true)
         if ok {
             Self.setStoredProfileGate(true)
@@ -343,33 +307,6 @@ class ProfileData: ObservableObject {
             return nil
         }
         return decoded
-    }
-
-    /// Off-main Keychain+JSON. Unlock peeks/awaits without a second SecItem.
-    private final class LaunchPrefetchBox: @unchecked Sendable {
-        private let lock = NSLock()
-        private var task: Task<PersistedProfile?, Never>?
-
-        func start(account: String) {
-            lock.lock()
-            if task != nil {
-                lock.unlock()
-                return
-            }
-            task = Task.detached(priority: .userInitiated) {
-                ProfileData.decodeBlob(KeychainStore.load(account: account, allowInteractive: false))
-            }
-            lock.unlock()
-        }
-
-        func wait() async -> PersistedProfile? {
-            let t: Task<PersistedProfile?, Never>?
-            lock.lock()
-            t = task
-            lock.unlock()
-            guard let t else { return nil }
-            return await t.value
-        }
     }
 
     /// - Returns: `true` when a profile blob was loaded from Keychain.

@@ -1,13 +1,11 @@
 import SwiftUI
-import CoreLocation
 
 /// Legal consent. First launch (or after a material policy version bump) only.
-/// Face ID runs first (OwnerAppLock). Never on passerby tapper.
+/// Never a cream lock. Never on passerby tapper.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
     static let currentVersion = "4.1"
 
-    /// Skip ack when stored version matches. Recorded on Agree.
     static var hasAcceptedCurrent: Bool {
         UserDefaults.standard.string(forKey: acceptedVersionKey) == currentVersion
     }
@@ -16,7 +14,7 @@ enum ConsentSettings {
         UserDefaults.standard.set(currentVersion, forKey: acceptedVersionKey)
     }
 
-    /// After Erase all data — Before you continue, then Main.
+    /// After Erase all data — next open shows Before you continue.
     static func clearAcceptance() {
         UserDefaults.standard.removeObject(forKey: acceptedVersionKey)
     }
@@ -25,6 +23,11 @@ enum ConsentSettings {
 struct ConsentGateView<Content: View>: View {
     @State private var hasAccepted = ConsentSettings.hasAcceptedCurrent
     @State private var contentArmed = ConsentSettings.hasAcceptedCurrent
+    @State private var checked = false
+    @State private var openPolicy: HelpDocument.Policy?
+    @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
+    @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
+    @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
     @ViewBuilder var content: () -> Content
 
     var body: some View {
@@ -35,8 +38,15 @@ struct ConsentGateView<Content: View>: View {
                     .allowsHitTesting(hasAccepted)
             }
             if !hasAccepted {
-                ConsentAcknowledgmentPage(onAgree: enterApp)
+                gate
             }
+        }
+        .onAppear {
+            OwnerLockPresentation.setLocked(false)
+            OwnerLockPresentation.holdSwitcherCover = false
+            SnapshotSafeCover.shared.reveal()
+            // First open: keep Main unmounted until Agree so the gate is the
+            // first real page, not a cream hang over a loading WKWebView.
         }
         .onReceive(NotificationCenter.default.publisher(for: .redMedDidEraseLocalData)) { _ in
             returnToAcknowledgment()
@@ -44,8 +54,9 @@ struct ConsentGateView<Content: View>: View {
     }
 
     private func returnToAcknowledgment() {
-        UserDefaults.standard.set(true, forKey: AppSettings.locationEnabledKey)
-        UserDefaults.standard.set(true, forKey: AppSettings.faceIDEnabledKey)
+        checked = false
+        openPolicy = nil
+        locationEnabled = true
         var t = Transaction()
         t.animation = nil
         withTransaction(t) {
@@ -54,38 +65,7 @@ struct ConsentGateView<Content: View>: View {
         }
     }
 
-    private func enterApp() {
-        ConsentSettings.recordAcceptance()
-        RedMedHaptics.success()
-        OwnerLockPresentation.setLocked(false)
-        OwnerLockPresentation.holdSwitcherCover = false
-        SnapshotSafeCover.shared.reveal()
-        var t = Transaction()
-        t.animation = nil
-        withTransaction(t) {
-            contentArmed = true
-            hasAccepted = true
-        }
-        // Do not spawn a spare WKWebView on this turn — that raced the
-        // owner RedMed embed and made tabs feel laggy after Agree.
-        // NFCView warms the preview shell after that tab is first opened.
-    }
-}
-
-/// First start / policy bump / after Erase only. Not mounted on later opens,
-/// so `CLLocationManager` is not created on every Face ID → Main.
-private struct ConsentAcknowledgmentPage: View {
-    var onAgree: () -> Void
-
-    @State private var checked = false
-    @State private var openPolicy: HelpDocument.Policy?
-    @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
-    @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
-    @AppStorage(AppSettings.faceIDEnabledKey) private var faceIDEnabled = true
-    @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
-    @StateObject private var locationPrompt = ConsentLocationPrompt()
-
-    var body: some View {
+    private var gate: some View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
@@ -93,7 +73,6 @@ private struct ConsentAcknowledgmentPage: View {
                         .font(.system(size: 22, weight: .bold))
                         .kerning(-0.4)
                         .foregroundColor(.redmedDark)
-                        .fitsContainer(lines: 1, minScale: 0.7, alignment: .center)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.top, 20)
 
@@ -103,37 +82,24 @@ private struct ConsentAcknowledgmentPage: View {
                     }
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.redmedMuted)
-                    .fitsContainer(lines: 8, minScale: 0.75, alignment: .leading)
                     .padding(14)
                     .redmedBox(flatten: false)
 
                     VStack(spacing: 0) {
                         Toggle("Haptic feedback", isOn: $hapticsEnabled)
                             .font(.system(size: RedMedChrome.rowFont, weight: .medium))
-                            .fitsContainer(lines: 1, minScale: 0.7)
                             .tint(.redmedAccent)
                             .padding(.horizontal, RedMedChrome.pagePadX)
                             .padding(.vertical, RedMedChrome.rowVPad)
                         Divider().overlay(Color.redmedDivider).padding(.leading, RedMedChrome.pagePadX)
                         Toggle("Location", isOn: $locationEnabled)
                             .font(.system(size: RedMedChrome.rowFont, weight: .medium))
-                            .fitsContainer(lines: 1, minScale: 0.7)
                             .tint(.redmedAccent)
                             .padding(.horizontal, RedMedChrome.pagePadX)
                             .padding(.vertical, RedMedChrome.rowVPad)
                             .onChange(of: locationEnabled) { _, on in
-                                if on {
-                                    locationPrompt.requestIfNeeded()
-                                    locationSuggester.refresh()
-                                }
+                                if on { locationSuggester.refresh() }
                             }
-                        Divider().overlay(Color.redmedDivider).padding(.leading, RedMedChrome.pagePadX)
-                        Toggle("Face ID", isOn: $faceIDEnabled)
-                            .font(.system(size: RedMedChrome.rowFont, weight: .medium))
-                            .fitsContainer(lines: 1, minScale: 0.7)
-                            .tint(.redmedAccent)
-                            .padding(.horizontal, RedMedChrome.pagePadX)
-                            .padding(.vertical, RedMedChrome.rowVPad)
                     }
                     .redmedBox(flatten: false)
 
@@ -163,7 +129,6 @@ private struct ConsentAcknowledgmentPage: View {
                         Text("I have read and agree to the RedMed Terms, Privacy, and Security pages, including the medical-device disclaimer, liability limits, and binding arbitration / class-action waiver in Terms.")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.redmedDark)
-                            .fitsContainer(lines: 8, minScale: 0.75, alignment: .leading)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .padding(.vertical, 4)
@@ -173,7 +138,7 @@ private struct ConsentAcknowledgmentPage: View {
                 .accessibilityAddTraits(checked ? [.isButton, .isSelected] : .isButton)
 
                 PrimaryButton(title: "Agree and continue", flatten: false) {
-                    agree()
+                    enterApp()
                 }
             }
             .padding(.horizontal, RedMedChrome.pagePadX)
@@ -186,21 +151,24 @@ private struct ConsentAcknowledgmentPage: View {
             ConsentPolicySheet(policy: policy)
                 .presentationBackground(Color.redmedBg)
         }
-        .onAppear {
-            // First open: keep Main unmounted until Agree so the gate is the
-            // first real page, not a cream hang over a loading WKWebView.
-            // Do not unlock here — OwnerAppLock owns Face ID / relock.
-            locationEnabled = true
-            locationPrompt.requestIfNeeded()
-        }
     }
 
-    private func agree() {
+    private func enterApp() {
         checked = true
-        if locationEnabled {
-            locationPrompt.requestIfNeeded()
+        ConsentSettings.recordAcceptance()
+        RedMedHaptics.success()
+        OwnerLockPresentation.setLocked(false)
+        OwnerLockPresentation.holdSwitcherCover = false
+        SnapshotSafeCover.shared.reveal()
+        var t = Transaction()
+        t.animation = nil
+        withTransaction(t) {
+            contentArmed = true
+            hasAccepted = true
         }
-        onAgree()
+        // Do not spawn a spare WKWebView on this turn — that raced the
+        // owner RedMed embed and made tabs feel laggy after Agree.
+        // NFCView warms the preview shell after that tab is first opened.
     }
 
     @ViewBuilder
@@ -213,7 +181,6 @@ private struct ConsentAcknowledgmentPage: View {
                 Text(policy.title)
                     .font(.system(size: RedMedChrome.rowFont, weight: .semibold))
                     .foregroundColor(.redmedDark)
-                    .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.system(size: 13, weight: .semibold))
@@ -247,23 +214,4 @@ private struct ConsentPolicySheet: View {
             .toolbar(.hidden, for: .navigationBar)
         }
     }
-}
-
-/// One-shot When In Use prompt for the first-run page. Kept here so Help
-/// chrome (`LocationAccessSuggester`) still never presents the system sheet.
-private final class ConsentLocationPrompt: NSObject, ObservableObject, CLLocationManagerDelegate {
-    private let manager = CLLocationManager()
-
-    override init() {
-        super.init()
-        manager.delegate = self
-    }
-
-    func requestIfNeeded() {
-        if manager.authorizationStatus == .notDetermined {
-            manager.requestWhenInUseAuthorization()
-        }
-    }
-
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {}
 }
