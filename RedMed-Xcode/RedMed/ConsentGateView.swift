@@ -51,7 +51,6 @@ struct ConsentGateView<Content: View>: View {
             // Do not unlock here — OwnerAppLock owns Face ID / relock.
             if !hasAccepted {
                 locationEnabled = true
-                faceIDEnabled = true
                 locationPrompt.requestIfNeeded()
             }
         }
