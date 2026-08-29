@@ -411,19 +411,21 @@ struct HelpMenuView: View {
             reason: "Confirm with Face ID, Touch ID, or passcode to erase all user data on this iPhone.",
             force: true
         ) { outcome in
-            switch outcome {
-            case .success:
-                profile.eraseAllLocalData()
-                RedMedHaptics.success()
-                isErasing = false
-                dismiss()
-            case .notVerified, .unavailable(_):
-                RedMedHaptics.error()
-                isErasing = false
-                eraseAuthFailed = true
-                VaultHistoryStore.shared.record(.unlockFailed, detail: "erase")
-            case .declined, .notInteractive, .timedOut:
-                isErasing = false
+            Task { @MainActor in
+                switch outcome {
+                case .success:
+                    profile.eraseAllLocalData()
+                    RedMedHaptics.success()
+                    isErasing = false
+                    dismiss()
+                case .notVerified, .unavailable(_):
+                    RedMedHaptics.error()
+                    isErasing = false
+                    eraseAuthFailed = true
+                    VaultHistoryStore.shared.record(.unlockFailed, detail: "erase")
+                case .declined, .notInteractive, .timedOut:
+                    isErasing = false
+                }
             }
         }
     }
