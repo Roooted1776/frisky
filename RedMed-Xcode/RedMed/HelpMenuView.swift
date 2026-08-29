@@ -407,7 +407,7 @@ struct HelpMenuView: View {
     private func requestErase() {
         guard showsOwnerTools, !isErasing else { return }
         isErasing = true
-        BiometricAuth.authenticate(
+        BiometricAuth.authenticateForOwnerAction(
             reason: "Confirm with Face ID, Touch ID, or passcode to erase all user data on this iPhone.",
             force: true
         ) { outcome in

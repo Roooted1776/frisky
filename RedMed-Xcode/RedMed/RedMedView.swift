@@ -268,7 +268,7 @@ struct RedMedView: View {
             showEdit = true
             return
         }
-        BiometricAuth.authenticate(
+        BiometricAuth.authenticateForOwnerAction(
             reason: "Unlock with Face ID, Touch ID, or passcode to edit your RedMed profile.",
             force: true
         ) { outcome in

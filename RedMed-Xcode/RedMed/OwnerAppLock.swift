@@ -128,6 +128,7 @@ struct OwnerAppLock<Content: View>: View {
         notInteractiveRetried = false
         OwnerLockPresentation.setLocked(true)
         OwnerLockPresentation.holdSwitcherCover = true
+        CrashMotionGuard.shared.stopMonitoring()
         gate = .locked
     }
 
@@ -187,6 +188,7 @@ struct OwnerAppLock<Content: View>: View {
             SnapshotSafeCover.shared.reveal()
             didUnlockOnce = true
             gate = .unlocked
+            CrashMotionGuard.shared.startMonitoring()
         case .notInteractive:
             // Cold-launch race: scene not interactive for LA yet. One
             // bounded retry after LAContext teardown. Same-turn retry is a

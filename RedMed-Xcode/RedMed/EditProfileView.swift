@@ -573,7 +573,7 @@ struct EditProfileView: View {
         let reason = requireAuthOnSave
             ? "Confirm with Face ID, Touch ID, or passcode to save your RedMed profile."
             : "Confirm with Face ID, Touch ID, or passcode to update your RedMed profile."
-        BiometricAuth.authenticate(
+        BiometricAuth.authenticateForOwnerAction(
             reason: reason,
             force: true
         ) { outcome in
