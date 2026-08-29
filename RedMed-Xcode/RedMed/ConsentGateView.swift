@@ -15,6 +15,11 @@ enum ConsentSettings {
     static func recordAcceptance() {
         UserDefaults.standard.set(currentVersion, forKey: acceptedVersionKey)
     }
+
+    /// After Erase all data — next Face ID then Before you continue.
+    static func clearAcceptance() {
+        UserDefaults.standard.removeObject(forKey: acceptedVersionKey)
+    }
 }
 
 struct ConsentGateView<Content: View>: View {
@@ -49,6 +54,22 @@ struct ConsentGateView<Content: View>: View {
                 faceIDEnabled = true
                 locationPrompt.requestIfNeeded()
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .redMedDidEraseLocalData)) { _ in
+            returnToAcknowledgment()
+        }
+    }
+
+    private func returnToAcknowledgment() {
+        checked = false
+        openPolicy = nil
+        locationEnabled = true
+        faceIDEnabled = true
+        var t = Transaction()
+        t.animation = nil
+        withTransaction(t) {
+            hasAccepted = false
+            contentArmed = false
         }
     }
 

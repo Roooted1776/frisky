@@ -243,7 +243,6 @@ struct HelpMenuView: View {
     @State private var showEraseConfirm = false
     @State private var isErasing = false
     @State private var eraseAuthFailed = false
-    @State private var eraseDone = false
 
     /// Same metrics as Edit — even horizontal rhythm across Help / Edit.
     private enum Metrics {
@@ -313,7 +312,7 @@ struct HelpMenuView: View {
                                             ProgressView()
                                                 .frame(maxWidth: .infinity, alignment: .leading)
                                         } else {
-                                            Text("Erase all RedMed data")
+                                            Text("Erase all user data")
                                                 .font(.system(size: Metrics.font, weight: .medium))
                                                 .frame(maxWidth: .infinity, alignment: .leading)
                                         }
@@ -322,7 +321,7 @@ struct HelpMenuView: View {
                                     .padding(.vertical, Metrics.rowVPad)
                                     .contentShape(Rectangle())
                                 }
-                                .disabled(isErasing || (!profile.hasSensitiveProfileData && !ProfileData.prefersLockOnLaunch && !ProfileData.hasStoredProfile()))
+                                .disabled(isErasing)
                             }
                             Text("Deletes the profile from this iPhone’s Keychain and clears local history. Settings prefs stay. The physical band is not wiped remotely — rewrite or discard it.")
                                 .font(.system(size: 12, weight: .medium))
@@ -344,7 +343,7 @@ struct HelpMenuView: View {
                 locationSuggester.refresh()
             }
             .confirmationDialog(
-                "Erase all RedMed data on this iPhone?",
+                "Erase all user data on this iPhone?",
                 isPresented: $showEraseConfirm,
                 titleVisibility: .visible
             ) {
@@ -359,11 +358,6 @@ struct HelpMenuView: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text("Face ID, Touch ID, or passcode is required to erase RedMed data.")
-            }
-            .alert("RedMed data erased", isPresented: $eraseDone) {
-                Button("OK", role: .cancel) { dismiss() }
-            } message: {
-                Text("This iPhone no longer holds your RedMed profile. Rewrite or discard the band if it still has a card.")
             }
         }
     }
@@ -414,7 +408,7 @@ struct HelpMenuView: View {
         guard showsOwnerTools, !isErasing else { return }
         isErasing = true
         BiometricAuth.authenticate(
-            reason: "Confirm with Face ID, Touch ID, or passcode to erase all RedMed data on this iPhone.",
+            reason: "Confirm with Face ID, Touch ID, or passcode to erase all user data on this iPhone.",
             force: true
         ) { outcome in
             switch outcome {
@@ -422,7 +416,7 @@ struct HelpMenuView: View {
                 profile.eraseAllLocalData()
                 RedMedHaptics.success()
                 isErasing = false
-                eraseDone = true
+                dismiss()
             case .notVerified, .unavailable(_):
                 RedMedHaptics.error()
                 isErasing = false

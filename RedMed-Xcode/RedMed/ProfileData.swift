@@ -366,6 +366,7 @@ class ProfileData: ObservableObject {
         guard persists else { return }
         KeychainStore.delete(account: Self.keychainAccount)
         Self.setStoredProfileGate(false)
+        ConsentSettings.clearAcceptance()
         purgeFromMemory()
         VaultHistoryStore.shared.clear()
         HIPAAOfflineVault.removeAll()

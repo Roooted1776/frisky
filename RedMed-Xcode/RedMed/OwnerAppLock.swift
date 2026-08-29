@@ -62,6 +62,13 @@ struct OwnerAppLock<Content: View>: View {
                 tryPromptFaceID()
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .redMedDidEraseLocalData)) { _ in
+            relock(cancelEvaluate: true)
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 350_000_000)
+                tryPromptFaceID(force: true)
+            }
+        }
     }
 
     private func handleScenePhase(_ phase: ScenePhase) {
