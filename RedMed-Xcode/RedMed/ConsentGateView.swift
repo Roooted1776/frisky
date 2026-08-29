@@ -25,6 +25,7 @@ struct ConsentGateView<Content: View>: View {
     /// Task.yield so Agree is a cover-drop, not a cold WKWebView first paint.
     @State private var contentArmed = ConsentSettings.hasAcceptedCurrent
     @State private var checked = false
+    @State private var selectedPolicy: HelpDocument.Policy = .privacy
     @State private var openPolicy: HelpDocument.Policy?
     /// OwnerAppLock already did Face ID. This view is only the acknowledgment.
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
@@ -115,12 +116,12 @@ struct ConsentGateView<Content: View>: View {
                         .padding(.horizontal, 4)
 
                     VStack(spacing: 0) {
-                        ForEach(Array(HelpDocument.Policy.allCases.enumerated()), id: \.element.id) { index, policy in
-                            if index > 0 {
-                                Divider().overlay(Color.redmedDivider).padding(.leading, RedMedChrome.pagePadX)
-                            }
-                            policyRow(policy)
-                        }
+                        policyTabs
+                        Divider().overlay(Color.redmedDivider)
+                        LocalWebView(filename: HelpDocument.bundledFile, fragment: selectedPolicy.fragment)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 440)
+                            .accessibilityLabel(selectedPolicy.title)
                     }
                     .redmedBox(flatten: false)
 
@@ -184,31 +185,39 @@ struct ConsentGateView<Content: View>: View {
         }
     }
 
-    /// One policy link row (title + chevron.right). Tapping opens the real
-    /// Help.html section for that policy in a sheet — keeps this screen a
-    /// short, clean acknowledgment instead of a second copy of Help's text.
-    @ViewBuilder
-    private func policyRow(_ policy: HelpDocument.Policy) -> some View {
-        Button {
-            RedMedHaptics.light()
-            openPolicy = policy
-        } label: {
-            HStack {
-                Text(policy.title)
-                    .font(.system(size: RedMedChrome.rowFont, weight: .semibold))
-                    .foregroundColor(.redmedDark)
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.redmedMuted.opacity(0.55))
+    /// Privacy / Security / Terms — same selected-tab tint as the dock.
+    /// Tapping a title selects it and shows that Help.html section on this
+    /// page. Tapping the already-selected title still opens the full sheet.
+    private var policyTabs: some View {
+        HStack(spacing: 6) {
+            ForEach(HelpDocument.Policy.allCases) { policy in
+                let isOn = selectedPolicy == policy
+                Button {
+                    RedMedHaptics.selection()
+                    if isOn {
+                        openPolicy = policy
+                    } else {
+                        selectedPolicy = policy
+                    }
+                } label: {
+                    Text(policy.title)
+                        .font(.system(size: RedMedChrome.rowFont, weight: isOn ? .semibold : .medium))
+                        .foregroundColor(isOn ? .redmedAccent : .redmedMuted)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(
+                            RoundedRectangle(cornerRadius: RedMedChrome.chipRadius, style: .continuous)
+                                .fill(isOn ? Color.redmedAccent.opacity(0.12) : Color.clear)
+                        )
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(RedMedPressStyle(scale: 0.98, haptic: nil))
+                .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : .isButton)
+                .accessibilityHint(isOn ? "Shows \(policy.title) below. Tap again for full page." : "Show \(policy.title)")
             }
-            .padding(.horizontal, RedMedChrome.pagePadX)
-            .padding(.vertical, RedMedChrome.rowVPad)
-            .contentShape(Rectangle())
         }
-        .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
-        .accessibilityAddTraits(.isButton)
-        .accessibilityHint("Opens \(policy.title)")
+        .padding(.horizontal, 8)
+        .padding(.vertical, 8)
     }
 }
 
