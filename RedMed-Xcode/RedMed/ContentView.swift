@@ -168,7 +168,6 @@ struct CustomTabBar: View {
                 .fill(Color.redmedDark.opacity(0.18))
                 .frame(width: 118, height: 4)
                 .padding(.top, 2)
-                .padding(.bottom, 3)
                 .accessibilityHidden(true)
         }
         .background {
