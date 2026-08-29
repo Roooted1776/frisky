@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreLocation
 
 /// Legal consent. Every cold start of the owner app (fresh process), then
 /// Main after Agree this process. Stored version is the legal record only —
@@ -28,7 +29,9 @@ struct ConsentGateView<Content: View>: View {
     @State private var openPolicy: HelpDocument.Policy?
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
+    @AppStorage(AppSettings.faceIDEnabledKey) private var faceIDEnabled = true
     @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
+    @StateObject private var locationPrompt = ConsentLocationPrompt()
     @ViewBuilder var content: () -> Content
 
     var body: some View {
@@ -48,6 +51,11 @@ struct ConsentGateView<Content: View>: View {
             SnapshotSafeCover.shared.reveal()
             // First open: keep Main unmounted until Agree so the gate is the
             // first real page, not a cream hang over a loading WKWebView.
+            if !hasAccepted {
+                locationEnabled = true
+                faceIDEnabled = true
+                locationPrompt.requestIfNeeded()
+            }
         }
     }
 
@@ -84,8 +92,17 @@ struct ConsentGateView<Content: View>: View {
                             .padding(.horizontal, RedMedChrome.pagePadX)
                             .padding(.vertical, RedMedChrome.rowVPad)
                             .onChange(of: locationEnabled) { _, on in
-                                if on { locationSuggester.refresh() }
+                                if on {
+                                    locationPrompt.requestIfNeeded()
+                                    locationSuggester.refresh()
+                                }
                             }
+                        Divider().overlay(Color.redmedDivider).padding(.leading, RedMedChrome.pagePadX)
+                        Toggle("Face ID", isOn: $faceIDEnabled)
+                            .font(.system(size: RedMedChrome.rowFont, weight: .medium))
+                            .tint(.redmedAccent)
+                            .padding(.horizontal, RedMedChrome.pagePadX)
+                            .padding(.vertical, RedMedChrome.rowVPad)
                     }
                     .redmedBox(flatten: false)
 
@@ -141,6 +158,9 @@ struct ConsentGateView<Content: View>: View {
 
     private func enterApp() {
         checked = true
+        if locationEnabled {
+            locationPrompt.requestIfNeeded()
+        }
         ConsentSettings.recordAcceptance()
         ConsentSettings.acceptedThisProcess = true
         RedMedHaptics.success()
@@ -201,4 +221,23 @@ private struct ConsentPolicySheet: View {
             .toolbar(.hidden, for: .navigationBar)
         }
     }
+}
+
+/// One-shot When In Use prompt for the first-run page. Kept here so Help
+/// chrome (`LocationAccessSuggester`) still never presents the system sheet.
+private final class ConsentLocationPrompt: NSObject, ObservableObject, CLLocationManagerDelegate {
+    private let manager = CLLocationManager()
+
+    override init() {
+        super.init()
+        manager.delegate = self
+    }
+
+    func requestIfNeeded() {
+        if manager.authorizationStatus == .notDetermined {
+            manager.requestWhenInUseAuthorization()
+        }
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {}
 }
