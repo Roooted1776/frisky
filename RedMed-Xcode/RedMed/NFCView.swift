@@ -73,6 +73,12 @@ struct NFCView: View {
         } message: {
             Text(band.alertMessage ?? "")
         }
+        .onAppear {
+            Task { @MainActor in
+                await Task.yield()
+                PasserbyWebViewPool.warmFullShell()
+            }
+        }
         .onChange(of: band.isWriting) { _, writing in
             // Linked only after a matching read-back. Written-but-unverified stays Not linked.
             guard !writing, band.writeSucceeded, band.writeVerified, AppConfig.nfcHardwareEnabled else { return }

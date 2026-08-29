@@ -68,8 +68,11 @@ struct AidView: View {
                                 PaneCard(pane: pane, isOpen: isOpen) { key in
                                     if key == nil {
                                         RedMedHaptics.selection()
-                                        // Instant expand — spring accordion fights first Aid paint.
-                                        openPane = isOpen ? nil : pane.id
+                                        var t = Transaction()
+                                        t.animation = nil
+                                        withTransaction(t) {
+                                            openPane = isOpen ? nil : pane.id
+                                        }
                                     } else if let k = key, let topic = AidTopicCatalog.topics[k] {
                                         RedMedHaptics.light()
                                         activeTopic = topic
@@ -203,7 +206,6 @@ struct PaneCard: View {
                 }
                 .padding(.horizontal, 10)
                 .padding(.bottom, 12)
-                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -212,5 +214,7 @@ struct PaneCard: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
         .shadow(color: RedMedChrome.cardShadow, radius: 8, y: 3)
+        .compositingGroup()
+        .transaction { $0.animation = nil }
     }
 }

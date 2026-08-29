@@ -146,10 +146,9 @@ struct ConsentGateView<Content: View>: View {
             contentArmed = true
             hasAccepted = true
         }
-        Task { @MainActor in
-            await Task.yield()
-            PasserbyWebViewPool.warmFullShell()
-        }
+        // Do not spawn a spare WKWebView on this turn — that raced the
+        // owner RedMed embed and made tabs feel laggy after Agree.
+        // NFCView warms the preview shell after that tab is first opened.
     }
 
     @ViewBuilder

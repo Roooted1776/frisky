@@ -14,34 +14,58 @@ enum RedMedHaptics {
         return UserDefaults.standard.bool(forKey: enabledKey)
     }
 
+    /// Reused generators — `UI*FeedbackGenerator()` + fire on every tab tap
+    /// hitches while Taptic Engine warms a brand-new client.
+    private static let selectionGen = UISelectionFeedbackGenerator()
+    private static let lightGen = UIImpactFeedbackGenerator(style: .light)
+    private static let mediumGen = UIImpactFeedbackGenerator(style: .medium)
+    private static let heavyGen = UIImpactFeedbackGenerator(style: .heavy)
+    private static let notifyGen = UINotificationFeedbackGenerator()
+
+    /// Warm the Taptic clients before the first tab press.
+    static func prepare() {
+        guard enabled else { return }
+        selectionGen.prepare()
+        lightGen.prepare()
+        mediumGen.prepare()
+        heavyGen.prepare()
+        notifyGen.prepare()
+    }
+
     static func selection() {
         guard enabled else { return }
-        UISelectionFeedbackGenerator().selectionChanged()
+        selectionGen.selectionChanged()
+        selectionGen.prepare()
     }
 
     static func light() {
         guard enabled else { return }
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        lightGen.impactOccurred()
+        lightGen.prepare()
     }
 
     static func medium() {
         guard enabled else { return }
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        mediumGen.impactOccurred()
+        mediumGen.prepare()
     }
 
     static func heavy() {
         guard enabled else { return }
-        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+        heavyGen.impactOccurred()
+        heavyGen.prepare()
     }
 
     static func error() {
         guard enabled else { return }
-        UINotificationFeedbackGenerator().notificationOccurred(.error)
+        notifyGen.notificationOccurred(.error)
+        notifyGen.prepare()
     }
 
     static func success() {
         guard enabled else { return }
-        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        notifyGen.notificationOccurred(.success)
+        notifyGen.prepare()
     }
 }
 
