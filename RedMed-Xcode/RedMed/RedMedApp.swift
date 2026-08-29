@@ -29,23 +29,15 @@ struct RedMedApp: App {
     }
 }
 
-/// First open: Before you continue (no lock cream). Agree opens Main.
-/// Later opens: Face ID lock, then Main.
+/// First open: Before you continue with Agree on screen. Later opens: Main.
+/// No cream lock page in front. Face ID still gates Edit.
 private struct LaunchRoot: View {
-    @State private var needsConsent = !ConsentSettings.hasAcceptedCurrent
-
     var body: some View {
-        Group {
-            if needsConsent {
-                ConsentGateView { Main() }
-            } else {
-                OwnerAppLock { Main() }
+        ConsentGateView { Main() }
+            .onAppear {
+                OwnerLockPresentation.setLocked(false)
+                OwnerLockPresentation.holdSwitcherCover = false
+                SnapshotSafeCover.shared.reveal()
             }
-        }
-        .onAppear {
-            guard needsConsent else { return }
-            OwnerLockPresentation.setLocked(false)
-            SnapshotSafeCover.shared.reveal()
-        }
     }
 }
