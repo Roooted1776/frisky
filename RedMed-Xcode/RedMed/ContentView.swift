@@ -222,7 +222,12 @@ struct TabBarItem: View {
         Button(action: action) {
             GeometryReader { geo in
                 // Label tracks the slot (W×H); shrink-to-fit so RedMed / 911 / Aid / NFC stay inside.
-                let labelSize = min(geo.size.height * 0.26, geo.size.width * 0.22)
+                let labelSize = FittedType.size(
+                    in: geo.size,
+                    heightFraction: 0.26,
+                    widthFraction: 0.22,
+                    clamp: 9...13
+                )
                 VStack(spacing: 2) {
                     Image(systemName: icon)
                         .font(.system(size: 18, weight: isOn ? .semibold : .regular))

@@ -81,6 +81,83 @@ struct CreamWindowBackground: UIViewRepresentable {
     }
 }
 
+
+// MARK: - Container-relative type
+
+/// Font size from a box: `min(height × hFrac, width × wFrac)`, clamped so type
+/// stays in the current hierarchy (not microscopic, not huge). Same formula as
+/// tab labels in `TabBarItem`.
+enum FittedType {
+    static func size(
+        in box: CGSize,
+        heightFraction: CGFloat,
+        widthFraction: CGFloat,
+        clamp: ClosedRange<CGFloat>
+    ) -> CGFloat {
+        let raw = min(box.height * heightFraction, box.width * widthFraction)
+        let value = raw.isFinite ? raw : clamp.lowerBound
+        return min(max(value, clamp.lowerBound), clamp.upperBound)
+    }
+}
+
+/// Shrink-to-fit in the proposed box. No GeometryReader — prefer this on rows,
+/// fields, and body copy. Titles / chrome that must track W×H use `FittedText`.
+extension View {
+    func fitsContainer(
+        lines: Int = 1,
+        minScale: CGFloat = 0.7,
+        alignment: TextAlignment = .leading
+    ) -> some View {
+        self
+            .lineLimit(lines)
+            .minimumScaleFactor(minScale)
+            .multilineTextAlignment(alignment)
+    }
+}
+
+/// Tab-label style: one GeometryReader, type as a fraction of the container.
+/// Give it a bounded frame (tab slot, modal bar, header). Do not wrap every row.
+struct FittedText: View {
+    let text: String
+    var weight: Font.Weight = .medium
+    var heightFraction: CGFloat = 0.26
+    var widthFraction: CGFloat = 0.22
+    var clamp: ClosedRange<CGFloat> = 11...22
+    var lines: Int = 1
+    var minScale: CGFloat = 0.65
+    var alignment: TextAlignment = .center
+    var color: Color = .redmedDark
+    var kerning: CGFloat = 0
+    var design: Font.Design = .default
+
+    var body: some View {
+        GeometryReader { geo in
+            let size = FittedType.size(
+                in: geo.size,
+                heightFraction: heightFraction,
+                widthFraction: widthFraction,
+                clamp: clamp
+            )
+            Text(text)
+                .font(.system(size: size, weight: weight, design: design))
+                .foregroundColor(color)
+                .kerning(kerning)
+                .lineLimit(lines)
+                .minimumScaleFactor(minScale)
+                .multilineTextAlignment(alignment)
+                .frame(width: geo.size.width, height: geo.size.height, alignment: frameAlignment)
+        }
+    }
+
+    private var frameAlignment: Alignment {
+        switch alignment {
+        case .leading: return .leading
+        case .trailing: return .trailing
+        default: return .center
+        }
+    }
+}
+
 struct SectionLabel: View {
     let text: String
     var body: some View {
@@ -88,6 +165,7 @@ struct SectionLabel: View {
             .font(.system(size: 12, weight: .semibold))
             .foregroundColor(.redmedMuted)
             .kerning(0.6)
+            .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
             .padding(.horizontal, 4)
             .padding(.bottom, 6)
     }
@@ -123,6 +201,7 @@ struct PrimaryButton: View {
                 Image(systemName: systemImage)
             }
             Text(title)
+                .fitsContainer(lines: 1, minScale: 0.7, alignment: .center)
         }
         .font(.system(size: 16, weight: .bold))
         .foregroundColor(.white)
@@ -167,6 +246,7 @@ struct OutlineButton: View {
                 }
                 Text(title)
                     .font(.system(size: 16, weight: .bold))
+                    .fitsContainer(lines: 1, minScale: 0.7, alignment: .center)
             }
             .foregroundColor(.redmedAccent)
             .frame(maxWidth: .infinity)
@@ -202,6 +282,7 @@ struct CompactFillButton: View {
                     Image(systemName: systemImage)
                 }
                 Text(title)
+                    .fitsContainer(lines: 1, minScale: 0.7, alignment: .center)
             }
             .font(.system(size: 13, weight: .bold))
             .foregroundColor(.white)
@@ -235,8 +316,7 @@ struct ChromeTextAction: View {
                 .font(.system(size: RedMedChrome.chromeActionSize, weight: weight))
                 .foregroundColor(.redmedAccent)
                 .kerning(-0.2)
-                .lineLimit(1)
-                .minimumScaleFactor(0.85)
+                .fitsContainer(lines: 1, minScale: 0.7, alignment: .center)
                 .padding(.horizontal, 4)
                 .padding(.vertical, 6)
         }
@@ -264,8 +344,7 @@ struct OwnerModalBarButton: View {
                 .font(.system(size: RedMedChrome.modalActionSize, weight: weight))
                 .foregroundColor(.redmedAccent)
                 .kerning(-0.2)
-                .lineLimit(1)
-                .minimumScaleFactor(0.85)
+                .fitsContainer(lines: 1, minScale: 0.7, alignment: .center)
                 .frame(
                     maxWidth: fillWidth ? .infinity : nil,
                     maxHeight: .infinity,
@@ -318,8 +397,7 @@ struct OwnerModalChrome<Trailing: View>: View {
                 Text(title)
                     .font(RedMedChrome.navTitleFont)
                     .foregroundColor(.redmedDark)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
+                    .fitsContainer(lines: 1, minScale: 0.7, alignment: .center)
 
                 Spacer(minLength: 8)
 

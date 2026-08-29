@@ -380,6 +380,7 @@ struct CrashSurvivalCancelCard: View {
                     Text("Stop the alarm")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.redmedDark)
+                        .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
                     Spacer()
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 14))

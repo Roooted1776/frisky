@@ -282,6 +282,7 @@ struct HelpMenuView: View {
                                     Text("Write the band")
                                         .font(.system(size: Metrics.font, weight: .medium))
                                         .foregroundColor(.redmedDark)
+                                        .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .padding(.horizontal, Metrics.rowHPad)
                                         .padding(.vertical, Metrics.rowVPad)
@@ -314,6 +315,7 @@ struct HelpMenuView: View {
                                         } else {
                                             Text("Erase all user data")
                                                 .font(.system(size: Metrics.font, weight: .medium))
+                                                .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
                                                 .frame(maxWidth: .infinity, alignment: .leading)
                                         }
                                     }
@@ -326,6 +328,7 @@ struct HelpMenuView: View {
                             Text("Deletes the profile from this iPhone’s Keychain and clears local history. Settings prefs stay. The physical band is not wiped remotely — rewrite or discard it.")
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundColor(.redmedMuted)
+                                .fitsContainer(lines: 5, minScale: 0.75, alignment: .leading)
                                 .padding(.horizontal, 4)
                                 .padding(.top, 8)
                         }
@@ -392,6 +395,7 @@ struct HelpMenuView: View {
                 Text(policy.title)
                     .font(.system(size: Metrics.font, weight: .medium))
                     .foregroundColor(.redmedDark)
+                    .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right")
                     .font(.system(size: 13, weight: .semibold))

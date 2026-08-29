@@ -101,9 +101,11 @@ struct NFCView: View {
             Text("Preview only")
                 .font(.system(size: 13, weight: .bold))
                 .foregroundColor(.redmedAccent)
+                .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
             Text(AppConfig.BraceletRF.hardwareParkedSummary)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundColor(.redmedMuted)
+                .fitsContainer(lines: 6, minScale: 0.75, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(16)
@@ -125,9 +127,11 @@ struct NFCView: View {
                     Text(status.title)
                         .font(.system(size: 15, weight: .bold))
                         .foregroundColor(.redmedDark)
+                        .fitsContainer(lines: 2, minScale: 0.75, alignment: .leading)
                     Text(status.detail)
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.redmedMuted)
+                        .fitsContainer(lines: 3, minScale: 0.75, alignment: .leading)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
@@ -179,12 +183,14 @@ struct NFCView: View {
                 Text("Add your name on RedMed before writing or scanning the band.")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.redmedAccent)
+                    .fitsContainer(lines: 3, minScale: 0.75, alignment: .leading)
             }
 
             if !band.statusMessage.isEmpty {
                 Text(band.statusMessage)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(statusIsError ? .redmedAccent : .redmedMuted)
+                    .fitsContainer(lines: 4, minScale: 0.75, alignment: .leading)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -213,6 +219,7 @@ struct NFCView: View {
             Text("What first responders see when they tap your band.")
                 .font(.system(size: 13, weight: .medium))
                 .foregroundColor(.redmedMuted)
+                .fitsContainer(lines: 3, minScale: 0.75, alignment: .leading)
                 .lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -227,6 +234,7 @@ struct NFCView: View {
                 Text("Add your name on RedMed before previewing the band.")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.redmedAccent)
+                    .fitsContainer(lines: 3, minScale: 0.75, alignment: .leading)
             }
         }
         .padding(16)
@@ -287,6 +295,7 @@ struct NFCView: View {
                 .font(.system(size: 13, weight: .medium))
                 .foregroundColor(.redmedDark)
                 .lineSpacing(2)
+                .fitsContainer(lines: 4, minScale: 0.75, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -305,6 +314,7 @@ struct NFCView: View {
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.redmedMuted)
                 .lineSpacing(2)
+                .fitsContainer(lines: 4, minScale: 0.75, alignment: .leading)
         }
     }
 }

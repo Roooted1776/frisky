@@ -85,6 +85,7 @@ struct TopicDetailView: View {
                                 .font(.system(size: 12, weight: .bold))
                                 .kerning(0.6)
                                 .foregroundColor(.redmedMuted)
+                                .fitsContainer(lines: 1, minScale: 0.7, alignment: .center)
                             ZStack {
                                 Circle()
                                     .fill(cprPhase == "breathe" ? Color(red: 0.055, green: 0.647, blue: 0.914) : Color.redmedAccent)
@@ -99,13 +100,16 @@ struct TopicDetailView: View {
                                 Text("\(cprCount)")
                                     .font(.system(size: 32, weight: .heavy))
                                     .foregroundColor(.white)
+                                    .fitsContainer(lines: 1, minScale: 0.6, alignment: .center)
                             }
                             Text(cprPhase == "breathe" ? "Give 2 breaths" : "Push hard, push fast")
                                 .font(.system(size: 16, weight: .bold))
                                 .foregroundColor(.redmedAccent)
+                                .fitsContainer(lines: 2, minScale: 0.7, alignment: .center)
                             Text("110 beats/min · haptic + click · 30 compressions, then 2 breaths")
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundColor(.redmedMuted)
+                                .fitsContainer(lines: 2, minScale: 0.75, alignment: .center)
                                 .multilineTextAlignment(.center)
                             if cprRunning {
                                 PrimaryButton(title: "Stop") { stopCPR() }
@@ -123,6 +127,7 @@ struct TopicDetailView: View {
                     Text("Recognize")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.redmedAccent)
+                        .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
                         .kerning(0.5)
                         .textCase(.uppercase)
                         .padding(.horizontal, 4)
@@ -134,6 +139,7 @@ struct TopicDetailView: View {
                             Text(sym)
                                 .font(.system(size: 15))
                                 .foregroundColor(.redmedDark)
+                                .fitsContainer(lines: 6, minScale: 0.75, alignment: .leading)
                                 .lineSpacing(3)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -150,6 +156,7 @@ struct TopicDetailView: View {
                     Text("What to do")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.redmedAccent)
+                        .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
                         .kerning(0.5)
                         .textCase(.uppercase)
                         .padding(.horizontal, 4)
@@ -165,6 +172,7 @@ struct TopicDetailView: View {
                                 Text(step)
                                     .font(.system(size: 15))
                                     .foregroundColor(.redmedDark)
+                                    .fitsContainer(lines: 6, minScale: 0.75, alignment: .leading)
                                     .lineSpacing(3)
                                     .fixedSize(horizontal: false, vertical: true)
                                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -211,6 +219,7 @@ private struct LiveNearbyHospitalsSection: View {
             Text("Nearest Hospitals — Live")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundColor(.redmedAccent)
+                .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
                 .kerning(0.5)
                 .textCase(.uppercase)
                 .padding(.horizontal, 4)
@@ -221,6 +230,7 @@ private struct LiveNearbyHospitalsSection: View {
                 Text("Location is off. Enable it on Before you continue (first launch or a policy update) or in iOS Settings to find nearby hospitals. Search uses Apple Maps on this phone.")
                     .font(.system(size: 13))
                     .foregroundColor(.redmedMuted)
+                    .fitsContainer(lines: 6, minScale: 0.75, alignment: .leading)
                     .padding(.vertical, 12)
             } else if hospitalFinder.isLoading {
                 HStack {
@@ -228,6 +238,7 @@ private struct LiveNearbyHospitalsSection: View {
                     Text("Finding hospitals near you…")
                         .font(.system(size: 14))
                         .foregroundColor(.redmedMuted)
+                        .fitsContainer(lines: 2, minScale: 0.75, alignment: .leading)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24)
@@ -235,6 +246,7 @@ private struct LiveNearbyHospitalsSection: View {
                 Text(err)
                     .font(.system(size: 13))
                     .foregroundColor(.redmedMuted)
+                    .fitsContainer(lines: 4, minScale: 0.75, alignment: .leading)
                     .padding(.vertical, 12)
                 Button("Try again") { hospitalFinder.search() }
                     .font(.system(size: 14, weight: .semibold))
@@ -256,10 +268,12 @@ private struct LiveNearbyHospitalsSection: View {
                                     Text(hosp.name)
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundColor(.redmedAccent)
+                                        .fitsContainer(lines: 2, minScale: 0.75, alignment: .leading)
                                         .fixedSize(horizontal: false, vertical: true)
                                     Text(hosp.address.isEmpty ? String(format: "%.1f mi away", hosp.distanceMiles) : "\(hosp.address) · \(String(format: "%.1f", hosp.distanceMiles)) mi")
                                         .font(.system(size: 12, weight: .medium))
                                         .foregroundColor(.redmedMuted)
+                                        .fitsContainer(lines: 3, minScale: 0.75, alignment: .leading)
                                         .fixedSize(horizontal: false, vertical: true)
                                 }
                                 Spacer(minLength: 0)

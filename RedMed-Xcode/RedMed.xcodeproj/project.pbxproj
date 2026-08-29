@@ -377,6 +377,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		AAAA00000000000000000070 /* Bundle passerby tapper */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -393,7 +394,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -euo pipefail\nSRC=\"${SRCROOT}/../tapper/index.html\"\nDEST=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/tapper.html\"\ntest -f \"$SRC\" || { echo \"missing $SRC\" >&2; exit 1; }\nmkdir -p \"$(dirname \"$DEST\")\"\ncp -f \"$SRC\" \"$DEST\"\n";
+			shellScript = "set -euo pipefail\nSRC=\"${SRCROOT}/../tapper/index.html\"\nDEST=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/tapper.html\"\ntest -f \"$SRC\" || { echo \"missing $SRC\" >&2; exit 1; }\ngrep -q 'data-tab=\"medical\"' \"$SRC\" || { echo \"$SRC is not the full passerby shell\" >&2; exit 1; }\ngrep -q 'data-tab=\"911\"' \"$SRC\" || { echo \"$SRC missing 911 tab\" >&2; exit 1; }\ngrep -q 'data-tab=\"aid\"' \"$SRC\" || { echo \"$SRC missing Aid tab\" >&2; exit 1; }\nmkdir -p \"$(dirname \"$DEST\")\"\ncp -f \"$SRC\" \"$DEST\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */

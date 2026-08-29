@@ -130,16 +130,18 @@ struct SeizureTimerStrip: View {
                     .font(.system(size: 9, weight: .bold))
                     .kerning(0.8)
                     .foregroundColor(.redmedMuted)
+                    .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
                 Text(format(elapsed))
                     .font(.system(size: 17, weight: .bold, design: .monospaced))
                     .foregroundColor(pastThreshold ? .redmedAccent : .redmedDark)
+                    .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
                     .contentTransition(.numericText())
             }
             .frame(minWidth: 56, alignment: .leading)
             Text(pastThreshold ? "5:00 — tap Call" : "Call \(EmergencyNumber.current) at 5:00")
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundColor(pastThreshold ? .redmedAccent : .redmedMuted)
-                .lineLimit(1)
+                .fitsContainer(lines: 1, minScale: 0.65, alignment: .leading)
             Spacer(minLength: 4)
             HStack(spacing: 6) {
                 if pastThreshold {
@@ -148,6 +150,7 @@ struct SeizureTimerStrip: View {
                         PublicEmergencyAid.dial()
                     }
                     .font(.system(size: 11, weight: .bold))
+                    .fitsContainer(lines: 1, minScale: 0.7, alignment: .center)
                     .foregroundColor(.white)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
@@ -248,6 +251,7 @@ struct GPSCard: View {
                 .font(.system(size: 9, weight: .bold))
                 .kerning(1.1)
                 .foregroundColor(.redmedAccent)
+                .fitsContainer(lines: 1, minScale: 0.7, alignment: .center)
                 .padding(.horizontal, 8).padding(.vertical, 3)
                 .background(
                     RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
@@ -256,10 +260,12 @@ struct GPSCard: View {
             Text("\(latStr), \(lonStr)")
                 .font(.system(size: 15, weight: .bold, design: .monospaced))
                 .foregroundColor(.redmedDark)
+                .fitsContainer(lines: 2, minScale: 0.7, alignment: .center)
                 .multilineTextAlignment(.center)
             Text("Accuracy \(accuracy)")
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundColor(.redmedMuted)
+                .fitsContainer(lines: 1, minScale: 0.7, alignment: .center)
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 12)
@@ -285,6 +291,7 @@ struct InfoCard: View {
                 Text(title)
                     .font(.system(size: 13, weight: .bold))
                     .foregroundColor(.redmedDark)
+                    .fitsContainer(lines: 2, minScale: 0.75, alignment: .leading)
             }
             VStack(alignment: .leading, spacing: 6) {
                 ForEach(Array(items.enumerated()), id: \.offset) { i, item in
@@ -297,6 +304,7 @@ struct InfoCard: View {
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundColor(.redmedDark)
                             .lineSpacing(2)
+                            .fitsContainer(lines: 4, minScale: 0.75, alignment: .leading)
                     }
                 }
             }

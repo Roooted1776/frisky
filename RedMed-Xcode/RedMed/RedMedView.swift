@@ -131,6 +131,7 @@ struct RedMedView: View {
                         Text("Couldn't load your medical card.")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.redmedMuted)
+                            .fitsContainer(lines: 2, minScale: 0.75, alignment: .center)
                             .multilineTextAlignment(.center)
                         PrimaryButton(title: "Try again") {
                             packFinished = false
@@ -340,8 +341,7 @@ private struct RedMedUserHeader: View {
                     .font(.system(size: 22, weight: .bold))
                     .kerning(-0.5)
                     .foregroundColor(.redmedDark)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.7)
+                    .fitsContainer(lines: 2, minScale: 0.7, alignment: .leading)
                     .fixedSize(horizontal: false, vertical: true)
                 Button(action: onStatus) {
                     HStack(spacing: 2) {
@@ -349,6 +349,7 @@ private struct RedMedUserHeader: View {
                             .font(.system(size: 12, weight: .bold))
                             .kerning(0.5)
                             .textCase(.uppercase)
+                            .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
                         Text("›")
                             .font(.system(size: 15, weight: .bold))
                     }
@@ -392,11 +393,13 @@ private struct OwnerSetupFunnel: View {
                     Text("Birth date and blood type only. RedMed never writes back to Health.")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.redmedMuted)
+                        .fitsContainer(lines: 3, minScale: 0.75, alignment: .leading)
                 }
                 if let healthMessage, !healthMessage.isEmpty {
                     Text(healthMessage)
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.redmedMuted)
+                        .fitsContainer(lines: 4, minScale: 0.75, alignment: .leading)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -428,10 +431,12 @@ private struct OwnerSetupFunnel: View {
             Text(label)
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.redmedMuted)
+                .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
             Spacer(minLength: 12)
             Text(value)
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(Color.redmedDark.opacity(0.4))
+                .fitsContainer(lines: 1, minScale: 0.7, alignment: .trailing)
         }
         .padding(.horizontal, RedMedChrome.pagePadX)
         .padding(.vertical, 11)
@@ -476,9 +481,11 @@ private struct OwnerSetupFunnel: View {
                 Text(title)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(.redmedDark)
+                    .fitsContainer(lines: 2, minScale: 0.75, alignment: .leading)
                 Text(detail)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.redmedMuted)
+                    .fitsContainer(lines: 4, minScale: 0.75, alignment: .leading)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
@@ -508,15 +515,18 @@ private struct OwnerNextStepBanner: View {
                     Text(title)
                         .font(.system(size: 15, weight: .bold))
                         .foregroundColor(.redmedDark)
+                        .fitsContainer(lines: 2, minScale: 0.75, alignment: .leading)
                     Text(detail)
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.redmedMuted)
+                        .fitsContainer(lines: 4, minScale: 0.75, alignment: .leading)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 8)
                 HStack(spacing: 2) {
                     Text(actionTitle)
                         .font(.system(size: 14, weight: .bold))
+                        .fitsContainer(lines: 1, minScale: 0.7, alignment: .trailing)
                     Text("›")
                         .font(.system(size: 16, weight: .bold))
                 }

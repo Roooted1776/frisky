@@ -112,6 +112,7 @@ struct EditProfileView: View {
                             Text("Organ donor")
                                 .font(.system(size: Metrics.font, weight: .medium))
                                 .foregroundColor(.redmedMuted)
+                                .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
                         }
                         .tint(.redmedAccent)
                         .padding(.horizontal, Metrics.rowHPad)
@@ -225,6 +226,7 @@ struct EditProfileView: View {
                                 Text(suggestion)
                                     .font(.system(size: 14))
                                     .foregroundColor(.redmedDark)
+                                    .fitsContainer(lines: 1, minScale: 0.7, alignment: .center)
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 8)
                                     .background(Color.redmedAccent.opacity(0.10))
@@ -281,6 +283,7 @@ struct EditProfileView: View {
             Text(label)
                 .font(.system(size: Metrics.font, weight: .medium))
                 .foregroundColor(.redmedMuted)
+                .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
                 .frame(width: Metrics.labelWidth, alignment: .leading)
                 .padding(.trailing, 12)
             content()
@@ -294,6 +297,7 @@ struct EditProfileView: View {
             Text("Birth date")
                 .font(.system(size: Metrics.font, weight: .medium))
                 .foregroundColor(.redmedMuted)
+                .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
                 .frame(width: Metrics.labelWidth, alignment: .leading)
                 .padding(.trailing, 12)
 
@@ -304,6 +308,7 @@ struct EditProfileView: View {
                 Text(hasBirthDate ? birthDate : "Select date")
                     .font(.system(size: Metrics.font, weight: .medium))
                     .foregroundColor(hasBirthDate ? .redmedDark : .redmedAccent)
+                    .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(Rectangle())
             }
@@ -373,6 +378,7 @@ struct EditProfileView: View {
             Text("Blood type")
                 .font(.system(size: Metrics.font, weight: .medium))
                 .foregroundColor(.redmedMuted)
+                .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
                 .frame(width: Metrics.labelWidth, alignment: .leading)
                 .padding(.trailing, 12)
 
@@ -383,6 +389,7 @@ struct EditProfileView: View {
                     Text(bloodType.isEmpty ? "Select" : bloodType)
                         .font(.system(size: Metrics.font, weight: .medium))
                         .foregroundColor(bloodType.isEmpty ? .redmedAccent : .redmedDark)
+                        .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.redmedAccent)
@@ -415,7 +422,7 @@ struct EditProfileView: View {
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "plus.circle.fill").font(.system(size: Metrics.icon))
-                Text("Add contact").font(.system(size: Metrics.font, weight: .medium))
+                Text("Add contact").font(.system(size: Metrics.font, weight: .medium)).fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
             }
             .foregroundColor(.redmedAccent)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -494,6 +501,7 @@ struct EditProfileView: View {
                     }
                     Text(healthImportBusy ? "Reading Apple Health…" : "Fill from Apple Health")
                         .font(.system(size: Metrics.font, weight: .semibold))
+                        .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
                     Spacer(minLength: 0)
                     Image(systemName: "chevron.right")
                         .font(.system(size: 13, weight: .semibold))
@@ -513,6 +521,7 @@ struct EditProfileView: View {
             Text("Birth date and blood type only. Empty fields are filled; existing values stay. RedMed never writes back to Health.")
                 .font(.system(size: 12, weight: .medium))
                 .foregroundColor(.redmedMuted)
+                .fitsContainer(lines: 4, minScale: 0.75, alignment: .leading)
                 .padding(.horizontal, Metrics.rowHPad)
                 .padding(.vertical, 12)
 
@@ -521,6 +530,7 @@ struct EditProfileView: View {
                 Text(healthImportMessage)
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(.redmedMuted)
+                    .fitsContainer(lines: 4, minScale: 0.75, alignment: .leading)
                     .padding(.horizontal, Metrics.rowHPad)
                     .padding(.vertical, 12)
             }
@@ -759,6 +769,7 @@ private struct ContactDraftRow: View {
                         Text(country.dialCode)
                             .font(.system(size: Metrics.font, weight: .medium))
                             .foregroundColor(.redmedDark)
+                            .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
                         Image(systemName: "chevron.up.chevron.down")
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(.redmedAccent)
@@ -848,7 +859,7 @@ private struct DraftLinesEditor: View {
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "plus.circle.fill").font(.system(size: Metrics.icon))
-                Text(addLabel).font(.system(size: Metrics.font, weight: .medium))
+                Text(addLabel).font(.system(size: Metrics.font, weight: .medium)).fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
             }
             .foregroundColor(.redmedAccent)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -953,6 +964,8 @@ private struct RepresentedField: UIViewRepresentable {
         tf.placeholder = placeholder
         tf.font = .systemFont(ofSize: 15)
         tf.textColor = UIColor(Color.redmedDark)
+        tf.adjustsFontSizeToFitWidth = true
+        tf.minimumFontSize = 11
         tf.borderStyle = .none
         tf.backgroundColor = .clear
         tf.keyboardType = keyboardType

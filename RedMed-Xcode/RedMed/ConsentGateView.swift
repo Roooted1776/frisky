@@ -80,6 +80,7 @@ struct ConsentGateView<Content: View>: View {
                         .font(.system(size: 22, weight: .bold))
                         .kerning(-0.4)
                         .foregroundColor(.redmedDark)
+                        .fitsContainer(lines: 1, minScale: 0.7, alignment: .center)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.top, 20)
 
@@ -89,18 +90,21 @@ struct ConsentGateView<Content: View>: View {
                     }
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.redmedMuted)
+                    .fitsContainer(lines: 8, minScale: 0.75, alignment: .leading)
                     .padding(14)
                     .redmedBox(flatten: false)
 
                     VStack(spacing: 0) {
                         Toggle("Haptic feedback", isOn: $hapticsEnabled)
                             .font(.system(size: RedMedChrome.rowFont, weight: .medium))
+                            .fitsContainer(lines: 1, minScale: 0.7)
                             .tint(.redmedAccent)
                             .padding(.horizontal, RedMedChrome.pagePadX)
                             .padding(.vertical, RedMedChrome.rowVPad)
                         Divider().overlay(Color.redmedDivider).padding(.leading, RedMedChrome.pagePadX)
                         Toggle("Location", isOn: $locationEnabled)
                             .font(.system(size: RedMedChrome.rowFont, weight: .medium))
+                            .fitsContainer(lines: 1, minScale: 0.7)
                             .tint(.redmedAccent)
                             .padding(.horizontal, RedMedChrome.pagePadX)
                             .padding(.vertical, RedMedChrome.rowVPad)
@@ -113,6 +117,7 @@ struct ConsentGateView<Content: View>: View {
                         Divider().overlay(Color.redmedDivider).padding(.leading, RedMedChrome.pagePadX)
                         Toggle("Face ID", isOn: $faceIDEnabled)
                             .font(.system(size: RedMedChrome.rowFont, weight: .medium))
+                            .fitsContainer(lines: 1, minScale: 0.7)
                             .tint(.redmedAccent)
                             .padding(.horizontal, RedMedChrome.pagePadX)
                             .padding(.vertical, RedMedChrome.rowVPad)
@@ -145,6 +150,7 @@ struct ConsentGateView<Content: View>: View {
                         Text("I have read and agree to the RedMed Terms, Privacy, and Security pages, including the medical-device disclaimer, liability limits, and binding arbitration / class-action waiver in Terms.")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.redmedDark)
+                            .fitsContainer(lines: 8, minScale: 0.75, alignment: .leading)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .padding(.vertical, 4)
@@ -200,6 +206,7 @@ struct ConsentGateView<Content: View>: View {
                 Text(policy.title)
                     .font(.system(size: RedMedChrome.rowFont, weight: .semibold))
                     .foregroundColor(.redmedDark)
+                    .fitsContainer(lines: 1, minScale: 0.7, alignment: .leading)
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.system(size: 13, weight: .semibold))

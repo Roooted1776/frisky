@@ -20,7 +20,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | Keychain profile | `WhenPasscodeSetThisDeviceOnly`, no biometry ACL; save fail-closed; never synchronizable |
 | Owner tabs | RedMed · 911 · Aid · NFC; scanners never see NFC |
 | NFC Preview + Scan | Both use `fullScreenCover(item:)` after pack — no empty-cover race |
-| Passerby shell | Identical triple: `tapper.html` / `tapper/index.html` / `RedMed-Xcode/RedMed/tapper.html` |
+| Passerby shell | One file `tapper/index.html`; Xcode copies it to the app bundle as `tapper.html` at build; repo-root `tapper.html` redirects to `/tapper/` |
 | Offline shell | SW cache precaches HTML + pheart / BrandLogo / BrandWordmark |
 | Band URI contract | Write only `medicalCardBaseURL + #d=` base64url; vendor/social/short URLs rejected |
 | AES-GCM on chip | Public client key by design (EMS decrypts with no account) |
