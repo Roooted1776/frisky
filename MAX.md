@@ -16,7 +16,7 @@ RedMed is a **native iOS/SwiftUI** medical ID (`RedMed-Xcode/`). Local only: Key
 
 - Owner tabs: **RedMed · 911 · Aid · NFC**. Scanner / tapper: **RedMed · 911 · Aid** (no Edit, no NFC).
 - **In-app Face ID only on the owner RedMed page** (Edit / Save / Erase). 911, Aid, NFC write, and app launch do not prompt. Tapper: no biometrics, no acknowledgement.
-- No cream lock in front of Main. `ConsentGateView` is first launch / policy bump only. `SnapshotSafeCover` is the app-switcher cream.
+- No cream lock in front of Main. `ConsentGateView` on every cold start; Agree this process stays in Main. `SnapshotSafeCover` is the app-switcher cream.
 - Profile restores from Keychain on owner Main appear (device-unlocked Keychain — no Face ID to view). One Face ID is possible after this build to migrate an old biometry Keychain item, then never again to view.
 - NFC Tag Reading + HealthKit + Associated Domains are **parked** (personal/free Apple team). NFC tab stays visible; write is Preview packed card.
 - Seizure timer **never auto-dials**. At 5:00 it shows Call (`tel:`). GPS stays on-screen — never uploaded, never attached to `tel:`.

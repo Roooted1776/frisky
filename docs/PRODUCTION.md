@@ -26,7 +26,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | AES-GCM on chip | Public client key by design (EMS decrypts with no account) |
 | ATS | Arbitrary loads + local networking **false** |
 | Snapshot / pasteboard | Privacy cover + secure pasteboard clear on background |
-| Consent | `ConsentGateView` first launch / policy bump only; never a cream lock; never on tapper |
+| Consent | `ConsentGateView` every cold start; stored version is legal record only; never a cream lock; never on tapper |
 | Apple Health import | Parked (`healthKitImportEnabled = false`) |
 | App Store package | `PrivacyInfo.xcprivacy` + export flag + `docs/APP-STORE.md` |
 | Open PRs | Squash only into `main` |

@@ -32,8 +32,8 @@ struct RedMedApp: App {
     }
 }
 
-/// First open: Before you continue with Agree on screen. Later opens: Main.
-/// No cream lock page in front. Face ID still gates Edit.
+/// Cold start: Before you continue, then Main after Agree this process.
+/// Same session stays in Main. No cream lock page in front. Face ID still gates Edit.
 private struct LaunchRoot: View {
     var body: some View {
         ConsentGateView { Main() }
