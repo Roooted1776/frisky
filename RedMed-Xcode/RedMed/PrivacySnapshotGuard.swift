@@ -145,6 +145,9 @@ final class SnapshotSafeCover {
     static let shared = SnapshotSafeCover()
 
     private var coverView: UIView?
+    /// Cold launch / Xcode debugger attach fire willResignActive before the
+    /// first Main frame. Covering then is the cream hang after the launch screen.
+    private var hasBeenActive = false
 
     private init() {
         NotificationCenter.default.addObserver(
@@ -159,6 +162,7 @@ final class SnapshotSafeCover {
             object: nil,
             queue: .main
         ) { [weak self] _ in
+            self?.hasBeenActive = true
             self?.uncover()
         }
     }
@@ -177,6 +181,9 @@ final class SnapshotSafeCover {
     }
 
     private func cover() {
+        // Wait for the first active frame so launch / debugger attach
+        // cannot paint cream over Main.
+        guard hasBeenActive else { return }
         // Passerby tap card (Preview / Scan / band-style shell) is the public
         // EMT view — never veil it, matching PrivacySnapshotGuard's own rule.
         guard !TapCardPresentation.isVisible,
@@ -210,7 +217,8 @@ final class SnapshotSafeCover {
 /// showed the button, the cover hid it. Skip covering while locked.
 enum OwnerLockPresentation {
     private static let lock = NSLock()
-    private static var locked = true
+    // Launch opens Main (Face ID gates Edit only).
+    private static var locked = false
     private static var holdCover = false
 
     static var isLocked: Bool {

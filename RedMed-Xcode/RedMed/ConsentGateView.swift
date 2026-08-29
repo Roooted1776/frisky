@@ -40,11 +40,8 @@ struct ConsentGateView<Content: View>: View {
             OwnerLockPresentation.setLocked(false)
             OwnerLockPresentation.holdSwitcherCover = false
             SnapshotSafeCover.shared.reveal()
-            guard !contentArmed else { return }
-            Task { @MainActor in
-                await Task.yield()
-                contentArmed = true
-            }
+            // First open: keep Main unmounted until Agree so the gate is the
+            // first real page, not a cream hang over a loading WKWebView.
         }
     }
 
