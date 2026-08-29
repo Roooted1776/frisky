@@ -98,24 +98,11 @@ struct OwnerAppLock<Content: View>: View {
             case .unlocked:
                 content()
             case .locked:
-                // Face ID / passcode sheet is the only chrome while evaluating.
-                // FacePage (Proceed) only after cancel / mismatch / timeout.
-                if showUnlockControl, !isAuthenticating {
-                    FacePage(
-                        screenCaptured: screenCaptured,
-                        biometryFailed: biometryFailed,
-                        unavailableReason: faceIDUnavailableReason,
-                        profileLoadFailed: profileLoadFailed,
-                        notInteractive: notInteractive,
-                        onProceed: { startUnlockPipeline() },
-                        onOpenSettings: {
-                            guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
-                            UIApplication.shared.open(url)
-                        }
-                    )
-                } else {
-                    LockEntryPage()
-                }
+                // Invisible under the system Face ID sheet. No LockEntryPage,
+                // FacePage, heart, or Proceed — first visible page is the
+                // acknowledgment (or Main if consent is already accepted).
+                Color.redmedBg
+                    .ignoresSafeArea()
             }
         }
         #if DEBUG
@@ -248,7 +235,7 @@ struct OwnerAppLock<Content: View>: View {
                 // CoreMotion + vault file I/O on the same turn as consent
                 // first paint (and right after Face ID's Neural Engine) was
                 // a post-unlock hitch. Yield is not enough — wait a beat
-                // so Before you continue can paint, then start hardware.
+                // so Main can paint, then start hardware.
                 Task(priority: .utility) { @MainActor in
                     try? await Task.sleep(nanoseconds: 500_000_000)
                     guard gate == .unlocked else { return }
@@ -257,18 +244,22 @@ struct OwnerAppLock<Content: View>: View {
                         _ = HIPAAOfflineVault.prepare()
                     }
                 }
-                // NFC Preview WK warm moved to ConsentGateView after Agree —
-                // an 800ms post-unlock warm raced page-2 first paint.
+                // NFC Preview WK warm is not started on this turn —
+                // an 800ms post-unlock warm raced Main first paint.
             }
         }
         .onChange(of: showUnlockControl) { _, shown in
-            // Lock screen resolved into the manual Proceed screen — the other
-            // resolution (unlocked) is handled in the gate onChange above.
+            // No Proceed / FacePage chrome. Retry the system Face ID prompt.
             if shown {
                 RedMedSignpost.end(.coldLaunchWindow)
-                // Proceed / Open Settings must be tappable. The UIKit
-                // cream veil sat on top of that button if left up.
                 revealSwitcherCover()
+                showUnlockControl = false
+                didAutoPromptThisLock = false
+                Task { @MainActor in
+                    try? await Task.sleep(nanoseconds: 280_000_000)
+                    guard gate == .locked else { return }
+                    tryAutoUnlockIfActive()
+                }
             }
         }
         .onChange(of: scenePhase) { _, phase in

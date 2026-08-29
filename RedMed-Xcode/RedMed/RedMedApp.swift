@@ -8,9 +8,7 @@ struct RedMedApp: App {
         WindowGroup {
             // Owner UI lives in Main.swift — not HTML.
             // Privacy cover hides PHI from iOS app-switcher snapshots.
-            // First open: Face ID on Before you continue, then the ack, then Main.
-            // Later opens: Face ID lock, then Main. Consent is first-launch only,
-            // never on passerby tapper.
+            // System Face ID, then acknowledgment (first launch), then Main.
             PrivacySnapshotGuard {
                 LaunchRoot()
             }
@@ -60,25 +58,10 @@ struct RedMedApp: App {
     }
 }
 
-/// First process: Face ID on Before you continue, then acknowledgment, then Main.
-/// Same session stays on this tree after Agree so we do not remount OwnerAppLock
-/// and Face ID again. Next cold start uses the lock (consent already accepted).
+/// System Face ID first (lock chrome hidden). After unlock: acknowledgment
+/// (first launch / policy bump), then Main. Later opens: Face ID, then Main.
 private struct LaunchRoot: View {
-    @State private var needsConsent = !ConsentSettings.hasAcceptedCurrent
-
     var body: some View {
-        Group {
-            if needsConsent {
-                ConsentGateView { Main() }
-            } else {
-                OwnerAppLock { Main() }
-            }
-        }
-        .onAppear {
-            guard needsConsent else { return }
-            // Do not leave the switcher cream veil over the first page.
-            OwnerLockPresentation.setLocked(false)
-            SnapshotSafeCover.shared.reveal()
-        }
+        OwnerAppLock { ConsentGateView { Main() } }
     }
 }

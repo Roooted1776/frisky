@@ -26,11 +26,7 @@ struct ConsentGateView<Content: View>: View {
     @State private var contentArmed = ConsentSettings.hasAcceptedCurrent
     @State private var checked = false
     @State private var openPolicy: HelpDocument.Policy?
-    /// Face ID on this page first. Simulator auto-succeeds in BiometricAuth
-    /// so the ack is the first real frame. Device shows the heart + title
-    /// under the system sheet, then the acknowledgment.
-    @State private var faceUnlocked = false
-    @State private var faceIDStarted = false
+    /// OwnerAppLock already did Face ID. This view is only the acknowledgment.
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
@@ -46,11 +42,7 @@ struct ConsentGateView<Content: View>: View {
                     .allowsHitTesting(hasAccepted)
             }
             if !hasAccepted {
-                if faceUnlocked {
-                    gate
-                } else {
-                    facePrompt
-                }
+                gate
             }
         }
         .onAppear {
@@ -58,43 +50,6 @@ struct ConsentGateView<Content: View>: View {
             Task { @MainActor in
                 await Task.yield()
                 contentArmed = true
-            }
-        }
-    }
-
-    /// Face ID theme on Before you continue — not a blank cream hang.
-    private var facePrompt: some View {
-        ZStack {
-            Color.redmedBg
-                .ignoresSafeArea()
-            VStack(spacing: 14) {
-                LockMedGlyph(size: RedMedChrome.unlockFrameSize)
-                Text("Before you continue")
-                    .font(.system(size: 22, weight: .bold))
-                    .kerning(-0.4)
-                    .foregroundColor(.redmedDark)
-                    .multilineTextAlignment(.center)
-            }
-        }
-        .allowsHitTesting(false)
-        .onAppear(perform: startFaceID)
-    }
-
-    private func startFaceID() {
-        guard !faceIDStarted, !faceUnlocked else { return }
-        faceIDStarted = true
-        BiometricAuth.authenticate(
-            reason: "Continue with RedMed",
-            force: true,
-            allowPasscode: true
-        ) { _ in
-            // Never trap first launch on this shell. Cancel / fail still
-            // opens the acknowledgment so Agree can enter the app. Later
-            // cold starts use OwnerAppLock for PHI.
-            var t = Transaction()
-            t.animation = nil
-            withTransaction(t) {
-                faceUnlocked = true
             }
         }
     }
