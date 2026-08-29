@@ -16,7 +16,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 
 | Area | Status |
 |------|--------|
-| Owner Face ID gate | Open/return (system prompt) plus Edit / Save / Erase. Profile restores on Main appear (device-unlocked Keychain, no Face ID to view) |
+| Owner Face ID gate | Open/return always (system prompt). Edit / Save / Erase honor the Before you continue Face ID toggle. Profile restores on Main appear (device-unlocked Keychain, no Face ID to view) |
 | Keychain profile | `WhenPasscodeSetThisDeviceOnly`, no biometry ACL; save fail-closed; never synchronizable |
 | Owner tabs | RedMed · 911 · Aid · NFC; scanners never see NFC |
 | NFC Preview + Scan | Both use `fullScreenCover(item:)` after pack — no empty-cover race |
