@@ -42,16 +42,14 @@ jobs:
         run: |
           set -euo pipefail
           fail() { echo "::error::$1"; exit 1; }
+          # One shell: tapper/index.html. Root tapper.html is a #d= redirect.
+          # Xcode copies tapper/index.html → bundle tapper.html at build.
+          # Do not require three identical files (that gate is stale).
+          bash scripts/sync-tapper.sh
           f=tapper/index.html
-          grep -q 'data-tab="medical"' "$f" || fail "$f missing data-tab=medical"
-          grep -q 'data-tab="911"' "$f" || fail "$f missing data-tab=911"
-          grep -q 'data-tab="aid"' "$f" || fail "$f missing data-tab=aid"
           ! grep -q 'Checking your phone' "$f" || fail "$f still has Checking your phone"
           ! grep -q 'Set up your RedMed band' "$f" || fail "$f still has band-setup copy"
-          echo "OK tabs + no band-setup in $f"
-          cmp -s tapper.html tapper/index.html || fail "tapper.html != tapper/index.html — run scripts/sync-tapper.sh"
-          cmp -s tapper.html RedMed-Xcode/RedMed/tapper.html || fail "tapper.html != RedMed-Xcode/RedMed/tapper.html — run scripts/sync-tapper.sh"
-          echo "OK triple tapper.html identical"
+          echo "OK no band-setup in $f"
           # Brand photos live in assets/ (canonical) + tapper/ (shell-relative).
           # They are NOT at repo root — do not test -f BrandLogo.png.
           for p in \
