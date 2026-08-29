@@ -16,8 +16,8 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 
 | Area | Status |
 |------|--------|
-| Owner Face ID gate | Unlock → Keychain load with parked LAContext; WK warm **only after** unlock |
-| Keychain profile | `WhenPasscodeSetThisDeviceOnly` + `biometryCurrentSet`; save fail-closed; never synchronizable |
+| Owner Face ID gate | Edit / Save / Erase only. Profile restores on Main appear (device-unlocked Keychain, no Face ID to view) |
+| Keychain profile | `WhenPasscodeSetThisDeviceOnly`, no biometry ACL; save fail-closed; never synchronizable |
 | Owner tabs | RedMed · 911 · Aid · NFC; scanners never see NFC |
 | NFC Preview + Scan | Both use `fullScreenCover(item:)` after pack — no empty-cover race |
 | Passerby shell | Identical triple: `tapper.html` / `tapper/index.html` / `RedMed-Xcode/RedMed/tapper.html` |
@@ -26,7 +26,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | AES-GCM on chip | Public client key by design (EMS decrypts with no account) |
 | ATS | Arbitrary loads + local networking **false** |
 | Snapshot / pasteboard | Privacy cover + secure pasteboard clear on background |
-| Consent after Face ID | `ConsentGateView` on **every** unlock (not first-launch only); never before lock, never on tapper |
+| Consent | `ConsentGateView` first launch / policy bump only; never a cream lock; never on tapper |
 | Apple Health import | Parked (`healthKitImportEnabled = false`) |
 | App Store package | `PrivacyInfo.xcprivacy` + export flag + `docs/APP-STORE.md` |
 | Open PRs | Squash only into `main` |

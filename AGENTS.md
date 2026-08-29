@@ -24,17 +24,20 @@ The app has no backend, database, or web service.
 
 **Roles / shells (permanent — do not regress):**
 - **Face ID (2026-08-29):** in-app Face ID is only on the **owner RedMed page**
-  (Edit / Save). Not app launch, not 911 / Aid / NFC write, not tapper.
+  (Edit / Save / Erase). Not app launch, not 911 / Aid / NFC write, not tapper.
   Tapper has no biometrics and no acknowledgement page. Do not remount
-  `OwnerAppLock` as an app-wide cream lock. Crash monitor starts from owner
-  `Main`, not from that lock. The band is the product, not optional.
+  `OwnerAppLock` / `LockEntryPage` / `FacePage` as an app-wide cream lock.
+  Crash monitor starts from owner `Main` / `ContentView.onAppear`, not from
+  a lock. Profile restores from Keychain on owner Main appear (device-unlocked
+  Keychain — no Face ID to view). The band is the product, not optional.
 - **Owner app** (`Main` → `ContentView`, `isScannerSession == false`): tabs are
   **RedMed · 911 · Aid · NFC**. Edit is available on RedMed. NFC tab is always
   visible for owners; `AppConfig.nfcHardwareEnabled` only gates CoreNFC
   write/read sessions, never tab chrome. Owner writes the passive HF NFC band
   from the NFC tab (no Face ID on write) as `medicalCardBaseURL#d=` only
   (`AppConfig.OwnerBandURI`) — no vendor cloud, no social/short URL, no BLE.
-  Launch path is Face ID lock then Main (those tabs). No extra pages before Face ID. After unlock, a clickwrap (`ConsentGateView`) appears before Main on **every** Face ID unlock (boot, and any re-lock/re-unlock) — never in front of Face ID, never on passerby tapper.
+  Launch path is `ConsentGateView` (first launch / policy bump only) then
+  Main. No cream lock in front of Main. Face ID is not an app-open gate.
 - **Scanner / passerby shell** (`PublicCardView` / bracelet tap → `tapper.html#d=…`,
   `isScannerSession == true`): tabs are **RedMed · 911 · Aid** only — **no Edit**,
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain or
@@ -45,12 +48,13 @@ The app has no backend, database, or web service.
   unregistered host onto bands. `redmed.pages.dev` stays
   optional until Cloudflare secrets / Pages Git connect land.
   **Tap-to-view never requires Face ID / biometrics / passcode / login** — owner biometrics gate
-  edit, NFC write, vault, and app unlock only. Passerby HTML never asks.
+  Edit, Save, and Erase only. NFC write, 911, Aid, and app launch do not prompt.
+  Passerby HTML never asks.
   **Nothing blocks the tap card** (YOU card / Preview / Scan / band tap): no
   privacy veil, no native overlay stealing taps, no login. Safari opens
   `tapper.html#d=` immediately.
   Native **Help** chrome is on 911, Aid, NFC, and in-app scanner screens.
-  Not on the Face ID lock shell, not on Edit (that modal bar is Cancel / Save
+  Not on Edit (that modal bar is Cancel / Save
   only), and not a bottom dock on the owner RedMed tab (that dock was
   removed). Scanner Help is **policies only** (no Settings,
   Erase, or Write to NFC) so it cannot mutate owner Keychain or `@AppStorage`.
@@ -89,9 +93,8 @@ The app has no backend, database, or web service.
 
 **Settings vs automatic (permanent):**
 - Haptic feedback + Location toggles (`AppSettings` / `HapticEngine.enabledKey`)
-  live on `ConsentGateView`'s "Before you continue" screen, not Help — moved
-  there so they're set on the screen the owner already sees every unlock
-  instead of a separate Help → Settings trip. No other toggles there, and
+  live on `ConsentGateView`'s "Before you continue" screen, not Help — first
+  launch / policy bump only, **not** every open. No other toggles there, and
   Help no longer has a Settings section at all.
 - **Brightness + sound are survival-alarm only (not Settings):**
   arm `BrightnessBoost` + `VolumeBoost` + `LocatorBeacon` only when (1) on-device crash /
@@ -107,52 +110,28 @@ The app has no backend, database, or web service.
   or Find Help (same copy both places, owner and `tapper.html`).
 
 **Vault / privacy (permanent):**
-- `VaultHistoryView` Face ID unlock: explicit **Accept** tap first (no auto
-  prompt on appear); relock on `.background` only. Do **not**
-  lock on `.inactive` — LAContext / system auth sheets put the scene inactive
-  and would discard a successful unlock via `authGeneration`.
-- Owner app lock is **Face ID / Touch ID with device passcode fallback** before Main (`allowPasscode: true`, `force: true` — every open prompts, never skip via this-process success). Front page is
-  `LockEntryPage`: flat cream only (no BrandLogo, no spinner, no hangtime chrome). Path: open →
-  Face ID or passcode → Main. No hanging mark / lock watermark / FaceIDFrame clip on
-  that shell. Passerby `tapper.html` never has Face ID,
-  passcode, login, or any page in front of the card. No glyph, no Help on
-  `LockEntryPage`. After cancel / mismatch, **Face** (`FacePage`) with a
-  **Proceed** CTA replaces that shell (not a bottom dock) — cream + Proceed,
-  no hanging mark. Proceed must cancel any hung / leftover `LAContext` and,
-  only when one was actually live, wait a beat (~0.28s wall clock, not just
-  the next run loop turn) before `evaluatePolicy` — a same-turn retry after
-  userCancel fails immediately with no sheet and no system success animation
-  (dead button). A fresh first attempt with nothing in flight skips the wait.
-  `FacePage` has no visible "Face" title text — cream + status line + CTA only.
-  Never show a "Looking for Face ID" hang line; while evaluating, keep the
-  flat cream shell so the system Face ID / passcode sheet is the only UI.
-  `BiometricAuth.Outcome.unavailable(UnavailableReason)` (lockout / not
-  enrolled / no device passcode / biometry not available) is distinct from
-  `.notVerified` (a scan that just didn't match) — retrying `evaluatePolicy`
-  never fixes an unavailable state (no sheet even shows), so `FacePage`
-  swaps its CTA to **Open Settings** with a reason-specific message instead
-  of a **Proceed** that can only ever fail the same way again. Apple locks
-  Face ID after **5 unsuccessful matches** until the device passcode succeeds
-  (system-wide). `.deviceOwnerAuthentication` should still offer passcode;
-  `unavailable(.lockout)` is for `canEvaluatePolicy` failing outright.
-  Reuse duration stays **0** (Apple max is 300s — a non-zero value would skip
-  the owner gate off a recent device unlock). Edit, Save, NFC
-  write, vault unlock, and Erase all re-prompt Face ID every time (`force: true`).
-  **Re-lock whenever the owner leaves** so the next open always prompts:
-  true `.background` always (purge PHI + `gate = .locked`). Do **not**
-  relock on `.inactive` — that swapped live pages for `LockEntryPage`
-  cream under Control Center / app-switcher peek. `SnapshotSafeCover`
-  is the switcher thumbnail only (`holdSwitcherCover` until Face ID succeeds).
-  On the next `.active`, relock if still unlocked; keep cream over the pages until Face ID succeeds (or Proceed). Do not drop the cover on lock-shell commit.
-  Never relock on `.inactive` while Face ID / a system auth sheet is up
-  (`BiometricAuth.isEvaluating` or `isAuthenticating`) — that sheet itself
-  puts the scene `.inactive` and must not kill the prompt. VaultHistoryView
-  stays `.background`-only. Do
-  **not** play `LockOpen.mp4` or `FaceIDFrame.mp4`. Clip never gates Face ID.
-  Fresh install unlocks into empty tabs after auth. Owner RedMed tab then
-  shows a native **setup funnel** (Fill medical ID → Save → Write the band)
-  instead of an empty YOU card. Not an extra page before Face ID. Not on
-  passerby tapper.
+- `VaultHistoryView` was deleted. `VaultHistoryStore` still records events
+  (no UI). Do not remount a Face ID vault screen.
+- **No cream lock in front of Main.** Do not remount `OwnerAppLock` /
+  `LockEntryPage` / `FacePage`. Passerby `tapper.html` never has Face ID,
+  passcode, login, or any page in front of the card.
+- Face ID / Touch ID with device passcode fallback is **Edit, Save, and
+  Erase only** (`force: true`, reuse duration **0**). NFC write, 911, Aid,
+  app launch, and tapper do not prompt. Apple locks Face ID after **5
+  unsuccessful matches** until device passcode succeeds (system-wide).
+  `BiometricAuth.Outcome.unavailable` is distinct from `.notVerified`.
+- Profile Keychain is `WhenPasscodeSetThisDeviceOnly` with **no** biometry
+  ACL — readable when the device is unlocked; excluded from iCloud/backups.
+  Face ID is UI-only, not SecItem. Restore on owner `ContentView` appear
+  (`ProfileData.restoreOnLaunch`). One interactive Face ID is allowed only
+  to migrate an old `biometryCurrentSet` blob, then never again to view.
+  If a stored profile is expected and RAM is empty, show cream — not the
+  empty setup funnel. `persist()` must not save an empty RAM profile over
+  a stored blob (erase deletes Keychain first).
+- Fresh install (no stored blob) shows the native **setup funnel** (Fill
+  medical ID → Save → Write the band). Not on passerby tapper.
+- `SnapshotSafeCover` is the app-switcher cream thumbnail. Do **not** play
+  `LockOpen.mp4` or `FaceIDFrame.mp4`.
   Owner pages + passerby tapper: cream fill only (no page BrandLogo). **No hanging
   decorative brand marks** anywhere (no lock watermark, no Aid pane wordmarks, no
   privacy-cover logo) — page BrandWordmark headers on NFC / topic sheets only;
@@ -162,10 +141,9 @@ The app has no backend, database, or web service.
 - `PrivacySnapshotGuard` cover must appear opaque with **no** opacity fade;
   app-switcher snapshots can capture mid-transition PHI. Capture cover **only
   while PHI is in RAM**. Non-capture cover is true **`.background` only** (with
-  PHI) — never on `.inactive` (Face ID / LAContext blanks the UI mid-unlock),
-  never over the lock / Unlock shell, and **never over the tap card** (NFC
-  Preview / Scan / `PasserbyHTMLCardView`). After unlock while still
-  sharing, cover again; copy should say screen sharing, not a vague
+  PHI) — never on `.inactive` (Face ID / LAContext on Edit/Save/Erase blanks
+  the UI mid-prompt), and **never over the tap card** (NFC Preview / Scan /
+  `PasserbyHTMLCardView`). Copy should say screen sharing, not a vague
   “Profile hidden”.
 - `HIPAAOfflineVault`: complete file protection + backup exclusion; history
   events are timestamps/kind only (no field values).
@@ -182,61 +160,33 @@ The app has no backend, database, or web service.
 
 **Cold launch:** Do **not** create `CLLocationManager`, start GPS / MapKit /
 trauma JSON, or show a Location banner at `@main`. First launch opens a cream
-shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash) with
-**zero Keychain** on the first frame — `OwnerAppLock` always starts locked
-(flat cream / `redmedBg`, no BrandLogo) so Main never mounts before Face ID / passcode.
-A UserDefaults gate (`ProfileData.storedProfileGateKey`, set on persist /
-Keychain presence) hints whether a blob is expected for prefetch / fail-closed
-load; SecItem confirms off-main. Auto Face ID on every owner launch **immediately**
-(including cold-start `.inactive` — do **not** wait for `.active` or the cream
-hangs with no sheet; that wait was the cream hang), but **not** before a
-window is key — `tryAutoUnlockIfActive` also gates on `hasKeyWindow` and
-retries from `UIWindow.didBecomeKeyNotification` if `onAppear` fires too
-early, because an `evaluatePolicy` call made before any window is key has
-been observed to never complete (no success, no error) until the 1s/1.5s
-watchdogs kill it — a *different* cream hang than the `.active`-wait one,
-now seen on every cold launch instead of occasionally. Apple does **not**
-timeout `evaluatePolicy` (no LA API for it). RedMed backstops: **1s/1.5s**
-only when the scene is `.active` (no sheet — nothing to interrupt) — kept
-just above a real cold-launch `evaluatePolicy` round trip so a genuine
-sheet is not cancelled mid-presentation, but short enough that a true
-no-sheet hang reads as fast, not frozen;
-**60s total** when `.inactive` while evaluating so a slow passcode after a
-Face ID miss is not torn down early, but a ghost sheet cannot hang
-forever; **90s** `BiometricAuth.timedOut` if the callback never fires
-(Erase / vault / NFC write) — must stay above the 60s unlock budget.
-Apple's passcode sheet has no OS timeout — 60s is ours.
-`didAutoPromptThisLock` blocks re-prompt while the Face ID sheet holds
-`.inactive`). Prefetch still starts in the same `onAppear` tick and inside the
-unlock pipeline (single-flight overlap with Face ID). After cancel / mismatch
-the **Face** page (`FacePage`) shows **Proceed**. Fresh install unlocks into empty tabs after
-auth; returning owners load Keychain. Owner pages + tapper: cream fill, no page
-BrandLogo. Unlock overlaps Keychain decode + AES `#d=` pack + tapper.html
-string warm with Face ID and skips unlock animation so tabs paint on the next
-frame after biometrics. WKWebView warm starts **only after** `gate = .unlocked`
-— warming during Face ID / before the Keychain await steals MainActor and
-leaves a blank cream / white hang after auth. Parked Face ID decode unlocks
-on the same MainActor turn (no deferred `Task` hop). Do not call Keychain in
-`@State` defaults.
-Location defaults on (Before you continue) with **no RedMed location gate / banner / Allow popup** — Help must not
+shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash)
+then `ConsentGateView` (first launch / policy bump) then Main. No cream lock;
+Main mounts without Face ID. Owner `ContentView.onAppear` starts crash
+monitoring; `.task` calls `profile.restoreOnLaunch()` (owner only — scanners
+must not hit owner Keychain). A UserDefaults gate
+(`ProfileData.storedProfileGateKey`) plus `hasStoredProfile()` hints that a
+blob is expected so the empty funnel stays hidden while restore is in flight.
+Do not call Keychain decode in `@State` defaults.
+Location defaults on (Before you continue — first launch / policy bump) with
+**no RedMed location gate / banner / Allow popup** — Help must not
 call `requestWhenInUseAuthorization`. When-In-Use + GPS start on Find Help only
-when Location is enabled (`AppSettings.locationEnabled` + `LocationManager.start`);
-iOS may show its system Allow sheet once (cannot auto-accept). Passerby
-`tapper.html` must not call `geolocation` until the 911 tab opens. CoreMotion crash
-monitoring starts after unlock; do not construct
-`CMMotionManager` at `CrashMotionGuard` shared init or during Face ID. `ContentView` lazy
+when Location is enabled (`AppSettings.locationEnabled` + `LocationManager.start`
+→ `startUpdatingLocation()` while the 911 tab is visible); iOS may show its
+system Allow sheet once (cannot auto-accept). Passerby `tapper.html` must not
+call `geolocation` until the 911 tab opens. Nearby hospitals is a one-shot
+MapKit POI search (Apple may see query + region). Do not construct
+`CMMotionManager` at `CrashMotionGuard` shared init. `ContentView` lazy
 tab mounting mounts RedMed only on cold start (911 / Aid / NFC on first visit,
-kept alive after with opacity). Opacity keep-alive **does not** fire
+kept alive after). Opacity keep-alive **does not** fire
 `onDisappear` on tab switch — any side effect that must stop when leaving a
 tab (Find Help GPS, seizure timer, etc.) needs an explicit `isVisible`
-(or equivalent) hook from `ContentView`, not `onDisappear` alone. Keychain
-profile decode runs off-main (prefetched during Face ID) and must **fail closed**
-(stay locked) if a stored blob was expected but decode returns false — never
-unlock into an empty profile that can overwrite Keychain. Empty Keychain after
-auth (fresh install) may open empty Main. Vault prep runs off the main thread
-after first paint. CoreMotion crash monitoring starts after unlock — not during
-Face ID. `UILaunchScreen` must use `LaunchBackground` (same as `redmedBg`,
-including dark appearance) — never an empty dict (system black).
+(or equivalent) hook from `ContentView`, not `onDisappear` alone.
+`persist()` must not overwrite a stored Keychain blob with an empty RAM
+profile. Empty Keychain (fresh install) may open the setup funnel. Vault prep
+runs off the main thread after first paint. `UILaunchScreen` must use
+`LaunchBackground` (same as `redmedBg`, including dark appearance) — never an
+empty dict (system black).
 `PrivacySnapshotGuard` must not cover until the scene has been `.active`
 once (cold start begins `.inactive` and would otherwise blank the first
 paint); store content as a `@ViewBuilder` closure, do not eagerly evaluate

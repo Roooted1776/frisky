@@ -77,7 +77,7 @@
 
     <h2><span class="sec-num">5</span> Where it lives</h2>
     <p>Your profile stays on your iPhone Keychain and, if you write one, on the band’s NFC chip. It is not uploaded, synced, or backed up to any RedMed server — we do not operate one for profiles.</p>
-    <p>On iOS we use the <code>WhenPasscodeSetThisDeviceOnly</code> Keychain class bound to <code>biometryCurrentSet</code> (Face ID / Touch ID): readable only after a successful owner biometric, and <strong>excluded from iCloud and encrypted backups</strong>. It does not sync to your other Apple devices. Enrolling a new Face ID invalidates the stored profile.</p>
+    <p>On iOS we use the <code>WhenPasscodeSetThisDeviceOnly</code> Keychain class with <strong>no biometry ACL</strong>: readable while this iPhone is unlocked, and <strong>excluded from iCloud and encrypted backups</strong>. It does not sync to your other Apple devices. Face ID still gates Edit, Save, and Erase in the app — not reading the card, not 911, not Aid, not NFC write, not tapper.</p>
     <p>When someone taps the band, nothing is fetched from us. The card is built from what is on the chip (<code>#d=</code> in the URL fragment).</p>
 
     <h2><span class="sec-num">6</span> The band is readable by design</h2>
@@ -88,13 +88,15 @@
 
     <h2><span class="sec-num">7</span> Location (Find Help)</h2>
     <p>Find Help shows coordinates only while that screen is open. GPS starts when Find Help needs it and stops when you leave or close the app. Location is not used for ads, profiling, or background tracking, and is never sent to us.</p>
-    <p>Location defaults on (toggle on the "Before you continue" screen shown after Face ID). RedMed does not show an in-app location gate. The first time Find Help needs GPS, iOS may show its own When-In-Use Allow dialog — Apple requires that tap; we cannot auto-accept it.</p>
+    <p>Location defaults on (toggle on the "Before you continue" screen — first launch or a policy update, not after Face ID). RedMed does not show an in-app location gate. The first time Find Help needs GPS, iOS may show its own When-In-Use Allow dialog — Apple requires that tap; we cannot auto-accept it.</p>
+    <p>The 911 coordinate readout stays on this iPhone. If you open Find Nearby Hospitals, that search asks Apple Maps on this phone for ER POIs — Apple may see the query and region; it is not a RedMed upload. GPS is never attached to a <code>tel:</code> call.</p>
     <p>The Call button opens the system Phone app to your regional emergency number only. <strong>RedMed does not attach name, medical fields, contacts, GPS, or any other profile data to that call.</strong></p>
 
     <h2><span class="sec-num">8</span> Who else can see data</h2>
     <ul>
       <li><strong>Anyone who taps your band</strong> (or opens a card link with your <code>#d=</code>) can read the self-reported ID on it. That local handoff is the product.</li>
       <li><strong>Your phone’s OS apps</strong> — Phone, Messages, Maps, Share Sheet — when you use them. Apple’s rules apply there. Dispatchers hear or read what you say or type, not a RedMed server copy.</li>
+      <li><strong>Apple Maps</strong> may see a hospital search (query + region) when you use Find Nearby Hospitals. That search is Apple’s, not a RedMed upload. The 911 GPS readout itself stays on-device.</li>
       <li><strong>No ad networks, no analytics IDs, no data brokers, no account signup.</strong> We do not sell personal information or share it for cross-context behavioral advertising.</li>
     </ul>
 
@@ -137,7 +139,7 @@
     <p class="legal-parties">How RedMed protects the iPhone app, the passerby card, and the NFC band in the United States</p>
     <div class="legal-notice">
       <strong>In short</strong>
-      Profile stays on your phone (Keychain) and on the band if you write one. No RedMed profile backend. Owner Face ID gates edit, write, unlock, and local history. Band tap needs <strong>no</strong> Face ID — EMS must read it cold. Packing on the chip is obfuscation, not a private vault.
+      Profile stays on your phone (Keychain) and on the band if you write one. No RedMed profile backend. Owner Face ID gates Edit, Save, and Erase only. NFC write, 911, Aid, app launch, and tapper do not prompt. Band tap needs <strong>no</strong> Face ID — EMS must read it cold. Packing on the chip is obfuscation, not a private vault.
     </div>
     <article class="legal-body">
       <p>This page describes how RedMed approaches security. It is informational, <strong>not a warranty</strong>, and does not change the medical-device, no-outcome, or liability terms in <a href="#terms">Terms</a>.</p>
@@ -147,8 +149,8 @@
 
     <h2><span class="sec-num">2</span> On-device profile</h2>
     <ul>
-      <li>Profile fields in iOS <strong>Keychain</strong> with <code>WhenPasscodeSetThisDeviceOnly</code> and <code>biometryCurrentSet</code> (Face ID). Legacy unbound blobs migrate on next load.</li>
-      <li>Readable only while unlocked; excluded from iCloud and encrypted backups.</li>
+      <li>Profile fields in iOS <strong>Keychain</strong> with <code>WhenPasscodeSetThisDeviceOnly</code> and <strong>no biometry ACL</strong>. Older biometry-bound blobs migrate on the next owner open (one Face ID, then never again to view).</li>
+      <li>Readable while the device is unlocked; excluded from iCloud and encrypted backups.</li>
       <li>Local history / vault files use complete file protection and backup exclusion.</li>
       <li>Owner Face ID gates Edit, Save, and Erase. 911, Aid, NFC write, and tapper do not prompt.</li>
       <li>Passerby <code>tapper.html</code> never asks for Face ID, passcode, or login — tap opens the card from <code>#d=</code>.</li>
@@ -162,7 +164,7 @@
     <p>The card page renders fields with <code>textContent</code>, length caps, and phone sanitization. There is no RedMed profile server.</p>
 
     <h2><span class="sec-num">4</span> Location</h2>
-    <p>GPS starts only on Find Help (When-In-Use). Coordinates stay on-device for display. We do not receive, log, or retain them. Accurate coordinates and a successful 911 call are not guaranteed.</p>
+    <p>GPS starts only on Find Help (When-In-Use). Coordinates stay on-device for display and are never attached to a <code>tel:</code> call. We do not receive, log, or retain them. Find Nearby Hospitals asks Apple Maps on this phone for ER POIs — Apple may see that search. Accurate coordinates and a successful 911 call are not guaranteed.</p>
 
     <h2><span class="sec-num">5</span> Crash / severe-impact alarm</h2>
     <p>The on-device motion monitor described in <a href="#terms">Terms</a> §7 runs entirely on the phone: no network call, no upload, no RedMed server involvement. It evaluates a short rolling window of motion sensor data to estimate whether a severe impact occurred, then discards it. A false trigger or a missed trigger is a known limitation of on-device motion heuristics, not a data-security failure — see Terms §7, §13, and §14 for the corresponding disclaimers and liability limits.</p>
@@ -201,7 +203,7 @@
     <h2><span class="sec-num">2</span> Agreement</h2>
     <p>These Terms govern the RedMed iPhone app and any associated passive NFC medical band programmed through the app (together, the “App”).</p>
     <p>By downloading, installing, opening, or using the App — as the person who creates a profile, or as anyone who views a card by tapping a band or opening a <code>#d=</code> link — you agree to these Terms and to <a href="#privacy">Privacy</a>. If you do not agree, do not use the App.</p>
-    <p>In the owner iPhone app, after Face ID, first launch (and any material policy change) requires an explicit I-agree tap before the App is usable. A passerby who only views a band card agrees by opening that card.</p>
+    <p>In the owner iPhone app, first launch (and any material policy change) requires an explicit I-agree tap on Before you continue before the App is usable. That screen is not shown after Face ID. A passerby who only views a band card agrees by opening that card.</p>
     <p>Nothing here limits rights you cannot waive under US consumer-protection law. Where a term conflicts with a non-waivable statutory right, that right wins.</p>
 
     <h2><span class="sec-num">3</span> What the App does</h2>
@@ -222,7 +224,7 @@
     <p>You control what you enter. RedMed does not verify allergies, meds, conditions, or blood type. Keep the profile and band current when facts change. Responders should verify critical details when they can and use their own judgment.</p>
 
     <h2><span class="sec-num">6</span> Find Help and location</h2>
-    <p>Location and compass are used only while Find Help is visible, to display coordinates you can read to 911. Defaults on (toggle on the "Before you continue" screen shown after Face ID). First GPS use may trigger iOS’s When-In-Use Allow dialog — we cannot skip it.</p>
+    <p>Location and compass are used only while Find Help is visible, to display coordinates you can read to 911. Defaults on (toggle on the "Before you continue" screen — first launch or a policy update, not after Face ID). First GPS use may trigger iOS’s When-In-Use Allow dialog — we cannot skip it. Find Nearby Hospitals asks Apple Maps on this phone for ER POIs; that search is Apple’s. GPS is never attached to a 911 call.</p>
     <p>The optional seizure stopwatch is started by you. At five minutes it may open the dialer. It does not detect seizures and must never delay an earlier call when one is needed.</p>
     <p>RedMed does not use Apple's Emergency SOS via satellite, Apple Crash Detection API, or carrier satellite messaging — see <a href="#crash-alarm">§7</a> for RedMed's own, separate crash/impact alarm. Find Help may open Phone or Messages, or describe those built-in steps when there is no cell signal; RedMed does not operate those radios. Coordinates stay on-device and are not sent to us.</p>
 

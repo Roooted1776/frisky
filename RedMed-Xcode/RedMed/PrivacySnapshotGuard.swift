@@ -7,18 +7,13 @@ import UIKit
 /// that YOU card unblocked. Cover owner chrome when backgrounded or recorded.
 ///
 /// FaceTime / Screen Recording sets `UIScreen.isCaptured`. Do **not** cover the
-/// lock / Unlock shell — RAM is purged then, and a cover blocks Face ID /
-/// Unlock so the owner cannot enter. Do **not** cover the tap card — that is
-/// the public EMT view. Cover only when PHI is actually in memory and the tap
-/// card is not up. `OwnerAppLock` stages Keychain decode without publishing
-/// fields until after `gate = .unlocked`, so capture never paints a cover over
-/// the lock shell.
+/// tap card — that is the public EMT view. Cover only when PHI is actually in
+/// memory and the tap card is not up. There is no cream lock in front of Main.
 ///
 /// Non-capture SwiftUI cover is **`.background` only** (with PHI). Face ID /
-/// LAContext put the scene `.inactive` — covering then blanks the UI mid-unlock
-/// and painted a second cover over the cream lock. App-switcher snapshots
-/// still get a cover on true background while PHI is in RAM; after
-/// `OwnerAppLock` purges, the lock shell itself has no PHI to leak.
+/// LAContext on Edit / Save / Erase put the scene `.inactive` — covering then
+/// blanks the UI mid-prompt. App-switcher snapshots still get a cover on true
+/// background while PHI is in RAM.
 ///
 /// In-app pages stay uncovered while the owner is using them. The cream
 /// overlay is the app-switcher thumbnail (`SnapshotSafeCover`) plus this
@@ -127,13 +122,9 @@ struct PrivacySnapshotGuard<Content: View>: View {
 /// before iOS captures the app-switcher thumbnail — so PHI can never leak
 /// into that snapshot. This is the **only** cream overlay while the owner
 /// is still on live pages: it is a switcher snapshot veil, not a page
-/// chrome. `OwnerAppLock` no longer swaps the tab tree for `LockEntryPage`
-/// on `.inactive` (that painted cream on top of pages). Face ID runs on
-/// the next `.active` (re-entry). The cover stays up across that handoff
-/// (`holdSwitcherCover`) so pages stay cream-over until Face ID succeeds
-/// (or Proceed / Open Settings must be tappable).
+/// chrome. There is no cream lock swapping the tab tree on `.inactive`.
 ///
-/// Removed once Face ID unlocks (or if the owner never left). Fires on
+/// Removed when the owner is back on live pages (or if they never left). Fires on
 /// every app switch (`.inactive` included — Control Center, app switcher,
 /// an incoming call) because the snapshot risk exists at every one of
 /// those transitions, not only true `.background`.
