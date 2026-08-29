@@ -23,14 +23,12 @@
  * only replicated onto SHELL_KEYS when the body contains data-tab="medical"
  * — redirect stubs (card.html / get.html / index.html) must never land there.
  */
-var CACHE = 'redmed-tapper-v129';
+var CACHE = 'redmed-tapper-v130';
 var ASSETS = [
   './pheart.png',
   './BrandLogo.png',
-  './BrandWordmark.png',
   '../assets/pheart.png',
-  '../assets/BrandLogo.png',
-  '../assets/BrandWordmark.png'
+  '../assets/BrandLogo.png'
 ];
 /** Primary HTML shell — install must fail closed if neither key can be cached. */
 var REQUIRED_SHELLS = ['./index.html', './'];

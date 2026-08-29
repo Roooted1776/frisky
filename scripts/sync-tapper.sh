@@ -22,4 +22,15 @@ if grep -q 'data-tab="medical"' tapper.html; then
 fi
 grep -q 'tapper/' tapper.html
 
+# CACHE + precache list must match across Pages root, /tapper/, and the app bundle.
+if ! cmp -s sw.js tapper/sw.js; then
+  echo "sw.js and tapper/sw.js drifted — bump CACHE in lockstep" >&2
+  exit 1
+fi
+if ! cmp -s sw.js RedMed-Xcode/RedMed/sw.js; then
+  echo "sw.js and RedMed-Xcode/RedMed/sw.js drifted — bump CACHE in lockstep" >&2
+  exit 1
+fi
+grep -q "redmed-tapper-v" sw.js
+
 echo "OK single tapper shell at tapper/index.html"
