@@ -181,7 +181,6 @@ struct CustomTabBar: View {
                 .fill(Color.redmedDark.opacity(0.18))
                 .frame(width: 118, height: 4)
                 .padding(.top, 2)
-                .padding(.bottom, 3)
                 .accessibilityHidden(true)
         }
         .background {
@@ -200,8 +199,6 @@ struct CustomTabBar: View {
         }
         // Bar bounds only — upward shadow must not eat YOU-card / list taps.
         .contentShape(barShape)
-        // 3pt lift off the home indicator (bar sits in ignored bottom safe area).
-        .padding(.bottom, 3)
         .accessibilityElement(children: .contain)
     }
 
