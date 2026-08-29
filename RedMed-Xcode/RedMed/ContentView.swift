@@ -76,19 +76,20 @@ struct ContentView: View {
         .onAppear {
             mountedTabs.insert(activeTab)
             clampScannerTab()
-            RedMedHaptics.prepare()
             // HTML string only — not a second WKWebView (that raced first paint).
             PasserbyHTMLCardView.scheduleShellWarmOnce()
             // Same-turn mount in scannerSafeTab already paints 911 / Aid / NFC
             // on first tap. Do not stack those pages under RedMed on the first
-            // frame (that raced the live embed). After RedMed settles, mount
-            // them under the active page so the first tab hop is not a cold
-            // cream paint. GPS / WK warm stay gated on isVisible.
+            // frame (that raced the live embed). After the YOU card's WKWebView
+            // has a beat to parse, mount them under the active page so the first
+            // tab hop is not a cold cream paint. GPS / WK warm stay gated on
+            // isVisible.
             if !isScannerSession {
                 Task { @MainActor in
                     await Task.yield()
+                    RedMedHaptics.prepare()
                     CrashMotionGuard.shared.startMonitoring()
-                    try? await Task.sleep(nanoseconds: 450_000_000)
+                    try? await Task.sleep(nanoseconds: 900_000_000)
                     guard !Task.isCancelled else { return }
                     mountedTabs.insert(.emergency)
                     try? await Task.sleep(nanoseconds: 100_000_000)

@@ -67,13 +67,13 @@ struct RedMedView: View {
     }
 
     /// Owner empty profile — native steps instead of a blank YOU card.
-    /// Hidden while a stored ID is expected or restore is in flight (cream, not funnel).
+    /// Hidden while a stored ID is expected (`prefersLockOnLaunch`) or restore
+    /// is in flight (cream, not funnel). UserDefaults only — no SecItem in `body`.
     private var showsOwnerSetupFunnel: Bool {
         !isScannerSession
             && !profile.hasSensitiveProfileData
             && !profile.isRestoringFromKeychain
             && !ProfileData.prefersLockOnLaunch
-            && !ProfileData.hasStoredProfile()
     }
 
     var body: some View {

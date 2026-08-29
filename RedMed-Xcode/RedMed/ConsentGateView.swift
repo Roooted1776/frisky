@@ -25,13 +25,6 @@ enum ConsentSettings {
 struct ConsentGateView<Content: View>: View {
     @State private var hasAccepted = ConsentSettings.hasAcceptedCurrent
     @State private var contentArmed = ConsentSettings.hasAcceptedCurrent
-    @State private var checked = false
-    @State private var openPolicy: HelpDocument.Policy?
-    @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
-    @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
-    @AppStorage(AppSettings.faceIDEnabledKey) private var faceIDEnabled = true
-    @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
-    @StateObject private var locationPrompt = ConsentLocationPrompt()
     @ViewBuilder var content: () -> Content
 
     var body: some View {
@@ -42,16 +35,7 @@ struct ConsentGateView<Content: View>: View {
                     .allowsHitTesting(hasAccepted)
             }
             if !hasAccepted {
-                gate
-            }
-        }
-        .onAppear {
-            // First open: keep Main unmounted until Agree so the gate is the
-            // first real page, not a cream hang over a loading WKWebView.
-            // Do not unlock here — OwnerAppLock owns Face ID / relock.
-            if !hasAccepted {
-                locationEnabled = true
-                locationPrompt.requestIfNeeded()
+                ConsentAcknowledgmentPage(onAgree: enterApp)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .redMedDidEraseLocalData)) { _ in
@@ -60,10 +44,8 @@ struct ConsentGateView<Content: View>: View {
     }
 
     private func returnToAcknowledgment() {
-        checked = false
-        openPolicy = nil
-        locationEnabled = true
-        faceIDEnabled = true
+        UserDefaults.standard.set(true, forKey: AppSettings.locationEnabledKey)
+        UserDefaults.standard.set(true, forKey: AppSettings.faceIDEnabledKey)
         var t = Transaction()
         t.animation = nil
         withTransaction(t) {
@@ -72,7 +54,38 @@ struct ConsentGateView<Content: View>: View {
         }
     }
 
-    private var gate: some View {
+    private func enterApp() {
+        ConsentSettings.recordAcceptance()
+        RedMedHaptics.success()
+        OwnerLockPresentation.setLocked(false)
+        OwnerLockPresentation.holdSwitcherCover = false
+        SnapshotSafeCover.shared.reveal()
+        var t = Transaction()
+        t.animation = nil
+        withTransaction(t) {
+            contentArmed = true
+            hasAccepted = true
+        }
+        // Do not spawn a spare WKWebView on this turn — that raced the
+        // owner RedMed embed and made tabs feel laggy after Agree.
+        // NFCView warms the preview shell after that tab is first opened.
+    }
+}
+
+/// First start / policy bump / after Erase only. Not mounted on later opens,
+/// so `CLLocationManager` is not created on every Face ID → Main.
+private struct ConsentAcknowledgmentPage: View {
+    var onAgree: () -> Void
+
+    @State private var checked = false
+    @State private var openPolicy: HelpDocument.Policy?
+    @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
+    @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
+    @AppStorage(AppSettings.faceIDEnabledKey) private var faceIDEnabled = true
+    @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
+    @StateObject private var locationPrompt = ConsentLocationPrompt()
+
+    var body: some View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
@@ -160,7 +173,7 @@ struct ConsentGateView<Content: View>: View {
                 .accessibilityAddTraits(checked ? [.isButton, .isSelected] : .isButton)
 
                 PrimaryButton(title: "Agree and continue", flatten: false) {
-                    enterApp()
+                    agree()
                 }
             }
             .padding(.horizontal, RedMedChrome.pagePadX)
@@ -173,27 +186,21 @@ struct ConsentGateView<Content: View>: View {
             ConsentPolicySheet(policy: policy)
                 .presentationBackground(Color.redmedBg)
         }
+        .onAppear {
+            // First open: keep Main unmounted until Agree so the gate is the
+            // first real page, not a cream hang over a loading WKWebView.
+            // Do not unlock here — OwnerAppLock owns Face ID / relock.
+            locationEnabled = true
+            locationPrompt.requestIfNeeded()
+        }
     }
 
-    private func enterApp() {
+    private func agree() {
         checked = true
         if locationEnabled {
             locationPrompt.requestIfNeeded()
         }
-        ConsentSettings.recordAcceptance()
-        RedMedHaptics.success()
-        OwnerLockPresentation.setLocked(false)
-        OwnerLockPresentation.holdSwitcherCover = false
-        SnapshotSafeCover.shared.reveal()
-        var t = Transaction()
-        t.animation = nil
-        withTransaction(t) {
-            contentArmed = true
-            hasAccepted = true
-        }
-        // Do not spawn a spare WKWebView on this turn — that raced the
-        // owner RedMed embed and made tabs feel laggy after Agree.
-        // NFCView warms the preview shell after that tab is first opened.
+        onAgree()
     }
 
     @ViewBuilder
