@@ -65,11 +65,6 @@ struct NFCView: View {
             )
             .presentationBackground(Color.redmedBg)
         }
-        .alert("Authentication Failed", isPresented: $band.authFailed) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Face ID or passcode is required to write your emergency card to the bracelet.")
-        }
         .alert("Bracelet", isPresented: Binding(
             get: { band.alertMessage != nil },
             set: { if !$0 { band.alertMessage = nil } }

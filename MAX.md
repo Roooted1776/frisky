@@ -12,12 +12,11 @@ Maximilian Aguilar-Aasted. GitHub **Roooted1776**. X **DNS404**. Ships RedMed hi
 
 ## Product (do not regress)
 
-RedMed is a **native iOS/SwiftUI** medical ID (`RedMed-Xcode/`). Local only: Keychain + optional passive NXP NTAG216 band (`#d=` AES-GCM). No RedMed server, no login, no passerby Face ID.
+RedMed is a **native iOS/SwiftUI** medical ID (`RedMed-Xcode/`). Local only: Keychain + a passive NXP NTAG216 band (`#d=` AES-GCM). The band is the product, not optional. No RedMed server, no login, no passerby Face ID.
 
 - Owner tabs: **RedMed · 911 · Aid · NFC**. Scanner / tapper: **RedMed · 911 · Aid** (no Edit, no NFC).
-- **Face ID every open** (passcode fallback). Consent (`ConsentGateView`) after unlock, every unlock — never in front of Face ID, never on tapper.
-- Cream lock shell only (`LockEntryPage`). No extra pages before Face ID.
-- Relock on **`.background`**. Do **not** swap live tabs for the lock page on `.inactive` (Control Center / peek). `SnapshotSafeCover` is the app-switcher cream; Face ID on re-entry.
+- **In-app Face ID only on the owner RedMed page** (Edit / Save). 911, Aid, NFC, and app launch do not prompt. Tapper: no biometrics, no acknowledgement.
+- No cream lock in front of Main. `SnapshotSafeCover` is the app-switcher cream.
 - NFC Tag Reading + HealthKit + Associated Domains are **parked** (personal/free Apple team). NFC tab stays visible; write is Preview packed card.
 - Seizure timer **never auto-dials**. At 5:00 it shows Call (`tel:`). GPS stays on-screen — never uploaded, never attached to `tel:`.
 - Survival alarm (brightness / volume / siren) on crash or SOS only — not Settings, not Apple Crash Detection.
