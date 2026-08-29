@@ -184,6 +184,12 @@ struct OwnerAppLock<Content: View>: View {
             // concurrency — same post–Face ID load crash as #296 / #307.
             Task { @MainActor in
                 guard generation == authGeneration else { return }
+                if case .success = outcome {
+                    // Prefetch ran during the sheet. Apply before Main mounts
+                    // so the first unlocked frame is the YOU card, not cream.
+                    await profile.adoptLaunchPrefetch()
+                    guard generation == authGeneration else { return }
+                }
                 handleUnlockOutcome(outcome, generation: generation)
             }
         }
@@ -199,9 +205,17 @@ struct OwnerAppLock<Content: View>: View {
             OwnerLockPresentation.setLocked(false)
             OwnerLockPresentation.holdSwitcherCover = false
             SnapshotSafeCover.shared.reveal()
+            let returning = didUnlockOnce
             didUnlockOnce = true
             gate = .unlocked
-            CrashMotionGuard.shared.startMonitoring()
+            // First unlock: ContentView.onAppear starts crash motion after
+            // the YOU card yields. Relock keeps Main mounted, so start here.
+            if returning {
+                Task { @MainActor in
+                    await Task.yield()
+                    CrashMotionGuard.shared.startMonitoring()
+                }
+            }
         case .notInteractive:
             // Cold-launch race: scene not interactive for LA yet. One
             // bounded retry after LAContext teardown. Same-turn retry is a
