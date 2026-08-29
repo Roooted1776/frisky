@@ -58,7 +58,9 @@ struct ContentView: View {
                 }
                 mountedTab(.aid) { AidView() }
                 if showsNFC {
-                    mountedTab(.nfc) { NFCView() }
+                    mountedTab(.nfc) {
+                        NFCView(isVisible: activeTab == .nfc)
+                    }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -78,12 +80,23 @@ struct ContentView: View {
             // HTML string only — not a second WKWebView (that raced first paint).
             PasserbyHTMLCardView.scheduleShellWarmOnce()
             // Same-turn mount in scannerSafeTab already paints 911 / Aid / NFC
-            // on first tap. Pre-stacking those pages under RedMed kept three
-            // extra trees + LocationManager compositing for the whole session.
+            // on first tap. Do not stack those pages under RedMed on the first
+            // frame (that raced the live embed). After RedMed settles, mount
+            // them under the active page so the first tab hop is not a cold
+            // cream paint. GPS / WK warm stay gated on isVisible.
             if !isScannerSession {
                 Task { @MainActor in
                     await Task.yield()
                     CrashMotionGuard.shared.startMonitoring()
+                    try? await Task.sleep(nanoseconds: 450_000_000)
+                    guard !Task.isCancelled else { return }
+                    mountedTabs.insert(.emergency)
+                    try? await Task.sleep(nanoseconds: 100_000_000)
+                    mountedTabs.insert(.aid)
+                    try? await Task.sleep(nanoseconds: 200_000_000)
+                    if showsNFC {
+                        mountedTabs.insert(.nfc)
+                    }
                 }
             }
         }

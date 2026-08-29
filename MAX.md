@@ -29,7 +29,7 @@ RedMed is a **native iOS/SwiftUI** medical ID (`RedMed-Xcode/`). Local only: Key
 - Before you continue: first start / policy bump / after Erase. Haptic, Location, Face ID toggles default on. That page may present the iOS Location Allow sheet. Help never prompts Location.
 - Erase all user data is on owner Help, then ack, then Main. Scanner Help stays policies only.
 - ICE phones display US as `(XXX) XXX-XXXX`. Tab bar: labels scale to the slot; bar sits 3pt off the home indicator. Type fits its box on every screen. In-app tapper is a live copy of `tapper/index.html`.
-- Load: lazy tabs (RedMed first; 911 / Aid / NFC on first visit). No second WKWebView on Agree. Crash-motion from owner Main appear. Keychain device-unlocked restore.
+- Load: Face ID overlaps Keychain+JSON prefetch and the tapper.html string cache so Main paints the YOU card on unlock. RedMed mounts first; 911 / Aid / NFC stagger-mount after that paint (GPS / Preview WK still gated on the front tab). No second WKWebView on Agree. Crash-motion from owner Main appear. Keychain device-unlocked restore.
 - HealthKit + NFC Tag Reading + Associated Domains parked. NFC tab visible; write is Preview packed card.
 - App Store honesty: parked NFC copy, no autodial, Aid disclaimer, MapKit hospital search may leave the phone, siren may play in background.
 - Debug-on-device: Main Thread Checker / TPC / view+queue debug / Metal validation / `ENABLE_DEBUG_DYLIB` off. `print()` → `os.Logger`.
