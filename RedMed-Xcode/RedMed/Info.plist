@@ -42,11 +42,13 @@
 		<false/>
 	</dict>
 	<key>NSFaceIDUsageDescription</key>
-	<string>RedMed uses Face ID or Touch ID to unlock your profile, authorize writing to your bracelet, and open the on-device local history vault. Device passcode is only used for erase or lockout recovery. Scanned cards are read-only and cannot be changed without your app and authentication.</string>
+	<string>RedMed uses Face ID or Touch ID to edit, save, or erase your medical ID. Device passcode can be used if biometrics are unavailable.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>RedMed uses your location on the 911 tab to show coordinates you can read to emergency services. Location stays on this iPhone and is never uploaded by RedMed.</string>
+	<string>RedMed uses your location on the 911 tab to show coordinates you can read to emergency services. Nearby hospitals may ask Apple Maps for ER POIs on this phone. RedMed does not upload GPS to a RedMed server or attach it to a 911 call.</string>
 	<key>UIBackgroundModes</key>
-	<array/>
+	<array>
+		<string>audio</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>

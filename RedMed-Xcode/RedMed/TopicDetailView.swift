@@ -218,7 +218,7 @@ private struct LiveNearbyHospitalsSection: View {
                 .padding(.top, 24)
 
             if !locationEnabled {
-                Text("Location is off. Enable it the next time you unlock (Before you continue) to find nearby hospitals.")
+                Text("Location is off. Enable it on Before you continue (first launch or a policy update) or in iOS Settings to find nearby hospitals. Search uses Apple Maps on this phone.")
                     .font(.system(size: 13))
                     .foregroundColor(.redmedMuted)
                     .padding(.vertical, 12)

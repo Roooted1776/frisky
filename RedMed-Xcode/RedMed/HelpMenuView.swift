@@ -322,7 +322,7 @@ struct HelpMenuView: View {
                                     .padding(.vertical, Metrics.rowVPad)
                                     .contentShape(Rectangle())
                                 }
-                                .disabled(isErasing || (!profile.hasSensitiveProfileData && !ProfileData.prefersLockOnLaunch))
+                                .disabled(isErasing || (!profile.hasSensitiveProfileData && !ProfileData.prefersLockOnLaunch && !ProfileData.hasStoredProfile()))
                             }
                             Text("Deletes the profile from this iPhone’s Keychain and clears local history. Settings prefs stay. The physical band is not wiped remotely — rewrite or discard it.")
                                 .font(.system(size: 12, weight: .medium))

@@ -66,13 +66,9 @@ enum BiometricAuth {
     /// Backstop for a hung `evaluatePolicy` that never calls back at all.
     /// Apple does **not** timeout the system sheet — there is no LA API for
     /// it. This clock is ours, started when `evaluatePolicy` is actually
-    /// invoked (not at `authenticate` entry / cooldown). Several callers
-    /// (Vault History unlock, Erase, NFC write) hard-guard re-entrancy on
-    /// their own busy flag, so a completion that never fires would brick
-    /// that action until force-quit. Must stay **above** `OwnerAppLock`'s
-    /// 60s inactive passcode budget or this fires first and cuts off a
-    /// slow typist. `OwnerAppLock`'s 1s/1.5s watchdogs only kill a hung
-    /// evaluate with **no system UI** (scene `.active`).
+    /// invoked (not at `authenticate` entry / cooldown). Callers (Erase,
+    /// Edit, Save) hard-guard re-entrancy on their own busy flag, so a
+    /// completion that never fires would brick that action until force-quit.
     private static let evaluateHangTimeout: TimeInterval = 90
 
     /// `force` is kept so every call site stays explicit. There is no

@@ -4,7 +4,7 @@ import SwiftUI
 ///
 /// Permanent product rule (bracelet tap / scanner):
 /// - Owner (`isScannerSession == false`): RedMed · 911 · Aid · NFC (+ Edit on RedMed).
-///   Help chrome on every native screen except the Face ID lock shell and the Edit modal.
+///   Help chrome on every native screen except the Edit modal.
 /// - Scanner / tap (`isScannerSession == true` or HTML `tapper.html#d=`): RedMed · 911 · Aid
 ///   only — **no Edit**, **no NFC**. Help is policies-only (no Settings / Erase / NFC write).
 ///
@@ -67,6 +67,10 @@ struct ContentView: View {
             CustomTabBar(tab: scannerSafeTab, showsNFC: showsNFC)
         }
         .ignoresSafeArea(edges: .bottom)
+        .task {
+            guard !isScannerSession else { return }
+            await profile.restoreOnLaunch()
+        }
         .onAppear {
             mountedTabs.insert(activeTab)
             clampScannerTab()

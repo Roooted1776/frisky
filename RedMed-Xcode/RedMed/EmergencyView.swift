@@ -63,7 +63,7 @@ private struct FindHelpLocationBlock: View {
             GPSCard(location: locationEnabled ? locationManager.location : nil)
                 .opacity(locationEnabled ? 1 : 0.45)
             CompactFillButton(
-                title: locationEnabled ? "Copy coordinates" : "Location off — enable it the next time you unlock",
+                title: locationEnabled ? "Copy coordinates" : "Location off — enable it on Before you continue or in Settings",
                 disabled: !locationEnabled || locationManager.location == nil
             ) {
                 if locationEnabled, let loc = locationManager.location {
@@ -330,7 +330,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         case .notDetermined:
             m.requestWhenInUseAuthorization()
         case .authorizedAlways, .authorizedWhenInUse:
-            m.requestLocation()
+            m.startUpdatingLocation()
         case .denied, .restricted:
             break
         @unknown default:
@@ -347,7 +347,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         guard wantsLocation else { return }
         switch manager.authorizationStatus {
         case .authorizedAlways, .authorizedWhenInUse:
-            manager.requestLocation()
+            manager.startUpdatingLocation()
         default:
             break
         }

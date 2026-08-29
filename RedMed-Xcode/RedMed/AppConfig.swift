@@ -230,6 +230,6 @@ enum AppConfig {
     enum Satellite {
         /// Permanent product rule — do not soften or time-box.
         static let localOnlyLine =
-            "Local only once tap — everyone and everything. No servers · no online. No Bluetooth · passive HF NFC. No PII or PHI leaves this device through RedMed."
+            "Local only once tap — no RedMed servers. No Bluetooth · passive HF NFC. Call uses system tel: only (no profile, no GPS on the call). Nearby hospitals asks Apple Maps on this phone for ER POIs; that search is Apple's, not a RedMed upload."
     }
 }

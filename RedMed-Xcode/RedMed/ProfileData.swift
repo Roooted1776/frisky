@@ -66,6 +66,10 @@ class ProfileData: ObservableObject {
     }
     /// True while owner Edit holds draft PHI that may not yet be in Keychain.
     @Published var holdsEditingSession: Bool = false
+    /// True while launch restore is in flight (or expected). Funnel waits on this.
+    @Published var isRestoringFromKeychain: Bool = false
+    /// One-shot so ContentView.task cannot Face ID twice in one process.
+    private var didAttemptLaunchRestore = false
 
     private func setField<T: Equatable>(_ storage: inout T, _ newValue: T) {
         guard storage != newValue else { return }
@@ -113,18 +117,22 @@ class ProfileData: ObservableObject {
 
     init(persisting: Bool = true) {
         self.persists = persisting
-        // Keychain decode waits until Face ID unlock (OwnerAppLock) or explicit reload.
-        // Cold launch only checks blob presence via hasStoredProfile().
+        // If a blob is expected, start restoring so the empty funnel cannot flash.
+        // Presence check only (exists) — no JSON decode here.
+        if persisting && (Self.hasStoredProfile() || Self.prefersLockOnLaunch) {
+            self.isRestoringFromKeychain = true
+        }
     }
 
-    /// Lightweight gate for app lock — no JSON decode.
+    /// Lightweight presence check — no JSON decode. True for old biometry ACL
+    /// rows that cannot be read without interaction (`exists` treats
+    /// errSecInteractionNotAllowed / errSecAuthFailed as present).
     static func hasStoredProfile() -> Bool {
         KeychainStore.exists(account: keychainAccount)
     }
 
-    /// UserDefaults mirror of Keychain presence — hints whether unlock should
-    /// expect a blob (prefetch / fail-closed). Lock always paints first; Main
-    /// never mounts before Face ID. Keychain remains authoritative in OwnerAppLock.
+    /// UserDefaults mirror of Keychain presence — hints that a stored ID is
+    /// expected so the empty funnel stays hidden (cream) until restore finishes.
     static let storedProfileGateKey = "redmed.hasStoredProfileGate"
 
     static var prefersLockOnLaunch: Bool {
@@ -172,9 +180,15 @@ class ProfileData: ObservableObject {
     }
 
     /// - Returns: `true` when the Keychain write succeeded.
+    /// Refuses to save an empty RAM profile over a stored Keychain blob
+    /// (empty-funnel Save must not clobber). First-install Save of a newly
+    /// filled ID is fine (no stored blob yet). Explicit erase deletes Keychain first.
     @discardableResult
     func persist() -> Bool {
         guard persists else { return false }
+        if !hasSensitiveProfileData && (Self.hasStoredProfile() || Self.prefersLockOnLaunch) {
+            return false
+        }
         let stamp = DateFormatter.localizedString(from: Date(), dateStyle: .medium, timeStyle: .none)
         if hasSensitiveProfileData { lastUpdated = stamp }
         let blob = PersistedProfile(
@@ -197,10 +211,9 @@ class ProfileData: ObservableObject {
         return ok
     }
 
-    /// Wipe PHI from RAM without touching Keychain (owner app lock).
+    /// Wipe PHI from RAM without touching Keychain.
     func purgeFromMemory() {
         guard persists else { return }
-        discardUnlockPrefetch()
         withBulkUpdate {
             name = ""
             birthDate = ""
@@ -216,221 +229,40 @@ class ProfileData: ObservableObject {
         holdsEditingSession = false
     }
 
-    /// Reload owner profile from Keychain after Face ID unlock.
+    /// Reload owner profile from Keychain (non-interactive).
     @discardableResult
     func reloadFromKeychain() -> Bool {
         guard persists else { return false }
         return loadFromKeychain()
     }
 
-    // MARK: - Unlock prefetch (overlap Keychain with Face ID)
-
-    /// In-flight Keychain decode while Face ID runs — applied only after auth success.
-    private var unlockBlobTask: Task<PersistedProfile?, Never>?
-    /// Embed JSON only (no AES) — overlaps Face ID; unlock builds sync from the blob.
-    private var unlockJSONTask: Task<String?, Never>?
-    /// AES `#d=` after JSON; finishes in background — never blocks unlock.
-    private var unlockAESTask: Task<String?, Never>?
-    /// Staged Keychain blob after Face ID — published only via `commitUnlockProfile`.
-    private var pendingUnlockBlob: PersistedProfile?
-    /// Decoded blob parked as soon as SecItem finishes — unlock can adopt without
-    /// `await` (avoids yielding MainActor to in-flight WKWebView warm).
-    private let unlockPrefetchBox = UnlockPrefetchBox()
-    /// Stable preview `#d=` from Face ID overlap — RedMedView consumes on first unlock paint.
-    private(set) var unlockPreviewPayload: String?
-    /// Plaintext profile JSON from Face ID overlap — pairs with `unlockPreviewPayload`.
-    private(set) var unlockEmbedProfileJSON: String?
-
-    /// Fresh-install unlock — placeholder `#d=` so RedMed paints without an AES stall.
+    /// Owner Main appear — load the Keychain blob into RAM. `allowInteractive`
+    /// is true only here so an old biometryCurrentSet item can Face ID once
+    /// and migrate to the unbound-when-unlocked ACL. Scanner sessions must
+    /// not call this (owner Keychain).
     @MainActor
-    func prepareEmptyUnlockShell() {
-        unlockPreviewPayload = ProfileNFCCodec.placeholderPreviewPayload
-        unlockEmbedProfileJSON = ProfileNFCCodec.embedProfileJSON(
-            from: ProfileNFCCodec.chipProfile(from: self)
-        )
-    }
-
-    /// Single-flight off-main Keychain decode + JSON + AES while biometrics run.
-    /// Does not publish PHI — `commitUnlockProfile` applies only after Face ID + gate unlock.
-    /// Re-calling while in flight is a no-op (keeps the Face ID overlap intact).
-    /// After Face ID parks `LAContext`, retry Keychain if the overlap load
-    /// ran without a context (bound items fail closed, no second sheet).
-    func beginUnlockPrefetchWithParkedContext() {
+    func restoreOnLaunch() async {
         guard persists else { return }
-        if unlockPrefetchBox.hasReadyProfile { return }
-        if BiometricAuth.peekAuthenticationContext() != nil {
-            unlockBlobTask?.cancel()
-            unlockBlobTask = nil
-            unlockJSONTask?.cancel()
-            unlockJSONTask = nil
-            unlockAESTask?.cancel()
-            unlockAESTask = nil
-            unlockPrefetchBox.clear()
+        guard !didAttemptLaunchRestore else { return }
+        didAttemptLaunchRestore = true
+        isRestoringFromKeychain = true
+        let ok = await reloadFromKeychainAsync(allowInteractive: true)
+        if ok {
+            Self.setStoredProfileGate(true)
+            isRestoringFromKeychain = false
+            return
         }
-        // Face ID is done — this read is cream-to-Main. `.utility` here
-        // left the Keychain blob racing a low-priority queue after the sheet
-        // dismissed (blank cream until SecItem returned).
-        beginUnlockPrefetch(priority: .userInitiated)
-    }
-
-    func beginUnlockPrefetch() {
-        beginUnlockPrefetch(priority: .utility)
-    }
-
-    /// Single-flight off-main Keychain decode + JSON + AES while biometrics run.
-    /// Does not publish PHI — `commitUnlockProfile` applies only after Face ID + gate unlock.
-    /// Re-calling while in flight is a no-op (keeps the Face ID overlap intact).
-    /// `.utility` during Face ID so prefetch doesn't contend with the sheet;
-    /// `.userInitiated` after auth so Main isn't waiting on a background QoS.
-    private func beginUnlockPrefetch(priority: TaskPriority) {
-        guard persists else { return }
-        if unlockBlobTask != nil { return }
-        let account = Self.keychainAccount
-        let box = unlockPrefetchBox
-        let generation = box.beginGeneration()
-        let blobTask = Task.detached(priority: priority) { () -> PersistedProfile? in
-            // Prefetch must not read legacy unbound blobs — those have no ACL
-            // and would decode PHI before Face ID succeeds. Post-auth load
-            // still migrates them.
-            guard let data = KeychainStore.load(account: account, allowLegacy: false),
-                  let decoded = try? JSONDecoder().decode(PersistedProfile.self, from: data) else {
-                if !Task.isCancelled { box.store(nil, generation: generation) }
-                return nil
-            }
-            guard !Task.isCancelled else { return decoded }
-            box.store(decoded, generation: generation)
-            return decoded
+        // Load failed. If a blob is expected, keep the gate so the funnel
+        // stays hidden (cream) instead of an empty Save that could clobber.
+        if Self.hasStoredProfile() || Self.prefersLockOnLaunch {
+            Self.setStoredProfileGate(true)
+        } else {
+            Self.setStoredProfileGate(false)
         }
-        unlockBlobTask = blobTask
-        // JSON first (warm caches during Face ID), then AES separately so unlock never waits on seal.
-        let jsonTask = Task.detached(priority: priority) { () -> String? in
-            guard let decoded = await blobTask.value else { return nil }
-            guard !Task.isCancelled else { return nil }
-            return Self.previewArtifactsJSONOnly(from: decoded)
-        }
-        unlockJSONTask = jsonTask
-        unlockAESTask = Task.detached(priority: priority) { () -> String? in
-            guard let decoded = await blobTask.value else { return nil }
-            guard !Task.isCancelled else { return nil }
-            return Self.previewArtifacts(from: decoded).payload
-        }
+        isRestoringFromKeychain = false
     }
 
-    /// Drop any in-flight / held prefetch (background, cancel, erase).
-    func discardUnlockPrefetch() {
-        unlockBlobTask?.cancel()
-        unlockBlobTask = nil
-        unlockJSONTask?.cancel()
-        unlockJSONTask = nil
-        unlockAESTask?.cancel()
-        unlockAESTask = nil
-        pendingUnlockBlob = nil
-        unlockPrefetchBox.clear()
-        unlockPreviewPayload = nil
-        unlockEmbedProfileJSON = nil
-    }
-
-    /// Prefer the Face ID–overlapped decode; fall back to a fresh Keychain read.
-    /// Loads embed JSON staging only — does **not** publish PHI fields (so the
-    /// lock / Unlock shell stays uncoverable under screen capture). Does not
-    /// wait on AES `#d=` or embed-JSON task completion — JSON is built sync from
-    /// the decoded blob (tiny) so Face ID success is not held on a peer Task.
-    /// Call `commitUnlockProfile` only after `OwnerAppLock` sets `gate = .unlocked`.
-    @MainActor
-    @discardableResult
-    func prepareUnlockPrefetchOrReload() async -> Bool {
-        guard persists else { return false }
-        pendingUnlockBlob = nil
-
-        // Fast path: SecItem already finished during Face ID — no await / no MainActor yield.
-        if let parked = tryAdoptParkedUnlockBlob() {
-            return parked
-        }
-
-        if let blobTask = unlockBlobTask {
-            unlockBlobTask = nil
-            if let blob = await blobTask.value {
-                adoptUnlockArtifactsSync(for: blob)
-                pendingUnlockBlob = blob
-                return true
-            }
-        }
-
-        unlockJSONTask?.cancel()
-        unlockJSONTask = nil
-        unlockAESTask?.cancel()
-        unlockAESTask = nil
-
-        let account = Self.keychainAccount
-        let blob: PersistedProfile? = await Task.detached(priority: .userInitiated) {
-            guard let data = KeychainStore.load(account: account),
-                  let decoded = try? JSONDecoder().decode(PersistedProfile.self, from: data) else {
-                return nil
-            }
-            return decoded
-        }.value
-        guard let blob else { return false }
-        unlockEmbedProfileJSON = Self.previewArtifactsJSONOnly(from: blob)
-        unlockPreviewPayload = ProfileNFCCodec.placeholderPreviewPayload
-        pendingUnlockBlob = blob
-        return true
-    }
-
-    /// Sync adopt when Face ID overlap already parked the blob — avoids a
-    /// `Task { @MainActor }` hop (blank cream frame) after the LA sheet dismisses.
-    /// `nil` = still in flight / needs async reload; `true`/`false` = adopted.
-    @MainActor
-    func tryPrepareUnlockPrefetchSync() -> Bool? {
-        guard persists else { return false }
-        pendingUnlockBlob = nil
-        return tryAdoptParkedUnlockBlob()
-    }
-
-    /// `nil` = not ready; `true` = profile staged; `false` = empty Keychain result.
-    @MainActor
-    private func tryAdoptParkedUnlockBlob() -> Bool? {
-        guard let parked = unlockPrefetchBox.takeIfReady() else { return nil }
-        unlockBlobTask = nil
-        guard let parked else { return false }
-        adoptUnlockArtifactsSync(for: parked)
-        pendingUnlockBlob = parked
-        return true
-    }
-
-    /// Publish staged Keychain PHI into `@Published` fields — only after the lock shell is gone.
-    @MainActor
-    func commitUnlockProfile() {
-        guard let blob = pendingUnlockBlob else { return }
-        pendingUnlockBlob = nil
-        apply(blob)
-    }
-
-    /// Stage placeholder `#d=` + embed JSON from an already-decoded blob.
-    /// Sync JSON encode — never await the Face ID–overlapped JSON task (that
-    /// await yielded MainActor to WKWebView warm and left cream after auth).
-    /// In-flight AES finishes in the background (RedMed refreshes via JS).
-    @MainActor
-    private func adoptUnlockArtifactsSync(for blob: PersistedProfile) {
-        let aesTask = unlockAESTask
-        unlockJSONTask?.cancel()
-        unlockJSONTask = nil
-        unlockAESTask = nil
-
-        unlockPreviewPayload = ProfileNFCCodec.placeholderPreviewPayload
-        unlockEmbedProfileJSON = Self.previewArtifactsJSONOnly(from: blob)
-
-        guard let aesTask else { return }
-        Task { @MainActor in
-            guard let payload = await aesTask.value else { return }
-            // Only stash if RedMed has not taken the unlock hold yet.
-            if unlockPreviewPayload == ProfileNFCCodec.placeholderPreviewPayload {
-                unlockPreviewPayload = payload
-            }
-        }
-    }
-
-    /// Shared `PersistedProfile` → `NFCChipProfile` mapping used by both the
-    /// JSON-only and full (payload + JSON) preview artifact builders below.
+    /// Shared `PersistedProfile` → `NFCChipProfile` mapping.
     private static func chip(from blob: PersistedProfile) -> NFCChipProfile {
         NFCChipProfile(
             name: blob.name,
@@ -447,52 +279,34 @@ class ProfileData: ObservableObject {
         )
     }
 
-    /// Embed JSON only (no AES) — unlock critical path.
-    private static func previewArtifactsJSONOnly(from blob: PersistedProfile) -> String? {
-        ProfileNFCCodec.embedProfileJSON(from: chip(from: blob))
-    }
-
-    /// RedMed tab takes the Face ID–overlapped `#d=` once (nil after).
-    @discardableResult
-    func takeUnlockPreviewPayload() -> String? {
-        let payload = unlockPreviewPayload
-        unlockPreviewPayload = nil
-        return payload
-    }
-
-    /// RedMed tab takes the Face ID–overlapped embed JSON once (nil after).
-    @discardableResult
-    func takeUnlockEmbedProfileJSON() -> String? {
-        let json = unlockEmbedProfileJSON
-        unlockEmbedProfileJSON = nil
-        return json
-    }
-
-    /// Off-main AES preview pack + embed JSON from a Keychain blob (no @Published writes).
-    private static func previewArtifacts(from blob: PersistedProfile) -> (payload: String?, json: String?) {
-        let builtChip = chip(from: blob)
-        return (
-            ProfileNFCCodec.previewPayload(from: builtChip),
-            ProfileNFCCodec.embedProfileJSON(from: builtChip)
-        )
-    }
-
-    /// Off-main Keychain + JSON decode, then apply on MainActor — keeps unlock UI responsive.
+    /// Off-main Keychain + JSON decode, then apply on MainActor.
+    /// `allowInteractive` is for the one-time launch migrate only — not every save.
     @MainActor
     @discardableResult
-    func reloadFromKeychainAsync() async -> Bool {
+    func reloadFromKeychainAsync(allowInteractive: Bool = false) async -> Bool {
         guard persists else { return false }
         let account = Self.keychainAccount
-        let blob: PersistedProfile? = await Task.detached(priority: .userInitiated) {
-            guard let data = KeychainStore.load(account: account),
-                  let decoded = try? JSONDecoder().decode(PersistedProfile.self, from: data) else {
-                return nil
-            }
-            return decoded
-        }.value
+        let blob: PersistedProfile?
+        if allowInteractive {
+            // Interactive migrate may present Face ID — stay on main.
+            let data = KeychainStore.load(account: account, allowInteractive: true)
+            blob = Self.decodeBlob(data)
+        } else {
+            blob = await Task.detached(priority: .userInitiated) {
+                Self.decodeBlob(KeychainStore.load(account: account, allowInteractive: false))
+            }.value
+        }
         guard let blob else { return false }
         apply(blob)
         return true
+    }
+
+    private static func decodeBlob(_ data: Data?) -> PersistedProfile? {
+        guard let data,
+              let decoded = try? JSONDecoder().decode(PersistedProfile.self, from: data) else {
+            return nil
+        }
+        return decoded
     }
 
     /// - Returns: `true` when a profile blob was loaded from Keychain.
@@ -550,7 +364,6 @@ class ProfileData: ObservableObject {
     /// Call only after Face ID / passcode success.
     func eraseAllLocalData() {
         guard persists else { return }
-        discardUnlockPrefetch()
         KeychainStore.delete(account: Self.keychainAccount)
         Self.setStoredProfileGate(false)
         purgeFromMemory()
@@ -562,7 +375,7 @@ class ProfileData: ObservableObject {
 }
 
 extension Notification.Name {
-    /// Posted after owner Help erase clears Keychain + vault. OwnerAppLock resets lock memory.
+    /// Posted after owner Help erase clears Keychain + vault.
     static let redMedDidEraseLocalData = Notification.Name("redMedDidEraseLocalData")
     /// Crash / SOS armed — ContentView jumps to 911 without observing CrashMotionGuard.
     static let redMedSurvivalArmed = Notification.Name("redMedSurvivalArmed")
@@ -633,60 +446,6 @@ struct EmergencyContact: Identifiable, Equatable {
         self.relationship = ""
         self.phone = ""
         self.detail = detail
-    }
-}
-
-/// Parks the Face ID–overlapped Keychain decode so unlock can adopt without `await`.
-private final class UnlockPrefetchBox: @unchecked Sendable {
-    private let lock = NSLock()
-    private var ready = false
-    private var blob: PersistedProfile?
-
-    var hasReadyProfile: Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        return ready && blob != nil
-    }
-
-    private var generation: UInt64 = 0
-
-    /// Bump so a cancelled prefetch cannot overwrite a newer box.
-    func beginGeneration() -> UInt64 {
-        lock.lock()
-        generation &+= 1
-        blob = nil
-        ready = false
-        let token = generation
-        lock.unlock()
-        return token
-    }
-
-    func store(_ value: PersistedProfile?, generation: UInt64) {
-        lock.lock()
-        defer { lock.unlock() }
-        guard generation == self.generation else { return }
-        blob = value
-        ready = true
-    }
-
-    func clear() {
-        lock.lock()
-        generation &+= 1
-        blob = nil
-        ready = false
-        lock.unlock()
-    }
-
-    /// `nil` = still in flight. `.some(nil)` = finished, empty Keychain.
-    /// `.some(blob)` = finished with a profile.
-    func takeIfReady() -> PersistedProfile?? {
-        lock.lock()
-        defer { lock.unlock() }
-        guard ready else { return nil }
-        ready = false
-        let value = blob
-        blob = nil
-        return .some(value)
     }
 }
 

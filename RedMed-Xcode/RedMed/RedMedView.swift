@@ -52,26 +52,28 @@ struct RedMedView: View {
         ].joined(separator: "\u{1e}")
     }
 
-    /// Prefer live cache; else Face ID–overlapped pack so unlock's first frame is not cream-only.
-    /// Placeholder `#d=` is enough when embed JSON is present (app-embed skips WebCrypto).
-    /// Never return nil for a filled profile — that `else` was a cream hang after Face ID.
+    /// Prefer live cache; else placeholder so a filled profile never paints cream.
+    /// Nil while restoring or on the empty funnel so those states can show cream / setup.
     private var shellPayload: String? {
         if let packedPayload { return packedPayload }
-        if let pending = profile.unlockPreviewPayload { return pending }
-        if showsOwnerSetupFunnel { return nil }
+        if showsOwnerSetupFunnel || profile.isRestoringFromKeychain { return nil }
         return ProfileNFCCodec.placeholderPreviewPayload
     }
 
-    /// Prefer live cache; else Face ID–overlapped plaintext JSON; else live profile.
+    /// Prefer live cache; else live profile embed JSON.
     private var shellEmbedJSON: String? {
         cachedEmbedJSON
-            ?? profile.unlockEmbedProfileJSON
             ?? ProfileNFCCodec.embedProfileJSON(from: profile)
     }
 
     /// Owner empty profile — native steps instead of a blank YOU card.
+    /// Hidden while a stored ID is expected or restore is in flight (cream, not funnel).
     private var showsOwnerSetupFunnel: Bool {
-        !isScannerSession && !profile.hasSensitiveProfileData
+        !isScannerSession
+            && !profile.hasSensitiveProfileData
+            && !profile.isRestoringFromKeychain
+            && !ProfileData.prefersLockOnLaunch
+            && !ProfileData.hasStoredProfile()
     }
 
     var body: some View {
@@ -107,6 +109,9 @@ struct RedMedView: View {
                         onFill: { requestEdit() },
                         onHealthImport: { Task { await importFromHealthThenEdit() } }
                     )
+                } else if profile.isRestoringFromKeychain {
+                    Color.redmedBg
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if let shellPayload {
                     VStack(spacing: 0) {
                         if !isScannerSession {
@@ -150,6 +155,9 @@ struct RedMedView: View {
         .privacySensitive(!isScannerSession)
         .background { RedMedPageBackground() }
         .onAppear { adoptUnlockPreviewOrSync() }
+        .onChange(of: profile.isRestoringFromKeychain) { _, restoring in
+            if !restoring { adoptUnlockPreviewOrSync() }
+        }
         .onChange(of: profilePackFingerprint) { _, _ in syncPackedPayload() }
         .fullScreenCover(isPresented: Binding(
             get: { showEdit && !isScannerSession },
@@ -192,27 +200,11 @@ struct RedMedView: View {
         }
     }
 
-    /// First unlock paint: adopt Face ID embed JSON + `#d=` (placeholder OK).
+    /// First paint: live packed payload / embed JSON from the profile in RAM.
     /// Durable AES refreshes in the background via JS push — no cream stall.
     private func adoptUnlockPreviewOrSync() {
-        let pendingPayload = profile.unlockPreviewPayload
-        let pendingJSON = profile.unlockEmbedProfileJSON
-        if packedPayload == nil, pendingPayload != nil || pendingJSON != nil {
-            packedPayload = pendingPayload ?? ProfileNFCCodec.placeholderPreviewPayload
-            cachedEmbedJSON = profile.takeUnlockEmbedProfileJSON()
-                ?? pendingJSON
-                ?? ProfileNFCCodec.embedProfileJSON(from: profile)
-            packFingerprint = profilePackFingerprint
-            packFinished = true
-            _ = profile.takeUnlockPreviewPayload()
-            // Replace placeholder with a durable seal off the first-paint path.
-            if packedPayload == ProfileNFCCodec.placeholderPreviewPayload {
-                refreshDurablePayload()
-            }
-            return
-        }
+        if profile.isRestoringFromKeychain { return }
         if packedPayload == nil {
-            // No prefetch (edge) — still paint with placeholder + live embed JSON.
             cachedEmbedJSON = ProfileNFCCodec.embedProfileJSON(from: profile)
             packedPayload = ProfileNFCCodec.placeholderPreviewPayload
             packFingerprint = profilePackFingerprint
