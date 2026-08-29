@@ -47,7 +47,6 @@
 		AABB00000000000000000059 /* RedMedSignpost.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000059 /* RedMedSignpost.swift */; };
 		AABB00000000000000000034 /* SecurePasteboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000034 /* SecurePasteboard.swift */; };
 		AABB00000000000000000035 /* VolumeBoost.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000035 /* VolumeBoost.swift */; };
-		AABB00000000000000000036 /* BrandWordmark.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000036 /* BrandWordmark.png */; };
 		AABB0000000000000000004C /* PasserbyHTMLCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000004C /* PasserbyHTMLCardView.swift */; };
 		AABB0000000000000000004D /* AudioSessionGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000004D /* AudioSessionGate.swift */; };
 		AABB00000000000000000050 /* Help.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000050 /* Help.html */; };
@@ -104,7 +103,6 @@
 		AAAA00000000000000000059 /* RedMedSignpost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedMedSignpost.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000034 /* SecurePasteboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurePasteboard.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000035 /* VolumeBoost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeBoost.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000036 /* BrandWordmark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BrandWordmark.png; sourceTree = "<group>"; };
 		AAAA0000000000000000004C /* PasserbyHTMLCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasserbyHTMLCardView.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000004D /* AudioSessionGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSessionGate.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000050 /* Help.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = Help.html; sourceTree = "<group>"; };
@@ -248,7 +246,6 @@
 				AAAA00000000000000000025 /* sw.js */,
 				AAAA00000000000000000022 /* BrandLogo.png */,
 				AAAA00000000000000000054 /* pheart.png */,
-				AAAA00000000000000000036 /* BrandWordmark.png */,
 			);
 			name = "Passerby Bundle";
 			sourceTree = "<group>";
@@ -364,7 +361,6 @@
 				AABB00000000000000000025 /* sw.js in Resources */,
 				AABB00000000000000000022 /* BrandLogo.png in Resources */,
 				AABB00000000000000000054 /* pheart.png in Resources */,
-				AABB00000000000000000036 /* BrandWordmark.png in Resources */,
 				AABB0000000000000000001A /* legal-doc.css in Resources */,
 				AABB0000000000000000005A /* PrivacyInfo.xcprivacy in Resources */,
 				AABB0000000000000000005C /* LaunchScreen.storyboard in Resources */,

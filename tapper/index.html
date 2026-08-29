@@ -1611,17 +1611,8 @@ function redmedAssetURL(file) {
 
   <script>
 (function () {
-  // Must match AppConfig.BraceletRF — single scanner product contract.
-  var SPECS = {
-    carrierMHz: 13.56,
-    walkByMinIn: 6,
-    walkByMaxIn: 8,
-    tapMinIn: 1,
-    tapMaxIn: 2,
-    reliableMaxIn: 4,
-    tabs: ['RedMed', '911', 'Aid'],
-    page: 'tapper.html'
-  };
+  // Tap physics lockstep with AppConfig.BraceletRF: 1–2″ tap, walk-by 6–8″
+  // does not fire, coupling dies past ~4″, passive 13.56 MHz HF NFC.
 
   // In-app RedMed tab / Preview / Scan — ?src=app or injected flag. No SOS auto-arm.
   function isAppPreview() {

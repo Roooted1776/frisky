@@ -1,6 +1,5 @@
 #!/usr/bin/env swift
 import AppKit
-import CoreText
 import Foundation
 
 // Scales repo-root BrandLogo.png into BrandLogo / BrandWordmark / AppIcon slots.
@@ -14,11 +13,12 @@ func ensureDir(_ url: URL) throws {
     try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
 }
 
-func savePNG(_ rep: NSBitmapImageRep, to url: URL) throws {
+func savePNG(_ rep: NSBitmapImageRep, to url: URL, quantize: Bool = true) throws {
     guard let data = rep.representation(using: .png, properties: [:]) else {
         throw NSError(domain: "render", code: 1, userInfo: [NSLocalizedDescriptionKey: "PNG encode failed for \(url.lastPathComponent)"])
     }
     try data.write(to: url, options: .atomic)
+    if quantize { quantizePNG(at: url) }
     fputs("wrote \(url.path) (\(rep.pixelsWide)x\(rep.pixelsHigh))\n", stderr)
 }
 
@@ -27,8 +27,12 @@ func savePNG(_ rep: NSBitmapImageRep, to url: URL) throws {
 /// effort only: silently no-ops when pngquant isn't on PATH (e.g. CI),
 /// so the pipeline still runs without it, just with bigger files.
 func quantizePNG(at url: URL) {
-    guard let pngquant = ["/opt/homebrew/bin/pngquant", "/usr/local/bin/pngquant"]
-        .first(where: { FileManager.default.isExecutable(atPath: $0) }) else { return }
+    let pngquant = [
+        "/opt/homebrew/bin/pngquant",
+        "/usr/local/bin/pngquant",
+        "/usr/bin/pngquant"
+    ].first(where: { FileManager.default.isExecutable(atPath: $0) })
+    guard let pngquant else { return }
     let proc = Process()
     proc.executableURL = URL(fileURLWithPath: pngquant)
     proc.arguments = ["--quality=85-100", "--speed", "1", "--strip", "--force", "--ext", ".png", url.path]
@@ -110,7 +114,7 @@ func scaledSquare(_ image: NSImage, size: Int, opaqueBackground: NSColor? = nil)
     return NSBitmapImageRep(cgImage: cgImage)
 }
 
-func drawWordmark(logo: NSImage, height: Int, darkBackground: Bool) -> NSBitmapImageRep {
+func drawWordmark(logo: NSImage, height: Int) -> NSBitmapImageRep {
     let heightF = CGFloat(height)
     let logoSize = heightF * 0.84
     let padding = heightF * 0.08
@@ -123,12 +127,9 @@ func drawWordmark(logo: NSImage, height: Int, darkBackground: Bool) -> NSBitmapI
         .foregroundColor: NSColor(calibratedRed: 0.882, green: 0.114, blue: 0.282, alpha: 1), // #e11d48
         .kern: -fontSize * 0.02
     ]
-    let medColor = darkBackground
-        ? NSColor(calibratedWhite: 0.92, alpha: 1)
-        : NSColor(calibratedRed: 0.110, green: 0.098, blue: 0.086, alpha: 1) // #1c1917
     let medAttrs: [NSAttributedString.Key: Any] = [
         .font: font,
-        .foregroundColor: medColor,
+        .foregroundColor: NSColor(calibratedRed: 0.110, green: 0.098, blue: 0.086, alpha: 1), // #1c1917
         .kern: -fontSize * 0.02
     ]
 
@@ -164,11 +165,6 @@ func drawWordmark(logo: NSImage, height: Int, darkBackground: Bool) -> NSBitmapI
     ctx.setShouldAntialias(true)
     ctx.interpolationQuality = .high
 
-    if darkBackground {
-        ctx.setFillColor(NSColor.black.cgColor)
-        ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
-    }
-
     let mark = scaledSquare(logo, size: Int(logoSize.rounded()))
     let logoY = (heightF - logoSize) / 2
     if let markImage = mark.cgImage {
@@ -199,22 +195,25 @@ do {
     try ensureDir(wordDir)
     try ensureDir(iconDir)
 
+    // Drawn at RedMedChrome.logoSize (72pt) → 72 / 144 / 216. Do not ship
+    // 180-pt slots; iOS still decodes the extra pixels then downscales.
     let logoScales: [(String, Int)] = [
-        ("BrandLogo.png", 180),
-        ("BrandLogo@2x.png", 360),
-        ("BrandLogo@3x.png", 540)
+        ("BrandLogo.png", 72),
+        ("BrandLogo@2x.png", 144),
+        ("BrandLogo@3x.png", 216)
     ]
     for (name, px) in logoScales {
         try savePNG(scaledSquare(brandLogo, size: px), to: logoDir.appendingPathComponent(name))
     }
 
+    // Drawn at RedMedChrome.wordmarkHeight (42pt).
     let wordScales: [(String, Int)] = [
-        ("BrandWordmark.png", 159),
-        ("BrandWordmark@2x.png", 318),
-        ("BrandWordmark@3x.png", 477)
+        ("BrandWordmark.png", 42),
+        ("BrandWordmark@2x.png", 84),
+        ("BrandWordmark@3x.png", 126)
     ]
     for (name, h) in wordScales {
-        try savePNG(drawWordmark(logo: brandLogo, height: h, darkBackground: false), to: wordDir.appendingPathComponent(name))
+        try savePNG(drawWordmark(logo: brandLogo, height: h), to: wordDir.appendingPathComponent(name))
     }
 
     // App Store marketing icon: must be exactly 1024x1024 with no alpha channel.
@@ -233,19 +232,14 @@ do {
             repoRoot.appendingPathComponent("assets/pheart.png"),
             repoRoot.appendingPathComponent("tapper/BrandLogo.png"),
             repoRoot.appendingPathComponent("tapper/pheart.png"),
-            root.appendingPathComponent("RedMed/BrandLogo.png")
+            root.appendingPathComponent("RedMed/BrandLogo.png"),
+            root.appendingPathComponent("RedMed/pheart.png")
         ]
         for target in sharedTargets {
             try savePNG(scaledSquare(brandLogo, size: 216), to: target)
-            quantizePNG(at: target)
         }
-        // Bundled app copy: not web-served, kept truecolor (unquantized) for sharpest
-        // in-app decode. Still sized to the actual 72 CSS px -> 216 @3x display size
-        // (WKWebView `<img id="rmLogo" width="72" height="72">` fallback) — a 1024px
-        // truecolor RGBA copy decoded ~22x more pixels than ever painted on screen,
-        // for no visible gain, and cost real WKWebView decode time on every load that
-        // hit this fallback.
-        try savePNG(scaledSquare(brandLogo, size: 216), to: root.appendingPathComponent("RedMed/pheart.png"))
+        // Loose BrandWordmark.png is not bundled — native uses the imageset,
+        // passerby HTML never loads a wordmark image.
     }
 } catch {
     fputs("error: \(error)\n", stderr)

@@ -27,10 +27,8 @@ var CACHE = 'redmed-tapper-v130';
 var ASSETS = [
   './pheart.png',
   './BrandLogo.png',
-  './BrandWordmark.png',
   '../assets/pheart.png',
-  '../assets/BrandLogo.png',
-  '../assets/BrandWordmark.png'
+  '../assets/BrandLogo.png'
 ];
 /** Primary HTML shell — install must fail closed if neither key can be cached. */
 var REQUIRED_SHELLS = ['./index.html', './'];
