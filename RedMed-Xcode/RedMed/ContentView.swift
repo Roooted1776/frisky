@@ -187,6 +187,8 @@ struct CustomTabBar: View {
         }
         // Bar bounds only — upward shadow must not eat YOU-card / list taps.
         .contentShape(barShape)
+        // 3pt lift off the home indicator (bar sits in ignored bottom safe area).
+        .padding(.bottom, 3)
         .accessibilityElement(children: .contain)
     }
 
@@ -223,7 +225,8 @@ struct TabBarItem: View {
                     .font(.system(size: 18, weight: isOn ? .semibold : .regular))
                     .symbolRenderingMode(isCompass ? .hierarchical : .monochrome)
                     .foregroundStyle(tint)
-                    .frame(width: 48, height: 26)
+                    // Square W×H so each SF Symbol's glyph center matches the slot center.
+                    .frame(width: 26, height: 26, alignment: .center)
                     .background(
                         RoundedRectangle(cornerRadius: RedMedChrome.chipRadius, style: .continuous)
                             .fill(isOn ? Color.redmedAccent.opacity(0.12) : Color.clear)
@@ -233,8 +236,10 @@ struct TabBarItem: View {
                     .font(.system(size: 10, weight: isOn ? .semibold : .medium))
                     .foregroundColor(tint)
                     .kerning(-0.1)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, alignment: .center)
             .frame(minHeight: 44)
             // Discrete tint swap — no spring/bounce on every tab hop.
             .transaction { $0.animation = nil }
