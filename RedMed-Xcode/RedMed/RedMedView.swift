@@ -67,6 +67,7 @@ struct RedMedView: View {
                             ownerNextStepBanner
                         }
                         OwnerYouCard()
+                            .id(profile.cardEpoch)
                     }
                 }
             }
@@ -290,7 +291,9 @@ private struct OwnerYouCard: View {
             Divider().overlay(Color.redmedDivider)
             youRow(label: "Organ donor", value: profile.isOrganDonor ? "Yes" : "")
         }
-        .redmedBox()
+        // flatten: false — compositingGroup kept the empty "—" paint after
+        // Keychain restore (same reason Edit uses flatten: false).
+        .redmedBox(flatten: false)
     }
 
     private func youRow(label: String, value: String) -> some View {
@@ -319,7 +322,7 @@ private struct OwnerYouCard: View {
             YouListDrop(title: "Conditions", items: profile.conditions)
             YouContactDrop(contacts: profile.contacts)
         }
-        .redmedBox()
+        .redmedBox(flatten: false)
     }
 }
 
