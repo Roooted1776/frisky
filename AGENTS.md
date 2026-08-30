@@ -72,7 +72,8 @@ The app has no backend, database, or web service.
   WebView). Help is on 911 / Aid / NFC (top chrome) — not on Edit, whose
   modal bar is Cancel / Save only. Owner RedMed tab is Edit-only — no bottom
   Help dock. Scanner Help is
-  policies only. NFC Preview (under Scan) / NFC Scan open bundled
+  policies only. Owner RedMed tab is a native YOU card (no `tapper.html`
+  WKWebView on that tab). NFC Preview (under Scan) / NFC Scan open bundled
   `tapper.html#d=` (`?src=app`, no SOS auto-arm);
   live band taps use `AppConfig.medicalCardBaseURL#d=` (currently
   `https://roooted1776.github.io/tapper/#d=`; custom host after domain cutover).
@@ -127,8 +128,8 @@ The app has no backend, database, or web service.
   Face ID is UI-only, not SecItem. Restore on owner `ContentView` appear
   (`ProfileData.restoreOnLaunch`). One interactive Face ID is allowed only
   to migrate an old `biometryCurrentSet` blob, then never again to view.
-  If a stored profile is expected and RAM is empty, show cream — not the
-  empty setup funnel. `persist()` must not save an empty RAM profile over
+  If a stored profile is expected and RAM is empty, keep the funnel hidden
+  (native YOU card with empty slots, not cream-over-WKWebView). `persist()` must not save an empty RAM profile over
   a stored blob (erase deletes Keychain first).
 - Fresh install (no stored blob) shows the native **setup funnel** (Fill
   medical ID → Save → Write the band). Not on passerby tapper.
@@ -138,8 +139,8 @@ The app has no backend, database, or web service.
   decorative brand marks** anywhere (no lock watermark, no Aid pane wordmarks, no
   privacy-cover logo) — page BrandWordmark headers on NFC / topic sheets only;
   YOU-card BrandLogo is the medical header mark (tapper `.rm-header`; owner RedMed
-  tab uses the same row natively — logo + name + Linked/Not linked — with Edit
-  trailing, HTML header hidden in `app-embed` so it is not double-headed).
+  tab is native — logo + name + Linked/Not linked + identity/lists — with Edit
+  trailing. `tapper.html` WKWebView is passerby + NFC Preview / Scan only).
 - `PrivacySnapshotGuard` cover must appear opaque with **no** opacity fade;
   app-switcher snapshots can capture mid-transition PHI. Capture cover **only
   while PHI is in RAM**. Non-capture cover is true **`.background` only** (with

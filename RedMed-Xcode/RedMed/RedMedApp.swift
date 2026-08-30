@@ -14,13 +14,12 @@ struct RedMedApp: App {
             .background(CreamWindowBackground())
             .preferredColorScheme(.light)
             .task {
-                // Snapshot observers + string-only tapper.html warm. Do not
-                // construct a WKWebView here — that raced the first Main frame.
+                // Snapshot observers only. Do not warm WKWebView or read
+                // tapper.html here — that raced the first Main frame.
                 SnapshotSafeCover.activate()
                 OwnerLockPresentation.setLocked(false)
                 OwnerLockPresentation.holdSwitcherCover = false
                 SnapshotSafeCover.shared.reveal()
-                PasserbyHTMLCardView.scheduleShellWarmOnce()
                 await profile.restoreOnLaunch()
             }
             .onOpenURL { url in
