@@ -13,8 +13,6 @@ struct RedMedView: View {
     @State private var showEdit = false
     /// When true, Edit opened without Face ID (empty RedMed profile) — Save must authenticate.
     @State private var requireAuthOnSave = false
-    @State private var showAuthFailedAlert = false
-    @State private var authUnavailableMessage: String?
     @State private var healthImportBusy = false
     @State private var healthImportMessage: String?
     /// HealthKit characteristics to seed Edit. Not written to ProfileData until Save.
@@ -88,19 +86,6 @@ struct RedMedView: View {
                 .environmentObject(profile)
                 .presentationBackground(Color.redmedBg)
         }
-        .alert(BiometricAuth.deniedAlertTitle, isPresented: $showAuthFailedAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(BiometricAuth.deniedAlertMessage(action: "edit"))
-        }
-        .alert(BiometricAuth.unavailableAlertTitle, isPresented: Binding(
-            get: { authUnavailableMessage != nil },
-            set: { if !$0 { authUnavailableMessage = nil } }
-        )) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(authUnavailableMessage ?? "")
-        }
     }
 
     /// Sibling above the YOU card — never an overlay on the tap card.
@@ -136,26 +121,11 @@ struct RedMedView: View {
     private func requestEdit() {
         // Scanners never edit — UI gate alone is not enough.
         guard !isScannerSession else { return }
-        guard profile.hasSensitiveProfileData else {
-            // First fill: open freely, Face ID on Save (see EditProfileView.requireAuthOnSave).
-            requireAuthOnSave = true
-            showEdit = true
-            return
-        }
-        BiometricAuth.authenticate(
-            reason: "Unlock with Face ID, Touch ID, or passcode to edit your RedMed profile.",
-            force: true
-        ) { outcome in
-            if outcome == .success {
-                requireAuthOnSave = false
-                showEdit = true
-            } else if outcome == .notVerified {
-                showAuthFailedAlert = true
-                VaultHistoryStore.shared.record(.unlockFailed, detail: "edit")
-            } else if case .unavailable(let reason) = outcome {
-                authUnavailableMessage = reason.message
-            }
-        }
+        // Face ID / Touch ID / passcode gate removed from the edit field per
+        // request — Edit now opens directly, with no biometric confirmation
+        // required either to open it or on Save.
+        requireAuthOnSave = false
+        showEdit = true
     }
 
     /// Optional Health fill on the empty funnel, then Edit so Save still Face ID gates persist.

@@ -19,8 +19,6 @@ struct EditProfileView: View {
     @State private var medications: [DraftLine] = []
     @State private var conditions: [DraftLine] = []
     @State private var contacts: [EmergencyContact] = []
-    @State private var showAuthFailedAlert = false
-    @State private var authUnavailableMessage: String?
     @State private var showSaveFailedAlert = false
     @State private var showBirthDatePicker = false
     @State private var showBloodTypePicker = false
@@ -184,19 +182,6 @@ struct EditProfileView: View {
         .onAppear {
             loadDraft()
             SuggestionCatalog.warmUp()
-        }
-        .alert(BiometricAuth.deniedAlertTitle, isPresented: $showAuthFailedAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(BiometricAuth.deniedAlertMessage(action: "save"))
-        }
-        .alert(BiometricAuth.unavailableAlertTitle, isPresented: Binding(
-            get: { authUnavailableMessage != nil },
-            set: { if !$0 { authUnavailableMessage = nil } }
-        )) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(authUnavailableMessage ?? "")
         }
         .alert("Couldn't Save", isPresented: $showSaveFailedAlert) {
             Button("OK", role: .cancel) {}
@@ -579,24 +564,10 @@ struct EditProfileView: View {
             dismiss()
             return
         }
-        let reason = requireAuthOnSave
-            ? "Confirm with Face ID, Touch ID, or passcode to save your RedMed profile."
-            : "Confirm with Face ID, Touch ID, or passcode to update your RedMed profile."
-        BiometricAuth.authenticate(
-            reason: reason,
-            force: true
-        ) { outcome in
-            Task { @MainActor in
-                if outcome == .success {
-                    commitSave()
-                } else if outcome == .notVerified {
-                    showAuthFailedAlert = true
-                    VaultHistoryStore.shared.record(.unlockFailed, detail: "editSave")
-                } else if case .unavailable(let reason) = outcome {
-                    authUnavailableMessage = reason.message
-                }
-            }
-        }
+        // Face ID / Touch ID / passcode confirmation removed from the edit
+        // field's Save action per request — saving no longer requires
+        // biometric authentication.
+        commitSave()
     }
 
     private func commitSave() {
