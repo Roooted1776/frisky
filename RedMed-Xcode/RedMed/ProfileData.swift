@@ -1,6 +1,1 @@
-import SwiftUI
-import Combine
-
-enum AppTab {
-    case redmed, emergency, aid, nfc
-}
+PLACEHOLDER_WILL_REPLACE
