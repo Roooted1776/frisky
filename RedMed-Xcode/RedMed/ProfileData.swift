@@ -1,1 +1,6 @@
-PLACEHOLDER_LOAD_FROM_FILE
+import SwiftUI
+import Combine
+
+enum AppTab {
+    case redmed, emergency, aid, nfc
+}
