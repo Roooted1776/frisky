@@ -481,7 +481,7 @@ struct EmergencyContact: Identifiable, Equatable {
         }
         set {
             let parts = newValue
-                .split(separator: "\u00b7", maxSplits: 1)
+                .split(separator: "·", maxSplits: 1)
                 .map { $0.trimmingCharacters(in: .whitespaces) }
             if parts.count > 1 {
                 relationship = parts[0]
@@ -699,7 +699,7 @@ enum AidTopicCatalog {
     ),
     "heat-stroke": AidTopic(
         id: "heat-stroke", title: "Heat Exhaustion & Stroke",
-        symptoms: ["Heavy sweating, weakness, cold/pale/clammy skin (exhaustion)", "Hot, red, dry or damp skin, rapid pulse, confusion (stroke)", "Nausea, fainting, body temp above 103\u00b0F"],
+        symptoms: ["Heavy sweating, weakness, cold/pale/clammy skin (exhaustion)", "Hot, red, dry or damp skin, rapid pulse, confusion (stroke)", "Nausea, fainting, body temp above 103°F"],
         care: ["Heat stroke: call \(EmergencyNumber.current) immediately — it is life-threatening", "Move to cool or shaded area", "Cool rapidly: remove extra clothing, apply ice packs to neck/armpits/groin", "If conscious: sip cool water slowly", "Do NOT give fluids to an unconscious person", "Fan them while applying cool water to skin", "Lay them down and elevate legs if no spinal injury"]
     ),
     "burn-care": AidTopic(
