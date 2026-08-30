@@ -445,4 +445,6 @@ enum BiometricAuth {
     static func deniedAlertMessage(action: String) -> String {
         "Face ID or passcode is required to \(action) your RedMed profile."
     }
+
+    static let unavailableAlertTitle = "Face ID Unavailable"
 }

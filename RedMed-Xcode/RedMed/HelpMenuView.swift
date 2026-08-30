@@ -243,6 +243,7 @@ struct HelpMenuView: View {
     @State private var showEraseConfirm = false
     @State private var isErasing = false
     @State private var eraseAuthFailed = false
+    @State private var authUnavailableMessage: String?
 
     /// Same metrics as Edit — even horizontal rhythm across Help / Edit.
     private enum Metrics {
@@ -359,6 +360,14 @@ struct HelpMenuView: View {
             } message: {
                 Text("Face ID, Touch ID, or passcode is required to erase RedMed data.")
             }
+            .alert(BiometricAuth.unavailableAlertTitle, isPresented: Binding(
+                get: { authUnavailableMessage != nil },
+                set: { if !$0 { authUnavailableMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(authUnavailableMessage ?? "")
+            }
         }
     }
 
@@ -417,10 +426,15 @@ struct HelpMenuView: View {
                 RedMedHaptics.success()
                 isErasing = false
                 dismiss()
-            case .notVerified, .unavailable(_):
+            case .notVerified:
                 RedMedHaptics.error()
                 isErasing = false
                 eraseAuthFailed = true
+                VaultHistoryStore.shared.record(.unlockFailed, detail: "erase")
+            case .unavailable(let reason):
+                RedMedHaptics.error()
+                isErasing = false
+                authUnavailableMessage = reason.message
                 VaultHistoryStore.shared.record(.unlockFailed, detail: "erase")
             case .declined, .notInteractive, .timedOut:
                 isErasing = false

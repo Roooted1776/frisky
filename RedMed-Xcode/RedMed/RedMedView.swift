@@ -19,6 +19,7 @@ struct RedMedView: View {
     /// When true, Edit opened without Face ID (empty RedMed profile) — Save must authenticate.
     @State private var requireAuthOnSave = false
     @State private var showAuthFailedAlert = false
+    @State private var authUnavailableMessage: String?
     /// Cached `#d=` — never AES-pack inside `body` (random nonce remounted WKWebView).
     @State private var packedPayload: String?
     /// Plaintext JSON paired with `packedPayload` — avoids remount when profile publishes mid-apply.
@@ -172,6 +173,14 @@ struct RedMedView: View {
         } message: {
             Text(BiometricAuth.deniedAlertMessage(action: "edit"))
         }
+        .alert(BiometricAuth.unavailableAlertTitle, isPresented: Binding(
+            get: { authUnavailableMessage != nil },
+            set: { if !$0 { authUnavailableMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(authUnavailableMessage ?? "")
+        }
     }
 
     /// Sibling above the YOU card — never an overlay on the tap card.
@@ -278,6 +287,8 @@ struct RedMedView: View {
             } else if outcome == .notVerified {
                 showAuthFailedAlert = true
                 VaultHistoryStore.shared.record(.unlockFailed, detail: "edit")
+            } else if case .unavailable(let reason) = outcome {
+                authUnavailableMessage = reason.message
             }
         }
     }

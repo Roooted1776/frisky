@@ -20,6 +20,7 @@ struct EditProfileView: View {
     @State private var conditions: [DraftLine] = []
     @State private var contacts: [EmergencyContact] = []
     @State private var showAuthFailedAlert = false
+    @State private var authUnavailableMessage: String?
     @State private var showSaveFailedAlert = false
     @State private var showBirthDatePicker = false
     @State private var showBloodTypePicker = false
@@ -188,6 +189,14 @@ struct EditProfileView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(BiometricAuth.deniedAlertMessage(action: "save"))
+        }
+        .alert(BiometricAuth.unavailableAlertTitle, isPresented: Binding(
+            get: { authUnavailableMessage != nil },
+            set: { if !$0 { authUnavailableMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(authUnavailableMessage ?? "")
         }
         .alert("Couldn't Save", isPresented: $showSaveFailedAlert) {
             Button("OK", role: .cancel) {}
@@ -583,6 +592,8 @@ struct EditProfileView: View {
                 } else if outcome == .notVerified {
                     showAuthFailedAlert = true
                     VaultHistoryStore.shared.record(.unlockFailed, detail: "editSave")
+                } else if case .unavailable(let reason) = outcome {
+                    authUnavailableMessage = reason.message
                 }
             }
         }
