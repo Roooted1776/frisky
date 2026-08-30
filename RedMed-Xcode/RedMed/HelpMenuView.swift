@@ -348,7 +348,7 @@ struct HelpMenuView: View {
                 isPresented: $showEraseConfirm,
                 titleVisibility: .visible
             ) {
-                Button("Erase everything", role: .destructive) {
+                Button("Erase Everything", role: .destructive) {
                     requestErase()
                 }
                 Button("Cancel", role: .cancel) {}

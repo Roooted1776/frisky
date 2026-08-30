@@ -110,7 +110,7 @@ struct TopicDetailView: View {
                             if cprRunning {
                                 PrimaryButton(title: "Stop") { stopCPR() }
                             } else {
-                                PrimaryButton(title: "Start beat") { startCPR() }
+                                PrimaryButton(title: "Start Beat") { startCPR() }
                             }
                         }
                         .padding(20)
@@ -236,11 +236,11 @@ private struct LiveNearbyHospitalsSection: View {
                     .font(.system(size: 13))
                     .foregroundColor(.redmedMuted)
                     .padding(.vertical, 12)
-                Button("Try again") { hospitalFinder.search() }
+                Button("Try Again") { hospitalFinder.search() }
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.redmedAccent)
             } else if hospitalFinder.hospitals.isEmpty {
-                PrimaryButton(title: "Find hospitals near me") { hospitalFinder.search() }
+                PrimaryButton(title: "Find Hospitals Near Me") { hospitalFinder.search() }
             } else {
                 VStack(spacing: 0) {
                     ForEach(Array(hospitalFinder.hospitals.enumerated()), id: \.element.id) { i, hosp in
