@@ -54,10 +54,11 @@ struct RedMedView: View {
     }
 
     /// Prefer live cache; else placeholder so a filled profile never paints cream.
-    /// Nil while restoring or on the empty funnel so those states can show cream / setup.
+    /// Nil on the empty funnel only. Stored-ID restore still returns a
+    /// placeholder so WKWebView can parse tapper.html while Keychain loads.
     private var shellPayload: String? {
         if let packedPayload { return packedPayload }
-        if showsOwnerSetupFunnel || profile.isRestoringFromKeychain { return nil }
+        if showsOwnerSetupFunnel { return nil }
         return ProfileNFCCodec.placeholderPreviewPayload
     }
 
@@ -68,7 +69,7 @@ struct RedMedView: View {
     }
 
     /// Owner empty profile — native steps instead of a blank YOU card.
-    /// Hidden while a stored ID is expected or restore is in flight (cream, not funnel).
+    /// Hidden while a stored ID is expected or restore is in flight.
     private var showsOwnerSetupFunnel: Bool {
         !isScannerSession
             && !profile.hasSensitiveProfileData
@@ -110,9 +111,6 @@ struct RedMedView: View {
                         onFill: { requestEdit() },
                         onHealthImport: { Task { await importFromHealthThenEdit() } }
                     )
-                } else if profile.isRestoringFromKeychain {
-                    Color.redmedBg
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if let shellPayload {
                     VStack(spacing: 0) {
                         if !isScannerSession {
@@ -186,7 +184,9 @@ struct RedMedView: View {
     /// Sibling above the YOU card — never an overlay on the tap card.
     @ViewBuilder
     private var ownerNextStepBanner: some View {
-        if !profile.isEmergencyProfileConfigured {
+        if profile.isRestoringFromKeychain {
+            EmptyView()
+        } else if !profile.isEmergencyProfileConfigured {
             OwnerNextStepBanner(
                 icon: "square.and.pencil",
                 title: "Finish your medical ID",
@@ -209,18 +209,21 @@ struct RedMedView: View {
         }
     }
 
-    /// First paint: live packed payload / embed JSON from the profile in RAM.
-    /// Durable AES refreshes in the background via JS push — no cream stall.
+    /// First paint: placeholder shell immediately so WKWebView parse overlaps
+    /// Keychain restore. Real embed JSON / AES `#d=` land via JS push.
     private func adoptUnlockPreviewOrSync() {
-        if profile.isRestoringFromKeychain { return }
         if packedPayload == nil {
-            cachedEmbedJSON = ProfileNFCCodec.embedProfileJSON(from: profile)
             packedPayload = ProfileNFCCodec.placeholderPreviewPayload
-            packFingerprint = profilePackFingerprint
             packFinished = true
+            if profile.isRestoringFromKeychain {
+                return
+            }
+            cachedEmbedJSON = ProfileNFCCodec.embedProfileJSON(from: profile)
+            packFingerprint = profilePackFingerprint
             refreshDurablePayload()
             return
         }
+        if profile.isRestoringFromKeychain { return }
         syncPackedPayload()
     }
 

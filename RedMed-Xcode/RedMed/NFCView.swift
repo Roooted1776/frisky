@@ -8,8 +8,12 @@ import SwiftUI
 struct NFCView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
+    /// ContentView keep-alive never calls `onDisappear`. Only warm a spare
+    /// WKWebView while NFC is the front tab — never under RedMed first paint.
+    var isVisible: Bool = true
     @StateObject private var band = NFCBandManager()
     @State private var previewSession: PreviewSession?
+    @State private var didWarmFullShell = false
 
     private struct PreviewSession: Identifiable {
         let id = UUID()
@@ -73,16 +77,25 @@ struct NFCView: View {
         } message: {
             Text(band.alertMessage ?? "")
         }
-        .onAppear {
-            Task { @MainActor in
-                await Task.yield()
-                PasserbyWebViewPool.warmFullShell()
-            }
+        .onAppear { warmFullShellIfFront() }
+        .onChange(of: isVisible) { _, visible in
+            if visible { warmFullShellIfFront() }
         }
         .onChange(of: band.isWriting) { _, writing in
             // Linked only after a matching read-back. Written-but-unverified stays Not linked.
             guard !writing, band.writeSucceeded, band.writeVerified, AppConfig.nfcHardwareEnabled else { return }
             band.linkBracelet(on: profile, detail: "NFC write verified")
+        }
+    }
+
+    /// Spare Preview/Scan WKWebView — only while NFC is front. Background
+    /// keep-alive mount must not race the RedMed embed's first paint.
+    private func warmFullShellIfFront() {
+        guard isVisible, !didWarmFullShell else { return }
+        didWarmFullShell = true
+        Task { @MainActor in
+            await Task.yield()
+            PasserbyWebViewPool.warmFullShell()
         }
     }
 
