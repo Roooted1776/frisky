@@ -233,6 +233,11 @@ struct TabBarItem: View {
                     .font(.system(size: 10, weight: isOn ? .semibold : .medium))
                     .foregroundColor(tint)
                     .kerning(-0.1)
+                    // Shrink-to-fit instead of a manual GeometryReader size calc —
+                    // keeps "RedMed" from clipping/overflowing its slot without
+                    // reintroducing the layout complexity 5ada426 added.
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.65)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, alignment: .center)
             }
