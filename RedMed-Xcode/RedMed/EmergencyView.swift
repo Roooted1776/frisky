@@ -80,6 +80,9 @@ private struct FindHelpLocationBlock: View {
                 return
             }
             await Task.yield()
+            // Let 911 paint first — startUpdatingLocation hitch on the tap turn.
+            try? await Task.sleep(nanoseconds: 80_000_000)
+            guard !Task.isCancelled, isVisible else { return }
             if locationEnabled { locationManager.start() }
         }
         .onChange(of: locationEnabled) { _, on in

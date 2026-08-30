@@ -11,12 +11,13 @@ enum RedMedMotion {
 struct RedMedPressStyle: ButtonStyle {
     var scale: CGFloat = 0.97
     var haptic: (() -> Void)? = { RedMedHaptics.light() }
+    var animates: Bool = true
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? scale : 1)
             .opacity(configuration.isPressed ? 0.92 : 1)
-            .animation(RedMedMotion.snappy, value: configuration.isPressed)
+            .animation(animates ? RedMedMotion.snappy : nil, value: configuration.isPressed)
             .onChange(of: configuration.isPressed) { _, pressed in
                 if pressed { haptic?() }
             }

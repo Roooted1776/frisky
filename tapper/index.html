@@ -251,16 +251,6 @@ function redmedAssetURL(file) {
   }
   /* First paint stays visible — opacity:0 here read as a long white flash on load. */
   .panel.active { display: block; }
-  .panel.active.anim-in {
-    animation: panelIn 0.22s ease-out;
-  }
-  @keyframes panelIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: none; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .panel.active.anim-in { animation: none; }
-  }
 
   /* —— RedMed tab (My ID look) —— */
   .rm-header {
@@ -2069,15 +2059,12 @@ function redmedAssetURL(file) {
     setListDropOpen(dropId, true);
   }
 
-  var tabAnimReady = false;
   function showTab(id) {
     // Bracelet / passerby / Preview shell: RedMed · 911 · Aid only — never NFC or Edit.
     if (id !== 'medical' && id !== '911' && id !== 'aid') return;
     document.querySelectorAll('.panel').forEach(function (p) {
       var on = p.getAttribute('data-panel') === id;
       p.classList.toggle('active', on);
-      // Animate tab switches only — cold open must not start at opacity 0.
-      p.classList.toggle('anim-in', on && tabAnimReady);
       p.setAttribute('aria-hidden', on ? 'false' : 'true');
     });
     document.querySelectorAll('.tab').forEach(function (tab) {
@@ -2092,9 +2079,13 @@ function redmedAssetURL(file) {
       var app = document.querySelector('.app');
       if (app) app.scrollTop = 0;
     } catch (e0) {}
-    // GPS only when 911 is open — medical open must not trigger a location popup.
-    if (id === '911') ensureGeo();
-    if (id === 'aid') ensureAidChrome();
+    // Paint the panel first — GPS / Aid chrome after the frame.
+    if (id === '911') {
+      requestAnimationFrame(function () { ensureGeo(); });
+    }
+    if (id === 'aid') {
+      requestAnimationFrame(function () { ensureAidChrome(); });
+    }
   }
 
   function decodeProfile() {
@@ -2334,7 +2325,6 @@ function redmedAssetURL(file) {
     });
   });
   showTab('medical');
-  tabAnimReady = true;
 
   // Aid accordion + topic sheets — idle by default; eager when Aid tab opens.
   var aidChromeReady = false;
