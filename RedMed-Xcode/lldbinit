@@ -1,0 +1,2 @@
+# Xcode Stop / re-Run sends SIGTERM. Idle main sits in mach_msg2_trap; that is not a crash.
+process handle SIGTERM -n false -p true -s false

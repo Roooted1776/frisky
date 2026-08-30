@@ -231,9 +231,11 @@ Keep the tree product-only: `RedMed-Xcode/`, passerby `tapper*` / legacy
 debug `screenshots/`, dead `support.js` / `ios-frame.jsx`, or UK
 `compliance/` paper packs.
 
-**Debugger note:** `Thread 1: signal SIGTERM` at `mach_msg2_trap` is usually
-Xcode Stop / Simulator killing the process — not a Swift crash. Look for
-`EXC_BAD_ACCESS` / fatalError / assertion if it is a real fault.
+**Debugger note:** `Thread 1: signal SIGTERM` at `mach_msg2_trap` is Xcode Stop
+or the Simulator killing the process, not a Swift crash. Shared scheme
+`lldbinit` tells LLDB not to pause on SIGTERM. If it still says Paused, delete
+Runtime Issue breakpoints in xcuserdata. Look for `EXC_BAD_ACCESS` / fatalError
+/ assertion if it is a real fault.
 
 **Passerby web shell IS runnable on Linux / Cursor Cloud.** Only the native iOS app can't run
 here — the static passerby shell (`tapper.html` / `tapper/index.html`, `get*`/`card.html`
