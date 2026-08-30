@@ -68,8 +68,11 @@ class ProfileData: ObservableObject {
     @Published var holdsEditingSession: Bool = false
     /// True while launch restore is in flight (or expected). Funnel waits on this.
     @Published var isRestoringFromKeychain: Bool = false
-    /// One-shot so ContentView.task cannot Face ID twice in one process.
+    /// One-shot so RedMedApp / ContentView cannot restore twice in one process.
     private var didAttemptLaunchRestore = false
+    /// Off-main Keychain+JSON started at `init` so Main can paint the YOU card
+    /// instead of cream-then-parse. Face ID is not on this path.
+    private var launchPrefetchTask: Task<PersistedProfile?, Never>?
 
     private func setField<T: Equatable>(_ storage: inout T, _ newValue: T) {
         guard storage != newValue else { return }
@@ -118,9 +121,26 @@ class ProfileData: ObservableObject {
     init(persisting: Bool = true) {
         self.persists = persisting
         // If a blob is expected, start restoring so the empty funnel cannot flash.
-        // Presence check only (exists) — no JSON decode here.
+        // Presence check only (exists) — JSON decode is the detached prefetch.
         if persisting && (Self.hasStoredProfile() || Self.prefersLockOnLaunch) {
             self.isRestoringFromKeychain = true
+            beginLaunchPrefetch()
+        }
+        if persisting {
+            PasserbyHTMLCardView.scheduleShellWarmOnce()
+        }
+    }
+
+    /// Non-interactive Keychain read + JSON decode. Idempotent. Does not touch
+    /// `@Published` fields until `restoreOnLaunch` adopts the result.
+    func beginLaunchPrefetch() {
+        guard persists else { return }
+        guard !didAttemptLaunchRestore else { return }
+        guard launchPrefetchTask == nil else { return }
+        guard Self.hasStoredProfile() || Self.prefersLockOnLaunch else { return }
+        let account = Self.keychainAccount
+        launchPrefetchTask = Task.detached(priority: .userInitiated) {
+            Self.decodeBlob(KeychainStore.load(account: account, allowInteractive: false))
         }
     }
 
@@ -236,25 +256,49 @@ class ProfileData: ObservableObject {
         return loadFromKeychain()
     }
 
-    /// Owner Main appear — load the Keychain blob into RAM. `allowInteractive`
-    /// is true only here so an old biometryCurrentSet item can Face ID once
-    /// and migrate to the unbound-when-unlocked ACL. Scanner sessions must
-    /// not call this (owner Keychain).
+    /// Owner Main appear — load the Keychain blob into RAM. Prefetch is the
+    /// common path (device-unlocked, no Face ID). `allowInteractive` is only
+    /// the one-shot migrate of an old `biometryCurrentSet` item. Scanner
+    /// sessions must not call this (owner Keychain).
     @MainActor
     func restoreOnLaunch() async {
         guard persists else { return }
         guard !didAttemptLaunchRestore else { return }
         didAttemptLaunchRestore = true
-        isRestoringFromKeychain = true
-        let ok = await reloadFromKeychainAsync(allowInteractive: true)
-        if ok {
-            Self.setStoredProfileGate(true)
+
+        let expected = Self.hasStoredProfile() || Self.prefersLockOnLaunch
+        if !expected && launchPrefetchTask == nil {
             isRestoringFromKeychain = false
             return
         }
-        // Load failed. If a blob is expected, keep the gate so the funnel
-        // stays hidden (cream) instead of an empty Save that could clobber.
-        if Self.hasStoredProfile() || Self.prefersLockOnLaunch {
+        isRestoringFromKeychain = true
+
+        if let task = launchPrefetchTask {
+            launchPrefetchTask = nil
+            if let blob = await task.value {
+                apply(blob)
+                Self.setStoredProfileGate(true)
+                isRestoringFromKeychain = false
+                return
+            }
+        } else if expected {
+            let ok = await reloadFromKeychainAsync(allowInteractive: false)
+            if ok {
+                Self.setStoredProfileGate(true)
+                isRestoringFromKeychain = false
+                return
+            }
+        }
+
+        // Prefetch miss on an expected blob — one interactive migrate of a
+        // leftover biometry ACL row, then never again to view.
+        if expected {
+            let ok = await reloadFromKeychainAsync(allowInteractive: true)
+            if ok {
+                Self.setStoredProfileGate(true)
+                isRestoringFromKeychain = false
+                return
+            }
             Self.setStoredProfileGate(true)
         } else {
             Self.setStoredProfileGate(false)
