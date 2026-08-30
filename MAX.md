@@ -34,4 +34,4 @@ RedMed is a **native iOS/SwiftUI** medical ID (`RedMed-Xcode/`). Local only: Key
 
 ## Xcode on his Mac
 
-After a pull: **Product → Clean Build Folder**, Stop, Run. Face ID test path: **Run Without Debugging**. Runtime Issue breakpoints live in xcuserdata (not git) — delete them if it still says Paused on iPhone.
+After a pull: **Product → Clean Build Folder**, Stop, Run. Face ID test path: **Run Without Debugging**. Runtime Issue breakpoints live in xcuserdata (not git) — delete them if it still says Paused on iPhone. `Thread 1: signal SIGTERM` at `mach_msg2_trap` is Stop, not a crash; scheme `lldbinit` ignores it.
