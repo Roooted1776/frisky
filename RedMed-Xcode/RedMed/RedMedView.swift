@@ -501,7 +501,7 @@ private struct OwnerSetupFunnel: View {
             VStack(alignment: .leading, spacing: 16) {
                 ghostYouCard
                 stepsCard
-                PrimaryButton(title: "Fill medical ID", action: onFill)
+                PrimaryButton(title: "Fill Medical ID", action: onFill)
                 if HealthKitProfileImport.isAvailable {
                     healthButton
                     Text("Birth date and blood type only. RedMed never writes back to Health.")
