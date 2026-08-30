@@ -92,7 +92,7 @@ class ProfileData: ObservableObject {
     /// One-shot so RedMedApp / ContentView cannot restore twice in one process.
     private var didAttemptLaunchRestore = false
     /// Off-main Keychain+JSON started at `init` so Main can paint the YOU card
-    /// instead of cream-then-parse. Face ID is not on this path.
+    /// instead of cream-then-parse. Applied only after login Face ID.
     private var launchPrefetchTask: Task<PersistedProfile?, Never>?
 
     private func setField<T: Equatable>(_ storage: inout T, _ newValue: T) {
@@ -294,6 +294,26 @@ class ProfileData: ObservableObject {
     func reloadFromKeychain() -> Bool {
         guard persists else { return false }
         return loadFromKeychain()
+    }
+
+    /// Apply prefetch after login Face ID. Does not present a second sheet.
+    /// Falls through to restoreOnLaunch on a prefetch miss so an old
+    /// biometry ACL row can migrate using the parked login context.
+    @MainActor
+    func adoptLaunchPrefetch() async {
+        guard persists else { return }
+        guard !didAttemptLaunchRestore else { return }
+        if let task = launchPrefetchTask {
+            launchPrefetchTask = nil
+            if let blob = await task.value {
+                didAttemptLaunchRestore = true
+                apply(blob)
+                Self.setStoredProfileGate(true)
+                isRestoringFromKeychain = false
+                return
+            }
+        }
+        await restoreOnLaunch()
     }
 
     /// Owner Main appear — load the Keychain blob into RAM. Prefetch is the

@@ -16,11 +16,10 @@ struct RedMedApp: App {
             .task {
                 // Snapshot observers only. Do not warm WKWebView or read
                 // tapper.html here — that raced the first Main frame.
+                // Do not restore PHI here — OwnerAppLock adopts after Face ID.
                 SnapshotSafeCover.activate()
-                OwnerLockPresentation.setLocked(false)
-                OwnerLockPresentation.holdSwitcherCover = false
-                SnapshotSafeCover.shared.reveal()
-                await profile.restoreOnLaunch()
+                OwnerLockPresentation.setLocked(true)
+                OwnerLockPresentation.holdSwitcherCover = true
             }
             .onOpenURL { url in
                 if (url.scheme ?? "").lowercased() == "redmed",
@@ -33,15 +32,12 @@ struct RedMedApp: App {
     }
 }
 
-/// First open: Before you continue with Agree on screen. Later opens: Main.
-/// No cream lock page in front. Face ID still gates Edit.
+/// Face ID (system sheet on cream) then Before you continue / Main.
+/// No heart, no Proceed. Passerby tapper is not in this tree.
 private struct LaunchRoot: View {
     var body: some View {
-        ConsentGateView { Main() }
-            .onAppear {
-                OwnerLockPresentation.setLocked(false)
-                OwnerLockPresentation.holdSwitcherCover = false
-                SnapshotSafeCover.shared.reveal()
-            }
+        OwnerAppLock {
+            ConsentGateView { Main() }
+        }
     }
 }

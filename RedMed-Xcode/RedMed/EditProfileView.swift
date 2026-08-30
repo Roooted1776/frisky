@@ -6,8 +6,6 @@ struct EditProfileView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.isScannerSession) private var isScannerSession
 
-    /// True when Edit opened without Face ID (first fill). Save then requires biometrics.
-    var requireAuthOnSave: Bool = false
     /// Optional Apple Health seed (birth date / blood type). Applied to empty draft fields only.
     var healthSeed: HealthKitProfileImport.Draft? = nil
 
@@ -672,11 +670,8 @@ struct EditProfileView: View {
             dismiss()
             return
         }
-        let reason = requireAuthOnSave
-            ? "Confirm with Face ID, Touch ID, or passcode to save your RedMed profile."
-            : "Confirm with Face ID, Touch ID, or passcode to update your RedMed profile."
         BiometricAuth.authenticate(
-            reason: reason,
+            reason: "Confirm with Face ID, Touch ID, or passcode to save your RedMed profile.",
             force: true
         ) { outcome in
             Task { @MainActor in

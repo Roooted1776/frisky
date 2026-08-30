@@ -11,7 +11,7 @@ import UIKit
 /// memory and the tap card is not up. There is no cream lock in front of Main.
 ///
 /// Non-capture SwiftUI cover is **`.background` only** (with PHI). Face ID /
-/// LAContext on Edit / Save / Erase put the scene `.inactive` — covering then
+/// LAContext on Login / Save / Erase put the scene `.inactive` — covering then
 /// blanks the UI mid-prompt. App-switcher snapshots still get a cover on true
 /// background while PHI is in RAM.
 ///
@@ -29,6 +29,9 @@ struct PrivacySnapshotGuard<Content: View>: View {
     /// Preview / Scan tap card is the public EMT view — never veil it.
     /// Literal default — do not read MainActor / TapCardPresentation in `@State`.
     @State private var tapCardVisible = false
+    /// iOS can report UIScreen.isCaptured == true with nothing actually being
+    /// recorded (iOS 26 platform bug). Lets the owner break out manually.
+    @State private var manualCaptureOverride = false
     @ViewBuilder private var content: () -> Content
 
     init(@ViewBuilder content: @escaping () -> Content) {
@@ -44,7 +47,7 @@ struct PrivacySnapshotGuard<Content: View>: View {
         if tapCardVisible { return false }
         // Capture cover only while PHI is resident — lock / Unlock must stay tappable.
         if screenCaptured {
-            return phiInMemory
+            return phiInMemory && !manualCaptureOverride
         }
         // Stay uncovered until the first active frame so tabs paint immediately.
         guard hasBeenActive else { return false }
@@ -72,6 +75,18 @@ struct PrivacySnapshotGuard<Content: View>: View {
                 hasBeenActive = true
             }
         }
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                let nowCaptured = UIScreen.main.isCaptured
+                if nowCaptured != screenCaptured {
+                    screenCaptured = nowCaptured
+                }
+                if !nowCaptured {
+                    manualCaptureOverride = false
+                }
+            }
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 hasBeenActive = true
@@ -87,6 +102,9 @@ struct PrivacySnapshotGuard<Content: View>: View {
         .onReceive(NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)) { _ in
             let nowCaptured = UIScreen.main.isCaptured
             screenCaptured = nowCaptured
+            if !nowCaptured {
+                manualCaptureOverride = false
+            }
             if nowCaptured {
                 SecurePasteboard.clear()
                 // Don't log a cover we refused to paint over the tap card.
@@ -111,10 +129,16 @@ struct PrivacySnapshotGuard<Content: View>: View {
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 28)
+                    Button("Not sharing your screen? Tap to unlock") {
+                        manualCaptureOverride = true
+                    }
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.redmedAccent)
+                    .padding(.top, 4)
                 }
             }
         }
-        .accessibilityHidden(true)
+        .accessibilityHidden(screenCaptured ? false : true)
     }
 }
 
@@ -208,7 +232,7 @@ final class SnapshotSafeCover {
 /// showed the button, the cover hid it. Skip covering while locked.
 enum OwnerLockPresentation {
     private static let lock = NSLock()
-    // Launch opens Main (Face ID gates Edit only).
+    // Launch starts locked. Face ID is login / save / erase only.
     private static var locked = false
     private static var holdCover = false
 
