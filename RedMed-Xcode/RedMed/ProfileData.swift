@@ -87,7 +87,7 @@ class ProfileData: ObservableObject {
     private func withBulkUpdate(_ body: () -> Void) {
         // ObservableObject: emit *before* mutations so SwiftUI snapshots the
         // empty YOU card, then reads the filled blob on the next body pass.
-        // Sending after apply left native rows stuck on dashes (PR 465).
+        // Sending after apply left native rows stuck on "\u2014" (PR 465).
         if bulkUpdateDepth == 0 { objectWillChange.send() }
         bulkUpdateDepth += 1
         body()
