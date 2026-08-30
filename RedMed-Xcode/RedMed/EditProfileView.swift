@@ -982,6 +982,7 @@ private struct RepresentedField: UIViewRepresentable {
         tf.textAlignment = textAlignment
         tf.accessibilityIdentifier = fieldID
         tf.accessibilityLabel = placeholder
+        tf.text = text
         tf.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         tf.setContentHuggingPriority(.required, for: .vertical)
         tf.addTarget(context.coordinator, action: #selector(Coordinator.editingChanged), for: .editingChanged)

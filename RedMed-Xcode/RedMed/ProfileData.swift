@@ -68,6 +68,10 @@ class ProfileData: ObservableObject {
     @Published var holdsEditingSession: Bool = false
     /// True while launch restore is in flight (or expected). Funnel waits on this.
     @Published var isRestoringFromKeychain: Bool = false
+    /// Bumped after a bulk RAM apply (restore / purge). Native YOU card keys
+    /// off this so keep-alive Equatable / flattened boxes cannot keep the
+    /// empty first paint after Keychain lands.
+    @Published private(set) var cardEpoch: UInt = 0
     /// One-shot so RedMedApp / ContentView cannot restore twice in one process.
     private var didAttemptLaunchRestore = false
     /// Off-main Keychain+JSON started at `init` so Main can paint the YOU card
@@ -81,10 +85,14 @@ class ProfileData: ObservableObject {
     }
 
     private func withBulkUpdate(_ body: () -> Void) {
+        // ObservableObject: emit *before* mutations so SwiftUI snapshots the
+        // empty YOU card, then reads the filled blob on the next body pass.
+        // Sending after apply left native rows stuck on "\u2014" (PR 465).
+        if bulkUpdateDepth == 0 { objectWillChange.send() }
         bulkUpdateDepth += 1
         body()
         bulkUpdateDepth -= 1
-        objectWillChange.send()
+        cardEpoch &+= 1
     }
 
     var hasData: Bool {
@@ -224,7 +232,10 @@ class ProfileData: ObservableObject {
         )
         guard let data = try? JSONEncoder().encode(blob) else { return false }
         let ok = KeychainStore.save(data, account: Self.keychainAccount)
-        if ok { Self.setStoredProfileGate(true) }
+        if ok {
+            Self.setStoredProfileGate(true)
+            cardEpoch &+= 1
+        }
         return ok
     }
 
@@ -470,7 +481,7 @@ struct EmergencyContact: Identifiable, Equatable {
         }
         set {
             let parts = newValue
-                .split(separator: "·", maxSplits: 1)
+                .split(separator: "\u00b7", maxSplits: 1)
                 .map { $0.trimmingCharacters(in: .whitespaces) }
             if parts.count > 1 {
                 relationship = parts[0]
@@ -519,6 +530,44 @@ private struct PersistedProfile: Codable, Sendable {
     var braceletLinked: Bool
     var isOrganDonor: Bool
     var lastUpdated: String
+
+    init(
+        name: String,
+        birthDate: String,
+        bloodType: String,
+        allergies: [String],
+        medications: [String],
+        conditions: [String],
+        contacts: [PersistedContact],
+        braceletLinked: Bool,
+        isOrganDonor: Bool,
+        lastUpdated: String
+    ) {
+        self.name = name
+        self.birthDate = birthDate
+        self.bloodType = bloodType
+        self.allergies = allergies
+        self.medications = medications
+        self.conditions = conditions
+        self.contacts = contacts
+        self.braceletLinked = braceletLinked
+        self.isOrganDonor = isOrganDonor
+        self.lastUpdated = lastUpdated
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+        birthDate = try c.decodeIfPresent(String.self, forKey: .birthDate) ?? ""
+        bloodType = try c.decodeIfPresent(String.self, forKey: .bloodType) ?? ""
+        allergies = try c.decodeIfPresent([String].self, forKey: .allergies) ?? []
+        medications = try c.decodeIfPresent([String].self, forKey: .medications) ?? []
+        conditions = try c.decodeIfPresent([String].self, forKey: .conditions) ?? []
+        contacts = try c.decodeIfPresent([PersistedContact].self, forKey: .contacts) ?? []
+        braceletLinked = try c.decodeIfPresent(Bool.self, forKey: .braceletLinked) ?? false
+        isOrganDonor = try c.decodeIfPresent(Bool.self, forKey: .isOrganDonor) ?? false
+        lastUpdated = try c.decodeIfPresent(String.self, forKey: .lastUpdated) ?? ""
+    }
 }
 
 /// Keychain contact blob. Prefers `relationship` + `phone`; still reads legacy `detail`.
@@ -650,7 +699,7 @@ enum AidTopicCatalog {
     ),
     "heat-stroke": AidTopic(
         id: "heat-stroke", title: "Heat Exhaustion & Stroke",
-        symptoms: ["Heavy sweating, weakness, cold/pale/clammy skin (exhaustion)", "Hot, red, dry or damp skin, rapid pulse, confusion (stroke)", "Nausea, fainting, body temp above 103°F"],
+        symptoms: ["Heavy sweating, weakness, cold/pale/clammy skin (exhaustion)", "Hot, red, dry or damp skin, rapid pulse, confusion (stroke)", "Nausea, fainting, body temp above 103\u00b0F"],
         care: ["Heat stroke: call \(EmergencyNumber.current) immediately — it is life-threatening", "Move to cool or shaded area", "Cool rapidly: remove extra clothing, apply ice packs to neck/armpits/groin", "If conscious: sip cool water slowly", "Do NOT give fluids to an unconscious person", "Fan them while applying cool water to skin", "Lay them down and elevate legs if no spinal injury"]
     ),
     "burn-care": AidTopic(

@@ -49,7 +49,7 @@ struct ContentView: View {
             // Keep-alive stack at origin. Inactive tabs hide at opacity 0.
             // RedMed is a native YOU card — no WKWebView to park at 0.02.
             ZStack {
-                mountedTab(.redmed) {
+                mountedTab(.redmed, epoch: profile.cardEpoch) {
                     RedMedView()
                 }
                 mountedTab(.emergency) {
@@ -110,12 +110,14 @@ struct ContentView: View {
     private func mountedTab<Content: View>(
         _ tab: AppTab,
         parksWebView: Bool = false,
+        epoch: UInt = 0,
         @ViewBuilder content: () -> Content
     ) -> some View {
         if mountedTabs.contains(tab) {
             IsolatedKeepAliveTab(
                 isFront: activeTab == tab,
                 parksWebView: parksWebView,
+                epoch: epoch,
                 content: content()
             )
             .equatable()
@@ -129,17 +131,20 @@ struct ContentView: View {
     }
 }
 
-/// Parks a mounted tab without tearing it down. Front tab always re-diffs;
-/// a tab that stayed in back skips `body` so 911 GPS / Aid accordion / NFC
+/// Parks a mounted tab without tearing it down. Front tab re-diffs when
+/// `epoch` changes (Keychain restore / save) or when it becomes front.
+/// A tab that stayed in back skips `body` so 911 GPS / Aid accordion / NFC
 /// pack do not rebuild on every hop. All owner tabs are native (Preview
 /// WKWebView is a full-screen cover), so back tabs hide at opacity 0.
 private struct IsolatedKeepAliveTab<Content: View>: View, Equatable {
     let isFront: Bool
     let parksWebView: Bool
+    let epoch: UInt
     let content: Content
 
     static func == (lhs: Self, rhs: Self) -> Bool {
         guard lhs.parksWebView == rhs.parksWebView else { return false }
+        guard lhs.epoch == rhs.epoch else { return false }
         if lhs.isFront != rhs.isFront { return false }
         return !lhs.isFront
     }
