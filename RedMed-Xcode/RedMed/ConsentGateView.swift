@@ -137,7 +137,7 @@ struct ConsentGateView<Content: View>: View {
                 .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
                 .accessibilityAddTraits(checked ? [.isButton, .isSelected] : .isButton)
 
-                PrimaryButton(title: "Agree and continue", flatten: false) {
+                PrimaryButton(title: "Agree and continue", disabled: !checked, flatten: false) {
                     enterApp()
                 }
             }
