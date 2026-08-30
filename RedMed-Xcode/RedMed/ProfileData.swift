@@ -343,14 +343,21 @@ class ProfileData: ObservableObject {
     /// Band pairing flag for Main / NFC chrome.
     /// `true` only after a real CoreNFC write; cleared when RedMed is edited.
     /// Callers must not set `true` from pack/simulate paths.
-    func setBraceletPaired(_ paired: Bool) {
-        if paired && !AppConfig.nfcHardwareEnabled { return }
+    /// Returns `false` if a Keychain persist was required and failed — callers
+    /// should surface that rather than let the in-memory flag drift from disk.
+    @discardableResult
+    func setBraceletPaired(_ paired: Bool) -> Bool {
+        if paired && !AppConfig.nfcHardwareEnabled { return false }
         guard braceletLinked != paired else {
-            if persists { _ = persist() }
-            return
+            return persists ? persist() : true
         }
         braceletLinked = paired
-        if persists { _ = persist() }
+        guard persists else { return true }
+        guard persist() else {
+            braceletLinked = !paired
+            return false
+        }
+        return true
     }
 
     /// Chip holds a snapshot — any real profile edit unpairs until the band is rewritten.

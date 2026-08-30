@@ -73,11 +73,13 @@ class NearbyHospitalFinder: NSObject, ObservableObject, CLLocationManagerDelegat
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         guard isLoading else { return }
+        let generation = searchGeneration
         switch manager.authorizationStatus {
         case .authorizedWhenInUse, .authorizedAlways:
             manager.requestLocation()
         case .denied, .restricted:
             let fail = {
+                guard self.searchGeneration == generation else { return }
                 self.isLoading = false
                 self.errorMessage = "Couldn't get your location. Check Location permission in Settings."
             }
@@ -89,6 +91,9 @@ class NearbyHospitalFinder: NSObject, ObservableObject, CLLocationManagerDelegat
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let loc = locations.first else { return }
+        // Captured now so a slower, superseded search (see `search()`) can't
+        // overwrite a later search's results once its MKLocalSearch resolves.
+        let generation = searchGeneration
         let request = MKLocalSearch.Request()
         // MapKit POI search — not a certified trauma Level I/II directory.
         request.naturalLanguageQuery = "hospital emergency room"
@@ -98,6 +103,7 @@ class NearbyHospitalFinder: NSObject, ObservableObject, CLLocationManagerDelegat
         MKLocalSearch(request: request).start { [weak self] response, error in
             guard let self else { return }
             let apply = {
+                guard self.searchGeneration == generation else { return }
                 self.isLoading = false
                 if let error {
                     self.errorMessage = error.localizedDescription
@@ -128,7 +134,9 @@ class NearbyHospitalFinder: NSObject, ObservableObject, CLLocationManagerDelegat
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        let generation = searchGeneration
         let fail = {
+            guard self.searchGeneration == generation else { return }
             self.isLoading = false
             self.errorMessage = "Couldn't get your location. Check Location permission in Settings."
         }

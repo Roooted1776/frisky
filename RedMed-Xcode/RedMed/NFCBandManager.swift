@@ -121,7 +121,10 @@ final class NFCBandManager: ObservableObject {
     /// Mark owner bracelet paired after a real CoreNFC write **and** matching read-back.
     func linkBracelet(on profile: ProfileData, detail: String) {
         guard AppConfig.nfcHardwareEnabled, writeVerified else { return }
-        profile.setBraceletPaired(true)
+        guard profile.setBraceletPaired(true) else {
+            alertMessage = "Bracelet write succeeded, but RedMed couldn't save the paired status. Try again."
+            return
+        }
         VaultHistoryStore.shared.record(.braceletWritten, detail: detail)
     }
 
