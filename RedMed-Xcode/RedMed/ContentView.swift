@@ -164,3 +164,128 @@ private struct IsolatedKeepAliveTab<Content: View>: View, Equatable {
         return parksWebView ? 0.02 : 0
     }
 }
+
+struct CustomTabBar: View {
+    @Binding var tab: AppTab
+    var showsNFC: Bool = true
+
+    /// Continuous rounded top — polished bottom chrome without frost (opaque cream).
+    private var barShape: UnevenRoundedRectangle {
+        UnevenRoundedRectangle(
+            topLeadingRadius: RedMedChrome.tabTopRadius,
+            bottomLeadingRadius: 0,
+            bottomTrailingRadius: 0,
+            topTrailingRadius: RedMedChrome.tabTopRadius,
+            style: .continuous
+        )
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                TabBarItem(icon: "person.fill",  label: "RedMed", isOn: tab == .redmed) {
+                    select(.redmed)
+                }
+                TabBarItem(icon: "safari.fill",  label: "911",    isOn: tab == .emergency) {
+                    select(.emergency)
+                }
+                TabBarItem(icon: "cross.case.fill", label: "Aid", isOn: tab == .aid) {
+                    select(.aid)
+                }
+                if showsNFC {
+                    TabBarItem(icon: "wave.3.right", label: "NFC", isOn: tab == .nfc) {
+                        select(.nfc)
+                    }
+                }
+            }
+            .padding(.top, 4.5)
+
+            Capsule()
+                .fill(Color.redmedDark.opacity(0.18))
+                .frame(width: 118, height: 4)
+                .padding(.top, 2)
+                .accessibilityHidden(true)
+        }
+        .background {
+            barShape
+                .fill(Color.redmedBg)
+                .overlay {
+                    barShape.strokeBorder(Color.redmedDivider, lineWidth: 0.5)
+                }
+                .shadow(color: RedMedChrome.cardShadow, radius: 10, y: -2)
+                // This bar is on-screen behind every tab's scroll content —
+                // flatten its static fill/stroke/shadow to one GPU texture so
+                // scrolling underneath doesn't force a CPU shadow recompute
+                // on every frame.
+                .drawingGroup()
+                .allowsHitTesting(false)
+        }
+        // Bar bounds only — upward shadow must not eat YOU-card / list taps.
+        .contentShape(barShape)
+        .accessibilityElement(children: .contain)
+    }
+
+    private func select(_ next: AppTab) {
+        guard tab != next else {
+            RedMedHaptics.selection()
+            return
+        }
+        RedMedHaptics.selection()
+        // No withAnimation on AppTab — that marks the content ZStack transaction even
+        // when mounted tabs suppress animation, and fights opacity keep-alive.
+        tab = next
+    }
+}
+
+struct TabBarItem: View {
+    let icon: String
+    let label: String
+    let isOn: Bool
+    let action: () -> Void
+
+    /// 911 uses `safari.fill` — hierarchical keeps the compass needle visible
+    /// (flat monochrome fills the disc solid, same failure as tapper without evenodd).
+    private var tint: Color {
+        isOn ? .redmedAccent : .redmedMuted
+    }
+
+    private var isCompass: Bool { icon == "safari.fill" }
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 2) {
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: isOn ? .semibold : .regular))
+                    .symbolRenderingMode(isCompass ? .hierarchical : .monochrome)
+                    .foregroundStyle(tint)
+                    // Square W×H so each SF Symbol's glyph center matches the slot center.
+                    .frame(width: 26, height: 26, alignment: .center)
+                    .background(
+                        RoundedRectangle(cornerRadius: RedMedChrome.chipRadius, style: .continuous)
+                            .fill(isOn ? Color.redmedAccent.opacity(0.12) : Color.clear)
+                    )
+                    .accessibilityHidden(true)
+                Text(label)
+                    .font(.system(size: 10, weight: isOn ? .semibold : .medium))
+                    .foregroundColor(tint)
+                    .kerning(-0.1)
+                    // Shrink-to-fit instead of a manual GeometryReader size calc —
+                    // keeps "RedMed" from clipping/overflowing its slot without
+                    // reintroducing the layout complexity 5ada426 added.
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.65)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+            .frame(minHeight: 44)
+            // Discrete tint swap — no spring/bounce on every tab hop.
+            .transaction { $0.animation = nil }
+        }
+        // Instant press — the 0.32s CTA spring made hops feel late.
+        .buttonStyle(RedMedPressStyle(scale: 0.98, haptic: nil, animates: false))
+        .accessibilityLabel(label)
+        .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : .isButton)
+        .accessibilityHint(isOn ? "Selected" : "Switch to \(label)")
+    }
+}
