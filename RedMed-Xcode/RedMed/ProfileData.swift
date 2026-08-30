@@ -1,1 +1,6 @@
-PLACEHOLDER_LOAD_FROM_DISK
+import SwiftUI
+import Combine
+
+enum AppTab {
+    case redmed, emergency, aid, nfc
+}
