@@ -91,11 +91,12 @@ struct NFCView: View {
         }
     }
 
-    /// Spare Preview/Scan WKWebView — only while NFC is front. Background
-    /// keep-alive mount must not race the RedMed embed's first paint.
+    /// Spare Preview/Scan WKWebView — only while NFC is front. Do not warm
+    /// during RedMed first paint.
     private func warmFullShellIfFront() {
         guard isVisible, !didWarmFullShell else { return }
         didWarmFullShell = true
+        PasserbyHTMLCardView.scheduleShellWarmOnce()
         Task { @MainActor in
             await Task.yield()
             PasserbyWebViewPool.warmFullShell()

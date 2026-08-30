@@ -6,9 +6,8 @@ import WebKit
 /// `?src=app` / `__REDMED_APP_PREVIEW` so SOS does **not** auto-arm (real
 /// bracelet opens hosted `/tapper/#d=…` without that flag). Explicit SOS /
 /// DeviceMotion / 911 GPS still run in Preview — same as passerby HTML.
-/// Does **not** set `html.app-embed` / `__REDMED_APP_EMBED` — that hides the
-/// HTML tab bar and is owner RedMed embed only (`PasserbyHTMLShell` with
-/// `appEmbed: true`), where native owns 911 / Aid / SOS / GPS.
+/// Does **not** set `html.app-embed` / `__REDMED_APP_EMBED` — owner RedMed is
+/// a native YOU card. This shell is Preview / Scan (full HTML RedMed · 911 · Aid).
 /// Sets `html.app-preview` and disables WKWebView UIScrollView scrolling so
 /// flex tabbar taps work (fixed + dual-scroll ate RedMed · 911 · Aid switches).
 /// Never calls `BiometricAuth` — passerby / Preview tap-to-view stays ungated.
@@ -124,7 +123,7 @@ enum TapCardPresentation {
 struct PasserbyHTMLShell: View {
     let encodedPayload: String
     var braceletLinked: Bool = false
-    var appEmbed: Bool = true
+    var appEmbed: Bool = false
     var embedProfileJSON: String? = .none
     var pageVisible: Bool = true
 
@@ -380,7 +379,7 @@ enum PasserbyWebViewPool {
 private struct PasserbyHTMLWebView: UIViewRepresentable {
     let encodedPayload: String
     var braceletLinked: Bool = false
-    var appEmbed: Bool = true
+    var appEmbed: Bool = false
     var embedProfileJSON: String? = .none
     var pageVisible: Bool = true
 

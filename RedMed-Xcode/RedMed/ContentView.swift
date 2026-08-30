@@ -46,12 +46,11 @@ struct ContentView: View {
             Color.redmedBg.ignoresSafeArea()
                 .allowsHitTesting(false)
 
-            // Keep-alive stack at origin. Native pages (911 / Aid / NFC) hide at
-            // opacity 0. RedMed parks at 0.02 — true 0 / offscreen-clip blanked
-            // the WKWebView compositor into cream on the way back.
+            // Keep-alive stack at origin. Inactive tabs hide at opacity 0.
+            // RedMed is a native YOU card — no WKWebView to park at 0.02.
             ZStack {
-                mountedTab(.redmed, parksWebView: true) {
-                    RedMedView(isVisible: activeTab == .redmed)
+                mountedTab(.redmed) {
+                    RedMedView()
                 }
                 mountedTab(.emergency) {
                     EmergencyView(isVisible: activeTab == .emergency)
@@ -77,25 +76,15 @@ struct ContentView: View {
             mountedTabs.insert(activeTab)
             clampScannerTab()
             RedMedHaptics.prepare()
-            // HTML string only — not a second WKWebView (that raced first paint).
-            PasserbyHTMLCardView.scheduleShellWarmOnce()
-            // Do not stack 911 / Aid / NFC under RedMed on the first frame
-            // (that raced the live embed). After RedMed settles, mount them
-            // under the active page so the first tab hop is not a cold cream
-            // paint. GPS / WK warm stay gated on isVisible.
+            // Same-turn mount in scannerSafeTab already paints 911 / Aid / NFC
+            // on first tap. Do not pre-stack those pages under RedMed — that
+            // kept GPS / Aid catalog / NFC WK warm compositing for the session.
             if !isScannerSession {
                 Task { @MainActor in
                     await Task.yield()
-                    CrashMotionGuard.shared.startMonitoring()
-                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    try? await Task.sleep(nanoseconds: 400_000_000)
                     guard !Task.isCancelled else { return }
-                    mountedTabs.insert(.emergency)
-                    try? await Task.sleep(nanoseconds: 80_000_000)
-                    mountedTabs.insert(.aid)
-                    try? await Task.sleep(nanoseconds: 120_000_000)
-                    if showsNFC {
-                        mountedTabs.insert(.nfc)
-                    }
+                    CrashMotionGuard.shared.startMonitoring()
                 }
             }
         }
@@ -103,8 +92,7 @@ struct ContentView: View {
             mountedTabs.insert(newTab)
         }
         .onChange(of: isScannerSession) { _, _ in clampScannerTab() }
-        // Crash / SOS → 911. Notification avoids @ObservedObject on the root tab tree
-        // (that rebuilt RedMed's WKWebView on every arm/disarm).
+        // Crash / SOS → 911. Notification avoids @ObservedObject on the root tab tree.
         .onReceive(NotificationCenter.default.publisher(for: .redMedSurvivalArmed)) { _ in
             tab = .emergency
             mountedTabs.insert(.emergency)
@@ -143,7 +131,8 @@ struct ContentView: View {
 
 /// Parks a mounted tab without tearing it down. Front tab always re-diffs;
 /// a tab that stayed in back skips `body` so 911 GPS / Aid accordion / NFC
-/// pack do not rebuild on every hop. RedMed never uses opacity 0 (WKWebView).
+/// pack do not rebuild on every hop. All owner tabs are native (Preview
+/// WKWebView is a full-screen cover), so back tabs hide at opacity 0.
 private struct IsolatedKeepAliveTab<Content: View>: View, Equatable {
     let isFront: Bool
     let parksWebView: Bool

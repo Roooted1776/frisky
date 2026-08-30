@@ -126,9 +126,6 @@ class ProfileData: ObservableObject {
             self.isRestoringFromKeychain = true
             beginLaunchPrefetch()
         }
-        if persisting {
-            PasserbyHTMLCardView.scheduleShellWarmOnce()
-        }
     }
 
     /// Non-interactive Keychain read + JSON decode. Idempotent. Does not touch
@@ -152,7 +149,7 @@ class ProfileData: ObservableObject {
     }
 
     /// UserDefaults mirror of Keychain presence — hints that a stored ID is
-    /// expected so the empty funnel stays hidden (cream) until restore finishes.
+    /// expected so the empty funnel stays hidden until restore finishes.
     static let storedProfileGateKey = "redmed.hasStoredProfileGate"
 
     static var prefersLockOnLaunch: Bool {

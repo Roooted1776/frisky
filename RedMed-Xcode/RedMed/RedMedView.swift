@@ -1,72 +1,24 @@
 import SwiftUI
 
-/// Owner / scanner RedMed tab — same bundled `tapper.html` medical panel helpers see
-/// on a band tap. Owner top chrome is the tapper YOU-card header (logo + name +
-/// Linked) with Edit trailing (no bottom Help dock). Scanners keep Back top chrome.
-/// Help lives on 911 / Aid / NFC — not on Edit.
-/// First-responder Preview lives on the NFC tab under Scan — not here.
-/// Native 911 / Aid / NFC tabs stay separate (HTML tab bar hidden in app-embed).
-///
-/// Fresh install (owner, empty profile): native setup funnel instead of an empty
-/// YOU card — Fill ID → Save → Write band. Passerby tapper is unchanged.
+/// Owner / scanner RedMed tab — native YOU card (header + identity + lists).
+/// Bundled `tapper.html` is passerby + NFC Preview / Scan only. No WKWebView
+/// on this tab: WebKit parse was the cold-open stall, and a parked embed
+/// under 911 / Aid / NFC kept the compositor hot mid-session.
+/// Owner chrome: logo + name + Linked with Edit trailing (no Help dock).
+/// Scanners keep Back. Help lives on 911 / Aid / NFC — not on Edit.
+/// Fresh install: native setup funnel. Passerby tapper is unchanged.
 struct RedMedView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
-    /// ContentView keep-alive never calls `onDisappear`. Pass whether RedMed
-    /// is the front tab so a parked WKWebView can recover if WebKit died.
-    var isVisible: Bool = true
     @State private var showEdit = false
     /// When true, Edit opened without Face ID (empty RedMed profile) — Save must authenticate.
     @State private var requireAuthOnSave = false
     @State private var showAuthFailedAlert = false
     @State private var authUnavailableMessage: String?
-    /// Cached `#d=` — never AES-pack inside `body` (random nonce remounted WKWebView).
-    @State private var packedPayload: String?
-    /// Plaintext JSON paired with `packedPayload` — avoids remount when profile publishes mid-apply.
-    @State private var cachedEmbedJSON: String?
-    @State private var packFingerprint = ""
-    @State private var packGeneration = 0
-    /// True after the first pack attempt finishes — avoids a mid-screen Edit under chrome while packing.
-    @State private var packFinished = false
     @State private var healthImportBusy = false
     @State private var healthImportMessage: String?
     /// HealthKit characteristics to seed Edit. Not written to ProfileData until Save.
     @State private var healthSeed: HealthKitProfileImport.Draft?
-
-    /// Durable profile fields only — ignores `holdsEditingSession` so Edit open/close
-    /// does not rebuild the shell.
-    private var profilePackFingerprint: String {
-        let contacts = profile.contacts
-            .map { "\($0.name)|\($0.relationship)|\($0.phone)" }
-            .joined(separator: ";")
-        return [
-            profile.name,
-            profile.birthDate,
-            profile.bloodType,
-            profile.allergies.joined(separator: ","),
-            profile.medications.joined(separator: ","),
-            profile.conditions.joined(separator: ","),
-            contacts,
-            profile.isOrganDonor ? "1" : "0",
-            profile.lastUpdated,
-            profile.showsBraceletAsLinked ? "1" : "0"
-        ].joined(separator: "\u{1e}")
-    }
-
-    /// Prefer live cache; else placeholder so a filled profile never paints cream.
-    /// Nil on the empty funnel only. Stored-ID restore still returns a
-    /// placeholder so WKWebView can parse tapper.html while Keychain loads.
-    private var shellPayload: String? {
-        if let packedPayload { return packedPayload }
-        if showsOwnerSetupFunnel { return nil }
-        return ProfileNFCCodec.placeholderPreviewPayload
-    }
-
-    /// Prefer live cache; else live profile embed JSON.
-    private var shellEmbedJSON: String? {
-        cachedEmbedJSON
-            ?? ProfileNFCCodec.embedProfileJSON(from: profile)
-    }
 
     /// Owner empty profile — native steps instead of a blank YOU card.
     /// Hidden while a stored ID is expected or restore is in flight.
@@ -79,8 +31,6 @@ struct RedMedView: View {
     }
 
     var body: some View {
-        // Chrome is a sibling of the WKWebView — never an overlay. Overlaying
-        // Edit on UIKit WebView lets the web view steal taps (Edit looks dead).
         VStack(spacing: 0) {
             if isScannerSession {
                 HStack(alignment: .center, spacing: 12) {
@@ -111,37 +61,13 @@ struct RedMedView: View {
                         onFill: { requestEdit() },
                         onHealthImport: { Task { await importFromHealthThenEdit() } }
                     )
-                } else if let shellPayload {
+                } else {
                     VStack(spacing: 0) {
                         if !isScannerSession {
                             ownerNextStepBanner
                         }
-                        PasserbyHTMLShell(
-                            encodedPayload: shellPayload,
-                            braceletLinked: profile.showsBraceletAsLinked,
-                            embedProfileJSON: shellEmbedJSON,
-                            pageVisible: isVisible
-                        )
-                        // Opacity tab swaps must not animate WKWebView (jank + flash).
-                        .transaction { $0.animation = nil }
+                        OwnerYouCard()
                     }
-                } else if packFinished {
-                    VStack(spacing: 14) {
-                        Text("Couldn't load your medical card.")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.redmedMuted)
-                            .multilineTextAlignment(.center)
-                        PrimaryButton(title: "Try again") {
-                            packFinished = false
-                            packedPayload = nil
-                            syncPackedPayload()
-                        }
-                    }
-                    .padding(24)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    Color.redmedBg
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -153,11 +79,6 @@ struct RedMedView: View {
         // Owner profile only — never redact the passerby / EMS scanner card.
         .privacySensitive(!isScannerSession)
         .background { RedMedPageBackground() }
-        .onAppear { adoptUnlockPreviewOrSync() }
-        .onChange(of: profile.isRestoringFromKeychain) { _, restoring in
-            if !restoring { adoptUnlockPreviewOrSync() }
-        }
-        .onChange(of: profilePackFingerprint) { _, _ in syncPackedPayload() }
         .fullScreenCover(isPresented: Binding(
             get: { showEdit && !isScannerSession },
             set: { showEdit = $0 && !isScannerSession }
@@ -206,66 +127,6 @@ struct RedMedView: View {
                     NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
                 }
             )
-        }
-    }
-
-    /// First paint: placeholder shell immediately so WKWebView parse overlaps
-    /// Keychain restore. Real embed JSON / AES `#d=` land via JS push.
-    private func adoptUnlockPreviewOrSync() {
-        if packedPayload == nil {
-            packedPayload = ProfileNFCCodec.placeholderPreviewPayload
-            packFinished = true
-            if profile.isRestoringFromKeychain {
-                return
-            }
-            cachedEmbedJSON = ProfileNFCCodec.embedProfileJSON(from: profile)
-            packFingerprint = profilePackFingerprint
-            refreshDurablePayload()
-            return
-        }
-        if profile.isRestoringFromKeychain { return }
-        syncPackedPayload()
-    }
-
-    /// AES `#d=` after first paint — `updateUIView` JS-pushes without remounting.
-    private func refreshDurablePayload() {
-        packGeneration &+= 1
-        let generation = packGeneration
-        let chip = ProfileNFCCodec.chipProfile(from: profile)
-        Task.detached(priority: .utility) {
-            let payload = ProfileNFCCodec.previewPayload(from: chip)
-            await MainActor.run {
-                guard generation == packGeneration, let payload else { return }
-                packedPayload = payload
-            }
-        }
-    }
-
-    private func syncPackedPayload() {
-        let fp = profilePackFingerprint
-        guard fp != packFingerprint || packedPayload == nil else { return }
-        packFingerprint = fp
-        packGeneration &+= 1
-        let generation = packGeneration
-        // Keep any live shell while packing off-main — clearing blanked RedMed until AES finished.
-        let chip = ProfileNFCCodec.chipProfile(from: profile)
-        // Paint immediately with embed JSON if the shell is empty.
-        if packedPayload == nil {
-            packedPayload = ProfileNFCCodec.placeholderPreviewPayload
-            cachedEmbedJSON = ProfileNFCCodec.embedProfileJSON(from: chip)
-            packFinished = true
-        }
-        Task.detached(priority: .userInitiated) {
-            let artifacts = (
-                ProfileNFCCodec.previewPayload(from: chip),
-                ProfileNFCCodec.embedProfileJSON(from: chip)
-            )
-            await MainActor.run {
-                guard generation == packGeneration else { return }
-                packedPayload = artifacts.0
-                cachedEmbedJSON = artifacts.1
-                packFinished = true
-            }
         }
     }
 
@@ -320,8 +181,8 @@ struct RedMedView: View {
 // MARK: - Tapper header (owner RedMed)
 
 /// Same YOU-card header as passerby `tapper.html` `.rm-header` — logo, name,
-/// Linked / Not linked — with Edit as trailing chrome. Sibling of the WKWebView,
-/// never an overlay. Scanner / Preview keep HTML header + Back.
+/// Linked / Not linked — with Edit as trailing chrome. Scanner Preview keeps
+/// the HTML header.
 private struct RedMedUserHeader: View {
     let name: String
     let linked: Bool
@@ -380,6 +241,245 @@ private struct RedMedUserHeader: View {
         .padding(.bottom, 8)
         .redmedTopChromeWash()
         .accessibilityElement(children: .contain)
+    }
+}
+
+// MARK: - Native YOU card
+
+/// Same fields as passerby `tapper.html` (identity rows + list drops). SwiftUI
+/// only — no WebKit. Empty lists stay hidden. Contacts dial `tel:` like the HTML card.
+private struct OwnerYouCard: View {
+    @EnvironmentObject var profile: ProfileData
+
+    private var trimmedName: String {
+        profile.name.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var hasLists: Bool {
+        !profile.allergies.isEmpty
+            || !profile.medications.isEmpty
+            || !profile.conditions.isEmpty
+            || profile.contacts.contains {
+                !$0.name.isEmpty || !$0.relationship.isEmpty || !$0.phone.isEmpty
+            }
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                identityCard
+                if hasLists {
+                    listsCard
+                }
+            }
+            .padding(.horizontal, RedMedChrome.pagePadX)
+            .padding(.top, 4)
+            .padding(.bottom, 28)
+        }
+        .scrollIndicators(.visible)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var identityCard: some View {
+        VStack(spacing: 0) {
+            youRow(label: "Name", value: trimmedName)
+            Divider().overlay(Color.redmedDivider)
+            youRow(label: "Birth date", value: YouCardFormat.birthDate(profile.birthDate))
+            Divider().overlay(Color.redmedDivider)
+            youRow(label: "Blood type", value: profile.bloodType.trimmingCharacters(in: .whitespacesAndNewlines))
+            Divider().overlay(Color.redmedDivider)
+            youRow(label: "Organ donor", value: profile.isOrganDonor ? "Yes" : "")
+        }
+        .redmedBox()
+    }
+
+    private func youRow(label: String, value: String) -> some View {
+        let shown = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return HStack {
+            Text(label)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.redmedMuted)
+            Spacer(minLength: 12)
+            Text(shown.isEmpty ? "—" : shown)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(shown.isEmpty ? Color.redmedDark.opacity(0.4) : .redmedDark)
+                .multilineTextAlignment(.trailing)
+        }
+        .padding(.horizontal, RedMedChrome.pagePadX)
+        .padding(.vertical, 11)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(label)
+        .accessibilityValue(shown.isEmpty ? "Empty" : shown)
+    }
+
+    private var listsCard: some View {
+        VStack(spacing: 0) {
+            YouListDrop(title: "Allergies", items: profile.allergies)
+            YouListDrop(title: "Medications", items: profile.medications)
+            YouListDrop(title: "Conditions", items: profile.conditions)
+            YouContactDrop(contacts: profile.contacts)
+        }
+        .redmedBox()
+    }
+}
+
+private enum YouCardFormat {
+    private static let iso: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+    private static let display: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "MMM d, yyyy"
+        return f
+    }()
+
+    static func birthDate(_ raw: String) -> String {
+        let s = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !s.isEmpty else { return "" }
+        if let date = iso.date(from: s) { return display.string(from: date) }
+        return s
+    }
+}
+
+private struct YouListDrop: View {
+    let title: String
+    let items: [String]
+    @State private var open = true
+
+    var body: some View {
+        if items.isEmpty {
+            EmptyView()
+        } else {
+            VStack(alignment: .leading, spacing: 0) {
+                Button {
+                    var t = Transaction()
+                    t.animation = nil
+                    withTransaction(t) { open.toggle() }
+                } label: {
+                    HStack(spacing: 8) {
+                        Text(title)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.redmedDark)
+                        Text("\(items.count)")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.redmedMuted)
+                        Spacer(minLength: 8)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.redmedMuted)
+                            .rotationEffect(.degrees(open ? 90 : 0))
+                    }
+                    .padding(.horizontal, RedMedChrome.pagePadX)
+                    .padding(.vertical, 12)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
+                .accessibilityLabel(title)
+                .accessibilityValue("\(items.count)")
+                .accessibilityHint(open ? "Collapse" : "Expand")
+
+                if open {
+                    ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                        Text(item)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.redmedDark)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, RedMedChrome.pagePadX)
+                            .padding(.vertical, 10)
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct YouContactDrop: View {
+    let contacts: [EmergencyContact]
+    @State private var open = true
+
+    private var filled: [EmergencyContact] {
+        contacts.filter {
+            !$0.name.isEmpty || !$0.relationship.isEmpty || !$0.phone.isEmpty
+        }
+    }
+
+    var body: some View {
+        if filled.isEmpty {
+            EmptyView()
+        } else {
+            VStack(alignment: .leading, spacing: 0) {
+                Button {
+                    var t = Transaction()
+                    t.animation = nil
+                    withTransaction(t) { open.toggle() }
+                } label: {
+                    HStack(spacing: 8) {
+                        Text("Contacts")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.redmedDark)
+                        Text("\(filled.count)")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.redmedMuted)
+                        Spacer(minLength: 8)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.redmedMuted)
+                            .rotationEffect(.degrees(open ? 90 : 0))
+                    }
+                    .padding(.horizontal, RedMedChrome.pagePadX)
+                    .padding(.vertical, 12)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
+                .accessibilityLabel("Contacts")
+                .accessibilityValue("\(filled.count)")
+
+                if open {
+                    ForEach(filled) { contact in
+                        contactRow(contact)
+                    }
+                }
+            }
+        }
+    }
+
+    private func contactRow(_ contact: EmergencyContact) -> some View {
+        let name = contact.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let shownName = name.isEmpty ? "Emergency contact" : name
+        let digits = contact.dialDigits
+        let phoneShown: String = {
+            if digits.isEmpty { return "" }
+            let parsed = CountryDialCode.parse(contact.phone)
+            if parsed.country.dialCode == "+1" {
+                return CountryDialCode.formattedNANP(digits: parsed.localNumber)
+            }
+            return contact.phone
+        }()
+        return VStack(alignment: .leading, spacing: 2) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(shownName)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.redmedDark)
+                Spacer(minLength: 8)
+                if !digits.isEmpty, let url = URL(string: "tel:\(digits == "911" ? "911" : digits)") {
+                    Link(phoneShown, destination: url)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.redmedAccent)
+                }
+            }
+            if !contact.relationship.isEmpty {
+                Text(contact.relationship)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.redmedMuted)
+            }
+        }
+        .padding(.horizontal, RedMedChrome.pagePadX)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -500,7 +600,7 @@ private struct OwnerSetupFunnel: View {
     }
 }
 
-/// Compact next-step chip above the YOU card. Sibling of the WKWebView — not an overlay.
+/// Compact next-step chip above the YOU card.
 private struct OwnerNextStepBanner: View {
     let icon: String
     let title: String

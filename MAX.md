@@ -28,7 +28,7 @@ RedMed is a **native iOS/SwiftUI** medical ID (`RedMed-Xcode/`). Local only: Key
 - Erase all user data is on owner Help, then ack, then Main. Scanner Help stays policies only.
 - ICE phones display US as `(XXX) XXX-XXXX`. Tab labels scale to the slot.
 - Debug-on-device: Main Thread Checker / TPC / view+queue debug / Metal validation / `ENABLE_DEBUG_DYLIB` off. `print()` → `os.Logger`. Log streaming. No SwiftUI preview dylib.
-- Load: no `CLLocationManager` retained on consent; crash-motion after Main paints; Keychain + tapper.html string prefetch at process start so the YOU card parses during restore instead of cream-then-load. WKWebView still not constructed at `@main`. 911 / Aid / NFC stagger-mount after RedMed settles.
+- Load: no `CLLocationManager` retained on consent; crash-motion after Main paints; Keychain prefetch at process start; owner RedMed tab is a native YOU card (no WKWebView). `tapper.html` only on passerby + NFC Preview / Scan. 911 / Aid / NFC mount on first visit, not under RedMed.
 - App Store honesty on `main`: parked NFC copy, no autodial (native + all three `tapper.html`), Aid first-aid disclaimer, support page.
 - iOS CI is **workflow_dispatch only** (billing). Trigger it after Swift/scheme changes.
 
