@@ -25,6 +25,7 @@ class ProfileData: ObservableObject {
     private var _isPregnant: Bool = false
     private var _isDeafOrVisionImpaired: Bool = false
     private var _lastUpdated: String = ""
+    private var _notes: String = ""
 
     var name: String {
         get { _name }
@@ -73,6 +74,12 @@ class ProfileData: ObservableObject {
     var lastUpdated: String {
         get { _lastUpdated }
         set { setField(&_lastUpdated, newValue) }
+    }
+    /// Free-text notes. Capped at 150 words in the editor UI so the Keychain
+    /// blob (decoded on every unlock) stays small and fast to parse.
+    var notes: String {
+        get { _notes }
+        set { setField(&_notes, newValue) }
     }
     /// True while owner Edit holds draft PHI that may not yet be in Keychain.
     @Published var holdsEditingSession: Bool = false
@@ -133,6 +140,7 @@ class ProfileData: ObservableObject {
             || !allergies.isEmpty
             || !medications.isEmpty
             || !conditions.isEmpty
+            || !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             || contacts.contains {
                 !$0.name.isEmpty || !$0.relationship.isEmpty || !$0.phone.isEmpty
             }
@@ -197,6 +205,7 @@ class ProfileData: ObservableObject {
         copy.isPregnant = isPregnant
         copy.isDeafOrVisionImpaired = isDeafOrVisionImpaired
         copy.lastUpdated = lastUpdated
+        copy.notes = notes
         return copy
     }
 
@@ -217,6 +226,7 @@ class ProfileData: ObservableObject {
             isPregnant = other.isPregnant
             isDeafOrVisionImpaired = other.isDeafOrVisionImpaired
             lastUpdated = other.lastUpdated
+            notes = other.notes
         }
     }
 
@@ -246,7 +256,8 @@ class ProfileData: ObservableObject {
             isOrganDonor: isOrganDonor,
             isPregnant: isPregnant,
             isDeafOrVisionImpaired: isDeafOrVisionImpaired,
-            lastUpdated: lastUpdated
+            lastUpdated: lastUpdated,
+            notes: notes
         )
         guard let data = try? JSONEncoder().encode(blob) else { return false }
         let ok = KeychainStore.save(data, account: Self.keychainAccount)
@@ -273,6 +284,7 @@ class ProfileData: ObservableObject {
             isPregnant = false
             isDeafOrVisionImpaired = false
             lastUpdated = ""
+            notes = ""
         }
         holdsEditingSession = false
     }
@@ -413,6 +425,7 @@ class ProfileData: ObservableObject {
             if isPregnant != blob.isPregnant { isPregnant = blob.isPregnant }
             if isDeafOrVisionImpaired != blob.isDeafOrVisionImpaired { isDeafOrVisionImpaired = blob.isDeafOrVisionImpaired }
             if lastUpdated != blob.lastUpdated { lastUpdated = blob.lastUpdated }
+            if notes != blob.notes { notes = blob.notes }
         }
     }
 
@@ -505,7 +518,7 @@ struct EmergencyContact: Identifiable, Equatable {
         }
         set {
             let parts = newValue
-                .split(separator: "\u00b7", maxSplits: 1)
+                .split(separator: "\u{00b7}", maxSplits: 1)
                 .map { $0.trimmingCharacters(in: .whitespaces) }
             if parts.count > 1 {
                 relationship = parts[0]
@@ -556,6 +569,7 @@ private struct PersistedProfile: Codable, Sendable {
     var isPregnant: Bool
     var isDeafOrVisionImpaired: Bool
     var lastUpdated: String
+    var notes: String
 
     init(
         name: String,
@@ -569,7 +583,8 @@ private struct PersistedProfile: Codable, Sendable {
         isOrganDonor: Bool,
         isPregnant: Bool,
         isDeafOrVisionImpaired: Bool,
-        lastUpdated: String
+        lastUpdated: String,
+        notes: String
     ) {
         self.name = name
         self.birthDate = birthDate
@@ -583,6 +598,7 @@ private struct PersistedProfile: Codable, Sendable {
         self.isPregnant = isPregnant
         self.isDeafOrVisionImpaired = isDeafOrVisionImpaired
         self.lastUpdated = lastUpdated
+        self.notes = notes
     }
 
     init(from decoder: Decoder) throws {
@@ -599,6 +615,8 @@ private struct PersistedProfile: Codable, Sendable {
         isPregnant = try c.decodeIfPresent(Bool.self, forKey: .isPregnant) ?? false
         isDeafOrVisionImpaired = try c.decodeIfPresent(Bool.self, forKey: .isDeafOrVisionImpaired) ?? false
         lastUpdated = try c.decodeIfPresent(String.self, forKey: .lastUpdated) ?? ""
+        // Backward-compat: old blobs predate this field entirely.
+        notes = try c.decodeIfPresent(String.self, forKey: .notes) ?? ""
     }
 }
 
@@ -731,7 +749,7 @@ enum AidTopicCatalog {
     ),
     "heat-stroke": AidTopic(
         id: "heat-stroke", title: "Heat Exhaustion & Stroke",
-        symptoms: ["Heavy sweating, weakness, cold/pale/clammy skin (exhaustion)", "Hot, red, dry or damp skin, rapid pulse, confusion (stroke)", "Nausea, fainting, body temp above 103\u00b0F"],
+        symptoms: ["Heavy sweating, weakness, cold/pale/clammy skin (exhaustion)", "Hot, red, dry or damp skin, rapid pulse, confusion (stroke)", "Nausea, fainting, body temp above 103\u{00b0}F"],
         care: ["Heat stroke: call \(EmergencyNumber.current) immediately — it is life-threatening", "Move to cool or shaded area", "Cool rapidly: remove extra clothing, apply ice packs to neck/armpits/groin", "If conscious: sip cool water slowly", "Do NOT give fluids to an unconscious person", "Fan them while applying cool water to skin", "Lay them down and elevate legs if no spinal injury"]
     ),
     "burn-care": AidTopic(

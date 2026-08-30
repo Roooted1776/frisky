@@ -21,6 +21,7 @@ struct EditProfileView: View {
     @State private var medications: [DraftLine] = []
     @State private var conditions: [DraftLine] = []
     @State private var contacts: [EmergencyContact] = []
+    @State private var notes = ""
     @State private var showAuthFailedAlert = false
     @State private var authUnavailableMessage: String?
     @State private var showSaveFailedAlert = false
@@ -35,6 +36,8 @@ struct EditProfileView: View {
     @State private var healthImportMessage: String?
 
     private static let bloodTypeChoices = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
+    /// Keeps the Keychain blob small so decode on unlock stays fast.
+    private static let notesWordLimit = 150
 
     /// One body size across the edit form (labels, fields, prompts).
     /// Nav bar metrics live in `RedMedChrome` so Cancel / Save stay even.
@@ -185,6 +188,11 @@ struct EditProfileView: View {
                     editSectionLabel("Emergency Contacts")
                     editCard {
                         contactsEditor
+                    }
+
+                    editSectionLabel("Notes")
+                    editCard {
+                        notesEditor
                     }
                 }
                 .padding(.top, 20)
@@ -427,6 +435,42 @@ struct EditProfileView: View {
         .padding(.vertical, Metrics.rowVPad)
     }
 
+    // MARK: - Notes
+
+    private var notesWordCount: Int {
+        notes.split { $0.isWhitespace || $0.isNewline }.count
+    }
+
+    @ViewBuilder
+    private var notesEditor: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ZStack(alignment: .topLeading) {
+                if notes.isEmpty {
+                    Text("Anything else EMS or caregivers should know")
+                        .font(.system(size: Metrics.font, weight: .medium))
+                        .foregroundColor(.redmedMuted.opacity(0.6))
+                        .padding(.top, 2)
+                        .allowsHitTesting(false)
+                }
+                NotesTextView(
+                    fieldID: "edit-notes",
+                    text: $notes,
+                    wordLimit: Self.notesWordLimit
+                )
+                .frame(minHeight: 90)
+            }
+            .padding(.horizontal, Metrics.rowHPad)
+            .padding(.top, Metrics.rowVPad)
+
+            Text("\(notesWordCount)/\(Self.notesWordLimit) words")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.redmedMuted)
+                .padding(.horizontal, Metrics.rowHPad)
+                .padding(.top, 6)
+                .padding(.bottom, Metrics.rowVPad)
+        }
+    }
+
     // MARK: - Contacts
 
     @ViewBuilder
@@ -474,6 +518,32 @@ struct EditProfileView: View {
 
     // MARK: - Persistence
 
+    /// Server-side-of-the-UI backstop — the live editor already blocks typing
+    /// past the limit, but paste / programmatic seeds can still land here.
+    private static func capToWordLimit(_ text: String, limit: Int) -> String {
+        guard limit > 0 else { return "" }
+        var wordsSeen = 0
+        var inWord = false
+        var cutIndex: String.Index?
+        var idx = text.startIndex
+        while idx < text.endIndex {
+            let isSeparator = text[idx].isWhitespace || text[idx].isNewline
+            if isSeparator {
+                inWord = false
+            } else if !inWord {
+                inWord = true
+                wordsSeen += 1
+                if wordsSeen > limit {
+                    cutIndex = idx
+                    break
+                }
+            }
+            idx = text.index(after: idx)
+        }
+        guard let cutIndex else { return text }
+        return String(text[text.startIndex..<cutIndex]).trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     private static func parseBirthDate(_ raw: String) -> Date? {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
@@ -501,6 +571,7 @@ struct EditProfileView: View {
         medications = profile.medications.map { DraftLine(text: $0) }
         conditions = profile.conditions.map { DraftLine(text: $0) }
         contacts = profile.contacts
+        notes = profile.notes
         applyHealthSeed()
     }
 
@@ -633,6 +704,10 @@ struct EditProfileView: View {
         let nextAllergies = allergies.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         let nextMeds = medications.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         let nextConditions = conditions.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        let nextNotes = Self.capToWordLimit(
+            notes.trimmingCharacters(in: .whitespacesAndNewlines),
+            limit: Self.notesWordLimit
+        )
         let nextContacts = contacts.compactMap { contact -> EmergencyContact? in
             let trimmedName = contact.name.trimmingCharacters(in: .whitespacesAndNewlines)
             let trimmedPhone = contact.phone.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -662,6 +737,7 @@ struct EditProfileView: View {
             || nextAllergies != profile.allergies
             || nextMeds != profile.medications
             || nextConditions != profile.conditions
+            || nextNotes != profile.notes
             || nextContacts.map { "\($0.name)|\($0.relationship)|\($0.phone)" }
                 != profile.contacts.map { "\($0.name)|\($0.relationship)|\($0.phone)" }
 
@@ -676,6 +752,7 @@ struct EditProfileView: View {
         profile.medications = nextMeds
         profile.conditions = nextConditions
         profile.contacts = nextContacts
+        profile.notes = nextNotes
 
         // Band holds a snapshot — real edits unpair until NFC rewrite.
         if changed {
@@ -942,6 +1019,94 @@ private struct DraftLineRow: View {
             Divider().padding(.leading, Metrics.rowHPad)
         }
         .id(fieldID + "-row")
+    }
+}
+
+/// Multi-line notes field. Blocks keystrokes/paste past `wordLimit` at the
+/// point of edit (rather than truncating after the fact) so the cursor never
+/// jumps. Mirrors `RepresentedField`'s PHI lockdown (no autocorrect/spell
+/// check/autofill) since notes are free-text medical content.
+private struct NotesTextView: UIViewRepresentable {
+    let fieldID: String
+    @Binding var text: String
+    let wordLimit: Int
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(text: $text, wordLimit: wordLimit)
+    }
+
+    func makeUIView(context: Context) -> UITextView {
+        let tv = UITextView()
+        tv.backgroundColor = .clear
+        tv.font = .systemFont(ofSize: 15)
+        tv.textColor = UIColor(Color.redmedDark)
+        tv.textContainerInset = .zero
+        tv.textContainer.lineFragmentPadding = 0
+        tv.isScrollEnabled = false
+        tv.autocapitalizationType = .sentences
+        // PHI field: minimize system dictionary / autofill / keyboard learning.
+        tv.autocorrectionType = .no
+        tv.spellCheckingType = .no
+        tv.smartDashesType = .no
+        tv.smartQuotesType = .no
+        tv.smartInsertDeleteType = .no
+        tv.textContentType = nil
+        tv.accessibilityIdentifier = fieldID
+        tv.accessibilityLabel = "Notes"
+        tv.text = text
+        tv.delegate = context.coordinator
+        tv.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        return tv
+    }
+
+    func updateUIView(_ tv: UITextView, context: Context) {
+        context.coordinator.text = $text
+        context.coordinator.wordLimit = wordLimit
+        if tv.text != text {
+            tv.text = text
+        }
+        // Keep lockdown traits if UIKit resets them on reuse.
+        if tv.autocorrectionType != .no { tv.autocorrectionType = .no }
+        if tv.spellCheckingType != .no { tv.spellCheckingType = .no }
+        if tv.smartInsertDeleteType != .no { tv.smartInsertDeleteType = .no }
+        if tv.textContentType != nil { tv.textContentType = nil }
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextView, context: Context) -> CGSize? {
+        let width = proposal.width ?? uiView.bounds.width
+        guard width > 0 else { return nil }
+        let fitting = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
+        return CGSize(width: width, height: max(fitting.height, 90))
+    }
+
+    final class Coordinator: NSObject, UITextViewDelegate {
+        var text: Binding<String>
+        var wordLimit: Int
+
+        init(text: Binding<String>, wordLimit: Int) {
+            self.text = text
+            self.wordLimit = wordLimit
+        }
+
+        private func wordCount(_ s: String) -> Int {
+            s.split { $0.isWhitespace || $0.isNewline }.count
+        }
+
+        /// Block edits that would push the word count past the limit, but
+        /// always allow edits that keep it the same or lower (deletes,
+        /// replacements) so a field pre-filled above the cap stays editable.
+        func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText newText: String) -> Bool {
+            let current = textView.text as NSString
+            let updated = current.replacingCharacters(in: range, with: newText)
+            let updatedCount = wordCount(updated)
+            if updatedCount <= wordLimit { return true }
+            return updatedCount <= wordCount(current as String)
+        }
+
+        func textViewDidChange(_ textView: UITextView) {
+            let value = textView.text ?? ""
+            text.wrappedValue = value
+        }
     }
 }
 
