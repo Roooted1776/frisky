@@ -77,9 +77,12 @@ struct NFCView: View {
         } message: {
             Text(band.alertMessage ?? "")
         }
-        .onAppear { warmFullShellIfFront() }
-        .onChange(of: isVisible) { _, visible in
-            if visible { warmFullShellIfFront() }
+        .task(id: isVisible) {
+            guard isVisible else { return }
+            await Task.yield()
+            try? await Task.sleep(nanoseconds: 150_000_000)
+            guard !Task.isCancelled, isVisible else { return }
+            warmFullShellIfFront()
         }
         .onChange(of: band.isWriting) { _, writing in
             // Linked only after a matching read-back. Written-but-unverified stays Not linked.

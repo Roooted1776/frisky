@@ -46,11 +46,11 @@ struct ContentView: View {
             Color.redmedBg.ignoresSafeArea()
                 .allowsHitTesting(false)
 
-            // Stack at origin — do not offset/clip inactive tabs offscreen.
-            // Offset + clipped dropped the WKWebView compositor (same cream
-            // hang opacity 0 used to cause) between RedMed · 911 · Aid · NFC.
+            // Keep-alive stack at origin. Native pages (911 / Aid / NFC) hide at
+            // opacity 0. RedMed parks at 0.02 — true 0 / offscreen-clip blanked
+            // the WKWebView compositor into cream on the way back.
             ZStack {
-                mountedTab(.redmed) {
+                mountedTab(.redmed, parksWebView: true) {
                     RedMedView(isVisible: activeTab == .redmed)
                 }
                 mountedTab(.emergency) {
@@ -121,16 +121,16 @@ struct ContentView: View {
     @ViewBuilder
     private func mountedTab<Content: View>(
         _ tab: AppTab,
+        parksWebView: Bool = false,
         @ViewBuilder content: () -> Content
     ) -> some View {
         if mountedTabs.contains(tab) {
-            content()
-                // Stay on-screen under the active page. Opacity 0 and
-                // offscreen offset both blanked WKWebView into cream.
-                .zIndex(activeTab == tab ? 1 : 0)
-                .transaction { $0.animation = nil }
-                .allowsHitTesting(activeTab == tab)
-                .accessibilityHidden(activeTab != tab)
+            IsolatedKeepAliveTab(
+                isFront: activeTab == tab,
+                parksWebView: parksWebView,
+                content: content()
+            )
+            .equatable()
         }
     }
 
@@ -138,6 +138,36 @@ struct ContentView: View {
         if !showsNFC && tab == .nfc {
             tab = .redmed
         }
+    }
+}
+
+/// Parks a mounted tab without tearing it down. Front tab always re-diffs;
+/// a tab that stayed in back skips `body` so 911 GPS / Aid accordion / NFC
+/// pack do not rebuild on every hop. RedMed never uses opacity 0 (WKWebView).
+private struct IsolatedKeepAliveTab<Content: View>: View, Equatable {
+    let isFront: Bool
+    let parksWebView: Bool
+    let content: Content
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        guard lhs.parksWebView == rhs.parksWebView else { return false }
+        if lhs.isFront != rhs.isFront { return false }
+        return !lhs.isFront
+    }
+
+    var body: some View {
+        content
+            .opacity(displayOpacity)
+            .zIndex(isFront ? 1 : 0)
+            .transaction { $0.animation = nil }
+            .allowsHitTesting(isFront)
+            .accessibilityHidden(!isFront)
+    }
+
+    private var displayOpacity: Double {
+        if isFront { return 1 }
+        // 0 blanks WKCompositingView. Native pages have no web view.
+        return parksWebView ? 0.02 : 0
     }
 }
 
@@ -258,7 +288,8 @@ struct TabBarItem: View {
             // Discrete tint swap — no spring/bounce on every tab hop.
             .transaction { $0.animation = nil }
         }
-        .buttonStyle(RedMedPressStyle(scale: 0.96, haptic: nil))
+        // Instant press — the 0.32s CTA spring made hops feel late.
+        .buttonStyle(RedMedPressStyle(scale: 0.98, haptic: nil, animates: false))
         .accessibilityLabel(label)
         .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : .isButton)
         .accessibilityHint(isOn ? "Selected" : "Switch to \(label)")
