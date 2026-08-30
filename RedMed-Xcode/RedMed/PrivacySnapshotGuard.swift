@@ -29,6 +29,13 @@ struct PrivacySnapshotGuard<Content: View>: View {
     /// Preview / Scan tap card is the public EMT view — never veil it.
     /// Literal default — do not read MainActor / TapCardPresentation in `@State`.
     @State private var tapCardVisible = false
+    /// iOS can report `UIScreen.isCaptured == true` with nothing actually being
+    /// recorded or shared (confirmed, unresolved platform bug as of iOS 26 —
+    /// see https://developer.apple.com/forums/thread/801056). When that
+    /// happens the flag can stay stuck true with no `capturedDidChange`
+    /// notification to clear it, which would otherwise lock the owner out of
+    /// their own profile forever. This lets them break out manually.
+    @State private var manualCaptureOverride = false
     @ViewBuilder private var content: () -> Content
 
     init(@ViewBuilder content: @escaping () -> Content) {
@@ -44,7 +51,7 @@ struct PrivacySnapshotGuard<Content: View>: View {
         if tapCardVisible { return false }
         // Capture cover only while PHI is resident — lock / Unlock must stay tappable.
         if screenCaptured {
-            return phiInMemory
+            return phiInMemory && !manualCaptureOverride
         }
         // Stay uncovered until the first active frame so tabs paint immediately.
         guard hasBeenActive else { return false }
@@ -72,6 +79,22 @@ struct PrivacySnapshotGuard<Content: View>: View {
                 hasBeenActive = true
             }
         }
+        .task {
+            // `UIScreenCapturedDidChange` has been reported unreliable on
+            // iOS 26 — the flag can go stale without a notification. Poll
+            // while covered so a since-cleared capture (or a corrected OS
+            // false positive) drops the cover on its own, no relaunch needed.
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                let nowCaptured = UIScreen.main.isCaptured
+                if nowCaptured != screenCaptured {
+                    screenCaptured = nowCaptured
+                }
+                if !nowCaptured {
+                    manualCaptureOverride = false
+                }
+            }
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 hasBeenActive = true
@@ -87,6 +110,9 @@ struct PrivacySnapshotGuard<Content: View>: View {
         .onReceive(NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)) { _ in
             let nowCaptured = UIScreen.main.isCaptured
             screenCaptured = nowCaptured
+            if !nowCaptured {
+                manualCaptureOverride = false
+            }
             if nowCaptured {
                 SecurePasteboard.clear()
                 // Don't log a cover we refused to paint over the tap card.
@@ -111,10 +137,19 @@ struct PrivacySnapshotGuard<Content: View>: View {
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 28)
+                    // iOS can report this even when nothing is actually being
+                    // shared or recorded (see comment on manualCaptureOverride)
+                    // — don't let a false positive lock the owner out forever.
+                    Button("Not sharing your screen? Tap to unlock") {
+                        manualCaptureOverride = true
+                    }
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.redmedAccent)
+                    .padding(.top, 4)
                 }
             }
         }
-        .accessibilityHidden(true)
+        .accessibilityHidden(screenCaptured ? false : true)
     }
 }
 
