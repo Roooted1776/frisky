@@ -14,7 +14,59 @@
 <meta name="referrer" content="no-referrer">
 <!-- Favicon wired in resolveLogo from BrandLogo.png (preset src + fallbacks). -->
 <title>RedMed — tap to scan</title>
-<style>html,body{background:#fff7f7!important;margin:0}</style>
+<style>
+html,body{background:#fff7f7!important;margin:0}
+/* First paint = active panel only. Without this, the big stylesheet arrives late
+   and every .panel is visible on cream until .panel{display:none} parses. */
+.panel{display:none} .panel.active{display:block}
+html.tab-911 .panel,html.tab-aid .panel{display:none}
+html.tab-911 #panel-911,html.tab-aid #panel-aid{display:block}
+</style>
+<script>
+// Resolve the start tab before first paint. Bare open / #d= → medical (YOU).
+// Deep links: #911 #aid ?tab=911 #d=…&tab=aid. Never treat #d= as a tab id.
+(function () {
+  function norm(id) {
+    id = String(id || "").toLowerCase();
+    if (id === "911" || id === "aid") return id;
+    if (id === "rm" || id === "redmed" || id === "you" || id === "card" || id === "medical") return "medical";
+    return "";
+  }
+  function tabFromLocation() {
+    var hash = "";
+    var search = "";
+    try { hash = location.hash || ""; } catch (e0) {}
+    try { search = location.search || ""; } catch (e1) {}
+    if (/^#d=/i.test(hash)) {
+      var m = /(?:^|&)tab=([^&]*)/i.exec(hash.slice(1));
+      if (m) {
+        try {
+          var t = norm(decodeURIComponent(m[1] || ""));
+          if (t) return t;
+        } catch (e2) {}
+      }
+    } else {
+      var raw = hash.replace(/^#/, "").split("&")[0].split("=")[0];
+      var fromHash = norm(raw);
+      if (fromHash) return fromHash;
+    }
+    try {
+      var q = new URLSearchParams(search).get("tab");
+      var fromQ = norm(q);
+      if (fromQ) return fromQ;
+    } catch (e3) {}
+    return "medical";
+  }
+  window.__redmedTabFromLocation = tabFromLocation;
+  var tab = tabFromLocation();
+  window.__redmedStartTab = tab;
+  try {
+    document.documentElement.setAttribute("data-start-tab", tab);
+    document.documentElement.classList.remove("tab-911", "tab-aid");
+    if (tab === "911" || tab === "aid") document.documentElement.classList.add("tab-" + tab);
+  } catch (e4) {}
+})();
+</script>
 <script>
 // Same-origin asset paths for /tapper/, /tapper.html, and bundle roots.
 function redmedAssetURL(file) {
@@ -92,6 +144,9 @@ function redmedAssetURL(file) {
        everything. No server / no online. Bare /tapper/ without `#d=` and in-app
        Preview/Scan (`?src=app`) do not auto-arm SOS. Stop on Find Help or Aid.
        Explicit SOS toggle + DeviceMotion crash share the same local alarm.
+       Bare /tapper/ first-paints the YOU/main panel (empty dashes). No splash,
+       no "No patient" interstitial, no pick-a-tab gate. #911 / #aid / ?tab=
+       still open those panels; #d= stays the profile payload.
      - Layout: any phone + iPad, iOS 15+ (and Android). Fluid width, safe-area
        insets, no horizontal scroll. Tap-to-view: no account, no login, and no
        authentication gate before or on this page — EMT / helper open the card
@@ -2081,6 +2136,11 @@ function redmedAssetURL(file) {
       tab.setAttribute('aria-selected', on ? 'true' : 'false');
       tab.tabIndex = on ? 0 : -1;
     });
+    try {
+      document.documentElement.classList.remove('tab-911', 'tab-aid');
+      if (id === '911' || id === 'aid') document.documentElement.classList.add('tab-' + id);
+      document.documentElement.setAttribute('data-start-tab', id);
+    } catch (eCls) {}
     window.scrollTo(0, 0);
     // Preview/Scan: scroll lives on `.app`, not the window.
     try {
@@ -2146,26 +2206,19 @@ function redmedAssetURL(file) {
     var statusEl = document.getElementById('statusLine');
     var noteEl = document.querySelector('.rm-note');
     var emptyEl = document.getElementById('rmEmpty');
-    var hasIdentity = !!(rawName || rawDob || rawBlood);
-    // Bare /tapper/ with no #d= — not a blank patient chart. Owner embed keeps the YOU card
-    // (native funnel replaces it). Preview/Scan of an empty pack still shows the YOU card.
-    var noPatient = !fromBand && !hasIdentity && !isAppEmbed() && !isAppPreview();
+    // Bare /tapper/ (no #d=) stays on the YOU/main panel — empty dashes, not the
+    // old "No patient" interstitial that hid .you-card after first paint.
     try {
-      document.documentElement.classList.toggle('is-unlinked', noPatient);
-      if (emptyEl) {
-        emptyEl.hidden = !noPatient;
-      }
+      document.documentElement.classList.remove('is-unlinked');
+      if (emptyEl) emptyEl.hidden = true;
     } catch (eUn) {}
-    nameEl.textContent = noPatient ? 'RedMed' : displayName;
+    nameEl.textContent = displayName;
     try {
-      document.title = noPatient
-        ? 'RedMed — no patient'
-        : (rawName ? (rawName + ' · RedMed') : 'RedMed — emergency card');
+      document.title = rawName ? (rawName + ' · RedMed') : 'RedMed — emergency card';
     } catch (eTitle) {}
-    // Empty-state status note only — hide once a named / band card paints, or on the unlinked shell.
+    // Empty-state status note only — hide once a named / band card paints.
     if (noteEl) {
-      // Unlinked shell: the vacant card carries the message — hide the status note.
-      noteEl.classList.toggle('is-filled', noPatient || !!(rawName || fromBand));
+      noteEl.classList.toggle('is-filled', !!(rawName || fromBand));
     }
     // Real band tap: decode ⇒ fromBand. In-app embed: Swift sets __REDMED_BRACELET_LINKED
     // so Linked still requires a verified write + YOU card (name, birth, blood).
@@ -2175,7 +2228,7 @@ function redmedAssetURL(file) {
       var linked = isAppPreview()
         ? (!!window.__REDMED_BRACELET_LINKED && youComplete)
         : (!!fromBand && youComplete);
-      statusEl.textContent = noPatient ? 'No patient' : (linked ? 'Linked bracelet' : 'Not linked');
+      statusEl.textContent = linked ? 'Linked bracelet' : 'Not linked';
       statusEl.classList.toggle('linked', linked);
       if (isAppEmbed()) {
         statusEl.classList.add('rm-status-link');
@@ -2344,7 +2397,23 @@ function redmedAssetURL(file) {
       if (btn) { btn.focus(); showTab(tabOrder[next]); }
     });
   });
-  showTab('medical');
+  (function bootStartTab() {
+    var start = 'medical';
+    try {
+      if (typeof window.__redmedTabFromLocation === 'function') start = window.__redmedTabFromLocation();
+      else if (window.__redmedStartTab) start = window.__redmedStartTab;
+    } catch (eTab) {}
+    if (start !== '911' && start !== 'aid') start = 'medical';
+    showTab(start);
+  })();
+  window.addEventListener('hashchange', function () {
+    var next = 'medical';
+    try {
+      if (typeof window.__redmedTabFromLocation === 'function') next = window.__redmedTabFromLocation();
+    } catch (eH) {}
+    if (next !== '911' && next !== 'aid') next = 'medical';
+    showTab(next);
+  });
 
   // Aid accordion + topic sheets — idle by default; eager when Aid tab opens.
   var aidChromeReady = false;

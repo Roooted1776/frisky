@@ -23,7 +23,7 @@
  * only replicated onto SHELL_KEYS when the body contains data-tab="medical"
  * — redirect stubs (card.html / get.html / index.html) must never land there.
  */
-var CACHE = 'redmed-tapper-v132';
+var CACHE = 'redmed-tapper-v133';
 var ASSETS = [
   './pheart.png',
   './BrandLogo.png',
