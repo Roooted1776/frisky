@@ -9,6 +9,8 @@ struct NFCChipProfile: Codable, Equatable, Sendable {
     var dob: String = ""
     var blood: String = ""
     var donor: Bool = false
+    var pregnant: Bool = false
+    var deafOrVisionImpaired: Bool = false
     var allergies: [String] = []
     var meds: [String] = []
     var conditions: [String] = []
@@ -26,8 +28,10 @@ struct NFCChipContact: Codable, Equatable, Sendable {
 ///
 /// Wire format (new writes):
 /// 1. Profile → flat positional array (no JSON keys):
-///    `[blood, allergies, meds, emergencyPhone, name, dob, conditions, contacts, donor, updated?]`
+///    `[blood, allergies, meds, emergencyPhone, name, dob, conditions, contacts, donor, updated?, pregnant?, deafOrVisionImpaired?]`
 ///    Indices 0–3 match the product compact schema; 4+ keep the full card usable.
+///    `pregnant`/`deafOrVisionImpaired` only appear when either is true (see `compactArray`),
+///    so older readers that stop at `updated` are unaffected.
 ///    List fields are comma-joined strings; contacts are `[name, rel, phone]` rows.
 /// 2. UTF-8 JSON array (no spaces) sealed with AES-GCM (CryptoKit).
 /// 3. Bytes `0x02 || nonce(12) || ciphertext+tag` → base64url after `#d=`.
@@ -63,6 +67,8 @@ enum ProfileNFCCodec {
         static let contacts = 7
         static let donor = 8
         static let updated = 9
+        static let pregnant = 10
+        static let deafOrVisionImpaired = 11
     }
 
     /// Pre-AES compact array: `[name, dob, blood, donor, allergies, meds, conditions, contacts, updated?]`
@@ -87,6 +93,8 @@ enum ProfileNFCCodec {
             dob: profile.birthDate,
             blood: profile.bloodType,
             donor: profile.isOrganDonor,
+            pregnant: profile.isPregnant,
+            deafOrVisionImpaired: profile.isDeafOrVisionImpaired,
             allergies: profile.allergies,
             meds: profile.medications,
             conditions: profile.conditions,
@@ -106,6 +114,8 @@ enum ProfileNFCCodec {
         profile.birthDate = chip.dob
         profile.bloodType = chip.blood
         profile.isOrganDonor = chip.donor
+        profile.isPregnant = chip.pregnant
+        profile.isDeafOrVisionImpaired = chip.deafOrVisionImpaired
         profile.allergies = chip.allergies
         profile.medications = chip.meds
         profile.conditions = chip.conditions
@@ -196,6 +206,8 @@ enum ProfileNFCCodec {
             "dob": chip.dob,
             "blood": chip.blood,
             "donor": chip.donor,
+            "pregnant": chip.pregnant,
+            "deafOrVisionImpaired": chip.deafOrVisionImpaired,
             "updated": chip.updated,
             "allergies": chip.allergies,
             "meds": chip.meds,
@@ -309,6 +321,13 @@ enum ProfileNFCCodec {
         ]
         if !chip.updated.isEmpty {
             row.append(chip.updated)
+        }
+        // Trailing optional flags — only appended when the wire needs them, so
+        // legacy readers that stop at `updated` (index 9) are unaffected.
+        if chip.pregnant || chip.deafOrVisionImpaired {
+            if chip.updated.isEmpty { row.append("") }
+            row.append(chip.pregnant ? 1 : 0)
+            row.append(chip.deafOrVisionImpaired ? 1 : 0)
         }
         return row
     }
@@ -431,6 +450,8 @@ enum ProfileNFCCodec {
             dob: str(Idx.dob),
             blood: expandBlood(arr.indices.contains(Idx.blood) ? arr[Idx.blood] : ""),
             donor: donorFlag(Idx.donor),
+            pregnant: donorFlag(Idx.pregnant),
+            deafOrVisionImpaired: donorFlag(Idx.deafOrVisionImpaired),
             allergies: list(Idx.allergies),
             meds: list(Idx.meds),
             conditions: list(Idx.conditions),
@@ -530,19 +551,18 @@ enum ProfileNFCCodec {
         } else {
             contactRows = []
         }
-        let donor: Bool
-        if let b = obj["donor"] as? Bool {
-            donor = b
-        } else if let n = obj["donor"] as? NSNumber {
-            donor = n.boolValue
-        } else {
-            donor = false
+        func flag(_ key: String) -> Bool {
+            if let b = obj[key] as? Bool { return b }
+            if let n = obj[key] as? NSNumber { return n.boolValue }
+            return false
         }
         return NFCChipProfile(
             name: str("name"),
             dob: str("dob"),
             blood: str("blood"),
-            donor: donor,
+            donor: flag("donor"),
+            pregnant: flag("pregnant"),
+            deafOrVisionImpaired: flag("deafOrVisionImpaired"),
             allergies: list("allergies"),
             meds: list("meds"),
             conditions: list("conditions"),

@@ -290,6 +290,10 @@ private struct OwnerYouCard: View {
             youRow(label: "Blood type", value: profile.bloodType.trimmingCharacters(in: .whitespacesAndNewlines))
             Divider().overlay(Color.redmedDivider)
             youRow(label: "Organ donor", value: profile.isOrganDonor ? "Yes" : "")
+            Divider().overlay(Color.redmedDivider)
+            youRow(label: "Pregnant", value: profile.isPregnant ? "Yes" : "")
+            Divider().overlay(Color.redmedDivider)
+            youRow(label: "Deaf / vision impaired", value: profile.isDeafOrVisionImpaired ? "Yes" : "")
         }
         // flatten: false — compositingGroup kept the empty "—" paint after
         // Keychain restore (same reason Edit uses flatten: false).
@@ -533,6 +537,10 @@ private struct OwnerSetupFunnel: View {
             ghostRow(label: "Blood type", value: "—")
             Divider().overlay(Color.redmedDivider)
             ghostRow(label: "Organ donor", value: "—")
+            Divider().overlay(Color.redmedDivider)
+            ghostRow(label: "Pregnant", value: "—")
+            Divider().overlay(Color.redmedDivider)
+            ghostRow(label: "Deaf / vision impaired", value: "—")
         }
         .redmedBox()
         .accessibilityHidden(true)

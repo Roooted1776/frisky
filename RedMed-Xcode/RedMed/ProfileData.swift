@@ -22,6 +22,8 @@ class ProfileData: ObservableObject {
     private var _contacts: [EmergencyContact] = []
     private var _braceletLinked: Bool = false
     private var _isOrganDonor: Bool = false
+    private var _isPregnant: Bool = false
+    private var _isDeafOrVisionImpaired: Bool = false
     private var _lastUpdated: String = ""
 
     var name: String {
@@ -59,6 +61,14 @@ class ProfileData: ObservableObject {
     var isOrganDonor: Bool {
         get { _isOrganDonor }
         set { setField(&_isOrganDonor, newValue) }
+    }
+    var isPregnant: Bool {
+        get { _isPregnant }
+        set { setField(&_isPregnant, newValue) }
+    }
+    var isDeafOrVisionImpaired: Bool {
+        get { _isDeafOrVisionImpaired }
+        set { setField(&_isDeafOrVisionImpaired, newValue) }
     }
     var lastUpdated: String {
         get { _lastUpdated }
@@ -118,6 +128,8 @@ class ProfileData: ObservableObject {
             || !birthDate.isEmpty
             || !bloodType.isEmpty
             || isOrganDonor
+            || isPregnant
+            || isDeafOrVisionImpaired
             || !allergies.isEmpty
             || !medications.isEmpty
             || !conditions.isEmpty
@@ -182,6 +194,8 @@ class ProfileData: ObservableObject {
         }
         copy.braceletLinked = braceletLinked
         copy.isOrganDonor = isOrganDonor
+        copy.isPregnant = isPregnant
+        copy.isDeafOrVisionImpaired = isDeafOrVisionImpaired
         copy.lastUpdated = lastUpdated
         return copy
     }
@@ -200,6 +214,8 @@ class ProfileData: ObservableObject {
             }
             braceletLinked = other.braceletLinked
             isOrganDonor = other.isOrganDonor
+            isPregnant = other.isPregnant
+            isDeafOrVisionImpaired = other.isDeafOrVisionImpaired
             lastUpdated = other.lastUpdated
         }
     }
@@ -228,6 +244,8 @@ class ProfileData: ObservableObject {
             },
             braceletLinked: braceletLinked,
             isOrganDonor: isOrganDonor,
+            isPregnant: isPregnant,
+            isDeafOrVisionImpaired: isDeafOrVisionImpaired,
             lastUpdated: lastUpdated
         )
         guard let data = try? JSONEncoder().encode(blob) else { return false }
@@ -252,6 +270,8 @@ class ProfileData: ObservableObject {
             contacts = []
             braceletLinked = false
             isOrganDonor = false
+            isPregnant = false
+            isDeafOrVisionImpaired = false
             lastUpdated = ""
         }
         holdsEditingSession = false
@@ -321,6 +341,8 @@ class ProfileData: ObservableObject {
             dob: blob.birthDate,
             blood: blob.bloodType,
             donor: blob.isOrganDonor,
+            pregnant: blob.isPregnant,
+            deafOrVisionImpaired: blob.isDeafOrVisionImpaired,
             allergies: blob.allergies,
             meds: blob.medications,
             conditions: blob.conditions,
@@ -388,6 +410,8 @@ class ProfileData: ObservableObject {
             if contactsChanged { contacts = nextContacts }
             if braceletLinked != blob.braceletLinked { braceletLinked = blob.braceletLinked }
             if isOrganDonor != blob.isOrganDonor { isOrganDonor = blob.isOrganDonor }
+            if isPregnant != blob.isPregnant { isPregnant = blob.isPregnant }
+            if isDeafOrVisionImpaired != blob.isDeafOrVisionImpaired { isDeafOrVisionImpaired = blob.isDeafOrVisionImpaired }
             if lastUpdated != blob.lastUpdated { lastUpdated = blob.lastUpdated }
         }
     }
@@ -529,6 +553,8 @@ private struct PersistedProfile: Codable, Sendable {
     var contacts: [PersistedContact]
     var braceletLinked: Bool
     var isOrganDonor: Bool
+    var isPregnant: Bool
+    var isDeafOrVisionImpaired: Bool
     var lastUpdated: String
 
     init(
@@ -541,6 +567,8 @@ private struct PersistedProfile: Codable, Sendable {
         contacts: [PersistedContact],
         braceletLinked: Bool,
         isOrganDonor: Bool,
+        isPregnant: Bool,
+        isDeafOrVisionImpaired: Bool,
         lastUpdated: String
     ) {
         self.name = name
@@ -552,6 +580,8 @@ private struct PersistedProfile: Codable, Sendable {
         self.contacts = contacts
         self.braceletLinked = braceletLinked
         self.isOrganDonor = isOrganDonor
+        self.isPregnant = isPregnant
+        self.isDeafOrVisionImpaired = isDeafOrVisionImpaired
         self.lastUpdated = lastUpdated
     }
 
@@ -566,6 +596,8 @@ private struct PersistedProfile: Codable, Sendable {
         contacts = try c.decodeIfPresent([PersistedContact].self, forKey: .contacts) ?? []
         braceletLinked = try c.decodeIfPresent(Bool.self, forKey: .braceletLinked) ?? false
         isOrganDonor = try c.decodeIfPresent(Bool.self, forKey: .isOrganDonor) ?? false
+        isPregnant = try c.decodeIfPresent(Bool.self, forKey: .isPregnant) ?? false
+        isDeafOrVisionImpaired = try c.decodeIfPresent(Bool.self, forKey: .isDeafOrVisionImpaired) ?? false
         lastUpdated = try c.decodeIfPresent(String.self, forKey: .lastUpdated) ?? ""
     }
 }

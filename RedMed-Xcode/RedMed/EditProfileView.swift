@@ -15,6 +15,8 @@ struct EditProfileView: View {
     @State private var birthDate = ""
     @State private var bloodType = ""
     @State private var isOrganDonor = false
+    @State private var isPregnant = false
+    @State private var isDeafOrVisionImpaired = false
     @State private var allergies: [DraftLine] = []
     @State private var medications: [DraftLine] = []
     @State private var conditions: [DraftLine] = []
@@ -111,6 +113,24 @@ struct EditProfileView: View {
                         Divider().padding(.leading, Metrics.labelWidth + 12 + Metrics.rowHPad)
                         Toggle(isOn: $isOrganDonor) {
                             Text("Organ donor")
+                                .font(.system(size: Metrics.font, weight: .medium))
+                                .foregroundColor(.redmedMuted)
+                        }
+                        .tint(.redmedAccent)
+                        .padding(.horizontal, Metrics.rowHPad)
+                        .padding(.vertical, Metrics.rowVPad)
+                        Divider().padding(.leading, Metrics.labelWidth + 12 + Metrics.rowHPad)
+                        Toggle(isOn: $isPregnant) {
+                            Text("Pregnant")
+                                .font(.system(size: Metrics.font, weight: .medium))
+                                .foregroundColor(.redmedMuted)
+                        }
+                        .tint(.redmedAccent)
+                        .padding(.horizontal, Metrics.rowHPad)
+                        .padding(.vertical, Metrics.rowVPad)
+                        Divider().padding(.leading, Metrics.labelWidth + 12 + Metrics.rowHPad)
+                        Toggle(isOn: $isDeafOrVisionImpaired) {
+                            Text("Deaf / vision impaired")
                                 .font(.system(size: Metrics.font, weight: .medium))
                                 .foregroundColor(.redmedMuted)
                         }
@@ -474,6 +494,8 @@ struct EditProfileView: View {
         birthDate = profile.birthDate
         bloodType = profile.bloodType
         isOrganDonor = profile.isOrganDonor
+        isPregnant = profile.isPregnant
+        isDeafOrVisionImpaired = profile.isDeafOrVisionImpaired
         // Empty profile → empty sections (Add rows only). Never seed blank entries.
         allergies = profile.allergies.map { DraftLine(text: $0) }
         medications = profile.medications.map { DraftLine(text: $0) }
@@ -635,6 +657,8 @@ struct EditProfileView: View {
             || nextBirth != profile.birthDate
             || nextBlood != profile.bloodType
             || isOrganDonor != profile.isOrganDonor
+            || isPregnant != profile.isPregnant
+            || isDeafOrVisionImpaired != profile.isDeafOrVisionImpaired
             || nextAllergies != profile.allergies
             || nextMeds != profile.medications
             || nextConditions != profile.conditions
@@ -646,6 +670,8 @@ struct EditProfileView: View {
         profile.birthDate = nextBirth
         profile.bloodType = nextBlood
         profile.isOrganDonor = isOrganDonor
+        profile.isPregnant = isPregnant
+        profile.isDeafOrVisionImpaired = isDeafOrVisionImpaired
         profile.allergies = nextAllergies
         profile.medications = nextMeds
         profile.conditions = nextConditions
