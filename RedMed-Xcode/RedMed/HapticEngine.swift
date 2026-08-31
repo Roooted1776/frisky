@@ -72,7 +72,8 @@ enum RedMedHaptics {
 /// Owns a `CHHapticEngine` + short CPR metronome clicks for the SwiftUI view hierarchy.
 /// Prepare once when the hosting view appears; play calculated patterns on tap / beat.
 /// Audio clicks use `.playback` + mixWithOthers so they work with the silent switch
-/// without stealing the crash / SOS locator siren session.
+/// without stealing the crash / SOS locator siren session (siren retains at
+/// `AudioSessionGate.survivalPriority` and wins category options).
 @MainActor
 final class HapticEngine: ObservableObject {
     private static let sessionClient = "cpr-metronome"
