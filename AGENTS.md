@@ -253,6 +253,7 @@ pre-installed `python3` (no npm, no wrangler, no build step):
 ```
 python3 -m http.server 8787 --bind 127.0.0.1   # or ./scripts/deploy-pages.sh (same server)
 BASE=http://127.0.0.1:8787 ./scripts/smoke-pages.sh   # page-load + redirect smoke (11 checks)
+node scripts/test-d-codec.mjs   # AES / zlib / compact-array lockstep (no Xcode)
 ```
 
 Use `127.0.0.1` (not a LAN IP) so `#d=` decode works. The medical card renders from `#d=` with

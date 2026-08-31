@@ -1786,7 +1786,7 @@ function redmedAssetURL(file) {
   var BLOOD = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
   var ZLIB_VERSION = 0x01;
   var AES_VERSION = 0x02;
-  var KEY_LABEL = 'RedMed-NFC-AES-GCM-v1';
+  var KEY_LABEL = 'RedMed-NFC-AES-GCM-v1'; // lockstep: scripts/test-d-codec.mjs
   var aesKeyPromise = null;
 
   function asString(v, fallback) {

@@ -5,7 +5,7 @@ import UIKit
 /// NFC Preview / Scan — tap-to-view stays ungated
 /// (no Face ID, no passcode, no login).
 ///
-/// Edit, Save, and Erase pass `force: true`. NFC write and tapper do not.
+/// Edit, Save, and Erase pass `force: true`. NFC write, app launch, and tapper do not.
 /// There is no process-wide skip flag.
 ///
 /// On success the `LAContext` is **parked** (not invalidated) so

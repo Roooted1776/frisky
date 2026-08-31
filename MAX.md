@@ -32,6 +32,7 @@ RedMed is a **native iOS/SwiftUI** medical ID (`RedMed-Xcode/`). Local only: Key
 - App Store honesty on `main`: parked NFC copy, no autodial (native + all three `tapper.html`), Aid first-aid disclaimer, support page.
 - Hospital search: native MapKit / Apple Maps; passerby `tapper.html` names OpenStreetMap Overpass (`overpass-api.de`). Consent Location toggle is honored on Agree (not forced on).
 - iOS CI is **workflow_dispatch only** (billing). Trigger it after Swift/scheme changes.
+- `#d=` codec lockstep: `node scripts/test-d-codec.mjs`. Band write host github.io is still 404.
 
 ## Xcode on his Mac
 

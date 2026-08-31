@@ -42,8 +42,10 @@ enum AppConfig {
     /// Live App Store listing URL. `nil` until a paid Apple Developer account
     /// has a real app ID — never write a placeholder onto QR or NFC.
     static let appStoreURL: String? = nil
-    static let supportURL = "https://cdn.jsdelivr.net/gh/Roooted1776/redmed-privacy@main/support.html"
-    static let privacyPolicyURL = "https://cdn.jsdelivr.net/gh/Roooted1776/redmed-privacy@main/index.html"
+    /// Unused in Swift (in-app Help is bundled `Help.html`). Connect placeholders
+    /// stay in this repo — not jsDelivr `@main` of a second tree.
+    static let supportURL = "https://github.com/Roooted1776/frisky/blob/main/support/index.html"
+    static let privacyPolicyURL = "https://github.com/Roooted1776/frisky/blob/main/RedMed-Xcode/RedMed/Help.html"
 
     /// Owner band NDEF contract (permanent): write only
     /// `medicalCardBaseURL + "#d=" + base64url`. Profile stays in the fragment —
