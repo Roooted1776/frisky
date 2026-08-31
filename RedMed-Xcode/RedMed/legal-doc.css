@@ -210,12 +210,20 @@ body {
 /* Title + meta */
 .legal-doc-title {
   font-family: var(--font);
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: var(--fs-xl);
   font-weight: var(--fw-black);
   letter-spacing: -0.6px;
   line-height: 1.1;
   color: var(--text);
   margin-bottom: 14px;
+}
+.legal-title-ico {
+  font-size: 0.78em;
+  line-height: 1;
+  font-weight: 400;
 }
 .legal-meta {
   font-family: var(--font);
