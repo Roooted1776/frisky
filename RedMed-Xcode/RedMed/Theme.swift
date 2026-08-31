@@ -27,7 +27,7 @@ struct RedMedPressStyle: ButtonStyle {
 extension Color {
     static let redmedAccent   = Color(red: 0.882, green: 0.114, blue: 0.282) // #e11d48
     /// CTA gradient lift — pairs with `redmedAccent`, never a raw hex at call sites.
-    static let redmedAccentLift = Color(red: 1.000, green: 0.447, blue: 0.537)
+    static let redmedAccentLift = Color(red: 1.000, green: 0.447, blue: 0.537) // #ff7289
     static let redmedBg       = Color(red: 1.000, green: 0.969, blue: 0.969) // #fff7f7
     /// Heading / primary ink — same on owner chrome + passerby `--dark` / legal `--text`.
     static let redmedDark     = Color(red: 0.110, green: 0.098, blue: 0.086) // #1c1917
@@ -334,8 +334,8 @@ struct OwnerModalChrome<Trailing: View>: View {
                 .fill(Color.redmedDivider)
                 .frame(height: 1)
         }
-        // Opaque cream through the status bar — kills white cutoff above modals.
-        .redmedTopChromeFill()
+        // Same cream + rose wash as owner RedMed — not a flat cream band.
+        .redmedTopChromeWash()
     }
 }
 
@@ -395,7 +395,7 @@ struct OwnerModalActionBar<Center: View>: View {
                 .fill(Color.redmedDivider)
                 .frame(height: 1)
         }
-        .redmedTopChromeFill()
+        .redmedTopChromeWash()
     }
 }
 
@@ -482,8 +482,18 @@ struct BrandWordmarkHeader<Trailing: View>: View {
         .padding(.horizontal, RedMedChrome.pagePadX)
         .padding(.top, top)
         .padding(.bottom, RedMedChrome.wordmarkBottom)
-        // Keep wordmark band cream so no white peeks between chrome and content.
-        .background(Color.redmedBg)
+        // Local cream + wash (no ignoresSafeArea) — NFC Help chrome sits above this.
+        .background {
+            ZStack {
+                Color.redmedBg
+                RadialGradient(
+                    colors: [Color.redmedWash.opacity(0.85), Color.redmedBg.opacity(0)],
+                    center: .top,
+                    startRadius: 20,
+                    endRadius: 420
+                )
+            }
+        }
     }
 }
 
@@ -528,9 +538,8 @@ extension View {
     }
 
     /// Same opaque cream + rose radial wash as `RedMedPageBackground` / passerby
-    /// `tapper.html` body — owner RedMed top chrome uses this (not the flat
-    /// `redmedTopChromeFill`) so the header reads as one themed surface with
-    /// the rest of the page instead of a flat cream band cutting off the wash.
+    /// `tapper.html` body. Owner chrome (RedMed, 911, Aid, NFC, Help, Edit,
+    /// Preview, topic sheets) uses this so headers match the YOU-card page.
     func redmedTopChromeWash() -> some View {
         self.background(alignment: .top) {
             ZStack {

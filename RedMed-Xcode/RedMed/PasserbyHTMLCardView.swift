@@ -41,6 +41,7 @@ struct PasserbyHTMLCardView: View {
             .padding(.horizontal, RedMedChrome.pagePadX)
             .padding(.top, 16)
             .padding(.bottom, 8)
+            .redmedTopChromeWash()
 
             Group {
                 if let encodedPayload {

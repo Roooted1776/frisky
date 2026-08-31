@@ -82,8 +82,8 @@ struct PageHelpChrome<Trailing: View>: View {
         .padding(.horizontal, RedMedChrome.pagePadX)
         .padding(.top, 16)
         .padding(.bottom, 8)
-        // Opaque cream through status bar — covers white cutoff above every tab page.
-        .redmedTopChromeFill()
+        // Same cream + rose wash as owner RedMed — not a flat cream band.
+        .redmedTopChromeWash()
     }
 }
 

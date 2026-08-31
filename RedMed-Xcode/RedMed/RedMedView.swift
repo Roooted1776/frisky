@@ -37,7 +37,7 @@ struct RedMedView: View {
                 .padding(.horizontal, RedMedChrome.pagePadX)
                 .padding(.top, 16)
                 .padding(.bottom, 8)
-                .redmedTopChromeFill()
+                .redmedTopChromeWash()
             } else {
                 RedMedUserHeader(
                     name: profile.name,

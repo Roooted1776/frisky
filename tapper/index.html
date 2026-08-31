@@ -171,14 +171,14 @@ function redmedAssetURL(file) {
      Cloudflare redmed.pages.dev / getredmed.com — see docs/domain.md. -->
 <style>
   :root {
-    --accent: #e11d48;
-    --accent-soft: #ff7289;
-    --bg: #fff7f7;
-    --wash: #ffe8eb;
-    --dark: #1c1917;
-    --muted: #78716c;
+    --accent: #e11d48; /* Color.redmedAccent */
+    --accent-soft: #ff7289; /* Color.redmedAccentLift */
+    --bg: #fff7f7; /* Color.redmedBg */
+    --wash: #ffe8eb; /* Color.redmedWash */
+    --dark: #1c1917; /* Color.redmedDark */
+    --muted: #78716c; /* Color.redmedMuted */
     --divider: rgba(28,25,23,0.08);
-    --tab-off: #5f6369;
+    --tab-off: #78716c; /* same as --muted / Color.redmedMuted */
     /* Cream-lift — same Color.redmedSurface; not pure white on --bg. */
     --surface: #fff3f4;
     --box: 10px;
@@ -423,11 +423,11 @@ function redmedAssetURL(file) {
     font-weight: 700;
     letter-spacing: 0.5px;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--accent);
     margin: 0;
   }
   .rm-status.linked {
-    color: rgba(225,29,72,0.9);
+    color: var(--accent);
   }
   /* Owner RedMed embed only — status opens native NFC tab (Write / Scan). */
   html.app-embed .rm-status.rm-status-link,

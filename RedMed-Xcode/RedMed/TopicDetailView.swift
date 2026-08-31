@@ -87,11 +87,11 @@ struct TopicDetailView: View {
                                 .foregroundColor(.redmedMuted)
                             ZStack {
                                 Circle()
-                                    .fill(cprPhase == "breathe" ? Color(red: 0.055, green: 0.647, blue: 0.914) : Color.redmedAccent)
+                                    .fill(cprPhase == "breathe" ? Color.redmedAccentLift : Color.redmedAccent)
                                     .frame(width: 100, height: 100)
                                     .scaleEffect(cprPulse ? 1.14 : 1.0)
                                     .animation(.easeOut(duration: 0.16), value: cprPulse)
-                                    .shadow(color: Color.redmedAccent.opacity(0.32), radius: 10, y: 4)
+                                    .shadow(color: (cprPhase == "breathe" ? Color.redmedAccentLift : Color.redmedAccent).opacity(0.32), radius: 10, y: 4)
                                     // Pulses continuously at the CPR metronome rate — flatten
                                     // fill+shadow to one GPU texture so each beat just scales
                                     // a bitmap instead of recompositing a soft shadow on CPU.

@@ -315,6 +315,7 @@ struct HelpMenuView: View {
                                         } else {
                                             Text("Erase All User Data")
                                                 .font(.system(size: Metrics.font, weight: .medium))
+                                                .foregroundColor(.redmedAccent)
                                                 .frame(maxWidth: .infinity, alignment: .leading)
                                         }
                                     }
@@ -338,6 +339,7 @@ struct HelpMenuView: View {
                 .scrollIndicators(.visible)
             }
             .background { RedMedPageBackground() }
+            .tint(.redmedAccent)
             .toolbar(.hidden, for: .navigationBar)
             .onAppear {
                 guard showsOwnerTools, locationEnabled else { return }
