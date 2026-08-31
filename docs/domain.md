@@ -12,15 +12,15 @@ live interim host:
 
 `https://roooted1776.github.io/tapper/`
 
-## Current (2026-08-23)
+## Current (2026-08-31)
 
 | Path | Status |
 |------|--------|
 | Custom HTML app URL | **TBD** — set `AppConfig.medicalCardCustomDomainTBD` when ready |
-| Public GitHub Pages `Roooted1776.github.io/tapper/` | **Live interim** — NFC write base |
+| Public GitHub Pages `Roooted1776.github.io/tapper/` | **Live interim** — NFC write base. Repo `Roooted1776/Roooted1776.github.io` (Actions → Publish tapper copies from frisky). Do not flip `medicalCardBaseURL` onto another host until that host's `/tapper/` smoke is green. |
 | Cloudflare Pages `redmed.pages.dev` | Optional; 404 until CF secrets / Git connect |
 
-Smoke on the live interim: RedMed · 911 · Aid, no login.
+Smoke on the live interim: RedMed · 911 · Aid, no login. `pages-deploy.yml` **fails** when the write base 404s.
 
 ## When you pick the domain
 
