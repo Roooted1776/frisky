@@ -45,6 +45,31 @@ AUTH_COPY_NEEDLES = (
     "Log in",
     "Log In",
 )
+# Passerby shell is not an ad surface. Trackers on tapper.html would load on a
+# band tap (PHI in the fragment). Store / listing pixels stay off this file.
+# docs/ADVERTISING.md + docs/DO-NOT.md.
+AD_NETWORK_NEEDLES = (
+    "googletagmanager",
+    "google-analytics",
+    "analytics.google",
+    "gtag(",
+    "facebook.net",
+    "connect.facebook.com",
+    "fbevents.js",
+    "fbq(",
+    "analytics.tiktok",
+    "ttq(",
+    "hotjar",
+    "mixpanel",
+    "cdn.segment",
+    "segment.com",
+    "amplitude.com",
+    "doubleclick.net",
+    "googlesyndication",
+    "adsbygoogle",
+    "clarity.ms",
+    "plausible.io",
+)
 
 
 def check_tapper_no_auth(path: Path) -> bool:
@@ -60,6 +85,19 @@ def check_tapper_no_auth(path: Path) -> bool:
             ok = False
     if ok:
         print(f"OK   no-auth {path.relative_to(REPO)}")
+    return ok
+
+
+def check_tapper_no_ads(path: Path) -> bool:
+    raw = path.read_text(encoding="utf-8")
+    lower = raw.lower()
+    ok = True
+    for needle in AD_NETWORK_NEEDLES:
+        if needle.lower() in lower:
+            print(f"FAIL {path} ad network: {needle}")
+            ok = False
+    if ok:
+        print(f"OK   no-ads {path.relative_to(REPO)}")
     return ok
 
 
@@ -96,6 +134,7 @@ def main() -> int:
     ok = True
     # Static: band-tap shell never ships an auth gate (runs even if server is down).
     ok &= check_tapper_no_auth(REPO / "tapper/index.html")
+    ok &= check_tapper_no_ads(REPO / "tapper/index.html")
     root_tapper = (REPO / "tapper.html").read_text(encoding="utf-8")
     if "data-tab=\"medical\"" in root_tapper:
         print("FAIL tapper.html is a full shell copy — keep it a redirect")
