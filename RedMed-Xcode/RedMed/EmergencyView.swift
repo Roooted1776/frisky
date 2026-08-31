@@ -141,7 +141,7 @@ struct SeizureTimerStrip: View {
                     .contentTransition(.numericText())
             }
             .frame(minWidth: 56, alignment: .leading)
-            Text(pastThreshold ? "5:00 — Tap Call" : "Call \(EmergencyNumber.current) at 5:00")
+            Text(pastThreshold ? "5:00 — Tap Call" : "Call \(EmergencyNumber.current) At 5:00")
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundColor(pastThreshold ? .redmedAccent : .redmedMuted)
                 .lineLimit(1)

@@ -129,7 +129,7 @@ struct PrivacySnapshotGuard<Content: View>: View {
                         .foregroundColor(.redmedMuted)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 28)
-                    Button("Not sharing your screen? Tap to unlock") {
+                    Button("Not Sharing Your Screen? Tap To Unlock") {
                         manualCaptureOverride = true
                     }
                     .font(.system(size: 12, weight: .semibold))
