@@ -94,7 +94,7 @@ struct RedMedView: View {
         } else if !profile.isEmergencyProfileConfigured {
             OwnerNextStepBanner(
                 icon: "square.and.pencil",
-                title: "Finish your medical ID",
+                title: "Finish Your Medical ID",
                 detail: "Add birth date and blood type so helpers see a complete ID.",
                 actionTitle: "Edit",
                 action: { requestEdit() }
@@ -102,7 +102,7 @@ struct RedMedView: View {
         } else if !profile.showsBraceletAsLinked {
             OwnerNextStepBanner(
                 icon: "wave.3.right",
-                title: AppConfig.nfcHardwareEnabled ? "Write your band" : "Preview the helper card",
+                title: AppConfig.nfcHardwareEnabled ? "Write Your Band" : "Preview The Helper Card",
                 detail: AppConfig.nfcHardwareEnabled
                     ? "Write the band on the NFC tab so a passerby tap opens this card."
                     : "Band write is preview-only in this build. Open NFC to see what helpers would see.",
@@ -159,7 +159,7 @@ private struct RedMedUserHeader: View {
     }
 
     private var statusTitle: String {
-        linked ? "Linked bracelet" : "Not linked"
+        linked ? "Linked Bracelet" : "Not Linked"
     }
 
     var body: some View {
@@ -248,15 +248,15 @@ private struct OwnerYouCard: View {
         VStack(spacing: 0) {
             youRow(label: "Name", value: trimmedName)
             Divider().overlay(Color.redmedDivider)
-            youRow(label: "Birth date", value: YouCardFormat.birthDate(profile.birthDate))
+            youRow(label: "Birth Date", value: YouCardFormat.birthDate(profile.birthDate))
             Divider().overlay(Color.redmedDivider)
-            youRow(label: "Blood type", value: profile.bloodType.trimmingCharacters(in: .whitespacesAndNewlines))
+            youRow(label: "Blood Type", value: profile.bloodType.trimmingCharacters(in: .whitespacesAndNewlines))
             Divider().overlay(Color.redmedDivider)
-            youRow(label: "Organ donor", value: profile.isOrganDonor ? "Yes" : "")
+            youRow(label: "Organ Donor", value: profile.isOrganDonor ? "Yes" : "")
             Divider().overlay(Color.redmedDivider)
             youRow(label: "Pregnant", value: profile.isPregnant ? "Yes" : "")
             Divider().overlay(Color.redmedDivider)
-            youRow(label: "Deaf / vision impaired", value: profile.isDeafOrVisionImpaired ? "Yes" : "")
+            youRow(label: "Deaf / Vision Impaired", value: profile.isDeafOrVisionImpaired ? "Yes" : "")
         }
         // flatten: false — compositingGroup kept the empty "—" paint after
         // Keychain restore (same reason Edit uses flatten: false).
@@ -419,7 +419,7 @@ private struct YouContactDrop: View {
 
     private func contactRow(_ contact: EmergencyContact) -> some View {
         let name = contact.name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let shownName = name.isEmpty ? "Emergency contact" : name
+        let shownName = name.isEmpty ? "Emergency Contact" : name
         let digits = contact.dialDigits
         let phoneShown: String = {
             if digits.isEmpty { return "" }
@@ -495,15 +495,15 @@ private struct OwnerSetupFunnel: View {
         VStack(spacing: 0) {
             ghostRow(label: "Name", value: "—")
             Divider().overlay(Color.redmedDivider)
-            ghostRow(label: "Birth date", value: "—")
+            ghostRow(label: "Birth Date", value: "—")
             Divider().overlay(Color.redmedDivider)
-            ghostRow(label: "Blood type", value: "—")
+            ghostRow(label: "Blood Type", value: "—")
             Divider().overlay(Color.redmedDivider)
-            ghostRow(label: "Organ donor", value: "—")
+            ghostRow(label: "Organ Donor", value: "—")
             Divider().overlay(Color.redmedDivider)
             ghostRow(label: "Pregnant", value: "—")
             Divider().overlay(Color.redmedDivider)
-            ghostRow(label: "Deaf / vision impaired", value: "—")
+            ghostRow(label: "Deaf / Vision Impaired", value: "—")
         }
         .redmedBox()
         .accessibilityHidden(true)
@@ -525,22 +525,22 @@ private struct OwnerSetupFunnel: View {
 
     private var stepsCard: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SectionLabel(text: "Get started")
+            SectionLabel(text: "Get Started")
                 .padding(.horizontal, 10)
                 .padding(.top, 8)
                 .padding(.bottom, 2)
-            stepRow(number: "1", title: "Fill your medical ID", detail: "Name, birth date, blood type. Allergies and contacts help EMS.")
+            stepRow(number: "1", title: "Fill Your Medical ID", detail: "Name, birth date, blood type. Allergies and contacts help EMS.")
             Divider().overlay(Color.redmedDivider).padding(.leading, 54)
             stepRow(number: "2", title: "Save", detail: "Face ID writes it to this iPhone's Keychain. Nothing leaves the phone.")
             Divider().overlay(Color.redmedDivider).padding(.leading, 54)
-            stepRow(number: "3", title: AppConfig.nfcHardwareEnabled ? "Write the band" : "Preview the helper card", detail: AppConfig.nfcHardwareEnabled ? "NFC tab packs the card onto the chip. Helpers tap. No app, no login." : "NFC tab packs the card for Preview. Live band write ships when NFC Tag Reading is on the App ID.")
+            stepRow(number: "3", title: AppConfig.nfcHardwareEnabled ? "Write The Band" : "Preview The Helper Card", detail: AppConfig.nfcHardwareEnabled ? "NFC tab packs the card onto the chip. Helpers tap. No app, no login." : "NFC tab packs the card for Preview. Live band write ships when NFC Tag Reading is on the App ID.")
         }
         .redmedBox()
     }
 
     private var healthButton: some View {
         OutlineButton(
-            title: healthBusy ? "Reading Apple Health…" : "Fill from Apple Health",
+            title: healthBusy ? "Reading Apple Health…" : "Fill From Apple Health",
             systemImage: healthBusy ? nil : "heart.text.square",
             busy: healthBusy
         ) {

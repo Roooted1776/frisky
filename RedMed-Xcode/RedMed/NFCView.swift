@@ -105,17 +105,17 @@ struct NFCView: View {
 
     private var linkStatus: (title: String, detail: String, linked: Bool) {
         if profile.showsBraceletAsLinked {
-            return ("Linked bracelet", "Re-write after you edit RedMed", true)
+            return ("Linked Bracelet", "Re-write after you edit RedMed", true)
         }
         if profile.braceletLinked {
-            return ("Band written", "Finish name, birth date, and blood type on RedMed", false)
+            return ("Band Written", "Finish name, birth date, and blood type on RedMed", false)
         }
-        return ("Not linked", "Write once to set up the bracelet", false)
+        return ("Not Linked", "Write once to set up the bracelet", false)
     }
 
     private var parkedBanner: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Preview only")
+            Text("Preview Only")
                 .font(.system(size: 13, weight: .bold))
                 .foregroundColor(.redmedAccent)
             Text(AppConfig.BraceletRF.hardwareParkedSummary)
@@ -173,7 +173,7 @@ struct NFCView: View {
 
     private var setupCard: some View {
         VStack(alignment: .leading, spacing: 14) {
-            SectionLabel(text: "Set up")
+            SectionLabel(text: "Set Up")
 
             PrimaryButton(
                 title: writeButtonTitle,
@@ -274,9 +274,9 @@ struct NFCView: View {
 
     private var writeButtonTitle: String {
         if band.isWriting {
-            return AppConfig.nfcHardwareEnabled ? "Hold near the band…" : "Packing…"
+            return AppConfig.nfcHardwareEnabled ? "Hold Near The Band…" : "Packing…"
         }
-        return AppConfig.nfcHardwareEnabled ? "Write the band" : "Preview packed card"
+        return AppConfig.nfcHardwareEnabled ? "Write The Band" : "Preview Packed Card"
     }
 
     private var statusIsError: Bool {

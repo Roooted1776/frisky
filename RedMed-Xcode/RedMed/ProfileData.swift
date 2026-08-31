@@ -123,7 +123,7 @@ class ProfileData: ObservableObject {
             && !bloodType.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    /// Main header "Linked bracelet" — real CoreNFC write + complete YOU card.
+    /// Main header "Linked Bracelet" — real CoreNFC write + complete YOU card.
     /// Never from pack/simulate; hardware kill switch also forces Not linked.
     var showsBraceletAsLinked: Bool {
         AppConfig.nfcHardwareEnabled && braceletLinked && isEmergencyProfileConfigured

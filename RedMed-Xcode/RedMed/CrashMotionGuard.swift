@@ -377,7 +377,7 @@ struct CrashSurvivalCancelCard: View {
                 }
             } label: {
                 HStack {
-                    Text("Stop the alarm")
+                    Text("Stop The Alarm")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.redmedDark)
                     Spacer()
