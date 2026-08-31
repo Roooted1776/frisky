@@ -143,7 +143,9 @@ function redmedAssetURL(file) {
        (profile, 911, Aid, SOS siren). Local only once tap — everyone and
        everything. No server / no online. Bare /tapper/ without `#d=` and in-app
        Preview/Scan (`?src=app`) do not auto-arm SOS. Stop on Find Help or Aid.
-       Explicit SOS toggle + DeviceMotion crash share the same local alarm.
+       Explicit SOS tap opens `tel:` immediately (no in-page confirm). Crash
+       waits the US Crash Detection delay (10s alert + 30s countdown) then
+       the same `tel:` unless Stop. Band-tap auto-arm is siren only.
        Bare /tapper/ first-paints the YOU/main panel (empty dashes). No splash,
        no "No patient" interstitial, no pick-a-tab gate. #911 / #aid / ?tab=
        still open those panels; #d= stays the profile payload.
@@ -780,6 +782,7 @@ function redmedAssetURL(file) {
   #panel-911 .page-pad > .gps-card,
   #panel-911 .page-pad > .gps-actions,
   #panel-911 .page-pad > .seizure-strip,
+  #panel-911 .page-pad > .crash-dial-hint,
   #panel-911 .page-pad > .info {
     margin: 0;
   }
@@ -851,6 +854,18 @@ function redmedAssetURL(file) {
     background: var(--accent);
     box-shadow: var(--shadow-accent);
   }
+  .crash-dial-hint {
+    display: none;
+    margin: 0;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--surface);
+    border: 1px solid var(--divider);
+    border-radius: 12px;
+  }
+  .crash-dial-hint.show { display: block; }
   .hint {
     font-size: 12px;
     font-weight: 500;
@@ -1553,6 +1568,7 @@ function redmedAssetURL(file) {
           <div class="gps-acc" id="gpsAcc">Accuracy ––</div>
         </div>
         <button class="btn btn-sos" type="button" id="sosBtn" aria-pressed="false">SOS · Locate Me</button>
+        <p class="crash-dial-hint" id="crashDialHint" hidden></p>
         <a class="btn btn-call" id="callEmergency911" href="tel:112">Call <span class="emg">112</span></a>
         <div class="seizure-strip" id="seizureStrip">
           <div>
@@ -2992,9 +3008,11 @@ function redmedAssetURL(file) {
 <script>
 // Survival alarm — hardware-local only (this phone).
 // Real bracelet NFC open with #d= → arm + PLAY local siren (no server).
-// Explicit SOS toggle and DeviceMotion crash share the same on-device alarm.
-// Crash path ignores sex, masturbation, walking, eating, daily rhythm (same
-// gates as native CrashMotionGuard). Web Audio + wake lock only.
+// Explicit SOS tap: tel: immediately (no in-page confirm), then siren.
+// DeviceMotion crash: US Crash Detection delay (10s + 30s) then tel: unless Stop.
+// Band-tap auto-arm is siren only. Crash path ignores sex, masturbation, walking,
+// eating, daily rhythm (same gates as native CrashMotionGuard).
+// Web Audio + wake lock only.
 (function () {
   function appPreview() {
     try {
@@ -3038,6 +3056,10 @@ function redmedAssetURL(file) {
   var SAMPLE_HZ = 50.0;
   var COOLDOWN_S = 90.0;
   var DT = 1.0 / SAMPLE_HZ;
+  // Apple Support 104959 (US): 10s alert + 30s countdown, then emergency call.
+  var US_CRASH_ALERT_S = 10;
+  var US_CRASH_COUNTDOWN_S = 30;
+  var US_CRASH_DIAL_DELAY_S = US_CRASH_ALERT_S + US_CRASH_COUNTDOWN_S;
 
   var armed = false;
   var ctx = null;
@@ -3064,6 +3086,63 @@ function redmedAssetURL(file) {
   var audioNeedsGesture = false;
   var stoppingAudio = false;
   var reclaimLock = false;
+  var crashDialTimer = null;
+  var crashDialHint = document.getElementById('crashDialHint');
+
+  function emergencyTelHref() {
+    var call = document.getElementById('callEmergency911');
+    return (call && call.getAttribute('href')) || '';
+  }
+
+  function emergencyDigits() {
+    var href = emergencyTelHref();
+    return href.indexOf('tel:') === 0 ? href.slice(4) : '';
+  }
+
+  function dialEmergencyNow() {
+    var href = emergencyTelHref();
+    if (href.indexOf('tel:') === 0) window.location.href = href;
+  }
+
+  function formatDialRemain(sec) {
+    var t = Math.max(0, Math.ceil(sec));
+    return Math.floor(t / 60) + ':' + (t % 60 < 10 ? '0' : '') + (t % 60);
+  }
+
+  function paintCrashHint(remainSec) {
+    if (!crashDialHint) return;
+    if (remainSec == null || remainSec <= 0) {
+      crashDialHint.hidden = true;
+      crashDialHint.classList.remove('show');
+      crashDialHint.textContent = '';
+      return;
+    }
+    var digits = emergencyDigits() || '911';
+    crashDialHint.hidden = false;
+    crashDialHint.classList.add('show');
+    crashDialHint.textContent = 'Calling ' + digits + ' in ' + formatDialRemain(remainSec);
+  }
+
+  function clearCrashDial() {
+    if (crashDialTimer) { clearInterval(crashDialTimer); crashDialTimer = null; }
+    paintCrashHint(0);
+  }
+
+  function startCrashDialCountdown() {
+    clearCrashDial();
+    var until = Date.now() + US_CRASH_DIAL_DELAY_S * 1000;
+    paintCrashHint(US_CRASH_DIAL_DELAY_S);
+    crashDialTimer = setInterval(function () {
+      if (!armed) { clearCrashDial(); return; }
+      var left = (until - Date.now()) / 1000;
+      if (left <= 0) {
+        clearCrashDial();
+        dialEmergencyNow();
+        return;
+      }
+      paintCrashHint(left);
+    }, 250);
+  }
 
   function paint() {
     // Matches owner FindHelpSOSButton / this page's own Aid "Stop The Alarm" copy.
@@ -3289,7 +3368,7 @@ function redmedAssetURL(file) {
     busyUntil = 0;
   }
 
-  function arm() {
+  function arm(opts) {
     if (armed) return;
     armed = true;
     lastArmAt = Date.now() / 1000;
@@ -3300,11 +3379,15 @@ function redmedAssetURL(file) {
     } else {
       setTimeout(function () { startAudio(); }, 0);
     }
+    var mode = opts && opts.dial;
+    if (mode === 'crash') startCrashDialCountdown();
+    else clearCrashDial();
   }
 
   function disarm() {
     if (!armed) return;
     armed = false;
+    clearCrashDial();
     stopAudio();
     resetMotionTransient();
     paint();
@@ -3362,8 +3445,8 @@ function redmedAssetURL(file) {
         else inPostFreefallG = true;
       }
       if (jerk < MIN_JERK_G_S) return;
-      if (magnitude >= OVERRIDE_BUSY_PEAK_G) { arm(); return; }
-      if (inPostFreefallG && magnitude >= POST_FREEFALL_PEAK_G) arm();
+      if (magnitude >= OVERRIDE_BUSY_PEAK_G) { arm({ dial: 'crash' }); return; }
+      if (inPostFreefallG && magnitude >= POST_FREEFALL_PEAK_G) arm({ dial: 'crash' });
       return;
     }
 
@@ -3421,11 +3504,11 @@ function redmedAssetURL(file) {
 
     var requiredPeak = isBusy ? OVERRIDE_BUSY_PEAK_G : CRASH_PEAK_G;
     if (magnitude >= requiredPeak) {
-      arm();
+      arm({ dial: 'crash' });
       return;
     }
     if (!isBusy && inPostFreefall && magnitude >= POST_FREEFALL_PEAK_G) {
-      arm();
+      arm({ dial: 'crash' });
     }
   }
 
@@ -3493,9 +3576,14 @@ function redmedAssetURL(file) {
 
   sosBtn.addEventListener('click', function (e) {
     e.preventDefault();
-    // Explicit SOS tap is the only iOS path that may show a motion prompt.
+    if (armed) {
+      disarm();
+      return;
+    }
+    // Instant 911 — same tap, no in-page confirm. Do not wait on motion permission.
+    dialEmergencyNow();
+    arm();
     requestMotionThenStart();
-    if (armed) disarm(); else arm();
   });
   if (aidStop) {
     aidStop.addEventListener('click', function (e) {

@@ -5,7 +5,7 @@ import SwiftUI
 /// it does not skip the page. Never a cream lock. Never on passerby tapper.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
-    static let currentVersion = "4.5"
+    static let currentVersion = "4.6"
 
     /// Legal record only — does not hide the gate on cold start.
     static var hasAcceptedCurrent: Bool {
