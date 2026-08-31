@@ -189,7 +189,7 @@ function redmedAssetURL(file) {
     /* Fluid shell — SE → Pro Max → iPad / landscape. */
     --page-max: 480px;
     --page-pad-x: clamp(16px, 4.2vw, 28px);
-    --tabbar-h: 56px; /* matches ContentView content inset */
+    --tabbar-h: 56.5px; /* matches ContentView content inset */
     --fs-name: 22px; /* hero under logo — RED-9 / Main.dc */
     --fs-row: 14px; /* YOU rows + lists — matches Theme CardRow */
     --fs-title: 16px;
@@ -201,10 +201,10 @@ function redmedAssetURL(file) {
     --safe-l: env(safe-area-inset-left, 0px);
   }
   @media (min-width: 600px) {
-    :root { --page-max: 560px; --tabbar-h: 56px; }
+    :root { --page-max: 560px; --tabbar-h: 56.5px; }
   }
   @media (min-width: 768px) {
-    :root { --page-max: 680px; --tabbar-h: 56px; --box: 10px; }
+    :root { --page-max: 680px; --tabbar-h: 56.5px; --box: 10px; }
   }
   @media (min-width: 1024px) {
     :root { --page-max: 760px; }
@@ -1382,7 +1382,7 @@ function redmedAssetURL(file) {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 4.5px var(--safe-r) var(--safe-b) var(--safe-l);
+    padding: 5px var(--safe-r) var(--safe-b) var(--safe-l);
     z-index: 30;
   }
   .tabs {
@@ -1463,7 +1463,7 @@ function redmedAssetURL(file) {
   @media (max-width: 360px) {
     :root {
       --page-pad-x: 10px;
-      --tabbar-h: 58px;
+      --tabbar-h: 58.5px;
     }
     .seizure-strip { flex-wrap: wrap; }
   }
