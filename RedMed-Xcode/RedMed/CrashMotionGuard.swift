@@ -126,7 +126,8 @@ final class CrashMotionGuard: ObservableObject {
             let q = OperationQueue()
             q.name = "RedMed.CrashMotion"
             q.maxConcurrentOperationCount = 1
-            q.qualityOfService = .userInitiated
+            // Utility so 50 Hz evaluate does not contend with tab hops / scroll.
+            q.qualityOfService = .utility
             return q
         }()
         private let lock = NSLock()

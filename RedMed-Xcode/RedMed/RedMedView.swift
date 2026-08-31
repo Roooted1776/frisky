@@ -5,7 +5,8 @@ import SwiftUI
 /// on this tab: WebKit parse was the cold-open stall, and a parked embed
 /// under 911 / Aid / NFC kept the compositor hot mid-session.
 /// Owner chrome: logo + name + Linked with Edit trailing (no Help dock).
-/// Scanners keep Back. Help lives on 911 / Aid / NFC — not on Edit.
+/// Website link sits under the YOU fields, owner only. Scanners keep Back.
+/// Help lives on 911 / Aid / NFC — not on Edit.
 /// Fresh install: native setup funnel. Passerby tapper is unchanged.
 struct RedMedView: View {
     @EnvironmentObject var profile: ProfileData
@@ -78,7 +79,6 @@ struct RedMedView: View {
         }
         // Owner profile only — never redact the passerby / EMS scanner card.
         .privacySensitive(!isScannerSession)
-        .background { RedMedPageBackground() }
         .alert(BiometricAuth.deniedAlertTitle, isPresented: $showAuthFailedAlert) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -250,22 +250,30 @@ private struct RedMedUserHeader: View {
 /// empty). Contacts hide when vacant. Contacts dial `tel:` like the HTML card.
 private struct OwnerYouCard: View {
     @EnvironmentObject var profile: ProfileData
+    @Environment(\.isScannerSession) private var isScannerSession
 
     private var trimmedName: String {
         profile.name.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                identityCard
-                listsCard
+        GeometryReader { geo in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    identityCard
+                    listsCard
+                    if !isScannerSession {
+                        Spacer(minLength: 28)
+                        OwnerWebsiteLinkButton(profile: profile)
+                    }
+                }
+                .padding(.horizontal, RedMedChrome.pagePadX)
+                .padding(.top, 4)
+                .padding(.bottom, 28)
+                .frame(minHeight: geo.size.height, alignment: .top)
             }
-            .padding(.horizontal, RedMedChrome.pagePadX)
-            .padding(.top, 4)
-            .padding(.bottom, 28)
+            .scrollIndicators(.visible)
         }
-        .scrollIndicators(.visible)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
@@ -505,29 +513,34 @@ private struct OwnerSetupFunnel: View {
     var onHealthImport: () -> Void
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                ghostYouCard
-                stepsCard
-                PrimaryButton(title: "Fill Medical ID", action: onFill)
-                if HealthKitProfileImport.isAvailable {
-                    healthButton
-                    Text("Birth date and blood type only. RedMed never writes back to Health.")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.redmedMuted)
+        GeometryReader { geo in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    ghostYouCard
+                    stepsCard
+                    PrimaryButton(title: "Fill Medical ID", action: onFill)
+                    if HealthKitProfileImport.isAvailable {
+                        healthButton
+                        Text("Birth date and blood type only. RedMed never writes back to Health.")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.redmedMuted)
+                    }
+                    if let healthMessage, !healthMessage.isEmpty {
+                        Text(healthMessage)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.redmedMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: 28)
+                    OwnerWebsiteLinkButton()
                 }
-                if let healthMessage, !healthMessage.isEmpty {
-                    Text(healthMessage)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                .padding(.horizontal, RedMedChrome.pagePadX)
+                .padding(.top, 4)
+                .padding(.bottom, 28)
+                .frame(minHeight: geo.size.height, alignment: .top)
             }
-            .padding(.horizontal, RedMedChrome.pagePadX)
-            .padding(.top, 4)
-            .padding(.bottom, 28)
+            .scrollIndicators(.visible)
         }
-        .scrollIndicators(.visible)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
@@ -612,6 +625,73 @@ private struct OwnerSetupFunnel: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
+    }
+}
+
+/// Owner-only Safari link under the YOU fields. Packs `#d=` on tap when a
+/// profile exists so the hosted helper card opens with this ID. Not Help.
+private struct OwnerWebsiteLinkButton: View {
+    var profile: ProfileData? = nil
+    @Environment(\.openURL) private var openURL
+
+    private var caption: String {
+        var s = AppConfig.medicalCardBaseURL
+        if let range = s.range(of: "://") {
+            s = String(s[range.upperBound...])
+        }
+        if s.hasSuffix("/") { s.removeLast() }
+        return s
+    }
+
+    var body: some View {
+        Button(action: open) {
+            HStack(alignment: .center, spacing: 14) {
+                Image(systemName: "globe")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundColor(.redmedAccent)
+                    .frame(width: 44, height: 44)
+                    .background(Color.redmedAccent.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius, style: .continuous))
+                    .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Website")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.redmedDark)
+                    Text(caption)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.redmedMuted)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                }
+
+                Spacer(minLength: 8)
+
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(.redmedAccent)
+                    .accessibilityHidden(true)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(RedMedPressStyle(scale: 0.98))
+        .redmedBox(flatten: false)
+        .accessibilityLabel("Website")
+        .accessibilityHint("Opens the helper card in Safari")
+    }
+
+    private func open() {
+        let url: URL?
+        if let profile, profile.hasSensitiveProfileData {
+            url = ProfileNFCCodec.buildURL(profile: profile)
+                ?? URL(string: AppConfig.medicalCardBaseURL)
+        } else {
+            url = URL(string: AppConfig.medicalCardBaseURL)
+        }
+        if let url { openURL(url) }
     }
 }
 

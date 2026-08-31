@@ -48,7 +48,6 @@ struct NFCView: View {
             }
             .scrollIndicators(.visible)
         }
-        .background { RedMedPageBackground() }
         .fullScreenCover(item: $previewSession) { session in
             PasserbyHTMLCardView(
                 payloadOrURL: session.payload,

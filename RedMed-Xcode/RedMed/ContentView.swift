@@ -43,9 +43,9 @@ struct ContentView: View {
     var body: some View {
         // No Location banner / CLLocationManager here — Find Help owns that.
         ZStack(alignment: .bottom) {
-            // Same cream as tapper body / RedMedPageBackground — no system white in tab gaps.
-            Color.redmedBg.ignoresSafeArea()
-                .allowsHitTesting(false)
+            // One wash for every tab. Per-tab RedMedPageBackground stacked four
+            // RadialGradients under opacity-0 keep-alive pages and made hops hitch.
+            RedMedPageBackground()
 
             // Keep-alive stack at origin. Inactive tabs hide at opacity 0.
             // RedMed is a native YOU card — no WKWebView to park at 0.02.
@@ -53,12 +53,12 @@ struct ContentView: View {
                 mountedTab(.redmed, epoch: profile.cardEpoch) {
                     RedMedView()
                 }
-                mountedTab(.emergency) {
+                mountedTab(.emergency, refreshOnHide: true) {
                     EmergencyView(isVisible: activeTab == .emergency)
                 }
                 mountedTab(.aid) { AidView() }
                 if showsNFC {
-                    mountedTab(.nfc) {
+                    mountedTab(.nfc, refreshOnHide: true) {
                         NFCView(isVisible: activeTab == .nfc)
                     }
                 }
@@ -128,6 +128,7 @@ struct ContentView: View {
         _ tab: AppTab,
         parksWebView: Bool = false,
         epoch: UInt = 0,
+        refreshOnHide: Bool = false,
         @ViewBuilder content: () -> Content
     ) -> some View {
         if mountedTabs.contains(tab) {
@@ -135,9 +136,9 @@ struct ContentView: View {
                 isFront: activeTab == tab,
                 parksWebView: parksWebView,
                 epoch: epoch,
+                refreshOnHide: refreshOnHide,
                 content: content()
             )
-            .equatable()
         }
     }
 
@@ -154,31 +155,34 @@ struct ContentView: View {
     }
 }
 
-/// Parks a mounted tab without tearing it down. Front tab re-diffs when
-/// `epoch` changes (Keychain restore / save) or when it becomes front.
-/// A tab that stayed in back skips `body` so 911 GPS / Aid accordion / NFC
-/// pack do not rebuild on every hop. All owner tabs are native (Preview
-/// WKWebView is a full-screen cover), so back tabs hide at opacity 0.
-private struct IsolatedKeepAliveTab<Content: View>: View, Equatable {
+/// Parks a mounted tab without tearing it down.
+///
+/// Opacity lives on this wrapper so a hop can hide the leaving page without
+/// re-diffing it. Inner `FrozenKeepAliveContent` skips `body` while a tab
+/// stays in back, and on leave unless `refreshOnHide` (911 GPS / NFC
+/// `isVisible` must still run). Front tab always re-diffs so Keychain /
+/// environment land. Native pages hide at opacity 0 (Preview WKWebView is a
+/// full-screen cover).
+private struct IsolatedKeepAliveTab<Content: View>: View {
     let isFront: Bool
     let parksWebView: Bool
     let epoch: UInt
+    let refreshOnHide: Bool
     let content: Content
 
-    static func == (lhs: Self, rhs: Self) -> Bool {
-        guard lhs.parksWebView == rhs.parksWebView else { return false }
-        guard lhs.epoch == rhs.epoch else { return false }
-        if lhs.isFront != rhs.isFront { return false }
-        return !lhs.isFront
-    }
-
     var body: some View {
-        content
-            .opacity(displayOpacity)
-            .zIndex(isFront ? 1 : 0)
-            .transaction { $0.animation = nil }
-            .allowsHitTesting(isFront)
-            .accessibilityHidden(!isFront)
+        FrozenKeepAliveContent(
+            epoch: epoch,
+            isFront: isFront,
+            refreshOnHide: refreshOnHide,
+            content: content
+        )
+        .equatable()
+        .opacity(displayOpacity)
+        .zIndex(isFront ? 1 : 0)
+        .transaction { $0.animation = nil }
+        .allowsHitTesting(isFront)
+        .accessibilityHidden(!isFront)
     }
 
     private var displayOpacity: Double {
@@ -186,6 +190,27 @@ private struct IsolatedKeepAliveTab<Content: View>: View, Equatable {
         // 0 blanks WKCompositingView. Native pages have no web view.
         return parksWebView ? 0.02 : 0
     }
+}
+
+private struct FrozenKeepAliveContent<Content: View>: View, Equatable {
+    let epoch: UInt
+    let isFront: Bool
+    let refreshOnHide: Bool
+    let content: Content
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        guard lhs.epoch == rhs.epoch else { return false }
+        guard lhs.refreshOnHide == rhs.refreshOnHide else { return false }
+        if lhs.isFront == rhs.isFront {
+            // Stay in back: skip. Stay in front: always re-diff.
+            return !lhs.isFront
+        }
+        if rhs.isFront { return false }
+        // Becoming back: skip unless GPS / NFC visibility hooks need a pass.
+        return !rhs.refreshOnHide
+    }
+
+    var body: some View { content }
 }
 
 struct CustomTabBar: View {
