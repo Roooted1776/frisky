@@ -38,7 +38,7 @@
     <h1 class="legal-doc-title"><span class="legal-title-ico" aria-hidden="true">🔒</span>Privacy</h1>
     <p class="legal-meta">
       <strong>Effective</strong> August 2026<br>
-      <strong>Version</strong> 4.5 (United States)<br>
+      <strong>Version</strong> 4.6 (United States)<br>
       <strong>Law</strong> US federal and state privacy law (including CCPA/CPRA for California residents)
     </p>
     <p class="legal-parties">Applies to people in the United States who use the RedMed app or a RedMed NFC band</p>
@@ -71,7 +71,7 @@
       <li><strong>Location:</strong> coordinates and heading shown only while Find Help is open, so you can read them to a dispatcher. Find Nearby Hospitals also uses GPS: Apple Maps in the iPhone app; OpenStreetMap Overpass on a band tap in a browser (see §7).</li>
       <li><strong>Apple Health (optional):</strong> if you tap Fill From Apple Health, RedMed reads birth date and blood type from HealthKit on this iPhone. Read-only. Never written back to Health. Never sent to us.</li>
       <li><strong>Support email:</strong> if you write us, we see the address and message you send.</li>
-      <li><strong>Motion data (crash/impact alarm):</strong> while the owner app is in the foreground, it can read your iPhone's motion sensors to detect a possible vehicle crash or severe impact and trigger a local alarm. Face ID is not required for that monitor. See <a href="#terms">Terms</a> §7. This processing happens only in memory on your device to evaluate the last few seconds of motion — it is never stored, logged, or sent to us.</li>
+      <li><strong>Motion data (crash/impact alarm):</strong> while the owner app is in the foreground, it can read your iPhone's motion sensors to detect a possible vehicle crash or severe impact, trigger a local alarm, and after the US Crash Detection delay (10s + 30s) open Phone to the emergency number unless you stop it. Face ID is not required for that monitor. See <a href="#terms">Terms</a> §7. This processing happens only in memory on your device to evaluate the last few seconds of motion — it is never stored, logged, or sent to us.</li>
     </ul>
     <p>Providing a profile is optional. Leaving fields blank is fine; an empty card is less useful in an emergency.</p>
 
@@ -90,7 +90,7 @@
     <p>Find Help shows coordinates only while that screen is open. GPS starts when Find Help needs it and stops when you leave or close the app. Location is not used for ads, profiling, or background tracking, and is never sent to us.</p>
     <p>Location defaults on (toggle on the "Before You Continue" screen — every cold start; same session after Agree stays in Main). If you leave Location on, Agree may show iOS’s When-In-Use Allow dialog — Apple requires that tap; we cannot auto-accept it. If you turn Location off, Find Help does not start GPS and does not prompt. RedMed does not show an in-app location gate. GPS updates themselves start on Find Help.</p>
     <p>The 911 coordinate readout stays on this iPhone. GPS is never attached to a <code>tel:</code> call. Find Nearby Hospitals has two paths: in the RedMed iPhone app, that search asks Apple Maps (MapKit) on this phone for ER POIs — Apple may see the query and region. On a band tap in a browser (<code>tapper.html</code>), that search sends this phone’s coordinates to OpenStreetMap’s Overpass API (<code>overpass-api.de</code>) because the browser has no MapKit. Overpass may see that location. Neither path is a RedMed upload, and RedMed does not receive the coordinates.</p>
-    <p>The Call button opens the system Phone app to your regional emergency number only. <strong>RedMed does not attach name, medical fields, contacts, GPS, or any other profile data to that call.</strong></p>
+    <p>The Call button and <strong>SOS · Locate Me</strong> open the system Phone app to your regional emergency number only. SOS does that on the tap, with no in-app confirmation and no countdown. Crash detection waits the US Crash Detection delay (10-second alert + 30-second countdown) before the same <code>tel:</code> open, unless you tap Stop The Alarm. A band-tap auto-arm on a helper’s phone does not place a call. <strong>RedMed does not attach name, medical fields, contacts, GPS, or any other profile data to that call.</strong> iOS may still show its own Call sheet; RedMed cannot suppress that.</p>
 
     <h2><span class="sec-num">8</span> Who else can see data</h2>
     <ul>
@@ -134,7 +134,7 @@
     <h1 class="legal-doc-title"><span class="legal-title-ico" aria-hidden="true">🔐</span>Security</h1>
     <p class="legal-meta">
       <strong>Effective</strong> August 2026<br>
-      <strong>Version</strong> 4.5 (United States)<br>
+      <strong>Version</strong> 4.6 (United States)<br>
       <strong>Read with</strong> <a href="#privacy">Privacy</a> and <a href="#terms">Terms</a>
     </p>
     <p class="legal-parties">How RedMed protects the iPhone app, the passerby card, and the NFC band in the United States</p>
@@ -189,7 +189,7 @@
     <h1 class="legal-doc-title"><span class="legal-title-ico" aria-hidden="true">📜</span>Terms</h1>
     <p class="legal-meta">
       <strong>Effective</strong> August 2026<br>
-      <strong>Version</strong> 4.5 (United States)<br>
+      <strong>Version</strong> 4.6 (United States)<br>
       <strong>Governing law</strong> Laws of the State of <strong>New Jersey</strong>, United States
     </p>
     <p class="legal-parties">Applies to people in the United States who use the RedMed app or a RedMed NFC band</p>
@@ -210,7 +210,7 @@
     <h2><span class="sec-num">3</span> What the App does</h2>
     <ul>
       <li><strong>Medical ID</strong> — store self-reported name, birth date, blood type, allergies, meds, conditions, and contacts on your phone; optionally write them to a passive NFC band.</li>
-      <li><strong>Find Help</strong> — dial the regional emergency number, show coordinates to read aloud, optional seizure stopwatch you start yourself.</li>
+      <li><strong>Find Help</strong> — SOS opens the regional emergency number immediately (no in-app prompt); crash detection waits the US Crash Detection delay then opens the same call unless you stop it; coordinates to read aloud; optional seizure stopwatch you start yourself.</li>
       <li><strong>Aid</strong> — general first-aid / CPR guidance on-device while waiting for professionals.</li>
       <li><strong>Band tap</strong> — any phone that taps a written band can open the emergency card in a browser with no app install and no login.</li>
     </ul>
@@ -226,13 +226,13 @@
 
     <h2><span class="sec-num">6</span> Find Help and location</h2>
     <p>Location and compass are used only while Find Help is visible, to display coordinates you can read to 911. Defaults on (toggle on the "Before You Continue" screen — every cold start; same session after Agree stays in Main). If Location stays on, Agree may trigger iOS’s When-In-Use Allow dialog — we cannot skip it. If Location is off, GPS stays off. Find Nearby Hospitals in the iPhone app asks Apple Maps on this phone for ER POIs; that search is Apple’s. On a band tap in a browser, hospital search sends coordinates to OpenStreetMap Overpass (<code>overpass-api.de</code>). GPS is never attached to a 911 call.</p>
-    <p>The optional seizure stopwatch is started by you. At five minutes it may open the dialer. It does not detect seizures and must never delay an earlier call when one is needed.</p>
+    <p><strong>SOS · Locate Me</strong> on Find Help opens the system Phone app to your regional emergency number immediately — no in-app confirmation, no countdown — then arms the local alarm. The optional seizure stopwatch is started by you. At five minutes it shows a Call button; it does not autodial and must never delay an earlier call when one is needed.</p>
     <p>RedMed does not use Apple's Emergency SOS via satellite, Apple Crash Detection API, or carrier satellite messaging — see <a href="#crash-alarm">§7</a> for RedMed's own, separate crash/impact alarm. Find Help may open Phone or Messages, or describe those built-in steps when there is no cell signal; RedMed does not operate those radios. Coordinates stay on-device and are not sent to us.</p>
 
     <h2 id="crash-alarm"><span class="sec-num">7</span> Automatic crash / severe-impact alarm</h2>
-    <p>Separately from Find Help, the App can run an on-device motion monitor (built by RedMed, not Apple's Crash Detection) that watches your iPhone's motion sensors while the owner app is in the foreground. It does not wait on Face ID. CoreMotion stops when the app is backgrounded; an already-armed siren can keep sounding. If it detects a sudden, severe impact consistent with a vehicle crash or comparable event, it can automatically trigger a local <strong>alarm</strong> — maximum screen brightness, maximum device volume, and an audible siren — to draw attention and help you or a bystander find the phone and call for help. You can stop the alarm at any time with the on-screen "Stop The Alarm" control.</p>
-    <p>The alarm is <strong>local and automatic only</strong>. It does not call 911, does not message anyone, does not transmit your location or any data to RedMed or anyone else, and does not detect every crash or every severe impact. It is tuned to avoid triggering during ordinary daily motion (walking, running, exercise, and other normal handling of the phone), which means it can also fail to trigger during an actual crash, and it can trigger by mistake during unrelated hard impacts (for example, a dropped phone or a hard fall). <strong>Do not rely on the alarm instead of calling 911</strong> if you are able to call. Motion data used to evaluate a possible impact is processed only in memory on your device for this purpose and is not stored or transmitted.</p>
-    <p>Using the alarm as a substitute for a monitored medical device, a certified crash-detection system, or a direct call to 911 is outside its intended purpose and at your own risk.</p>
+    <p>Separately from Find Help, the App can run an on-device motion monitor (built by RedMed, not Apple's Crash Detection) that watches your iPhone's motion sensors while the owner app is in the foreground. It does not wait on Face ID. CoreMotion stops when the app is backgrounded; an already-armed siren can keep sounding. If it detects a sudden, severe impact consistent with a vehicle crash or comparable event, it arms a local <strong>alarm</strong> — maximum screen brightness, maximum device volume, and an audible siren — and follows the <strong>United States Crash Detection call delay</strong> published by Apple (Apple Support 104959): a 10-second alert, then a 30-second countdown, then it opens the system Phone app to your regional emergency number (911 in the United States) unless you tap Stop The Alarm. That is RedMed’s own CoreMotion path using the same delay Apple uses in the US. It is <strong>not</strong> Apple's Crash Detection, not FDA-cleared, and not a certified crash-detection or medical device. GPS is never attached to the call. You can stop the alarm and cancel the pending call at any time with the on-screen "Stop The Alarm" control.</p>
+    <p>The alarm can miss a real crash and can fire on an unrelated hard impact (for example, a dropped phone). It is tuned to avoid ordinary daily motion (walking, running, exercise, and other normal handling of the phone). It does not message anyone, does not transmit your location or any data to RedMed, and does not detect every crash or every severe impact. <strong>Do not rely on it instead of calling 911</strong> if you are able to call. Motion data used to evaluate a possible impact is processed only in memory on your device for this purpose and is not stored or transmitted.</p>
+    <p>Using the alarm as a substitute for a monitored medical device, Apple Crash Detection, or a direct call to 911 is outside its intended purpose and at your own risk.</p>
 
     <h2><span class="sec-num">8</span> No medical advice</h2>
     <p>Aid content is general public information, similar to material from public-health sources. It is for education while you wait for EMS. It is not personalized medical advice and creates no clinician-patient relationship.</p>
@@ -240,7 +240,7 @@
 
     <h2><span class="sec-num">9</span> Not a medical device</h2>
     <p>The App and band are <strong>not medical devices</strong> under the Federal Food, Drug, and Cosmetic Act or FDA rules for their current purpose: consumer storage and display of self-reported emergency ID, plus a convenience assist for contacting emergency services. RedMed is not FDA-cleared, approved, or registered as a device for diagnosis, treatment, cure, mitigation, or prevention of disease.</p>
-    <p>RedMed does not diagnose, treat, monitor vitals, or provide clinical decision support. The band is a passive NFC tag — the digital equivalent of a wallet medical ID — not a therapeutic instrument. The crash/impact alarm in <a href="#crash-alarm">§7</a> is a local attention-getting signal, not a monitor, diagnostic tool, or treatment system.</p>
+    <p>RedMed does not diagnose, treat, monitor vitals, or provide clinical decision support. The band is a passive NFC tag — the digital equivalent of a wallet medical ID — not a therapeutic instrument. The crash/impact alarm in <a href="#crash-alarm">§7</a> is a local attention-getting signal plus, after the US Crash Detection delay, an attempt to open Phone to the emergency number unless you stop it. It is not a monitor, diagnostic tool, treatment system, or certified crash-detection system.</p>
     <p>Using RedMed as if it were a monitor, alarm, or treatment system is outside the intended purpose and at that person’s sole risk.</p>
 
     <h2><span class="sec-num">10</span> Call 911 first</h2>
@@ -299,7 +299,7 @@
     <h1 class="legal-doc-title"><span class="legal-title-ico" aria-hidden="true">⚕️</span>Medical Disclaimer</h1>
     <p class="legal-meta">
       <strong>Effective</strong> August 2026<br>
-      <strong>Version</strong> 4.5 (United States)<br>
+      <strong>Version</strong> 4.6 (United States)<br>
       <strong>Read with</strong> <a href="#terms">Terms</a> §8–§10
     </p>
     <p class="legal-parties">Applies to people in the United States who use the RedMed app or a RedMed NFC band</p>
@@ -310,7 +310,7 @@
 
     <h2><span class="sec-num">9</span> Not a medical device</h2>
     <p>The App and band are <strong>not medical devices</strong> under the Federal Food, Drug, and Cosmetic Act or FDA rules for their current purpose: consumer storage and display of self-reported emergency ID, plus a convenience assist for contacting emergency services. RedMed is not FDA-cleared, approved, or registered as a device for diagnosis, treatment, cure, mitigation, or prevention of disease.</p>
-    <p>RedMed does not diagnose, treat, monitor vitals, or provide clinical decision support. The band is a passive NFC tag — the digital equivalent of a wallet medical ID — not a therapeutic instrument. The crash/impact alarm in <a href="#crash-alarm">§7</a> is a local attention-getting signal, not a monitor, diagnostic tool, or treatment system.</p>
+    <p>RedMed does not diagnose, treat, monitor vitals, or provide clinical decision support. The band is a passive NFC tag — the digital equivalent of a wallet medical ID — not a therapeutic instrument. The crash/impact alarm in <a href="#crash-alarm">§7</a> is a local attention-getting signal plus, after the US Crash Detection delay, an attempt to open Phone to the emergency number unless you stop it. It is not a monitor, diagnostic tool, treatment system, or certified crash-detection system.</p>
     <p>Using RedMed as if it were a monitor, alarm, or treatment system is outside the intended purpose and at that person’s sole risk.</p>
 
     <h2><span class="sec-num">10</span> Call 911 first</h2>
