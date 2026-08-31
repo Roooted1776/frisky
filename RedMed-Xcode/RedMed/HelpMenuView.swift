@@ -27,7 +27,7 @@ enum HelpDocument {
         var emoji: String {
             switch self {
             case .privacy: return "🔒"
-            case .security: return "🛡"
+            case .security: return "🛡️"
             case .terms: return "📜"
             case .medicalDisclaimer: return "⚕️"
             }
