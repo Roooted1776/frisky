@@ -1,11 +1,13 @@
 import SwiftUI
 
-/// Legal consent. First launch (or after a material policy version bump) only.
-/// Never a cream lock. Never on passerby tapper.
+/// Legal consent. Every cold start of the owner app (fresh process), then
+/// Main after Agree this process. Stored version is the legal record only —
+/// it does not skip the page. Never a cream lock. Never on passerby tapper.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
-    static let currentVersion = "4.4"
+    static let currentVersion = "4.5"
 
+    /// Legal record only — does not hide the gate on cold start.
     static var hasAcceptedCurrent: Bool {
         UserDefaults.standard.string(forKey: acceptedVersionKey) == currentVersion
     }
@@ -17,12 +19,17 @@ enum ConsentSettings {
     /// After Erase all data — next open shows Before you continue.
     static func clearAcceptance() {
         UserDefaults.standard.removeObject(forKey: acceptedVersionKey)
+        acceptedThisProcess = false
     }
+
+    /// Set on Agree this process. Dies with the process so the next cold
+    /// start shows Before you continue even if the stored version matches.
+    static var acceptedThisProcess = false
 }
 
 struct ConsentGateView<Content: View>: View {
-    @State private var hasAccepted = ConsentSettings.hasAcceptedCurrent
-    @State private var contentArmed = ConsentSettings.hasAcceptedCurrent
+    @State private var hasAccepted = ConsentSettings.acceptedThisProcess
+    @State private var contentArmed = ConsentSettings.acceptedThisProcess
     @State private var checked = false
     @State private var openPolicy: HelpDocument.Policy?
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
@@ -43,7 +50,7 @@ struct ConsentGateView<Content: View>: View {
         }
         .onAppear {
             SnapshotSafeCover.shared.reveal()
-            // First open: keep Main unmounted until Agree so the gate is the
+            // Cold start: keep Main unmounted until Agree so the gate is the
             // first real page, not a cream hang over a loading WKWebView.
         }
         .onReceive(NotificationCenter.default.publisher(for: .redMedDidEraseLocalData)) { _ in
@@ -55,6 +62,7 @@ struct ConsentGateView<Content: View>: View {
         checked = false
         openPolicy = nil
         locationEnabled = true
+        ConsentSettings.acceptedThisProcess = false
         var t = Transaction()
         t.animation = nil
         withTransaction(t) {
@@ -154,6 +162,7 @@ struct ConsentGateView<Content: View>: View {
     private func enterApp() {
         checked = true
         ConsentSettings.recordAcceptance()
+        ConsentSettings.acceptedThisProcess = true
         RedMedHaptics.success()
         SnapshotSafeCover.shared.reveal()
         var t = Transaction()

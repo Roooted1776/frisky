@@ -31,8 +31,8 @@ struct RedMedApp: App {
     }
 }
 
-/// Before you continue (first launch / policy bump) then Main.
-/// No cream Face ID lock. Passerby tapper is not in this tree.
+/// Before you continue (every cold start) then Main after Agree this process.
+/// Same session stays in Main. No cream Face ID lock. Passerby tapper is not in this tree.
 private struct LaunchRoot: View {
     var body: some View {
         ConsentGateView { Main() }

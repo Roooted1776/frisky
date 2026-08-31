@@ -38,7 +38,7 @@
     <h1 class="legal-doc-title"><span class="legal-title-ico" aria-hidden="true">🔒</span>Privacy</h1>
     <p class="legal-meta">
       <strong>Effective</strong> August 2026<br>
-      <strong>Version</strong> 4.4 (United States)<br>
+      <strong>Version</strong> 4.5 (United States)<br>
       <strong>Law</strong> US federal and state privacy law (including CCPA/CPRA for California residents)
     </p>
     <p class="legal-parties">Applies to people in the United States who use the RedMed app or a RedMed NFC band</p>
@@ -88,7 +88,7 @@
 
     <h2><span class="sec-num">7</span> Location (Find Help)</h2>
     <p>Find Help shows coordinates only while that screen is open. GPS starts when Find Help needs it and stops when you leave or close the app. Location is not used for ads, profiling, or background tracking, and is never sent to us.</p>
-    <p>Location defaults on (toggle on the "Before You Continue" screen — first launch or a policy update, not every open). If you leave Location on, Agree may show iOS’s When-In-Use Allow dialog — Apple requires that tap; we cannot auto-accept it. If you turn Location off, Find Help does not start GPS and does not prompt. RedMed does not show an in-app location gate. GPS updates themselves start on Find Help.</p>
+    <p>Location defaults on (toggle on the "Before You Continue" screen — every cold start; same session after Agree stays in Main). If you leave Location on, Agree may show iOS’s When-In-Use Allow dialog — Apple requires that tap; we cannot auto-accept it. If you turn Location off, Find Help does not start GPS and does not prompt. RedMed does not show an in-app location gate. GPS updates themselves start on Find Help.</p>
     <p>The 911 coordinate readout stays on this iPhone. GPS is never attached to a <code>tel:</code> call. Find Nearby Hospitals has two paths: in the RedMed iPhone app, that search asks Apple Maps (MapKit) on this phone for ER POIs — Apple may see the query and region. On a band tap in a browser (<code>tapper.html</code>), that search sends this phone’s coordinates to OpenStreetMap’s Overpass API (<code>overpass-api.de</code>) because the browser has no MapKit. Overpass may see that location. Neither path is a RedMed upload, and RedMed does not receive the coordinates.</p>
     <p>The Call button opens the system Phone app to your regional emergency number only. <strong>RedMed does not attach name, medical fields, contacts, GPS, or any other profile data to that call.</strong></p>
 
@@ -134,7 +134,7 @@
     <h1 class="legal-doc-title"><span class="legal-title-ico" aria-hidden="true">🔐</span>Security</h1>
     <p class="legal-meta">
       <strong>Effective</strong> August 2026<br>
-      <strong>Version</strong> 4.4 (United States)<br>
+      <strong>Version</strong> 4.5 (United States)<br>
       <strong>Read with</strong> <a href="#privacy">Privacy</a> and <a href="#terms">Terms</a>
     </p>
     <p class="legal-parties">How RedMed protects the iPhone app, the passerby card, and the NFC band in the United States</p>
@@ -189,7 +189,7 @@
     <h1 class="legal-doc-title"><span class="legal-title-ico" aria-hidden="true">📜</span>Terms</h1>
     <p class="legal-meta">
       <strong>Effective</strong> August 2026<br>
-      <strong>Version</strong> 4.4 (United States)<br>
+      <strong>Version</strong> 4.5 (United States)<br>
       <strong>Governing law</strong> Laws of the State of <strong>New Jersey</strong>, United States
     </p>
     <p class="legal-parties">Applies to people in the United States who use the RedMed app or a RedMed NFC band</p>
@@ -204,7 +204,7 @@
     <h2><span class="sec-num">2</span> Agreement</h2>
     <p>These Terms govern the RedMed iPhone app and any associated passive NFC medical band programmed through the app (together, the “App”).</p>
     <p>By downloading, installing, opening, or using the App — as the person who creates a profile, or as anyone who views a card by tapping a band or opening a <code>#d=</code> link — you agree to these Terms and to <a href="#privacy">Privacy</a>. If you do not agree, do not use the App.</p>
-    <p>In the owner iPhone app, first launch (and any material policy change) requires an explicit I-agree tap on Before You Continue before the App is usable. That screen is not an app-open Face ID lock and is not shown on later opens. A passerby who only views a band card agrees by opening that card.</p>
+    <p>In the owner iPhone app, every cold start requires an explicit I-agree tap on Before You Continue before the App is usable. Same session after Agree stays in Main. That screen is not an app-open Face ID lock. A passerby who only views a band card agrees by opening that card.</p>
     <p>Nothing here limits rights you cannot waive under US consumer-protection law. Where a term conflicts with a non-waivable statutory right, that right wins.</p>
 
     <h2><span class="sec-num">3</span> What the App does</h2>
@@ -225,7 +225,7 @@
     <p>You control what you enter. RedMed does not verify allergies, meds, conditions, or blood type. Keep the profile and band current when facts change. Responders should verify critical details when they can and use their own judgment.</p>
 
     <h2><span class="sec-num">6</span> Find Help and location</h2>
-    <p>Location and compass are used only while Find Help is visible, to display coordinates you can read to 911. Defaults on (toggle on the "Before You Continue" screen — first launch or a policy update, not every open). If Location stays on, Agree may trigger iOS’s When-In-Use Allow dialog — we cannot skip it. If Location is off, GPS stays off. Find Nearby Hospitals in the iPhone app asks Apple Maps on this phone for ER POIs; that search is Apple’s. On a band tap in a browser, hospital search sends coordinates to OpenStreetMap Overpass (<code>overpass-api.de</code>). GPS is never attached to a 911 call.</p>
+    <p>Location and compass are used only while Find Help is visible, to display coordinates you can read to 911. Defaults on (toggle on the "Before You Continue" screen — every cold start; same session after Agree stays in Main). If Location stays on, Agree may trigger iOS’s When-In-Use Allow dialog — we cannot skip it. If Location is off, GPS stays off. Find Nearby Hospitals in the iPhone app asks Apple Maps on this phone for ER POIs; that search is Apple’s. On a band tap in a browser, hospital search sends coordinates to OpenStreetMap Overpass (<code>overpass-api.de</code>). GPS is never attached to a 911 call.</p>
     <p>The optional seizure stopwatch is started by you. At five minutes it may open the dialer. It does not detect seizures and must never delay an earlier call when one is needed.</p>
     <p>RedMed does not use Apple's Emergency SOS via satellite, Apple Crash Detection API, or carrier satellite messaging — see <a href="#crash-alarm">§7</a> for RedMed's own, separate crash/impact alarm. Find Help may open Phone or Messages, or describe those built-in steps when there is no cell signal; RedMed does not operate those radios. Coordinates stay on-device and are not sent to us.</p>
 
@@ -299,7 +299,7 @@
     <h1 class="legal-doc-title"><span class="legal-title-ico" aria-hidden="true">⚕️</span>Medical Disclaimer</h1>
     <p class="legal-meta">
       <strong>Effective</strong> August 2026<br>
-      <strong>Version</strong> 4.4 (United States)<br>
+      <strong>Version</strong> 4.5 (United States)<br>
       <strong>Read with</strong> <a href="#terms">Terms</a> §8–§10
     </p>
     <p class="legal-parties">Applies to people in the United States who use the RedMed app or a RedMed NFC band</p>

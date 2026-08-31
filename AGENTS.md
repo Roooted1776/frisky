@@ -38,8 +38,9 @@ The app has no backend, database, or web service.
   write/read sessions, never tab chrome. Owner writes the passive HF NFC band
   from the NFC tab (no Face ID on write) as `medicalCardBaseURL#d=` only
   (`AppConfig.OwnerBandURI`) — no vendor cloud, no social/short URL, no BLE.
-  Launch path is `ConsentGateView` (first launch / policy bump only) then
-  Main. No cream lock in front of Main. Face ID is not an app-open gate.
+  Launch path is `ConsentGateView` (every cold start) then Main after Agree
+  this process. Same session stays in Main. No cream lock in front of Main.
+  Face ID is not an app-open gate.
 - **Scanner / passerby shell** (`PublicCardView` / bracelet tap → `tapper.html#d=…`,
   `isScannerSession == true`): tabs are **RedMed · 911 · Aid** only — **no Edit**,
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain or
@@ -98,9 +99,9 @@ The app has no backend, database, or web service.
 
 **Settings vs automatic (permanent):**
 - Haptic feedback + Location toggles (`AppSettings` / `HapticEngine.enabledKey`)
-  live on `ConsentGateView`'s "Before you continue" screen, not Help — first
-  launch / policy bump only, **not** every open. No other toggles there, and
-  Help no longer has a Settings section at all.
+  live on `ConsentGateView`'s "Before you continue" screen, not Help — every
+  cold start; same session after Agree stays in Main. No other toggles there,
+  and Help no longer has a Settings section at all.
 - **Brightness + sound are survival-alarm only (not Settings):**
   arm `BrightnessBoost` + `VolumeBoost` + `LocatorBeacon` only when (1) on-device crash /
   hard-impact detection (`CrashMotionGuard`) fires for **vehicle crash /
@@ -166,15 +167,16 @@ The app has no backend, database, or web service.
 **Cold launch:** Do **not** create `CLLocationManager`, start GPS / MapKit /
 trauma JSON, or show a Location banner at `@main`. First launch opens a cream
 shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash)
-then `ConsentGateView` (first launch / policy bump) then Main. No cream lock;
-Main mounts without Face ID. Owner `ContentView.onAppear` starts crash
+then `ConsentGateView` (every cold start) then Main after Agree this process.
+Same session stays in Main. No cream lock; Main mounts without Face ID.
+Owner `ContentView.onAppear` starts crash
 monitoring; `.background` stops CoreMotion; `.active` restarts it; `.inactive`
 does not stop it. `.task` calls `profile.restoreOnLaunch()` (owner only — scanners
 must not hit owner Keychain). A UserDefaults gate
 (`ProfileData.storedProfileGateKey`) plus `hasStoredProfile()` hints that a
 blob is expected so the empty funnel stays hidden while restore is in flight.
 Do not call Keychain decode in `@State` defaults.
-Location defaults on (Before you continue — first launch / policy bump) with
+Location defaults on (Before you continue — every cold start) with
 **no RedMed location gate / banner / Allow popup** — Help must not
 call `requestWhenInUseAuthorization`. Honor the Location toggle: Agree must
 not force `locationEnabled = true`. `requestWhenInUseIfNeeded` runs only if
