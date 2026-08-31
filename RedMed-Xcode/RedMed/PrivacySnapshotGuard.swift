@@ -8,7 +8,8 @@ import UIKit
 ///
 /// FaceTime / Screen Recording sets `UIScreen.isCaptured`. Do **not** cover the
 /// tap card — that is the public EMT view. Cover only when PHI is actually in
-/// memory and the tap card is not up. There is no cream lock in front of Main.
+/// memory and the tap card is not up. `OwnerAppLock` is the cream Face ID
+/// gate in front of Main; this cover is the snapshot / capture veil, not that lock.
 ///
 /// Non-capture SwiftUI cover is **`.background` only** (with PHI). Face ID /
 /// LAContext on Login / Save / Erase put the scene `.inactive` — covering then

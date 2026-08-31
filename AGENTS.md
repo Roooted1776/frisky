@@ -23,21 +23,16 @@ set up a working runtime here:
 The app has no backend, database, or web service.
 
 **Roles / shells (permanent — do not regress):**
-- **Face ID (2026-08-29):** in-app Face ID is only on the **owner RedMed page**
-  (Edit / Save / Erase). Not app launch, not 911 / Aid / NFC write, not tapper.
-  Tapper has no biometrics and no acknowledgement page. Do not remount
-  `OwnerAppLock` / `LockEntryPage` / `FacePage` as an app-wide cream lock.
-  Crash monitor starts from owner `Main` / `ContentView.onAppear`, not from
-  a lock. Profile restores from Keychain on owner Main appear (device-unlocked
-  Keychain — no Face ID to view). The band is the product, not optional.
+- **Face ID (2026-08-30):** owner open/return is **`OwnerAppLock`** (cream only — no heart, no Proceed). Face ID / passcode on every owner cold open and after leave. Then `ConsentGateView` (first launch / policy bump) then Main. Save and Erase also prompt (`force: true`, reuse duration **0**). Opening Edit does **not** prompt. NFC write, 911, Aid, and tapper do not prompt. Tapper has no biometrics and no acknowledgement page. Do not remount `LockEntryPage` / `FacePage`. Crash monitor starts after first unlock (`ContentView.onAppear`; return-unlock also starts) and **keeps running across relock** — cream lock is UI/PHI, not a CoreMotion stop. Profile restores after Face ID (`adoptLaunchPrefetch` / `restoreOnLaunch` on owner Main). Keychain is still device-unlocked — Face ID is UI-only, not SecItem. The band is the product, not optional.
 - **Owner app** (`Main` → `ContentView`, `isScannerSession == false`): tabs are
   **RedMed · 911 · Aid · NFC**. Edit is available on RedMed. NFC tab is always
   visible for owners; `AppConfig.nfcHardwareEnabled` only gates CoreNFC
   write/read sessions, never tab chrome. Owner writes the passive HF NFC band
   from the NFC tab (no Face ID on write) as `medicalCardBaseURL#d=` only
   (`AppConfig.OwnerBandURI`) — no vendor cloud, no social/short URL, no BLE.
-  Launch path is `ConsentGateView` (first launch / policy bump only) then
-  Main. No cream lock in front of Main. Face ID is not an app-open gate.
+  Launch path is `OwnerAppLock` (Face ID) then `ConsentGateView` (first launch / policy bump only) then
+  Main. Cream lock is in front of Main for the owner app. Face ID is an owner app-open gate.
+  Never on tapper.
 - **Scanner / passerby shell** (`PublicCardView` / bracelet tap → `tapper.html#d=…`,
   `isScannerSession == true`): tabs are **RedMed · 911 · Aid** only — **no Edit**,
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain or
@@ -48,8 +43,8 @@ The app has no backend, database, or web service.
   unregistered host onto bands. `redmed.pages.dev` stays
   optional until Cloudflare secrets / Pages Git connect land.
   **Tap-to-view never requires Face ID / biometrics / passcode / login** — owner biometrics gate
-  Edit, Save, and Erase only. NFC write, 911, Aid, and app launch do not prompt.
-  Passerby HTML never asks.
+  unlock, Save, and Erase. Opening Edit, NFC write, 911, Aid, and tapper do not prompt.
+  Passerby HTML never asks. Owner app open does prompt.
   **Nothing blocks the tap card** (YOU card / Preview / Scan / band tap): no
   privacy veil, no native overlay stealing taps, no login. Safari opens
   `tapper.html#d=` immediately.
@@ -115,12 +110,12 @@ The app has no backend, database, or web service.
 **Vault / privacy (permanent):**
 - `VaultHistoryView` was deleted. `VaultHistoryStore` still records events
   (no UI). Do not remount a Face ID vault screen.
-- **No cream lock in front of Main.** Do not remount `OwnerAppLock` /
-  `LockEntryPage` / `FacePage`. Passerby `tapper.html` never has Face ID,
+- **Owner open is `OwnerAppLock` (cream).** Do not remount `LockEntryPage` /
+  `FacePage`. Passerby `tapper.html` never has Face ID,
   passcode, login, or any page in front of the card.
-- Face ID / Touch ID with device passcode fallback is **Edit, Save, and
-  Erase only** (`force: true`, reuse duration **0**). NFC write, 911, Aid,
-  app launch, and tapper do not prompt. Apple locks Face ID after **5
+- Face ID / Touch ID with device passcode fallback is **unlock, Save, and
+  Erase** (`force: true`, reuse duration **0**). Opening Edit does not prompt.
+  NFC write, 911, Aid, and tapper do not prompt. Apple locks Face ID after **5
   unsuccessful matches** until device passcode succeeds (system-wide).
   `BiometricAuth.Outcome.unavailable` is distinct from `.notVerified`.
 - Profile Keychain is `WhenPasscodeSetThisDeviceOnly` with **no** biometry
@@ -144,7 +139,7 @@ The app has no backend, database, or web service.
 - `PrivacySnapshotGuard` cover must appear opaque with **no** opacity fade;
   app-switcher snapshots can capture mid-transition PHI. Capture cover **only
   while PHI is in RAM**. Non-capture cover is true **`.background` only** (with
-  PHI) — never on `.inactive` (Face ID / LAContext on Edit/Save/Erase blanks
+  PHI) — never on `.inactive` (Face ID / LAContext on unlock / Save / Erase blanks
   the UI mid-prompt), and **never over the tap card** (NFC Preview / Scan /
   `PasserbyHTMLCardView`). Copy should say screen sharing, not a vague
   “Profile hidden”.
@@ -164,19 +159,20 @@ The app has no backend, database, or web service.
 **Cold launch:** Do **not** create `CLLocationManager`, start GPS / MapKit /
 trauma JSON, or show a Location banner at `@main`. First launch opens a cream
 shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash)
-then `ConsentGateView` (first launch / policy bump) then Main. No cream lock;
-Main mounts without Face ID. Owner `ContentView.onAppear` starts crash
-monitoring; `.task` calls `profile.restoreOnLaunch()` (owner only — scanners
+then Face ID (`OwnerAppLock`) then `ConsentGateView` (first launch / policy bump)
+then Main. Owner `ContentView.onAppear` starts crash monitoring; relock does
+not stop it. `.task` calls `profile.restoreOnLaunch()` (owner only — scanners
 must not hit owner Keychain). A UserDefaults gate
 (`ProfileData.storedProfileGateKey`) plus `hasStoredProfile()` hints that a
 blob is expected so the empty funnel stays hidden while restore is in flight.
 Do not call Keychain decode in `@State` defaults.
-Location defaults on (Before you continue — first launch / policy bump) with
-**no RedMed location gate / banner / Allow popup** — Help must not
-call `requestWhenInUseAuthorization`. When-In-Use + GPS start on Find Help only
-when Location is enabled (`AppSettings.locationEnabled` + `LocationManager.start`
-→ `startUpdatingLocation()` while the 911 tab is visible); iOS may show its
-system Allow sheet once (cannot auto-accept). Passerby `tapper.html` must not
+Location defaults on (Before you continue — first launch / policy bump). The
+Location toggle is honored on Agree (do not force it on). Help must not
+call `requestWhenInUseAuthorization`. If Location is on at Agree,
+`LocationAccessSuggester.requestWhenInUseIfNeeded` may show the system Allow
+sheet once. GPS start/stop is still Find Help only
+(`AppSettings.locationEnabled` + `LocationManager.start`
+→ `startUpdatingLocation()` while the 911 tab is visible). Passerby `tapper.html` must not
 call `geolocation` until the 911 tab opens. Nearby hospitals is a one-shot
 MapKit POI search (Apple may see query + region). Do not construct
 `CMMotionManager` at `CrashMotionGuard` shared init. `ContentView` lazy
@@ -276,12 +272,12 @@ are unchanged, and skips reinstall when the built app is unchanged. Defaults to 
 override with `SIM="iPhone 17 Pro" SIM_OS=27.0 ./scripts/run.sh`. Location is pre-granted on
 the simulator (Apple Park coords); override with `LOCATION="40.7128,-74.0060" ./scripts/run.sh`.
 
-**Compile checking without a Mac:** `.github/workflows/ios-build.yml` builds the app on a
-GitHub `macos-latest` runner for every push to `main` and every PR that touches
-`RedMed-Xcode/**`, so Swift compile errors surface in CI even when the change was authored
-somewhere that cannot build. It only compiles — it does not run the app, the Simulator UI, NFC,
-or Face ID, and it is not a substitute for testing behaviour on a device. Note the path filter:
-macOS runner minutes bill at 10x on private repos, so doc/HTML-only changes deliberately skip it.
+**Compile checking without a Mac:** `.github/workflows/ios-build.yml` is
+`workflow_dispatch` only (billing). It does **not** gate merges. Trigger it
+after Swift/scheme changes. It only compiles — it does not run the app, the
+Simulator UI, NFC, or Face ID, and it is not a substitute for testing behaviour
+on a device. Path filter (when automatic triggers return): macOS runner minutes
+bill at 10x on private repos, so doc/HTML-only changes should skip it.
 
 On a **physical iPhone**, iOS requires a one-time Allow tap — that cannot be bypassed from code.
 

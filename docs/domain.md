@@ -7,20 +7,22 @@ Profile data stays in `#d=` only. No RedMed PHI backend.
 
 **Do not write an unregistered / placeholder host onto NFC bands.**
 `AppConfig.medicalCardCustomDomainTBD` stays `nil` until you choose a domain
-and HTTPS + `/tapper/` smoke are green. Until then `medicalCardBaseURL` is the
-live interim host:
+and HTTPS + `/tapper/` smoke are green. Until then `medicalCardBaseURL` is:
 
 `https://roooted1776.github.io/tapper/`
 
-## Current (2026-08-23)
+That host is **404**. `Roooted1776.github.io` does not exist. Do not write
+bands until `/tapper/` returns RedMed · 911 · Aid.
+
+## Current (2026-08-31)
 
 | Path | Status |
 |------|--------|
 | Custom HTML app URL | **TBD** — set `AppConfig.medicalCardCustomDomainTBD` when ready |
-| Public GitHub Pages `Roooted1776.github.io/tapper/` | **Live interim** — NFC write base |
+| Public GitHub Pages `Roooted1776.github.io/tapper/` | **404** — create `Roooted1776.github.io`, run `scripts/publish-github-io.sh`, smoke |
 | Cloudflare Pages `redmed.pages.dev` | Optional; 404 until CF secrets / Git connect |
 
-Smoke on the live interim: RedMed · 911 · Aid, no login.
+Do not treat a 404 write base as live. `pages-deploy.yml` fails when github.io smoke fails.
 
 ## When you pick the domain
 

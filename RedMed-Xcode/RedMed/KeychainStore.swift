@@ -8,8 +8,8 @@ import Security
 /// with **no** `kSecAttrAccessControl`. Readable whenever this device is
 /// unlocked. Excluded from iCloud Keychain and encrypted backups
 /// (`kSecAttrSynchronizable = false`). Face ID is **UI-only** on owner
-/// Edit / Save / Erase (`BiometricAuth`) — not a SecItem ACL. Viewing the
-/// card, 911, Aid, NFC write, and tapper do not prompt.
+/// unlock / Save / Erase (`BiometricAuth`) — not a SecItem ACL. Opening Edit,
+/// viewing the card after unlock, 911, Aid, NFC write, and tapper do not prompt.
 ///
 /// **Legacy items:** `biometryCurrentSet` ACL (older builds) or plain
 /// accessibility with no ACL. `load` still reads them. A successful read
@@ -248,7 +248,9 @@ enum KeychainStore {
             let staged = SecItemCopyMatching(q as CFDictionary, nil)
             return staged == errSecSuccess || staged == errSecInteractionNotAllowed || staged == errSecAuthFailed
         default:
-            return status != errSecItemNotFound
+            // Unknown SecItem error is not proof a blob exists. Fail closed
+            // so the empty-profile funnel can show instead of a locked ghost.
+            return false
         }
     }
 

@@ -42,9 +42,9 @@
 		<false/>
 	</dict>
 	<key>NSFaceIDUsageDescription</key>
-	<string>RedMed uses Face ID or Touch ID to edit, save, or erase your medical ID. Device passcode can be used if biometrics are unavailable.</string>
+	<string>RedMed uses Face ID or Touch ID to unlock the app, and again to save or erase your medical ID. Device passcode can be used if biometrics are unavailable.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>RedMed uses your location on the 911 tab to show coordinates you can read to emergency services. Nearby hospitals may ask Apple Maps for ER POIs on this phone. RedMed does not upload GPS to a RedMed server or attach it to a 911 call.</string>
+	<string>RedMed uses your location on the 911 tab to show coordinates you can read to emergency services. Nearby hospitals in this app may ask Apple Maps for ER POIs on this phone. A tapped band’s hospital search uses OpenStreetMap Overpass on that phone. RedMed does not upload GPS to a RedMed server or attach it to a 911 call.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
@@ -53,8 +53,6 @@
 	<dict>
 		<key>UIColorName</key>
 		<string>LaunchBackground</string>
-		<key>UIImageName</key>
-		<string>BrandLogo</string>
 	</dict>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>

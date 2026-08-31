@@ -42,8 +42,10 @@ enum AppConfig {
     /// Live App Store listing URL. `nil` until a paid Apple Developer account
     /// has a real app ID — never write a placeholder onto QR or NFC.
     static let appStoreURL: String? = nil
-    static let supportURL = "https://cdn.jsdelivr.net/gh/Roooted1776/redmed-privacy@main/support.html"
-    static let privacyPolicyURL = "https://cdn.jsdelivr.net/gh/Roooted1776/redmed-privacy@main/index.html"
+    /// Unused in Swift (in-app Help is bundled `Help.html`). Connect placeholders
+    /// stay in this repo — not jsDelivr `@main` of a second tree.
+    static let supportURL = "https://github.com/Roooted1776/frisky/blob/main/support/index.html"
+    static let privacyPolicyURL = "https://github.com/Roooted1776/frisky/blob/main/RedMed-Xcode/RedMed/Help.html"
 
     /// Owner band NDEF contract (permanent): write only
     /// `medicalCardBaseURL + "#d=" + base64url`. Profile stays in the fragment —
@@ -230,6 +232,6 @@ enum AppConfig {
     enum Satellite {
         /// Permanent product rule — do not soften or time-box.
         static let localOnlyLine =
-            "Local only once tap — no RedMed servers. No Bluetooth · passive HF NFC. Call uses system tel: only (no profile, no GPS on the call). Nearby hospitals asks Apple Maps on this phone for ER POIs; that search is Apple's, not a RedMed upload."
+            "Local only once tap — no RedMed servers. No Bluetooth · passive HF NFC. Call uses system tel: only (no profile, no GPS on the call). Nearby hospitals in this app asks Apple Maps on this phone; a band tap uses OpenStreetMap Overpass on that phone. Neither is a RedMed upload."
     }
 }

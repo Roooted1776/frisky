@@ -71,7 +71,8 @@ final class CrashMotionGuard: ObservableObject {
         }
     }
 
-    /// Stop CoreMotion on re-lock. Does not disarm an in-progress SOS hold.
+    /// Stop CoreMotion. Relock does not call this — cream lock is UI only.
+    /// Does not disarm an in-progress SOS hold.
     func stopMonitoring() {
         engine.stopMonitoring()
     }

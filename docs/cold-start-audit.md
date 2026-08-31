@@ -71,6 +71,9 @@ this window as `profileLoadFailed` instead of a Face ID hang, and Proceed calls 
 with a profiler/device repro — same caveat as the rest of this doc — but the prior behavior was a
 readable logic bug independent of timing.
 
+Later: `OwnerAppLock` is cream-only (no Proceed). Relock no longer stops `CrashMotionGuard` —
+cream lock is UI/PHI, not a CoreMotion stop.
+
 ## Broader cold-start / cream-page sweep (this pass)
 
 Following the fix above, re-read the full cold-launch chain end to end (`RedMedApp` →

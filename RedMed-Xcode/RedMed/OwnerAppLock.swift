@@ -135,7 +135,8 @@ struct OwnerAppLock<Content: View>: View {
         notInteractiveRetried = false
         OwnerLockPresentation.setLocked(true)
         OwnerLockPresentation.holdSwitcherCover = true
-        CrashMotionGuard.shared.stopMonitoring()
+        // Cream lock is UI/PHI only. Leave CoreMotion running so crash /
+        // high-impact detection still works while the owner app is backgrounded.
         gate = .locked
     }
 

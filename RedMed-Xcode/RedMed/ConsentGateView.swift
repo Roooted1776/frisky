@@ -4,7 +4,7 @@ import SwiftUI
 /// Never a cream lock. Never on passerby tapper.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
-    static let currentVersion = "4.1"
+        static let currentVersion = "4.2"
 
     static var hasAcceptedCurrent: Bool {
         UserDefaults.standard.string(forKey: acceptedVersionKey) == currentVersion
@@ -158,9 +158,8 @@ struct ConsentGateView<Content: View>: View {
 
     private func enterApp() {
         checked = true
-        // Agreement covers Location for owner RedMed and tapper/public GPS.
-        // Toggle on if it was flipped off; iOS still owns the system sheet.
-        locationEnabled = true
+        // Honor the Location toggle. Do not force it on. When-In-Use sheet
+        // only if Location is still on (`requestWhenInUseIfNeeded` no-ops off).
         ConsentSettings.recordAcceptance()
         RedMedHaptics.success()
         OwnerLockPresentation.setLocked(false)
