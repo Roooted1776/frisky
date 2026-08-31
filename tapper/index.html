@@ -892,12 +892,12 @@ function redmedAssetURL(file) {
     margin-top: 4px;
   }
   .gps-card .btn { margin: 0; }
-  .gps-refresh { margin-top: 4px; }
+  .gps-refresh { margin-top: 0; }
   .gps-actions {
     display: flex;
     flex-direction: column;
-    gap: 8px; /* FindHelpLocationBlock VStack spacing */
-    margin-top: 7px; /* slight air between Refresh and Copy Coordinates */
+    gap: 7px;
+    margin: 0;
   }
   .gps-actions .btn {
     margin: 0;
@@ -1537,18 +1537,17 @@ function redmedAssetURL(file) {
     <!-- 911 — mirrors owner EmergencyView (content-first, no page header). -->
     <div class="panel" id="panel-911" data-panel="911" role="tabpanel" aria-labelledby="tab-911" aria-hidden="true">
       <div class="page-pad">
-        <a class="btn btn-call" id="callEmergency911" href="tel:112">Call <span class="emg">112</span></a>
+        <div class="gps-actions">
+          <button class="btn btn-ink gps-refresh" type="button" id="refreshCoordsBtn">Refresh</button>
+          <button class="btn btn-ink" type="button" id="copyCoordsBtn" aria-label="Copy GPS Coordinates">Copy Coordinates</button>
+        </div>
         <div class="gps-card" role="status" aria-live="polite">
           <div class="gps-pill">LIVE GPS</div>
           <div class="coords" id="coords">–––</div>
-          <button class="btn btn-ink gps-refresh" type="button" id="refreshCoordsBtn">Refresh</button>
-          <div class="gps-actions">
-            <button class="btn btn-ink" type="button" id="copyCoordsBtn" aria-label="Copy GPS Coordinates">Copy Coordinates</button>
-          </div>
           <div class="gps-acc" id="gpsAcc">Accuracy ––</div>
         </div>
         <button class="btn btn-sos" type="button" id="sosBtn" aria-pressed="false">SOS · Locate Me</button>
-
+        <a class="btn btn-call" id="callEmergency911" href="tel:112">Call <span class="emg">112</span></a>
         <div class="seizure-strip" id="seizureStrip">
           <div>
             <div class="seizure-label">SEIZURE</div>

@@ -11,14 +11,14 @@ struct EmergencyView: View {
                 // Short, fixed page (~6 children). LazyVStack would estimate
                 // off-screen height and keep bookkeeping with no benefit.
                 VStack(alignment: .leading, spacing: 10) {
+                    FindHelpLocationBlock(isVisible: isVisible)
+                    FindHelpSOSButton()
                     PrimaryButton(
                         title: "Call \(EmergencyNumber.current)",
                         systemImage: "phone.fill"
                     ) {
                         PublicEmergencyAid.dial()
                     }
-                    FindHelpLocationBlock(isVisible: isVisible)
-                    FindHelpSOSButton()
                     SeizureTimerStrip(isVisible: isVisible)
                     InfoCard(
                         icon: "cross.fill",
@@ -59,15 +59,16 @@ private struct FindHelpLocationBlock: View {
     @StateObject private var locationManager = LocationManager()
 
     var body: some View {
-        GPSCard(
-            location: locationEnabled ? locationManager.location : nil,
-            locationEnabled: locationEnabled,
-            onRefresh: {
+        VStack(spacing: 0) {
+            CompactFillButton(title: "Refresh", disabled: !locationEnabled) {
                 guard locationEnabled else { return }
                 RedMedHaptics.light()
                 locationManager.refresh()
-            },
-            onCopy: {
+            }
+            CompactFillButton(
+                title: locationEnabled ? "Copy Coordinates" : "Location Off — Enable It On Before You Continue Or In Settings",
+                disabled: !locationEnabled || locationManager.location == nil
+            ) {
                 if locationEnabled, let loc = locationManager.location {
                     SecurePasteboard.copyEphemeral(
                         "\(loc.coordinate.latitude), \(loc.coordinate.longitude)"
@@ -75,7 +76,12 @@ private struct FindHelpLocationBlock: View {
                     RedMedHaptics.light()
                 }
             }
-        )
+            .padding(.top, 7)
+            GPSCard(
+                location: locationEnabled ? locationManager.location : nil
+            )
+            .padding(.top, 10)
+        }
         .task(id: isVisible) {
             guard isVisible else {
                 locationManager.stop()
@@ -244,9 +250,6 @@ private final class SeizureTimerEngine {
 
 struct GPSCard: View {
     let location: CLLocation?
-    var locationEnabled: Bool = true
-    var onRefresh: () -> Void = {}
-    var onCopy: () -> Void = {}
     var latStr: String { location.map { String(format: "%.6f", $0.coordinate.latitude) } ?? "–––" }
     var lonStr: String { location.map { String(format: "%.6f", $0.coordinate.longitude) } ?? "–––" }
     var accuracy: String { location.map { "±\(Int($0.horizontalAccuracy)) m" } ?? "––" }
@@ -266,17 +269,6 @@ struct GPSCard: View {
                 .foregroundColor(.redmedDark)
                 .multilineTextAlignment(.center)
                 .padding(.top, 4)
-            CompactFillButton(title: "Refresh", disabled: !locationEnabled) {
-                onRefresh()
-            }
-            .padding(.top, 4)
-            CompactFillButton(
-                title: locationEnabled ? "Copy Coordinates" : "Location Off — Enable It On Before You Continue Or In Settings",
-                disabled: !locationEnabled || location == nil
-            ) {
-                onCopy()
-            }
-            .padding(.top, 7)
             Text("Accuracy \(accuracy)")
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundColor(.redmedMuted)
