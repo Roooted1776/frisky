@@ -449,7 +449,7 @@ enum RedMedChrome {
     static let chipRadius: CGFloat = 8
     /// Tapper / empty YOU-card BrandLogo diameter (`--logo` matches).
     static let logoSize: CGFloat = 72
-    /// BrandWordmark lockup on topic pages (NFC uses BrandLogoHeader; Aid + 911 are content-first).
+    /// BrandWordmark lockup on topic pages (NFC / Aid / 911 are content-first — Help chrome only).
     static let wordmarkHeight: CGFloat = 42
     static let pagePadX: CGFloat = 16
     static let wordmarkTop: CGFloat = 6
@@ -501,34 +501,6 @@ extension BrandWordmarkHeader where Trailing == EmptyView {
     init(top: CGFloat = RedMedChrome.wordmarkTop) {
         self.top = top
         self.trailing = { EmptyView() }
-    }
-}
-
-/// Circular BrandLogo on cream — NFC page. Equal cream on all four sides of the mark.
-struct BrandLogoHeader: View {
-    var size: CGFloat = RedMedChrome.logoSize
-    var pad: CGFloat = RedMedChrome.pagePadX
-
-    var body: some View {
-        Image("BrandLogo")
-            .resizable()
-            .scaledToFit()
-            .frame(width: size, height: size)
-            .clipShape(Circle())
-            .accessibilityLabel("RedMed")
-            .padding(pad)
-            .frame(maxWidth: .infinity)
-            .background {
-                ZStack {
-                    Color.redmedBg
-                    RadialGradient(
-                        colors: [Color.redmedWash.opacity(0.85), Color.redmedBg.opacity(0)],
-                        center: .top,
-                        startRadius: 20,
-                        endRadius: 420
-                    )
-                }
-            }
     }
 }
 

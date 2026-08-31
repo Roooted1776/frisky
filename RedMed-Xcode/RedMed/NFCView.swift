@@ -33,13 +33,9 @@ struct NFCView: View {
     private var ownerBody: some View {
         VStack(spacing: 0) {
             PageHelpChrome()
-            BrandLogoHeader()
 
             ScrollView {
                 VStack(spacing: 16) {
-                    if !AppConfig.nfcHardwareEnabled {
-                        parkedBanner
-                    }
                     factsCard
                         .padding(.top, 4)
                     setupCard
@@ -98,22 +94,6 @@ struct NFCView: View {
             return ("Band Written", "Finish name, birth date, and blood type on RedMed", false)
         }
         return ("Not Linked", "Write once to set up the bracelet", false)
-    }
-
-    private var parkedBanner: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Preview Only")
-                .font(.system(size: 13, weight: .bold))
-                .foregroundColor(.redmedAccent)
-            Text(AppConfig.BraceletRF.hardwareParkedSummary)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(.redmedMuted)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .redmedBox()
-        .accessibilityLabel("Band write is preview-only in this build")
     }
 
     private var factsCard: some View {
@@ -219,6 +199,13 @@ struct NFCView: View {
                 .foregroundColor(.redmedMuted)
                 .lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
+
+            if !AppConfig.nfcHardwareEnabled {
+                Text("Preview Only")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(.redmedAccent)
+                    .accessibilityLabel("Band write is preview-only in this build")
+            }
 
             OutlineButton(
                 title: "Preview",
