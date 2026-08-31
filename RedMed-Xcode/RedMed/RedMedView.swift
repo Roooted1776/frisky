@@ -79,7 +79,6 @@ struct RedMedView: View {
         }
         // Owner profile only — never redact the passerby / EMS scanner card.
         .privacySensitive(!isScannerSession)
-        .background { RedMedPageBackground() }
         .alert(BiometricAuth.deniedAlertTitle, isPresented: $showAuthFailedAlert) {
             Button("OK", role: .cancel) {}
         } message: {

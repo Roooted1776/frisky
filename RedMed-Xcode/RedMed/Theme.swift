@@ -3,15 +3,16 @@ import UIKit
 
 /// Shared springs / fades for owner + scanner chrome. Keep short — presence, not noise.
 enum RedMedMotion {
-    /// Tab highlight, Aid chevron, SOS chrome, press scale.
+    /// Seizure Start/Stop chrome, CPR beat. Presses are instant (`RedMedPressStyle`).
     static let snappy = Animation.spring(response: 0.32, dampingFraction: 0.82)
 }
 
 /// Press scale for CTAs and chrome — reactive without fighting scroll.
+/// Default is instant: the 0.32s CTA spring made tab hops and in-app taps feel late.
 struct RedMedPressStyle: ButtonStyle {
     var scale: CGFloat = 0.97
     var haptic: (() -> Void)? = { RedMedHaptics.light() }
-    var animates: Bool = true
+    var animates: Bool = false
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -44,20 +45,20 @@ extension Color {
 /// Pages and passerby tapper share cream fill.
 struct RedMedPageBackground: View {
     var body: some View {
-        ZStack {
-            Color.redmedBg
-            RadialGradient(
-                colors: [Color.redmedWash.opacity(0.85), Color.redmedBg.opacity(0)],
-                center: .top,
-                startRadius: 20,
-                endRadius: 420
-            )
-            .frame(maxHeight: 520)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        }
-        .ignoresSafeArea()
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
+        Color.redmedBg
+            .overlay(alignment: .top) {
+                RadialGradient(
+                    colors: [Color.redmedWash.opacity(0.85), Color.redmedBg.opacity(0)],
+                    center: .top,
+                    startRadius: 20,
+                    endRadius: 420
+                )
+                .frame(height: 520)
+                .allowsHitTesting(false)
+            }
+            .ignoresSafeArea()
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
     }
 }
 
