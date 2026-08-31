@@ -442,6 +442,7 @@ struct HelpMenuView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(policy.title)
+    }
 
     private func requestErase() {
         guard showsOwnerTools, !isErasing else { return }
