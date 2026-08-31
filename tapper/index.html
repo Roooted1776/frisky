@@ -1044,12 +1044,12 @@ function redmedAssetURL(file) {
     margin: 12px 4px 0;
   }
   .survival-note {
-    margin: 4px 0 8px;
-    font-size: clamp(12px, 3.4cqi, 14px);
+    margin: 6px 2px 10px;
+    font-size: clamp(11px, 3.1cqi, 13px);
     font-weight: 500;
     color: var(--muted);
     line-height: 1.35;
-    text-align: center;
+    text-align: left;
   }
   .aid-stop-alarm {
     display: none;
@@ -1568,6 +1568,7 @@ function redmedAssetURL(file) {
           <div class="gps-acc" id="gpsAcc">Accuracy ––</div>
         </div>
         <button class="btn btn-sos" type="button" id="sosBtn" aria-pressed="false">SOS · Locate Me</button>
+        <p class="survival-note">Crash detect only while this page is open. Not Apple Crash Detection. SOS · Locate Me is this phone's siren.</p>
         <p class="crash-dial-hint" id="crashDialHint" hidden></p>
         <a class="btn btn-call" id="callEmergency911" href="tel:112">Call <span class="emg">112</span></a>
         <div class="seizure-strip" id="seizureStrip">

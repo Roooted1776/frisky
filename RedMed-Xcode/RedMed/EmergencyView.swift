@@ -104,29 +104,36 @@ private struct FindHelpLocationBlock: View {
 private struct FindHelpSOSButton: View {
     @ObservedObject private var survivalAlarm = CrashMotionGuard.shared
     var body: some View {
-        CompactFillButton(
-            title: survivalAlarm.isArmed ? "Stop The Alarm" : "SOS · Locate Me",
-            systemImage: survivalAlarm.isArmed ? "speaker.slash.fill" : "sos.circle.fill",
-            fill: survivalAlarm.isArmed ? .redmedAccent : .redmedDark
-        ) {
-            var t = Transaction()
-            t.animation = nil
-            withTransaction(t) {
-                if survivalAlarm.isArmed {
-                    RedMedHaptics.medium()
-                    survivalAlarm.disarm()
-                } else {
-                    RedMedHaptics.heavy()
-                    survivalAlarm.armSOS()
+        VStack(alignment: .leading, spacing: 6) {
+            CompactFillButton(
+                title: survivalAlarm.isArmed ? "Stop The Alarm" : "SOS · Locate Me",
+                systemImage: survivalAlarm.isArmed ? "speaker.slash.fill" : "sos.circle.fill",
+                fill: survivalAlarm.isArmed ? .redmedAccent : .redmedDark
+            ) {
+                var t = Transaction()
+                t.animation = nil
+                withTransaction(t) {
+                    if survivalAlarm.isArmed {
+                        RedMedHaptics.medium()
+                        survivalAlarm.disarm()
+                    } else {
+                        RedMedHaptics.heavy()
+                        survivalAlarm.armSOS()
+                    }
                 }
             }
+            .accessibilityLabel(survivalAlarm.isArmed ? "Stop The Alarm" : "SOS Locate Me")
+            .accessibilityHint(
+                survivalAlarm.isArmed
+                    ? "Stops the alarm and cancels a pending crash call."
+                    : "Calls \(EmergencyNumber.current) immediately and starts the locator alarm."
+            )
+            Text(AppConfig.CrashAlarmCopy.findHelpNote)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(.redmedMuted)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .accessibilityLabel(survivalAlarm.isArmed ? "Stop The Alarm" : "SOS Locate Me")
-        .accessibilityHint(
-            survivalAlarm.isArmed
-                ? "Stops the alarm and cancels a pending crash call."
-                : "Calls \(EmergencyNumber.current) immediately and starts the locator alarm."
-        )
     }
 }
 

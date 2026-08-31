@@ -288,6 +288,9 @@ assert('URI reject second hash', !isValidWriteURL(`${WRITE_BASE}#d=abc#more`));
 assert('URI reject space', !isValidWriteURL(`${WRITE_BASE}#d=ab c`));
 assert('URI reject +', !isValidWriteURL(`${WRITE_BASE}#d=ab+c`));
 
+const tapperCrash = appConfig.match(/static let tapperNote =\s+"([^"]+)"/);
+assert('crash tapper note lockstep', !!(tapperCrash && tapper.includes(tapperCrash[1])));
+
 // --- plaintext named JSON (smoke / Linux preview path) ---
 const named = {
   name: 'Jane Doe',
