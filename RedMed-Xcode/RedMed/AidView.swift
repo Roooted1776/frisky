@@ -59,68 +59,65 @@ struct AidView: View {
         VStack(spacing: 0) {
             PageHelpChrome()
 
-            GeometryReader { geo in
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 10) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            ForEach(AidPaneCatalog.panes) { pane in
-                                let isOpen = openPane == pane.id
-                                PaneCard(pane: pane, isOpen: isOpen) { key in
-                                    if key == nil {
-                                        RedMedHaptics.selection()
-                                        var t = Transaction()
-                                        t.animation = nil
-                                        withTransaction(t) {
-                                            openPane = isOpen ? nil : pane.id
-                                        }
-                                    } else if let k = key, let topic = AidTopicCatalog.topics[k] {
-                                        RedMedHaptics.light()
-                                        activeTopic = topic
+            ScrollView {
+                VStack(alignment: .leading, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(AidPaneCatalog.panes) { pane in
+                            let isOpen = openPane == pane.id
+                            PaneCard(pane: pane, isOpen: isOpen) { key in
+                                if key == nil {
+                                    RedMedHaptics.selection()
+                                    var t = Transaction()
+                                    t.animation = nil
+                                    withTransaction(t) {
+                                        openPane = isOpen ? nil : pane.id
                                     }
+                                } else if let k = key, let topic = AidTopicCatalog.topics[k] {
+                                    RedMedHaptics.light()
+                                    activeTopic = topic
                                 }
                             }
-
-                            CrashSurvivalCancelCard()
+                            .equatable()
                         }
 
-                        Text(AppConfig.AidCopy.referenceDisclaimer)
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(.redmedMuted)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: .infinity)
-                            .padding(.horizontal, 8)
-                            .padding(.top, 8)
-
-                        // Quiet prayer — owner Aid only (not scanner / passerby shells).
-                        Spacer(minLength: 28)
-
-                        if !isScannerSession {
-                            Text("\"\(AppConfig.QuietPrayer.text)\"")
-                                .font(.system(size: AppConfig.QuietPrayer.fontSize, weight: .regular))
-                                .italic()
-                                .foregroundColor(.redmedMuted.opacity(0.72))
-                                .multilineTextAlignment(.center)
-                                .lineSpacing(1)
-                                .frame(maxWidth: .infinity)
-                                .padding(.horizontal, 28)
-                        }
-
-                        Text(AppConfig.Satellite.localOnlyLine)
-                            .font(.system(size: 9, weight: .medium))
-                            .foregroundColor(.redmedMuted)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, 8)
+                        CrashSurvivalCancelCard()
                     }
-                    .padding(.horizontal, RedMedChrome.pagePadX)
-                    .padding(.top, 4)
-                    .padding(.bottom, 24)
-                    .frame(minHeight: geo.size.height, alignment: .top)
+
+                    Text(AppConfig.AidCopy.referenceDisclaimer)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.redmedMuted)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 8)
+                        .padding(.top, 8)
+
+                    // Quiet prayer — owner Aid only (not scanner / passerby shells).
+                    Spacer(minLength: 28)
+
+                    if !isScannerSession {
+                        Text("\"\(AppConfig.QuietPrayer.text)\"")
+                            .font(.system(size: AppConfig.QuietPrayer.fontSize, weight: .regular))
+                            .italic()
+                            .foregroundColor(.redmedMuted.opacity(0.72))
+                            .multilineTextAlignment(.center)
+                            .lineSpacing(1)
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 28)
+                    }
+
+                    Text(AppConfig.Satellite.localOnlyLine)
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundColor(.redmedMuted)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 8)
                 }
-                .scrollIndicators(.visible)
+                .padding(.horizontal, RedMedChrome.pagePadX)
+                .padding(.top, 4)
+                .padding(.bottom, 24)
             }
+            .scrollIndicators(.visible)
         }
-        .background { RedMedPageBackground() }
         .sheet(item: $activeTopic) { topic in
             TopicDetailView(topic: topic)
                 .presentationBackground(Color.redmedBg)
@@ -136,10 +133,14 @@ struct AidView: View {
 }
 
 // MARK: - Pane Card
-struct PaneCard: View {
+struct PaneCard: View, Equatable {
     let pane: AidPane
     let isOpen: Bool
     let onTap: (String?) -> Void // nil = toggle, string = open topic
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.pane.id == rhs.pane.id && lhs.isOpen == rhs.isOpen
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {

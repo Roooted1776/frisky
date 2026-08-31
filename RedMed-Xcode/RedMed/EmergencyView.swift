@@ -49,7 +49,6 @@ struct EmergencyView: View {
             }
             .scrollIndicators(.visible)
         }
-        .background { RedMedPageBackground() }
     }
 }
 
