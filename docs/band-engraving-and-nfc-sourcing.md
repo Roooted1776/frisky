@@ -28,6 +28,8 @@ passive Type 2 NDEF. Hardware work is procurement + Apple portal + factory:
 
 Do not substitute Shopify / storefront / custom firmware for that sequence.
 Do not MOQ before blank stock and entitlement are proven on a physical iPhone.
+Paid ads stay at **$0** until this sequence plus a live `/tapper/` and a real
+App Store listing are green ([`docs/ADVERTISING.md`](ADVERTISING.md)).
 
 ---
 

@@ -39,6 +39,7 @@ frisky/
 | `docs/domain.md` | getredmed.com cutover |
 | `docs/NFC-RESTORE.md` | CoreNFC entitlement restore |
 | `docs/band-engraving-and-nfc-sourcing.md` | Hardware |
+| `docs/ADVERTISING.md` | DTC ads: ship-before-ads gate, banned claims, channels, EMS one-pager |
 
 ## Code organization (logical)
 
