@@ -109,6 +109,14 @@ The app has no backend, database, or web service.
   **SOS · Locate me** on Find Help, or (3) a **real bracelet NFC tap** opens
   passerby `tapper.html#d=…` (hardware-local SOS on that phone — no server; bare
   `/tapper/` without `#d=` and in-app scanner preview do **not** auto-arm).
+  **SOS tap** (owner Find Help and passerby SOS button) opens `tel:` to
+  `EmergencyNumber` **immediately** — no in-app confirmation, no countdown —
+  then arms the alarm. iOS may still show its system Call sheet (cannot suppress).
+  **Crash detection** keeps vehicle-crash-only `CrashMotionThresholds` and uses
+  the US Crash Detection **call delay** (Apple Support 104959: 10s alert + 30s
+  countdown) then the same `tel:` unless Stop The Alarm. Not Apple's Crash
+  Detection API, not FDA-cleared, not a certified medical device. NFC band-tap
+  auto-arm is siren only (no autodial). Seizure timer still does not autodial.
   Opening owner Find Help must not force brightness, max volume, or play the
   siren by itself. Do not add Settings off switches for the survival alarm.
 - **LocatorBeacon** / **BrightnessBoost** / **VolumeBoost** survival hold may keep sounding /
@@ -226,11 +234,13 @@ delete every prior `CACHE` name so deploys clear stale decrypt/layout. Bump
 bundled copy on every SW / decrypt deploy. Register the SW ASAP in `tapper.html`
 (not on `window.load`). Legacy zlib inflate is bounded (64 KiB) in Swift +
 streaming bound in `tapper.html`. Passerby HTML **arms local SOS only on a real
-bracelet NFC open with `#d=`** (hardware-local on that phone; no server). Bare
-`/tapper/` and in-app preview do not auto-arm. Bare `/tapper/` without `#d=`
-shows a **No patient** empty state (not a blank YOU chart); 911 / Aid remain.
-Explicit Stop / SOS toggle and DeviceMotion crash share that on-device alarm. iOS may need a gesture to unmute
-AudioContext / grant motion. Native still owns system volume / brightness boost.
+bracelet NFC open with `#d=`** (hardware-local on that phone; no server; siren
+only — no autodial). Bare `/tapper/` and in-app preview do not auto-arm. Bare
+`/tapper/` without `#d=` shows a **No patient** empty state (not a blank YOU
+chart); 911 / Aid remain. Explicit SOS tap opens `tel:` immediately then the
+siren. DeviceMotion crash waits the US 10s+30s delay then `tel:` unless Stop.
+iOS may need a gesture to unmute AudioContext / grant motion. Native still owns
+system volume / brightness boost.
 
 **Repo hygiene:** `main` is the only long-lived branch. After merges, delete
 feature branches on the remote; do not leave parallel “brainchild” branches.

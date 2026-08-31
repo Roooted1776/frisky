@@ -36,13 +36,25 @@ private enum CrashMotionThresholds {
     static let cooldownSeconds: TimeInterval = 90
 }
 
+/// US Crash Detection call delay (Apple Support 104959, United States).
+/// 10s alert + 30s countdown, then emergency call. Timing only — not Apple's
+/// Crash Detection API, not FDA-cleared, not a certified medical device.
+enum USCrashDetectionCall {
+    static let alertSeconds: TimeInterval = 10
+    static let countdownSeconds: TimeInterval = 30
+    static var dialDelaySeconds: TimeInterval { alertSeconds + countdownSeconds }
+}
+
 /// Survival alarm arming: crash / severe impact (CoreMotion) or Find Help SOS
 /// (owner + tapper / in-app scanner). Passerby `tapper.html` mirrors thresholds
 /// via DeviceMotion. Arms full brightness + max system volume + locator siren.
 /// Cancel on Aid or Stop SOS on Find Help.
+/// SOS tap opens `tel:` immediately (no in-app prompt, no countdown).
+/// Crash follows `USCrashDetectionCall` (10s alert + 30s countdown) then the
+/// same `tel:` unless Stop. Not Apple's sensor fusion / API. NFC band-tap
+/// auto-arm is siren only.
 /// Motion path ignores running, walking, eating, sex / masturbation / intimate
 /// motion, rhythmic daily activity, and hand/wrist handling.
-/// Not Apple Crash Detection — no GPS/barometer fusion, no cloud.
 ///
 /// Motion samples run on a private serial queue (not the main thread) so Face ID /
 /// Face ID / first tabs stay responsive. UI + brightness/volume/siren hop to main.
@@ -51,14 +63,19 @@ private enum CrashMotionThresholds {
 /// Main starts monitoring once owner tabs are up. SOS / survival hold is
 /// separate — stopMonitoring does not cancel an armed siren. Face ID is
 /// Edit / Save / Erase only; crash motion is not gated on a lock.
+
 @MainActor
 final class CrashMotionGuard: ObservableObject {
     static let shared = CrashMotionGuard()
 
     @Published private(set) var isArmed = false
+    /// Seconds until crash autodial. Nil when idle, after SOS (already dialed),
+    /// or after the crash delay has fired.
+    @Published private(set) var crashDialRemaining: TimeInterval? = nil
 
     /// Off-main motion state + CoreMotion — never touches UIKit / @Published.
     private let engine = MotionEngine()
+    private var crashDialTask: Task<Void, Never>?
 
     private init() {}
 
@@ -67,7 +84,7 @@ final class CrashMotionGuard: ObservableObject {
         LocatorBeacon.warmAlarmCache()
         engine.startMonitoring { [weak self] generation in
             Task { @MainActor in
-                self?.applyArm(generation: generation)
+                self?.applyArm(generation: generation, source: .crash)
             }
         }
     }
@@ -79,8 +96,11 @@ final class CrashMotionGuard: ObservableObject {
 
     /// False-positive / SOS cancel — restores brightness/volume/siren holds.
     /// Paints Stop → SOS first; MPVolumeView / AVAudioSession tear-down wait a turn
-    /// (same hitch as arm if they run in the button press).
+    /// (same hitch as arm if they run in the button press). Cancels a pending crash dial.
     func disarm() {
+        crashDialTask?.cancel()
+        crashDialTask = nil
+        crashDialRemaining = nil
         engine.invalidateArm()
         guard isArmed else { return }
         isArmed = false
@@ -94,16 +114,22 @@ final class CrashMotionGuard: ObservableObject {
         }
     }
 
-    /// Find Help SOS (owner + tapper) — same survival hold as crash
-    /// (siren + max volume + full brightness).
+    /// Find Help SOS — `tel:` immediately (no in-app prompt, no countdown), then
+    /// the same survival hold as crash (siren + max volume + full brightness).
     /// Claims the arm token on the calling MainActor — does not wait on the
     /// CoreMotion serial queue (that hop made the SOS button feel lagged).
     func armSOS() {
         let generation = engine.claimArmGeneration()
-        applyArm(generation: generation)
+        PublicEmergencyAid.dial()
+        applyArm(generation: generation, source: .sos)
     }
 
-    private func applyArm(generation: UInt64) {
+    private enum ArmSource {
+        case sos
+        case crash
+    }
+
+    private func applyArm(generation: UInt64, source: ArmSource) {
         // Drop stale arm Tasks invalidated by disarm / Stop the alarm.
         guard engine.isArmGenerationCurrent(generation) else { return }
         guard !isArmed else { return }
@@ -117,6 +143,31 @@ final class CrashMotionGuard: ObservableObject {
             BrightnessBoost.beginSurvival()
             VolumeBoost.beginSurvival()
             LocatorBeacon.beginSurvival()
+        }
+        if source == .crash {
+            startCrashDialCountdown(generation: generation)
+        } else {
+            crashDialRemaining = nil
+        }
+    }
+
+    private func startCrashDialCountdown(generation: UInt64) {
+        crashDialTask?.cancel()
+        let total = USCrashDetectionCall.dialDelaySeconds
+        crashDialRemaining = total
+        crashDialTask = Task { @MainActor in
+            let started = Date()
+            while !Task.isCancelled {
+                let left = total - Date().timeIntervalSince(started)
+                guard self.engine.isArmGenerationCurrent(generation), self.isArmed else { return }
+                if left <= 0 {
+                    self.crashDialRemaining = nil
+                    PublicEmergencyAid.dial()
+                    return
+                }
+                self.crashDialRemaining = left
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+            }
         }
     }
 

@@ -58,8 +58,9 @@ enum EmergencyNumber {
         return byRegion[region] ?? fallback
     }()
 
-    /// `tel://` URL for `current`, ready for `UIApplication.shared.open`.
+    /// `tel:` URL for `current`, ready for `UIApplication.shared.open`.
+    /// RFC 3966 — no `//`. `telprompt:` would force a confirm sheet; SOS must not.
     static var dialURL: URL? {
-        URL(string: "tel://\(current)")
+        URL(string: "tel:\(current)")
     }
 }

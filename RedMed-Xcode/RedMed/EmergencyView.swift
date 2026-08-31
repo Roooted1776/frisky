@@ -13,6 +13,7 @@ struct EmergencyView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     FindHelpLocationBlock(isVisible: isVisible)
                     FindHelpSOSButton()
+                    CrashDialCountdownStrip()
                     PrimaryButton(
                         title: "Call \(EmergencyNumber.current)",
                         systemImage: "phone.fill"
@@ -122,12 +123,43 @@ private struct FindHelpSOSButton: View {
                 }
             }
             .accessibilityLabel(survivalAlarm.isArmed ? "Stop The Alarm" : "SOS Locate Me")
+            .accessibilityHint(
+                survivalAlarm.isArmed
+                    ? "Stops the alarm and cancels a pending crash call."
+                    : "Calls \(EmergencyNumber.current) immediately and starts the locator alarm."
+            )
             Text(AppConfig.CrashAlarmCopy.findHelpNote)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundColor(.redmedMuted)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+}
+
+/// US Crash Detection delay (10s + 30s). Hidden after SOS (already dialed) and after the call fires.
+private struct CrashDialCountdownStrip: View {
+    @ObservedObject private var survivalAlarm = CrashMotionGuard.shared
+
+    var body: some View {
+        if let remaining = survivalAlarm.crashDialRemaining {
+            Text("Calling \(EmergencyNumber.current) in \(format(remaining))")
+                .font(.system(size: 13, weight: .bold))
+                .foregroundColor(.redmedAccent)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .redmedBox()
+                .accessibilityLabel(
+                    "Calling \(EmergencyNumber.current) in \(format(remaining)). Tap Stop The Alarm to cancel."
+                )
+        }
+    }
+
+    private func format(_ t: TimeInterval) -> String {
+        let total = max(0, Int(ceil(t)))
+        return String(format: "%d:%02d", total / 60, total % 60)
+    }
 }
 
 /// At 5:00 the strip shows an explicit Call button. It never auto-dials.
