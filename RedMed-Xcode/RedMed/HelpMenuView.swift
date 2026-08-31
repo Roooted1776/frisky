@@ -23,6 +23,16 @@ enum HelpDocument {
             }
         }
 
+        /// Same marks as Help.html nav + page titles.
+        var emoji: String {
+            switch self {
+            case .privacy: return "🔒"
+            case .security: return "🛡"
+            case .terms: return "📜"
+            case .medicalDisclaimer: return "⚕️"
+            }
+        }
+
         var fragment: String {
             switch self {
             case .medicalDisclaimer: return "medical-disclaimer"
@@ -280,15 +290,22 @@ struct HelpMenuView: View {
                                     dismiss()
                                     DispatchQueue.main.async { onOpenNFC() }
                                 } label: {
-                                    Text("Write The Band")
-                                        .font(.system(size: Metrics.font, weight: .medium))
-                                        .foregroundColor(.redmedDark)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(.horizontal, Metrics.rowHPad)
-                                        .padding(.vertical, Metrics.rowVPad)
-                                        .contentShape(Rectangle())
+                                    HStack(spacing: 10) {
+                                        Text("🪪")
+                                            .font(.system(size: 17))
+                                            .frame(width: 22, alignment: .center)
+                                            .accessibilityHidden(true)
+                                        Text("Write The Band")
+                                            .font(.system(size: Metrics.font, weight: .medium))
+                                            .foregroundColor(.redmedDark)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+                                    .padding(.horizontal, Metrics.rowHPad)
+                                    .padding(.vertical, Metrics.rowVPad)
+                                    .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityLabel("Write The Band")
                             }
                         }
 
@@ -313,10 +330,16 @@ struct HelpMenuView: View {
                                             ProgressView()
                                                 .frame(maxWidth: .infinity, alignment: .leading)
                                         } else {
-                                            Text("Erase All User Data")
-                                                .font(.system(size: Metrics.font, weight: .medium))
-                                                .foregroundColor(.redmedAccent)
-                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                            HStack(spacing: 10) {
+                                                Text("🗑️")
+                                                    .font(.system(size: 17))
+                                                    .frame(width: 22, alignment: .center)
+                                                    .accessibilityHidden(true)
+                                                Text("Erase All User Data")
+                                                    .font(.system(size: Metrics.font, weight: .medium))
+                                                    .foregroundColor(.redmedAccent)
+                                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                            }
                                         }
                                     }
                                     .padding(.horizontal, Metrics.rowHPad)
@@ -324,6 +347,7 @@ struct HelpMenuView: View {
                                     .contentShape(Rectangle())
                                 }
                                 .disabled(isErasing)
+                                .accessibilityLabel("Erase All User Data")
                             }
                             Text("Deletes the profile from this iPhone’s Keychain and clears local history. Settings prefs stay. The physical band is not wiped remotely — rewrite or discard it.")
                                 .font(.system(size: 12, weight: .medium))
@@ -399,7 +423,11 @@ struct HelpMenuView: View {
                 .toolbarBackground(.visible, for: .navigationBar)
                 .toolbarColorScheme(.light, for: .navigationBar)
         } label: {
-            HStack {
+            HStack(spacing: 10) {
+                Text(policy.emoji)
+                    .font(.system(size: 17))
+                    .frame(width: 22, alignment: .center)
+                    .accessibilityHidden(true)
                 Text(policy.title)
                     .font(.system(size: Metrics.font, weight: .medium))
                     .foregroundColor(.redmedDark)
@@ -413,7 +441,7 @@ struct HelpMenuView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-    }
+        .accessibilityLabel(policy.title)
 
     private func requestErase() {
         guard showsOwnerTools, !isErasing else { return }
