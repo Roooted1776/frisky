@@ -2,6 +2,8 @@ import AVFoundation
 
 /// Survival siren for crash / severe-impact or Find Help SOS (owner + tapper).
 /// Plays through the silent switch (`.playback`) and keeps sounding in background until cancelled.
+/// Exclusive session — SOS Locate Me interrupts other apps and reclaims the
+/// route when Bluetooth drops or audio switches (headphones, CarPlay, AirPlay).
 /// System volume is forced to max by `VolumeBoost` for the same survival hold.
 @MainActor
 enum LocatorBeacon {
@@ -15,6 +17,13 @@ enum LocatorBeacon {
     /// Bumped on prepare / end so late activate callbacks cannot arm after cancel.
     private static var sessionEpoch: UInt64 = 0
     private static var sessionReady = false
+    /// Debounce BT disconnect / interruption bursts so a late reclaim cannot
+    /// restart the siren after Stop.
+    private static var reclaimGeneration: UInt64 = 0
+
+    private static var routeObserver: NSObjectProtocol?
+    private static var interruptionObserver: NSObjectProtocol?
+    private static var mediaResetObserver: NSObjectProtocol?
 
     /// Published for gate-queue stale checks (same value as `sessionEpoch`).
     private static let publishedEpoch = EpochBox()
@@ -48,7 +57,9 @@ enum LocatorBeacon {
         survivalHold = false
         sessionReady = false
         sessionEpoch &+= 1
+        reclaimGeneration &+= 1
         publishedEpoch.value = sessionEpoch
+        removeRouteWatch()
         stopRepeating()
         AudioSessionGate.release(client: sessionClient)
     }
@@ -79,7 +90,13 @@ enum LocatorBeacon {
         let box = siren
         let epochBox = publishedEpoch
 
-        AudioSessionGate.retain(client: sessionClient, options: [.duckOthers]) {
+        // Exclusive `.playback` (empty options) — interrupt other apps, take the
+        // output. mixWithOthers / CPR cannot override (survivalPriority).
+        AudioSessionGate.retain(
+            client: sessionClient,
+            options: [],
+            priority: AudioSessionGate.survivalPriority
+        ) {
             // Stale prepare — newer arm/end owns the session. Do not release or nil
             // the player (that was wiping sound after Stop → SOS again).
             guard epochBox.value == epoch else { return }
@@ -98,8 +115,104 @@ enum LocatorBeacon {
                 // Epoch mismatch / disarmed: endSurvival already released. Do nothing.
                 guard Self.survivalHold, epoch == Self.sessionEpoch else { return }
                 Self.sessionReady = true
+                Self.installRouteWatch()
                 Self.fire()
                 Self.armTimer()
+            }
+        }
+    }
+
+    /// Bluetooth disconnect, headphone unplug, CarPlay / AirPlay switch, and
+    /// session interruptions pause AVAudioPlayer. Reclaim the route and fire.
+    private static func installRouteWatch() {
+        removeRouteWatch()
+        let center = NotificationCenter.default
+        routeObserver = center.addObserver(
+            forName: AVAudioSession.routeChangeNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            Task { @MainActor in
+                Self.handleRouteChange()
+            }
+        }
+        interruptionObserver = center.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: nil,
+            queue: .main
+        ) { note in
+            let raw = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
+            Task { @MainActor in
+                Self.handleInterruption(rawType: raw)
+            }
+        }
+        mediaResetObserver = center.addObserver(
+            forName: AVAudioSession.mediaServicesWereResetNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            Task { @MainActor in
+                guard Self.survivalHold else { return }
+                Self.reclaimAudio()
+            }
+        }
+    }
+
+    private static func removeRouteWatch() {
+        let center = NotificationCenter.default
+        if let routeObserver {
+            center.removeObserver(routeObserver)
+            self.routeObserver = nil
+        }
+        if let interruptionObserver {
+            center.removeObserver(interruptionObserver)
+            self.interruptionObserver = nil
+        }
+        if let mediaResetObserver {
+            center.removeObserver(mediaResetObserver)
+            self.mediaResetObserver = nil
+        }
+    }
+
+    private static func handleRouteChange() {
+        guard survivalHold else { return }
+        // oldDeviceUnavailable = BT / headphones gone. newDeviceAvailable =
+        // AirPods / CarPlay / speaker switch. Either way SOS takes the new route.
+        reclaimAudio()
+    }
+
+    private static func handleInterruption(rawType: UInt?) {
+        guard survivalHold else { return }
+        guard let rawType,
+              let type = AVAudioSession.InterruptionType(rawValue: rawType) else {
+            reclaimAudio()
+            return
+        }
+        if type == .ended {
+            reclaimAudio()
+        }
+        // `.began` — system paused us (call / Siri). Stay armed; resume on `.ended`.
+    }
+
+    /// Debounced re-activate + siren burst. Route flips often fire in a cluster.
+    private static func reclaimAudio() {
+        guard survivalHold else { return }
+        reclaimGeneration &+= 1
+        let gen = reclaimGeneration
+        let epoch = sessionEpoch
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 80_000_000)
+            guard gen == Self.reclaimGeneration, Self.survivalHold, epoch == Self.sessionEpoch else {
+                return
+            }
+            AudioSessionGate.reassert(client: sessionClient) {
+                Task { @MainActor in
+                    guard gen == Self.reclaimGeneration, Self.survivalHold, epoch == Self.sessionEpoch else {
+                        return
+                    }
+                    Self.sessionReady = true
+                    Self.fire()
+                }
             }
         }
     }
@@ -123,7 +236,7 @@ enum LocatorBeacon {
         let epochBox = publishedEpoch
         AudioSessionGate.queue.async {
             guard epochBox.value == epoch else { return }
-            try? AVAudioSession.sharedInstance().setActive(true)
+            AudioSessionGate.activateOnQueue()
             box.player?.stop()
             guard let player = try? AVAudioPlayer(data: wav) else {
                 box.player = nil

@@ -15,6 +15,7 @@ enum VolumeBoost {
     private static var volumeObservation: NSKeyValueObservation?
     private static var foregroundObserver: NSObjectProtocol?
     private static var activeObserver: NSObjectProtocol?
+    private static var routeObserver: NSObjectProtocol?
     /// Ignore KVO echoes from our own slider writes.
     private static var suppressingObservation = false
 
@@ -75,6 +76,18 @@ enum VolumeBoost {
                 applyBoost()
             }
         }
+        // BT disconnect / headphone unplug / CarPlay: speaker volume is a
+        // different fader than the BT one. Re-max so SOS stays loud.
+        routeObserver = center.addObserver(
+            forName: AVAudioSession.routeChangeNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            Task { @MainActor in
+                guard survivalHold else { return }
+                applyBoost()
+            }
+        }
     }
 
     private static func removeLifecycleObservers() {
@@ -86,6 +99,10 @@ enum VolumeBoost {
         if let activeObserver {
             center.removeObserver(activeObserver)
             self.activeObserver = nil
+        }
+        if let routeObserver {
+            center.removeObserver(routeObserver)
+            self.routeObserver = nil
         }
     }
 

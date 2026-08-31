@@ -3062,6 +3062,8 @@ function redmedAssetURL(file) {
   var fireTimer = null;
   var keepAliveTimer = null;
   var audioNeedsGesture = false;
+  var stoppingAudio = false;
+  var reclaimLock = false;
 
   function paint() {
     // Matches owner FindHelpSOSButton / this page's own Aid "Stop The Alarm" copy.
@@ -3144,6 +3146,7 @@ function redmedAssetURL(file) {
         htmlAudio.playsInline = true;
         htmlAudio.preload = 'auto';
         htmlAudio.volume = 1;
+        wireHtmlAudio(htmlAudio);
       }
       htmlAudio.currentTime = 0;
       var p = htmlAudio.play();
@@ -3163,6 +3166,36 @@ function redmedAssetURL(file) {
     }
   }
 
+  function wireHtmlAudio(el) {
+    function onLost() {
+      if (!armed || stoppingAudio) return;
+      // Natural three-beep end fires pause+ended — do not restart (5s timer owns that).
+      if (el.ended) return;
+      reclaimAudio();
+    }
+    el.addEventListener('pause', onLost);
+    el.addEventListener('stalled', onLost);
+    el.addEventListener('error', onLost);
+    try {
+      el.addEventListener('webkitcurrentplaybacktargetiswirelesschanged', onLost);
+    } catch (e) {}
+  }
+
+  // Bluetooth disconnect / headphone unplug / audio switch pauses HTMLAudio
+  // and interrupts AudioContext. SOS Locate Me takes the new output.
+  function reclaimAudio() {
+    if (!armed || stoppingAudio || reclaimLock) return;
+    reclaimLock = true;
+    if (ctx && ctx.state !== 'running') {
+      ctx.resume().catch(function () {});
+    }
+    var dead = !htmlAudio || htmlAudio.error;
+    var cutOff = htmlAudio && htmlAudio.paused && !htmlAudio.ended;
+    if (dead || cutOff) fireSirenBurst();
+    else ensurePlaying();
+    setTimeout(function () { reclaimLock = false; }, 250);
+  }
+
   function ensurePlaying() {
     if (!armed) return;
     if (ctx && ctx.state === 'suspended') {
@@ -3175,6 +3208,7 @@ function redmedAssetURL(file) {
   }
 
   function stopAudio() {
+    stoppingAudio = true;
     if (beepTimer) { clearInterval(beepTimer); beepTimer = null; }
     if (fireTimer) { clearInterval(fireTimer); fireTimer = null; }
     if (keepAliveTimer) { clearInterval(keepAliveTimer); keepAliveTimer = null; }
@@ -3184,7 +3218,7 @@ function redmedAssetURL(file) {
     lfo = null;
     gain = null;
     if (ctx) {
-      try { ctx.close(); } catch (e) {}
+      try { ctx.onstatechange = null; ctx.close(); } catch (e) {}
       ctx = null;
     }
     if (htmlAudio) {
@@ -3196,6 +3230,7 @@ function redmedAssetURL(file) {
       wake = null;
     }
     audioNeedsGesture = false;
+    stoppingAudio = false;
   }
 
   function startAudio() {
@@ -3224,6 +3259,9 @@ function redmedAssetURL(file) {
 
       osc.start();
       lfo.start();
+      ctx.onstatechange = function () {
+        if (armed && ctx && ctx.state !== 'running') reclaimAudio();
+      };
       if (ctx.state === 'suspended') {
         ctx.resume().catch(function () { audioNeedsGesture = true; });
       }
@@ -3467,11 +3505,21 @@ function redmedAssetURL(file) {
   }
 
   document.addEventListener('visibilitychange', function () {
-    if (!armed || !ctx) return;
-    if (document.visibilityState === 'visible' && ctx.state === 'suspended') {
-      ctx.resume();
-    }
+    if (armed) reclaimAudio();
   });
+  window.addEventListener('pageshow', function () {
+    if (armed) reclaimAudio();
+  });
+  window.addEventListener('focus', function () {
+    if (armed) reclaimAudio();
+  });
+  try {
+    if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
+      navigator.mediaDevices.addEventListener('devicechange', function () {
+        if (armed) reclaimAudio();
+      });
+    }
+  } catch (e) {}
 
   // Real HF NFC band tap brings #d= that decrypts — arm local SOS on this phone only.
   // No auto-arm for bare /tapper/, garbage `#d=`, or in-app Preview/Scan (?src=app).
