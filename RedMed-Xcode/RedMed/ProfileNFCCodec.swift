@@ -47,11 +47,15 @@ struct NFCChipContact: Codable, Equatable, Sendable {
 /// - Optional `0x01` zlib wrapper (and bare zlib) around those payloads
 enum ProfileNFCCodec {
     private static let maxEncodedLength = 8192
+    /// Match `tapper.html` `MAX_STR` / `MAX_LIST` so a write is what the card shows.
+    private static let maxStr = 200
+    private static let maxList = 40
     /// Version byte for legacy zlib-wrapped JSON.
     private static let zlibVersion: UInt8 = 0x01
     /// Version byte for AES-GCM sealed payloads.
     private static let aesVersion: UInt8 = 0x02
     /// Shared with `tapper.html` — derive AES-256 key via SHA-256.
+    /// Lockstep checked by `scripts/test-d-codec.mjs`.
     private static let keyLabel = "RedMed-NFC-AES-GCM-v1"
     private static let bloodTypes = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
 
@@ -305,22 +309,25 @@ enum ProfileNFCCodec {
 
     private nonisolated static func compactArray(from chip: NFCChipProfile) -> [Any] {
         let phone = chip.contacts.first.flatMap { c -> String? in
-            let digits = c.phone.filter { $0.isNumber || $0 == "+" }
+            let digits = clipStr(String(c.phone.filter { $0.isNumber || $0 == "+" }.prefix(20)))
             return digits.isEmpty ? nil : digits
         } ?? ""
+        let contacts: [[Any]] = Array(chip.contacts.prefix(maxList)).map {
+            [clipStr($0.name), clipStr($0.rel), clipStr($0.phone)] as [Any]
+        }
         var row: [Any] = [
-            chip.blood,
+            clipStr(chip.blood),
             joinList(chip.allergies),
             joinList(chip.meds),
             phone,
-            chip.name,
-            chip.dob,
+            clipStr(chip.name),
+            clipStr(chip.dob),
             joinList(chip.conditions),
-            chip.contacts.map { [$0.name, $0.rel, $0.phone] as [Any] },
+            contacts,
             chip.donor ? 1 : 0
         ]
         if !chip.updated.isEmpty {
-            row.append(chip.updated)
+            row.append(clipStr(chip.updated))
         }
         // Trailing optional flags — only appended when the wire needs them, so
         // legacy readers that stop at `updated` (index 9) are unaffected.
@@ -603,9 +610,13 @@ enum ProfileNFCCodec {
         return updated
     }
 
-    private static func joinList(_ items: [String]) -> String {
-        items
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private nonisolated static func clipStr(_ s: String) -> String {
+        s.count <= maxStr ? s : String(s.prefix(maxStr))
+    }
+
+    private nonisolated static func joinList(_ items: [String]) -> String {
+        Array(items.prefix(maxList))
+            .map { clipStr($0.trimmingCharacters(in: .whitespacesAndNewlines)) }
             .filter { !$0.isEmpty }
             .joined(separator: ", ")
     }

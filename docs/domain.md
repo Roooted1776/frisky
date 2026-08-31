@@ -24,6 +24,16 @@ bands until `/tapper/` returns RedMed · 911 · Aid.
 
 Do not treat a 404 write base as live. `pages-deploy.yml` fails when github.io smoke fails.
 
+## Publish with git (github.io)
+
+1. On GitHub, create public repo `Roooted1776/Roooted1776.github.io` (User Pages).
+2. Clone it next to this repo.
+3. From frisky: `./scripts/publish-github-io.sh /path/to/Roooted1776.github.io`
+4. In that repo: commit, push `main`, enable Pages from `main` root.
+5. Smoke: `BASE=https://roooted1776.github.io bash scripts/smoke-pages.sh` until RedMed · 911 · Aid.
+
+Do not change `AppConfig.medicalCardBaseURL` until that smoke is green.
+
 ## When you pick the domain
 
 1. Register the custom domain (Cloudflare Registrar recommended so DNS + Pages stay together).

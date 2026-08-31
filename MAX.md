@@ -32,6 +32,7 @@ RedMed is a **native iOS/SwiftUI** medical ID (`RedMed-Xcode/`). Local only: Key
 - App Store honesty on `main`: parked NFC copy, no autodial (native + all three `tapper.html`), Aid first-aid disclaimer, support page.
 - iOS CI is **workflow_dispatch only** (billing). Trigger it after Swift/scheme changes.
 - Crash motion keeps running across cream relock. Help is policy 4.2 (Overpass named). Band write host github.io is still 404.
+- `#d=` codec lockstep: `node scripts/test-d-codec.mjs`. iOS CI still dispatch-only.
 
 ## Xcode on his Mac
 

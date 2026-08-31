@@ -24,7 +24,7 @@ frisky/
 ├── tapper/                # passerby shell + shell-relative PNGs
 ├── assets/                # canonical brand PNGs / SVG
 ├── docs/                  # all long-form docs (this file, MAX, SECURITY, product notes)
-├── scripts/               # run, deploy, smoke, tapper guard
+├── scripts/               # run, deploy, smoke, tapper guard, #d= codec test
 ├── Pages surface files    # tapper.html, redirects, sw, wrangler (see table)
 └── .github/workflows/
 ```

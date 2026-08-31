@@ -31,6 +31,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | Consent | `ConsentGateView` first start / policy bump only; stored version **4.2** skips ack; Face ID still runs every owner entry; never on tapper |
 | Apple Health import | Parked (`healthKitImportEnabled = false`) |
 | iOS CI | `workflow_dispatch` only (billing). Does not gate merges |
+| `#d=` codec | `node scripts/test-d-codec.mjs` — AES / zlib / compact / URI lockstep |
 | Open PRs | Squash only into `main` |
 
 ## Blocked / not green
@@ -39,7 +40,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 |------|--------|
 | Band write host | `https://roooted1776.github.io/tapper/` is **404**. `Roooted1776.github.io` does not exist. NFC write is parked, so this build cannot mint new dead bands |
 | `redmed.pages.dev` | 404 until CF secrets / Git connect |
-| `#d=` tests | No XCTest / JS round-trip vectors |
+| XCTest | No iOS test target. Codec lockstep is Node, not XCTest |
 | App Store package | `PrivacyInfo.xcprivacy` + export flag exist; listing is parked |
 
 ## Parked until paid Apple Developer + listing

@@ -14,10 +14,10 @@ This is RedMed: a native iOS medical ID plus a static passerby HTML shell. There
 
 Code is the Face ID story: `OwnerAppLock` on owner open/return, Save / Erase prompt, Edit open does not. Docs, Help 4.2, Info.plist, and support now say that. Crash motion keeps running across relock. Location toggle is honored on Agree. Overpass is named in Help / Satellite / Info.plist; `_headers` `connect-src` allows `https://overpass-api.de`. `KeychainStore.exists` fails closed. Launch screen is cream-only. README, PRODUCTION, APP-STORE, domain, SECURITY match. pages-deploy fails when github.io smoke fails. Actions pinned to SHAs. Privacy/support URLs no longer point at jsDelivr `@main` of `redmed-privacy`.
 
-**Still open (needs Max, not git):**
+**Still open (needs Max, not this tree):**
 
-1. Stand up `Roooted1776.github.io` (or CF Pages + custom domain) so `/tapper/` returns RedMed · 911 · Aid. Do not flip `AppConfig.medicalCardBaseURL` onto another 404.
-2. Restore push/PR iOS CI after billing. Add `#d=` Swift/JS round-trip tests.
+1. Stand up `Roooted1776.github.io` with git (`scripts/publish-github-io.sh` then push that repo). Do not flip `AppConfig.medicalCardBaseURL` onto another 404.
+2. Restore push/PR iOS CI after billing. `#d=` Swift/JS lockstep now runs as `node scripts/test-d-codec.mjs` (pages-deploy + local). No XCTest target.
 3. Leave NFC / HealthKit / Associated Domains parked until a paid Apple team can provision them.
 
 ---
@@ -29,7 +29,7 @@ No committed secrets, no XSS in profile render, no autodial, no scanner write in
 **Highest-severity facts:**
 
 1. **The URL written onto bands is 404.** `AppConfig.medicalCardBaseURL` is `https://roooted1776.github.io/tapper/`. Live GET is GitHub’s 404 page. `Roooted1776/Roooted1776.github.io` does not exist. `https://redmed.pages.dev/tapper/` is also 404. NFC write is parked, so this build cannot mint new dead bands — but any earlier write to that host is a dead tap. pages-deploy now **fails** that smoke (no longer warn-only).
-2. **iOS CI does not gate merges.** `.github/workflows/ios-build.yml` is `workflow_dispatch` only. There are zero XCTest / JS unit tests. Encode/decode of `#d=` is duplicated in Swift and JS with no round-trip vectors.
+2. **iOS CI does not gate merges.** `.github/workflows/ios-build.yml` is `workflow_dispatch` only. `#d=` encode/decode lockstep is `scripts/test-d-codec.mjs` (AES-GCM, zlib, current vs legacy compact, URI contract). No XCTest.
 3. **Passerby hospital search sends GPS to `overpass-api.de`.** Native uses MapKit. Help 4.2 names both. Residual: the public OSM API still sees a rescuer’s coordinates on a band tap — disclosed, not removed.
 4. **`OwnerAppLock` is live** and Face-IDs every owner open / return. That is the product (commit `b2a38cf`). Docs now match. Crash motion no longer stops on relock.
 
@@ -387,9 +387,10 @@ HIPAA: `Help.html` 60–65 is careful (operator-aligned, not certified). The typ
 | Check | When | Fail closed? | What it proves |
 |-------|------|--------------|----------------|
 | `scripts/sync-tapper.sh` | pages-deploy job + local | Yes | One shell; three `sw.js` identical |
+| `scripts/test-d-codec.mjs` | pages-deploy job + local | Yes | KEY_LABEL lockstep; AES-GCM round-trip; zlib 0x01; current vs legacy compact; URI contract; empty persist guard present |
 | `scripts/smoke-pages.sh` | pages-deploy (github.io **fail-closed**; pages.dev fail if CF ran) | Mixed | Tabs exist; no Face ID strings in tapper; brand PNGs |
 | `ios-build.yml` | Manual | N/A (not on PR) | Simulator compile, unsigned |
-| XCTest / codec vectors | Missing | — | — |
+| XCTest | Missing | — | — |
 
 `smoke-pages.sh` against `https://roooted1776.github.io` on 2026-08-31: static no-auth scan passed (local file); **all 11 HTTP checks 404**.
 
@@ -399,13 +400,13 @@ HIPAA: `Help.html` 60–65 is careful (operator-aligned, not certified). The typ
 
 Still blocked on Max / billing / Apple, not this follow-up.
 
-1. **Stand up the passerby host.** Create `Roooted1776.github.io` (or connect Pages `redmed` and put HTTPS in front of a real domain). Run `scripts/publish-github-io.sh` / CF deploy. Smoke until `/tapper/` returns RedMed · 911 · Aid. Only then write bands. Do not change `AppConfig.medicalCardBaseURL` to a host that is still 404. pages-deploy will stay red until this is done.
-2. **Restore iOS CI on `RedMed-Xcode/**` after billing.** Add XCTest (or a tiny Swift/JS shared vector file) for: AES `#d=` round-trip, legacy zlib/JSON, compact-array current vs legacy detection, `OwnerBandURI.isValidWriteURL`, empty-`persist()` guard.
+1. **Stand up the passerby host.** Create `Roooted1776.github.io`, run `scripts/publish-github-io.sh` against that checkout, commit and push. Smoke until `/tapper/` returns RedMed · 911 · Aid. Only then write bands. Do not change `AppConfig.medicalCardBaseURL` to a host that is still 404. pages-deploy will stay red until this is done.
+2. **Restore iOS CI on `RedMed-Xcode/**` after billing.** Codec lockstep is already `node scripts/test-d-codec.mjs`. XCTest on a Mac runner is still missing.
 3. Leave NFC / HealthKit / Associated Domains parked until a paid Apple team can provision them. Do not claim live Write.
 
 ## Code changes in the follow-up
 
-Swift: honor Location toggle; `KeychainStore.exists` fail-closed; crash monitor stays up across relock. Copy: Help 4.2, Info.plist, support, launch screen. Docs: AGENTS / MAX / PRODUCTION / domain / APP-STORE / README / SECURITY. CI: fail-closed github.io smoke; pin Actions SHAs; Overpass in `_headers`.
+Swift: honor Location toggle; `KeychainStore.exists` fail-closed; crash monitor stays up across relock; encode clips to tapper `MAX_STR`/`MAX_LIST`. Copy: Help 4.2, Info.plist, support, launch screen. Docs: AGENTS / MAX / PRODUCTION / domain / APP-STORE / README / SECURITY. CI: fail-closed github.io smoke; pin Actions SHAs; Overpass in `_headers`; `scripts/test-d-codec.mjs`.
 
 ---
 

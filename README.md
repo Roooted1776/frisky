@@ -17,6 +17,7 @@ GitHub repo is `frisky`. The iOS app builds only on macOS + Xcode.
 ```
 python3 -m http.server 8787 --bind 127.0.0.1
 BASE=http://127.0.0.1:8787 ./scripts/smoke-pages.sh
+node scripts/test-d-codec.mjs
 ```
 
 Band write base `https://roooted1776.github.io/tapper/` is **404** until `Roooted1776.github.io` exists and is published. Do not write bands until that host serves RedMed · 911 · Aid. See `docs/domain.md` and `docs/AUDIT.md`.

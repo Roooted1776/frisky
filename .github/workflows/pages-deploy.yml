@@ -28,6 +28,9 @@ on:
       - '_redirects'
       - 'wrangler.toml'
       - 'assets/**'
+      - 'scripts/sync-tapper.sh'
+      - 'scripts/smoke-pages.sh'
+      - 'scripts/test-d-codec.mjs'
       - '.github/workflows/pages-deploy.yml'
   workflow_dispatch:
 
@@ -48,6 +51,7 @@ jobs:
           # Xcode copies tapper/index.html → bundle tapper.html at build.
           # Do not require three identical files (that gate is stale).
           bash scripts/sync-tapper.sh
+          node scripts/test-d-codec.mjs
           f=tapper/index.html
           ! grep -q 'Checking your phone' "$f" || fail "$f still has Checking your phone"
           ! grep -q 'Set up your RedMed band' "$f" || fail "$f still has band-setup copy"
