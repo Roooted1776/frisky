@@ -8,12 +8,12 @@ import SwiftUI
 struct NFCView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
-    /// ContentView keep-alive never calls `onDisappear`. Only warm a spare
-    /// WKWebView while NFC is the front tab — never under RedMed first paint.
+    /// ContentView keep-alive never calls `onDisappear`. HTML cache may warm
+    /// while this tab is front — never spawn a WKWebView here (Preview / Scan
+    /// create one when opened).
     var isVisible: Bool = true
     @StateObject private var band = NFCBandManager()
     @State private var previewSession: PreviewSession?
-    @State private var didWarmFullShell = false
 
     private struct PreviewSession: Identifiable {
         let id = UUID()
@@ -78,28 +78,15 @@ struct NFCView: View {
             Text(band.alertMessage ?? "")
         }
         .task(id: isVisible) {
+            // HTML string only, off the main actor. Do not create a WKWebView
+            // on this tab — that was the long NFC load.
             guard isVisible else { return }
-            await Task.yield()
-            try? await Task.sleep(nanoseconds: 150_000_000)
-            guard !Task.isCancelled, isVisible else { return }
-            warmFullShellIfFront()
+            PasserbyHTMLCardView.scheduleShellWarmOnce()
         }
         .onChange(of: band.isWriting) { _, writing in
             // Linked only after a matching read-back. Written-but-unverified stays Not linked.
             guard !writing, band.writeSucceeded, band.writeVerified, AppConfig.nfcHardwareEnabled else { return }
             band.linkBracelet(on: profile, detail: "NFC write verified")
-        }
-    }
-
-    /// Spare Preview/Scan WKWebView — only while NFC is front. Do not warm
-    /// during RedMed first paint.
-    private func warmFullShellIfFront() {
-        guard isVisible, !didWarmFullShell else { return }
-        didWarmFullShell = true
-        PasserbyHTMLCardView.scheduleShellWarmOnce()
-        Task { @MainActor in
-            await Task.yield()
-            PasserbyWebViewPool.warmFullShell()
         }
     }
 
