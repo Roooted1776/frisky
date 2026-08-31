@@ -4,7 +4,7 @@ import SwiftUI
 /// Never a cream lock. Never on passerby tapper.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
-    static let currentVersion = "4.1"
+    static let currentVersion = "4.2"
 
     static var hasAcceptedCurrent: Bool {
         UserDefaults.standard.string(forKey: acceptedVersionKey) == currentVersion
@@ -42,8 +42,6 @@ struct ConsentGateView<Content: View>: View {
             }
         }
         .onAppear {
-            OwnerLockPresentation.setLocked(false)
-            OwnerLockPresentation.holdSwitcherCover = false
             SnapshotSafeCover.shared.reveal()
             // First open: keep Main unmounted until Agree so the gate is the
             // first real page, not a cream hang over a loading WKWebView.
@@ -163,8 +161,6 @@ struct ConsentGateView<Content: View>: View {
         locationEnabled = true
         ConsentSettings.recordAcceptance()
         RedMedHaptics.success()
-        OwnerLockPresentation.setLocked(false)
-        OwnerLockPresentation.holdSwitcherCover = false
         SnapshotSafeCover.shared.reveal()
         var t = Transaction()
         t.animation = nil

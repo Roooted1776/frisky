@@ -220,7 +220,7 @@ struct CompactFillButton: View {
 
 /// Trailing chrome text — owner **Edit**, NFC Preview **Back**, scanner **Back**, Aid topic **Back**.
 /// Help on 911 / Aid / NFC / Edit stays chrome text, not a bottom dock.
-/// No Help on the Face ID lock shell or the owner RedMed tab itself.
+/// No Help on the owner RedMed tab itself.
 /// Accent red text only — no chip / box fill (plain link over the HTML shell).
 struct ChromeTextAction: View {
     let title: String

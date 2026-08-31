@@ -28,7 +28,9 @@ The app has no backend, database, or web service.
   Tapper has no biometrics and no acknowledgement page. Do not remount
   `OwnerAppLock` / `LockEntryPage` / `FacePage` as an app-wide cream lock.
   Crash monitor starts from owner `Main` / `ContentView.onAppear`, not from
-  a lock. Profile restores from Keychain on owner Main appear (device-unlocked
+  a lock. CoreMotion stops on true `.background` (no motion background
+  mode) and restarts on `.active`. `.inactive` — Face ID on Edit / Save /
+  Erase, Control Center — does not stop it. An armed siren is independent. Profile restores from Keychain on owner Main appear (device-unlocked
   Keychain — no Face ID to view). The band is the product, not optional.
 - **Owner app** (`Main` → `ContentView`, `isScannerSession == false`): tabs are
   **RedMed · 911 · Aid · NFC**. Edit is available on RedMed. NFC tab is always
@@ -166,7 +168,8 @@ trauma JSON, or show a Location banner at `@main`. First launch opens a cream
 shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash)
 then `ConsentGateView` (first launch / policy bump) then Main. No cream lock;
 Main mounts without Face ID. Owner `ContentView.onAppear` starts crash
-monitoring; `.task` calls `profile.restoreOnLaunch()` (owner only — scanners
+monitoring; `.background` stops CoreMotion; `.active` restarts it; `.inactive`
+does not stop it. `.task` calls `profile.restoreOnLaunch()` (owner only — scanners
 must not hit owner Keychain). A UserDefaults gate
 (`ProfileData.storedProfileGateKey`) plus `hasStoredProfile()` hints that a
 blob is expected so the empty funnel stays hidden while restore is in flight.

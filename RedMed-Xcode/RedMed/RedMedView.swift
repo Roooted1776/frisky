@@ -11,6 +11,9 @@ struct RedMedView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
     @State private var showEdit = false
+    @State private var isRequestingEdit = false
+    @State private var showAuthFailedAlert = false
+    @State private var authUnavailableMessage: String?
     @State private var healthImportBusy = false
     @State private var healthImportMessage: String?
     /// HealthKit characteristics to seed Edit. Not written to ProfileData until Save.
@@ -76,6 +79,19 @@ struct RedMedView: View {
         // Owner profile only — never redact the passerby / EMS scanner card.
         .privacySensitive(!isScannerSession)
         .background { RedMedPageBackground() }
+        .alert(BiometricAuth.deniedAlertTitle, isPresented: $showAuthFailedAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(BiometricAuth.deniedAlertMessage(action: "edit"))
+        }
+        .alert(BiometricAuth.unavailableAlertTitle, isPresented: Binding(
+            get: { authUnavailableMessage != nil },
+            set: { if !$0 { authUnavailableMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(authUnavailableMessage ?? "")
+        }
         .fullScreenCover(isPresented: Binding(
             get: { showEdit && !isScannerSession },
             set: { showEdit = $0 && !isScannerSession }
@@ -117,9 +133,28 @@ struct RedMedView: View {
     // MARK: - Edit gate
 
     private func requestEdit() {
-        // Scanners never edit. Face ID is on Save only, not on opening Edit.
-        guard !isScannerSession else { return }
-        showEdit = true
+        // Scanners never edit. Face ID gates opening Edit; Save Face IDs persist.
+        guard !isScannerSession, !isRequestingEdit else { return }
+        isRequestingEdit = true
+        BiometricAuth.authenticate(
+            reason: "Confirm with Face ID, Touch ID, or passcode to edit your RedMed profile.",
+            force: true
+        ) { outcome in
+            Task { @MainActor in
+                isRequestingEdit = false
+                switch outcome {
+                case .success:
+                    showEdit = true
+                case .notVerified:
+                    showAuthFailedAlert = true
+                    VaultHistoryStore.shared.record(.unlockFailed, detail: "edit")
+                case .unavailable(let reason):
+                    authUnavailableMessage = reason.message
+                case .declined, .notInteractive, .timedOut:
+                    break
+                }
+            }
+        }
     }
 
     /// Optional Health fill on the empty funnel, then Edit so Save still Face ID gates persist.
@@ -135,7 +170,7 @@ struct RedMedView: View {
             healthImportMessage = draft.filledCount == 2
                 ? "Birth date and blood type ready. Add your name, then Save."
                 : "Copied from Apple Health. Add your name, then Save."
-            showEdit = true
+            requestEdit()
         } catch {
             healthImportMessage = error.localizedDescription
         }

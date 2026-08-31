@@ -24,7 +24,7 @@ RedMed is a **native iOS/SwiftUI** medical ID (`RedMed-Xcode/`). Local only: Key
 
 ## Shipped (Aug 2026, keep this current)
 
-- Owner open is Main (after first-start Before you continue). No cream Face ID lock in front. Face ID is Edit / Save / Erase only.
+- Owner open is Main (after first-start Before you continue). No cream Face ID lock in front. Face ID is Edit / Save / Erase only. Crash motion runs while owner Main is in the foreground; CoreMotion stops in background. Armed siren can keep going.
 - Erase all user data is on owner Help, then ack, then Main. Scanner Help stays policies only.
 - ICE phones display US as `(XXX) XXX-XXXX`. Tab labels scale to the slot.
 - Debug-on-device: Main Thread Checker / TPC / view+queue debug / Metal validation / `ENABLE_DEBUG_DYLIB` off. `print()` → `os.Logger`. Log streaming. No SwiftUI preview dylib.
