@@ -13,6 +13,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
+    @Environment(\.scenePhase) private var scenePhase
     @State private var tab: AppTab = .redmed
     /// Only mount a tab's heavy subtree after first visit; keep it alive after.
     @State private var mountedTabs: Set<AppTab> = [.redmed]
@@ -79,13 +80,29 @@ struct ContentView: View {
             // Same-turn mount in scannerSafeTab already paints 911 / Aid / NFC
             // on first tap. Do not pre-stack those pages under RedMed — that
             // kept GPS / Aid catalog / NFC WK warm compositing for the session.
-            if !isScannerSession {
-                Task { @MainActor in
-                    await Task.yield()
-                    try? await Task.sleep(nanoseconds: 400_000_000)
-                    guard !Task.isCancelled else { return }
-                    CrashMotionGuard.shared.startMonitoring()
-                }
+            // First paint first — CoreMotion after the YOU card yields.
+            Task { @MainActor in
+                await Task.yield()
+                try? await Task.sleep(nanoseconds: 400_000_000)
+                guard !Task.isCancelled else { return }
+                guard scenePhase == .active else { return }
+                startCrashMonitorIfOwner()
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            guard !isScannerSession else { return }
+            switch phase {
+            case .active:
+                startCrashMonitorIfOwner()
+            case .background:
+                // No motion background mode — CoreMotion is useless when
+                // suspended. Stop the session so the next `.active` can
+                // start a fresh one. Does not cancel an armed siren.
+                CrashMotionGuard.shared.stopMonitoring()
+            default:
+                // `.inactive` is Face ID on Edit / Save / Erase, Control
+                // Center, app switcher peek. Keep listening.
+                break
             }
         }
         .onChange(of: tab) { _, newTab in
@@ -128,6 +145,12 @@ struct ContentView: View {
         if !showsNFC && tab == .nfc {
             tab = .redmed
         }
+    }
+
+    /// Owner Main only. Scanner / passerby never start CoreMotion.
+    private func startCrashMonitorIfOwner() {
+        guard !isScannerSession else { return }
+        CrashMotionGuard.shared.startMonitoring()
     }
 }
 

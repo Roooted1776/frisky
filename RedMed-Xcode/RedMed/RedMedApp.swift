@@ -16,10 +16,9 @@ struct RedMedApp: App {
             .task {
                 // Snapshot observers only. Do not warm WKWebView or read
                 // tapper.html here — that raced the first Main frame.
-                // Do not restore PHI here — OwnerAppLock adopts after Face ID.
+                // Profile restore is owner ContentView.task (device-unlocked
+                // Keychain). Face ID is Edit / Save / Erase, not launch.
                 SnapshotSafeCover.activate()
-                OwnerLockPresentation.setLocked(true)
-                OwnerLockPresentation.holdSwitcherCover = true
             }
             .onOpenURL { url in
                 if (url.scheme ?? "").lowercased() == "redmed",
@@ -32,12 +31,10 @@ struct RedMedApp: App {
     }
 }
 
-/// Face ID (system sheet on cream) then Before you continue / Main.
-/// No heart, no Proceed. Passerby tapper is not in this tree.
+/// Before you continue (first launch / policy bump) then Main.
+/// No cream Face ID lock. Passerby tapper is not in this tree.
 private struct LaunchRoot: View {
     var body: some View {
-        OwnerAppLock {
-            ConsentGateView { Main() }
-        }
+        ConsentGateView { Main() }
     }
 }

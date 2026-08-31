@@ -296,9 +296,9 @@ class ProfileData: ObservableObject {
         return loadFromKeychain()
     }
 
-    /// Apply prefetch after login Face ID. Does not present a second sheet.
+    /// Apply prefetch on owner Main appear. Does not present Face ID.
     /// Falls through to restoreOnLaunch on a prefetch miss so an old
-    /// biometry ACL row can migrate using the parked login context.
+    /// biometry ACL row can migrate using a parked Edit/Save context.
     @MainActor
     func adoptLaunchPrefetch() async {
         guard persists else { return }

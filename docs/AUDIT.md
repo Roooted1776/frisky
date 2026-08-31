@@ -18,7 +18,7 @@ No committed secrets, no XSS in profile render, no autodial, no scanner write in
 1. **The URL written onto bands is 404.** `AppConfig.medicalCardBaseURL` is `https://roooted1776.github.io/tapper/`. Live GET is GitHub’s 404 page. `Roooted1776/Roooted1776.github.io` does not exist. `https://redmed.pages.dev/tapper/` is also 404. NFC write is parked, so this build cannot mint new dead bands — but any earlier write to that host is a dead tap, and CI treats the 404 as a warning.
 2. **iOS CI does not gate merges.** `.github/workflows/ios-build.yml` is `workflow_dispatch` only. There are zero XCTest / JS unit tests. Encode/decode of `#d=` is duplicated in Swift and JS with no round-trip vectors.
 3. **Passerby hospital search sends GPS to `overpass-api.de`.** `Help.html` and `AppConfig.Satellite` say Apple Maps. Native code uses MapKit. The hosted shell does not.
-4. **`OwnerAppLock` is live** and Face-IDs every owner open / return. `AGENTS.md` / `MAX.md` say the opposite. Crash motion stops on relock. Help copy still says Face ID is Edit / Save / Erase only.
+4. **`OwnerAppLock` was live** (resolved after this audit). Face-IDs every owner open / return. `AGENTS.md` / `MAX.md` said the opposite. Crash motion stopped on relock. Help copy said Face ID is Edit / Save / Erase only. **Fix:** strip `OwnerAppLock`; Face ID on Edit / Save / Erase; crash motion while owner Main is foreground.
 
 No critical in-repo security hole was safe and unambiguous to patch in this PR. Fixes that would change Face ID, location, or the band URL are product decisions — listed under next actions, not landed here.
 
@@ -179,6 +179,8 @@ This is stricter privacy for the owner phone and worse emergency access on that 
 
 This is a product fork, not a one-line bug. Do not “fix” it in passing. Pick one story and make `AGENTS.md`, `MAX.md`, `PRODUCTION.md`, `Help.html`, `Info.plist` `NSFaceIDUsageDescription`, and `support/index.html` match the code.
 
+**Resolved:** stripped `OwnerAppLock`. Face ID is Edit / Save / Erase. Crash motion starts from owner Main, stops CoreMotion on `.background`, restarts on `.active`, does not stop on `.inactive`. Band tap stays ungated. Consent 4.2. `PRODUCTION.md` no longer claims a Face ID toggle.
+
 ---
 
 ### Medium
@@ -240,9 +242,9 @@ Residual: a hard drop of the phone can still siren. That is documented risk, not
 
 #### L1. Info.plist / support copy vs actual Face ID and NFC
 
-- `NSFaceIDUsageDescription` (Info.plist 44–45): “edit, save, or erase” — does not mention unlock, and Edit open is ungated.
-- `support/index.html` 34–35: “Unlock uses Face ID… Edit, Save, Erase, **and NFC write** ask again.” NFC write does **not** prompt (`NFCBandManager.writeBand` comment 49; no `BiometricAuth` on that path).
-- `UILaunchScreen` includes `BrandLogo` (Info.plist 52–57). `AGENTS.md` says no BrandLogo splash.
+- `NSFaceIDUsageDescription` (Info.plist 44–45): “edit, save, or erase” — now matches code (Edit is gated).
+- `support/index.html`: was “Unlock uses Face ID… NFC write ask again.” **Fixed** with the H4 PR — launch ungated; NFC write does not prompt.
+- `UILaunchScreen` includes `BrandLogo` (Info.plist 52–57). `AGENTS.md` says no BrandLogo splash. **Still open.**
 
 #### L2. JS field caps vs Swift encode
 
@@ -265,7 +267,7 @@ Residual: a hard drop of the phone can still siren. That is documented risk, not
 
 #### L4. Empty README, stub SECURITY.md, public repo named frisky
 
-Root `README.md` is blank. GitHub community profile: `readme: null`, `security: null`, `license: null`. `docs/SECURITY.md` is one line pointing at `Help.html`. `docs/PRODUCTION.md` is the closest “green checklist” and is wrong on the Face ID toggle (see H4). `docs/cold-start-audit.md` matches **code** (`OwnerAppLock` path), not the AGENTS invariant.
+Root `README.md` is blank. GitHub community profile: `readme: null`, `security: null`, `license: null`. `docs/SECURITY.md` is one line pointing at `Help.html`. `docs/PRODUCTION.md` Face ID toggle claim was fixed with the H4 PR. `docs/cold-start-audit.md` is historical (`OwnerAppLock` path).
 
 #### L5. AASA team ID is public; Associated Domains entitlement is empty
 
@@ -317,7 +319,7 @@ Single target, 42 Swift files, no modules. Boundaries are conventions (`isScanne
 
 | Symbol | Status |
 |--------|--------|
-| `OwnerAppLock` | Live — wraps launch |
+| `OwnerAppLock` | Deleted — do not remount |
 | `FacePage`, `LockEntryPage`, `VaultHistoryView`, `MainInfoView` | Deleted (comments only) |
 | `VaultHistoryStore` | Live, no UI |
 | `HealthKitProfileImport` | Stub (`isAvailable` false) |
@@ -330,9 +332,9 @@ Single target, 42 Swift files, no modules. Boundaries are conventions (`isScanne
 
 | Topic | Code | AGENTS / MAX | PRODUCTION / Help |
 |-------|------|--------------|-------------------|
-| App-open Face ID | Yes (`OwnerAppLock`) | No | PRODUCTION yes; Help no |
-| Face ID on Edit | No | Yes | Help yes |
-| Face ID toggle on consent | Does not exist | — | PRODUCTION claims it |
+| App-open Face ID | No | No | PRODUCTION no; Help no |
+| Face ID on Edit | Yes | Yes | Help yes |
+| Face ID toggle on consent | Does not exist | — | PRODUCTION no longer claims it |
 | Location prompt | Agree (`requestWhenInUseIfNeeded`) | Find Help only | Help: Find Help |
 | iOS CI on push | No | AGENTS implies yes; MAX says dispatch | — |
 | github.io live | 404 | Claimed live | domain.md claimed live |
@@ -381,7 +383,7 @@ Ordered by what actually unblocks the product.
 
 1. **Stand up the passerby host.** Create `Roooted1776.github.io` (or connect Pages `redmed` and put HTTPS in front of a real domain). Run `scripts/publish-github-io.sh` / CF deploy. Smoke until `/tapper/` returns RedMed · 911 · Aid. Only then write bands. Do not change `AppConfig.medicalCardBaseURL` to a host that is still 404.
 2. **Make pages-deploy fail when the live write base 404s.** The warn-only smoke is why H1 is invisible on `main`.
-3. **Pick a Face ID story and align docs + code.** Either keep `OwnerAppLock` and rewrite AGENTS/MAX/Help/Info.plist/support, or remove the launch lock and keep Face ID on Save / Erase (and decide Edit). Same PR should say what crash-monitor does in background.
+3. **~~Pick a Face ID story and align docs + code.~~ Done.** Launch lock removed. Face ID is Edit / Save / Erase. Crash-monitor: CoreMotion while owner Main is foreground; stop on `.background`; armed siren independent.
 4. **Fix hospital-search disclosure.** Help / Info.plist / Satellite copy must name Overpass (or MapKit-only on native and “OpenStreetMap Overpass” on tapper). Add `https://overpass-api.de` to `_headers` `connect-src` if pages.dev will serve the shell.
 5. **Honor or delete the Location toggle.** `enterApp()` forcing `locationEnabled = true` makes the control fake.
 6. **Restore iOS CI on `RedMed-Xcode/**` after billing.** Add XCTest (or a tiny Swift/JS shared vector file) for: AES `#d=` round-trip, legacy zlib/JSON, compact-array current vs legacy detection, `OwnerBandURI.isValidWriteURL`, empty-`persist()` guard.

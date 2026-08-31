@@ -16,7 +16,8 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 
 | Area | Status |
 |------|--------|
-| Owner Face ID gate | Open/return always (system prompt). Edit / Save / Erase honor the Before you continue Face ID toggle. Profile restores on Main appear (device-unlocked Keychain, no Face ID to view) |
+| Owner Face ID gate | Edit / Save / Erase only (`force: true`). No cream lock on open or return. No Face ID toggle on Before you continue (Haptic + Location only). Profile restores on Main appear (device-unlocked Keychain, no Face ID to view) |
+| Crash motion | Starts after owner Main paints. Stops CoreMotion on `.background`. Restarts on `.active`. Does not stop on `.inactive` (Edit/Save/Erase Face ID). Armed siren is independent. Scanner / tapper never start it. |
 | Keychain profile | `WhenPasscodeSetThisDeviceOnly`, no biometry ACL; save fail-closed; never synchronizable |
 | Owner tabs | RedMed · 911 · Aid · NFC; scanners never see NFC |
 | NFC Preview + Scan | Both use `fullScreenCover(item:)` after pack — no empty-cover race |
@@ -26,7 +27,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | AES-GCM on chip | Public client key by design (EMS decrypts with no account) |
 | ATS | Arbitrary loads + local networking **false** |
 | Snapshot / pasteboard | Privacy cover + secure pasteboard clear on background |
-| Consent | `ConsentGateView` first start / policy bump only; stored version 4.1 skips ack; Face ID still runs every owner entry; never on tapper |
+| Consent | `ConsentGateView` first start / policy bump only; stored version 4.2 skips ack; never Face ID on that path; never on tapper |
 | Apple Health import | Parked (`healthKitImportEnabled = false`) |
 | App Store package | `PrivacyInfo.xcprivacy` + export flag + `docs/APP-STORE.md` |
 | Open PRs | Squash only into `main` |
@@ -40,6 +41,6 @@ Not doing these in git until you have the Program and an app ID:
 3. `AppConfig.appStoreURL` is `nil` (no placeholder listing).
 4. App Store Connect package / Archive.
 
-Legal policies stay in Help.html. User acknowledgments stay on `ConsentGateView` after Face ID.
+Legal policies stay in Help.html. User acknowledgments stay on `ConsentGateView` (first launch / policy bump). Face ID is not in front of that screen.
 
 Custom HTML domain is still TBD (`docs/domain.md`); bands stay on github.io until HTTPS is green.
