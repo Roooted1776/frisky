@@ -113,7 +113,7 @@ struct EditProfileView: View {
                         bloodTypeRow
                         Divider().padding(.leading, Metrics.labelWidth + 12 + Metrics.rowHPad)
                         Toggle(isOn: $isOrganDonor) {
-                            Text("Organ donor")
+                            Text("Organ Donor")
                                 .font(.system(size: Metrics.font, weight: .medium))
                                 .foregroundColor(.redmedMuted)
                         }
@@ -131,7 +131,7 @@ struct EditProfileView: View {
                         .padding(.vertical, Metrics.rowVPad)
                         Divider().padding(.leading, Metrics.labelWidth + 12 + Metrics.rowHPad)
                         Toggle(isOn: $isDeafOrVisionImpaired) {
-                            Text("Deaf / vision impaired")
+                            Text("Deaf / Vision Impaired")
                                 .font(.system(size: Metrics.font, weight: .medium))
                                 .foregroundColor(.redmedMuted)
                         }
@@ -150,7 +150,7 @@ struct EditProfileView: View {
                             lines: $allergies,
                             sectionKey: "allergies",
                             placeholder: "Allergy",
-                            addLabel: "Add allergy",
+                            addLabel: "Add Allergy",
                             onTextChange: { id, text in
                                 refreshSuggestions(lineID: id, text: text, lines: allergies, catalog: SuggestionCatalog.allergies)
                             }
@@ -163,7 +163,7 @@ struct EditProfileView: View {
                             lines: $medications,
                             sectionKey: "medications",
                             placeholder: "Medication",
-                            addLabel: "Add medication",
+                            addLabel: "Add Medication",
                             onTextChange: { id, text in
                                 refreshSuggestions(lineID: id, text: text, lines: medications, catalog: SuggestionCatalog.medications)
                             }
@@ -176,7 +176,7 @@ struct EditProfileView: View {
                             lines: $conditions,
                             sectionKey: "conditions",
                             placeholder: "Condition",
-                            addLabel: "Add condition",
+                            addLabel: "Add Condition",
                             onTextChange: { id, text in
                                 refreshSuggestions(lineID: id, text: text, lines: conditions, catalog: SuggestionCatalog.conditions)
                             }
@@ -233,7 +233,7 @@ struct EditProfileView: View {
             birthDatePickerSheet
                 .presentationBackground(Color.redmedBg)
         }
-        .confirmationDialog("Blood type", isPresented: $showBloodTypePicker, titleVisibility: .visible) {
+        .confirmationDialog("Blood Type", isPresented: $showBloodTypePicker, titleVisibility: .visible) {
             ForEach(Self.bloodTypeChoices, id: \.self) { type in
                 Button(type) { bloodType = type }
             }
@@ -326,7 +326,7 @@ struct EditProfileView: View {
 
     private var birthDateRow: some View {
         HStack(spacing: 0) {
-            Text("Birth date")
+            Text("Birth Date")
                 .font(.system(size: Metrics.font, weight: .medium))
                 .foregroundColor(.redmedMuted)
                 .frame(width: Metrics.labelWidth, alignment: .leading)
@@ -336,7 +336,7 @@ struct EditProfileView: View {
                 pickerBirthDate = Self.parseBirthDate(birthDate) ?? Self.defaultBirthDate
                 showBirthDatePicker = true
             } label: {
-                Text(hasBirthDate ? birthDate : "Select date")
+                Text(hasBirthDate ? birthDate : "Select Date")
                     .font(.system(size: Metrics.font, weight: .medium))
                     .foregroundColor(hasBirthDate ? .redmedDark : .redmedAccent)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -355,7 +355,7 @@ struct EditProfileView: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Clear birth date")
+                .accessibilityLabel("Clear Birth Date")
             }
 
             Spacer(minLength: 0)
@@ -368,7 +368,7 @@ struct EditProfileView: View {
         NavigationStack {
             VStack {
                 DatePicker(
-                    "Birth date",
+                    "Birth Date",
                     selection: $pickerBirthDate,
                     in: Self.birthDateRange,
                     displayedComponents: .date
@@ -379,7 +379,7 @@ struct EditProfileView: View {
                 .padding(.top, 8)
                 Spacer()
             }
-            .navigationTitle("Birth date")
+            .navigationTitle("Birth Date")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.redmedBg, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
@@ -405,7 +405,7 @@ struct EditProfileView: View {
 
     private var bloodTypeRow: some View {
         HStack(spacing: 0) {
-            Text("Blood type")
+            Text("Blood Type")
                 .font(.system(size: Metrics.font, weight: .medium))
                 .foregroundColor(.redmedMuted)
                 .frame(width: Metrics.labelWidth, alignment: .leading)
@@ -486,7 +486,7 @@ struct EditProfileView: View {
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "plus.circle.fill").font(.system(size: Metrics.icon))
-                Text("Add contact").font(.system(size: Metrics.font, weight: .medium))
+                Text("Add Contact").font(.system(size: Metrics.font, weight: .medium))
             }
             .foregroundColor(.redmedAccent)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -592,7 +592,7 @@ struct EditProfileView: View {
                         Image(systemName: "heart.text.square")
                             .font(.system(size: Metrics.icon, weight: .semibold))
                     }
-                    Text(healthImportBusy ? "Reading Apple Health…" : "Fill from Apple Health")
+                    Text(healthImportBusy ? "Reading Apple Health…" : "Fill From Apple Health")
                         .font(.system(size: Metrics.font, weight: .semibold))
                     Spacer(minLength: 0)
                     Image(systemName: "chevron.right")
@@ -783,7 +783,7 @@ private struct YouNameField: View {
     var body: some View {
         IdentifiedTextField(
             fieldID: "edit-you-full-name",
-            placeholder: "Full name",
+            placeholder: "Full Name",
             text: $text,
             autocapitalization: .words
         )
@@ -824,7 +824,7 @@ private struct ContactDraftRow: View {
             HStack(alignment: .center, spacing: 10) {
                 IdentifiedTextField(
                     fieldID: "edit-contact-\(contactID)-name",
-                    placeholder: "Contact name",
+                    placeholder: "Contact Name",
                     text: $contact.name,
                     autocapitalization: .words
                 )
@@ -839,8 +839,8 @@ private struct ContactDraftRow: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel(
                     contact.name.isEmpty
-                        ? "Delete contact"
-                        : "Delete contact \(contact.name)"
+                        ? "Delete Contact"
+                        : "Delete Contact \(contact.name)"
                 )
             }
             .padding(.horizontal, Metrics.rowHPad)
@@ -878,7 +878,7 @@ private struct ContactDraftRow: View {
 
                 IdentifiedTextField(
                     fieldID: "edit-contact-\(contactID)-phone",
-                    placeholder: country.dialCode == "+1" ? "(555) 123-4567" : "Phone number",
+                    placeholder: country.dialCode == "+1" ? "(555) 123-4567" : "Phone Number",
                     text: $localNumber,
                     keyboardType: .phonePad,
                     autocapitalization: .none,
@@ -893,7 +893,7 @@ private struct ContactDraftRow: View {
 
             IdentifiedTextField(
                 fieldID: "edit-contact-\(contactID)-rel",
-                placeholder: "Relation (optional)",
+                placeholder: "Relation (Optional)",
                 text: $contact.relationship,
                 autocapitalization: .words
             )

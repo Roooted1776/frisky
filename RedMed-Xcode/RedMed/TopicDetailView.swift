@@ -100,7 +100,7 @@ struct TopicDetailView: View {
                                     .font(.system(size: 32, weight: .heavy))
                                     .foregroundColor(.white)
                             }
-                            Text(cprPhase == "breathe" ? "Give 2 breaths" : "Push hard, push fast")
+                            Text(cprPhase == "breathe" ? "Give 2 Breaths" : "Push Hard, Push Fast")
                                 .font(.system(size: 16, weight: .bold))
                                 .foregroundColor(.redmedAccent)
                             Text("110 beats/min · haptic + click · 30 compressions, then 2 breaths")
@@ -147,7 +147,7 @@ struct TopicDetailView: View {
                     .padding(.bottom, 22)
 
                     // WHAT TO DO
-                    Text("What to do")
+                    Text("What To Do")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.redmedAccent)
                         .kerning(0.5)
@@ -218,14 +218,14 @@ private struct LiveNearbyHospitalsSection: View {
                 .padding(.top, 24)
 
             if !locationEnabled {
-                Text("Location is off. Enable it on Before you continue (first launch or a policy update) or in iOS Settings to find nearby hospitals. Search uses Apple Maps on this phone.")
+                Text("Location is off. Enable it on Before You Continue (first launch or a policy update) or in iOS Settings to find nearby hospitals. Search uses Apple Maps on this phone.")
                     .font(.system(size: 13))
                     .foregroundColor(.redmedMuted)
                     .padding(.vertical, 12)
             } else if hospitalFinder.isLoading {
                 HStack {
                     ProgressView()
-                    Text("Finding hospitals near you…")
+                    Text("Finding Hospitals Near You…")
                         .font(.system(size: 14))
                         .foregroundColor(.redmedMuted)
                 }

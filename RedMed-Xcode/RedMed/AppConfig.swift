@@ -98,7 +98,7 @@ enum AppConfig {
     /// Developer — see `docs/healthkit-restore.md`. Parked (`false`): personal/free
     /// teams cannot provision HealthKit (same class of problem as NFC Tag Reading
     /// and Associated Domains), so the entitlement stays out of `RedMed.entitlements`
-    /// and the "Fill from Apple Health" button stays hidden until restored.
+    /// and the "Fill From Apple Health" button stays hidden until restored.
     static let healthKitImportEnabled = false
 
     /// Hardware RF contract for the RedMed bracelet.

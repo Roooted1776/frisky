@@ -19,7 +19,7 @@ enum HelpDocument {
             case .privacy: return "Privacy"
             case .security: return "Security"
             case .terms: return "Terms"
-            case .medicalDisclaimer: return "Medical disclaimer"
+            case .medicalDisclaimer: return "Medical Disclaimer"
             }
         }
 
@@ -280,7 +280,7 @@ struct HelpMenuView: View {
                                     dismiss()
                                     DispatchQueue.main.async { onOpenNFC() }
                                 } label: {
-                                    Text("Write the band")
+                                    Text("Write The Band")
                                         .font(.system(size: Metrics.font, weight: .medium))
                                         .foregroundColor(.redmedDark)
                                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -313,7 +313,7 @@ struct HelpMenuView: View {
                                             ProgressView()
                                                 .frame(maxWidth: .infinity, alignment: .leading)
                                         } else {
-                                            Text("Erase all user data")
+                                            Text("Erase All User Data")
                                                 .font(.system(size: Metrics.font, weight: .medium))
                                                 .frame(maxWidth: .infinity, alignment: .leading)
                                         }
@@ -344,7 +344,7 @@ struct HelpMenuView: View {
                 locationSuggester.refresh()
             }
             .confirmationDialog(
-                "Erase all user data on this iPhone?",
+                "Erase All User Data On This iPhone?",
                 isPresented: $showEraseConfirm,
                 titleVisibility: .visible
             ) {

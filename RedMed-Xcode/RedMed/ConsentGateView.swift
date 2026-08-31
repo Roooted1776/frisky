@@ -69,7 +69,7 @@ struct ConsentGateView<Content: View>: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("Before you continue")
+                    Text("Before You Continue")
                         .font(.system(size: 22, weight: .bold))
                         .kerning(-0.4)
                         .foregroundColor(.redmedDark)
@@ -86,7 +86,7 @@ struct ConsentGateView<Content: View>: View {
                     .redmedBox(flatten: false)
 
                     VStack(spacing: 0) {
-                        Toggle("Haptic feedback", isOn: $hapticsEnabled)
+                        Toggle("Haptic Feedback", isOn: $hapticsEnabled)
                             .font(.system(size: RedMedChrome.rowFont, weight: .medium))
                             .tint(.redmedAccent)
                             .padding(.horizontal, RedMedChrome.pagePadX)

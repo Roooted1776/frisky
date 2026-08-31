@@ -1455,37 +1455,37 @@ function redmedAssetURL(file) {
 </style>
 </head>
 <body>
-  <a class="skip-link" href="#panel-medical">Skip to card</a>
+  <a class="skip-link" href="#panel-medical">Skip To Card</a>
   <div class="app">
     <!-- RedMed — same header + YOU card as owner RedMedView (no Edit). -->
     <div class="panel active" id="panel-medical" data-panel="medical" role="tabpanel" aria-labelledby="tab-medical" aria-hidden="false">
       <div class="rm-header">
-        <p class="rm-note">Tap to scan · no login · no server · no app</p>
+        <p class="rm-note">Tap To Scan · No Login · No Server · No App</p>
         <div class="rm-title-row">
           <img class="rm-logo" id="rmLogo" src="BrandLogo.png" width="72" height="72" alt="RedMed" decoding="async" fetchpriority="high">
           <div>
             <h1 class="rm-name" id="name">RedMed</h1>
             <div class="rm-meta">
-              <p class="rm-status" id="statusLine">Not linked</p>
+              <p class="rm-status" id="statusLine">Not Linked</p>
             </div>
           </div>
         </div>
       </div>
 
       <div class="rm-empty" id="rmEmpty" hidden>
-        <div class="rm-empty-pill">No patient</div>
-        <h2>No medical ID on this page</h2>
+        <div class="rm-empty-pill">No Patient</div>
+        <h2>No Medical ID On This Page</h2>
         <p>A written MED ID band opens the person's name, blood type, allergies, and contacts here.</p>
         <p class="rm-empty-foot">911 and Aid still work on this phone.</p>
       </div>
 
       <div class="card you-card">
         <div class="row" id="rowNameRow"><span class="k">Name</span><span class="v empty" id="rowName">—</span></div>
-        <div class="row"><span class="k">Birth date</span><span class="v empty" id="rowDob">—</span></div>
-        <div class="row row-blood" id="rowBloodRow"><span class="k">Blood type</span><span class="v empty" id="rowBlood">—</span></div>
-        <div class="row row-donor" id="rowDonorRow"><span class="k">Organ donor</span><span class="v empty" id="rowDonor">—</span></div>
+        <div class="row"><span class="k">Birth Date</span><span class="v empty" id="rowDob">—</span></div>
+        <div class="row row-blood" id="rowBloodRow"><span class="k">Blood Type</span><span class="v empty" id="rowBlood">—</span></div>
+        <div class="row row-donor" id="rowDonorRow"><span class="k">Organ Donor</span><span class="v empty" id="rowDonor">—</span></div>
         <div class="row row-pregnant" id="rowPregnantRow"><span class="k">Pregnant</span><span class="v empty" id="rowPregnant">—</span></div>
-        <div class="row row-deaf" id="rowDeafRow"><span class="k">Deaf / vision impaired</span><span class="v empty" id="rowDeaf">—</span></div>
+        <div class="row row-deaf" id="rowDeafRow"><span class="k">Deaf / Vision Impaired</span><span class="v empty" id="rowDeaf">—</span></div>
       </div>
 
       <div class="list-grid" hidden>
@@ -1535,9 +1535,9 @@ function redmedAssetURL(file) {
           <div class="gps-acc" id="gpsAcc">Accuracy ––</div>
         </div>
         <div class="gps-actions">
-          <button class="btn btn-ink" type="button" id="copyCoordsBtn" aria-label="Copy GPS coordinates">Copy coordinates</button>
+          <button class="btn btn-ink" type="button" id="copyCoordsBtn" aria-label="Copy GPS Coordinates">Copy Coordinates</button>
         </div>
-        <button class="btn btn-sos" type="button" id="sosBtn" aria-pressed="false">SOS · Locate me</button>
+        <button class="btn btn-sos" type="button" id="sosBtn" aria-pressed="false">SOS · Locate Me</button>
 
         <div class="seizure-strip" id="seizureStrip">
           <div>
@@ -1567,7 +1567,7 @@ function redmedAssetURL(file) {
         <div class="info">
           <div class="info-head">
             <div class="info-icon" aria-hidden="true">ℹ</div>
-            <h2>What to Tell <span class="emg">112</span></h2>
+            <h2>What To Tell <span class="emg">112</span></h2>
           </div>
           <ul>
             <li>Your exact location — read the GPS coordinates above.</li>
@@ -1634,7 +1634,7 @@ function redmedAssetURL(file) {
           </details>
         </div>
 
-        <button class="aid-stop-alarm" type="button" id="aidStopAlarm">Stop the alarm <span class="x" aria-hidden="true">✕</span></button>
+        <button class="aid-stop-alarm" type="button" id="aidStopAlarm">Stop The Alarm <span class="x" aria-hidden="true">✕</span></button>
 
         <p class="foot-note">First-aid reference only. Not medical advice and not a substitute for emergency dispatch. Call emergency services and follow their instructions.</p>
         <p class="foot-note">Local only once tap — everyone and everything. No servers · no online. No Bluetooth · passive HF NFC. No PII or PHI leaves this device through RedMed.</p>
@@ -2228,13 +2228,13 @@ function redmedAssetURL(file) {
       var linked = isAppPreview()
         ? (!!window.__REDMED_BRACELET_LINKED && youComplete)
         : (!!fromBand && youComplete);
-      statusEl.textContent = linked ? 'Linked bracelet' : 'Not linked';
+      statusEl.textContent = linked ? 'Linked Bracelet' : 'Not Linked';
       statusEl.classList.toggle('linked', linked);
       if (isAppEmbed()) {
         statusEl.classList.add('rm-status-link');
         statusEl.setAttribute('role', 'link');
         statusEl.setAttribute('tabindex', '0');
-        statusEl.setAttribute('aria-label', (linked ? 'Linked bracelet' : 'Not linked') + ' — open NFC');
+        statusEl.setAttribute('aria-label', (linked ? 'Linked Bracelet' : 'Not Linked') + ' — open NFC');
       } else {
         statusEl.classList.remove('rm-status-link');
         statusEl.removeAttribute('role');
@@ -2301,7 +2301,7 @@ function redmedAssetURL(file) {
         nameRow.className = 'cn-row';
         var name = document.createElement('div');
         name.className = 'cn';
-        name.textContent = c.name || 'Emergency contact';
+        name.textContent = c.name || 'Emergency Contact';
         nameRow.appendChild(name);
         if (phone) {
           var a = document.createElement('a');
@@ -2587,11 +2587,11 @@ function redmedAssetURL(file) {
       function renderHospitals(bodyEl, state) {
         var html;
         if (state === 'loading') {
-          html = '<div class="aid-hosp-status"><span class="aid-hosp-spinner" aria-hidden="true"></span>Finding hospitals near you…</div>';
+          html = '<div class="aid-hosp-status"><span class="aid-hosp-spinner" aria-hidden="true"></span>Finding Hospitals Near You…</div>';
         } else if (state.error) {
-          html = '<div class="aid-hosp-status">' + esc(state.error) + '</div><button type="button" class="aid-hosp-retry">Try again</button>';
+          html = '<div class="aid-hosp-status">' + esc(state.error) + '</div><button type="button" class="aid-hosp-retry">Try Again</button>';
         } else if (!state.list.length) {
-          html = '<div class="aid-hosp-status">No hospitals found nearby.</div><button type="button" class="aid-hosp-retry">Try again</button>';
+          html = '<div class="aid-hosp-status">No hospitals found nearby.</div><button type="button" class="aid-hosp-retry">Try Again</button>';
         } else {
           html = '<div class="aid-sec-card aid-hosp-list">';
           state.list.forEach(function (h, i) {
@@ -2686,7 +2686,7 @@ function redmedAssetURL(file) {
         topic.symptoms.forEach(function (sym) {
           html += '<div class="aid-sec-row">' + esc(fillEmg(sym)) + '</div>';
         });
-        html += '</div><div class="aid-sec-label">What to do</div><div class="aid-sec-card care">';
+        html += '</div><div class="aid-sec-label">What To Do</div><div class="aid-sec-card care">';
         topic.care.forEach(function (step) {
           html += '<div class="aid-sec-row care-row"><span class="care-mark" aria-hidden="true"></span><span class="care-text">' + esc(fillEmg(step)) + '</span></div>';
         });
@@ -2787,7 +2787,7 @@ function redmedAssetURL(file) {
         setCoords(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
       }, function () {
         document.getElementById('coords').textContent = 'GPS unavailable';
-        document.getElementById('gpsAcc').textContent = 'Tell dispatcher landmarks';
+        document.getElementById('gpsAcc').textContent = 'Tell Dispatcher Landmarks';
       }, { enableHighAccuracy: false, timeout: 8000, maximumAge: 30000 });
     } else {
       document.getElementById('coords').textContent = 'GPS unavailable';
@@ -2799,18 +2799,18 @@ function redmedAssetURL(file) {
     var loc = window.__redmedLoc;
     function paintCopy(ok) {
       if (!btn) return;
-      var prev = btn.getAttribute('data-label') || 'Copy coordinates';
+      var prev = btn.getAttribute('data-label') || 'Copy Coordinates';
       if (!btn.getAttribute('data-label')) btn.setAttribute('data-label', btn.textContent);
-      btn.textContent = ok ? 'Copied' : 'Not available yet';
+      btn.textContent = ok ? 'Copied' : 'Not Available Yet';
       window.setTimeout(function () { btn.textContent = prev; }, 1600);
     }
     if (!loc) { paintCopy(false); return; }
     var text = loc.latitude.toFixed(6) + ', ' + loc.longitude.toFixed(6);
     var done = function () { paintCopy(true); };
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(done).catch(function () { prompt('Copy coordinates', text); done(); });
+      navigator.clipboard.writeText(text).then(done).catch(function () { prompt('Copy Coordinates', text); done(); });
     } else {
-      prompt('Copy coordinates', text);
+      prompt('Copy Coordinates', text);
       done();
     }
   });
@@ -2847,7 +2847,7 @@ function redmedAssetURL(file) {
       hintEl.textContent = '';
       var existingCall = document.getElementById('seizureCallBtn');
       if (past) {
-        hintEl.appendChild(document.createTextNode('5:00 — tap Call'));
+        hintEl.appendChild(document.createTextNode('5:00 — Tap Call'));
         if (!existingCall && btn && btn.parentNode) {
           var callBtn = document.createElement('a');
           callBtn.id = 'seizureCallBtn';
@@ -3014,9 +3014,9 @@ function redmedAssetURL(file) {
   var audioNeedsGesture = false;
 
   function paint() {
-    // Matches owner FindHelpSOSButton / this page's own Aid "Stop the alarm" copy.
-    var label = armed ? 'Stop the alarm' : 'SOS · Locate me';
-    if (armed && audioNeedsGesture) label = 'Tap to play siren · Stop';
+    // Matches owner FindHelpSOSButton / this page's own Aid "Stop The Alarm" copy.
+    var label = armed ? 'Stop The Alarm' : 'SOS · Locate Me';
+    if (armed && audioNeedsGesture) label = 'Tap To Play Siren · Stop';
     sosBtn.textContent = label;
     sosBtn.classList.toggle('armed', armed);
     sosBtn.setAttribute('aria-pressed', armed ? 'true' : 'false');

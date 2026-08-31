@@ -33,7 +33,7 @@ struct EmergencyView: View {
                     )
                     InfoCard(
                         icon: "info.circle.fill",
-                        title: "What to Tell \(EmergencyNumber.current)",
+                        title: "What To Tell \(EmergencyNumber.current)",
                         numbered: false,
                         items: [
                             "Your exact location — read the GPS coordinates above.",
@@ -63,7 +63,7 @@ private struct FindHelpLocationBlock: View {
             GPSCard(location: locationEnabled ? locationManager.location : nil)
                 .opacity(locationEnabled ? 1 : 0.45)
             CompactFillButton(
-                title: locationEnabled ? "Copy coordinates" : "Location off — enable it on Before you continue or in Settings",
+                title: locationEnabled ? "Copy Coordinates" : "Location Off — Enable It On Before You Continue Or In Settings",
                 disabled: !locationEnabled || locationManager.location == nil
             ) {
                 if locationEnabled, let loc = locationManager.location {
@@ -97,7 +97,7 @@ private struct FindHelpSOSButton: View {
     @ObservedObject private var survivalAlarm = CrashMotionGuard.shared
     var body: some View {
         CompactFillButton(
-            title: survivalAlarm.isArmed ? "Stop the alarm" : "SOS · Locate me",
+            title: survivalAlarm.isArmed ? "Stop The Alarm" : "SOS · Locate Me",
             systemImage: survivalAlarm.isArmed ? "speaker.slash.fill" : "sos.circle.fill",
             fill: survivalAlarm.isArmed ? .redmedAccent : .redmedDark
         ) {
@@ -113,7 +113,7 @@ private struct FindHelpSOSButton: View {
                 }
             }
         }
-        .accessibilityLabel(survivalAlarm.isArmed ? "Stop the alarm" : "SOS Locate me")
+        .accessibilityLabel(survivalAlarm.isArmed ? "Stop The Alarm" : "SOS Locate Me")
     }
 }
 
@@ -139,7 +139,7 @@ struct SeizureTimerStrip: View {
                     .contentTransition(.numericText())
             }
             .frame(minWidth: 56, alignment: .leading)
-            Text(pastThreshold ? "5:00 — tap Call" : "Call \(EmergencyNumber.current) at 5:00")
+            Text(pastThreshold ? "5:00 — Tap Call" : "Call \(EmergencyNumber.current) at 5:00")
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundColor(pastThreshold ? .redmedAccent : .redmedMuted)
                 .lineLimit(1)
