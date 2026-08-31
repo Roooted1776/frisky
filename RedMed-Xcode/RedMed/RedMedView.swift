@@ -211,7 +211,8 @@ private struct RedMedUserHeader: View {
 // MARK: - Native YOU card
 
 /// Same fields as passerby `tapper.html` (identity rows + list drops). SwiftUI
-/// only — no WebKit. Empty lists stay hidden. Contacts dial `tel:` like the HTML card.
+/// only — no WebKit. Allergies / Medicines / Conditions always show (dashes if
+/// empty). Contacts hide when vacant. Contacts dial `tel:` like the HTML card.
 private struct OwnerYouCard: View {
     @EnvironmentObject var profile: ProfileData
 
@@ -219,22 +220,11 @@ private struct OwnerYouCard: View {
         profile.name.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private var hasLists: Bool {
-        !profile.allergies.isEmpty
-            || !profile.medications.isEmpty
-            || !profile.conditions.isEmpty
-            || profile.contacts.contains {
-                !$0.name.isEmpty || !$0.relationship.isEmpty || !$0.phone.isEmpty
-            }
-    }
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 identityCard
-                if hasLists {
-                    listsCard
-                }
+                listsCard
             }
             .padding(.horizontal, RedMedChrome.pagePadX)
             .padding(.top, 4)
@@ -285,7 +275,9 @@ private struct OwnerYouCard: View {
     private var listsCard: some View {
         VStack(spacing: 0) {
             YouListDrop(title: "Allergies", items: profile.allergies)
-            YouListDrop(title: "Medications", items: profile.medications)
+            Divider().overlay(Color.redmedDivider)
+            YouListDrop(title: "Medicines", items: profile.medications)
+            Divider().overlay(Color.redmedDivider)
             YouListDrop(title: "Conditions", items: profile.conditions)
             YouContactDrop(contacts: profile.contacts)
         }
@@ -322,7 +314,20 @@ private struct YouListDrop: View {
 
     var body: some View {
         if items.isEmpty {
-            EmptyView()
+            HStack {
+                Text(title)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.redmedMuted)
+                Spacer(minLength: 12)
+                Text("—")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(Color.redmedDark.opacity(0.4))
+            }
+            .padding(.horizontal, RedMedChrome.pagePadX)
+            .padding(.vertical, 11)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(title)
+            .accessibilityValue("Empty")
         } else {
             VStack(alignment: .leading, spacing: 0) {
                 Button {
@@ -382,6 +387,7 @@ private struct YouContactDrop: View {
             EmptyView()
         } else {
             VStack(alignment: .leading, spacing: 0) {
+                Divider().overlay(Color.redmedDivider)
                 Button {
                     var t = Transaction()
                     t.animation = nil

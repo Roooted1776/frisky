@@ -47,6 +47,9 @@ struct ConsentGateView<Content: View>: View {
             SnapshotSafeCover.shared.reveal()
             // First open: keep Main unmounted until Agree so the gate is the
             // first real page, not a cream hang over a loading WKWebView.
+            if !hasAccepted {
+                locationEnabled = true
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .redMedDidEraseLocalData)) { _ in
             returnToAcknowledgment()
@@ -155,6 +158,9 @@ struct ConsentGateView<Content: View>: View {
 
     private func enterApp() {
         checked = true
+        // Agreement covers Location for owner RedMed and tapper/public GPS.
+        // Toggle on if it was flipped off; iOS still owns the system sheet.
+        locationEnabled = true
         ConsentSettings.recordAcceptance()
         RedMedHaptics.success()
         OwnerLockPresentation.setLocked(false)
@@ -166,6 +172,7 @@ struct ConsentGateView<Content: View>: View {
             contentArmed = true
             hasAccepted = true
         }
+        LocationAccessSuggester.shared.requestWhenInUseIfNeeded()
         // Do not spawn a spare WKWebView on this turn — that raced the
         // owner RedMed embed and made tabs feel laggy after Agree.
         // NFCView warms the preview shell after that tab is first opened.

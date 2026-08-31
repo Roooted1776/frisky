@@ -598,7 +598,7 @@ function redmedAssetURL(file) {
     word-break: break-word;
   }
   .list-item:last-child { border-bottom: none; }
-  /* Allergies / Meds / Conditions / Contacts — one card, YOU-row heights/structure. */
+  /* Allergies / Medicines / Conditions always on; Contacts hide when vacant. */
   .list-grid {
     display: flex;
     flex-direction: column;
@@ -660,6 +660,12 @@ function redmedAssetURL(file) {
     padding: 0;
   }
   .list-drop-count[hidden] { display: none !important; }
+  .list-drop-count.empty {
+    font-weight: 500;
+    color: rgba(28,25,23,0.4); /* match .row .v.empty */
+  }
+  details.list-drop.is-empty .list-drop-chevron { display: none; }
+  details.list-drop.is-empty summary { cursor: default; }
   .list-drop-chevron {
     width: 18px;
     height: 18px;
@@ -1488,32 +1494,32 @@ function redmedAssetURL(file) {
         <div class="row row-deaf" id="rowDeafRow"><span class="k">Deaf / Vision Impaired</span><span class="v empty" id="rowDeaf">—</span></div>
       </div>
 
-      <div class="list-grid" hidden>
-        <details class="list-drop" id="dropAllergies">
+      <div class="list-grid">
+        <details class="list-drop is-empty" id="dropAllergies">
           <summary>
             <span class="list-drop-title">Allergies</span>
-            <span class="list-drop-count" id="countAllergies" hidden></span>
+            <span class="list-drop-count empty" id="countAllergies">—</span>
             <span class="list-drop-chevron" aria-hidden="true"></span>
           </summary>
           <div class="list-drop-body" id="allergies"></div>
         </details>
-        <details class="list-drop" id="dropMedications">
+        <details class="list-drop is-empty" id="dropMedications">
           <summary>
-            <span class="list-drop-title">Medications</span>
-            <span class="list-drop-count" id="countMedications" hidden></span>
+            <span class="list-drop-title">Medicines</span>
+            <span class="list-drop-count empty" id="countMedications">—</span>
             <span class="list-drop-chevron" aria-hidden="true"></span>
           </summary>
           <div class="list-drop-body" id="meds"></div>
         </details>
-        <details class="list-drop" id="dropConditions">
+        <details class="list-drop is-empty is-last" id="dropConditions">
           <summary>
             <span class="list-drop-title">Conditions</span>
-            <span class="list-drop-count" id="countConditions" hidden></span>
+            <span class="list-drop-count empty" id="countConditions">—</span>
             <span class="list-drop-chevron" aria-hidden="true"></span>
           </summary>
           <div class="list-drop-body" id="conditions"></div>
         </details>
-        <details class="list-drop" id="dropContacts">
+        <details class="list-drop" id="dropContacts" hidden>
           <summary>
             <span class="list-drop-title">Contacts</span>
             <span class="list-drop-count" id="countContacts" hidden></span>
@@ -1946,7 +1952,7 @@ function redmedAssetURL(file) {
       deafOrVisionImpaired: !!(raw.deafOrVisionImpaired === true || raw.deafOrVisionImpaired === 1 || raw.deafOrVisionImpaired === '1'),
       updated: asString(raw.updated),
       allergies: splitList(raw.allergies),
-      meds: splitList(raw.meds),
+      meds: splitList(raw.meds != null ? raw.meds : raw.medications),
       conditions: splitList(raw.conditions),
       contacts: contacts
     };
@@ -2075,12 +2081,20 @@ function redmedAssetURL(file) {
     return '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6);
   }
 
-  function setListDropOpen(dropId, hasItems) {
+  function setListDropOpen(dropId, hasItems, alwaysShow) {
     var drop = document.getElementById(dropId);
     if (!drop) return;
+    if (!drop.__emptyGuard) {
+      drop.__emptyGuard = true;
+      drop.addEventListener('toggle', function () {
+        if (drop.classList.contains('is-empty') && drop.open) drop.open = false;
+      });
+    }
+    drop.classList.toggle('is-empty', !hasItems);
     drop.open = !!hasItems;
-    // Hide empty sections so the shared YOU-style card has no blank rows.
-    drop.hidden = !hasItems;
+    // Allergies / Medicines / Conditions stay on the YOU card with dashes.
+    // Contacts still hide when vacant.
+    drop.hidden = alwaysShow ? false : !hasItems;
     syncListGridVisibility();
   }
 
@@ -2097,21 +2111,29 @@ function redmedAssetURL(file) {
     if (visible.length) visible[visible.length - 1].classList.add('is-last');
   }
 
-  function list(el, items, countId, dropId) {
+  function list(el, items, countId, dropId, alwaysShow) {
     el.textContent = '';
     var countEl = countId ? document.getElementById(countId) : null;
     var hasItems = !!(items && items.length);
     if (!hasItems) {
       if (countEl) {
-        countEl.textContent = '';
-        countEl.hidden = true;
+        if (alwaysShow) {
+          countEl.textContent = '—';
+          countEl.hidden = false;
+          countEl.classList.add('empty');
+        } else {
+          countEl.textContent = '';
+          countEl.hidden = true;
+          countEl.classList.remove('empty');
+        }
       }
-      setListDropOpen(dropId, false);
+      setListDropOpen(dropId, false, alwaysShow);
       return;
     }
     if (countEl) {
       countEl.textContent = String(items.length);
       countEl.hidden = false;
+      countEl.classList.remove('empty');
     }
     items.forEach(function (t) {
       var d = document.createElement('div');
@@ -2119,7 +2141,7 @@ function redmedAssetURL(file) {
       d.textContent = t;
       el.appendChild(d);
     });
-    setListDropOpen(dropId, true);
+    setListDropOpen(dropId, true, alwaysShow);
   }
 
   function showTab(id) {
@@ -2268,9 +2290,9 @@ function redmedAssetURL(file) {
       if (p.deafOrVisionImpaired) deafRow.classList.add('has-deaf');
       else deafRow.classList.remove('has-deaf');
     }
-    list(document.getElementById('allergies'), p.allergies, 'countAllergies', 'dropAllergies');
-    list(document.getElementById('meds'), p.meds, 'countMedications', 'dropMedications');
-    list(document.getElementById('conditions'), p.conditions, 'countConditions', 'dropConditions');
+    list(document.getElementById('allergies'), p.allergies, 'countAllergies', 'dropAllergies', true);
+    list(document.getElementById('meds'), p.meds, 'countMedications', 'dropMedications', true);
+    list(document.getElementById('conditions'), p.conditions, 'countConditions', 'dropConditions', true);
 
     var contactsEl = document.getElementById('contacts');
     contactsEl.textContent = '';

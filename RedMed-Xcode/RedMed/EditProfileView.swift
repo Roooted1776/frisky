@@ -157,13 +157,13 @@ struct EditProfileView: View {
                         )
                     }
 
-                    editSectionLabel("Medications")
+                    editSectionLabel("Medicines")
                     editCard {
                         DraftLinesEditor(
                             lines: $medications,
                             sectionKey: "medications",
-                            placeholder: "Medication",
-                            addLabel: "Add Medication",
+                            placeholder: "Medicine",
+                            addLabel: "Add Medicine",
                             onTextChange: { id, text in
                                 refreshSuggestions(lineID: id, text: text, lines: medications, catalog: SuggestionCatalog.medications)
                             }
