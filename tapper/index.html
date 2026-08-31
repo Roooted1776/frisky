@@ -1553,7 +1553,7 @@ function redmedAssetURL(file) {
             <div class="seizure-label">SEIZURE</div>
             <div class="seizure-time" id="seizureTime" aria-live="polite">0:00</div>
           </div>
-          <div class="seizure-hint" id="seizureHint">Call <span class="emg">112</span> at 5:00</div>
+          <div class="seizure-hint" id="seizureHint">Call <span class="emg">112</span> At 5:00</div>
           <div class="seizure-actions">
             <button class="seizure-btn seizure-btn-reset" type="button" id="seizureResetBtn">Reset</button>
             <button class="seizure-btn" type="button" id="seizureBtn">Start</button>
@@ -2811,11 +2811,11 @@ function redmedAssetURL(file) {
       navigator.geolocation.getCurrentPosition(function (pos) {
         setCoords(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
       }, function () {
-        document.getElementById('coords').textContent = 'GPS unavailable';
+        document.getElementById('coords').textContent = 'GPS Unavailable';
         document.getElementById('gpsAcc').textContent = 'Tell Dispatcher Landmarks';
       }, { enableHighAccuracy: false, timeout: 8000, maximumAge: 30000 });
     } else {
-      document.getElementById('coords').textContent = 'GPS unavailable';
+      document.getElementById('coords').textContent = 'GPS Unavailable';
     }
   }
 
@@ -2826,7 +2826,7 @@ function redmedAssetURL(file) {
       setCoords(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
     }, function () {
       if (!window.__redmedLoc) {
-        document.getElementById('coords').textContent = 'GPS unavailable';
+        document.getElementById('coords').textContent = 'GPS Unavailable';
         document.getElementById('gpsAcc').textContent = 'Tell Dispatcher Landmarks';
       }
     }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 });
@@ -2904,7 +2904,7 @@ function redmedAssetURL(file) {
         emg.className = 'emg';
         emg.textContent = num;
         hintEl.appendChild(emg);
-        hintEl.appendChild(document.createTextNode(' at 5:00'));
+        hintEl.appendChild(document.createTextNode(' At 5:00'));
       }
       btn.textContent = running ? 'Stop' : 'Start';
       btn.classList.toggle('on', running);
