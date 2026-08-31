@@ -31,7 +31,9 @@ entitlement is absent (unused purpose string). Add the key on restore.
 
 **Do not hide the owner NFC tab** — owners always get RedMed · 911 · Aid ·
 NFC; scanners never get NFC. The flag only blocks `NFCWriter` / `NFCReader`
-sessions (simulate / pack-only path stays).
+sessions (simulate / pack-only path stays). Parked NFC tab **Share Band URL**
+is the same `OwnerBandURI` CoreNFC Write would program. Shortcuts or NFC Tools
+can write that onto a blank unlocked NTAG216. That path does **not** mark Linked.
 
 Owner NFC page keeps **both** capabilities on one screen: Write and Scan
 (opens the same `tapper.html#d=` page helpers see).

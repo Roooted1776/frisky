@@ -16,24 +16,24 @@ This is RedMed: a native iOS medical ID plus a static passerby HTML shell. There
 
 **Still open (needs Max, not this tree):**
 
-1. Stand up `Roooted1776.github.io` with git (`scripts/publish-github-io.sh` then push that repo). Do not flip `AppConfig.medicalCardBaseURL` onto another 404.
+1. Paid Apple Developer: NFC Tag Reading on App ID `com.redmed.app`, then `nfcHardwareEnabled = true` + entitlement (`docs/NFC-RESTORE.md`). Until then, NFC tab Share Band URL programs a blank NTAG216 via Shortcuts / NFC Tools. Linked still needs CoreNFC.
 2. Restore push/PR iOS CI after billing. `#d=` Swift/JS lockstep now runs as `node scripts/test-d-codec.mjs` (pages-deploy + local). No XCTest target.
-3. Leave NFC / HealthKit / Associated Domains parked until a paid Apple team can provision them.
+3. Leave HealthKit / Associated Domains parked until a paid Apple team can provision them. Host `https://roooted1776.github.io/tapper/` is already live.
 
 ---
 
 ## Executive summary
 
-No committed secrets, no XSS in profile render, no autodial, no scanner write into owner Keychain. The serious remaining problem is operational: **the URL written onto bands is 404.**
+No committed secrets, no XSS in profile render, no autodial, no scanner write into owner Keychain. **The band write host is live.** The remaining ship gap is CoreNFC parked on the free Apple team — you can fill a profile and preview the card on this phone; you cannot CoreNFC-write a bracelet until NFC Tag Reading is provisioned.
 
 **Highest-severity facts:**
 
-1. **The URL written onto bands is 404.** `AppConfig.medicalCardBaseURL` is `https://roooted1776.github.io/tapper/`. Live GET is GitHub’s 404 page. `Roooted1776/Roooted1776.github.io` does not exist. `https://redmed.pages.dev/tapper/` is also 404. NFC write is parked, so this build cannot mint new dead bands — but any earlier write to that host is a dead tap. pages-deploy now **fails** that smoke (no longer warn-only).
+1. **Passerby host is live; CoreNFC write is not.** `https://roooted1776.github.io/tapper/` 200s and smoke-pages is green. `#d=` paints the YOU card. `nfcHardwareEnabled = false` (empty entitlements). NFC tab Share Band URL is that host + `#d=` for a blank NTAG216. Linked still needs paid NFC Tag Reading. `redmed.pages.dev` is still 404.
 2. **iOS CI does not gate merges.** `.github/workflows/ios-build.yml` is `workflow_dispatch` only. `#d=` encode/decode lockstep is `scripts/test-d-codec.mjs` (AES-GCM, zlib, current vs legacy compact, URI contract). No XCTest.
 3. **Passerby hospital search sends GPS to `overpass-api.de`.** Native uses MapKit. Help 4.3 names both. Residual: the public OSM API still sees a rescuer’s coordinates on a band tap — disclosed, not removed.
 4. **`OwnerAppLock` was live** (resolved in `#476`). Face ID is Edit / Save / Erase. Crash motion runs while owner Main is in the foreground.
 
-No critical in-repo security hole was safe and unambiguous to patch as a remote exploit. Remaining work is the dead host and tests.
+No critical in-repo security hole was safe and unambiguous to patch as a remote exploit. Remaining work is NFC entitlement + blank NTAG216 stock.
 
 ---
 
@@ -81,7 +81,7 @@ xcodebuild -project RedMed-Xcode/RedMed.xcodeproj -scheme RedMed \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=27.0' build
 ```
 
-Deployment target is literal `17.0` in all four `pbxproj` configs. `RedMed.entitlements` is an empty dict. `AppConfig.nfcHardwareEnabled = false`, `healthKitImportEnabled = false`, `appStoreURL = nil`. NFC tab stays visible; Write/Scan are pack-only preview.
+Deployment target is literal `17.0` in all four `pbxproj` configs. `RedMed.entitlements` is an empty dict. `AppConfig.nfcHardwareEnabled = false`, `healthKitImportEnabled = false`, `appStoreURL = nil`. NFC tab stays visible; Write/Scan are pack-only preview; parked Share Band URL is the live `#d=` URI.
 
 **Passerby shell (this Linux VM can serve it):**
 
@@ -96,11 +96,11 @@ BASE=http://127.0.0.1:8787 ./scripts/smoke-pages.sh
 
 | Host | Claimed role | Probed 2026-08-31 |
 |------|----------------|-------------------|
-| `https://roooted1776.github.io/tapper/` | Live band write base | **HTTP 404** |
+| `https://roooted1776.github.io/tapper/` | Live band write base | **HTTP 200**, smoke-pages green, `#d=` YOU card paints |
 | `https://redmed.pages.dev/tapper/` | Optional CF Pages | **HTTP 404** |
 | Custom domain | `medicalCardCustomDomainTBD = nil` | not set |
 
-`scripts/publish-github-io.sh` copies the shell into a checkout of `Roooted1776.github.io`. That repository **does not exist** (`gh repo view` cannot resolve it). `.github/workflows/pages-deploy.yml` on `main` skips Cloudflare when secrets are missing and **warns** (does not fail) when github.io smoke fails. Recent `Pages tapper deploy` runs on `main` are green in 7–11s.
+`scripts/publish-github-io.sh` copies the shell into `Roooted1776/Roooted1776.github.io` (exists; Actions → Publish tapper). `.github/workflows/pages-deploy.yml` fails the job when the write base 404s.
 
 ---
 
@@ -114,23 +114,9 @@ None found. No private keys, tokens, or `.pem` in the tree. CI Cloudflare creden
 
 ### High
 
-#### H1. Band write base is a dead host
+#### H1. Band write base is a dead host — **closed 2026-08-31**
 
-**Evidence**
-
-- `AppConfig.medicalCardBaseURL` returns `https://roooted1776.github.io/tapper/` when `medicalCardCustomDomainTBD` is nil (`AppConfig.swift` 24–33).
-- `OwnerBandURI.isValidWriteURL` requires that exact prefix (`AppConfig.swift` 65–67).
-- Live: `curl -sI https://roooted1776.github.io/tapper/` → `HTTP/2 404` (`server: GitHub.com`). Same for site root.
-- `gh repo view Roooted1776/Roooted1776.github.io` → repository does not exist.
-- `https://redmed.pages.dev/tapper/` → 404.
-- `pages-deploy.yml` 90–103: github.io smoke failure is `::warning::` then exit 0.
-- `docs/APP-STORE.md` 11 already admitted `roooted1776.github.io/privacy/` 404s and “user Pages unpublished.”
-
-**Why it matters**
-
-A passerby tap opens whatever host is on the chip. If that host 404s, `#d=` is sitting in the fragment with no shell to decrypt it. NFC is parked (`nfcHardwareEnabled = false`), so this build will not mint new bands — but the documented “live interim” is fiction, and CI will not turn red when it stays fiction.
-
-**Do not fix by flipping `AppConfig` to a placeholder.** Publish a real HTTPS `/tapper/` first (`docs/domain.md` cutover), then point the flag.
+`https://roooted1776.github.io/tapper/` is live (HTTP 200, smoke-pages green, `#d=` plaintext JSON paints the YOU card). `Roooted1776/Roooted1776.github.io` exists. Remaining ship gap is CoreNFC parked (`nfcHardwareEnabled = false`, free Apple team), not Pages. NFC tab Share Band URL is that host + `#d=` for a blank NTAG216. Linked still needs paid NFC Tag Reading. `redmed.pages.dev` is still 404. Do not flip `AppConfig` onto another host.
 
 #### H2. No merge gate for Swift; no encode/decode tests
 
@@ -355,7 +341,7 @@ Single target, 42 Swift files, no modules. Boundaries are conventions (`isScanne
 | Face ID toggle on consent | Does not exist | — | PRODUCTION no longer claims it |
 | Location prompt | Agree if Location on | Agree if on; GPS on Find Help | Help 4.3 |
 | iOS CI on push | No | Dispatch only | — |
-| github.io live | 404 | Claimed URL, noted 404 | domain.md 404 |
+| github.io live | Live | Live | domain.md live |
 | Repo visibility | Public | — | APP-STORE.md public |
 
 Treat **code** as what ships. `#476` stripped the launch lock. This follow-up does not remount it.
@@ -366,10 +352,10 @@ Treat **code** as what ships. `#476` stripped the launch lock. This follow-up do
 
 | Risk | Detail |
 |------|--------|
-| Band host | H1. No `Roooted1776.github.io`. Manual `publish-github-io.sh` has nowhere to copy. |
+| Band host | Live github.io `/tapper/`. CoreNFC still parked. Share Band URL for blank NTAG216. |
 | pages.dev | Optional; secrets missing; 404 today. `_headers` now allows Overpass `connect-src`. |
 | SW stale cache | Mitigated by `CACHE` bump + activate delete. Drift caught by `sync-tapper.sh` if someone runs it. |
-| Host cutover | Old bands keep the old host forever. `docs/domain.md` says keep old hosts up. Today the old host is already down. |
+| Host cutover | Old bands keep the old host forever. `docs/domain.md` says keep old hosts up. github.io `/tapper/` is up. |
 | Backups | Keychain + vault excluded from backup by design. Wipe = empty app. Band is the backup — only if H1 is fixed and the chip was actually written. |
 | Erase | Cannot wipe a physical band (`ProfileData.eraseAllLocalData` comment 479). |
 | Rate limits | No RedMed API. Overpass can 429 / 15s timeout (`tapper/index.html` 2647–2649). Native MapKit has a 15s watchdog (`NearbyHospitals.swift` 66–71). |
@@ -392,7 +378,7 @@ HIPAA: `Help.html` 60–65 is careful (operator-aligned, not certified). The typ
 | `ios-build.yml` | Manual | N/A (not on PR) | Simulator compile, unsigned |
 | XCTest | Missing | — | — |
 
-`smoke-pages.sh` against `https://roooted1776.github.io` on 2026-08-31: static no-auth scan passed (local file); **all 11 HTTP checks 404**.
+`smoke-pages.sh` against `https://roooted1776.github.io` on 2026-08-31 (later): **11/11 HTTP checks OK**.
 
 ---
 
@@ -400,9 +386,9 @@ HIPAA: `Help.html` 60–65 is careful (operator-aligned, not certified). The typ
 
 Still blocked on Max / billing / Apple, not this follow-up.
 
-1. **Stand up the passerby host.** Create `Roooted1776.github.io`, run `scripts/publish-github-io.sh` against that checkout, commit and push. Smoke until `/tapper/` returns RedMed · 911 · Aid. Only then write bands. Do not change `AppConfig.medicalCardBaseURL` to a host that is still 404. pages-deploy will stay red until this is done.
+1. **Write a physical band.** Paid Apple NFC Tag Reading (`docs/NFC-RESTORE.md`) is the product Write. Until then, NFC tab Share Band URL → Shortcuts / NFC Tools onto a blank unlocked NTAG216. Linked still needs CoreNFC. Host `/tapper/` is already green — do not flip `AppConfig.medicalCardBaseURL`.
 2. **Restore iOS CI on `RedMed-Xcode/**` after billing.** Codec lockstep is already `node scripts/test-d-codec.mjs`. XCTest on a Mac runner is still missing.
-3. Leave NFC / HealthKit / Associated Domains parked until a paid Apple team can provision them. Do not claim live Write.
+3. Leave HealthKit / Associated Domains parked until a paid Apple team can provision them. Do not claim in-app CoreNFC Write until the entitlement signs.
 
 ## Code changes in the follow-up
 
