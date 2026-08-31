@@ -1,2 +1,5 @@
-# Xcode Stop / re-Run sends SIGTERM. Idle main sits in mach_msg2_trap; that is not a crash.
+# Xcode Stop / re-Run is not a crash.
+# Simulator idle main: SIGTERM at mach_msg2_trap.
+# Physical iPhone: SIGKILL at dyld`lldb_image_notifier.
 process handle SIGTERM -n false -p true -s false
+process handle SIGKILL -n false -p true -s false
