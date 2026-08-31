@@ -30,6 +30,7 @@ RedMed is a **native iOS/SwiftUI** medical ID (`RedMed-Xcode/`). Local only: Key
 - Debug-on-device: Main Thread Checker / TPC / view+queue debug / Metal validation / `ENABLE_DEBUG_DYLIB` off. `print()` → `os.Logger`. Log streaming. No SwiftUI preview dylib.
 - Load: no `CLLocationManager` retained on consent; crash-motion after Main paints; Keychain prefetch at process start; owner RedMed tab is a native YOU card (no WKWebView). `tapper.html` only on passerby + NFC Preview / Scan. 911 / Aid / NFC mount on first visit, not under RedMed.
 - App Store honesty on `main`: parked NFC copy, no autodial (native + all three `tapper.html`), Aid first-aid disclaimer, support page.
+- Hospital search: native MapKit / Apple Maps; passerby `tapper.html` names OpenStreetMap Overpass (`overpass-api.de`). Consent Location toggle is honored on Agree (not forced on).
 - iOS CI is **workflow_dispatch only** (billing). Trigger it after Swift/scheme changes.
 
 ## Xcode on his Mac

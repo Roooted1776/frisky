@@ -30,9 +30,9 @@ final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManag
         apply((promptManager ?? CLLocationManager()).authorizationStatus)
     }
 
-    /// After Before-you-continue Agree: record Location on, then fire iOS's
-    /// When-In-Use sheet once if status is still `.notDetermined`.
-    /// Cannot skip the system sheet. Does nothing if already determined or Location is off.
+    /// After Before-you-continue Agree: fire iOS's When-In-Use sheet once if
+    /// Location stayed on and status is still `.notDetermined`.
+    /// Cannot skip the system sheet. Does nothing if Location is off or already determined.
     func requestWhenInUseIfNeeded() {
         guard AppSettings.locationEnabled else { return }
         if promptManager == nil {
