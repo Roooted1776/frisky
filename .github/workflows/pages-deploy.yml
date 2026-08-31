@@ -1,14 +1,15 @@
 # Optional Cloudflare Pages deploy for redmed.pages.dev.
-# Intended band write base is https://roooted1776.github.io/tapper/
-# (public GitHub Pages — see docs/domain.md). That host is 404 until
-# Roooted1776.github.io exists. Custom host is TBD
-# (AppConfig.medicalCardCustomDomainTBD).
+# Live band write base today is https://roooted1776.github.io/tapper/
+# (public GitHub Pages — see docs/domain.md). Custom host is TBD
+# (AppConfig.medicalCardCustomDomainTBD). Do not flip that flag onto a 404 host.
 #
 # Direct Upload needs CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID.
 # Missing secrets skip CF upload (does not take down github.io).
-# github.io smoke fails the job when the live write base 404s.
+# Write-base smoke fails the job when that host 404s.
 # Connect Pages project `redmed` in the Cloudflare dashboard instead
 # (`wrangler.toml` output dir = repo root) when you want pages.dev live.
+#
+# github.io is Roooted1776/Roooted1776.github.io (Actions → Publish tapper).
 
 name: Pages tapper deploy
 
@@ -28,8 +29,32 @@ on:
       - '_redirects'
       - 'wrangler.toml'
       - 'assets/**'
+      - 'RedMed-Xcode/RedMed/AppConfig.swift'
       - 'scripts/sync-tapper.sh'
       - 'scripts/smoke-pages.sh'
+      - 'scripts/write-base-origin.py'
+      - 'scripts/publish-github-io.sh'
+      - 'scripts/test-d-codec.mjs'
+      - '.github/workflows/pages-deploy.yml'
+  pull_request:
+    paths:
+      - 'tapper/**'
+      - 'tapper.html'
+      - 'index.html'
+      - 'card.html'
+      - 'get.html'
+      - 'get/**'
+      - 'support/**'
+      - 'sw.js'
+      - '_headers'
+      - '_redirects'
+      - 'wrangler.toml'
+      - 'assets/**'
+      - 'RedMed-Xcode/RedMed/AppConfig.swift'
+      - 'scripts/sync-tapper.sh'
+      - 'scripts/smoke-pages.sh'
+      - 'scripts/write-base-origin.py'
+      - 'scripts/publish-github-io.sh'
       - 'scripts/test-d-codec.mjs'
       - '.github/workflows/pages-deploy.yml'
   workflow_dispatch:
@@ -86,30 +111,39 @@ jobs:
           echo "To publish pages.dev later: add the two secrets, or connect Pages project redmed to this repo."
 
       - name: Deploy to Cloudflare Pages
-        if: steps.cf.outputs.skip != 'true'
+        if: github.event_name != 'pull_request' && steps.cf.outputs.skip != 'true'
         uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy . --project-name=redmed --commit-dirty=true
 
-      - name: Smoke live github.io /tapper/
+      - name: Smoke live write base /tapper/
         run: |
           set -euo pipefail
-          # roooted1776.github.io is a SEPARATE repo (Roooted1776.github.io),
-          # published by hand via scripts/publish-github-io.sh — this workflow
-          # has no push access to it and cannot deploy it. Fail closed anyway:
-          # a 404 write base is a dead band, not a warning.
+          # AppConfig.medicalCardBaseURL is the URL written onto bands.
+          # Fail closed when that host 404s — a green job with a dead write
+          # base is how H1 stayed invisible. Do not flip AppConfig onto
+          # another 404 (pages.dev, a TBD domain, /frisky/ project Pages).
           # GitHub Contents API rewrites drop the +x bit (file is 100644).
-          # Always invoke through bash so Permission denied (126) cannot recur.
-          if BASE=https://roooted1776.github.io bash scripts/smoke-pages.sh; then
+          ORIGIN="$(python3 scripts/write-base-origin.py)"
+          echo "Write-base origin: ${ORIGIN} (AppConfig.medicalCardBaseURL)"
+          ok=0
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            if BASE="${ORIGIN}" bash scripts/smoke-pages.sh; then
+              ok=1
+              break
+            fi
+            sleep 3
+          done
+          if [ "$ok" = 1 ]; then
             exit 0
           fi
-          echo "::error::https://roooted1776.github.io/tapper/ smoke failed — that site is the live band write base (AppConfig.medicalCardBaseURL). Publish it with scripts/publish-github-io.sh against Roooted1776.github.io, or the host is still 404. Do not treat a 404 write base as green."
+          echo "::error::Band write base ${ORIGIN}/tapper/ failed smoke (AppConfig.medicalCardBaseURL). Publish https://github.com/Roooted1776/Roooted1776.github.io (Actions → Publish tapper) or scripts/publish-github-io.sh. Do not flip medicalCardBaseURL onto another 404."
           exit 1
 
       - name: Smoke redmed.pages.dev after CF deploy
-        if: steps.cf.outputs.skip != 'true'
+        if: github.event_name != 'pull_request' && steps.cf.outputs.skip != 'true'
         run: |
           set -euo pipefail
           ok=0

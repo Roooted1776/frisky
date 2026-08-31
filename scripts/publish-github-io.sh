@@ -2,6 +2,10 @@
 # Copy the public passerby shell into Roooted1776.github.io.
 # No PHI, no iOS source — HTML/SW/assets only. Profile data stays in #d=.
 #
+# Live host: https://roooted1776.github.io/tapper/ (AppConfig.medicalCardBaseURL).
+# CI publish: Roooted1776/Roooted1776.github.io → Actions → Publish tapper
+# (checks out this repo and runs this script). Do not flip AppConfig onto a 404.
+#
 # Usage:
 #   ./scripts/publish-github-io.sh /path/to/Roooted1776.github.io
 set -euo pipefail
