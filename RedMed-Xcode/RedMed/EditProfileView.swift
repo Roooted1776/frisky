@@ -34,7 +34,7 @@ struct EditProfileView: View {
     @State private var healthImportMessage: String?
 
     private static let bloodTypeChoices = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
-    /// Keeps the Keychain blob small so decode on unlock stays fast.
+    /// Keeps the Keychain blob small so decode on Main appear stays fast.
     private static let notesWordLimit = 150
 
     /// One body size across the edit form (labels, fields, prompts).

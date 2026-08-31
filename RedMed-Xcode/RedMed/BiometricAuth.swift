@@ -5,7 +5,7 @@ import UIKit
 /// NFC Preview / Scan — tap-to-view stays ungated
 /// (no Face ID, no passcode, no login).
 ///
-/// Edit, Save, and Erase pass `force: true`. NFC write and tapper do not.
+/// Edit, Save, and Erase pass `force: true`. NFC write, app launch, and tapper do not.
 /// There is no process-wide skip flag.
 ///
 /// On success the `LAContext` is **parked** (not invalidated) so
@@ -29,7 +29,7 @@ enum BiometricAuth {
 
     /// Why `canEvaluatePolicy` / `evaluatePolicy` reports biometrics can't
     /// run. Distinct from `.notVerified` (a scan that failed to match) —
-    /// these are states no amount of tapping Proceed will resolve.
+    /// these are states no amount of retrying will resolve.
     enum UnavailableReason: Equatable {
         case notEnrolled
         case lockout
@@ -39,9 +39,9 @@ enum BiometricAuth {
         var message: String {
             switch self {
             case .notEnrolled:
-                return "Face ID isn't set up on this iPhone. Add it in Settings, then reopen RedMed."
+                return "Face ID isn't set up on this iPhone. Add it in Settings, then try again."
             case .lockout:
-                return "Face ID locked after 5 failed attempts. Unlock this iPhone with its passcode, then reopen RedMed."
+                return "Face ID locked after 5 failed attempts. Unlock this iPhone with its passcode, then try again."
             case .passcodeNotSet:
                 return "Set a device passcode in Settings to use Face ID."
             case .notAvailable:
@@ -56,7 +56,7 @@ enum BiometricAuth {
     private static let parkLock = NSLock()
     private static var parkedContext: LAContext?
     /// Live `evaluatePolicy` context. Invalidate before starting a new one —
-    /// a second evaluate while the first is up fails immediately (dead Proceed).
+    /// a second evaluate while the first is up fails immediately (dead prompt).
     private static var inFlightContext: LAContext?
     /// Last time an evaluate ended or was cancelled. A new evaluate inside
     /// `evaluateCooldown` of this fails with no sheet (dead Face ID).
@@ -88,15 +88,12 @@ enum BiometricAuth {
     ) {
         _ = force
 
-        // Simulator: never evaluatePolicy and never a UIKit alert. The
-        // Authenticate alert sat on a hidden window / inactive scene and
-        // left the cream heart with no Proceed (start stuck). Auto-succeed
-        // so cold start can reach Main. Device still uses real Face ID.
+        // Simulator: never evaluatePolicy and never a UIKit alert.
+        // Auto-succeed so Edit / Save / Erase can proceed without a
+        // device. Device still uses real Face ID.
         #if targetEnvironment(simulator)
         _ = cancelInFlight()
         markSessionEnded()
-        // Same-turn success — main.async let the 1s watchdog win and
-        // paint Proceed (a tap) over the cream lock on cold start.
         if Thread.isMainThread {
             completion(.success)
         } else {
@@ -179,9 +176,8 @@ enum BiometricAuth {
     }
 
     /// Live `evaluatePolicy` in progress (including the teardown wait).
-    /// Scene `.inactive` during this is the Face ID sheet — do not relock.
-    /// Simulator Authenticate alert counts too, so watchdogs do not
-    /// swap in Proceed on top of a tappable prompt.
+    /// Scene `.inactive` during this is the Face ID sheet on Edit / Save /
+    /// Erase — do not treat it as a leave.
     static var isEvaluating: Bool {
         parkLock.lock()
         defer { parkLock.unlock() }
@@ -206,7 +202,7 @@ enum BiometricAuth {
     }
     #endif
 
-    /// Kill a hung / leftover Face ID sheet so Proceed can start a fresh one.
+    /// Kill a hung / leftover Face ID sheet so Edit / Save / Erase can start a fresh one.
     /// Returns whether a live context was actually cancelled — callers only
     /// need to wait out the teardown when this is true.
     @discardableResult
@@ -425,8 +421,7 @@ enum BiometricAuth {
     }
 
     private static func topViewController() -> UIViewController? {
-        // Key window only. Presenting on a hidden host window leaves the
-        // cream lock tappable-dead while isEvaluating stays true.
+        // Key window only.
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
         let window = scenes.flatMap(\.windows).first(where: { $0.isKeyWindow && $0.rootViewController != nil })
         guard var top = window?.rootViewController else { return nil }

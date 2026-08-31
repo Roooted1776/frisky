@@ -28,7 +28,9 @@ The app has no backend, database, or web service.
   Tapper has no biometrics and no acknowledgement page. Do not remount
   `OwnerAppLock` / `LockEntryPage` / `FacePage` as an app-wide cream lock.
   Crash monitor starts from owner `Main` / `ContentView.onAppear`, not from
-  a lock. Profile restores from Keychain on owner Main appear (device-unlocked
+  a lock. CoreMotion stops on true `.background` (no motion background
+  mode) and restarts on `.active`. `.inactive` — Face ID on Edit / Save /
+  Erase, Control Center — does not stop it. An armed siren is independent. Profile restores from Keychain on owner Main appear (device-unlocked
   Keychain — no Face ID to view). The band is the product, not optional.
 - **Owner app** (`Main` → `ContentView`, `isScannerSession == false`): tabs are
   **RedMed · 911 · Aid · NFC**. Edit is available on RedMed. NFC tab is always
@@ -166,19 +168,24 @@ trauma JSON, or show a Location banner at `@main`. First launch opens a cream
 shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash)
 then `ConsentGateView` (first launch / policy bump) then Main. No cream lock;
 Main mounts without Face ID. Owner `ContentView.onAppear` starts crash
-monitoring; `.task` calls `profile.restoreOnLaunch()` (owner only — scanners
+monitoring; `.background` stops CoreMotion; `.active` restarts it; `.inactive`
+does not stop it. `.task` calls `profile.restoreOnLaunch()` (owner only — scanners
 must not hit owner Keychain). A UserDefaults gate
 (`ProfileData.storedProfileGateKey`) plus `hasStoredProfile()` hints that a
 blob is expected so the empty funnel stays hidden while restore is in flight.
 Do not call Keychain decode in `@State` defaults.
 Location defaults on (Before you continue — first launch / policy bump) with
 **no RedMed location gate / banner / Allow popup** — Help must not
-call `requestWhenInUseAuthorization`. When-In-Use + GPS start on Find Help only
-when Location is enabled (`AppSettings.locationEnabled` + `LocationManager.start`
-→ `startUpdatingLocation()` while the 911 tab is visible); iOS may show its
-system Allow sheet once (cannot auto-accept). Passerby `tapper.html` must not
-call `geolocation` until the 911 tab opens. Nearby hospitals is a one-shot
-MapKit POI search (Apple may see query + region). Do not construct
+call `requestWhenInUseAuthorization`. Honor the Location toggle: Agree must
+not force `locationEnabled = true`. `requestWhenInUseIfNeeded` runs only if
+Location stayed on; GPS updates (`LocationManager.start` →
+`startUpdatingLocation()`) start on Find Help while the 911 tab is visible.
+iOS may show its system Allow sheet once (cannot auto-accept). Passerby
+`tapper.html` must not call `geolocation` until the 911 tab opens. Nearby
+hospitals in the app is a one-shot MapKit POI search (Apple may see query +
+region). Passerby `tapper.html` hospital search POSTs coordinates to
+OpenStreetMap Overpass (`overpass-api.de`); Help / Info.plist / Satellite
+must name that. Do not construct
 `CMMotionManager` at `CrashMotionGuard` shared init. `ContentView` lazy
 tab mounting mounts RedMed only on cold start (911 / Aid / NFC on first visit,
 kept alive after). Opacity keep-alive **does not** fire
@@ -246,6 +253,7 @@ pre-installed `python3` (no npm, no wrangler, no build step):
 ```
 python3 -m http.server 8787 --bind 127.0.0.1   # or ./scripts/deploy-pages.sh (same server)
 BASE=http://127.0.0.1:8787 ./scripts/smoke-pages.sh   # page-load + redirect smoke (11 checks)
+node scripts/test-d-codec.mjs   # AES / zlib / compact-array lockstep (no Xcode)
 ```
 
 Use `127.0.0.1` (not a LAN IP) so `#d=` decode works. The medical card renders from `#d=` with

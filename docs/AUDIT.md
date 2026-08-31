@@ -3,24 +3,37 @@
 **Repo:** [Roooted1776/frisky](https://github.com/Roooted1776/frisky)  
 **Default branch:** `main` @ `90d4b0b` (“Skip WebKit pre-warm on the NFC tab.”)  
 **Date:** 2026-08-31  
-**Method:** static read of Swift / HTML / CI / docs on this tree, plus live HTTP probes. No iOS build (this environment is Linux; Xcode is macOS-only). No secrets were found that needed rotation, so this PR is audit-only.
+**Follow-up:** same day. In-repo cleanup of findings that did not need a new host or paid Apple team.  
+**Method:** static read of Swift / HTML / CI / docs on this tree, plus live HTTP probes. No iOS build (this environment is Linux; Xcode is macOS-only). No secrets were found that needed rotation.
 
 This is RedMed: a native iOS medical ID plus a static passerby HTML shell. There is no application server and no profile API. Confirmed from `AppConfig.swift`, `ProfileData.swift`, `tapper/index.html`, and the absence of any backend package.
 
 ---
 
+## Follow-up (landed)
+
+`#476` stripped `OwnerAppLock`. Face ID is Edit / Save / Erase. `#474` named Overpass and honored the Location toggle. This PR keeps the rest of the in-repo audit work: `KeychainStore.exists` fail-closed, cream-only launch screen, README / PRODUCTION / domain / SECURITY, pages-deploy fail-closed github.io smoke, Actions SHA pins, privacy URLs in this repo, Swift encode clips to tapper `MAX_STR`/`MAX_LIST`, and `scripts/test-d-codec.mjs`.
+
+**Still open (needs Max, not this tree):**
+
+1. Stand up `Roooted1776.github.io` with git (`scripts/publish-github-io.sh` then push that repo). Do not flip `AppConfig.medicalCardBaseURL` onto another 404.
+2. Restore push/PR iOS CI after billing. `#d=` Swift/JS lockstep now runs as `node scripts/test-d-codec.mjs` (pages-deploy + local). No XCTest target.
+3. Leave NFC / HealthKit / Associated Domains parked until a paid Apple team can provision them.
+
+---
+
 ## Executive summary
 
-No committed secrets, no XSS in profile render, no autodial, no scanner write into owner Keychain. The serious problems are operational and documentary, not a remote exploit.
+No committed secrets, no XSS in profile render, no autodial, no scanner write into owner Keychain. The serious remaining problem is operational: **the URL written onto bands is 404.**
 
 **Highest-severity facts:**
 
-1. **The URL written onto bands is 404.** `AppConfig.medicalCardBaseURL` is `https://roooted1776.github.io/tapper/`. Live GET is GitHub’s 404 page. `Roooted1776/Roooted1776.github.io` does not exist. `https://redmed.pages.dev/tapper/` is also 404. NFC write is parked, so this build cannot mint new dead bands — but any earlier write to that host is a dead tap, and CI treats the 404 as a warning.
-2. **iOS CI does not gate merges.** `.github/workflows/ios-build.yml` is `workflow_dispatch` only. There are zero XCTest / JS unit tests. Encode/decode of `#d=` is duplicated in Swift and JS with no round-trip vectors.
-3. **Passerby hospital search sends GPS to `overpass-api.de`.** `Help.html` and `AppConfig.Satellite` say Apple Maps. Native code uses MapKit. The hosted shell does not.
-4. **`OwnerAppLock` is live** and Face-IDs every owner open / return. `AGENTS.md` / `MAX.md` say the opposite. Crash motion stops on relock. Help copy still says Face ID is Edit / Save / Erase only.
+1. **The URL written onto bands is 404.** `AppConfig.medicalCardBaseURL` is `https://roooted1776.github.io/tapper/`. Live GET is GitHub’s 404 page. `Roooted1776/Roooted1776.github.io` does not exist. `https://redmed.pages.dev/tapper/` is also 404. NFC write is parked, so this build cannot mint new dead bands — but any earlier write to that host is a dead tap. pages-deploy now **fails** that smoke (no longer warn-only).
+2. **iOS CI does not gate merges.** `.github/workflows/ios-build.yml` is `workflow_dispatch` only. `#d=` encode/decode lockstep is `scripts/test-d-codec.mjs` (AES-GCM, zlib, current vs legacy compact, URI contract). No XCTest.
+3. **Passerby hospital search sends GPS to `overpass-api.de`.** Native uses MapKit. Help 4.3 names both. Residual: the public OSM API still sees a rescuer’s coordinates on a band tap — disclosed, not removed.
+4. **`OwnerAppLock` was live** (resolved in `#476`). Face ID is Edit / Save / Erase. Crash motion runs while owner Main is in the foreground.
 
-No critical in-repo security hole was safe and unambiguous to patch in this PR. Fixes that would change Face ID, location, or the band URL are product decisions — listed under next actions, not landed here.
+No critical in-repo security hole was safe and unambiguous to patch as a remote exploit. Remaining work is the dead host and tests.
 
 ---
 
@@ -36,7 +49,7 @@ RedMed is a **local-only medical ID**:
 
 There is no login, no profile backend, no analytics SDK. `docs/DO-NOT.md` and `Help.html` correctly refuse “HIPAA certified” and “encrypted band” marketing.
 
-Repo name is `frisky`. GitHub visibility is **public** (`gh repo view`: `isPrivate: false`). `docs/APP-STORE.md` still says the repo is private. Empty root `README.md`. No license.
+Repo name is `frisky`. GitHub visibility is **public**. Empty root `README.md` was filled in the follow-up. No license.
 
 ### Tree (what actually matters)
 
@@ -148,9 +161,9 @@ A Swift compile break or a Swift/JS schema drift (pregnant / deaf flags, compact
 
 **Why it matters**
 
-Consent version 4.1 (`ConsentGateView` / `Help.html`) tells the owner that hospital search is Apple’s. A helper on the 911/Aid shell who taps hospitals sends coordinates to `overpass-api.de` (public OSM API, not Apple, not RedMed). That is a disclosure hole, not a RedMed server — but it is still a third party seeing a rescuer’s location.
+Consent version 4.2 (`ConsentGateView` / `Help.html`) names Apple Maps (owner app) and OpenStreetMap Overpass (band tap). A helper on the 911/Aid shell who taps hospitals still sends coordinates to `overpass-api.de` (public OSM API, not Apple, not RedMed). Disclosed, not removed.
 
-`_headers` CSP is stricter (`connect-src 'self'` only, lines 45/53/61). On Cloudflare Pages both policies apply; browsers intersect them and **Overpass would be blocked**. GitHub Pages ignores `_headers`, so the live-if-published path uses the HTML meta and Overpass works. Two hosts, two behaviors, one legal paragraph.
+**Follow-up:** Help 4.2 / Satellite / Info.plist name Apple Maps (owner app) and OpenStreetMap Overpass (band tap). `_headers` `connect-src` includes `https://overpass-api.de`. The third-party GPS send is unchanged; the disclosure hole is closed.
 
 #### H4. App-open Face ID is mounted; crash detection dies when the app relocks
 
@@ -179,6 +192,8 @@ This is stricter privacy for the owner phone and worse emergency access on that 
 
 This is a product fork, not a one-line bug. Do not “fix” it in passing. Pick one story and make `AGENTS.md`, `MAX.md`, `PRODUCTION.md`, `Help.html`, `Info.plist` `NSFaceIDUsageDescription`, and `support/index.html` match the code.
 
+**Resolved:** `#476` stripped `OwnerAppLock`. Face ID is Edit / Save / Erase. Crash motion starts from owner Main, stops CoreMotion on `.background`, restarts on `.active`, does not stop on `.inactive`. Band tap stays ungated. Consent 4.3.
+
 ---
 
 ### Medium
@@ -190,6 +205,8 @@ This is a product fork, not a one-line bug. Do not “fix” it in passing. Pick
 `AGENTS.md` says When-In-Use starts on Find Help only and Help must not call `requestWhenInUseAuthorization`. Help.html 91 still says the first system Allow sheet is when Find Help needs GPS.
 
 The toggle is not a real choice. Either honor it or remove it.
+
+**Follow-up:** `enterApp()` no longer forces `locationEnabled = true`. `requestWhenInUseIfNeeded()` already no-ops when Location is off.
 
 #### M2. `#d=` AES-GCM uses a public client key (integrity, not identity)
 
@@ -215,12 +232,15 @@ An unlocked iPhone + a process that can call SecItem can read the blob. That is 
 
 Those two `AppConfig` strings are unused in Swift (grep). Dead config pointing at the CDN.
 
+**Follow-up:** both strings now point at this repo. `privacy/index.html` no longer meta-refreshes to `redmed-privacy`. Connect URL stays TBD until a live host.
+
 #### M5. `pages-deploy.yml` fail-open + floating action tags
 
 - Missing `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` → skip deploy, workflow success (63–80).
 - github.io smoke warn-only (90–103) — this is why H1 is green on `main`.
 - `actions/checkout@v4` / `@v5`, `cloudflare/wrangler-action@v3` — major tags, not SHAs.
-- GitHub Actions UI still lists a third workflow `apply-review-fixes.yml` as active; that file is **not** on `main` (API listing vs tree). Stale Actions metadata.
+
+**Follow-up:** github.io smoke **fails** the job. Actions pinned to SHAs (`checkout` v4.2.2 / v5.0.0, `wrangler-action` v3). Cloudflare skip on missing secrets is unchanged (optional host).
 
 No SPM / CocoaPods / npm lockfile in this repo, so there is no app dependency CVE surface. Risk is Actions supply chain and the dead host.
 
@@ -240,13 +260,11 @@ Residual: a hard drop of the phone can still siren. That is documented risk, not
 
 #### L1. Info.plist / support copy vs actual Face ID and NFC
 
-- `NSFaceIDUsageDescription` (Info.plist 44–45): “edit, save, or erase” — does not mention unlock, and Edit open is ungated.
-- `support/index.html` 34–35: “Unlock uses Face ID… Edit, Save, Erase, **and NFC write** ask again.” NFC write does **not** prompt (`NFCBandManager.writeBand` comment 49; no `BiometricAuth` on that path).
-- `UILaunchScreen` includes `BrandLogo` (Info.plist 52–57). `AGENTS.md` says no BrandLogo splash.
+**Follow-up:** Info.plist Face ID string is edit / save / erase. Support does not claim NFC write or app-open Face ID. Launch screen BrandLogo removed (cream `LaunchBackground` only).
 
 #### L2. JS field caps vs Swift encode
 
-`tapper/index.html` 1777–1780: `MAX_STR = 200`, `MAX_LIST = 40`. Swift `compactArray` / `encodePayload` has no field caps; only `maxEncodedLength = 8192` and NTAG216 ~850 byte warning (`capacityNote` 245–253). Over-long owner fields can pack on-device and truncate in the passerby card.
+`tapper/index.html` 1777–1780: `MAX_STR = 200`, `MAX_LIST = 40`. Swift `compactArray` now clips to the same caps. Over-long owner fields no longer pack past what the passerby card shows.
 
 #### L3. `KeychainStore.exists` default branch is a tautology
 
@@ -263,9 +281,11 @@ Residual: a hard drop of the phone can still siren. That is documented risk, not
 
 `default` is only reached when status is not `errSecItemNotFound`, so it always returns `true`. An unexpected SecItem error hides the empty-profile funnel (`prefersLockOnLaunch` / `hasStoredProfile()`). Fail closed (return `false`) would match “don’t know.”
 
+**Follow-up:** `default` returns `false`.
+
 #### L4. Empty README, stub SECURITY.md, public repo named frisky
 
-Root `README.md` is blank. GitHub community profile: `readme: null`, `security: null`, `license: null`. `docs/SECURITY.md` is one line pointing at `Help.html`. `docs/PRODUCTION.md` is the closest “green checklist” and is wrong on the Face ID toggle (see H4). `docs/cold-start-audit.md` matches **code** (`OwnerAppLock` path), not the AGENTS invariant.
+**Follow-up:** README filled. `docs/SECURITY.md` points at Help + advisory path. `docs/PRODUCTION.md` rewritten (no fake Face ID toggle; github.io listed as 404). `docs/cold-start-audit.md` is historical (`OwnerAppLock` path). AGENTS matches the stripped-lock product.
 
 #### L5. AASA team ID is public; Associated Domains entitlement is empty
 
@@ -317,7 +337,7 @@ Single target, 42 Swift files, no modules. Boundaries are conventions (`isScanne
 
 | Symbol | Status |
 |--------|--------|
-| `OwnerAppLock` | Live — wraps launch |
+| `OwnerAppLock` | Deleted — do not remount |
 | `FacePage`, `LockEntryPage`, `VaultHistoryView`, `MainInfoView` | Deleted (comments only) |
 | `VaultHistoryStore` | Live, no UI |
 | `HealthKitProfileImport` | Stub (`isAvailable` false) |
@@ -330,15 +350,15 @@ Single target, 42 Swift files, no modules. Boundaries are conventions (`isScanne
 
 | Topic | Code | AGENTS / MAX | PRODUCTION / Help |
 |-------|------|--------------|-------------------|
-| App-open Face ID | Yes (`OwnerAppLock`) | No | PRODUCTION yes; Help no |
-| Face ID on Edit | No | Yes | Help yes |
-| Face ID toggle on consent | Does not exist | — | PRODUCTION claims it |
-| Location prompt | Agree (`requestWhenInUseIfNeeded`) | Find Help only | Help: Find Help |
-| iOS CI on push | No | AGENTS implies yes; MAX says dispatch | — |
-| github.io live | 404 | Claimed live | domain.md claimed live |
-| Repo visibility | Public | — | APP-STORE.md says private |
+| App-open Face ID | No | No | PRODUCTION no; Help no |
+| Face ID on Edit | Yes | Yes | Help yes |
+| Face ID toggle on consent | Does not exist | — | PRODUCTION no longer claims it |
+| Location prompt | Agree if Location on | Agree if on; GPS on Find Help | Help 4.3 |
+| iOS CI on push | No | Dispatch only | — |
+| github.io live | 404 | Claimed URL, noted 404 | domain.md 404 |
+| Repo visibility | Public | — | APP-STORE.md public |
 
-Treat **code** as what ships. Treat AGENTS as the intended invariant where they disagree — and resolve it on purpose.
+Treat **code** as what ships. `#476` stripped the launch lock. This follow-up does not remount it.
 
 ---
 
@@ -347,7 +367,7 @@ Treat **code** as what ships. Treat AGENTS as the intended invariant where they 
 | Risk | Detail |
 |------|--------|
 | Band host | H1. No `Roooted1776.github.io`. Manual `publish-github-io.sh` has nowhere to copy. |
-| pages.dev | Optional; secrets missing; 404 today. `_headers` would also block Overpass. |
+| pages.dev | Optional; secrets missing; 404 today. `_headers` now allows Overpass `connect-src`. |
 | SW stale cache | Mitigated by `CACHE` bump + activate delete. Drift caught by `sync-tapper.sh` if someone runs it. |
 | Host cutover | Old bands keep the old host forever. `docs/domain.md` says keep old hosts up. Today the old host is already down. |
 | Backups | Keychain + vault excluded from backup by design. Wipe = empty app. Band is the backup — only if H1 is fixed and the chip was actually written. |
@@ -367,9 +387,10 @@ HIPAA: `Help.html` 60–65 is careful (operator-aligned, not certified). The typ
 | Check | When | Fail closed? | What it proves |
 |-------|------|--------------|----------------|
 | `scripts/sync-tapper.sh` | pages-deploy job + local | Yes | One shell; three `sw.js` identical |
-| `scripts/smoke-pages.sh` | pages-deploy (github.io warn-only; pages.dev fail if CF ran) | Mixed | Tabs exist; no Face ID strings in tapper; brand PNGs |
+| `scripts/test-d-codec.mjs` | pages-deploy job + local | Yes | KEY_LABEL lockstep; AES-GCM round-trip; zlib 0x01; current vs legacy compact; URI contract; empty persist guard present |
+| `scripts/smoke-pages.sh` | pages-deploy (github.io **fail-closed**; pages.dev fail if CF ran) | Mixed | Tabs exist; no Face ID strings in tapper; brand PNGs |
 | `ios-build.yml` | Manual | N/A (not on PR) | Simulator compile, unsigned |
-| XCTest / codec vectors | Missing | — | — |
+| XCTest | Missing | — | — |
 
 `smoke-pages.sh` against `https://roooted1776.github.io` on 2026-08-31: static no-auth scan passed (local file); **all 11 HTTP checks 404**.
 
@@ -377,24 +398,15 @@ HIPAA: `Help.html` 60–65 is careful (operator-aligned, not certified). The typ
 
 ## Recommended next actions
 
-Ordered by what actually unblocks the product.
+Still blocked on Max / billing / Apple, not this follow-up.
 
-1. **Stand up the passerby host.** Create `Roooted1776.github.io` (or connect Pages `redmed` and put HTTPS in front of a real domain). Run `scripts/publish-github-io.sh` / CF deploy. Smoke until `/tapper/` returns RedMed · 911 · Aid. Only then write bands. Do not change `AppConfig.medicalCardBaseURL` to a host that is still 404.
-2. **Make pages-deploy fail when the live write base 404s.** The warn-only smoke is why H1 is invisible on `main`.
-3. **Pick a Face ID story and align docs + code.** Either keep `OwnerAppLock` and rewrite AGENTS/MAX/Help/Info.plist/support, or remove the launch lock and keep Face ID on Save / Erase (and decide Edit). Same PR should say what crash-monitor does in background.
-4. **Fix hospital-search disclosure.** Help / Info.plist / Satellite copy must name Overpass (or MapKit-only on native and “OpenStreetMap Overpass” on tapper). Add `https://overpass-api.de` to `_headers` `connect-src` if pages.dev will serve the shell.
-5. **Honor or delete the Location toggle.** `enterApp()` forcing `locationEnabled = true` makes the control fake.
-6. **Restore iOS CI on `RedMed-Xcode/**` after billing.** Add XCTest (or a tiny Swift/JS shared vector file) for: AES `#d=` round-trip, legacy zlib/JSON, compact-array current vs legacy detection, `OwnerBandURI.isValidWriteURL`, empty-`persist()` guard.
-7. **Pin Actions to SHAs.** Point App Store privacy at a tagged / hashed document, not jsDelivr `@main`, or serve `/privacy/` from the same host as the band.
-8. **Fill `README.md`.** Public repo, blank landing, product name ≠ repo name. One paragraph + run/deploy pointers.
-9. **Rewrite `docs/PRODUCTION.md` against this audit** (or delete the “green” table until it is true).
-10. Leave NFC / HealthKit / Associated Domains parked until a paid Apple team can provision them. Do not claim live Write.
+1. **Stand up the passerby host.** Create `Roooted1776.github.io`, run `scripts/publish-github-io.sh` against that checkout, commit and push. Smoke until `/tapper/` returns RedMed · 911 · Aid. Only then write bands. Do not change `AppConfig.medicalCardBaseURL` to a host that is still 404. pages-deploy will stay red until this is done.
+2. **Restore iOS CI on `RedMed-Xcode/**` after billing.** Codec lockstep is already `node scripts/test-d-codec.mjs`. XCTest on a Mac runner is still missing.
+3. Leave NFC / HealthKit / Associated Domains parked until a paid Apple team can provision them. Do not claim live Write.
 
----
+## Code changes in the follow-up
 
-## Code changes in this PR
-
-None. No committed secret, no broken auth check, and no obviously exploitable hole that could be patched without changing product behavior.
+Swift: `KeychainStore.exists` fail-closed; encode clips to tapper `MAX_STR`/`MAX_LIST`. Copy: cream-only launch screen. Docs: PRODUCTION / domain / APP-STORE / README / SECURITY. CI: fail-closed github.io smoke; pin Actions SHAs; `scripts/test-d-codec.mjs`. Face ID lock stays stripped (`#476`). Overpass / Location honor stay as `#474`.
 
 ---
 

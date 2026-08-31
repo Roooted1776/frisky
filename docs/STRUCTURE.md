@@ -9,7 +9,7 @@ Only what must live at the deploy / GitHub surface:
 
 | Path | Why at root |
 |------|-------------|
-| `README.md` | GitHub landing |
+| `README.md` | GitHub landing (product + run/deploy + dead-host note) |
 | `AGENTS.md` | Cursor / agent rules (must be easy to find) |
 | `tapper.html` · `index.html` · `card.html` · `get.html` · `get/` | Pages URLs + `#d=` redirects |
 | `sw.js` · `_headers` · `_redirects` · `wrangler.toml` | Cloudflare / SW |
@@ -24,7 +24,7 @@ frisky/
 ├── tapper/                # passerby shell + shell-relative PNGs
 ├── assets/                # canonical brand PNGs / SVG
 ├── docs/                  # all long-form docs (this file, MAX, SECURITY, product notes)
-├── scripts/               # run, deploy, smoke, tapper guard
+├── scripts/               # run, deploy, smoke, tapper guard, #d= codec test
 ├── Pages surface files    # tapper.html, redirects, sw, wrangler (see table)
 └── .github/workflows/
 ```
@@ -34,7 +34,7 @@ frisky/
 | File | Role |
 |------|------|
 | `../MAX.md` | Max profile + shipped history (agent memory; linked from `AGENTS.md`) |
-| `docs/SECURITY.md` | Threat model / reporting |
+| `docs/SECURITY.md` | Advisory pointer into Help.html |
 | `docs/STRUCTURE.md` | This map |
 | `docs/domain.md` | getredmed.com cutover |
 | `docs/NFC-RESTORE.md` | CoreNFC entitlement restore |

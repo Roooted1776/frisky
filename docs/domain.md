@@ -22,6 +22,17 @@ live interim host:
 
 Smoke on the live interim: RedMed · 911 · Aid, no login. `pages-deploy.yml` **fails** when the write base 404s.
 
+## Publish github.io
+
+Repo `Roooted1776/Roooted1776.github.io` already exists. Re-publish:
+
+1. GitHub → that repo → Actions → **Publish tapper** → Run workflow
+   (checks out frisky and runs `scripts/publish-github-io.sh`).
+2. Or locally: `./scripts/publish-github-io.sh /path/to/Roooted1776.github.io`, then commit and push `main`.
+3. Smoke: `BASE=https://roooted1776.github.io bash scripts/smoke-pages.sh`
+
+Do not change `AppConfig.medicalCardBaseURL` until that smoke is green.
+
 ## When you pick the domain
 
 1. Register the custom domain (Cloudflare Registrar recommended so DNS + Pages stay together).

@@ -5,11 +5,11 @@
 #
 # Direct Upload needs CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID.
 # Missing secrets skip CF upload (does not take down github.io).
+# Write-base smoke fails the job when that host 404s.
 # Connect Pages project `redmed` in the Cloudflare dashboard instead
 # (`wrangler.toml` output dir = repo root) when you want pages.dev live.
 #
 # github.io is Roooted1776/Roooted1776.github.io (Actions → Publish tapper).
-# Live write-base smoke is fail-closed: a 404 host must not paint this job green.
 
 name: Pages tapper deploy
 
@@ -30,9 +30,11 @@ on:
       - 'wrangler.toml'
       - 'assets/**'
       - 'RedMed-Xcode/RedMed/AppConfig.swift'
+      - 'scripts/sync-tapper.sh'
       - 'scripts/smoke-pages.sh'
       - 'scripts/write-base-origin.py'
       - 'scripts/publish-github-io.sh'
+      - 'scripts/test-d-codec.mjs'
       - '.github/workflows/pages-deploy.yml'
   pull_request:
     paths:
@@ -49,9 +51,11 @@ on:
       - 'wrangler.toml'
       - 'assets/**'
       - 'RedMed-Xcode/RedMed/AppConfig.swift'
+      - 'scripts/sync-tapper.sh'
       - 'scripts/smoke-pages.sh'
       - 'scripts/write-base-origin.py'
       - 'scripts/publish-github-io.sh'
+      - 'scripts/test-d-codec.mjs'
       - '.github/workflows/pages-deploy.yml'
   workflow_dispatch:
 
@@ -62,7 +66,7 @@ jobs:
       contents: read
       deployments: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Refuse band-setup / missing tabs
         run: |
@@ -72,6 +76,7 @@ jobs:
           # Xcode copies tapper/index.html → bundle tapper.html at build.
           # Do not require three identical files (that gate is stale).
           bash scripts/sync-tapper.sh
+          node scripts/test-d-codec.mjs
           f=tapper/index.html
           ! grep -q 'Checking your phone' "$f" || fail "$f still has Checking your phone"
           ! grep -q 'Set up your RedMed band' "$f" || fail "$f still has band-setup copy"
@@ -107,7 +112,7 @@ jobs:
 
       - name: Deploy to Cloudflare Pages
         if: github.event_name != 'pull_request' && steps.cf.outputs.skip != 'true'
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -120,6 +125,7 @@ jobs:
           # Fail closed when that host 404s — a green job with a dead write
           # base is how H1 stayed invisible. Do not flip AppConfig onto
           # another 404 (pages.dev, a TBD domain, /frisky/ project Pages).
+          # GitHub Contents API rewrites drop the +x bit (file is 100644).
           ORIGIN="$(python3 scripts/write-base-origin.py)"
           echo "Write-base origin: ${ORIGIN} (AppConfig.medicalCardBaseURL)"
           ok=0

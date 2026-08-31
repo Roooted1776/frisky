@@ -1280,7 +1280,13 @@ function redmedAssetURL(file) {
     min-width: 0;
     overflow-wrap: anywhere;
   }
-  /* Live hospital list — TopicDetailView's LiveNearbyHospitalsSection, web equivalent */
+  .aid-hosp-note {
+    margin: 0 4px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--muted);
+  }
   .aid-hosp-status {
     display: flex;
     align-items: center;
@@ -1780,7 +1786,7 @@ function redmedAssetURL(file) {
   var BLOOD = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
   var ZLIB_VERSION = 0x01;
   var AES_VERSION = 0x02;
-  var KEY_LABEL = 'RedMed-NFC-AES-GCM-v1';
+  var KEY_LABEL = 'RedMed-NFC-AES-GCM-v1'; // lockstep: scripts/test-d-codec.mjs
   var aesKeyPromise = null;
 
   function asString(v, fallback) {
@@ -2660,8 +2666,12 @@ function redmedAssetURL(file) {
             'way["amenity"="hospital"](around:' + HOSP_RADIUS_M + ',' + lat + ',' + lon + ');' +
             'relation["amenity"="hospital"](around:' + HOSP_RADIUS_M + ',' + lat + ',' + lon + ');' +
             ');out center 20;';
-          var url = 'https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(q);
-          fetch(url).then(function (res) {
+          var url = 'https://overpass-api.de/api/interpreter';
+          fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+            body: 'data=' + encodeURIComponent(q)
+          }).then(function (res) {
             if (!res.ok) throw new Error('bad status');
             return res.json();
           }).then(function (data) {
@@ -2717,7 +2727,9 @@ function redmedAssetURL(file) {
         });
         html += '</div>';
         if (key === 'trauma-hospitals') {
-          html += '<div class="aid-sec-label">Nearest Hospitals — Live</div><div id="aidHospBody"></div>';
+          html += '<div class="aid-sec-label">Nearest Hospitals — Live</div>';
+          html += '<p class="aid-hosp-note">Search uses OpenStreetMap Overpass (overpass-api.de). That service sees this phone’s coordinates. Not a RedMed server.</p>';
+          html += '<div id="aidHospBody"></div>';
         }
         scroll.innerHTML = html;
         scroll.scrollTop = 0;

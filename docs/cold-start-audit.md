@@ -1,11 +1,21 @@
 # Cold Start Speed Audit
 
-Static code audit of the owner app's cold-launch path (`RedMedApp` → `PrivacySnapshotGuard`
-→ `OwnerAppLock` → `ConsentGateView` → `Main` → `ContentView`). This is a **read-through audit**,
-not a profiled one: the app cannot be built or run in this environment (Xcode/Simulator are
-macOS-only — see `AGENTS.md`), so there are no Instruments traces or wall-clock numbers here.
-Findings are based on tracing what actually executes between process start and first interactive
-frame, cross-checked against the cold-launch invariants already documented in `AGENTS.md`.
+**Launch lock is gone.** Current path is `RedMedApp` → `PrivacySnapshotGuard` →
+`ConsentGateView` → `Main` → `ContentView`. Face ID is Edit / Save / Erase only.
+Do not treat the `OwnerAppLock` notes below as current product.
+
+The rest of this file is a **historical** read-through of the cream-lock launch path
+(key-window races, `evaluatePolicy` during `.inactive`, Proceed / FacePage). Keep it
+for why those bugs existed. New work should not remount `OwnerAppLock`.
+
+---
+
+Original audit of the owner app's then-current cold-launch path (`RedMedApp` →
+`PrivacySnapshotGuard` → `OwnerAppLock` → `ConsentGateView` → `Main` →
+`ContentView`). This was a **read-through audit**, not a profiled one: the app cannot
+be built or run in this environment (Xcode/Simulator are macOS-only — see
+`AGENTS.md`). Cross-checked against the cold-launch invariants in `AGENTS.md` at
+the time — those invariants already forbade the lock; the code had not caught up.
 
 ## Summary
 
@@ -70,6 +80,9 @@ this window as `profileLoadFailed` instead of a Face ID hang, and Proceed calls 
 `retryStuckProfileLoad()` that re-awaits the decode instead of restarting biometrics. Not confirmed
 with a profiler/device repro — same caveat as the rest of this doc — but the prior behavior was a
 readable logic bug independent of timing.
+
+Later: `OwnerAppLock` is cream-only (no Proceed). Relock no longer stops `CrashMotionGuard` —
+cream lock is UI/PHI, not a CoreMotion stop.
 
 ## Broader cold-start / cream-page sweep (this pass)
 
