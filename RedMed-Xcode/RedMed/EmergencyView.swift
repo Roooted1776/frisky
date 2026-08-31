@@ -59,13 +59,15 @@ private struct FindHelpLocationBlock: View {
     @StateObject private var locationManager = LocationManager()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            GPSCard(location: locationEnabled ? locationManager.location : nil)
-                .opacity(locationEnabled ? 1 : 0.45)
-            CompactFillButton(
-                title: locationEnabled ? "Copy Coordinates" : "Location Off — Enable It On Before You Continue Or In Settings",
-                disabled: !locationEnabled || locationManager.location == nil
-            ) {
+        GPSCard(
+            location: locationEnabled ? locationManager.location : nil,
+            locationEnabled: locationEnabled,
+            onRefresh: {
+                guard locationEnabled else { return }
+                RedMedHaptics.light()
+                locationManager.refresh()
+            },
+            onCopy: {
                 if locationEnabled, let loc = locationManager.location {
                     SecurePasteboard.copyEphemeral(
                         "\(loc.coordinate.latitude), \(loc.coordinate.longitude)"
@@ -73,7 +75,7 @@ private struct FindHelpLocationBlock: View {
                     RedMedHaptics.light()
                 }
             }
-        }
+        )
         .task(id: isVisible) {
             guard isVisible else {
                 locationManager.stop()
@@ -242,11 +244,14 @@ private final class SeizureTimerEngine {
 
 struct GPSCard: View {
     let location: CLLocation?
+    var locationEnabled: Bool = true
+    var onRefresh: () -> Void = {}
+    var onCopy: () -> Void = {}
     var latStr: String { location.map { String(format: "%.6f", $0.coordinate.latitude) } ?? "–––" }
     var lonStr: String { location.map { String(format: "%.6f", $0.coordinate.longitude) } ?? "–––" }
     var accuracy: String { location.map { "±\(Int($0.horizontalAccuracy)) m" } ?? "––" }
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 0) {
             Text("LIVE GPS")
                 .font(.system(size: 9, weight: .bold))
                 .kerning(1.1)
@@ -260,9 +265,22 @@ struct GPSCard: View {
                 .font(.system(size: 15, weight: .bold, design: .monospaced))
                 .foregroundColor(.redmedDark)
                 .multilineTextAlignment(.center)
+                .padding(.top, 4)
+            CompactFillButton(title: "Refresh", disabled: !locationEnabled) {
+                onRefresh()
+            }
+            .padding(.top, 4)
+            CompactFillButton(
+                title: locationEnabled ? "Copy Coordinates" : "Location Off — Enable It On Before You Continue Or In Settings",
+                disabled: !locationEnabled || location == nil
+            ) {
+                onCopy()
+            }
+            .padding(.top, 7)
             Text("Accuracy \(accuracy)")
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundColor(.redmedMuted)
+                .padding(.top, 4)
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 12)
@@ -315,6 +333,25 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private var manager: CLLocationManager?
     @Published var location: CLLocation?
     private var wantsLocation = false
+    private var forceNextUpdate = false
+
+    func refresh() {
+        if !wantsLocation { start() }
+        guard let m = manager else { return }
+        switch m.authorizationStatus {
+        case .authorizedAlways, .authorizedWhenInUse:
+            forceNextUpdate = true
+            // One-shot is ignored while startUpdatingLocation is running.
+            m.stopUpdatingLocation()
+            m.requestLocation()
+        case .denied, .restricted:
+            break
+        case .notDetermined:
+            m.requestWhenInUseAuthorization()
+        @unknown default:
+            break
+        }
+    }
 
     func start() {
         wantsLocation = true
@@ -358,7 +395,10 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let latest = locations.last else { return }
-        if let prev = location,
+        let forced = forceNextUpdate
+        forceNextUpdate = false
+        if !forced,
+           let prev = location,
            prev.distance(from: latest) < 8,
            abs(prev.horizontalAccuracy - latest.horizontalAccuracy) < 15 {
             return
@@ -368,7 +408,20 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         } else {
             DispatchQueue.main.async { self.location = latest }
         }
+        if forced, wantsLocation {
+            manager.startUpdatingLocation()
+        }
     }
 
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        forceNextUpdate = false
+        if wantsLocation {
+            switch manager.authorizationStatus {
+            case .authorizedAlways, .authorizedWhenInUse:
+                manager.startUpdatingLocation()
+            default:
+                break
+            }
+        }
+    }
 }
