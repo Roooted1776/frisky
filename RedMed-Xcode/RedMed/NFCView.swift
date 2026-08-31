@@ -2,7 +2,8 @@
 // see ContentView.showsNFC / scannerSafeTab.
 // One page: Write + Scan + Preview → full-page tap card (what first responders see).
 // When `AppConfig.nfcHardwareEnabled` is true, Write/Scan start real CoreNFC.
-// Pack-only simulate stays when the flag is off — it never flips Linked.
+// Parked: Write/Scan preview the packed card; Share Band URL is the live
+// `medicalCardBaseURL#d=` for Shortcuts / NFC Tools. Never Linked from this path.
 import SwiftUI
 
 struct NFCView: View {
@@ -14,6 +15,10 @@ struct NFCView: View {
     var isVisible: Bool = true
     @StateObject private var band = NFCBandManager()
     @State private var previewSession: PreviewSession?
+    /// Parked CoreNFC: packed `medicalCardBaseURL#d=` for Share → Shortcuts / NFC Tools.
+    /// Nil until pack finishes; never used to flip Linked.
+    @State private var parkedBandURL: String?
+    @State private var parkedPackNote: String = ""
 
     private struct PreviewSession: Identifiable {
         let id = UUID()
@@ -77,6 +82,7 @@ struct NFCView: View {
             // on this tab — that was the long NFC load.
             guard isVisible else { return }
             PasserbyHTMLCardView.scheduleShellWarmOnce()
+            await refreshParkedBandURL()
         }
         .onChange(of: band.isWriting) { _, writing in
             // Linked only after a matching read-back. Written-but-unverified stays Not linked.
@@ -158,6 +164,10 @@ struct NFCView: View {
                 band.verifyBand(from: profile)
             }
 
+            if !AppConfig.nfcHardwareEnabled {
+                parkedShareControl
+            }
+
             if !profile.hasData {
                 Text("Add your name on RedMed before writing or scanning the band.")
                     .font(.system(size: 14, weight: .semibold))
@@ -171,6 +181,13 @@ struct NFCView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
 
+            if !parkedPackNote.isEmpty {
+                Text(parkedPackNote)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.redmedAccent)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
             VStack(alignment: .leading, spacing: 8) {
                 if AppConfig.nfcHardwareEnabled {
                     tipRow("Write once after RedMed is filled — blank unlocked NXP NTAG216 (ISO 14443A Type 2).")
@@ -178,9 +195,8 @@ struct NFCView: View {
                     tipRow("Scan / Preview: same HTML card helpers get — quick, no login, no server, no app.")
                     tipRow("Linked only after write + matching read-back.")
                 } else {
-                    tipRow("This build cannot write a physical band (NFC Tag Reading is parked).")
-                    tipRow("Preview packed card opens the same HTML helpers would see — no Linked flag.")
-                    tipRow("Live write ships when NFC Tag Reading is on the App ID. See docs/NFC-RESTORE.md.")
+                    tipRow("CoreNFC write is parked. Share Band URL onto a blank NTAG216 (Shortcuts or NFC Tools).")
+                    tipRow("Preview packed card is the same HTML a helper sees. Linked still needs a real NFC write.")
                 }
             }
             .padding(.top, 2)
@@ -222,6 +238,57 @@ struct NFCView: View {
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .redmedBox()
+    }
+
+    @ViewBuilder
+    private var parkedShareControl: some View {
+        if let parkedBandURL {
+            ShareLink(item: parkedBandURL) {
+                HStack(spacing: 8) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 17, weight: .semibold))
+                    Text("Share Band URL")
+                        .font(.system(size: 16, weight: .bold))
+                }
+                .foregroundColor(.redmedAccent)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 15)
+                .background(Color.redmedBg)
+                .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: RedMedChrome.boxRadius, style: .continuous)
+                        .strokeBorder(Color.redmedAccent.opacity(0.45), lineWidth: 1.5)
+                )
+            }
+            .disabled(band.isBusy)
+            .opacity(band.isBusy ? 0.72 : 1)
+            .accessibilityLabel("Share Band URL")
+            .accessibilityHint("Same #d= URL CoreNFC Write would put on a blank NTAG216. Shortcuts or NFC Tools can write it. Does not mark Linked.")
+        }
+    }
+
+    private func refreshParkedBandURL() async {
+        guard !AppConfig.nfcHardwareEnabled, profile.hasData else {
+            parkedBandURL = nil
+            parkedPackNote = ""
+            return
+        }
+        let chip = ProfileNFCCodec.chipProfile(from: profile)
+        let packed = await Task.detached(priority: .userInitiated) {
+            ProfileNFCCodec.buildURLString(chip: chip)
+        }.value
+        guard let packed, AppConfig.OwnerBandURI.isValidWriteURL(packed) else {
+            parkedBandURL = nil
+            parkedPackNote = "Couldn't pack a RedMed #d= URL."
+            return
+        }
+        if packed.utf8.count > 850 {
+            parkedBandURL = nil
+            parkedPackNote = "\(packed.utf8.count) bytes — too large for NXP NTAG216. Shorten RedMed."
+            return
+        }
+        parkedPackNote = ""
+        parkedBandURL = packed
     }
 
     private func openFirstResponderPreview() {

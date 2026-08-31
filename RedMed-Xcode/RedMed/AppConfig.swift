@@ -211,7 +211,7 @@ enum AppConfig {
         static var noBluetoothSummary: String { carrierVsBluetoothSummary }
 
         static var hardwareParkedSummary: String {
-            "Band write is preview-only in this build. NFC Tag Reading is parked until a paid Apple Developer team can provision it. Preview packed card shows the same HTML helpers would see. Linked still requires a real CoreNFC write."
+            "CoreNFC write is parked until a paid Apple Developer team can provision NFC Tag Reading. Share Band URL is the same #d= payload Write would program — Shortcuts or NFC Tools can put it on a blank NTAG216. Linked still requires a real CoreNFC write."
         }
     }
 
