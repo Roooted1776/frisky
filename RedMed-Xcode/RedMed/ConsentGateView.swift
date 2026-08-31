@@ -175,22 +175,7 @@ struct ConsentGateView<Content: View>: View {
             RedMedHaptics.light()
             openPolicy = policy
         } label: {
-            HStack(spacing: 10) {
-                Text(policy.emoji)
-                    .font(.system(size: 17))
-                    .frame(width: 22, alignment: .center)
-                    .accessibilityHidden(true)
-                Text(policy.title)
-                    .font(.system(size: RedMedChrome.rowFont, weight: .semibold))
-                    .foregroundColor(.redmedDark)
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.redmedMuted.opacity(0.55))
-            }
-            .padding(.horizontal, RedMedChrome.pagePadX)
-            .padding(.vertical, RedMedChrome.rowVPad)
-            .contentShape(Rectangle())
+            HelpPolicyRowLabel(policy: policy, titleWeight: .semibold)
         }
         .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
         .accessibilityAddTraits(.isButton)
@@ -205,16 +190,7 @@ private struct ConsentPolicySheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                OwnerModalChrome(
-                    title: policy.title,
-                    leadingTitle: "Done",
-                    leadingAction: { dismiss() }
-                )
-                LocalWebView(filename: HelpDocument.bundledFile, fragment: policy.fragment)
-            }
-            .background { RedMedPageBackground() }
-            .toolbar(.hidden, for: .navigationBar)
+            HelpPolicyPage(policy: policy, showsDoneChrome: true, onDone: { dismiss() })
         }
     }
 }

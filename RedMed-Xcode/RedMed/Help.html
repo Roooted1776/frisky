@@ -320,12 +320,21 @@
 
   <footer class="legal-footer">
     <p>© 2026 RedMed · All rights reserved</p>
-    <p><a href="#privacy">Privacy</a> · <a href="#security">Security</a> · <a href="#terms">Terms</a> · <a href="#medical-disclaimer">Medical Disclaimer</a></p>
+    <p><a href="#privacy"><span aria-hidden="true">🔒</span> Privacy</a> · <a href="#security"><span aria-hidden="true">🔐</span> Security</a> · <a href="#terms"><span aria-hidden="true">📜</span> Terms</a> · <a href="#medical-disclaimer"><span aria-hidden="true">⚕️</span> Medical Disclaimer</a></p>
     <p class="legal-footer-disclaimer">This document is for information and is not legal advice. It has not yet been reviewed by qualified US counsel.</p>
   </footer>
 </div>
 <script>
 (function () {
+  // Lockstep with HelpDocument.Policy in HelpMenuView.swift.
+  var POLICIES = {
+    privacy: { title: "Privacy", emoji: "🔒" },
+    security: { title: "Security", emoji: "🔐" },
+    terms: { title: "Terms", emoji: "📜" },
+    "medical-disclaimer": { title: "Medical Disclaimer", emoji: "⚕️" }
+  };
+  window.__rmPolicies = POLICIES;
+
   var ids = Array.prototype.map.call(
     document.querySelectorAll("section.legal-policy[id]"),
     function (el) { return el.id; }
@@ -367,6 +376,13 @@
     var target = sectionOf[id] ? id : "privacy";
     var sec = sectionOf[target] || "privacy";
     showSection(sec);
+    var meta = POLICIES[sec];
+    if (meta) document.title = meta.emoji + " " + meta.title + " — RedMed";
+    try {
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.rmPolicy) {
+        window.webkit.messageHandlers.rmPolicy.postMessage(sec);
+      }
+    } catch (e) {}
     if (scroll) {
       var el = document.getElementById(target) || document.getElementById(sec);
       if (el) el.scrollIntoView({ block: "start" });

@@ -23,7 +23,7 @@ enum HelpDocument {
             }
         }
 
-        /// Same marks as Help.html nav + page titles.
+        /// Keep lockstep with Help.html nav, h1, footer, and `__rmPolicies`.
         var emoji: String {
             switch self {
             case .privacy: return "🔒"
@@ -33,11 +33,17 @@ enum HelpDocument {
             }
         }
 
+        var markedTitle: String { "\(emoji) \(title)" }
+
         var fragment: String {
             switch self {
             case .medicalDisclaimer: return "medical-disclaimer"
             default: return rawValue
             }
+        }
+
+        static func matching(fragment: String) -> Policy? {
+            allCases.first { $0.fragment == fragment }
         }
     }
 }
@@ -46,12 +52,14 @@ enum HelpDocument {
 struct LocalWebView: UIViewRepresentable {
     let filename: String
     var fragment: String? = nil
+    /// Help.html tab id only — native chrome (Help push + consent sheet) stays on the visible policy.
+    var onPolicyChange: ((HelpDocument.Policy) -> Void)? = nil
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
-        // Policies are static bundle HTML — no app ↔ page script bridge.
+        config.userContentController.add(context.coordinator, name: "rmPolicy")
         config.preferences.javaScriptCanOpenWindowsAutomatically = false
         let cream = UIColor(Color.redmedBg)
         let webView = WKWebView(frame: .zero, configuration: config)
@@ -71,9 +79,14 @@ struct LocalWebView: UIViewRepresentable {
         return webView
     }
 
+    static func dismantleUIView(_ webView: WKWebView, coordinator: Coordinator) {
+        webView.configuration.userContentController.removeScriptMessageHandler(forName: "rmPolicy")
+    }
+
     func updateUIView(_ webView: WKWebView, context: Context) {
         let key = "\(filename)#\(fragment ?? "")"
         context.coordinator.fragment = fragment
+        context.coordinator.onPolicyChange = onPolicyChange
         if context.coordinator.loadedKey == key { return }
 
         let loadedFile = context.coordinator.loadedKey?
@@ -109,10 +122,25 @@ struct LocalWebView: UIViewRepresentable {
     ]
 
     /// Blocks in-webview navigation to untrusted schemes; opens http(s)/tel/mailto/redmed externally.
-    final class Coordinator: NSObject, WKNavigationDelegate {
+    final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         var loadedKey: String?
         var fragment: String?
         var didLoadHTML = false
+        var onPolicyChange: ((HelpDocument.Policy) -> Void)?
+
+        func userContentController(
+            _ userContentController: WKUserContentController,
+            didReceive message: WKScriptMessage
+        ) {
+            guard message.name == "rmPolicy", let raw = message.body as? String else { return }
+            reportPolicy(raw)
+        }
+
+        func reportPolicy(_ fragment: String) {
+            let safe = fragment.filter { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" }
+            guard safe == fragment, let policy = HelpDocument.Policy.matching(fragment: safe) else { return }
+            DispatchQueue.main.async { self.onPolicyChange?(policy) }
+        }
 
         func scrollToFragment(in webView: WKWebView) {
             guard let fragment else { return }
@@ -170,6 +198,7 @@ struct LocalWebView: UIViewRepresentable {
                    isShowingHelp(webView) {
                     decisionHandler(.cancel)
                     fragment = dest
+                    reportPolicy(dest)
                     jumpToPolicyFragment(dest, in: webView)
                     return
                 }
@@ -236,6 +265,74 @@ struct LocalWebView: UIViewRepresentable {
             }
             return nil
         }
+    }
+}
+
+// MARK: - Policy page (Help push + Before You Continue sheet)
+/// Same WebView + marks on both Help sides. Chrome title follows HTML tab switches.
+struct HelpPolicyPage: View {
+    let policy: HelpDocument.Policy
+    var showsDoneChrome: Bool = false
+    var onDone: (() -> Void)? = nil
+    @State private var visible: HelpDocument.Policy
+
+    init(
+        policy: HelpDocument.Policy,
+        showsDoneChrome: Bool = false,
+        onDone: (() -> Void)? = nil
+    ) {
+        self.policy = policy
+        self.showsDoneChrome = showsDoneChrome
+        self.onDone = onDone
+        _visible = State(initialValue: policy)
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if showsDoneChrome {
+                OwnerModalChrome(
+                    title: visible.markedTitle,
+                    leadingTitle: "Done",
+                    leadingAction: { onDone?() }
+                )
+            }
+            LocalWebView(
+                filename: HelpDocument.bundledFile,
+                fragment: visible.fragment,
+                onPolicyChange: { visible = $0 }
+            )
+        }
+        .background { RedMedPageBackground() }
+        .navigationTitle(visible.markedTitle)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(showsDoneChrome ? .hidden : .visible, for: .navigationBar)
+        .toolbarBackground(Color.redmedBg, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarColorScheme(.light, for: .navigationBar)
+    }
+}
+
+struct HelpPolicyRowLabel: View {
+    let policy: HelpDocument.Policy
+    var titleWeight: Font.Weight = .medium
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Text(policy.emoji)
+                .font(.system(size: 17))
+                .frame(width: 22, alignment: .center)
+                .accessibilityHidden(true)
+            Text(policy.title)
+                .font(.system(size: RedMedChrome.rowFont, weight: titleWeight))
+                .foregroundColor(.redmedDark)
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(.redmedMuted.opacity(0.55))
+        }
+        .padding(.horizontal, RedMedChrome.pagePadX)
+        .padding(.vertical, RedMedChrome.rowVPad)
+        .contentShape(Rectangle())
     }
 }
 
@@ -415,33 +512,13 @@ struct HelpMenuView: View {
     @ViewBuilder
     private func policyLink(_ policy: HelpDocument.Policy) -> some View {
         NavigationLink {
-            LocalWebView(filename: HelpDocument.bundledFile, fragment: policy.fragment)
-                .navigationTitle(policy.title)
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar(.visible, for: .navigationBar)
-                .toolbarBackground(Color.redmedBg, for: .navigationBar)
-                .toolbarBackground(.visible, for: .navigationBar)
-                .toolbarColorScheme(.light, for: .navigationBar)
+            HelpPolicyPage(policy: policy)
         } label: {
-            HStack(spacing: 10) {
-                Text(policy.emoji)
-                    .font(.system(size: 17))
-                    .frame(width: 22, alignment: .center)
-                    .accessibilityHidden(true)
-                Text(policy.title)
-                    .font(.system(size: Metrics.font, weight: .medium))
-                    .foregroundColor(.redmedDark)
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.redmedMuted.opacity(0.55))
-            }
-            .padding(.horizontal, Metrics.rowHPad)
-            .padding(.vertical, Metrics.rowVPad)
-            .contentShape(Rectangle())
+            HelpPolicyRowLabel(policy: policy)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(policy.title)
+    }
 
     private func requestErase() {
         guard showsOwnerTools, !isErasing else { return }
