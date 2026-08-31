@@ -9,4 +9,4 @@ Permanent product rules. Do not ship copy or URLs that break these.
 - **Do not** call the bracelet "encrypted" or "locked to your phone." `#d=` packing uses a public client key so any phone can open the card. The band is the credential.
 - **Do not** spend paid ads, ship “available now,” or stand up Shopify until the gate in [`docs/ADVERTISING.md`](ADVERTISING.md) is green (live `/tapper/`, real App Store ID, physical NFC write, 1–10 sample bands).
 - **Do not** put Meta Pixel, GA4, TikTok Pixel, or any ad/analytics tracker on `tapper/index.html` (or the bundled `tapper.html`). Conversion pixels belong on the store / listing only.
-- **Do not** sell v1 to hospitals or EMS agencies, or run a first-responder course / giveaway funnel. Buyer is the wearer or family. EMS is a 60-second tap brief, not a customer.
+- **Do not** mash the two advertising views into one claim. View A is wearer / family (Shopify + App Store). View B is facility / EMS (station brief, then PO only after the company gate in `docs/ADVERTISING.md`). Do not tell families “hospitals use this.” Do not tell facilities the App Store is their checkout. No course LMS / giveaway funnel.

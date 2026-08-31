@@ -254,9 +254,10 @@ Keep the tree product-only: `RedMed-Xcode/`, passerby `tapper*` / legacy
 `docs/` product notes,
 `scripts/`, `.github/`, and agent docs. Do not re-add staging `uploads/`,
 debug `screenshots/`, dead `support.js` / `ios-frame.jsx`, or UK
-`compliance/` paper packs. Advertising copy: [`docs/ADVERTISING.md`](docs/ADVERTISING.md).
-**$0 paid media** until that gate is green. Do not put trackers on `tapper.html`.
-DTC wearer/family only; no hospital outbound and no first-responder course funnel.
+`compliance/` paper packs. Advertising copy: [`docs/ADVERTISING.md`](docs/ADVERTISING.md)
+(two views: wearer/family and facility/EMS). **$0 paid media** until that
+product gate is green. Do not put trackers on `tapper.html`. Do not mash the
+two views into one claim. No first-responder course funnel.
 
 **Debugger note:** `Thread 1: signal SIGTERM` at `mach_msg2_trap` (Simulator)
 or `Thread 1: signal SIGKILL` at dyld `lldb_image_notifier` (physical iPhone)
