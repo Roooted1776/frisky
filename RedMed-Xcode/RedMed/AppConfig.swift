@@ -227,6 +227,17 @@ enum AppConfig {
             "First-aid reference only. Not medical advice and not a substitute for emergency dispatch. Call emergency services and follow their instructions."
     }
 
+    /// Honesty for crash / SOS. Not Apple Crash Detection. No motion background mode.
+    /// Owner CoreMotion runs only while the app is in the foreground; an armed
+    /// siren can keep going. Passerby tapper uses DeviceMotion only while the
+    /// page is open. Keep `tapperNote` in lockstep with `tapper/index.html`.
+    enum CrashAlarmCopy {
+        static let findHelpNote =
+            "Crash detect only while RedMed is open. Not Apple Crash Detection. SOS · Locate Me still sounds after you arm it."
+        static let tapperNote =
+            "Crash detect only while this page is open. Not Apple Crash Detection. SOS · Locate Me is this phone's siren."
+    }
+
     /// Carrier notes + local-only rule for Find Help.
     /// Call uses system `tel:` only — never attaches profile / PII / PHI / GPS.
     enum Satellite {
