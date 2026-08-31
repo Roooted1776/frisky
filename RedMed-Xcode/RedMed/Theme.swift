@@ -456,7 +456,7 @@ enum RedMedChrome {
     static let wordmarkBottom: CGFloat = 4
     static let rowFont: CGFloat = 15
     static let rowVPad: CGFloat = 13
-    static let tabBarHeight: CGFloat = 56
+    static let tabBarHeight: CGFloat = 56.5
     static let tabTopRadius: CGFloat = 18
     static let disabledOpacity: Double = 0.48
     static let cardShadow = Color.black.opacity(0.045)
