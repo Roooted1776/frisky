@@ -33,7 +33,7 @@ struct NFCView: View {
     private var ownerBody: some View {
         VStack(spacing: 0) {
             PageHelpChrome()
-            BrandWordmarkHeader(top: 0)
+            BrandLogoHeader()
 
             ScrollView {
                 VStack(spacing: 16) {
