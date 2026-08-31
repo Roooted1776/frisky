@@ -4,7 +4,7 @@ import SwiftUI
 /// Never a cream lock. Never on passerby tapper.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
-    static let currentVersion = "4.3"
+    static let currentVersion = "4.4"
 
     static var hasAcceptedCurrent: Bool {
         UserDefaults.standard.string(forKey: acceptedVersionKey) == currentVersion
@@ -175,7 +175,11 @@ struct ConsentGateView<Content: View>: View {
             RedMedHaptics.light()
             openPolicy = policy
         } label: {
-            HStack {
+            HStack(spacing: 10) {
+                Text(policy.emoji)
+                    .font(.system(size: 17))
+                    .frame(width: 22, alignment: .center)
+                    .accessibilityHidden(true)
                 Text(policy.title)
                     .font(.system(size: RedMedChrome.rowFont, weight: .semibold))
                     .foregroundColor(.redmedDark)
@@ -190,6 +194,7 @@ struct ConsentGateView<Content: View>: View {
         }
         .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
         .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(policy.title)
         .accessibilityHint("Opens \(policy.title)")
     }
 }
