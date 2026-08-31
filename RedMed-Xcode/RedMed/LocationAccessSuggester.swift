@@ -31,8 +31,8 @@ final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManag
     }
 
     /// After Before-you-continue Agree: fire iOS's When-In-Use sheet once if
-    /// Location is on and status is still `.notDetermined`.
-    /// Cannot skip the system sheet. Does nothing if already determined or Location is off.
+    /// Location stayed on and status is still `.notDetermined`.
+    /// Cannot skip the system sheet. Does nothing if Location is off or already determined.
     func requestWhenInUseIfNeeded() {
         guard AppSettings.locationEnabled else { return }
         if promptManager == nil {

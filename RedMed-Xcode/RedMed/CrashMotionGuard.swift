@@ -49,7 +49,8 @@ private enum CrashMotionThresholds {
 /// Arm/disarm uses a generation token so a late arm Task cannot restart the alarm
 /// after Stop / disarm.
 /// Main starts monitoring once owner tabs are up. SOS / survival hold is
-/// separate — stopMonitoring does not cancel an armed siren.
+/// separate — stopMonitoring does not cancel an armed siren. Face ID is
+/// Edit / Save / Erase only; crash motion is not gated on a lock.
 @MainActor
 final class CrashMotionGuard: ObservableObject {
     static let shared = CrashMotionGuard()
@@ -71,8 +72,7 @@ final class CrashMotionGuard: ObservableObject {
         }
     }
 
-    /// Stop CoreMotion. Relock does not call this — cream lock is UI only.
-    /// Does not disarm an in-progress SOS hold.
+    /// Stop CoreMotion on true background. Does not disarm an in-progress SOS hold.
     func stopMonitoring() {
         engine.stopMonitoring()
     }

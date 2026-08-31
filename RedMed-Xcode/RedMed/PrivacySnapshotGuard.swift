@@ -8,11 +8,10 @@ import UIKit
 ///
 /// FaceTime / Screen Recording sets `UIScreen.isCaptured`. Do **not** cover the
 /// tap card — that is the public EMT view. Cover only when PHI is actually in
-/// memory and the tap card is not up. `OwnerAppLock` is the cream Face ID
-/// gate in front of Main; this cover is the snapshot / capture veil, not that lock.
+/// memory and the tap card is not up. There is no cream lock in front of Main.
 ///
 /// Non-capture SwiftUI cover is **`.background` only** (with PHI). Face ID /
-/// LAContext on Login / Save / Erase put the scene `.inactive` — covering then
+/// LAContext on Edit / Save / Erase put the scene `.inactive` — covering then
 /// blanks the UI mid-prompt. App-switcher snapshots still get a cover on true
 /// background while PHI is in RAM.
 ///
@@ -46,14 +45,13 @@ struct PrivacySnapshotGuard<Content: View>: View {
     private var mustCover: Bool {
         // Tap card (Preview / Scan / band-style shell) stays readable — never cover.
         if tapCardVisible { return false }
-        // Capture cover only while PHI is resident — lock / Unlock must stay tappable.
         if screenCaptured {
             return phiInMemory && !manualCaptureOverride
         }
         // Stay uncovered until the first active frame so tabs paint immediately.
         guard hasBeenActive else { return false }
         // App-switcher / true background only — Face ID / LAContext put the scene
-        // `.inactive` and would blank the UI mid-unlock (same rule as VaultHistoryView).
+        // `.inactive` and would blank the UI mid-prompt on Edit / Save / Erase.
         guard scenePhase == .background else { return false }
         return phiInMemory
     }
@@ -154,9 +152,8 @@ struct PrivacySnapshotGuard<Content: View>: View {
 /// an incoming call) because the snapshot risk exists at every one of
 /// those transitions, not only true `.background`.
 ///
-/// Skip covering while already locked — the cream lock shell is opaque
-/// and has no PHI, and a UIKit cover on `willResignActive` (Face ID puts
-/// the scene inactive) sat on top of **Proceed**.
+/// Face ID on Edit / Save / Erase also resigns active. The system sheet sits
+/// above this window cover; `didBecomeActive` drops it when the prompt ends.
 final class SnapshotSafeCover {
     static let shared = SnapshotSafeCover()
 
@@ -189,8 +186,7 @@ final class SnapshotSafeCover {
         _ = shared
     }
 
-    /// Drop the switcher veil after Face ID succeeds (or erase). Safe to
-    /// call when no cover is up.
+    /// Drop the switcher veil. Safe to call when no cover is up.
     func reveal() {
         coverView?.removeFromSuperview()
         coverView = nil
@@ -203,7 +199,6 @@ final class SnapshotSafeCover {
         // Passerby tap card (Preview / Scan / band-style shell) is the public
         // EMT view — never veil it, matching PrivacySnapshotGuard's own rule.
         guard !TapCardPresentation.isVisible,
-              !OwnerLockPresentation.isLocked,
               coverView == nil,
               let window = UIApplication.shared.connectedScenes
                 .compactMap({ $0 as? UIWindowScene })
@@ -219,48 +214,6 @@ final class SnapshotSafeCover {
     }
 
     private func uncover() {
-        // Stay cream across the switcher → foreground handoff until
-        // Face ID owns the lock shell. Dropping the cover on
-        // didBecomeActive would flash PHI under the incoming tabs.
-        if OwnerLockPresentation.holdSwitcherCover { return }
         reveal()
-    }
-}
-
-/// Cream lock shell is already opaque and has no PHI. A UIKit cover on
-/// `willResignActive` (Face ID puts the scene inactive) sat on top of
-/// **Proceed** and made a hung evaluate look indefinite — watchdogs
-/// showed the button, the cover hid it. Skip covering while locked.
-enum OwnerLockPresentation {
-    private static let lock = NSLock()
-    // Launch starts locked. Face ID is login / save / erase only.
-    private static var locked = false
-    private static var holdCover = false
-
-    static var isLocked: Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        return locked
-    }
-
-    static func setLocked(_ locked: Bool) {
-        lock.lock()
-        self.locked = locked
-        lock.unlock()
-    }
-
-    /// Keep the UIKit switcher cream up until Face ID succeeds (or
-    /// Proceed). Prevents a PHI flash on `didBecomeActive`.
-    static var holdSwitcherCover: Bool {
-        get {
-            lock.lock()
-            defer { lock.unlock() }
-            return holdCover
-        }
-        set {
-            lock.lock()
-            holdCover = newValue
-            lock.unlock()
-        }
     }
 }

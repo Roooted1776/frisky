@@ -15,24 +15,24 @@ Maximilian Aguilar-Aasted. GitHub **Roooted1776**. X **DNS404**. Ships RedMed hi
 RedMed is a **native iOS/SwiftUI** medical ID (`RedMed-Xcode/`). Local only: Keychain + a passive NXP NTAG216 band (`#d=` AES-GCM). The band is the product, not optional. No RedMed server, no login, no passerby Face ID.
 
 - Owner tabs: **RedMed · 911 · Aid · NFC**. Scanner / tapper: **RedMed · 911 · Aid** (no Edit, no NFC).
-- **In-app Face ID:** owner open/return (`OwnerAppLock`, cream only), then Save / Erase. Opening Edit, 911, Aid, NFC write, and tapper do not prompt. Tapper: no biometrics, no acknowledgement.
-- Owner open is Face ID then Main (after first-start Before you continue). Cream lock is in front of Main. `ConsentGateView` is first launch / policy bump only. `SnapshotSafeCover` is the app-switcher cream.
-- Profile restores after Face ID (`adoptLaunchPrefetch` / owner Main appear). Keychain is still device-unlocked — Face ID is UI-only, not SecItem. One Face ID is possible after this build to migrate an old biometry Keychain item, then never again to view.
+- **In-app Face ID only on the owner RedMed page** (Edit / Save / Erase). 911, Aid, NFC write, and app launch do not prompt. Tapper: no biometrics, no acknowledgement.
+- No cream lock in front of Main. `ConsentGateView` is first launch / policy bump only. `SnapshotSafeCover` is the app-switcher cream.
+- Profile restores from Keychain on owner Main appear (device-unlocked Keychain — no Face ID to view). One Face ID is possible after this build to migrate an old biometry Keychain item, then never again to view.
 - NFC Tag Reading + HealthKit + Associated Domains are **parked** (personal/free Apple team). NFC tab stays visible; write is Preview packed card.
 - Seizure timer **never auto-dials**. At 5:00 it shows Call (`tel:`). GPS stays on-screen — never uploaded, never attached to `tel:`.
 - Survival alarm (brightness / volume / siren) on crash or SOS only — not Settings, not Apple Crash Detection.
 
 ## Shipped (Aug 2026, keep this current)
 
-- Owner open is Face ID (cream) then Main (after first-start Before you continue). Face ID is unlock / Save / Erase. Opening Edit does not prompt.
+- Owner open is Main (after first-start Before you continue). No cream Face ID lock in front. Face ID is Edit / Save / Erase only. Crash motion runs while owner Main is in the foreground; CoreMotion stops in background. Armed siren can keep going.
 - Erase all user data is on owner Help, then ack, then Main. Scanner Help stays policies only.
 - ICE phones display US as `(XXX) XXX-XXXX`. Tab labels scale to the slot.
 - Debug-on-device: Main Thread Checker / TPC / view+queue debug / Metal validation / `ENABLE_DEBUG_DYLIB` off. `print()` → `os.Logger`. Log streaming. No SwiftUI preview dylib.
 - Load: no `CLLocationManager` retained on consent; crash-motion after Main paints; Keychain prefetch at process start; owner RedMed tab is a native YOU card (no WKWebView). `tapper.html` only on passerby + NFC Preview / Scan. 911 / Aid / NFC mount on first visit, not under RedMed.
 - App Store honesty on `main`: parked NFC copy, no autodial (native + all three `tapper.html`), Aid first-aid disclaimer, support page.
+- Hospital search: native MapKit / Apple Maps; passerby `tapper.html` names OpenStreetMap Overpass (`overpass-api.de`). Consent Location toggle is honored on Agree (not forced on).
 - iOS CI is **workflow_dispatch only** (billing). Trigger it after Swift/scheme changes.
-- Crash motion keeps running across cream relock. Help is policy 4.2 (Overpass named). Band write host github.io is still 404.
-- `#d=` codec lockstep: `node scripts/test-d-codec.mjs`. iOS CI still dispatch-only.
+- `#d=` codec lockstep: `node scripts/test-d-codec.mjs`. Band write host github.io is still 404.
 
 ## Xcode on his Mac
 

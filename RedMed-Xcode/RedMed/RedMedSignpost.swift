@@ -1,22 +1,10 @@
 import Foundation
 import os
 
-/// Diagnostic-only `os_signpost` markers for the cold-launch / Face ID unlock
-/// path — no behavior change, negligible overhead. Added because Instruments
-/// reported high main-thread CPU "during the Face ID sheet" with no specific
-/// symbol to act on.
-///
-/// To use: open Instruments' "Points of Interest" template (or add the
-/// os_signpost instrument to a Time Profiler trace), reproduce the slow
-/// launch, and look at the labeled intervals on the timeline:
-/// - `coldLaunchWindow` spans the whole lock screen, from first appear to
-///   the first UI resolution (either unlocked or the Proceed screen).
-/// - `faceIDEvaluate` spans only the system `LAContext.evaluatePolicy` call.
-///
-/// If the CPU spike's time range sits inside `faceIDEvaluate`, it's Apple's
-/// own Face ID / Neural Engine work, not RedMed's code. If it falls in the
-/// gap around `faceIDEvaluate` but still inside `coldLaunchWindow`, that
-/// points at something in RedMed's own unlock path worth digging into next.
+/// Diagnostic-only `os_signpost` markers for Face ID evaluate
+/// (Edit / Save / Erase). No behavior change. `coldLaunchWindow` is unused
+/// after the launch lock was removed; `faceIDEvaluate` still spans
+/// `LAContext.evaluatePolicy`.
 enum RedMedSignpost {
     enum Interval {
         case coldLaunchWindow
@@ -34,11 +22,8 @@ enum RedMedSignpost {
     private static let lock = NSLock()
     private static var states: [String: OSSignpostIntervalState] = [:]
 
-    /// Persistent breadcrumb for diagnosing a stuck cold-launch lock screen
-    /// after the fact — `os_log` output (unlike Instruments) is visible live
-    /// in Console.app (device connected, filter subsystem "com.redmed.app",
-    /// category "AppLock") without an attached Xcode debug session. Cheap
-    /// enough to leave in permanently; only fires on the lock/unlock path.
+    /// Persistent breadcrumb for Face ID evaluate — `os_log` in Console.app
+    /// (filter subsystem "com.redmed.app"). Cheap enough to leave in.
     private static let log = os.Logger(subsystem: "com.redmed.app", category: "AppLock")
 
     static func trace(_ message: String) {

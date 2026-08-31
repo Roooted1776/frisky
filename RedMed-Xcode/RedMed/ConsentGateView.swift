@@ -4,7 +4,7 @@ import SwiftUI
 /// Never a cream lock. Never on passerby tapper.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
-        static let currentVersion = "4.2"
+    static let currentVersion = "4.3"
 
     static var hasAcceptedCurrent: Bool {
         UserDefaults.standard.string(forKey: acceptedVersionKey) == currentVersion
@@ -42,14 +42,9 @@ struct ConsentGateView<Content: View>: View {
             }
         }
         .onAppear {
-            OwnerLockPresentation.setLocked(false)
-            OwnerLockPresentation.holdSwitcherCover = false
             SnapshotSafeCover.shared.reveal()
             // First open: keep Main unmounted until Agree so the gate is the
             // first real page, not a cream hang over a loading WKWebView.
-            if !hasAccepted {
-                locationEnabled = true
-            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .redMedDidEraseLocalData)) { _ in
             returnToAcknowledgment()
@@ -158,12 +153,8 @@ struct ConsentGateView<Content: View>: View {
 
     private func enterApp() {
         checked = true
-        // Honor the Location toggle. Do not force it on. When-In-Use sheet
-        // only if Location is still on (`requestWhenInUseIfNeeded` no-ops off).
         ConsentSettings.recordAcceptance()
         RedMedHaptics.success()
-        OwnerLockPresentation.setLocked(false)
-        OwnerLockPresentation.holdSwitcherCover = false
         SnapshotSafeCover.shared.reveal()
         var t = Transaction()
         t.animation = nil
@@ -171,6 +162,7 @@ struct ConsentGateView<Content: View>: View {
             contentArmed = true
             hasAccepted = true
         }
+        // Honor the Location toggle. Request When-In-Use only if it stayed on.
         LocationAccessSuggester.shared.requestWhenInUseIfNeeded()
         // Do not spawn a spare WKWebView on this turn — that raced the
         // owner RedMed embed and made tabs feel laggy after Agree.

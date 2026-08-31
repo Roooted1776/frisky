@@ -12,7 +12,7 @@ This is RedMed: a native iOS medical ID plus a static passerby HTML shell. There
 
 ## Follow-up (landed)
 
-Code is the Face ID story: `OwnerAppLock` on owner open/return, Save / Erase prompt, Edit open does not. Docs, Help 4.2, Info.plist, and support now say that. Crash motion keeps running across relock. Location toggle is honored on Agree. Overpass is named in Help / Satellite / Info.plist; `_headers` `connect-src` allows `https://overpass-api.de`. `KeychainStore.exists` fails closed. Launch screen is cream-only. README, PRODUCTION, APP-STORE, domain, SECURITY match. pages-deploy fails when github.io smoke fails. Actions pinned to SHAs. Privacy/support URLs no longer point at jsDelivr `@main` of `redmed-privacy`.
+`#476` stripped `OwnerAppLock`. Face ID is Edit / Save / Erase. `#474` named Overpass and honored the Location toggle. This PR keeps the rest of the in-repo audit work: `KeychainStore.exists` fail-closed, cream-only launch screen, README / PRODUCTION / domain / SECURITY, pages-deploy fail-closed github.io smoke, Actions SHA pins, privacy URLs in this repo, Swift encode clips to tapper `MAX_STR`/`MAX_LIST`, and `scripts/test-d-codec.mjs`.
 
 **Still open (needs Max, not this tree):**
 
@@ -30,8 +30,8 @@ No committed secrets, no XSS in profile render, no autodial, no scanner write in
 
 1. **The URL written onto bands is 404.** `AppConfig.medicalCardBaseURL` is `https://roooted1776.github.io/tapper/`. Live GET is GitHub’s 404 page. `Roooted1776/Roooted1776.github.io` does not exist. `https://redmed.pages.dev/tapper/` is also 404. NFC write is parked, so this build cannot mint new dead bands — but any earlier write to that host is a dead tap. pages-deploy now **fails** that smoke (no longer warn-only).
 2. **iOS CI does not gate merges.** `.github/workflows/ios-build.yml` is `workflow_dispatch` only. `#d=` encode/decode lockstep is `scripts/test-d-codec.mjs` (AES-GCM, zlib, current vs legacy compact, URI contract). No XCTest.
-3. **Passerby hospital search sends GPS to `overpass-api.de`.** Native uses MapKit. Help 4.2 names both. Residual: the public OSM API still sees a rescuer’s coordinates on a band tap — disclosed, not removed.
-4. **`OwnerAppLock` is live** and Face-IDs every owner open / return. That is the product (commit `b2a38cf`). Docs now match. Crash motion no longer stops on relock.
+3. **Passerby hospital search sends GPS to `overpass-api.de`.** Native uses MapKit. Help 4.3 names both. Residual: the public OSM API still sees a rescuer’s coordinates on a band tap — disclosed, not removed.
+4. **`OwnerAppLock` was live** (resolved in `#476`). Face ID is Edit / Save / Erase. Crash motion runs while owner Main is in the foreground.
 
 No critical in-repo security hole was safe and unambiguous to patch as a remote exploit. Remaining work is the dead host and tests.
 
@@ -192,7 +192,7 @@ This is stricter privacy for the owner phone and worse emergency access on that 
 
 This is a product fork, not a one-line bug. Do not “fix” it in passing. Pick one story and make `AGENTS.md`, `MAX.md`, `PRODUCTION.md`, `Help.html`, `Info.plist` `NSFaceIDUsageDescription`, and `support/index.html` match the code.
 
-**Follow-up:** kept `OwnerAppLock` (shipped in `b2a38cf`). Docs / Help 4.2 / Info.plist / support match: unlock + Save + Erase; not Edit open. Relock no longer calls `stopMonitoring()`.
+**Resolved:** `#476` stripped `OwnerAppLock`. Face ID is Edit / Save / Erase. Crash motion starts from owner Main, stops CoreMotion on `.background`, restarts on `.active`, does not stop on `.inactive`. Band tap stays ungated. Consent 4.3.
 
 ---
 
@@ -260,11 +260,11 @@ Residual: a hard drop of the phone can still siren. That is documented risk, not
 
 #### L1. Info.plist / support copy vs actual Face ID and NFC
 
-**Follow-up:** Info.plist Face ID string is unlock / save / erase. Support no longer claims NFC write or Edit open prompt. Launch screen BrandLogo removed (cream `LaunchBackground` only).
+**Follow-up:** Info.plist Face ID string is edit / save / erase. Support does not claim NFC write or app-open Face ID. Launch screen BrandLogo removed (cream `LaunchBackground` only).
 
 #### L2. JS field caps vs Swift encode
 
-`tapper/index.html` 1777–1780: `MAX_STR = 200`, `MAX_LIST = 40`. Swift `compactArray` / `encodePayload` has no field caps; only `maxEncodedLength = 8192` and NTAG216 ~850 byte warning (`capacityNote` 245–253). Over-long owner fields can pack on-device and truncate in the passerby card.
+`tapper/index.html` 1777–1780: `MAX_STR = 200`, `MAX_LIST = 40`. Swift `compactArray` now clips to the same caps. Over-long owner fields no longer pack past what the passerby card shows.
 
 #### L3. `KeychainStore.exists` default branch is a tautology
 
@@ -285,7 +285,7 @@ Residual: a hard drop of the phone can still siren. That is documented risk, not
 
 #### L4. Empty README, stub SECURITY.md, public repo named frisky
 
-**Follow-up:** README filled. `docs/SECURITY.md` points at Help + advisory path. `docs/PRODUCTION.md` rewritten (no fake Face ID toggle; github.io listed as 404). `docs/cold-start-audit.md` matches the lock path; AGENTS now does too.
+**Follow-up:** README filled. `docs/SECURITY.md` points at Help + advisory path. `docs/PRODUCTION.md` rewritten (no fake Face ID toggle; github.io listed as 404). `docs/cold-start-audit.md` is historical (`OwnerAppLock` path). AGENTS matches the stripped-lock product.
 
 #### L5. AASA team ID is public; Associated Domains entitlement is empty
 
@@ -337,7 +337,7 @@ Single target, 42 Swift files, no modules. Boundaries are conventions (`isScanne
 
 | Symbol | Status |
 |--------|--------|
-| `OwnerAppLock` | Live — wraps launch |
+| `OwnerAppLock` | Deleted — do not remount |
 | `FacePage`, `LockEntryPage`, `VaultHistoryView`, `MainInfoView` | Deleted (comments only) |
 | `VaultHistoryStore` | Live, no UI |
 | `HealthKitProfileImport` | Stub (`isAvailable` false) |
@@ -350,15 +350,15 @@ Single target, 42 Swift files, no modules. Boundaries are conventions (`isScanne
 
 | Topic | Code | AGENTS / MAX | PRODUCTION / Help |
 |-------|------|--------------|-------------------|
-| App-open Face ID | Yes (`OwnerAppLock`) | Yes (follow-up) | Yes |
-| Face ID on Edit open | No | No | No |
+| App-open Face ID | No | No | PRODUCTION no; Help no |
+| Face ID on Edit | Yes | Yes | Help yes |
 | Face ID toggle on consent | Does not exist | — | PRODUCTION no longer claims it |
-| Location prompt | Agree if Location on | Agree if on; GPS on Find Help | Help 4.2 |
+| Location prompt | Agree if Location on | Agree if on; GPS on Find Help | Help 4.3 |
 | iOS CI on push | No | Dispatch only | — |
 | github.io live | 404 | Claimed URL, noted 404 | domain.md 404 |
 | Repo visibility | Public | — | APP-STORE.md public |
 
-Treat **code** as what ships. Follow-up aligned AGENTS to the lock Max shipped (`b2a38cf`).
+Treat **code** as what ships. `#476` stripped the launch lock. This follow-up does not remount it.
 
 ---
 
@@ -406,7 +406,7 @@ Still blocked on Max / billing / Apple, not this follow-up.
 
 ## Code changes in the follow-up
 
-Swift: honor Location toggle; `KeychainStore.exists` fail-closed; crash monitor stays up across relock; encode clips to tapper `MAX_STR`/`MAX_LIST`. Copy: Help 4.2, Info.plist, support, launch screen. Docs: AGENTS / MAX / PRODUCTION / domain / APP-STORE / README / SECURITY. CI: fail-closed github.io smoke; pin Actions SHAs; Overpass in `_headers`; `scripts/test-d-codec.mjs`.
+Swift: `KeychainStore.exists` fail-closed; encode clips to tapper `MAX_STR`/`MAX_LIST`. Copy: cream-only launch screen. Docs: PRODUCTION / domain / APP-STORE / README / SECURITY. CI: fail-closed github.io smoke; pin Actions SHAs; `scripts/test-d-codec.mjs`. Face ID lock stays stripped (`#476`). Overpass / Location honor stay as `#474`.
 
 ---
 
