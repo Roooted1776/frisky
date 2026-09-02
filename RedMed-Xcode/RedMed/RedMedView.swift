@@ -4,9 +4,9 @@ import SwiftUI
 /// Bundled `tapper.html` is passerby + NFC Preview / Scan only. No WKWebView
 /// on this tab: WebKit parse was the cold-open stall, and a parked embed
 /// under 911 / Aid / NFC kept the compositor hot mid-session.
-/// Owner chrome: logo + name + Linked with Edit trailing (no Help dock).
-/// Website link sits under the YOU fields, owner only. Scanners keep Back.
-/// Help lives on 911 / Aid / NFC — not on Edit.
+/// Owner chrome: Edit on its own row, then logo + name + Linked (no Help dock).
+/// YOU-card header matches passerby / NFC Preview — no Edit on that row.
+/// Scanners keep Back. Help lives on 911 / Aid / NFC — not on Edit.
 /// Fresh install: native setup funnel. Passerby tapper is unchanged.
 struct RedMedView: View {
     @EnvironmentObject var profile: ProfileData
@@ -43,14 +43,25 @@ struct RedMedView: View {
                 .padding(.bottom, 8)
                 .redmedTopChromeWash()
             } else {
-                RedMedUserHeader(
-                    name: profile.name,
-                    linked: profile.showsBraceletAsLinked,
-                    onEdit: { requestEdit() },
-                    onStatus: {
-                        NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
+                VStack(spacing: 0) {
+                    HStack(alignment: .center, spacing: 12) {
+                        Spacer(minLength: 0)
+                        ChromeTextAction(title: "Edit", action: { requestEdit() })
                     }
-                )
+                    .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
+                    .padding(.horizontal, RedMedChrome.pagePadX)
+                    .padding(.top, 16)
+
+                    RedMedUserHeader(
+                        name: profile.name,
+                        linked: profile.showsBraceletAsLinked,
+                        onStatus: {
+                            NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
+                        }
+                    )
+                }
+                .padding(.bottom, 8)
+                .redmedTopChromeWash()
             }
 
             Group {
@@ -180,12 +191,12 @@ struct RedMedView: View {
 // MARK: - Tapper header (owner RedMed)
 
 /// Same YOU-card header as passerby `tapper.html` `.rm-header` — logo, name,
-/// Linked / Not linked — with Edit as trailing chrome. Scanner Preview keeps
+/// Linked / Not linked. No Edit here: that chrome sits on the owner row above
+/// so NFC Preview / tapper stay a read-only helper card. Scanner Preview keeps
 /// the HTML header.
 private struct RedMedUserHeader: View {
     let name: String
     let linked: Bool
-    var onEdit: () -> Void
     var onStatus: () -> Void
 
     private var displayName: String {
@@ -232,13 +243,9 @@ private struct RedMedUserHeader: View {
             }
 
             Spacer(minLength: 8)
-
-            ChromeTextAction(title: "Edit", action: onEdit)
         }
         .padding(.horizontal, RedMedChrome.pagePadX)
-        .padding(.top, 16)
-        .padding(.bottom, 8)
-        .redmedTopChromeWash()
+        .padding(.top, 2)
         .accessibilityElement(children: .contain)
     }
 }
@@ -250,7 +257,6 @@ private struct RedMedUserHeader: View {
 /// empty). Contacts hide when vacant. Contacts dial `tel:` like the HTML card.
 private struct OwnerYouCard: View {
     @EnvironmentObject var profile: ProfileData
-    @Environment(\.isScannerSession) private var isScannerSession
 
     private var trimmedName: String {
         profile.name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -262,10 +268,6 @@ private struct OwnerYouCard: View {
                 VStack(alignment: .leading, spacing: 16) {
                     identityCard
                     listsCard
-                    if !isScannerSession {
-                        Spacer(minLength: 28)
-                        OwnerWebsiteLinkButton(profile: profile)
-                    }
                 }
                 .padding(.horizontal, RedMedChrome.pagePadX)
                 .padding(.top, 4)
@@ -531,8 +533,6 @@ private struct OwnerSetupFunnel: View {
                             .foregroundColor(.redmedMuted)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    Spacer(minLength: 28)
-                    OwnerWebsiteLinkButton()
                 }
                 .padding(.horizontal, RedMedChrome.pagePadX)
                 .padding(.top, 4)
@@ -625,73 +625,6 @@ private struct OwnerSetupFunnel: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-    }
-}
-
-/// Owner-only Safari link under the YOU fields. Packs `#d=` on tap when a
-/// profile exists so the hosted helper card opens with this ID. Not Help.
-private struct OwnerWebsiteLinkButton: View {
-    var profile: ProfileData? = nil
-    @Environment(\.openURL) private var openURL
-
-    private var caption: String {
-        var s = AppConfig.medicalCardBaseURL
-        if let range = s.range(of: "://") {
-            s = String(s[range.upperBound...])
-        }
-        if s.hasSuffix("/") { s.removeLast() }
-        return s
-    }
-
-    var body: some View {
-        Button(action: open) {
-            HStack(alignment: .center, spacing: 14) {
-                Image(systemName: "globe")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundColor(.redmedAccent)
-                    .frame(width: 44, height: 44)
-                    .background(Color.redmedAccent.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius, style: .continuous))
-                    .accessibilityHidden(true)
-
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Website")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.redmedDark)
-                    Text(caption)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.75)
-                }
-
-                Spacer(minLength: 8)
-
-                Image(systemName: "arrow.up.right")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundColor(.redmedAccent)
-                    .accessibilityHidden(true)
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(RedMedPressStyle(scale: 0.98))
-        .redmedBox(flatten: false)
-        .accessibilityLabel("Website")
-        .accessibilityHint("Opens the helper card in Safari")
-    }
-
-    private func open() {
-        let url: URL?
-        if let profile, profile.hasSensitiveProfileData {
-            url = ProfileNFCCodec.buildURL(profile: profile)
-                ?? URL(string: AppConfig.medicalCardBaseURL)
-        } else {
-            url = URL(string: AppConfig.medicalCardBaseURL)
-        }
-        if let url { openURL(url) }
     }
 }
 

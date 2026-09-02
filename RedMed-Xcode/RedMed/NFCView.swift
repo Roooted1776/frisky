@@ -59,6 +59,7 @@ struct NFCView: View {
                 braceletLinked: session.linked,
                 embedProfileJSON: session.embedJSON
             )
+            .environment(\.isScannerSession, true)
             .presentationBackground(Color.redmedBg)
         }
         .fullScreenCover(item: $band.scannedCard) { session in
@@ -67,6 +68,7 @@ struct NFCView: View {
                 braceletLinked: profile.showsBraceletAsLinked,
                 embedProfileJSON: session.embedJSON
             )
+            .environment(\.isScannerSession, true)
             .presentationBackground(Color.redmedBg)
         }
         .alert("Bracelet", isPresented: Binding(
