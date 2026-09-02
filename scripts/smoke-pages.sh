@@ -147,6 +147,14 @@ def main() -> int:
         ok = False
     else:
         print("OK   empty-state gates tapper/index.html")
+    if "copyTextToClipboard" not in tapper_src or "enableHighAccuracy: true" not in tapper_src:
+        print("FAIL tapper/index.html Copy Coordinates / high-accuracy GPS missing")
+        ok = False
+    elif "toFixed(6)" not in tapper_src:
+        print("FAIL tapper/index.html GPS copy must use 6 decimal places")
+        ok = False
+    else:
+        print("OK   copy-coords tapper/index.html")
     root_tapper = (REPO / "tapper.html").read_text(encoding="utf-8")
     if "data-tab=\"medical\"" in root_tapper:
         print("FAIL tapper.html is a full shell copy — keep it a redirect")

@@ -95,10 +95,6 @@ struct PrivacySnapshotGuard<Content: View>: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 hasBeenActive = true
-            } else if phase == .background, hasBeenActive {
-                // Clear on true background only — `.inactive` (Control Center /
-                // app switcher peek) would wipe coords before the user can paste.
-                SecurePasteboard.clear()
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .redMedTapCardPresentationDidChange)) { _ in
@@ -111,7 +107,6 @@ struct PrivacySnapshotGuard<Content: View>: View {
                 manualCaptureOverride = false
             }
             if nowCaptured {
-                SecurePasteboard.clear()
                 // Don't log a cover we refused to paint over the tap card.
                 if phiInMemory, !tapCardVisible {
                     VaultHistoryStore.shared.record(.screenCaptureCovered, detail: "share")
