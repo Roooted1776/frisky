@@ -5,7 +5,7 @@ import SwiftUI
 /// it does not skip the page. Never a cream lock. Never on passerby tapper.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
-    static let currentVersion = "4.6"
+    static let currentVersion = "4.7"
 
     /// Legal record only — does not hide the gate on cold start.
     static var hasAcceptedCurrent: Bool {
@@ -61,7 +61,6 @@ struct ConsentGateView<Content: View>: View {
     private func returnToAcknowledgment() {
         checked = false
         openPolicy = nil
-        locationEnabled = true
         ConsentSettings.acceptedThisProcess = false
         var t = Transaction()
         t.animation = nil
@@ -171,8 +170,8 @@ struct ConsentGateView<Content: View>: View {
             contentArmed = true
             hasAccepted = true
         }
-        // Honor the Location toggle. Request When-In-Use only if it stayed on.
-        LocationAccessSuggester.shared.requestWhenInUseIfNeeded()
+        // Honor the Location toggle. Do not fire iOS When-In-Use here —
+        // they just agreed. Find Help / hospitals request when GPS starts.
         // Do not spawn a spare WKWebView on this turn — that raced the
         // owner RedMed embed and made tabs feel laggy after Agree.
         // NFCView warms the preview shell after that tab is first opened.

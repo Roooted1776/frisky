@@ -28,15 +28,19 @@ set up a working runtime here:
 The app has no backend, database, or web service.
 
 **Roles / shells (permanent — do not regress):**
-- **Face ID (2026-08-29):** in-app Face ID is only on the **owner RedMed page**
-  (Edit / Save / Erase). Not app launch, not 911 / Aid / NFC write, not tapper.
+- **Face ID:** in-app Face ID is on the **owner RedMed page immediately before the user / YOU card** (when a stored ID exists), plus Edit / Save / Erase. Not app launch, not 911 / Aid / NFC write, not tapper, not Consent.
   Tapper has no biometrics and no acknowledgement page. Do not remount
   `OwnerAppLock` / `LockEntryPage` / `FacePage` as an app-wide cream lock.
+  Tabs stay reachable without Face ID. The RedMed tab does not paint PHI
+  until Face ID succeeds. Relock that view on true `.background` only.
   Crash monitor starts from owner `Main` / `ContentView.onAppear`, not from
   a lock. CoreMotion stops on true `.background` (no motion background
-  mode) and restarts on `.active`. `.inactive` — Face ID on Edit / Save /
-  Erase, Control Center — does not stop it. An armed siren is independent. Profile restores from Keychain on owner Main appear (device-unlocked
-  Keychain — no Face ID to view). The band is the product, not optional.
+  mode) and restarts on `.active`. `.inactive` — Face ID on the RedMed
+  user page / Edit / Save / Erase, Control Center — does not stop it. An
+  armed siren is independent. Profile restores from Keychain on owner Main
+  appear (device-unlocked Keychain). Face ID gates **display** of that
+  profile on the RedMed tab, not the Keychain read, not NFC write. The
+  band is the product, not optional.
 - **Owner app** (`Main` → `ContentView`, `isScannerSession == false`): tabs are
   **RedMed · 911 · Aid · NFC**. Edit is available on RedMed. NFC tab is always
   visible for owners; `AppConfig.nfcHardwareEnabled` only gates CoreNFC
@@ -44,8 +48,9 @@ The app has no backend, database, or web service.
   from the NFC tab (no Face ID on write) as `medicalCardBaseURL#d=` only
   (`AppConfig.OwnerBandURI`) — no vendor cloud, no social/short URL, no BLE.
   Launch path is `ConsentGateView` (every cold start) then Main after Agree
-  this process. Same session stays in Main. No cream lock in front of Main.
-  Face ID is not an app-open gate.
+  this process. Same session stays in Main. No cream lock in front of Main
+  (911 / Aid / NFC stay reachable). Face ID is not an app-open gate; it
+  sits on the RedMed tab immediately before the user / YOU card.
 - **Scanner / passerby shell** (`PublicCardView` / bracelet tap → `tapper.html#d=…`,
   `isScannerSession == true`): tabs are **RedMed · 911 · Aid** only — **no Edit**,
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain or
@@ -56,7 +61,7 @@ The app has no backend, database, or web service.
   unregistered host onto bands. `redmed.pages.dev` stays
   optional until Cloudflare secrets / Pages Git connect land.
   **Tap-to-view never requires Face ID / biometrics / passcode / login** — owner biometrics gate
-  Edit, Save, and Erase only. NFC write, 911, Aid, and app launch do not prompt.
+  the RedMed user page, Edit, Save, and Erase. NFC write, 911, Aid, and app launch do not prompt.
   Passerby HTML never asks.
   **Nothing blocks the tap card** (YOU card / Preview / Scan / band tap): no
   privacy veil, no native overlay stealing taps, no login. Safari opens
@@ -134,18 +139,22 @@ The app has no backend, database, or web service.
 - **No cream lock in front of Main.** Do not remount `OwnerAppLock` /
   `LockEntryPage` / `FacePage`. Passerby `tapper.html` never has Face ID,
   passcode, login, or any page in front of the card.
-- Face ID / Touch ID with device passcode fallback is **Edit, Save, and
-  Erase only** (`force: true`, reuse duration **0**). NFC write, 911, Aid,
-  app launch, and tapper do not prompt. Apple locks Face ID after **5
-  unsuccessful matches** until device passcode succeeds (system-wide).
-  `BiometricAuth.Outcome.unavailable` is distinct from `.notVerified`.
+- Face ID / Touch ID with device passcode fallback is **viewing the owner
+  RedMed user page, Edit, Save, and Erase** (`force: true`, reuse duration
+  **0**). NFC write, 911, Aid, app launch, and tapper do not prompt. Apple
+  locks Face ID after **5 unsuccessful matches** until device passcode
+  succeeds (system-wide). `BiometricAuth.Outcome.unavailable` is distinct
+  from `.notVerified`.
 - Profile Keychain is `WhenPasscodeSetThisDeviceOnly` with **no** biometry
   ACL — readable when the device is unlocked; excluded from iCloud/backups.
   Face ID is UI-only, not SecItem. Restore on owner `ContentView` appear
   (`ProfileData.restoreOnLaunch`). One interactive Face ID is allowed only
-  to migrate an old `biometryCurrentSet` blob, then never again to view.
-  If a stored profile is expected and RAM is empty, keep the funnel hidden
-  (native YOU card with empty slots, not cream-over-WKWebView). `persist()` must not save an empty RAM profile over
+  to migrate an old `biometryCurrentSet` blob (Keychain ACL), then never
+  again to *load*. Display of the YOU card still Face IDs when a stored
+  ID exists. If a stored profile is expected and RAM is empty, keep the
+  funnel hidden (unlock pane until Face ID, then native YOU card with
+  empty slots if restore is still in flight — not cream-over-WKWebView).
+  `persist()` must not save an empty RAM profile over
   a stored blob (erase deletes Keychain first).
 - Fresh install (no stored blob) shows the native **setup funnel** (Fill
   medical ID → Save → Write the band). Not on passerby tapper.
@@ -160,8 +169,8 @@ The app has no backend, database, or web service.
 - `PrivacySnapshotGuard` cover must appear opaque with **no** opacity fade;
   app-switcher snapshots can capture mid-transition PHI. Capture cover **only
   while PHI is in RAM**. Non-capture cover is true **`.background` only** (with
-  PHI) — never on `.inactive` (Face ID / LAContext on Edit/Save/Erase blanks
-  the UI mid-prompt), and **never over the tap card** (NFC Preview / Scan /
+  PHI) — never on `.inactive` (Face ID / LAContext on the RedMed user page /
+  Edit/Save/Erase blanks the UI mid-prompt), and **never over the tap card** (NFC Preview / Scan /
   `PasserbyHTMLCardView`). Copy should say screen sharing, not a vague
   “Profile hidden”.
 - `HIPAAOfflineVault`: complete file protection + backup exclusion; history
@@ -181,7 +190,8 @@ The app has no backend, database, or web service.
 trauma JSON, or show a Location banner at `@main`. First launch opens a cream
 shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash)
 then `ConsentGateView` (every cold start) then Main after Agree this process.
-Same session stays in Main. No cream lock; Main mounts without Face ID.
+Same session stays in Main. No cream lock in front of Main. Owner RedMed
+tab Face IDs before painting the YOU card when a stored ID exists.
 Owner `ContentView.onAppear` starts crash
 monitoring; `.background` stops CoreMotion; `.active` restarts it; `.inactive`
 does not stop it. `.task` calls `profile.restoreOnLaunch()` (owner only — scanners
@@ -192,15 +202,16 @@ Do not call Keychain decode in `@State` defaults.
 Location defaults on (Before you continue — every cold start) with
 **no RedMed location gate / banner / Allow popup** — Help must not
 call `requestWhenInUseAuthorization`. Honor the Location toggle: Agree must
-not force `locationEnabled = true`. `requestWhenInUseIfNeeded` runs only if
-Location stayed on; GPS updates (`LocationManager.start` →
+not force `locationEnabled = true`. Agree must not present When-In-Use —
+they already chose Location. GPS updates (`LocationManager.start` →
 `startUpdatingLocation()`) start on Find Help while the 911 tab is visible.
-iOS may show its system Allow sheet once (cannot auto-accept). Passerby
+iOS may show its system Allow sheet once then (cannot auto-accept). The
+usage string stays one short purpose line. Passerby
 `tapper.html` must not call `geolocation` until the 911 tab opens. Nearby
 hospitals in the app is a one-shot MapKit POI search (Apple may see query +
 region). Passerby `tapper.html` hospital search POSTs coordinates to
-OpenStreetMap Overpass (`overpass-api.de`); Help / Info.plist / Satellite
-must name that. Do not construct
+OpenStreetMap Overpass (`overpass-api.de`); Help / Satellite
+must name that — not the When-In-Use usage string. Do not construct
 `CMMotionManager` at `CrashMotionGuard` shared init. `ContentView` lazy
 tab mounting mounts RedMed only on cold start (911 / Aid / NFC on first visit,
 kept alive after). Opacity keep-alive **does not** fire

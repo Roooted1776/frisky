@@ -146,9 +146,9 @@ function redmedAssetURL(file) {
        Explicit SOS tap opens `tel:` immediately (no in-page confirm). Crash
        waits the US Crash Detection delay (10s alert + 30s countdown) then
        the same `tel:` unless Stop. Band-tap auto-arm is siren only.
-       Bare /tapper/ first-paints the YOU/main panel (empty dashes). No splash,
-       no "No patient" interstitial, no pick-a-tab gate. #911 / #aid / ?tab=
-       still open those panels; #d= stays the profile payload.
+       Bare /tapper/ without `#d=` (and a failed / empty `#d=`) paints the
+       No Patient empty state — not a blank YOU chart with dashes. #911 /
+       #aid / ?tab= still open those panels; #d= stays the profile payload.
      - Layout: any phone + iPad, iOS 15+ (and Android). Fluid width, safe-area
        insets, no horizontal scroll. Tap-to-view: no account, no login, and no
        authentication gate before or on this page — EMT / helper open the card
@@ -506,7 +506,7 @@ function redmedAssetURL(file) {
     border-radius: var(--box);
     box-shadow: var(--shadow);
   }
-  html.is-unlinked .rm-empty { display: block; }
+  html.is-unlinked .rm-empty { display: block !important; }
   html.is-unlinked .you-card,
   html.is-unlinked .list-grid { display: none !important; }
   /* Owner embed uses the native setup funnel — keep the shell quiet. */
@@ -2198,6 +2198,8 @@ function redmedAssetURL(file) {
     // Paint the panel first — GPS / Aid chrome after the frame.
     if (id === '911') {
       requestAnimationFrame(function () { ensureGeo(); });
+    } else {
+      stopGeo();
     }
     if (id === 'aid') {
       requestAnimationFrame(function () { ensureAidChrome(); });
@@ -2239,12 +2241,29 @@ function redmedAssetURL(file) {
   }
 
   var firstPhone = '';
-  /// True only after a successful `decodeProfile()` (or native embed). Used to
-  /// refuse SOS auto-arm on garbage `#d=` that paints the No patient empty state.
+  /// True only after a successful `decodeProfile()` (or native embed) that
+  /// actually has medical fields. Used to refuse SOS auto-arm on garbage
+  /// `#d=`, empty `{}` / `[]`, and the No Patient empty state.
   var paintedFromBand = false;
 
+  function profileHasContent(p) {
+    if (!p) return false;
+    if ((p.name || '').trim()) return true;
+    if ((p.dob || '').trim()) return true;
+    if ((p.blood || '').trim()) return true;
+    var lists = [p.allergies, p.meds, p.conditions];
+    for (var i = 0; i < lists.length; i++) {
+      if (typeof lists[i] === 'string' && lists[i].trim()) return true;
+      if (Array.isArray(lists[i]) && lists[i].length) return true;
+    }
+    if (p.contacts && p.contacts.length) return true;
+    if (p.donor || p.pregnant || p.deafOrVisionImpaired) return true;
+    return false;
+  }
+
   function renderProfile(p, fromBand) {
-    paintedFromBand = !!fromBand;
+    var hasPatient = profileHasContent(p);
+    paintedFromBand = !!fromBand && hasPatient;
     p = p || {};
     var rawName = (p.name || '').trim();
     var rawDob = (p.dob || '').trim();
@@ -2254,11 +2273,12 @@ function redmedAssetURL(file) {
     var statusEl = document.getElementById('statusLine');
     var noteEl = document.querySelector('.rm-note');
     var emptyEl = document.getElementById('rmEmpty');
-    // Bare /tapper/ (no #d=) stays on the YOU/main panel — empty dashes, not the
-    // old "No patient" interstitial that hid .you-card after first paint.
+    // Bare /tapper/ and failed / empty `#d=` → No Patient. Owner embed keeps
+    // the YOU card (html.app-embed.is-unlinked hides .rm-empty).
     try {
-      document.documentElement.classList.remove('is-unlinked');
-      if (emptyEl) emptyEl.hidden = true;
+      var showEmpty = !isAppEmbed() && !hasPatient;
+      document.documentElement.classList.toggle('is-unlinked', showEmpty);
+      if (emptyEl) emptyEl.hidden = !showEmpty;
     } catch (eUn) {}
     nameEl.textContent = displayName;
     try {
@@ -2461,6 +2481,14 @@ function redmedAssetURL(file) {
     } catch (eH) {}
     if (next !== '911' && next !== 'aid') next = 'medical';
     showTab(next);
+    // Band payload lives in the fragment. A same-document hash swap
+    // (paste #d=, in-page test) must re-decode — first paint already ran.
+    // Native embed keeps the injected profile. Do not re-arm SOS here
+    // (redmed-profile-painted is once; first load owns auto-arm).
+    if (window.__redmedNativeProfile || window.__REDMED_PROFILE) return;
+    decodeProfile().then(function (p) {
+      renderProfile(p, p != null);
+    });
   });
 
   // Aid accordion + topic sheets — idle by default; eager when Aid tab opens.
@@ -2718,7 +2746,7 @@ function redmedAssetURL(file) {
           search(pos.coords.latitude, pos.coords.longitude);
         }, function () {
           finish({ error: "Couldn't get your location. Check Location permission." });
-        }, { enableHighAccuracy: false, timeout: 12000, maximumAge: 60000 });
+        }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 });
       }
 
       function closeSheet() {
@@ -2820,66 +2848,118 @@ function redmedAssetURL(file) {
     scheduleIdle(wireStatusNFCLink);
   }
 
-  function setCoords(lat, lon, acc) {
+  function coordText(lat, lon) {
+    return lat.toFixed(6) + ', ' + lon.toFixed(6);
+  }
+
+  function setCoords(lat, lon, acc, force) {
     if (!isFinite(lat) || !isFinite(lon)) return;
-    document.getElementById('coords').textContent = lat.toFixed(6) + ', ' + lon.toFixed(6);
+    var prev = window.__redmedLoc;
+    if (!force && prev && isFinite(acc) && acc > 0 && prev.accuracy > 0 && acc > prev.accuracy + 20) {
+      return;
+    }
+    document.getElementById('coords').textContent = coordText(lat, lon);
     document.getElementById('gpsAcc').textContent = acc > 0
       ? ('Accuracy ±' + Math.round(acc) + ' m')
       : 'Accuracy ––';
     window.__redmedLoc = { latitude: lat, longitude: lon, accuracy: acc };
   }
 
+  var GEO_OPTS = { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 };
+  var geoWatchId = null;
+
+  function stopGeo() {
+    if (geoWatchId != null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(geoWatchId);
+    }
+    geoWatchId = null;
+  }
+
   // Lazy GPS — do not call getCurrentPosition on medical-tab load (browser location popup).
   // App-embed: native Find Help owns location. Preview/Scan + passerby: start on 911 tab.
-  var geoStarted = false;
   function ensureGeo() {
-    if (geoStarted) return;
     if (isAppEmbed()) return;
-    geoStarted = true;
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function (pos) {
-        setCoords(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
-      }, function () {
+    if (geoWatchId != null) return;
+    if (!navigator.geolocation) {
+      document.getElementById('coords').textContent = 'GPS Unavailable';
+      return;
+    }
+    function apply(pos, force) {
+      setCoords(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, force);
+    }
+    function fail() {
+      if (!window.__redmedLoc) {
         document.getElementById('coords').textContent = 'GPS Unavailable';
         document.getElementById('gpsAcc').textContent = 'Tell Dispatcher Landmarks';
-      }, { enableHighAccuracy: false, timeout: 8000, maximumAge: 30000 });
-    } else {
-      document.getElementById('coords').textContent = 'GPS Unavailable';
+      }
     }
+    navigator.geolocation.getCurrentPosition(function (pos) { apply(pos, true); }, fail, GEO_OPTS);
+    geoWatchId = navigator.geolocation.watchPosition(function (pos) { apply(pos, false); }, function () {}, GEO_OPTS);
   }
 
   document.getElementById('refreshCoordsBtn').addEventListener('click', function () {
     if (isAppEmbed()) return;
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(function (pos) {
-      setCoords(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+      setCoords(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, true);
     }, function () {
       if (!window.__redmedLoc) {
         document.getElementById('coords').textContent = 'GPS Unavailable';
         document.getElementById('gpsAcc').textContent = 'Tell Dispatcher Landmarks';
       }
-    }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 });
+    }, GEO_OPTS);
   });
+
+  function copyTextToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise(function (resolve, reject) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.setAttribute('aria-hidden', 'true');
+      ta.style.cssText = 'position:fixed;top:0;left:0;width:2px;height:2px;opacity:0.01;border:0;padding:0;margin:0;';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+      if (ok) resolve(); else reject(new Error('copy failed'));
+    });
+  }
+
+  function locFromDisplay() {
+    var t = ((document.getElementById('coords') || {}).textContent || '');
+    var m = t.match(/^\s*(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)\s*$/);
+    if (!m) return null;
+    return { latitude: parseFloat(m[1]), longitude: parseFloat(m[2]) };
+  }
 
   document.getElementById('copyCoordsBtn').addEventListener('click', function () {
     var btn = document.getElementById('copyCoordsBtn');
-    var loc = window.__redmedLoc;
+    var loc = window.__redmedLoc || locFromDisplay();
     function paintCopy(ok) {
       if (!btn) return;
       var prev = btn.getAttribute('data-label') || 'Copy Coordinates';
-      if (!btn.getAttribute('data-label')) btn.setAttribute('data-label', btn.textContent);
+      if (!btn.getAttribute('data-label')) btn.setAttribute('data-label', prev);
       btn.textContent = ok ? 'Copied' : 'Not Available Yet';
       window.setTimeout(function () { btn.textContent = prev; }, 1600);
     }
-    if (!loc) { paintCopy(false); return; }
-    var text = loc.latitude.toFixed(6) + ', ' + loc.longitude.toFixed(6);
-    var done = function () { paintCopy(true); };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(done).catch(function () { prompt('Copy Coordinates', text); done(); });
-    } else {
-      prompt('Copy Coordinates', text);
-      done();
+    if (!loc) {
+      ensureGeo();
+      paintCopy(false);
+      return;
     }
+    var text = coordText(loc.latitude, loc.longitude);
+    copyTextToClipboard(text).then(function () {
+      paintCopy(true);
+    }).catch(function () {
+      try { prompt('Copy Coordinates', text); } catch (e) {}
+      paintCopy(true);
+    });
   });
 
   // Seizure stopwatch — mirrors owner Find Help. Never auto-dials.

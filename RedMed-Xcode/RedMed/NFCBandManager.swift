@@ -47,7 +47,7 @@ final class NFCBandManager: ObservableObject {
 
     /// AES-GCM pack (off-main) → CoreNFC write (or pack-only simulate when hardware is parked).
     /// Parked Share Band URL on the NFC tab is the same `OwnerBandURI` string.
-    /// No Face ID here — Edit / Save / Erase only.
+    /// No Face ID here — view / Edit / Save / Erase only.
     /// Linked / Not linked flips only after a real verified CoreNFC session — never simulate or share.
     func writeBand(from profile: ProfileData, isScannerSession: Bool) {
         guard !isScannerSession else { return }

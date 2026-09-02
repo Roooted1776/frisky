@@ -65,12 +65,16 @@ struct EditProfileView: View {
     }()
 
     private static var birthDateRange: ClosedRange<Date> {
-        let start = Calendar.current.date(byAdding: .year, value: -120, to: Date()) ?? Date.distantPast
+        var cal = Calendar(identifier: .gregorian)
+        cal.locale = Locale(identifier: "en_US_POSIX")
+        let start = cal.date(byAdding: .year, value: -120, to: Date()) ?? Date.distantPast
         return start...Date()
     }
 
     private static var defaultBirthDate: Date {
-        Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
+        var cal = Calendar(identifier: .gregorian)
+        cal.locale = Locale(identifier: "en_US_POSIX")
+        return cal.date(byAdding: .year, value: -25, to: Date()) ?? Date()
     }
 
     private var hasBirthDate: Bool { Self.parseBirthDate(birthDate) != nil }
@@ -366,18 +370,16 @@ struct EditProfileView: View {
 
     private var birthDatePickerSheet: some View {
         NavigationStack {
-            VStack {
-                DatePicker(
-                    "Birth Date",
-                    selection: $pickerBirthDate,
-                    in: Self.birthDateRange,
-                    displayedComponents: .date
+            VStack(spacing: 0) {
+                BirthDateWheel(
+                    date: $pickerBirthDate,
+                    range: Self.birthDateRange
                 )
-                .datePickerStyle(.wheel)
-                .labelsHidden()
-                .tint(.redmedAccent)
-                .padding(.top, 8)
-                Spacer()
+                .frame(maxWidth: .infinity)
+                .frame(height: BirthDateWheel.wheelHeight)
+                .padding(.top, 4)
+
+                Spacer(minLength: 0)
             }
             .navigationTitle("Birth Date")
             .navigationBarTitleDisplayMode(.inline)
@@ -391,7 +393,8 @@ struct EditProfileView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
-                        birthDate = Self.birthDateFormatter.string(from: pickerBirthDate)
+                        let clamped = min(max(pickerBirthDate, Self.birthDateRange.lowerBound), Self.birthDateRange.upperBound)
+                        birthDate = Self.birthDateFormatter.string(from: clamped)
                         showBirthDatePicker = false
                     }
                     .fontWeight(.semibold)
@@ -400,7 +403,11 @@ struct EditProfileView: View {
             }
             .background { RedMedPageBackground() }
         }
-        .presentationDetents([.medium])
+        .preferredColorScheme(.light)
+        // Tall enough for three populated wheels + nav; medium alone
+        // was clipping columns so month/day/year looked empty.
+        .presentationDetents([.height(BirthDateWheel.sheetHeight), .medium])
+        .presentationDragIndicator(.visible)
     }
 
     private var bloodTypeRow: some View {
@@ -759,6 +766,7 @@ struct EditProfileView: View {
             showSaveFailedAlert = true
             return
         }
+        OwnerRedMedGate.unlock()
         VaultHistoryStore.shared.record(.profileSaved)
         dismiss()
     }
@@ -1014,6 +1022,166 @@ private struct DraftLineRow: View {
             Divider().padding(.leading, Metrics.rowHPad)
         }
         .id(fieldID + "-row")
+    }
+}
+
+/// Explicit month / day / year wheel columns for Edit → Birth Date.
+/// System `DatePicker(.wheel)` inside a medium sheet + Spacer often collapses
+/// to blank columns on cream; these Pickers always carry their own data.
+private struct BirthDateWheel: View {
+    @Binding var date: Date
+    let range: ClosedRange<Date>
+
+    static let wheelHeight: CGFloat = 216
+    /// Nav (~52) + wheel + padding + home indicator.
+    static let sheetHeight: CGFloat = 320
+
+    private static let calendar: Calendar = {
+        var cal = Calendar(identifier: .gregorian)
+        cal.locale = Locale(identifier: "en_US_POSIX")
+        return cal
+    }()
+
+    private static let monthNames: [String] = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.calendar = calendar
+        return formatter.monthSymbols
+    }()
+
+    private var yearRange: ClosedRange<Int> {
+        let lo = Self.calendar.component(.year, from: range.lowerBound)
+        let hi = Self.calendar.component(.year, from: range.upperBound)
+        return lo...hi
+    }
+
+    private var month: Int {
+        Self.calendar.component(.month, from: clampedDate)
+    }
+
+    private var day: Int {
+        Self.calendar.component(.day, from: clampedDate)
+    }
+
+    private var year: Int {
+        Self.calendar.component(.year, from: clampedDate)
+    }
+
+    private var daysInSelectedMonth: Int {
+        Self.daysInMonth(month: month, year: year)
+    }
+
+    private var clampedDate: Date {
+        min(max(date, range.lowerBound), range.upperBound)
+    }
+
+    var body: some View {
+        HStack(spacing: 0) {
+            monthColumn
+            dayColumn
+            yearColumn
+        }
+        .frame(height: Self.wheelHeight)
+        .preferredColorScheme(.light)
+        .onAppear { syncFromBinding() }
+        .onChange(of: date) { _, _ in syncFromBinding() }
+    }
+
+    private var monthColumn: some View {
+        Picker("Month", selection: monthBinding) {
+            ForEach(1...12, id: \.self) { m in
+                Text(Self.monthNames[m - 1])
+                    .foregroundColor(.redmedDark)
+                    .tag(m)
+            }
+        }
+        .pickerStyle(.wheel)
+        .labelsHidden()
+        .frame(maxWidth: .infinity)
+        .clipped()
+        .accessibilityLabel("Month")
+    }
+
+    private var dayColumn: some View {
+        Picker("Day", selection: dayBinding) {
+            ForEach(1...daysInSelectedMonth, id: \.self) { d in
+                Text("\(d)")
+                    .foregroundColor(.redmedDark)
+                    .tag(d)
+            }
+        }
+        .pickerStyle(.wheel)
+        .labelsHidden()
+        .frame(maxWidth: .infinity)
+        .clipped()
+        .id("birth-day-\(year)-\(month)-\(daysInSelectedMonth)")
+        .accessibilityLabel("Day")
+    }
+
+    private var yearColumn: some View {
+        Picker("Year", selection: yearBinding) {
+            ForEach(Array(yearRange), id: \.self) { y in
+                Text(String(y))
+                    .foregroundColor(.redmedDark)
+                    .tag(y)
+            }
+        }
+        .pickerStyle(.wheel)
+        .labelsHidden()
+        .frame(maxWidth: .infinity)
+        .clipped()
+        .accessibilityLabel("Year")
+    }
+
+    private var monthBinding: Binding<Int> {
+        Binding(
+            get: { month },
+            set: { apply(month: $0, day: day, year: year) }
+        )
+    }
+
+    private var dayBinding: Binding<Int> {
+        Binding(
+            get: { min(day, daysInSelectedMonth) },
+            set: { apply(month: month, day: $0, year: year) }
+        )
+    }
+
+    private var yearBinding: Binding<Int> {
+        Binding(
+            get: { year },
+            set: { apply(month: month, day: day, year: $0) }
+        )
+    }
+
+    private func syncFromBinding() {
+        let next = clampedDate
+        if next != date {
+            date = next
+        }
+    }
+
+    private func apply(month: Int, day: Int, year: Int) {
+        let maxDay = Self.daysInMonth(month: month, year: year)
+        var comps = DateComponents()
+        comps.calendar = Self.calendar
+        comps.year = year
+        comps.month = month
+        comps.day = min(max(day, 1), maxDay)
+        guard let built = Self.calendar.date(from: comps) else { return }
+        date = min(max(built, range.lowerBound), range.upperBound)
+    }
+
+    private static func daysInMonth(month: Int, year: Int) -> Int {
+        var comps = DateComponents()
+        comps.calendar = calendar
+        comps.year = year
+        comps.month = month
+        comps.day = 1
+        guard let first = calendar.date(from: comps),
+              let interval = calendar.range(of: .day, in: .month, for: first)
+        else { return 31 }
+        return interval.count
     }
 }
 

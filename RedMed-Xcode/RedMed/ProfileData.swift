@@ -91,8 +91,9 @@ class ProfileData: ObservableObject {
     @Published private(set) var cardEpoch: UInt = 0
     /// One-shot so RedMedApp / ContentView cannot restore twice in one process.
     private var didAttemptLaunchRestore = false
-    /// Off-main Keychain+JSON started at `init` so Main can paint the YOU card
-    /// instead of cream-then-parse. Applied only after login Face ID.
+    /// Off-main Keychain+JSON started at `init` so restore can adopt the blob
+    /// without blocking first paint. Display of the YOU card still waits on
+    /// Face ID when a stored ID exists.
     private var launchPrefetchTask: Task<PersistedProfile?, Never>?
 
     private func setField<T: Equatable>(_ storage: inout T, _ newValue: T) {
@@ -129,7 +130,8 @@ class ProfileData: ObservableObject {
         AppConfig.nfcHardwareEnabled && braceletLinked && isEmergencyProfileConfigured
     }
 
-    /// Any RedMed profile content that should require Face ID / passcode to edit.
+    /// Any RedMed profile content that should require Face ID / passcode
+    /// to view or edit.
     var hasSensitiveProfileData: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             || !birthDate.isEmpty
@@ -487,6 +489,7 @@ class ProfileData: ObservableObject {
         VaultHistoryStore.shared.clear()
         HIPAAOfflineVault.removeAll()
         SecurePasteboard.clear()
+        OwnerRedMedGate.lock()
         NotificationCenter.default.post(name: .redMedDidEraseLocalData, object: nil)
     }
 }

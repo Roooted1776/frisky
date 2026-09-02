@@ -4,21 +4,44 @@ import SwiftUI
 /// Bundled `tapper.html` is passerby + NFC Preview / Scan only. No WKWebView
 /// on this tab: WebKit parse was the cold-open stall, and a parked embed
 /// under 911 / Aid / NFC kept the compositor hot mid-session.
-/// Owner chrome: logo + name + Linked with Edit trailing (no Help dock).
-/// Website link sits under the YOU fields, owner only. Scanners keep Back.
-/// Help lives on 911 / Aid / NFC — not on Edit.
+/// Owner chrome: Edit on its own row, then logo + name + Linked (no Help dock).
+/// YOU-card header matches passerby / NFC Preview — no Edit on that row.
+/// Owner Face ID runs immediately before the user / YOU card when a stored
+/// ID exists (not an app-wide lock — 911 / Aid / NFC stay reachable).
+/// Scanners keep Back. Help lives on 911 / Aid / NFC — not on Edit.
 /// Fresh install: native setup funnel. Passerby tapper is unchanged.
 struct RedMedView: View {
+    var isVisible: Bool = true
+
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
+    @Environment(\.scenePhase) private var scenePhase
     @State private var showEdit = false
     @State private var isRequestingEdit = false
+    @State private var isRequestingUnlock = false
+    @State private var viewUnlocked = OwnerRedMedGate.isUnlocked
     @State private var showAuthFailedAlert = false
+    @State private var authFailedAction = "edit"
     @State private var authUnavailableMessage: String?
     @State private var healthImportBusy = false
     @State private var healthImportMessage: String?
     /// HealthKit characteristics to seed Edit. Not written to ProfileData until Save.
     @State private var healthSeed: HealthKitProfileImport.Draft?
+
+    /// Stored owner ID (or RAM PHI) — Face ID before the YOU card. Fresh
+    /// install funnel has no PHI yet. Scanners never gate.
+    private var needsViewGate: Bool {
+        !isScannerSession
+            && (profile.hasSensitiveProfileData
+                || profile.isRestoringFromKeychain
+                || ProfileData.prefersLockOnLaunch
+                || ProfileData.hasStoredProfile())
+    }
+
+    /// Scanner always. Owner: funnel when empty, YOU card after Face ID.
+    private var showsOwnerUser: Bool {
+        isScannerSession || !needsViewGate || viewUnlocked
+    }
 
     /// Owner empty profile — native steps instead of a blank YOU card.
     /// Hidden while a stored ID is expected or restore is in flight.
@@ -42,15 +65,26 @@ struct RedMedView: View {
                 .padding(.top, 16)
                 .padding(.bottom, 8)
                 .redmedTopChromeWash()
-            } else {
-                RedMedUserHeader(
-                    name: profile.name,
-                    linked: profile.showsBraceletAsLinked,
-                    onEdit: { requestEdit() },
-                    onStatus: {
-                        NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
+            } else if showsOwnerUser {
+                VStack(spacing: 0) {
+                    HStack(alignment: .center, spacing: 12) {
+                        Spacer(minLength: 0)
+                        ChromeTextAction(title: "Edit", action: { requestEdit() })
                     }
-                )
+                    .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
+                    .padding(.horizontal, RedMedChrome.pagePadX)
+                    .padding(.top, 16)
+
+                    RedMedUserHeader(
+                        name: profile.name,
+                        linked: profile.showsBraceletAsLinked,
+                        onStatus: {
+                            NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
+                        }
+                    )
+                }
+                .padding(.bottom, 8)
+                .redmedTopChromeWash()
             }
 
             Group {
@@ -61,7 +95,7 @@ struct RedMedView: View {
                         onFill: { requestEdit() },
                         onHealthImport: { Task { await importFromHealthThenEdit() } }
                     )
-                } else {
+                } else if showsOwnerUser {
                     VStack(spacing: 0) {
                         if !isScannerSession {
                             ownerNextStepBanner
@@ -69,6 +103,11 @@ struct RedMedView: View {
                         OwnerYouCard()
                             .id(profile.cardEpoch)
                     }
+                } else {
+                    OwnerRedMedUnlockPane(
+                        busy: isRequestingUnlock,
+                        onUnlock: { requestViewUnlock() }
+                    )
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -82,7 +121,7 @@ struct RedMedView: View {
         .alert(BiometricAuth.deniedAlertTitle, isPresented: $showAuthFailedAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text(BiometricAuth.deniedAlertMessage(action: "edit"))
+            Text(BiometricAuth.deniedAlertMessage(action: authFailedAction))
         }
         .alert(BiometricAuth.unavailableAlertTitle, isPresented: Binding(
             get: { authUnavailableMessage != nil },
@@ -99,6 +138,34 @@ struct RedMedView: View {
             EditProfileView(healthSeed: healthSeed)
                 .environmentObject(profile)
                 .presentationBackground(Color.redmedBg)
+        }
+        .onAppear { if isVisible { tryUnlockIfNeeded() } }
+        .onChange(of: isVisible) { _, visible in
+            if visible { tryUnlockIfNeeded() }
+        }
+        .onChange(of: showEdit) { _, open in
+            guard !open else { return }
+            viewUnlocked = OwnerRedMedGate.isUnlocked
+            tryUnlockIfNeeded()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            guard !isScannerSession else { return }
+            switch phase {
+            case .background:
+                OwnerRedMedGate.lock()
+                viewUnlocked = false
+                if isRequestingUnlock {
+                    isRequestingUnlock = false
+                    BiometricAuth.cancelInFlight()
+                }
+            case .active:
+                if isVisible { tryUnlockIfNeeded() }
+            default:
+                break
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .redMedDidEraseLocalData)) { _ in
+            viewUnlocked = false
         }
     }
 
@@ -130,7 +197,48 @@ struct RedMedView: View {
         }
     }
 
-    // MARK: - Edit gate
+    // MARK: - View / Edit gates
+
+    private func tryUnlockIfNeeded() {
+        if OwnerRedMedGate.isUnlocked {
+            viewUnlocked = true
+            return
+        }
+        guard needsViewGate, !viewUnlocked, !isRequestingUnlock, !showEdit else { return }
+        guard scenePhase == .active else { return }
+        requestViewUnlock()
+    }
+
+    private func requestViewUnlock() {
+        guard !isScannerSession, !isRequestingUnlock, !viewUnlocked, !showEdit else { return }
+        isRequestingUnlock = true
+        BiometricAuth.authenticate(
+            reason: "Confirm with Face ID, Touch ID, or passcode to view your RedMed profile.",
+            force: true
+        ) { outcome in
+            Task { @MainActor in
+                isRequestingUnlock = false
+                switch outcome {
+                case .success:
+                    if scenePhase == .background {
+                        OwnerRedMedGate.lock()
+                        viewUnlocked = false
+                    } else {
+                        OwnerRedMedGate.unlock()
+                        viewUnlocked = true
+                    }
+                case .notVerified:
+                    authFailedAction = "view"
+                    showAuthFailedAlert = true
+                    VaultHistoryStore.shared.record(.unlockFailed, detail: "view")
+                case .unavailable(let reason):
+                    authUnavailableMessage = reason.message
+                case .declined, .notInteractive, .timedOut:
+                    break
+                }
+            }
+        }
+    }
 
     private func requestEdit() {
         // Scanners never edit. Face ID gates opening Edit; Save Face IDs persist.
@@ -146,6 +254,7 @@ struct RedMedView: View {
                 case .success:
                     showEdit = true
                 case .notVerified:
+                    authFailedAction = "edit"
                     showAuthFailedAlert = true
                     VaultHistoryStore.shared.record(.unlockFailed, detail: "edit")
                 case .unavailable(let reason):
@@ -177,15 +286,45 @@ struct RedMedView: View {
     }
 }
 
+// MARK: - Owner RedMed view gate
+
+/// Cream pane on the owner RedMed tab until Face ID. No logo (no hanging
+/// brand mark). 911 / Aid / NFC stay on the tab bar. Scanners never see this.
+private struct OwnerRedMedUnlockPane: View {
+    var busy: Bool
+    var onUnlock: () -> Void
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Spacer(minLength: 0)
+            Text("Unlock to view your medical ID.")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(.redmedDark)
+                .multilineTextAlignment(.center)
+            Text("Face ID, Touch ID, or passcode. 911, Aid, and NFC stay available.")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.redmedMuted)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+            PrimaryButton(title: "Unlock", busy: busy, action: onUnlock)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, RedMedChrome.pagePadX)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Unlock to view your medical ID")
+    }
+}
+
 // MARK: - Tapper header (owner RedMed)
 
 /// Same YOU-card header as passerby `tapper.html` `.rm-header` — logo, name,
-/// Linked / Not linked — with Edit as trailing chrome. Scanner Preview keeps
+/// Linked / Not linked. No Edit here: that chrome sits on the owner row above
+/// so NFC Preview / tapper stay a read-only helper card. Scanner Preview keeps
 /// the HTML header.
 private struct RedMedUserHeader: View {
     let name: String
     let linked: Bool
-    var onEdit: () -> Void
     var onStatus: () -> Void
 
     private var displayName: String {
@@ -232,13 +371,9 @@ private struct RedMedUserHeader: View {
             }
 
             Spacer(minLength: 8)
-
-            ChromeTextAction(title: "Edit", action: onEdit)
         }
         .padding(.horizontal, RedMedChrome.pagePadX)
-        .padding(.top, 16)
-        .padding(.bottom, 8)
-        .redmedTopChromeWash()
+        .padding(.top, 2)
         .accessibilityElement(children: .contain)
     }
 }
@@ -250,7 +385,6 @@ private struct RedMedUserHeader: View {
 /// empty). Contacts hide when vacant. Contacts dial `tel:` like the HTML card.
 private struct OwnerYouCard: View {
     @EnvironmentObject var profile: ProfileData
-    @Environment(\.isScannerSession) private var isScannerSession
 
     private var trimmedName: String {
         profile.name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -262,10 +396,6 @@ private struct OwnerYouCard: View {
                 VStack(alignment: .leading, spacing: 16) {
                     identityCard
                     listsCard
-                    if !isScannerSession {
-                        Spacer(minLength: 28)
-                        OwnerWebsiteLinkButton(profile: profile)
-                    }
                 }
                 .padding(.horizontal, RedMedChrome.pagePadX)
                 .padding(.top, 4)
@@ -531,8 +661,6 @@ private struct OwnerSetupFunnel: View {
                             .foregroundColor(.redmedMuted)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    Spacer(minLength: 28)
-                    OwnerWebsiteLinkButton()
                 }
                 .padding(.horizontal, RedMedChrome.pagePadX)
                 .padding(.top, 4)
@@ -625,73 +753,6 @@ private struct OwnerSetupFunnel: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-    }
-}
-
-/// Owner-only Safari link under the YOU fields. Packs `#d=` on tap when a
-/// profile exists so the hosted helper card opens with this ID. Not Help.
-private struct OwnerWebsiteLinkButton: View {
-    var profile: ProfileData? = nil
-    @Environment(\.openURL) private var openURL
-
-    private var caption: String {
-        var s = AppConfig.medicalCardBaseURL
-        if let range = s.range(of: "://") {
-            s = String(s[range.upperBound...])
-        }
-        if s.hasSuffix("/") { s.removeLast() }
-        return s
-    }
-
-    var body: some View {
-        Button(action: open) {
-            HStack(alignment: .center, spacing: 14) {
-                Image(systemName: "globe")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundColor(.redmedAccent)
-                    .frame(width: 44, height: 44)
-                    .background(Color.redmedAccent.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.chipRadius, style: .continuous))
-                    .accessibilityHidden(true)
-
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Website")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.redmedDark)
-                    Text(caption)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.redmedMuted)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.75)
-                }
-
-                Spacer(minLength: 8)
-
-                Image(systemName: "arrow.up.right")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundColor(.redmedAccent)
-                    .accessibilityHidden(true)
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(RedMedPressStyle(scale: 0.98))
-        .redmedBox(flatten: false)
-        .accessibilityLabel("Website")
-        .accessibilityHint("Opens the helper card in Safari")
-    }
-
-    private func open() {
-        let url: URL?
-        if let profile, profile.hasSensitiveProfileData {
-            url = ProfileNFCCodec.buildURL(profile: profile)
-                ?? URL(string: AppConfig.medicalCardBaseURL)
-        } else {
-            url = URL(string: AppConfig.medicalCardBaseURL)
-        }
-        if let url { openURL(url) }
     }
 }
 

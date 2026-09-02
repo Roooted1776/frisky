@@ -3,7 +3,7 @@ import SwiftUI
 /// Root tab shell.
 ///
 /// Permanent product rule (bracelet tap / scanner):
-/// - Owner (`isScannerSession == false`): RedMed · 911 · Aid · NFC (+ Edit on RedMed).
+/// - Owner (`isScannerSession == false`): RedMed · 911 · Aid · NFC (+ Edit chrome on RedMed, not on the YOU-card / Preview header).
 ///   Help chrome on every native screen except the Edit modal.
 /// - Scanner / tap (`isScannerSession == true` or HTML `tapper.html#d=`): RedMed · 911 · Aid
 ///   only — **no Edit**, **no NFC**. Help is policies-only (no Settings / Erase / NFC write).
@@ -51,7 +51,7 @@ struct ContentView: View {
             // RedMed is a native YOU card — no WKWebView to park at 0.02.
             ZStack {
                 mountedTab(.redmed, epoch: profile.cardEpoch) {
-                    RedMedView()
+                    RedMedView(isVisible: activeTab == .redmed)
                 }
                 mountedTab(.emergency, refreshOnHide: true) {
                     EmergencyView(isVisible: activeTab == .emergency)
@@ -100,8 +100,9 @@ struct ContentView: View {
                 // start a fresh one. Does not cancel an armed siren.
                 CrashMotionGuard.shared.stopMonitoring()
             default:
-                // `.inactive` is Face ID on Edit / Save / Erase, Control
-                // Center, app switcher peek. Keep listening.
+                // `.inactive` is Face ID on the RedMed user page / Edit /
+                // Save / Erase, Control Center, app switcher peek. Keep
+                // listening.
                 break
             }
         }

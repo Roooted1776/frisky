@@ -17,7 +17,8 @@ struct RedMedApp: App {
                 // Snapshot observers only. Do not warm WKWebView or read
                 // tapper.html here — that raced the first Main frame.
                 // Profile restore is owner ContentView.task (device-unlocked
-                // Keychain). Face ID is Edit / Save / Erase, not launch.
+                // Keychain). Face ID is the owner RedMed user page / Edit /
+                // Save / Erase, not launch.
                 SnapshotSafeCover.activate()
             }
             .onOpenURL { url in

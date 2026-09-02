@@ -135,6 +135,26 @@ def main() -> int:
     # Static: band-tap shell never ships an auth gate (runs even if server is down).
     ok &= check_tapper_no_auth(REPO / "tapper/index.html")
     ok &= check_tapper_no_ads(REPO / "tapper/index.html")
+    tapper_src = (REPO / "tapper/index.html").read_text(encoding="utf-8")
+    if "function profileHasContent" not in tapper_src:
+        print("FAIL tapper/index.html missing profileHasContent")
+        ok = False
+    elif "classList.toggle('is-unlinked'" not in tapper_src:
+        print("FAIL tapper/index.html never toggles is-unlinked")
+        ok = False
+    elif "No Patient" not in tapper_src:
+        print("FAIL tapper/index.html missing No Patient empty state")
+        ok = False
+    else:
+        print("OK   empty-state gates tapper/index.html")
+    if "copyTextToClipboard" not in tapper_src or "enableHighAccuracy: true" not in tapper_src:
+        print("FAIL tapper/index.html Copy Coordinates / high-accuracy GPS missing")
+        ok = False
+    elif "toFixed(6)" not in tapper_src:
+        print("FAIL tapper/index.html GPS copy must use 6 decimal places")
+        ok = False
+    else:
+        print("OK   copy-coords tapper/index.html")
     root_tapper = (REPO / "tapper.html").read_text(encoding="utf-8")
     if "data-tab=\"medical\"" in root_tapper:
         print("FAIL tapper.html is a full shell copy — keep it a redirect")
