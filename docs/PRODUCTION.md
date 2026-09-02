@@ -19,7 +19,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | Owner Face ID gate | Edit / Save / Erase only (`force: true`). No cream lock on open or return. No Face ID toggle on Before you continue (Haptic + Location only). Profile restores on Main appear (device-unlocked Keychain, no Face ID to view) |
 | Crash motion | Starts after owner Main paints. Stops CoreMotion on `.background`. Restarts on `.active`. Does not stop on `.inactive` (Edit/Save/Erase Face ID). Armed siren is independent. Scanner / tapper never start it. |
 | Keychain profile | `WhenPasscodeSetThisDeviceOnly`, no biometry ACL; save fail-closed; never synchronizable |
-| Location toggle | Honored on Agree. When-In-Use sheet may fire at Agree if Location is on. GPS start/stop is Find Help only |
+| Location toggle | Honored on Agree. Agree does not present When-In-Use. System sheet + GPS start/stop are Find Help only |
 | Owner tabs | RedMed · 911 · Aid · NFC; scanners never see NFC |
 | NFC Preview + Scan | Both use `fullScreenCover(item:)` after pack — no empty-cover race. Parked Share Band URL is live `medicalCardBaseURL#d=` (Shortcuts / NFC Tools). Never Linked from share |
 | Passerby shell | One file `tapper/index.html`; Xcode copies it to the app bundle as `tapper.html` at build; repo-root `tapper.html` redirects to `/tapper/` |

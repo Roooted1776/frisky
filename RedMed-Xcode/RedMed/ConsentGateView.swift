@@ -171,8 +171,8 @@ struct ConsentGateView<Content: View>: View {
             contentArmed = true
             hasAccepted = true
         }
-        // Honor the Location toggle. Request When-In-Use only if it stayed on.
-        LocationAccessSuggester.shared.requestWhenInUseIfNeeded()
+        // Honor the Location toggle. Do not fire iOS When-In-Use here —
+        // they just agreed. Find Help / hospitals request when GPS starts.
         // Do not spawn a spare WKWebView on this turn — that raced the
         // owner RedMed embed and made tabs feel laggy after Agree.
         // NFCView warms the preview shell after that tab is first opened.
