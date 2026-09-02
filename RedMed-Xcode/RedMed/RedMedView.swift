@@ -4,7 +4,8 @@ import SwiftUI
 /// Bundled `tapper.html` is passerby + NFC Preview / Scan only. No WKWebView
 /// on this tab: WebKit parse was the cold-open stall, and a parked embed
 /// under 911 / Aid / NFC kept the compositor hot mid-session.
-/// Owner chrome: logo + name + Linked with Edit trailing (no Help dock).
+/// Owner chrome: Edit on its own row, then logo + name + Linked (no Help dock).
+/// YOU-card header matches passerby / NFC Preview — no Edit on that row.
 /// Scanners keep Back. Help lives on 911 / Aid / NFC — not on Edit.
 /// Fresh install: native setup funnel. Passerby tapper is unchanged.
 struct RedMedView: View {
@@ -42,14 +43,25 @@ struct RedMedView: View {
                 .padding(.bottom, 8)
                 .redmedTopChromeWash()
             } else {
-                RedMedUserHeader(
-                    name: profile.name,
-                    linked: profile.showsBraceletAsLinked,
-                    onEdit: { requestEdit() },
-                    onStatus: {
-                        NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
+                VStack(spacing: 0) {
+                    HStack(alignment: .center, spacing: 12) {
+                        Spacer(minLength: 0)
+                        ChromeTextAction(title: "Edit", action: { requestEdit() })
                     }
-                )
+                    .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
+                    .padding(.horizontal, RedMedChrome.pagePadX)
+                    .padding(.top, 16)
+
+                    RedMedUserHeader(
+                        name: profile.name,
+                        linked: profile.showsBraceletAsLinked,
+                        onStatus: {
+                            NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
+                        }
+                    )
+                }
+                .padding(.bottom, 8)
+                .redmedTopChromeWash()
             }
 
             Group {
@@ -179,12 +191,12 @@ struct RedMedView: View {
 // MARK: - Tapper header (owner RedMed)
 
 /// Same YOU-card header as passerby `tapper.html` `.rm-header` — logo, name,
-/// Linked / Not linked — with Edit as trailing chrome. Scanner Preview keeps
+/// Linked / Not linked. No Edit here: that chrome sits on the owner row above
+/// so NFC Preview / tapper stay a read-only helper card. Scanner Preview keeps
 /// the HTML header.
 private struct RedMedUserHeader: View {
     let name: String
     let linked: Bool
-    var onEdit: () -> Void
     var onStatus: () -> Void
 
     private var displayName: String {
@@ -231,13 +243,9 @@ private struct RedMedUserHeader: View {
             }
 
             Spacer(minLength: 8)
-
-            ChromeTextAction(title: "Edit", action: onEdit)
         }
         .padding(.horizontal, RedMedChrome.pagePadX)
-        .padding(.top, 16)
-        .padding(.bottom, 8)
-        .redmedTopChromeWash()
+        .padding(.top, 2)
         .accessibilityElement(children: .contain)
     }
 }
