@@ -5,7 +5,8 @@ import UIKit
 /// NFC Preview / Scan — tap-to-view stays ungated
 /// (no Face ID, no passcode, no login).
 ///
-/// Edit, Save, and Erase pass `force: true`. NFC write, app launch, and tapper do not.
+/// Owner RedMed user view, Edit, Save, and Erase pass `force: true`.
+/// NFC write, 911, Aid, app launch, and tapper do not.
 /// There is no process-wide skip flag.
 ///
 /// On success the `LAContext` is **parked** (not invalidated) so
@@ -89,8 +90,8 @@ enum BiometricAuth {
         _ = force
 
         // Simulator: never evaluatePolicy and never a UIKit alert.
-        // Auto-succeed so Edit / Save / Erase can proceed without a
-        // device. Device still uses real Face ID.
+        // Auto-succeed so the owner RedMed view / Edit / Save / Erase
+        // can proceed without a device. Device still uses real Face ID.
         #if targetEnvironment(simulator)
         _ = cancelInFlight()
         markSessionEnded()
@@ -176,8 +177,8 @@ enum BiometricAuth {
     }
 
     /// Live `evaluatePolicy` in progress (including the teardown wait).
-    /// Scene `.inactive` during this is the Face ID sheet on Edit / Save /
-    /// Erase — do not treat it as a leave.
+    /// Scene `.inactive` during this is the Face ID sheet on the owner
+    /// RedMed user view / Edit / Save / Erase — do not treat it as a leave.
     static var isEvaluating: Bool {
         parkLock.lock()
         defer { parkLock.unlock() }
@@ -202,7 +203,8 @@ enum BiometricAuth {
     }
     #endif
 
-    /// Kill a hung / leftover Face ID sheet so Edit / Save / Erase can start a fresh one.
+    /// Kill a hung / leftover Face ID sheet so the owner RedMed view /
+    /// Edit / Save / Erase can start a fresh one.
     /// Returns whether a live context was actually cancelled — callers only
     /// need to wait out the teardown when this is true.
     @discardableResult
@@ -442,4 +444,14 @@ enum BiometricAuth {
     }
 
     static let unavailableAlertTitle = "Face ID Unavailable"
+}
+
+/// Foreground unlock for the owner RedMed user page (YOU card).
+/// Not an app-wide lock — 911 / Aid / NFC stay reachable without this.
+/// Relock on true `.background` only (not `.inactive` / Face ID sheet).
+enum OwnerRedMedGate {
+    static var isUnlocked = false
+
+    static func unlock() { isUnlocked = true }
+    static func lock() { isUnlocked = false }
 }

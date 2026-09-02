@@ -16,8 +16,8 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 
 | Area | Status |
 |------|--------|
-| Owner Face ID gate | Edit / Save / Erase only (`force: true`). No cream lock on open or return. No Face ID toggle on Before you continue (Haptic + Location only). Profile restores on Main appear (device-unlocked Keychain, no Face ID to view) |
-| Crash motion | Starts after owner Main paints. Stops CoreMotion on `.background`. Restarts on `.active`. Does not stop on `.inactive` (Edit/Save/Erase Face ID). Armed siren is independent. Scanner / tapper never start it. |
+| Owner Face ID gate | Owner RedMed user page (stored ID) then Edit / Save / Erase (`force: true`). No cream lock in front of Main — 911 / Aid / NFC stay reachable. Relock the RedMed view on `.background` only. No Face ID toggle on Before you continue (Haptic + Location only). Profile restores on Main appear (device-unlocked Keychain); Face ID gates display of the YOU card |
+| Crash motion | Starts after owner Main paints. Stops CoreMotion on `.background`. Restarts on `.active`. Does not stop on `.inactive` (Face ID on RedMed user page / Edit / Save / Erase). Armed siren is independent. Scanner / tapper never start it. |
 | Keychain profile | `WhenPasscodeSetThisDeviceOnly`, no biometry ACL; save fail-closed; never synchronizable |
 | Location toggle | Honored on Agree. When-In-Use sheet may fire at Agree if Location is on. GPS start/stop is Find Help only |
 | Owner tabs | RedMed · 911 · Aid · NFC; scanners never see NFC |
@@ -29,7 +29,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | Hospital search | Native: MapKit / Apple Maps. Passerby: OpenStreetMap Overpass (`overpass-api.de`). Disclosed in Help 4.3 |
 | ATS | Arbitrary loads + local networking **false** |
 | Snapshot / pasteboard | Privacy cover + secure pasteboard clear on background |
-| Consent | `ConsentGateView` every cold start; stored version **4.5** is legal record only (does not skip ack); never Face ID on that path; never on tapper |
+| Consent | `ConsentGateView` every cold start; stored version **4.7** is legal record only (does not skip ack); never Face ID on that path; never on tapper |
 | Apple Health import | Parked (`healthKitImportEnabled = false`) |
 | iOS CI | `workflow_dispatch` only (billing). Does not gate merges |
 | `#d=` codec | `node scripts/test-d-codec.mjs` — AES / zlib / compact / URI lockstep |
