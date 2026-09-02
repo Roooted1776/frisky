@@ -202,15 +202,16 @@ Do not call Keychain decode in `@State` defaults.
 Location defaults on (Before you continue — every cold start) with
 **no RedMed location gate / banner / Allow popup** — Help must not
 call `requestWhenInUseAuthorization`. Honor the Location toggle: Agree must
-not force `locationEnabled = true`. `requestWhenInUseIfNeeded` runs only if
-Location stayed on; GPS updates (`LocationManager.start` →
+not force `locationEnabled = true`. Agree must not present When-In-Use —
+they already chose Location. GPS updates (`LocationManager.start` →
 `startUpdatingLocation()`) start on Find Help while the 911 tab is visible.
-iOS may show its system Allow sheet once (cannot auto-accept). Passerby
+iOS may show its system Allow sheet once then (cannot auto-accept). The
+usage string stays one short purpose line. Passerby
 `tapper.html` must not call `geolocation` until the 911 tab opens. Nearby
 hospitals in the app is a one-shot MapKit POI search (Apple may see query +
 region). Passerby `tapper.html` hospital search POSTs coordinates to
-OpenStreetMap Overpass (`overpass-api.de`); Help / Info.plist / Satellite
-must name that. Do not construct
+OpenStreetMap Overpass (`overpass-api.de`); Help / Satellite
+must name that — not the When-In-Use usage string. Do not construct
 `CMMotionManager` at `CrashMotionGuard` shared init. `ContentView` lazy
 tab mounting mounts RedMed only on cold start (911 / Aid / NFC on first visit,
 kept alive after). Opacity keep-alive **does not** fire
