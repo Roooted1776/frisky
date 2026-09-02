@@ -506,7 +506,7 @@ function redmedAssetURL(file) {
     border-radius: var(--box);
     box-shadow: var(--shadow);
   }
-  html.is-unlinked .rm-empty { display: block; }
+  html.is-unlinked .rm-empty { display: block !important; }
   html.is-unlinked .you-card,
   html.is-unlinked .list-grid { display: none !important; }
   /* Owner embed uses the native setup funnel — keep the shell quiet. */
@@ -2481,6 +2481,14 @@ function redmedAssetURL(file) {
     } catch (eH) {}
     if (next !== '911' && next !== 'aid') next = 'medical';
     showTab(next);
+    // Band payload lives in the fragment. A same-document hash swap
+    // (paste #d=, in-page test) must re-decode — first paint already ran.
+    // Native embed keeps the injected profile. Do not re-arm SOS here
+    // (redmed-profile-painted is once; first load owns auto-arm).
+    if (window.__redmedNativeProfile || window.__REDMED_PROFILE) return;
+    decodeProfile().then(function (p) {
+      renderProfile(p, p != null);
+    });
   });
 
   // Aid accordion + topic sheets — idle by default; eager when Aid tab opens.

@@ -366,6 +366,7 @@ const tapperSrc = readFileSync(join(ROOT, 'tapper/index.html'), 'utf8');
 assert('profileHasContent in tapper', tapperSrc.includes('function profileHasContent'));
 assert('is-unlinked toggle in tapper', tapperSrc.includes("classList.toggle('is-unlinked'"));
 assert('paintedFromBand requires content', tapperSrc.includes('paintedFromBand = !!fromBand && hasPatient'));
+assert('hashchange re-decodes #d=', tapperSrc.includes('decodeProfile().then(function (p)') && tapperSrc.includes('hashchange'));
 const extracted = tapperSrc.match(/function profileHasContent\(p\) \{[\s\S]*?\n  \}/);
 assert('profileHasContent extract', !!extracted);
 if (extracted) {
