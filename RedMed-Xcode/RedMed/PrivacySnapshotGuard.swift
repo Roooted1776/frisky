@@ -46,6 +46,12 @@ struct PrivacySnapshotGuard<Content: View>: View {
         // Tap card (Preview / Scan / band-style shell) stays readable — never cover.
         if tapCardVisible { return false }
         if screenCaptured {
+            // Same .inactive rule as the non-capture path: Face ID / LAContext
+            // on Edit / Save / Erase resigns the scene and must not blank the
+            // form mid-prompt. Cold start is also .inactive — wait for first
+            // .active so a false UIScreen.isCaptured (iOS 26) cannot cream
+            // the first paint.
+            guard hasBeenActive, scenePhase == .active else { return false }
             return phiInMemory && !manualCaptureOverride
         }
         // Stay uncovered until the first active frame so tabs paint immediately.
