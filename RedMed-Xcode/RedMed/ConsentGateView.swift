@@ -61,7 +61,6 @@ struct ConsentGateView<Content: View>: View {
     private func returnToAcknowledgment() {
         checked = false
         openPolicy = nil
-        locationEnabled = true
         ConsentSettings.acceptedThisProcess = false
         var t = Transaction()
         t.animation = nil

@@ -146,9 +146,9 @@ function redmedAssetURL(file) {
        Explicit SOS tap opens `tel:` immediately (no in-page confirm). Crash
        waits the US Crash Detection delay (10s alert + 30s countdown) then
        the same `tel:` unless Stop. Band-tap auto-arm is siren only.
-       Bare /tapper/ first-paints the YOU/main panel (empty dashes). No splash,
-       no "No patient" interstitial, no pick-a-tab gate. #911 / #aid / ?tab=
-       still open those panels; #d= stays the profile payload.
+       Bare /tapper/ without `#d=` (and a failed / empty `#d=`) paints the
+       No Patient empty state — not a blank YOU chart with dashes. #911 /
+       #aid / ?tab= still open those panels; #d= stays the profile payload.
      - Layout: any phone + iPad, iOS 15+ (and Android). Fluid width, safe-area
        insets, no horizontal scroll. Tap-to-view: no account, no login, and no
        authentication gate before or on this page — EMT / helper open the card
@@ -2241,12 +2241,29 @@ function redmedAssetURL(file) {
   }
 
   var firstPhone = '';
-  /// True only after a successful `decodeProfile()` (or native embed). Used to
-  /// refuse SOS auto-arm on garbage `#d=` that paints the No patient empty state.
+  /// True only after a successful `decodeProfile()` (or native embed) that
+  /// actually has medical fields. Used to refuse SOS auto-arm on garbage
+  /// `#d=`, empty `{}` / `[]`, and the No Patient empty state.
   var paintedFromBand = false;
 
+  function profileHasContent(p) {
+    if (!p) return false;
+    if ((p.name || '').trim()) return true;
+    if ((p.dob || '').trim()) return true;
+    if ((p.blood || '').trim()) return true;
+    var lists = [p.allergies, p.meds, p.conditions];
+    for (var i = 0; i < lists.length; i++) {
+      if (typeof lists[i] === 'string' && lists[i].trim()) return true;
+      if (Array.isArray(lists[i]) && lists[i].length) return true;
+    }
+    if (p.contacts && p.contacts.length) return true;
+    if (p.donor || p.pregnant || p.deafOrVisionImpaired) return true;
+    return false;
+  }
+
   function renderProfile(p, fromBand) {
-    paintedFromBand = !!fromBand;
+    var hasPatient = profileHasContent(p);
+    paintedFromBand = !!fromBand && hasPatient;
     p = p || {};
     var rawName = (p.name || '').trim();
     var rawDob = (p.dob || '').trim();
@@ -2256,11 +2273,12 @@ function redmedAssetURL(file) {
     var statusEl = document.getElementById('statusLine');
     var noteEl = document.querySelector('.rm-note');
     var emptyEl = document.getElementById('rmEmpty');
-    // Bare /tapper/ (no #d=) stays on the YOU/main panel — empty dashes, not the
-    // old "No patient" interstitial that hid .you-card after first paint.
+    // Bare /tapper/ and failed / empty `#d=` → No Patient. Owner embed keeps
+    // the YOU card (html.app-embed.is-unlinked hides .rm-empty).
     try {
-      document.documentElement.classList.remove('is-unlinked');
-      if (emptyEl) emptyEl.hidden = true;
+      var showEmpty = !isAppEmbed() && !hasPatient;
+      document.documentElement.classList.toggle('is-unlinked', showEmpty);
+      if (emptyEl) emptyEl.hidden = !showEmpty;
     } catch (eUn) {}
     nameEl.textContent = displayName;
     try {

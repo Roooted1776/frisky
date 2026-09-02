@@ -361,6 +361,23 @@ assert('clipStr 200', clipStr(long).length === MAX_STR);
 const many = Array.from({ length: 50 }, (_, i) => `item${i}`);
 assert('joinList 40', joinList(many).split(', ').length === MAX_LIST);
 
+// --- passerby empty-state / SOS auto-arm gates (tapper/index.html) ---
+const tapperSrc = readFileSync(join(ROOT, 'tapper/index.html'), 'utf8');
+assert('profileHasContent in tapper', tapperSrc.includes('function profileHasContent'));
+assert('is-unlinked toggle in tapper', tapperSrc.includes("classList.toggle('is-unlinked'"));
+assert('paintedFromBand requires content', tapperSrc.includes('paintedFromBand = !!fromBand && hasPatient'));
+const extracted = tapperSrc.match(/function profileHasContent\(p\) \{[\s\S]*?\n  \}/);
+assert('profileHasContent extract', !!extracted);
+if (extracted) {
+  const profileHasContent = new Function(`${extracted[0]}; return profileHasContent;`)();
+  assert('empty object no content', profileHasContent({}) === false);
+  assert('empty array no content', profileHasContent([]) === false);
+  assert('null no content', profileHasContent(null) === false);
+  assert('name is content', profileHasContent({ name: 'Jane Doe' }) === true);
+  assert('blood is content', profileHasContent({ blood: 'O+' }) === true);
+  assert('blank name no content', profileHasContent({ name: '  ' }) === false);
+}
+
 if (failed) {
   console.error(`test-d-codec failed: ${failed} check(s)`);
   process.exit(1);
