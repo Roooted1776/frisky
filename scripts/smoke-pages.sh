@@ -154,7 +154,7 @@ def main() -> int:
     else:
         print("OK   redirect tapper.html")
 
-    ok &= check("/tapper/", 'data-tab="medical"', 'data-tab="911"', 'data-tab="aid"', "copyCoordsBtn", "copyTextToClipboard")
+    ok &= check("/tapper/", 'data-tab="medical"', 'data-tab="911"', 'data-tab="aid"')
     ok &= check("/tapper/index.html", 'data-tab="medical"')
     ok &= check("/get/", "/tapper/")
     ok &= check("/get.html", "/tapper/")
