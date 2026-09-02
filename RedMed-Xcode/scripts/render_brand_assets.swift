@@ -3,7 +3,7 @@ import AppKit
 import Foundation
 
 // Scales repo-root BrandLogo.png into BrandLogo / BrandWordmark / AppIcon slots.
-// The source art is the circular heart on cream #fff7f7 (same as Color.redmedBg).
+// Source art is the white heart + red ECG glyph (App Store icon flattens onto cream #fff7f7).
 
 let root = URL(fileURLWithPath: CommandLine.arguments.count > 1
     ? CommandLine.arguments[1]
@@ -31,7 +31,7 @@ func quantizePNG(at url: URL) {
         "/opt/homebrew/bin/pngquant",
         "/usr/local/bin/pngquant",
         "/usr/bin/pngquant"
-    ].first(where: { FileManager.default.isExecutable(atPath: $0) })
+    ].first(where: { FileManager.default.isExecutableFile(atPath: $0) })
     guard let pngquant else { return }
     let proc = Process()
     proc.executableURL = URL(fileURLWithPath: pngquant)
