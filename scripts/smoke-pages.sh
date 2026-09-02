@@ -135,6 +135,15 @@ def main() -> int:
     # Static: band-tap shell never ships an auth gate (runs even if server is down).
     ok &= check_tapper_no_auth(REPO / "tapper/index.html")
     ok &= check_tapper_no_ads(REPO / "tapper/index.html")
+    tapper = (REPO / "tapper/index.html").read_text(encoding="utf-8")
+    if "copyTextToClipboard" not in tapper or "enableHighAccuracy: true" not in tapper:
+        print("FAIL tapper/index.html Copy Coordinates / high-accuracy GPS missing")
+        ok = False
+    elif "toFixed(6)" not in tapper:
+        print("FAIL tapper/index.html GPS copy must use 6 decimal places")
+        ok = False
+    else:
+        print("OK   copy-coords tapper/index.html")
     root_tapper = (REPO / "tapper.html").read_text(encoding="utf-8")
     if "data-tab=\"medical\"" in root_tapper:
         print("FAIL tapper.html is a full shell copy — keep it a redirect")
@@ -145,7 +154,7 @@ def main() -> int:
     else:
         print("OK   redirect tapper.html")
 
-    ok &= check("/tapper/", 'data-tab="medical"', 'data-tab="911"', 'data-tab="aid"')
+    ok &= check("/tapper/", 'data-tab="medical"', 'data-tab="911"', 'data-tab="aid"', "copyCoordsBtn", "copyTextToClipboard")
     ok &= check("/tapper/index.html", 'data-tab="medical"')
     ok &= check("/get/", "/tapper/")
     ok &= check("/get.html", "/tapper/")
