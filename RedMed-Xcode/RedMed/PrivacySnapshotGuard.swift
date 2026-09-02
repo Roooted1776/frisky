@@ -11,9 +11,9 @@ import UIKit
 /// memory and the tap card is not up. There is no cream lock in front of Main.
 ///
 /// Non-capture SwiftUI cover is **`.background` only** (with PHI). Face ID /
-/// LAContext on Edit / Save / Erase put the scene `.inactive` — covering then
-/// blanks the UI mid-prompt. App-switcher snapshots still get a cover on true
-/// background while PHI is in RAM.
+/// LAContext on the RedMed user page / Edit / Save / Erase put the scene
+/// `.inactive` — covering then blanks the UI mid-prompt. App-switcher
+/// snapshots still get a cover on true background while PHI is in RAM.
 ///
 /// In-app pages stay uncovered while the owner is using them. The cream
 /// overlay is the app-switcher thumbnail (`SnapshotSafeCover`) plus this
@@ -47,17 +47,18 @@ struct PrivacySnapshotGuard<Content: View>: View {
         if tapCardVisible { return false }
         if screenCaptured {
             // Same .inactive rule as the non-capture path: Face ID / LAContext
-            // on Edit / Save / Erase resigns the scene and must not blank the
-            // form mid-prompt. Cold start is also .inactive — wait for first
-            // .active so a false UIScreen.isCaptured (iOS 26) cannot cream
-            // the first paint.
+            // on the RedMed user page / Edit / Save / Erase resigns the scene
+            // and must not blank the UI mid-prompt. Cold start is also
+            // .inactive — wait for first .active so a false
+            // UIScreen.isCaptured (iOS 26) cannot cream the first paint.
             guard hasBeenActive, scenePhase == .active else { return false }
             return phiInMemory && !manualCaptureOverride
         }
         // Stay uncovered until the first active frame so tabs paint immediately.
         guard hasBeenActive else { return false }
         // App-switcher / true background only — Face ID / LAContext put the scene
-        // `.inactive` and would blank the UI mid-prompt on Edit / Save / Erase.
+        // `.inactive` and would blank the UI mid-prompt on the RedMed user
+        // page / Edit / Save / Erase.
         guard scenePhase == .background else { return false }
         return phiInMemory
     }
@@ -153,8 +154,9 @@ struct PrivacySnapshotGuard<Content: View>: View {
 /// an incoming call) because the snapshot risk exists at every one of
 /// those transitions, not only true `.background`.
 ///
-/// Face ID on Edit / Save / Erase also resigns active. The system sheet sits
-/// above this window cover; `didBecomeActive` drops it when the prompt ends.
+/// Face ID on the RedMed user page / Edit / Save / Erase also resigns active.
+/// The system sheet sits above this window cover; `didBecomeActive` drops it
+/// when the prompt ends.
 final class SnapshotSafeCover {
     static let shared = SnapshotSafeCover()
 

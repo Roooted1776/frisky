@@ -61,8 +61,9 @@ enum USCrashDetectionCall {
 /// Arm/disarm uses a generation token so a late arm Task cannot restart the alarm
 /// after Stop / disarm.
 /// Main starts monitoring once owner tabs are up. SOS / survival hold is
-/// separate — stopMonitoring does not cancel an armed siren. Face ID is
-/// Edit / Save / Erase only; crash motion is not gated on a lock.
+/// separate — stopMonitoring does not cancel an armed siren. Face ID gates
+/// the owner RedMed user page plus Edit / Save / Erase; crash motion is
+/// not gated on that view unlock.
 
 @MainActor
 final class CrashMotionGuard: ObservableObject {

@@ -766,6 +766,7 @@ struct EditProfileView: View {
             showSaveFailedAlert = true
             return
         }
+        OwnerRedMedGate.unlock()
         VaultHistoryStore.shared.record(.profileSaved)
         dismiss()
     }

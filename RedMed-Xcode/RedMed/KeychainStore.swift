@@ -7,9 +7,10 @@ import Security
 /// **Current contract:** `kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly`
 /// with **no** `kSecAttrAccessControl`. Readable whenever this device is
 /// unlocked. Excluded from iCloud Keychain and encrypted backups
-/// (`kSecAttrSynchronizable = false`). Face ID is **UI-only** on owner
-/// Edit / Save / Erase (`BiometricAuth`) — not a SecItem ACL. Viewing the
-/// card, 911, Aid, NFC write, app launch, and tapper do not prompt.
+/// (`kSecAttrSynchronizable = false`). Face ID is **UI-only** on the owner
+/// RedMed user page, Edit / Save / Erase (`BiometricAuth`) — not a SecItem
+/// ACL. Keychain load does not prompt. Display of the YOU card does.
+/// 911, Aid, NFC write, app launch, and tapper do not prompt.
 ///
 /// **Legacy items:** `biometryCurrentSet` ACL (older builds) or plain
 /// accessibility with no ACL. `load` still reads them. A successful read
@@ -17,7 +18,7 @@ import Security
 /// Never write a new `biometryCurrentSet` item.
 ///
 /// `load` / `save` may still attach `BiometricAuth.peekAuthenticationContext()`
-/// so a just-completed Edit/Save Face ID can update or replace an old
+/// so a just-completed view/Edit/Save Face ID can update or replace an old
 /// biometry row without a second sheet.
 enum KeychainStore {
     private static let defaultService = "com.redmed.app.profile"
@@ -32,7 +33,7 @@ enum KeychainStore {
     }
 
     /// Attach parked LAContext so a leftover biometry ACL row can update/delete
-    /// without a second prompt after Edit/Save Face ID.
+    /// without a second prompt after view/Edit/Save Face ID.
     private static func withAuthContext(_ query: inout [String: Any], extra: LAContext? = nil) {
         if let ctx = extra ?? BiometricAuth.peekAuthenticationContext() {
             ctx.interactionNotAllowed = extra == nil

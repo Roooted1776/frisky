@@ -6,19 +6,42 @@ import SwiftUI
 /// under 911 / Aid / NFC kept the compositor hot mid-session.
 /// Owner chrome: Edit on its own row, then logo + name + Linked (no Help dock).
 /// YOU-card header matches passerby / NFC Preview — no Edit on that row.
+/// Owner Face ID runs immediately before the user / YOU card when a stored
+/// ID exists (not an app-wide lock — 911 / Aid / NFC stay reachable).
 /// Scanners keep Back. Help lives on 911 / Aid / NFC — not on Edit.
 /// Fresh install: native setup funnel. Passerby tapper is unchanged.
 struct RedMedView: View {
+    var isVisible: Bool = true
+
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
+    @Environment(\.scenePhase) private var scenePhase
     @State private var showEdit = false
     @State private var isRequestingEdit = false
+    @State private var isRequestingUnlock = false
+    @State private var viewUnlocked = OwnerRedMedGate.isUnlocked
     @State private var showAuthFailedAlert = false
+    @State private var authFailedAction = "edit"
     @State private var authUnavailableMessage: String?
     @State private var healthImportBusy = false
     @State private var healthImportMessage: String?
     /// HealthKit characteristics to seed Edit. Not written to ProfileData until Save.
     @State private var healthSeed: HealthKitProfileImport.Draft?
+
+    /// Stored owner ID (or RAM PHI) — Face ID before the YOU card. Fresh
+    /// install funnel has no PHI yet. Scanners never gate.
+    private var needsViewGate: Bool {
+        !isScannerSession
+            && (profile.hasSensitiveProfileData
+                || profile.isRestoringFromKeychain
+                || ProfileData.prefersLockOnLaunch
+                || ProfileData.hasStoredProfile())
+    }
+
+    /// Scanner always. Owner: funnel when empty, YOU card after Face ID.
+    private var showsOwnerUser: Bool {
+        isScannerSession || !needsViewGate || viewUnlocked
+    }
 
     /// Owner empty profile — native steps instead of a blank YOU card.
     /// Hidden while a stored ID is expected or restore is in flight.
@@ -42,7 +65,7 @@ struct RedMedView: View {
                 .padding(.top, 16)
                 .padding(.bottom, 8)
                 .redmedTopChromeWash()
-            } else {
+            } else if showsOwnerUser {
                 VStack(spacing: 0) {
                     HStack(alignment: .center, spacing: 12) {
                         Spacer(minLength: 0)
@@ -72,7 +95,7 @@ struct RedMedView: View {
                         onFill: { requestEdit() },
                         onHealthImport: { Task { await importFromHealthThenEdit() } }
                     )
-                } else {
+                } else if showsOwnerUser {
                     VStack(spacing: 0) {
                         if !isScannerSession {
                             ownerNextStepBanner
@@ -80,6 +103,11 @@ struct RedMedView: View {
                         OwnerYouCard()
                             .id(profile.cardEpoch)
                     }
+                } else {
+                    OwnerRedMedUnlockPane(
+                        busy: isRequestingUnlock,
+                        onUnlock: { requestViewUnlock() }
+                    )
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -93,7 +121,7 @@ struct RedMedView: View {
         .alert(BiometricAuth.deniedAlertTitle, isPresented: $showAuthFailedAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text(BiometricAuth.deniedAlertMessage(action: "edit"))
+            Text(BiometricAuth.deniedAlertMessage(action: authFailedAction))
         }
         .alert(BiometricAuth.unavailableAlertTitle, isPresented: Binding(
             get: { authUnavailableMessage != nil },
@@ -110,6 +138,34 @@ struct RedMedView: View {
             EditProfileView(healthSeed: healthSeed)
                 .environmentObject(profile)
                 .presentationBackground(Color.redmedBg)
+        }
+        .onAppear { if isVisible { tryUnlockIfNeeded() } }
+        .onChange(of: isVisible) { _, visible in
+            if visible { tryUnlockIfNeeded() }
+        }
+        .onChange(of: showEdit) { _, open in
+            guard !open else { return }
+            viewUnlocked = OwnerRedMedGate.isUnlocked
+            tryUnlockIfNeeded()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            guard !isScannerSession else { return }
+            switch phase {
+            case .background:
+                OwnerRedMedGate.lock()
+                viewUnlocked = false
+                if isRequestingUnlock {
+                    isRequestingUnlock = false
+                    BiometricAuth.cancelInFlight()
+                }
+            case .active:
+                if isVisible { tryUnlockIfNeeded() }
+            default:
+                break
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .redMedDidEraseLocalData)) { _ in
+            viewUnlocked = false
         }
     }
 
@@ -141,7 +197,48 @@ struct RedMedView: View {
         }
     }
 
-    // MARK: - Edit gate
+    // MARK: - View / Edit gates
+
+    private func tryUnlockIfNeeded() {
+        if OwnerRedMedGate.isUnlocked {
+            viewUnlocked = true
+            return
+        }
+        guard needsViewGate, !viewUnlocked, !isRequestingUnlock, !showEdit else { return }
+        guard scenePhase == .active else { return }
+        requestViewUnlock()
+    }
+
+    private func requestViewUnlock() {
+        guard !isScannerSession, !isRequestingUnlock, !viewUnlocked, !showEdit else { return }
+        isRequestingUnlock = true
+        BiometricAuth.authenticate(
+            reason: "Confirm with Face ID, Touch ID, or passcode to view your RedMed profile.",
+            force: true
+        ) { outcome in
+            Task { @MainActor in
+                isRequestingUnlock = false
+                switch outcome {
+                case .success:
+                    if scenePhase == .background {
+                        OwnerRedMedGate.lock()
+                        viewUnlocked = false
+                    } else {
+                        OwnerRedMedGate.unlock()
+                        viewUnlocked = true
+                    }
+                case .notVerified:
+                    authFailedAction = "view"
+                    showAuthFailedAlert = true
+                    VaultHistoryStore.shared.record(.unlockFailed, detail: "view")
+                case .unavailable(let reason):
+                    authUnavailableMessage = reason.message
+                case .declined, .notInteractive, .timedOut:
+                    break
+                }
+            }
+        }
+    }
 
     private func requestEdit() {
         // Scanners never edit. Face ID gates opening Edit; Save Face IDs persist.
@@ -157,6 +254,7 @@ struct RedMedView: View {
                 case .success:
                     showEdit = true
                 case .notVerified:
+                    authFailedAction = "edit"
                     showAuthFailedAlert = true
                     VaultHistoryStore.shared.record(.unlockFailed, detail: "edit")
                 case .unavailable(let reason):
@@ -185,6 +283,36 @@ struct RedMedView: View {
         } catch {
             healthImportMessage = error.localizedDescription
         }
+    }
+}
+
+// MARK: - Owner RedMed view gate
+
+/// Cream pane on the owner RedMed tab until Face ID. No logo (no hanging
+/// brand mark). 911 / Aid / NFC stay on the tab bar. Scanners never see this.
+private struct OwnerRedMedUnlockPane: View {
+    var busy: Bool
+    var onUnlock: () -> Void
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Spacer(minLength: 0)
+            Text("Unlock to view your medical ID.")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(.redmedDark)
+                .multilineTextAlignment(.center)
+            Text("Face ID, Touch ID, or passcode. 911, Aid, and NFC stay available.")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.redmedMuted)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+            PrimaryButton(title: "Unlock", busy: busy, action: onUnlock)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, RedMedChrome.pagePadX)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Unlock to view your medical ID")
     }
 }
 

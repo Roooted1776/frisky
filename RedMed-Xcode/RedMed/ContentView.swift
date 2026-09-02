@@ -51,7 +51,7 @@ struct ContentView: View {
             // RedMed is a native YOU card — no WKWebView to park at 0.02.
             ZStack {
                 mountedTab(.redmed, epoch: profile.cardEpoch) {
-                    RedMedView()
+                    RedMedView(isVisible: activeTab == .redmed)
                 }
                 mountedTab(.emergency, refreshOnHide: true) {
                     EmergencyView(isVisible: activeTab == .emergency)
@@ -100,8 +100,9 @@ struct ContentView: View {
                 // start a fresh one. Does not cancel an armed siren.
                 CrashMotionGuard.shared.stopMonitoring()
             default:
-                // `.inactive` is Face ID on Edit / Save / Erase, Control
-                // Center, app switcher peek. Keep listening.
+                // `.inactive` is Face ID on the RedMed user page / Edit /
+                // Save / Erase, Control Center, app switcher peek. Keep
+                // listening.
                 break
             }
         }
