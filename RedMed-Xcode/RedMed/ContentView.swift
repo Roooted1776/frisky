@@ -3,7 +3,7 @@ import SwiftUI
 /// Root tab shell.
 ///
 /// Permanent product rule (bracelet tap / scanner):
-/// - Owner (`isScannerSession == false`): RedMed · 911 · Aid · NFC (+ Edit on RedMed).
+/// - Owner (`isScannerSession == false`): RedMed · 911 · Aid · NFC (+ Edit chrome on RedMed, not on the YOU-card / Preview header).
 ///   Help chrome on every native screen except the Edit modal.
 /// - Scanner / tap (`isScannerSession == true` or HTML `tapper.html#d=`): RedMed · 911 · Aid
 ///   only — **no Edit**, **no NFC**. Help is policies-only (no Settings / Erase / NFC write).
