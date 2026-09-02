@@ -44,7 +44,6 @@
 		AABB00000000000000000030 /* CrashMotionGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000030 /* CrashMotionGuard.swift */; };
 		AABB00000000000000000031 /* NFCBandManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000031 /* NFCBandManager.swift */; };
 		AABB00000000000000000032 /* SatelliteFieldUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000032 /* SatelliteFieldUI.swift */; };
-		AABB00000000000000000059 /* RedMedSignpost.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000059 /* RedMedSignpost.swift */; };
 		AABB00000000000000000034 /* SecurePasteboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000034 /* SecurePasteboard.swift */; };
 		AABB00000000000000000035 /* VolumeBoost.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000035 /* VolumeBoost.swift */; };
 		AABB0000000000000000004C /* PasserbyHTMLCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000004C /* PasserbyHTMLCardView.swift */; };
@@ -54,6 +53,7 @@
 		AABB00000000000000000055 /* ConsentGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000055 /* ConsentGateView.swift */; };
 		AABB00000000000000000056 /* CountryDialCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000056 /* CountryDialCode.swift */; };
 		AABB00000000000000000057 /* HealthKitProfileImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000057 /* HealthKitProfileImport.swift */; };
+		AABB00000000000000000059 /* RedMedSignpost.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000059 /* RedMedSignpost.swift */; };
 		AABB0000000000000000005A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000005A /* PrivacyInfo.xcprivacy */; };
 		AABB0000000000000000005C /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000005C /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
@@ -99,7 +99,6 @@
 		AAAA00000000000000000030 /* CrashMotionGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashMotionGuard.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000031 /* NFCBandManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFCBandManager.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000032 /* SatelliteFieldUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatelliteFieldUI.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000059 /* RedMedSignpost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedMedSignpost.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000034 /* SecurePasteboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurePasteboard.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000035 /* VolumeBoost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeBoost.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000004C /* PasserbyHTMLCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasserbyHTMLCardView.swift; sourceTree = "<group>"; };
@@ -109,6 +108,7 @@
 		AAAA00000000000000000055 /* ConsentGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsentGateView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000056 /* CountryDialCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryDialCode.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000057 /* HealthKitProfileImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitProfileImport.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000059 /* RedMedSignpost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedMedSignpost.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000005A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		AAAA0000000000000000005C /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -366,7 +366,6 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
-
 /* Begin PBXShellScriptBuildPhase section */
 		AAAA00000000000000000070 /* Bundle passerby tapper */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -478,7 +477,6 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				MTL_ENABLE_DEBUG_INFO = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -494,6 +492,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -565,7 +564,6 @@
 				ENABLE_PREVIEWS = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = RedMed/Info.plist;
-				MTL_ENABLE_DEBUG_INFO = NO;
 				INFOPLIST_KEY_CFBundleDisplayName = RedMed;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -574,6 +572,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.redmed.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
