@@ -1,9 +1,10 @@
 // Owner-only NFC bracelet setup. Ped/EMS scanner shells never mount this tab —
 // see ContentView.showsNFC / scannerSafeTab.
 // One page: Write + Scan + Preview → full-page tap card (what first responders see).
-// When `AppConfig.nfcHardwareEnabled` is true, Write/Scan start real CoreNFC.
-// Parked: Write/Scan preview the packed card; Share Band URL is the live
-// `medicalCardBaseURL#d=` for Shortcuts / NFC Tools. Never Linked from this path.
+// When `AppConfig.nfcHardwareEnabled` is true, Write starts a CoreNFC
+// NDEF session and programs `medicalCardBaseURL#d=` from the live profile.
+// Scan reads a band and opens the same tapper card. Linked only after
+// write + matching read-back. Parked (`false`): pack-only Preview + Share Band URL.
 import SwiftUI
 
 struct NFCView: View {

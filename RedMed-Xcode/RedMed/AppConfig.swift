@@ -88,11 +88,12 @@ enum AppConfig {
     /// Product kill switch for CoreNFC write/read sessions only.
     /// Owner still always sees the NFC tab (ContentView.showsNFC); scanners never do.
     /// `true` = owner Write/Scan start real `NFCNDEFReaderSession` against blank
-    /// unlocked NXP NTAG216 (ISO 14443A Type 2). Requires NFC Tag Reading on App ID
+    /// unlocked NXP NTAG216 (ISO 14443A Type 2). Write packs live RedMed into
+    /// `medicalCardBaseURL#d=` (`OwnerBandURI`). Requires NFC Tag Reading on App ID
     /// `com.redmed.app` + paid Apple Developer — see `docs/NFC-RESTORE.md`.
-    /// Parked (`false`): personal/free teams cannot provision NFC; Write/Scan
-    /// stay on the pack-only simulate path until entitlement is restored.
-    static let nfcHardwareEnabled = false
+    /// Keep this flag in lockstep with `RedMed.entitlements` + `NFCReaderUsageDescription`.
+    /// `false` parks hardware sessions (pack-only simulate + Share Band URL).
+    static let nfcHardwareEnabled = true
 
     /// Product kill switch for the optional Apple Health import on the empty-profile
     /// funnel / Edit. `true` = `HealthKitProfileImport` may call HealthKit.

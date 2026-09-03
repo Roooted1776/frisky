@@ -17,23 +17,24 @@ unavailable, write fails and the band is not marked linked.
 **Linked** only after a real CoreNFC write **and** matching read-back
 (`writeVerified`). Written-but-unverified stays Not linked.
 
-## Currently parked (personal team signing)
+## Currently on (in-repo)
 
-`AppConfig.nfcHardwareEnabled = false` and
-`RedMed.entitlements` is a bare `<dict/>` (no NFC key, no XML comments —
-Automatic Signing strips comments and can rewrite a mismatched file
-mid-build). Free / personal Apple teams cannot provision **NFC Tag
-Reading**, so device builds fail while the entitlement is present. Keep
-flag and entitlements in lockstep.
+`AppConfig.nfcHardwareEnabled = true`,
+`RedMed.entitlements` has `com.apple.developer.nfc.readersession.formats` →
+`NDEF`, and `Info.plist` has `NFCReaderUsageDescription`. Owner NFC **Write
+The Band** starts `NFCNDEFReaderSession` and programs
+`medicalCardBaseURL#d=` from the live profile. Scan reads a band and opens
+the same tapper card. Keep flag, entitlement, and usage string in lockstep.
 
-`Info.plist` must **not** include `NFCReaderUsageDescription` while the
-entitlement is absent (unused purpose string). Add the key on restore.
+Device signing still needs **NFC Tag Reading** on App ID `com.redmed.app`
+(paid Apple Developer). Free / personal teams cannot provision it — Automatic
+Signing fails while the entitlement is present. Portal + Xcode capability
+are not git; see Restore below if a device build rejects the profile.
 
 **Do not hide the owner NFC tab** — owners always get RedMed · 911 · Aid ·
-NFC; scanners never get NFC. The flag only blocks `NFCWriter` / `NFCReader`
-sessions (simulate / pack-only path stays). Parked NFC tab **Share Band URL**
-is the same `OwnerBandURI` CoreNFC Write would program. Shortcuts or NFC Tools
-can write that onto a blank unlocked NTAG216. That path does **not** mark Linked.
+NFC; scanners never get NFC. The flag only gates `NFCWriter` / `NFCReader`
+sessions (simulate / pack-only + Share Band URL return if the flag is
+parked). Linked only after a real write + matching read-back.
 
 Owner NFC page keeps **both** capabilities on one screen: Write and Scan
 (opens the same `tapper.html#d=` page helpers see).
@@ -76,6 +77,8 @@ Owner NFC page keeps **both** capabilities on one screen: Write and Scan
   `AppConfig.BraceletRF.backgroundTagReadingSummary`.
 
 ## Restore (paid Program + device)
+
+In-repo steps 1, 2, and 5 are already on. Remaining is Apple + a phone:
 
 1. Set `AppConfig.nfcHardwareEnabled = true`
 2. Put `com.apple.developer.nfc.readersession.formats` → `NDEF` back in

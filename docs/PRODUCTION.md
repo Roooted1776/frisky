@@ -21,7 +21,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | Keychain profile | `WhenPasscodeSetThisDeviceOnly`, no biometry ACL; save fail-closed; never synchronizable |
 | Location toggle | Honored on Agree. Agree does not present When-In-Use. System sheet + GPS start/stop are Find Help only |
 | Owner tabs | RedMed · 911 · Aid · NFC; scanners never see NFC |
-| NFC Preview + Scan | Both use `fullScreenCover(item:)` after pack — no empty-cover race. Parked Share Band URL is live `medicalCardBaseURL#d=` (Shortcuts / NFC Tools). Never Linked from share |
+| NFC Preview + Scan | Both use `fullScreenCover(item:)` after pack — no empty-cover race. Owner Write starts CoreNFC (`nfcHardwareEnabled = true`) and programs live `medicalCardBaseURL#d=`. Linked only after matching read-back |
 | Passerby shell | One file `tapper/index.html`; Xcode copies it to the app bundle as `tapper.html` at build; repo-root `tapper.html` redirects to `/tapper/` |
 | Offline shell | SW cache precaches HTML + pheart / BrandLogo / BrandWordmark |
 | Band URI contract | Write only `medicalCardBaseURL + #d=` base64url; vendor/social/short URLs rejected |
@@ -39,7 +39,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 
 | Area | Status |
 |------|--------|
-| Band write host | Live: `https://roooted1776.github.io/tapper/` (smoke green 2026-08-31). CoreNFC write is still parked. NFC tab Share Band URL is that host + `#d=` for a blank NTAG216. Linked still needs paid NFC Tag Reading |
+| Band write host | Live: `https://roooted1776.github.io/tapper/` (smoke green 2026-08-31). In-repo Write is CoreNFC (`nfcHardwareEnabled = true`). Device signing still needs NFC Tag Reading on App ID `com.redmed.app` |
 | `redmed.pages.dev` | 404 until CF secrets / Git connect |
 | XCTest | No iOS test target. Codec lockstep is Node, not XCTest |
 | App Store package | `PrivacyInfo.xcprivacy` + export flag exist; listing is parked |
@@ -48,11 +48,11 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 
 Not doing these in git until you have the Program and an app ID:
 
-1. NFC Tag Reading entitlement — keep `nfcHardwareEnabled = false` and empty `RedMed.entitlements`.
+1. NFC Tag Reading on App ID `com.redmed.app` (portal + Xcode capability). In-repo flag, entitlement, and usage string are already on — see `docs/NFC-RESTORE.md`.
 2. HealthKit entitlement — keep `healthKitImportEnabled = false`.
 3. `AppConfig.appStoreURL` is `nil` (no placeholder listing).
 4. App Store Connect package / Archive.
 
 Legal policies stay in Help.html. User acknowledgments stay on `ConsentGateView` (every cold start; Agree this process stays in Main). Face ID is not in front of that screen.
 
-Custom HTML domain is still TBD (`docs/domain.md`). Write base `/tapper/` is green. Do not flip `nfcHardwareEnabled` until the paid NFC entitlement can sign.
+Custom HTML domain is still TBD (`docs/domain.md`). Write base `/tapper/` is green.
