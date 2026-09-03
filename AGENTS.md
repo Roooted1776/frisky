@@ -6,10 +6,11 @@
 authoritative for code.
 
 **Ship blocker:** the passerby host `https://roooted1776.github.io/tapper/` is live.
-This build still cannot CoreNFC-write a band (`nfcHardwareEnabled = false`, free
-Apple team). Parked NFC tab **Share Band URL** is the same `#d=` URI for a blank
-NTAG216 (Shortcuts / NFC Tools). Linked still needs paid NFC Tag Reading + a
-real write. Do not spend PRs on tab chrome or copy.
+Owner NFC **Write The Band** starts a real CoreNFC NDEF write of the live
+profile (`nfcHardwareEnabled = true`, `medicalCardBaseURL#d=` only). Device
+signing still needs NFC Tag Reading on App ID `com.redmed.app` (paid Apple
+team) — see `docs/NFC-RESTORE.md`. Linked only after write + matching
+read-back. Do not spend PRs on tab chrome or copy.
 
 This repository is a **native iOS/SwiftUI app** (RedMed), located under `RedMed-Xcode/`. It
 builds and runs **only on macOS with Xcode 15+** (prefer Xcode 27 / iOS 27.0 Simulator) and an
