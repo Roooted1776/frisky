@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Owner / scanner RedMed tab — native YOU card (header + identity + lists).
 /// Bundled `tapper.html` is passerby + NFC Preview / Scan only. No WKWebView
@@ -30,12 +31,12 @@ struct RedMedView: View {
 
     /// Stored owner ID (or RAM PHI) — Face ID before the YOU card. Fresh
     /// install funnel has no PHI yet. Scanners never gate.
+    /// UserDefaults gate + restore flag only — do not SecItem on every body.
     private var needsViewGate: Bool {
         !isScannerSession
             && (profile.hasSensitiveProfileData
                 || profile.isRestoringFromKeychain
-                || ProfileData.prefersLockOnLaunch
-                || ProfileData.hasStoredProfile())
+                || ProfileData.prefersLockOnLaunch)
     }
 
     /// Scanner always. Owner: funnel when empty, YOU card after Face ID.
@@ -50,7 +51,6 @@ struct RedMedView: View {
             && !profile.hasSensitiveProfileData
             && !profile.isRestoringFromKeychain
             && !ProfileData.prefersLockOnLaunch
-            && !ProfileData.hasStoredProfile()
     }
 
     var body: some View {
@@ -140,10 +140,22 @@ struct RedMedView: View {
                 .presentationBackground(Color.redmedBg)
         }
         .onAppear { if isVisible { tryUnlockIfNeeded() } }
+        .onReceive(NotificationCenter.default.publisher(for: UIWindow.didBecomeKeyNotification)) { _ in
+            if isVisible { tryUnlockIfNeeded() }
+        }
         .onChange(of: isVisible) { _, visible in
             if visible { tryUnlockIfNeeded() }
         }
-        
+        .task(id: isRequestingUnlock) {
+            guard isRequestingUnlock else { return }
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            guard isRequestingUnlock else { return }
+            // Live Face ID / passcode puts the scene `.inactive`. Do not
+            // tear that down at 1.5s — only kill a hung evaluate with no UI.
+            if BiometricAuth.isEvaluating, scenePhase != .active { return }
+            BiometricAuth.cancelInFlight()
+            isRequestingUnlock = false
+        }
         .onChange(of: showEdit) { _, open in
             guard !open else { return }
             viewUnlocked = OwnerRedMedGate.isUnlocked
@@ -206,7 +218,10 @@ struct RedMedView: View {
             return
         }
         guard needsViewGate, !viewUnlocked, !isRequestingUnlock, !showEdit else { return }
-        guard scenePhase == .active else { return }
+        guard scenePhase != .background else { return }
+        #if !targetEnvironment(simulator)
+        guard BiometricAuth.hasKeyWindow else { return }
+        #endif
         requestViewUnlock()
     }
 
