@@ -88,10 +88,19 @@ struct NFCView: View {
             await refreshParkedBandURL()
         }
         .onChange(of: band.isWriting) { _, writing in
-            // Linked only after a matching read-back. Written-but-unverified stays Not linked.
-            guard !writing, band.writeSucceeded, band.writeVerified, AppConfig.nfcHardwareEnabled else { return }
-            band.linkBracelet(on: profile, detail: "NFC write verified")
+            guard !writing else { return }
+            linkBraceletIfVerified()
         }
+        .onChange(of: band.writeVerified) { _, verified in
+            guard verified, !band.isWriting else { return }
+            linkBraceletIfVerified()
+        }
+    }
+
+    /// Linked only after a matching read-back. Written-but-unverified stays Not linked.
+    private func linkBraceletIfVerified() {
+        guard band.writeSucceeded, band.writeVerified, AppConfig.nfcHardwareEnabled else { return }
+        band.linkBracelet(on: profile, detail: "NFC write verified")
     }
 
     private var linkStatus: (title: String, detail: String, linked: Bool) {
@@ -154,7 +163,8 @@ struct NFCView: View {
                 title: writeButtonTitle,
                 systemImage: band.isWriting ? nil : "wave.3.right",
                 busy: band.isWriting,
-                disabled: !profile.hasData || band.isBusy
+                disabled: !profile.hasData || band.isBusy,
+                flatten: false
             ) {
                 band.writeBand(from: profile, isScannerSession: isScannerSession)
             }
