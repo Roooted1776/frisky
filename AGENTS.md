@@ -29,9 +29,14 @@ set up a working runtime here:
 The app has no backend, database, or web service.
 
 **Roles / shells (permanent — do not regress):**
-- **Face ID:** in-app Face ID is on the **owner RedMed page immediately before the user / YOU card** (when a stored ID exists), plus Edit / Save / Erase. Not app launch, not 911 / Aid / NFC write, not tapper, not Consent.
-  Tapper has no biometrics and no acknowledgement page. Do not remount
-  `OwnerAppLock` / `LockEntryPage` / `FacePage` as an app-wide cream lock.
+- **Face ID:** first launch (or policy-version bump) runs Face ID **on**
+  `ConsentGateView` (Before you continue). After it succeeds the same page
+  is usable; Agree enters Main. Later cold starts skip consent. Face ID
+  then sits on the **owner RedMed page immediately before the user / YOU
+  card** (when a stored ID exists), plus Edit / Save / Erase. Not 911 /
+  Aid / NFC write, not tapper. Tapper has no biometrics and no
+  acknowledgement page. Do not remount `OwnerAppLock` / `LockEntryPage` /
+  `FacePage` as an app-wide cream lock.
   Tabs stay reachable without Face ID. The RedMed tab does not paint PHI
   until Face ID succeeds. Relock that view on true `.background` only.
   Crash monitor starts from owner `Main` / `ContentView.onAppear`, not from
@@ -48,10 +53,11 @@ The app has no backend, database, or web service.
   write/read sessions, never tab chrome. Owner writes the passive HF NFC band
   from the NFC tab (no Face ID on write) as `medicalCardBaseURL#d=` only
   (`AppConfig.OwnerBandURI`) — no vendor cloud, no social/short URL, no BLE.
-  Launch path is `ConsentGateView` (every cold start) then Main after Agree
-  this process. Same session stays in Main. No cream lock in front of Main
-  (911 / Aid / NFC stay reachable). Face ID is not an app-open gate; it
-  sits on the RedMed tab immediately before the user / YOU card.
+  Launch path is `ConsentGateView` on first launch (or policy-version bump)
+  with Face ID on that page, then Main after Agree. Later cold starts skip
+  the gate and open Main; Face ID is the RedMed tab before the YOU card
+  when a stored ID exists. Same session stays in Main. No cream lock in
+  front of Main (911 / Aid / NFC stay reachable).
 - **Scanner / passerby shell** (`PublicCardView` / bracelet tap → `tapper.html#d=…`,
   `isScannerSession == true`): tabs are **RedMed · 911 · Aid** only — **no Edit**,
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain or
@@ -110,8 +116,9 @@ The app has no backend, database, or web service.
 
 **Settings vs automatic (permanent):**
 - Haptic feedback + Location toggles (`AppSettings` / `HapticEngine.enabledKey`)
-  live on `ConsentGateView`'s "Before you continue" screen, not Help — every
-  cold start; same session after Agree stays in Main. No other toggles there,
+  live on `ConsentGateView`'s "Before you continue" screen, not Help —
+  first launch / policy-version bump; same session after Agree stays in Main.
+  Later cold starts skip that page. No other toggles there,
   and Help no longer has a Settings section at all.
 - **Brightness + sound are survival-alarm only (not Settings):**
   arm `BrightnessBoost` + `VolumeBoost` + `LocatorBeacon` only when (1) on-device crash /
@@ -190,7 +197,8 @@ The app has no backend, database, or web service.
 **Cold launch:** Do **not** create `CLLocationManager`, start GPS / MapKit /
 trauma JSON, or show a Location banner at `@main`. First launch opens a cream
 shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash)
-then `ConsentGateView` (every cold start) then Main after Agree this process.
+then `ConsentGateView` on first launch (or policy-version bump) with Face ID
+on that page, then Main after Agree. Later cold starts skip the gate.
 Same session stays in Main. No cream lock in front of Main. Owner RedMed
 tab Face IDs before painting the YOU card when a stored ID exists.
 Owner `ContentView.onAppear` starts crash
@@ -200,7 +208,7 @@ must not hit owner Keychain). A UserDefaults gate
 (`ProfileData.storedProfileGateKey`) plus `hasStoredProfile()` hints that a
 blob is expected so the empty funnel stays hidden while restore is in flight.
 Do not call Keychain decode in `@State` defaults.
-Location defaults on (Before you continue — every cold start) with
+Location defaults on (Before you continue — first launch / policy bump) with
 **no RedMed location gate / banner / Allow popup** — Help must not
 call `requestWhenInUseAuthorization`. Honor the Location toggle: Agree must
 not force `locationEnabled = true`. Agree must not present When-In-Use —

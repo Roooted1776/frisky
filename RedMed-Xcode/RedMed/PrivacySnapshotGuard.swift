@@ -77,6 +77,7 @@ struct PrivacySnapshotGuard<Content: View>: View {
         .onAppear {
             tapCardVisible = TapCardPresentation.isVisible
             screenCaptured = UIScreen.main.isCaptured
+            SnapshotSafeCover.phiInMemory = phiInMemory
             if scenePhase == .active {
                 hasBeenActive = true
             }
@@ -92,6 +93,9 @@ struct PrivacySnapshotGuard<Content: View>: View {
                     manualCaptureOverride = false
                 }
             }
+        }
+        .onChange(of: phiInMemory) { _, on in
+            SnapshotSafeCover.phiInMemory = on
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
@@ -164,6 +168,9 @@ final class SnapshotSafeCover {
     /// Cold launch / Xcode debugger attach fire willResignActive before the
     /// first Main frame. Covering then is the cream hang after the launch screen.
     private var hasBeenActive = false
+    /// Cover only while PHI is in RAM. Face ID on Before you continue has
+    /// no profile yet — cream over that page is the stuck launch.
+    static var phiInMemory = false
 
     private init() {
         NotificationCenter.default.addObserver(
@@ -199,6 +206,7 @@ final class SnapshotSafeCover {
         // Wait for the first active frame so launch / debugger attach
         // cannot paint cream over Main.
         guard hasBeenActive else { return }
+        guard Self.phiInMemory else { return }
         // Passerby tap card (Preview / Scan / band-style shell) is the public
         // EMT view — never veil it, matching PrivacySnapshotGuard's own rule.
         guard !TapCardPresentation.isVisible,
