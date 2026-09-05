@@ -24,6 +24,7 @@ final class NFCBandManager: ObservableObject {
     @Published var writeVerified = false
     @Published var lastPackedURL: String?
     /// Scan / simulate → full passerby shell (item present; payload never empty).
+    /// NFC UI uses Preview for the helper card; this path remains for hardware verifyBand.
     @Published var scannedCard: ScannedCardSession?
     @Published var alertMessage: String?
 
@@ -46,7 +47,8 @@ final class NFCBandManager: ObservableObject {
     // MARK: - Write (owner band setup)
 
     /// Snapshot live RedMed → AES-GCM `#d=` → CoreNFC write (or pack-only when parked).
-    /// Pack + `session.begin()` stay on this tap's stack. CoreNFC drops the
+    /// Pack + `session.begin()` stay on this tap's stack (NFC tab open / Write).
+    /// Once the sheet is up, hold the band ~1–2″ to finish. CoreNFC drops the
     /// sheet if Write hops through `Task` / `Task.detached` first.
     /// Parked Share Band URL on the NFC tab is the same `OwnerBandURI` string.
     /// No Face ID here — view / Edit / Save / Erase only.
@@ -73,12 +75,14 @@ final class NFCBandManager: ObservableObject {
             writeVerified = false
             writer.writeURL(urlString)
         } else {
-            simulateWrite(
-                urlString,
-                embedJSON: ProfileNFCCodec.embedProfileJSON(from: chip),
-                profile: profile
-            )
+            simulateWrite(urlString, profile: profile)
         }
+    }
+
+    /// Drop a live write/read sheet when leaving the NFC tab.
+    func cancelSessions() {
+        writer.cancel()
+        reader.cancel()
     }
 
     // MARK: - Verify / scan (same HTML shell a stranger gets on band tap)
@@ -193,8 +197,8 @@ final class NFCBandManager: ObservableObject {
     }
 
     /// Pack-only fallback when CoreNFC is parked — never marks Linked.
-    /// Opens the same passerby card Scan/Preview use so the owner loop is complete without hardware.
-    private func simulateWrite(_ urlString: String, embedJSON: String?, profile: ProfileData) {
+    /// Does not open the helper card; NFC Preview is the single first-responder preview.
+    private func simulateWrite(_ urlString: String, profile: ProfileData) {
         isWriting = true
         writeSucceeded = false
         writeVerified = false
@@ -206,8 +210,7 @@ final class NFCBandManager: ObservableObject {
             self.isWriting = false
             self.writeSucceeded = false
             self.writeVerified = false
-            self.statusMessage = "Packed only (no band) — \(note.text). Linked needs a real NFC write."
-            self.presentHTMLCard(payloadOrURL: urlString, embedJSON: embedJSON)
+            self.statusMessage = "Packed only (no band) — \(note.text). Use Preview for the helper card; Linked needs a real NFC write."
         }
     }
 

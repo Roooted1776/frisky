@@ -17,6 +17,8 @@ struct ContentView: View {
     @State private var tab: AppTab = .redmed
     /// Only mount a tab's heavy subtree after first visit; keep it alive after.
     @State private var mountedTabs: Set<AppTab> = [.redmed]
+    /// Owned here so the NFC tab tap can begin CoreNFC on the same gesture stack.
+    @StateObject private var nfcBand = NFCBandManager()
 
     /// Owner-only fourth tab. Scanners never see NFC.
     private var showsNFC: Bool { !isScannerSession }
@@ -59,14 +61,16 @@ struct ContentView: View {
                 mountedTab(.aid) { AidView() }
                 if showsNFC {
                     mountedTab(.nfc, refreshOnHide: true) {
-                        NFCView(isVisible: activeTab == .nfc)
+                        NFCView(isVisible: activeTab == .nfc, band: nfcBand)
                     }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(.bottom, RedMedChrome.tabBarHeight)
 
-            CustomTabBar(tab: scannerSafeTab, showsNFC: showsNFC)
+            CustomTabBar(tab: scannerSafeTab, showsNFC: showsNFC, onNFCWrite: {
+                startHoldToWriteFromNFCTab()
+            })
         }
         .ignoresSafeArea(edges: .bottom)
         .task {
@@ -108,6 +112,9 @@ struct ContentView: View {
         }
         .onChange(of: tab) { _, newTab in
             mountedTabs.insert(newTab)
+            if newTab != .nfc {
+                nfcBand.cancelSessions()
+            }
         }
         .onChange(of: isScannerSession) { _, _ in clampScannerTab() }
         // Crash / SOS → 911. Notification avoids @ObservedObject on the root tab tree.
@@ -115,13 +122,23 @@ struct ContentView: View {
             tab = .emergency
             mountedTabs.insert(.emergency)
         }
-        // Owner RedMed status (Not linked / Linked bracelet) → NFC Write / Scan.
+        // Owner RedMed status (Not linked / Linked bracelet) → NFC Write.
         .onReceive(NotificationCenter.default.publisher(for: .redMedOpenNFCTab)) { _ in
             guard showsNFC else { return }
             tab = .nfc
             mountedTabs.insert(.nfc)
+            startHoldToWriteFromNFCTab()
         }
         .presentsOwnerHelp()
+    }
+
+    /// Open the CoreNFC write sheet on the NFC-tab / Write CTA stack.
+    /// Hold the band ~1–2″ finishes the program — iOS has no silent write.
+    private func startHoldToWriteFromNFCTab() {
+        guard showsNFC, !isScannerSession else { return }
+        guard AppConfig.nfcHardwareEnabled else { return }
+        guard profile.hasData else { return }
+        nfcBand.writeBand(from: profile, isScannerSession: false)
     }
 
     @ViewBuilder
@@ -217,6 +234,8 @@ private struct FrozenKeepAliveContent<Content: View>: View, Equatable {
 struct CustomTabBar: View {
     @Binding var tab: AppTab
     var showsNFC: Bool = true
+    /// Owner NFC tab tap — begin CoreNFC write on this gesture so hold finishes it.
+    var onNFCWrite: (() -> Void)? = nil
 
     /// Continuous rounded top — polished bottom chrome without frost (opaque cream).
     private var barShape: UnevenRoundedRectangle {
@@ -275,14 +294,21 @@ struct CustomTabBar: View {
     }
 
     private func select(_ next: AppTab) {
-        guard tab != next else {
+        if tab == next {
             RedMedHaptics.selection()
+            // Re-tap NFC → open write sheet again so hold can finish / retry.
+            if next == .nfc {
+                onNFCWrite?()
+            }
             return
         }
         RedMedHaptics.selection()
         // No withAnimation on AppTab — that marks the content ZStack transaction even
         // when mounted tabs suppress animation, and fights opacity keep-alive.
         tab = next
+        if next == .nfc {
+            onNFCWrite?()
+        }
     }
 }
 
