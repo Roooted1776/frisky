@@ -12,32 +12,28 @@ final class NFCWriter: NSObject, ObservableObject {
     private var urlToWrite: String = ""
 
     /// Starts a CoreNFC session only from an explicit Write tap — never on proximity.
+    /// Must run on the same main-thread stack as the button action. Do not wrap
+    /// the caller in `Task` first — iOS then refuses / silently drops the sheet.
     /// No Simulator fake-success path — failures stay failures.
     /// Accepts only `medicalCardBaseURL#d=…` — never vendor clouds, social/short
     /// links, App Store URLs, or any non-`#d=` NDEF.
     func writeURL(_ urlString: String) {
         guard AppConfig.OwnerBandURI.isValidWriteURL(urlString) else {
-            DispatchQueue.main.async {
-                self.statusMessage = "Band write refused — only RedMed #d= URLs are allowed (no vendor cloud, social, or short links)."
-                self.success = false
-                self.isWriting = false
-            }
+            statusMessage = "Band write refused — only RedMed #d= URLs are allowed (no vendor cloud, social, or short links)."
+            success = false
+            isWriting = false
             return
         }
         guard AppConfig.nfcHardwareEnabled else {
-            DispatchQueue.main.async {
-                self.statusMessage = "NFC writing is disabled in this build."
-                self.success = false
-                self.isWriting = false
-            }
+            statusMessage = "NFC writing is disabled in this build."
+            success = false
+            isWriting = false
             return
         }
         guard NFCNDEFReaderSession.readingAvailable else {
-            DispatchQueue.main.async {
-                self.statusMessage = "NFC writing needs a physical iPhone with NFC Tag Reading enabled."
-                self.success = false
-                self.isWriting = false
-            }
+            statusMessage = "NFC writing needs a physical iPhone with NFC Tag Reading enabled."
+            success = false
+            isWriting = false
             return
         }
         urlToWrite = urlString
@@ -46,7 +42,9 @@ final class NFCWriter: NSObject, ObservableObject {
         isWriting = true
         statusMessage = "Hold your iPhone near the NFC tag."
 
-        session?.invalidate()
+        // Do not invalidate-then-begin. A live session is still tearing down
+        // after the last write; starting the next one waits until `didInvalidate`
+        // nils `session` and `isWriting` (Write stays disabled until then).
         let session = NFCNDEFReaderSession(delegate: self, queue: nil, invalidateAfterFirstRead: false)
         session.alertMessage = "Hold your iPhone near the NFC tag to write your RedMed card."
         self.session = session
@@ -204,13 +202,12 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                         tag.readNDEF { readMessage, readError in
                             if let readError {
                                 session.alertMessage = "Written — couldn't verify read-back. Test with another phone."
-                                session.invalidate()
-                                DispatchQueue.main.async {
-                                    self?.success = true
-                                    self?.verified = false
-                                    self?.statusMessage = "Tag written. Verification skipped: \(readError.localizedDescription)"
-                                    self?.isWriting = false
-                                }
+                                self?.finishWrite(
+                                    success: true,
+                                    verified: false,
+                                    status: "Tag written. Verification skipped: \(readError.localizedDescription)",
+                                    thenInvalidate: session
+                                )
                                 return
                             }
 
@@ -219,15 +216,14 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                             session.alertMessage = ok
                                 ? "Success! Bracelet programmed and verified."
                                 : "Written, but read-back didn't match. Test with another phone."
-                            session.invalidate()
-                            DispatchQueue.main.async {
-                                self?.success = true
-                                self?.verified = ok
-                                self?.statusMessage = ok
+                            self?.finishWrite(
+                                success: true,
+                                verified: ok,
+                                status: ok
                                     ? "Bracelet programmed and verified. Other phones can tap it; payment terminals cannot."
-                                    : "Written, but verification failed — try writing again."
-                                self?.isWriting = false
-                            }
+                                    : "Written, but verification failed — try writing again.",
+                                thenInvalidate: session
+                            )
                         }
                     }
                 @unknown default:
@@ -237,9 +233,30 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
         }
     }
 
+    /// Mark outcome on main *before* invalidate so `didInvalidate` cannot
+    /// overwrite a successful write with the session-end error.
+    private func finishWrite(
+        success: Bool,
+        verified: Bool,
+        status: String,
+        thenInvalidate session: NFCNDEFReaderSession
+    ) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.success = success
+            self.verified = verified
+            self.statusMessage = status
+            self.isWriting = false
+            session.invalidate()
+        }
+    }
+
     func readerSession(_ session: NFCNDEFReaderSession, didInvalidateWithError error: Error) {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
+            if self.session === session {
+                self.session = nil
+            }
             self.isWriting = false
             if let readerError = error as? NFCReaderError,
                readerError.code == .readerSessionInvalidationErrorUserCanceled {

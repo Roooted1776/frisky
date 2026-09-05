@@ -45,7 +45,9 @@ final class NFCBandManager: ObservableObject {
 
     // MARK: - Write (owner band setup)
 
-    /// AES-GCM pack (off-main) → CoreNFC write (or pack-only simulate when hardware is parked).
+    /// Snapshot live RedMed → AES-GCM `#d=` → CoreNFC write (or pack-only when parked).
+    /// Pack + `session.begin()` stay on this tap's stack. CoreNFC drops the
+    /// sheet if Write hops through `Task` / `Task.detached` first.
     /// Parked Share Band URL on the NFC tab is the same `OwnerBandURI` string.
     /// No Face ID here — view / Edit / Save / Erase only.
     /// Linked / Not linked flips only after a real verified CoreNFC session — never simulate or share.
@@ -55,27 +57,27 @@ final class NFCBandManager: ObservableObject {
         guard profile.hasData else { return }
 
         let chip = ProfileNFCCodec.chipProfile(from: profile)
-        Task { @MainActor [weak self] in
-            let packed = await Task.detached(priority: .userInitiated) {
-                (
-                    ProfileNFCCodec.buildURLString(chip: chip),
-                    ProfileNFCCodec.embedProfileJSON(from: chip)
-                )
-            }.value
-            guard let self else { return }
-            guard let urlString = packed.0,
-                  AppConfig.OwnerBandURI.isValidWriteURL(urlString) else {
-                self.alertMessage = "Couldn't build a RedMed #d= tag payload (vendor/social URLs are blocked)."
-                return
-            }
-            if AppConfig.nfcHardwareEnabled {
-                self.statusMessage = ""
-                self.writeSucceeded = false
-                self.writeVerified = false
-                self.writer.writeURL(urlString)
-            } else {
-                self.simulateWrite(urlString, embedJSON: packed.1, profile: profile)
-            }
+        guard let urlString = ProfileNFCCodec.buildURLString(chip: chip),
+              AppConfig.OwnerBandURI.isValidWriteURL(urlString) else {
+            alertMessage = "Couldn't build a RedMed #d= tag payload (vendor/social URLs are blocked)."
+            return
+        }
+        lastPackedURL = urlString
+        if urlString.utf8.count > 850 {
+            alertMessage = "\(urlString.utf8.count) bytes — too large for NXP NTAG216. Shorten RedMed."
+            return
+        }
+        if AppConfig.nfcHardwareEnabled {
+            statusMessage = ""
+            writeSucceeded = false
+            writeVerified = false
+            writer.writeURL(urlString)
+        } else {
+            simulateWrite(
+                urlString,
+                embedJSON: ProfileNFCCodec.embedProfileJSON(from: chip),
+                profile: profile
+            )
         }
     }
 
