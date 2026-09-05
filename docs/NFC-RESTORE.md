@@ -21,7 +21,8 @@ unavailable, write fails and the band is not marked linked.
 
 `AppConfig.nfcHardwareEnabled = true`,
 `RedMed.entitlements` has `com.apple.developer.nfc.readersession.formats` →
-`NDEF`, and `Info.plist` has `NFCReaderUsageDescription`. Owner NFC **Write
+`TAG` (not `NDEF`: Xcode rewrites that value mid-build and the device
+build fails), and `Info.plist` has `NFCReaderUsageDescription`. Owner NFC **Write
 The Band** starts `NFCNDEFReaderSession` and programs
 `medicalCardBaseURL#d=` from the live profile. Scan reads a band and opens
 the same tapper card. Keep flag, entitlement, and usage string in lockstep.
@@ -81,8 +82,9 @@ Owner NFC page keeps **both** capabilities on one screen: Write and Scan
 In-repo steps 1, 2, and 5 are already on. Remaining is Apple + a phone:
 
 1. Set `AppConfig.nfcHardwareEnabled = true`
-2. Put `com.apple.developer.nfc.readersession.formats` → `NDEF` back in
-   `RedMed.entitlements`
+2. Put `com.apple.developer.nfc.readersession.formats` → `TAG` back in
+   `RedMed.entitlements` (do not use `NDEF`; Apple disallows it and Xcode
+   rewrites the file during the build)
 3. Developer portal → App ID `com.redmed.app` → enable **NFC Tag Reading**
 4. Xcode → Signing & Capabilities → **Near Field Communication Tag Reading**
 5. Add `NFCReaderUsageDescription` to `Info.plist`:
