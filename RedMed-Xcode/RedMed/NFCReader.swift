@@ -12,7 +12,8 @@ final class NFCReader: NSObject, ObservableObject {
     private var onProfile: ((NFCChipProfile, String) -> Void)?
     private var didDeliver = false
 
-    /// Starts a CoreNFC session only from an explicit Scan tap — never on proximity.
+    /// Opens the system read sheet from an explicit Scan tap.
+    /// Hold completes the read once the sheet is up.
     /// No Simulator fake-success path — failures stay failures.
     func readTag(
         alertMessage: String = "Hold your iPhone near the tag to read the RedMed card.",
@@ -41,6 +42,14 @@ final class NFCReader: NSObject, ObservableObject {
         session.alertMessage = alertMessage
         self.session = session
         session.begin()
+    }
+
+    func cancel() {
+        session?.invalidate()
+        session = nil
+        DispatchQueue.main.async {
+            self.isReading = false
+        }
     }
 
     private func deliverProfile(from urlString: String, session: NFCNDEFReaderSession) {

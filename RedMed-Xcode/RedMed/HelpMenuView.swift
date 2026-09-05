@@ -384,8 +384,7 @@ struct HelpMenuView: View {
                             helpSectionLabel("Bracelet")
                             helpCard {
                                 Button {
-                                    dismiss()
-                                    DispatchQueue.main.async { onOpenNFC() }
+                                    onOpenNFC()
                                 } label: {
                                     HStack(spacing: 10) {
                                         Text("🪪")

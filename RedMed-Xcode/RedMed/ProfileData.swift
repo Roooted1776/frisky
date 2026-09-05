@@ -509,7 +509,8 @@ extension Notification.Name {
     static let redMedDidEraseLocalData = Notification.Name("redMedDidEraseLocalData")
     /// Crash / SOS armed — ContentView jumps to 911 without observing CrashMotionGuard.
     static let redMedSurvivalArmed = Notification.Name("redMedSurvivalArmed")
-    /// Owner RedMed embed tapped Not linked / Linked bracelet — ContentView selects NFC.
+    /// Owner RedMed embed tapped Not linked / Linked bracelet — ContentView selects NFC
+    /// and begins CoreNFC write on that same gesture (hold finishes the program).
     static let redMedOpenNFCTab = Notification.Name("redMedOpenNFCTab")
     /// Preview / Scan tap card presented — PrivacySnapshotGuard must not cover it.
     static let redMedTapCardPresentationDidChange = Notification.Name("redMedTapCardPresentationDidChange")

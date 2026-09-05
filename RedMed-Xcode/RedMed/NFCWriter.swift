@@ -11,8 +11,9 @@ final class NFCWriter: NSObject, ObservableObject {
     private var session: NFCNDEFReaderSession?
     private var urlToWrite: String = ""
 
-    /// Starts a CoreNFC session only from an explicit Write tap — never on proximity.
-    /// Must run on the same main-thread stack as the button action. Do not wrap
+    /// Opens the system write sheet from an NFC-tab / Write user action.
+    /// Proximity does the write once the sheet is up — hold the band ~1–2″.
+    /// Must run on the same main-thread stack as that action. Do not wrap
     /// the caller in `Task` first — iOS then refuses / silently drops the sheet.
     /// No Simulator fake-success path — failures stay failures.
     /// Accepts only `medicalCardBaseURL#d=…` — never vendor clouds, social/short
