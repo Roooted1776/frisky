@@ -17,8 +17,9 @@ struct RedMedApp: App {
                 // Snapshot observers only. Do not warm WKWebView or read
                 // tapper.html here — that raced the first Main frame.
                 // Profile restore is owner ContentView.task (device-unlocked
-                // Keychain). Face ID is the owner RedMed user page / Edit /
-                // Save / Erase, not launch.
+                // Keychain). First-launch Face ID is on ConsentGateView.
+                // Later opens skip consent; Face ID is the owner RedMed
+                // user page / Edit / Save / Erase.
                 SnapshotSafeCover.activate()
             }
             .onOpenURL { url in
@@ -32,8 +33,9 @@ struct RedMedApp: App {
     }
 }
 
-/// Before you continue (every cold start) then Main after Agree this process.
-/// Same session stays in Main. No cream Face ID lock. Passerby tapper is not in this tree.
+/// First launch (or policy-version bump): Before you continue with Face ID
+/// on that page, then Main after Agree. Later cold starts skip the gate.
+/// No cream Face ID lock. Passerby tapper is not in this tree.
 private struct LaunchRoot: View {
     var body: some View {
         ConsentGateView { Main() }

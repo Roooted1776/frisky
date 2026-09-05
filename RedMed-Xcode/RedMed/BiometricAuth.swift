@@ -5,8 +5,10 @@ import UIKit
 /// NFC Preview / Scan — tap-to-view stays ungated
 /// (no Face ID, no passcode, no login).
 ///
-/// Owner RedMed user view, Edit, Save, and Erase pass `force: true`.
-/// NFC write, 911, Aid, app launch, and tapper do not.
+/// First-launch consent, owner RedMed user view, Edit, Save, and Erase
+/// pass `force: true`. NFC write, 911, Aid, later app launch, and tapper
+/// do not (later opens Face ID on the RedMed user page when a stored ID
+/// exists).
 /// There is no process-wide skip flag.
 ///
 /// On success the `LAContext` is **parked** (not invalidated) so
@@ -90,8 +92,9 @@ enum BiometricAuth {
         _ = force
 
         // Simulator: never evaluatePolicy and never a UIKit alert.
-        // Auto-succeed so the owner RedMed view / Edit / Save / Erase
-        // can proceed without a device. Device still uses real Face ID.
+        // Auto-succeed so first-launch consent / RedMed view / Edit /
+        // Save / Erase can proceed without a device. Device still uses
+        // real Face ID.
         #if targetEnvironment(simulator)
         _ = cancelInFlight()
         markSessionEnded()
