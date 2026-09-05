@@ -143,6 +143,7 @@ struct RedMedView: View {
         .onChange(of: isVisible) { _, visible in
             if visible { tryUnlockIfNeeded() }
         }
+        
         .onChange(of: showEdit) { _, open in
             guard !open else { return }
             viewUnlocked = OwnerRedMedGate.isUnlocked
