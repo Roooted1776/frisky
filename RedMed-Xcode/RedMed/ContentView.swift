@@ -76,13 +76,13 @@ struct ContentView: View {
         .onAppear {
             mountedTabs.insert(activeTab)
             clampScannerTab()
-            RedMedHaptics.prepare()
             // Same-turn mount in scannerSafeTab already paints 911 / Aid / NFC
             // on first tap. Do not pre-stack those pages under RedMed — that
             // kept GPS / Aid catalog / NFC WK warm compositing for the session.
-            // First paint first — CoreMotion after the YOU card yields.
+            // First paint first — haptics / CoreMotion after the YOU card yields.
             Task { @MainActor in
                 await Task.yield()
+                RedMedHaptics.prepare()
                 try? await Task.sleep(nanoseconds: 400_000_000)
                 guard !Task.isCancelled else { return }
                 guard scenePhase == .active else { return }
