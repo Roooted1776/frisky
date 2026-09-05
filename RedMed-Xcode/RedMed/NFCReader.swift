@@ -12,7 +12,7 @@ final class NFCReader: NSObject, ObservableObject {
     private var onProfile: ((NFCChipProfile, String) -> Void)?
     private var didDeliver = false
 
-    /// Opens the system read sheet from an explicit Scan tap.
+    /// Opens the system read sheet from an explicit Load From Band tap.
     /// Hold completes the read once the sheet is up.
     /// No Simulator fake-success path — failures stay failures.
     func readTag(

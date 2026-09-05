@@ -16,12 +16,12 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 
 | Area | Status |
 |------|--------|
-| Owner Face ID gate | Owner RedMed user page (stored ID) then Edit / Save / Erase (`force: true`). No cream lock in front of Main — 911 / Aid / NFC stay reachable. Relock the RedMed view on `.background` only. No Face ID toggle on Before you continue (Haptic + Location only). Profile restores on Main appear (device-unlocked Keychain); Face ID gates display of the YOU card |
-| Crash motion | Starts after owner Main paints. Stops CoreMotion on `.background`. Restarts on `.active`. Does not stop on `.inactive` (Face ID on RedMed user page / Edit / Save / Erase). Armed siren is independent. Scanner / tapper never start it. |
+| Owner Face ID gate | Owner RedMed user page (stored ID) then Edit / Save / Erase / Load From Band (`force: true`). No cream lock in front of Main — 911 / Aid / NFC stay reachable. Relock the RedMed view on `.background` only. No Face ID toggle on Before you continue (Haptic + Location only). Profile restores on Main appear (device-unlocked Keychain); Face ID gates display of the YOU card |
+| Crash motion | Starts after owner Main paints. Stops CoreMotion on `.background`. Restarts on `.active`. Does not stop on `.inactive` (Face ID on RedMed user page / Edit / Save / Erase / Load From Band). Armed siren is independent. Scanner / tapper never start it. |
 | Keychain profile | `WhenPasscodeSetThisDeviceOnly`, no biometry ACL; save fail-closed; never synchronizable |
 | Location toggle | Honored on Agree. Agree does not present When-In-Use. System sheet + GPS start/stop are Find Help only |
 | Owner tabs | RedMed · 911 · Aid · NFC; scanners never see NFC |
-| NFC Preview + Scan | Both use `fullScreenCover(item:)` after pack — no empty-cover race. Owner Write starts CoreNFC (`nfcHardwareEnabled = true`) and programs live `medicalCardBaseURL#d=`. Linked only after matching read-back |
+| NFC Preview + Scan | Preview uses `fullScreenCover(item:)` after pack — no empty-cover race. Owner Write starts CoreNFC (`nfcHardwareEnabled = true`) and programs live `medicalCardBaseURL#d=`. Load From Band reads `#d=` into Keychain after Face ID. Linked after matching write read-back or Load |
 | Passerby shell | One file `tapper/index.html`; Xcode copies it to the app bundle as `tapper.html` at build; repo-root `tapper.html` redirects to `/tapper/` |
 | Offline shell | SW cache precaches HTML + pheart / BrandLogo / BrandWordmark |
 | Band URI contract | Write only `medicalCardBaseURL + #d=` base64url; vendor/social/short URLs rejected |

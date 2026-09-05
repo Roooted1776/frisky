@@ -51,8 +51,9 @@ final class NFCBandManager: ObservableObject {
     /// Once the sheet is up, hold the band ~1–2″ to finish. CoreNFC drops the
     /// sheet if Write hops through `Task` / `Task.detached` first.
     /// Parked Share Band URL on the NFC tab is the same `OwnerBandURI` string.
-    /// No Face ID here — view / Edit / Save / Erase only.
-    /// Linked / Not linked flips only after a real verified CoreNFC session — never simulate or share.
+    /// No Face ID here — view / Edit / Save / Erase / Load From Band only.
+    /// Linked / Not linked flips only after a real verified CoreNFC write, or
+    /// owner Load From Band that persist()s the chip — never simulate or share.
     func writeBand(from profile: ProfileData, isScannerSession: Bool) {
         guard !isScannerSession else { return }
         guard !isBusy else { return }
@@ -83,6 +84,25 @@ final class NFCBandManager: ObservableObject {
     func cancelSessions() {
         writer.cancel()
         reader.cancel()
+    }
+
+    /// Owner Load From Band: CoreNFC read on this tap, then caller Face IDs and persist()s.
+    /// Does not open the helper card. Scanners never. Parked builds have no session.
+    func readBandForLoad(
+        isScannerSession: Bool,
+        onChip: @escaping (NFCChipProfile) -> Void
+    ) {
+        guard !isScannerSession else { return }
+        guard !isBusy else { return }
+        guard AppConfig.nfcHardwareEnabled else {
+            alertMessage = "NFC reading is disabled in this build."
+            return
+        }
+        statusMessage = ""
+        reader.readTag(alertMessage: "Hold your iPhone near the bracelet to load the card.") { [weak self] chip, _ in
+            self?.statusMessage = ""
+            onChip(chip)
+        }
     }
 
     // MARK: - Verify / scan (same HTML shell a stranger gets on band tap)

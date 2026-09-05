@@ -461,8 +461,69 @@ class ProfileData: ObservableObject {
         }
     }
 
+    /// Durable medical fields match this chip (ignore `updated` / notes).
+    func matchesBand(_ chip: NFCChipProfile) -> Bool {
+        let live = ProfileNFCCodec.chipProfile(from: self)
+        guard live.contacts.count == chip.contacts.count else { return false }
+        let contactsMatch = zip(live.contacts, chip.contacts).allSatisfy {
+            $0.name == $1.name && $0.rel == $1.rel && $0.phone == $1.phone
+        }
+        return live.name == chip.name
+            && live.dob == chip.dob
+            && live.blood == chip.blood
+            && live.donor == chip.donor
+            && live.pregnant == chip.pregnant
+            && live.deafOrVisionImpaired == chip.deafOrVisionImpaired
+            && live.allergies == chip.allergies
+            && live.meds == chip.meds
+            && live.conditions == chip.conditions
+            && contactsMatch
+    }
+
+    /// Field writes for `ProfileNFCCodec.apply` — not a persist.
+    func applyChipFields(_ chip: NFCChipProfile) {
+        name = chip.name
+        birthDate = chip.dob
+        bloodType = chip.blood
+        isOrganDonor = chip.donor
+        isPregnant = chip.pregnant
+        isDeafOrVisionImpaired = chip.deafOrVisionImpaired
+        allergies = chip.allergies
+        medications = chip.meds
+        conditions = chip.conditions
+        contacts = chip.contacts.map { c in
+            EmergencyContact(name: c.name, relationship: c.rel, phone: c.phone)
+        }
+        if !chip.updated.isEmpty {
+            lastUpdated = chip.updated
+        }
+    }
+
+    /// Owner-only: replace RAM + Keychain with a band `#d=` snapshot.
+    /// Notes are not on the chip — cleared so leftover PHI from a previous ID
+    /// cannot mix. Marks Linked when hardware is on (this read *is* the band).
+    /// Scanners / `persists == false` snapshots must not call this.
+    @discardableResult
+    func adoptBandSnapshot(_ chip: NFCChipProfile) -> Bool {
+        guard persists else { return false }
+        guard chip.hasAnyProfileData else { return false }
+        let previous = snapshot()
+        withBulkUpdate {
+            applyChipFields(chip)
+            notes = ""
+            if AppConfig.nfcHardwareEnabled {
+                braceletLinked = true
+            }
+        }
+        guard persist() else {
+            restore(from: previous)
+            return false
+        }
+        return true
+    }
+
     /// Band pairing flag for Main / NFC chrome.
-    /// `true` only after a real CoreNFC write; cleared when RedMed is edited.
+    /// `true` only after a real CoreNFC write or Load From Band; cleared when RedMed is edited.
     /// Callers must not set `true` from pack/simulate paths.
     /// Returns `false` if a Keychain persist was required and failed — callers
     /// should surface that rather than let the in-memory flag drift from disk.

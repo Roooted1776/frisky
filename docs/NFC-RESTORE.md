@@ -14,8 +14,9 @@ still simulates Write/Scan by packing the compact `tapper.html#d=` URL. Real
 CoreNFC has **no** Simulator fake-success: if hardware is enabled and NFC is
 unavailable, write fails and the band is not marked linked.
 
-**Linked** only after a real CoreNFC write **and** matching read-back
-(`writeVerified`). Written-but-unverified stays Not linked.
+**Linked** after a real CoreNFC write **and** matching read-back
+(`writeVerified`), or after owner **Load From Band** persist()s the chip.
+Written-but-unverified stays Not linked.
 
 ## Currently on (in-repo)
 
@@ -24,8 +25,8 @@ unavailable, write fails and the band is not marked linked.
 `TAG` (not `NDEF`: Xcode rewrites that value mid-build and the device
 build fails), and `Info.plist` has `NFCReaderUsageDescription`. Owner NFC **Write
 The Band** starts `NFCNDEFReaderSession` and programs
-`medicalCardBaseURL#d=` from the live profile. Scan reads a band and opens
-the same tapper card. Keep flag, entitlement, and usage string in lockstep.
+`medicalCardBaseURL#d=` from the live profile. Load From Band reads `#d=` into owner Keychain after Face
+ID. Preview packs the live profile into the same tapper card. Keep flag, entitlement, and usage string in lockstep.
 
 Device signing still needs **NFC Tag Reading** on App ID `com.redmed.app`
 (paid Apple Developer). Free / personal teams cannot provision it — Automatic
@@ -35,10 +36,10 @@ are not git; see Restore below if a device build rejects the profile.
 **Do not hide the owner NFC tab** — owners always get RedMed · 911 · Aid ·
 NFC; scanners never get NFC. The flag only gates `NFCWriter` / `NFCReader`
 sessions (simulate / pack-only + Share Band URL return if the flag is
-parked). Linked only after a real write + matching read-back.
+parked). Linked after a real write + matching read-back, or Load From Band.
 
-Owner NFC page keeps **both** capabilities on one screen: Write and Scan
-(opens the same `tapper.html#d=` page helpers see).
+Owner NFC page keeps **Write**, **Preview**, and **Load From Band** on one screen.
+Load is owner-only (Face ID + Keychain). Preview does not persist.
 
 ## RF / hardware contract
 
@@ -63,7 +64,7 @@ Owner NFC page keeps **both** capabilities on one screen: Write and Scan
   - Intentional tap: ~1–2″ to the phone antenna
   - Walk-by / no-fire margin: ~6–8″ (already dead past ~4″ of reliable ISO 14443)
   - Do not market these as a tunable read range
-  - `NFCBandManager` / `NFCWriter` / `NFCReader` only `begin()` after Write or Scan
+  - `NFCBandManager` / `NFCWriter` / `NFCReader` only `begin()` after Write or Load From Band
   - Deliberate stranger tap must still open the emergency card
 - Do **not** source NTAG213, MIFARE, LF (~125 kHz), or UHF chips.
 - Payment POS may share 13.56 MHz but speaks EMV, not RedMed NDEF URLs
@@ -88,7 +89,7 @@ In-repo steps 1, 2, and 5 are already on. Remaining is Apple + a phone:
 3. Developer portal → App ID `com.redmed.app` → enable **NFC Tag Reading**
 4. Xcode → Signing & Capabilities → **Near Field Communication Tag Reading**
 5. Add `NFCReaderUsageDescription` to `Info.plist`:
-   `RedMed writes your medical ID onto your NFC bracelet and can scan a band you hold to the phone. Tag reading starts only when you tap Write or Scan.`
+   `RedMed writes your medical ID onto your NFC bracelet and can load a written band into this iPhone. Tag reading starts only when you tap Write or Load From Band.`
 6. Device test on **verified blank NTAG216** stock: Write → second phone Safari
    tap → emergency card. Linked only if read-back matches.
 

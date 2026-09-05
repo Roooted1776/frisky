@@ -41,9 +41,9 @@
 		<false/>
 	</dict>
 	<key>NFCReaderUsageDescription</key>
-	<string>RedMed writes your medical ID onto your NFC bracelet and can scan a band you hold to the phone. Tag reading starts only when you tap Write or Scan.</string>
+	<string>RedMed writes your medical ID onto your NFC bracelet and can load a written band into this iPhone. Tag reading starts only when you tap Write or Load From Band.</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>RedMed uses Face ID or Touch ID to view, edit, save, or erase your medical ID. Device passcode can be used if biometrics are unavailable.</string>
+	<string>RedMed uses Face ID or Touch ID to view, edit, save, load from a band, or erase your medical ID. Device passcode can be used if biometrics are unavailable.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Shows your coordinates on Find Help so you can read them to emergency services.</string>
 	<key>UIBackgroundModes</key>

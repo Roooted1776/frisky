@@ -2,13 +2,13 @@ import LocalAuthentication
 import UIKit
 
 /// Strict owner authentication. Never call from passerby `tapper.html`,
-/// NFC Preview / Scan — tap-to-view stays ungated
+/// NFC Preview — tap-to-view stays ungated
 /// (no Face ID, no passcode, no login).
 ///
-/// First-launch consent, owner RedMed user view, Edit, Save, and Erase
-/// pass `force: true`. NFC write, 911, Aid, later app launch, and tapper
-/// do not (later opens Face ID on the RedMed user page when a stored ID
-/// exists).
+/// First-launch consent, owner RedMed user view, Edit, Save, Erase, and
+/// Load From Band pass `force: true`. NFC write, 911, Aid, later app launch,
+/// and tapper do not (later opens Face ID on the RedMed user page when a
+/// stored ID exists).
 /// There is no process-wide skip flag.
 ///
 /// On success the `LAContext` is **parked** (not invalidated) so
