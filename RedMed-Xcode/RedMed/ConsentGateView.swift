@@ -42,7 +42,6 @@ struct ConsentGateView<Content: View>: View {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
-    @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
     @ViewBuilder var content: () -> Content
 
     var body: some View {
@@ -148,7 +147,7 @@ struct ConsentGateView<Content: View>: View {
                             .padding(.horizontal, RedMedChrome.pagePadX)
                             .padding(.vertical, RedMedChrome.rowVPad)
                             .onChange(of: locationEnabled) { _, on in
-                                if on { locationSuggester.refresh() }
+                                if on { LocationAccessSuggester.shared.refresh() }
                             }
                     }
                     .redmedBox(flatten: false)
@@ -258,17 +257,10 @@ struct ConsentGateView<Content: View>: View {
         guard !hasAccepted, !faceVerified, !didAutoPrompt, !isAuthenticating else { return }
         guard scenePhase != .background else { return }
         #if !targetEnvironment(simulator)
-        guard hasKeyWindow else { return }
+        guard BiometricAuth.hasKeyWindow else { return }
         #endif
         didAutoPrompt = true
         runFaceID()
-    }
-
-    private var hasKeyWindow: Bool {
-        UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .flatMap(\.windows)
-            .contains(where: \.isKeyWindow)
     }
 
     private func runFaceID() {

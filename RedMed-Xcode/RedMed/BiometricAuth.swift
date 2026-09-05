@@ -252,6 +252,16 @@ enum BiometricAuth {
         clearPark()
     }
 
+    /// `evaluatePolicy` before a key window never presents a sheet and can
+    /// hang until the hang clock. ConsentGate and the owner RedMed view
+    /// both wait for this (and retry on `UIWindow.didBecomeKeyNotification`).
+    static var hasKeyWindow: Bool {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .contains(where: \.isKeyWindow)
+    }
+
     private static func markSessionEnded() {
         parkLock.lock()
         lastSessionEndedAt = Date()

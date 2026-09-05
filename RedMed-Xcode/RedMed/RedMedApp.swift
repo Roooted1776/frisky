@@ -16,11 +16,12 @@ struct RedMedApp: App {
             .task {
                 // Snapshot observers only. Do not warm WKWebView or read
                 // tapper.html here — that raced the first Main frame.
-                // Profile restore is owner ContentView.task (device-unlocked
-                // Keychain). First-launch Face ID is on ConsentGateView.
-                // Later opens skip consent; Face ID is the owner RedMed
-                // user page / Edit / Save / Erase.
+                // Keychain prefetch is `.utility` after first paint so it
+                // cannot steal the Face ID sheet's first tick.
                 SnapshotSafeCover.activate()
+                await Task.yield()
+                RedMedHaptics.prepare()
+                profile.beginLaunchPrefetch()
             }
             .onOpenURL { url in
                 if (url.scheme ?? "").lowercased() == "redmed",

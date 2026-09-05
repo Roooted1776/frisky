@@ -91,9 +91,9 @@ class ProfileData: ObservableObject {
     @Published private(set) var cardEpoch: UInt = 0
     /// One-shot so RedMedApp / ContentView cannot restore twice in one process.
     private var didAttemptLaunchRestore = false
-    /// Off-main Keychain+JSON started at `init` so restore can adopt the blob
-    /// without blocking first paint. Display of the YOU card still waits on
-    /// Face ID when a stored ID exists.
+    /// Off-main Keychain+JSON started after first paint so restore can adopt
+    /// the blob without blocking the first frame. Display of the YOU card
+    /// still waits on Face ID when a stored ID exists.
     private var launchPrefetchTask: Task<PersistedProfile?, Never>?
 
     private func setField<T: Equatable>(_ storage: inout T, _ newValue: T) {
@@ -150,23 +150,31 @@ class ProfileData: ObservableObject {
 
     init(persisting: Bool = true) {
         self.persists = persisting
-        // If a blob is expected, start restoring so the empty funnel cannot flash.
-        // Presence check only (exists) — JSON decode is the detached prefetch.
-        if persisting && (Self.hasStoredProfile() || Self.prefersLockOnLaunch) {
+        // UserDefaults only — a SecItem + LAContext exists() here ran on the
+        // main thread before the first ConsentGate / Main frame and contended
+        // with Face ID. Prefetch starts after first paint (`RedMedApp.task`).
+        if persisting && Self.prefersLockOnLaunch {
             self.isRestoringFromKeychain = true
-            beginLaunchPrefetch()
         }
     }
 
     /// Non-interactive Keychain read + JSON decode. Idempotent. Does not touch
     /// `@Published` fields until `restoreOnLaunch` adopts the result.
+    /// Call after first paint — never from `init`. `.utility` so this cannot
+    /// steal CPU from the Face ID sheet (returning RedMed tab or first-launch
+    /// ConsentGate). UserDefaults gate only — no SecItem exists() here.
     func beginLaunchPrefetch() {
         guard persists else { return }
         guard !didAttemptLaunchRestore else { return }
         guard launchPrefetchTask == nil else { return }
-        guard Self.hasStoredProfile() || Self.prefersLockOnLaunch else { return }
+        guard Self.prefersLockOnLaunch else { return }
+        if !isRestoringFromKeychain { isRestoringFromKeychain = true }
+        startLaunchPrefetchTask()
+    }
+
+    private func startLaunchPrefetchTask() {
         let account = Self.keychainAccount
-        launchPrefetchTask = Task.detached(priority: .userInitiated) {
+        launchPrefetchTask = Task.detached(priority: .utility) {
             Self.decodeBlob(KeychainStore.load(account: account, allowInteractive: false))
         }
     }
@@ -326,26 +334,28 @@ class ProfileData: ObservableObject {
     func restoreOnLaunch() async {
         guard persists else { return }
         guard !didAttemptLaunchRestore else { return }
-        didAttemptLaunchRestore = true
 
-        let expected = Self.hasStoredProfile() || Self.prefersLockOnLaunch
-        if !expected && launchPrefetchTask == nil {
+        if launchPrefetchTask == nil && Self.prefersLockOnLaunch {
+            beginLaunchPrefetch()
+        }
+
+        let expected = Self.prefersLockOnLaunch || launchPrefetchTask != nil || Self.hasStoredProfile()
+        if !expected {
+            didAttemptLaunchRestore = true
             isRestoringFromKeychain = false
             return
         }
+        didAttemptLaunchRestore = true
         isRestoringFromKeychain = true
+
+        if launchPrefetchTask == nil {
+            startLaunchPrefetchTask()
+        }
 
         if let task = launchPrefetchTask {
             launchPrefetchTask = nil
             if let blob = await task.value {
                 apply(blob)
-                Self.setStoredProfileGate(true)
-                isRestoringFromKeychain = false
-                return
-            }
-        } else if expected {
-            let ok = await reloadFromKeychainAsync(allowInteractive: false)
-            if ok {
                 Self.setStoredProfileGate(true)
                 isRestoringFromKeychain = false
                 return
