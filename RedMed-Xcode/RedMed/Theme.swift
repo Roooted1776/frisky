@@ -43,22 +43,40 @@ extension Color {
 
 /// Cream page with rose wash only (fill color — no BrandLogo).
 /// Pages and passerby tapper share cream fill.
+///
+/// First frame is flat `redmedBg` matching UILaunchScreen / LaunchBackground
+/// (`#fff7f7`) so SplashBoard → SwiftUI has no one-frame rose-wash jump.
+/// Wash lands after two MainActor yields with `animation: nil` (no fade flash).
 struct RedMedPageBackground: View {
+    @State private var showWash = false
+
     var body: some View {
         Color.redmedBg
             .overlay(alignment: .top) {
-                RadialGradient(
-                    colors: [Color.redmedWash.opacity(0.85), Color.redmedBg.opacity(0)],
-                    center: .top,
-                    startRadius: 20,
-                    endRadius: 420
-                )
-                .frame(height: 520)
-                .allowsHitTesting(false)
+                if showWash {
+                    RadialGradient(
+                        colors: [Color.redmedWash.opacity(0.85), Color.redmedBg.opacity(0)],
+                        center: .top,
+                        startRadius: 20,
+                        endRadius: 420
+                    )
+                    .frame(height: 520)
+                    .allowsHitTesting(false)
+                }
             }
             .ignoresSafeArea()
             .allowsHitTesting(false)
             .accessibilityHidden(true)
+            .task {
+                guard !showWash else { return }
+                // Two yields: LaunchRoot’s cream veil drops after active + one
+                // yield, so this stays flat under that handoff, then wash.
+                await Task.yield()
+                await Task.yield()
+                var t = Transaction()
+                t.animation = nil
+                withTransaction(t) { showWash = true }
+            }
     }
 }
 
