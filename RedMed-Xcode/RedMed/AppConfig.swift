@@ -93,7 +93,7 @@ enum AppConfig {
     /// `com.redmed.app` + paid Apple Developer — see `docs/NFC-RESTORE.md`.
     /// Keep this flag in lockstep with `RedMed.entitlements` + `NFCReaderUsageDescription`.
     /// `false` parks hardware sessions (pack-only simulate + Share Band URL).
-    static let nfcHardwareEnabled = true
+    static let nfcHardwareEnabled = false
 
     /// Product kill switch for the optional Apple Health import on the empty-profile
     /// funnel / Edit. `true` = `HealthKitProfileImport` may call HealthKit.

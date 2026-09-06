@@ -18,20 +18,19 @@ unavailable, write fails and the band is not marked linked.
 (`writeVerified`), or after owner **Load From Band** persist()s the chip.
 Written-but-unverified stays Not linked.
 
-## Currently on (in-repo)
+## Currently parked (in-repo)
 
-`AppConfig.nfcHardwareEnabled = true`,
-`RedMed.entitlements` has `com.apple.developer.nfc.readersession.formats` →
-`TAG` (not `NDEF`: Xcode rewrites that value mid-build and the device
-build fails), and `Info.plist` has `NFCReaderUsageDescription`. Owner NFC **Write
-The Band** starts `NFCNDEFReaderSession` and programs
-`medicalCardBaseURL#d=` from the live profile. Load From Band reads `#d=` into owner Keychain after Face
-ID. Preview packs the live profile into the same tapper card. Keep flag, entitlement, and usage string in lockstep.
+`AppConfig.nfcHardwareEnabled = false`,
+`RedMed.entitlements` is a bare empty `<dict></dict>` (no NFC key), and
+`Info.plist` has no `NFCReaderUsageDescription`. Owner NFC tab stays
+visible. Write / Scan are pack-only simulate + Share Band URL. Real
+`NFCNDEFReaderSession` is parked until paid Program + **NFC Tag Reading**
+on App ID `com.redmed.app`. Keep flag, entitlement, and usage string in
+lockstep when restoring.
 
-Device signing still needs **NFC Tag Reading** on App ID `com.redmed.app`
-(paid Apple Developer). Free / personal teams cannot provision it — Automatic
-Signing fails while the entitlement is present. Portal + Xcode capability
-are not git; see Restore below if a device build rejects the profile.
+Automatic Signing no longer needs NFC on the App ID. Free / personal
+teams can device-build. Portal + Xcode capability are not git; see Restore
+below when a paid team can provision Tag Reading.
 
 **Do not hide the owner NFC tab** — owners always get RedMed · 911 · Aid ·
 NFC; scanners never get NFC. The flag only gates `NFCWriter` / `NFCReader`
@@ -80,7 +79,8 @@ Load is owner-only (Face ID + Keychain). Preview does not persist.
 
 ## Restore (paid Program + device)
 
-In-repo steps 1, 2, and 5 are already on. Remaining is Apple + a phone:
+In-repo flag, entitlement, and usage string are parked. Do all of these
+after a paid Program can provision NFC Tag Reading:
 
 1. Set `AppConfig.nfcHardwareEnabled = true`
 2. Put `com.apple.developer.nfc.readersession.formats` → `TAG` back in
