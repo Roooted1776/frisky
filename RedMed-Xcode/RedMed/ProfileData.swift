@@ -160,9 +160,10 @@ class ProfileData: ObservableObject {
 
     /// Non-interactive Keychain read + JSON decode. Idempotent. Does not touch
     /// `@Published` fields until `restoreOnLaunch` adopts the result.
-    /// Call after first paint — never from `init`. `.utility` so this cannot
-    /// steal CPU from the Face ID sheet (returning RedMed tab or first-launch
-    /// ConsentGate). UserDefaults gate only — no SecItem exists() here.
+    /// Call after first paint — never from `init`. ContentView staggers ~300ms
+    /// past Face ID sheet presentation, then uses `.userInitiated` so the blob
+    /// is ready when evaluate returns (YOU is not empty after unlock).
+    /// UserDefaults gate only — no SecItem exists() here.
     func beginLaunchPrefetch() {
         guard persists else { return }
         guard !didAttemptLaunchRestore else { return }
@@ -174,7 +175,7 @@ class ProfileData: ObservableObject {
 
     private func startLaunchPrefetchTask() {
         let account = Self.keychainAccount
-        launchPrefetchTask = Task.detached(priority: .utility) {
+        launchPrefetchTask = Task.detached(priority: .userInitiated) {
             Self.decodeBlob(KeychainStore.load(account: account, allowInteractive: false))
         }
     }
