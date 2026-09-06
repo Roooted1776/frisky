@@ -1,11 +1,14 @@
 // Owner-only NFC bracelet setup. Ped/EMS scanner shells never mount this tab —
 // see ContentView.showsNFC / scannerSafeTab.
-// One page: Write + Preview → full-page tap card (what first responders see).
+// One page: Write + Preview + Load From Band.
 // When `AppConfig.nfcHardwareEnabled` is true, Write starts a CoreNFC
 // NDEF session and programs `medicalCardBaseURL#d=` from the live profile.
 // Preview packs the live profile into the same tapper card helpers get.
-// Linked only after write + matching read-back. Parked (`false`): pack-only
-// Write status + Share Band URL + Preview (never flips Linked).
+// Load From Band reads `#d=` off the chip, Face IDs, then persist()s into
+// owner Keychain (empty funnel restore). Scanners never.
+// Linked after write + matching read-back, or after a successful Load.
+// Parked (`false`): pack-only Write status + Share Band URL + Preview
+// (never flips Linked; Load is hidden).
 import SwiftUI
 
 struct NFCView: View {
@@ -22,6 +25,10 @@ struct NFCView: View {
     /// Nil until pack finishes; never used to flip Linked.
     @State private var parkedBandURL: String?
     @State private var parkedPackNote: String = ""
+    @State private var pendingLoadChip: NFCChipProfile?
+    @State private var showLoadOverwriteConfirm = false
+    @State private var showLoadAuthFailedAlert = false
+    @State private var loadAuthUnavailableMessage: String?
 
     private struct PreviewSession: Identifiable {
         let id = UUID()
@@ -84,6 +91,29 @@ struct NFCView: View {
             Button("OK", role: .cancel) { band.alertMessage = nil }
         } message: {
             Text(band.alertMessage ?? "")
+        }
+        .alert("Replace RedMed?", isPresented: $showLoadOverwriteConfirm) {
+            Button("Cancel", role: .cancel) { pendingLoadChip = nil }
+            Button("Replace") {
+                if let chip = pendingLoadChip {
+                    authenticateAndAdopt(chip)
+                }
+            }
+        } message: {
+            Text("This replaces the RedMed ID on this iPhone with the card on the band.")
+        }
+        .alert(BiometricAuth.deniedAlertTitle, isPresented: $showLoadAuthFailedAlert) {
+            Button("OK", role: .cancel) { pendingLoadChip = nil }
+        } message: {
+            Text(BiometricAuth.deniedAlertMessage(action: "load this band into"))
+        }
+        .alert(BiometricAuth.unavailableAlertTitle, isPresented: Binding(
+            get: { loadAuthUnavailableMessage != nil },
+            set: { if !$0 { loadAuthUnavailableMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) { pendingLoadChip = nil }
+        } message: {
+            Text(loadAuthUnavailableMessage ?? "")
         }
         .task(id: isVisible) {
             // HTML string only, off the main actor. Do not create a WKWebView
@@ -214,12 +244,29 @@ struct NFCView: View {
                 openFirstResponderPreview()
             }
 
+            if AppConfig.nfcHardwareEnabled {
+                OutlineButton(
+                    title: band.isReading ? "Hold Near The Band…" : "Load From Band",
+                    systemImage: band.isReading ? nil : "arrow.down.to.line",
+                    busy: band.isReading,
+                    disabled: band.isBusy
+                ) {
+                    startLoadFromBand()
+                }
+                .accessibilityLabel("Load From Band")
+                .accessibilityHint("Reads the bracelet into this iPhone. Face ID required. Replaces the RedMed ID here.")
+            }
+
             if !AppConfig.nfcHardwareEnabled {
                 parkedShareControl
             }
 
             if !profile.hasData {
-                Text("Add your name on RedMed before writing or previewing the band.")
+                Text(
+                    AppConfig.nfcHardwareEnabled
+                        ? "Add your name on RedMed before writing or previewing. Load From Band reads a written bracelet into this iPhone."
+                        : "Add your name on RedMed before writing or previewing the band."
+                )
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.redmedAccent)
             }
@@ -243,7 +290,8 @@ struct NFCView: View {
                     tipRow("Open NFC (or tap Write) — then hold the band to the top of the phone \(AppConfig.BraceletRF.intentionalTapRangeLabel).")
                     tipRow("Write packs #d= onto the chip only — never a vendor cloud or social/short link.")
                     tipRow("Preview: same HTML card helpers get — quick, no login, no server, no app.")
-                    tipRow("Linked only after write + matching read-back.")
+                    tipRow("Load From Band reads #d= into this iPhone (Face ID). Replaces RedMed here.")
+                    tipRow("Linked after write + matching read-back, or after Load From Band.")
                 } else {
                     tipRow("CoreNFC write is parked. Share Band URL onto a blank NTAG216 (Shortcuts or NFC Tools).")
                     tipRow("Preview is the same HTML a helper sees. Linked still needs a real NFC write.")
@@ -327,6 +375,92 @@ struct NFCView: View {
         }
     }
 
+    private func startLoadFromBand() {
+        guard !isScannerSession, AppConfig.nfcHardwareEnabled, !band.isBusy else { return }
+        band.readBandForLoad(isScannerSession: isScannerSession) { chip in
+            Task { @MainActor in
+                handleLoadedChip(chip)
+            }
+        }
+    }
+
+    private func handleLoadedChip(_ chip: NFCChipProfile) {
+        guard chip.hasAnyProfileData else {
+            pendingLoadChip = nil
+            band.alertMessage = "This band has no RedMed ID."
+            return
+        }
+        if profile.matchesBand(chip) {
+            pendingLoadChip = nil
+            if profile.showsBraceletAsLinked {
+                band.statusMessage = "This band matches RedMed."
+                return
+            }
+            authenticateAndLinkMatchingBand()
+            return
+        }
+        pendingLoadChip = chip
+        if profile.hasSensitiveProfileData {
+            showLoadOverwriteConfirm = true
+        } else {
+            authenticateAndAdopt(chip)
+        }
+    }
+
+    private func authenticateAndLinkMatchingBand() {
+        BiometricAuth.authenticate(
+            reason: "Confirm with Face ID, Touch ID, or passcode to mark this band as linked.",
+            force: true
+        ) { outcome in
+            Task { @MainActor in
+                switch outcome {
+                case .success:
+                    if profile.setBraceletPaired(true) {
+                        band.statusMessage = "This band matches RedMed. Linked."
+                        VaultHistoryStore.shared.record(.braceletWritten, detail: "bandLoadMatch")
+                    } else {
+                        band.alertMessage = "Couldn't save the linked status. Try again."
+                    }
+                case .notVerified:
+                    showLoadAuthFailedAlert = true
+                    VaultHistoryStore.shared.record(.unlockFailed, detail: "bandLoad")
+                case .unavailable(let reason):
+                    loadAuthUnavailableMessage = reason.message
+                default:
+                    break
+                }
+            }
+        }
+    }
+
+    private func authenticateAndAdopt(_ chip: NFCChipProfile) {
+        BiometricAuth.authenticate(
+            reason: "Confirm with Face ID, Touch ID, or passcode to load this band into RedMed.",
+            force: true
+        ) { outcome in
+            Task { @MainActor in
+                switch outcome {
+                case .success:
+                    if profile.adoptBandSnapshot(chip) {
+                        pendingLoadChip = nil
+                        band.statusMessage = "Loaded into RedMed."
+                        VaultHistoryStore.shared.record(.profileSaved, detail: "bandLoad")
+                    } else {
+                        pendingLoadChip = nil
+                        band.alertMessage = "Couldn't save the band into RedMed. Try again."
+                    }
+                case .notVerified:
+                    showLoadAuthFailedAlert = true
+                    VaultHistoryStore.shared.record(.unlockFailed, detail: "bandLoad")
+                case .unavailable(let reason):
+                    loadAuthUnavailableMessage = reason.message
+                default:
+                    pendingLoadChip = nil
+                }
+            }
+        }
+    }
+
     private var writeButtonTitle: String {
         if band.isWriting {
             return AppConfig.nfcHardwareEnabled ? "Hold Near The Band…" : "Packing…"
@@ -340,7 +474,10 @@ struct NFCView: View {
         if msg.contains("Couldn't") || msg.contains("failed") || msg.contains("Failed") {
             return true
         }
-        return !band.writeSucceeded && !msg.isEmpty && !band.isWriting
+        if msg.hasPrefix("Loaded") || msg.hasPrefix("This band matches") {
+            return false
+        }
+        return !band.writeSucceeded && !msg.isEmpty && !band.isWriting && !band.isReading
             && msg != "Hold your iPhone near the NFC tag."
     }
 

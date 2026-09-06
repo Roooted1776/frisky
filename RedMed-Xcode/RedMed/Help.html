@@ -77,7 +77,7 @@
 
     <h2><span class="sec-num">5</span> Where it lives</h2>
     <p>Your profile stays on your iPhone Keychain and, if you write one, on the band’s NFC chip. It is not uploaded, synced, or backed up to any RedMed server — we do not operate one for profiles.</p>
-    <p>On iOS we use the <code>WhenPasscodeSetThisDeviceOnly</code> Keychain class with <strong>no biometry ACL</strong>: readable while this iPhone is unlocked, and <strong>excluded from iCloud and encrypted backups</strong>. It does not sync to your other Apple devices. Face ID gates viewing the owner RedMed user page (when a stored ID exists), plus Edit, Save, and Erase — not 911, not Aid, not NFC write, not app launch, not tapper. A helper who opens the owner app on this iPhone hits Face ID before the YOU card. The band is still the credential for tap-to-view — no Face ID on a passerby tap.</p>
+    <p>On iOS we use the <code>WhenPasscodeSetThisDeviceOnly</code> Keychain class with <strong>no biometry ACL</strong>: readable while this iPhone is unlocked, and <strong>excluded from iCloud and encrypted backups</strong>. It does not sync to your other Apple devices. Face ID gates viewing the owner RedMed user page (when a stored ID exists), plus Edit, Save, Erase, and Load From Band — not 911, not Aid, not NFC write, not app launch, not tapper. A helper who opens the owner app on this iPhone hits Face ID before the YOU card. The band is still the credential for tap-to-view — no Face ID on a passerby tap.</p>
     <p>When someone taps the band, nothing is fetched from us. The card is built from what is on the chip (<code>#d=</code> in the URL fragment).</p>
 
     <h2><span class="sec-num">6</span> The band is readable by design</h2>
@@ -140,7 +140,7 @@
     <p class="legal-parties">How RedMed protects the iPhone app, the passerby card, and the NFC band in the United States</p>
     <div class="legal-notice">
       <strong>In short</strong>
-      Profile stays on your phone (Keychain) and on the band if you write one. No RedMed profile backend. Owner Face ID gates the RedMed user page, Edit, Save, and Erase. NFC write, 911, Aid, app launch, and tapper do not prompt. Band tap needs <strong>no</strong> Face ID — EMS must read it cold. Packing on the chip is obfuscation, not a private vault.
+      Profile stays on your phone (Keychain) and on the band if you write one. No RedMed profile backend. Owner Face ID gates the RedMed user page, Edit, Save, Erase, and Load From Band. NFC write, 911, Aid, app launch, and tapper do not prompt. Band tap needs <strong>no</strong> Face ID — EMS must read it cold. Packing on the chip is obfuscation, not a private vault.
     </div>
     <article class="legal-body">
       <p>This page describes how RedMed approaches security. It is informational, <strong>not a warranty</strong>, and does not change the medical-device, no-outcome, or liability terms in <a href="#terms">Terms</a>.</p>
@@ -153,7 +153,7 @@
       <li>Profile fields in iOS <strong>Keychain</strong> with <code>WhenPasscodeSetThisDeviceOnly</code> and <strong>no biometry ACL</strong>. Older biometry-bound blobs migrate on the next owner open (one Face ID, then never again to view).</li>
       <li>Readable while the device is unlocked; excluded from iCloud and encrypted backups.</li>
       <li>Local history / vault files use complete file protection and backup exclusion.</li>
-      <li>Owner Face ID gates viewing the RedMed user page (stored ID), plus Edit, Save, and Erase. 911, Aid, NFC write, app launch, and tapper do not prompt.</li>
+      <li>Owner Face ID gates viewing the RedMed user page (stored ID), plus Edit, Save, Erase, and Load From Band. 911, Aid, NFC write, app launch, and tapper do not prompt.</li>
       <li>Passerby <code>tapper.html</code> never asks for Face ID, passcode, or login — tap opens the card from <code>#d=</code>.</li>
       <li>App-switcher snapshots are covered while profile data is in memory so live fields are not cached in the system snapshot.</li>
       <li>Help → <strong>Erase All User Data</strong> deletes Keychain profile and vault files on this iPhone. The physical band is not wiped remotely.</li>
@@ -174,7 +174,7 @@
     <p>Same posture as <a href="#privacy">Privacy</a>: no profile on our systems → RedMed is outside the covered-entity / BA path for that profile. Device Keychain and no backend are the controls. They are not a hospital Security Rule program and not a “HIPAA certified” claim.</p>
 
     <h2><span class="sec-num">7</span> Report a vulnerability</h2>
-    <p>Open a private GitHub security advisory on <a href="https://github.com/Roooted1776/frisky">Roooted1776/frisky</a> for XSS in <code>#d=</code> rendering, Keychain / vault bypass, or owner view / Edit / Save / Erase gate bypass. Or email <a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a>. Do not file public issues with live keys or real medical payloads. See <code>docs/SECURITY.md</code>.</p>
+    <p>Open a private GitHub security advisory on <a href="https://github.com/Roooted1776/frisky">Roooted1776/frisky</a> for XSS in <code>#d=</code> rendering, Keychain / vault bypass, or owner view / Edit / Save / Erase / Load From Band gate bypass. Or email <a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a>. Do not file public issues with live keys or real medical payloads. See <code>docs/SECURITY.md</code>.</p>
 
     <h2><span class="sec-num">8</span> Trust root</h2>
     <p>There is no RedMed profile server. The trust root is the owner’s iPhone: Keychain, biometrics gates, RAM purge on background, vault file protection, and the band fragment if written.</p>

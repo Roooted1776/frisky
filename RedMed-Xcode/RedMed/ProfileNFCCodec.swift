@@ -16,6 +16,20 @@ struct NFCChipProfile: Codable, Equatable, Sendable {
     var conditions: [String] = []
     var contacts: [NFCChipContact] = []
     var updated: String = ""
+
+    /// Anything persist() would treat as a real ID. Empty `#d=` must not clobber Keychain.
+    var hasAnyProfileData: Bool {
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            || !dob.isEmpty
+            || !blood.isEmpty
+            || donor
+            || pregnant
+            || deafOrVisionImpaired
+            || !allergies.isEmpty
+            || !meds.isEmpty
+            || !conditions.isEmpty
+            || contacts.contains { !$0.name.isEmpty || !$0.phone.isEmpty }
+    }
 }
 
 struct NFCChipContact: Codable, Equatable, Sendable {
@@ -114,21 +128,7 @@ enum ProfileNFCCodec {
     }
 
     static func apply(_ chip: NFCChipProfile, to profile: ProfileData) {
-        profile.name = chip.name
-        profile.birthDate = chip.dob
-        profile.bloodType = chip.blood
-        profile.isOrganDonor = chip.donor
-        profile.isPregnant = chip.pregnant
-        profile.isDeafOrVisionImpaired = chip.deafOrVisionImpaired
-        profile.allergies = chip.allergies
-        profile.medications = chip.meds
-        profile.conditions = chip.conditions
-        profile.contacts = chip.contacts.map { c in
-            EmergencyContact(name: c.name, relationship: c.rel, phone: c.phone)
-        }
-        if !chip.updated.isEmpty {
-            profile.lastUpdated = chip.updated
-        }
+        profile.applyChipFields(chip)
     }
 
     /// Full NDEF URI string including `#d=` — prefer this over `URL` when writing tags

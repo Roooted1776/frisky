@@ -33,10 +33,10 @@ The app has no backend, database, or web service.
   `ConsentGateView` (Before you continue). After it succeeds the same page
   is usable; Agree enters Main. Later cold starts skip consent. Face ID
   then sits on the **owner RedMed page immediately before the user / YOU
-  card** (when a stored ID exists), plus Edit / Save / Erase. Not 911 /
-  Aid / NFC write, not tapper. Tapper has no biometrics and no
-  acknowledgement page. Do not remount `OwnerAppLock` / `LockEntryPage` /
-  `FacePage` as an app-wide cream lock.
+  card** (when a stored ID exists), plus Edit / Save / Erase / Load From
+  Band. Not 911 / Aid / NFC write, not tapper. Tapper has no biometrics
+  and no acknowledgement page. Do not remount `OwnerAppLock` /
+  `LockEntryPage` / `FacePage` as an app-wide cream lock.
   Tabs stay reachable without Face ID. The RedMed tab does not paint PHI
   until Face ID succeeds. Relock that view on true `.background` only.
   Crash monitor starts from owner `Main` / `ContentView.onAppear`, not from
@@ -45,15 +45,17 @@ The app has no backend, database, or web service.
   user page / Edit / Save / Erase, Control Center — does not stop it. An
   armed siren is independent. Profile restores from Keychain on owner Main
   appear (device-unlocked Keychain). Face ID gates **display** of that
-  profile on the RedMed tab, not the Keychain read, not NFC write. The
-  band is the product, not optional.
+  profile on the RedMed tab, not the Keychain read, not NFC write. Owner
+  **Load From Band** (NFC tab) reads `#d=` then Face IDs and persist()s
+  into Keychain — scanners never. The band is the product, not optional.
 - **Owner app** (`Main` → `ContentView`, `isScannerSession == false`): tabs are
   **RedMed · 911 · Aid · NFC**. Edit is available on RedMed. NFC tab is always
   visible for owners; `AppConfig.nfcHardwareEnabled` only gates CoreNFC
   write/read sessions, never tab chrome. Owner writes the passive HF NFC band
   from the NFC tab (no Face ID on write) as `medicalCardBaseURL#d=` only
   (`AppConfig.OwnerBandURI`) — no vendor cloud, no social/short URL, no BLE.
-  Launch path is `ConsentGateView` on first launch (or policy-version bump)
+  **Load From Band** is the reverse owner path: CoreNFC read of `#d=` → Face
+  ID → Keychain. Preview does not persist. Launch path is `ConsentGateView` on first launch (or policy-version bump)
   with Face ID on that page, then Main after Agree. Later cold starts skip
   the gate and open Main; Face ID is the RedMed tab before the YOU card
   when a stored ID exists. Same session stays in Main. No cream lock in
@@ -68,7 +70,7 @@ The app has no backend, database, or web service.
   unregistered host onto bands. `redmed.pages.dev` stays
   optional until Cloudflare secrets / Pages Git connect land.
   **Tap-to-view never requires Face ID / biometrics / passcode / login** — owner biometrics gate
-  the RedMed user page, Edit, Save, and Erase. NFC write, 911, Aid, and app launch do not prompt.
+  the RedMed user page, Edit, Save, Erase, and Load From Band. NFC write, 911, Aid, and app launch do not prompt.
   Passerby HTML never asks.
   **Nothing blocks the tap card** (YOU card / Preview / Scan / band tap): no
   privacy veil, no native overlay stealing taps, no login. Safari opens
@@ -148,7 +150,7 @@ The app has no backend, database, or web service.
   `LockEntryPage` / `FacePage`. Passerby `tapper.html` never has Face ID,
   passcode, login, or any page in front of the card.
 - Face ID / Touch ID with device passcode fallback is **viewing the owner
-  RedMed user page, Edit, Save, and Erase** (`force: true`, reuse duration
+  RedMed user page, Edit, Save, Erase, and Load From Band** (`force: true`, reuse duration
   **0**). NFC write, 911, Aid, app launch, and tapper do not prompt. Apple
   locks Face ID after **5 unsuccessful matches** until device passcode
   succeeds (system-wide). `BiometricAuth.Outcome.unavailable` is distinct
