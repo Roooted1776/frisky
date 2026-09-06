@@ -6,10 +6,12 @@
 authoritative for code.
 
 **Ship blocker:** the passerby host `https://roooted1776.github.io/tapper/` is live.
-Owner NFC **Write The Band** starts a real CoreNFC NDEF write of the live
-profile (`nfcHardwareEnabled = true`, `medicalCardBaseURL#d=` only). Device
-signing still needs NFC Tag Reading on App ID `com.redmed.app` (paid Apple
-team) — see `docs/NFC-RESTORE.md`. Linked only after write + matching
+Owner NFC hardware is parked (`nfcHardwareEnabled = false`, empty
+entitlements, no `NFCReaderUsageDescription`) so Automatic Signing works
+without NFC Tag Reading on App ID `com.redmed.app`. The owner NFC tab stays
+visible; Write / Scan are pack-only + Share Band URL. Restore real CoreNFC
+after paid Program + NFC Tag Reading — see `docs/NFC-RESTORE.md`.
+`medicalCardBaseURL#d=` is unchanged. Linked only after write + matching
 read-back. Do not spend PRs on tab chrome or copy.
 
 This repository is a **native iOS/SwiftUI app** (RedMed), located under `RedMed-Xcode/`. It

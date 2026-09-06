@@ -21,7 +21,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | Keychain profile | `WhenPasscodeSetThisDeviceOnly`, no biometry ACL; save fail-closed; never synchronizable |
 | Location toggle | Honored on Agree. Agree does not present When-In-Use. System sheet + GPS start/stop are Find Help only |
 | Owner tabs | RedMed · 911 · Aid · NFC; scanners never see NFC |
-| NFC Preview + Scan | Preview uses `fullScreenCover(item:)` after pack — no empty-cover race. Owner Write starts CoreNFC (`nfcHardwareEnabled = true`) and programs live `medicalCardBaseURL#d=`. Load From Band reads `#d=` into Keychain after Face ID. Linked after matching write read-back or Load |
+| NFC Preview + Scan | Preview uses `fullScreenCover(item:)` after pack — no empty-cover race. CoreNFC is parked (`nfcHardwareEnabled = false`); Write / Scan are pack-only simulate + Share Band URL. Load From Band and Linked need restored hardware (`docs/NFC-RESTORE.md`) |
 | Passerby shell | One file `tapper/index.html`; Xcode copies it to the app bundle as `tapper.html` at build; repo-root `tapper.html` redirects to `/tapper/` |
 | Offline shell | SW cache precaches HTML + pheart / BrandLogo / BrandWordmark |
 | Band URI contract | Write only `medicalCardBaseURL + #d=` base64url; vendor/social/short URLs rejected |
@@ -39,7 +39,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 
 | Area | Status |
 |------|--------|
-| Band write host | Live: `https://roooted1776.github.io/tapper/` (smoke green 2026-08-31). In-repo Write is CoreNFC (`nfcHardwareEnabled = true`). Device signing still needs NFC Tag Reading on App ID `com.redmed.app` |
+| Band write host | Live: `https://roooted1776.github.io/tapper/` (smoke green 2026-08-31). In-repo CoreNFC is parked (`nfcHardwareEnabled = false`, empty entitlements). Automatic Signing does not need NFC Tag Reading. Restore via `docs/NFC-RESTORE.md` |
 | `redmed.pages.dev` | 404 until CF secrets / Git connect |
 | XCTest | No iOS test target. Codec lockstep is Node, not XCTest |
 | App Store package | `PrivacyInfo.xcprivacy` + export flag exist; listing is parked |
@@ -48,7 +48,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 
 Not doing these in git until you have the Program and an app ID:
 
-1. NFC Tag Reading on App ID `com.redmed.app` (portal + Xcode capability). In-repo flag, entitlement, and usage string are already on — see `docs/NFC-RESTORE.md`.
+1. NFC Tag Reading on App ID `com.redmed.app` (portal + Xcode capability), then restore in-repo flag, entitlement, and usage string — see `docs/NFC-RESTORE.md`.
 2. HealthKit entitlement — keep `healthKitImportEnabled = false`.
 3. `AppConfig.appStoreURL` is `nil` (no placeholder listing).
 4. App Store Connect package / Archive.
