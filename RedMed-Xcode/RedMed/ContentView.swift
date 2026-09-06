@@ -75,6 +75,13 @@ struct ContentView: View {
         .ignoresSafeArea(edges: .bottom)
         .task {
             guard !isScannerSession else { return }
+            // Stagger past Face ID sheet presentation (returning RedMed
+            // unlock or first-launch ConsentGate). Starting SecItem in the
+            // same turn as evaluatePolicy contended for the sheet's first
+            // tick — see docs/cold-start-audit.md. Prefetch still overlaps
+            // the Face ID interaction; it just does not lead it.
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            guard !Task.isCancelled else { return }
             await profile.restoreOnLaunch()
         }
         .onAppear {
