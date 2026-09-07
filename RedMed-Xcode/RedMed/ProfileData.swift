@@ -160,9 +160,9 @@ class ProfileData: ObservableObject {
 
     /// Non-interactive Keychain read + JSON decode. Idempotent. Does not touch
     /// `@Published` fields until `restoreOnLaunch` adopts the result.
-    /// Call after first paint — never from `init`. ContentView staggers ~300ms
-    /// past Face ID sheet presentation, then uses `.userInitiated` so the blob
-    /// is ready when evaluate returns (YOU is not empty after unlock).
+    /// Call after first paint — never from `init`. ContentView restores ASAP
+    /// after one yield (no fixed 300ms Face ID stagger on returning opens).
+    /// Prefetch uses `.userInitiated` so the blob lands before YOU paints empty.
     /// UserDefaults gate only — no SecItem exists() here.
     func beginLaunchPrefetch() {
         guard persists else { return }

@@ -2,7 +2,8 @@
 
 ## Cursor Cloud specific instructions
 
-**Personal profile / memory:** `MAX.md` is cleared. Product invariants below stay
+**Personal profile / memory:** `MAX.md` holds Max's terse Xcode / cold-start
+notes (Debug install lag ≠ App Store). Product invariants below stay
 authoritative for code.
 
 **Ship blocker:** the passerby host `https://roooted1776.github.io/tapper/` is live.
@@ -208,8 +209,10 @@ Same session stays in Main. No cream lock in front of Main. Owner RedMed
 tab Face IDs before painting the YOU card when a stored ID exists.
 Owner `ContentView.onAppear` starts crash
 monitoring; `.background` stops CoreMotion; `.active` restarts it; `.inactive`
-does not stop it. `.task` calls `profile.restoreOnLaunch()` (owner only — scanners
-must not hit owner Keychain). A UserDefaults gate
+does not stop it. `.task` calls `profile.restoreOnLaunch()` ASAP after one
+yield (owner only — scanners must not hit owner Keychain). Do **not** add a
+fixed Face ID-every-open stagger before restore — consent Face ID runs before
+Main is armed; returning opens skip consent. A UserDefaults gate
 (`ProfileData.storedProfileGateKey`) plus `hasStoredProfile()` hints that a
 blob is expected so the empty funnel stays hidden while restore is in flight.
 Do not call Keychain decode in `@State` defaults.
