@@ -32,24 +32,24 @@ set up a working runtime here:
 The app has no backend, database, or web service.
 
 **Roles / shells (permanent — do not regress):**
-- **Face ID:** first launch (or policy-version bump) runs Face ID **on**
-  `ConsentGateView` (Before you continue). After it succeeds the same page
-  is usable; Agree enters Main. Later cold starts skip consent. Face ID
-  then sits on **Edit / Save / Erase / Load From Band** only — **not**
+- **Face ID:** sits on **Edit / Save / Erase / Load From Band** only — **not**
+  on `ConsentGateView` (Before you continue is Agree clickwrap only), not
   opening / viewing the owner YOU card, not app launch / Main, not 911 /
-  Aid / NFC write, not tapper. Tapper has no biometrics and no
-  acknowledgement page. Do not remount `OwnerAppLock` / `LockEntryPage` /
-  `FacePage` / `OwnerRedMedGate` as an app-wide or YOU-card cream lock.
-  Tabs stay reachable without Face ID. The RedMed tab paints the YOU card
-  from RAM / Keychain restore without a view unlock. Crash monitor starts
-  from owner `Main` / `ContentView.onAppear`, not from a lock. CoreMotion
-  stops on true `.background` (no motion background mode) and restarts on
-  `.active`. `.inactive` — Face ID on Edit / Save / Erase, Control Center —
-  does not stop it. An armed siren is independent. Profile restores from
-  Keychain on owner Main appear (device-unlocked Keychain) **without Face
-  ID to view**. Owner **Load From Band** (NFC tab) reads `#d=` then Face
-  IDs and persist()s into Keychain — scanners never. The band is the
-  product, not optional.
+  Aid / NFC write, not tapper. First launch (or policy-version bump) shows
+  Before you continue (checkbox + Agree); later cold starts skip consent.
+  Tapper has no biometrics and no acknowledgement page. Do not remount
+  `OwnerAppLock` / `LockEntryPage` / `FacePage` / `OwnerRedMedGate` as an
+  app-wide or YOU-card cream lock. Tabs stay reachable without Face ID.
+  The RedMed tab paints the YOU card from RAM / Keychain restore without a
+  view unlock. Crash monitor starts from owner `Main` /
+  `ContentView.onAppear`, not from a lock. CoreMotion stops on true
+  `.background` (no motion background mode) and restarts on `.active`.
+  `.inactive` — Face ID on Edit / Save / Erase, Control Center — does not
+  stop it. An armed siren is independent. Profile restores from Keychain
+  on owner Main appear (device-unlocked Keychain) **without Face ID to
+  view**. Owner **Load From Band** (NFC tab) reads `#d=` then Face IDs and
+  persist()s into Keychain — scanners never. The band is the product, not
+  optional.
 - **Owner app** (`Main` → `ContentView`, `isScannerSession == false`): tabs are
   **RedMed · 911 · Aid · NFC**. Edit is available on RedMed. NFC tab is always
   visible for owners; `AppConfig.nfcHardwareEnabled` only gates CoreNFC
@@ -57,11 +57,12 @@ The app has no backend, database, or web service.
   from the NFC tab (no Face ID on write) as `medicalCardBaseURL#d=` only
   (`AppConfig.OwnerBandURI`) — no vendor cloud, no social/short URL, no BLE.
   **Load From Band** is the reverse owner path: CoreNFC read of `#d=` → Face
-  ID → Keychain. Preview does not persist. Launch path is `ConsentGateView` on first launch (or policy-version bump)
-  with Face ID on that page, then Main after Agree. Later cold starts skip
-  the gate and open Main; the YOU card is visible without Face ID (Edit /
-  Save / Erase still Face ID). Same session stays in Main. No cream lock in
-  front of Main (911 / Aid / NFC stay reachable).
+  ID → Keychain. Preview does not persist. Launch path is `ConsentGateView`
+  on first launch (or policy-version bump) — Agree clickwrap only (no Face
+  ID on that page), then Main after Agree. Later cold starts skip the gate
+  and open Main; the YOU card is visible without Face ID (Edit / Save /
+  Erase still Face ID). Same session stays in Main. No cream lock in front
+  of Main (911 / Aid / NFC stay reachable).
 - **Scanner / passerby shell** (`OwnerHelpChrome` / bracelet tap → `tapper.html#d=…`,
   `isScannerSession == true`): tabs are **RedMed · 911 · Aid** only — **no Edit**,
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain or
@@ -201,16 +202,16 @@ The app has no backend, database, or web service.
 **Cold launch:** Do **not** create `CLLocationManager`, start GPS / MapKit /
 trauma JSON, or show a Location banner at `@main`. First launch opens a cream
 shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash)
-then `ConsentGateView` on first launch (or policy-version bump) with Face ID
-on that page, then Main after Agree. Later cold starts skip the gate.
-Same session stays in Main. No cream lock in front of Main. Owner RedMed
-tab shows the YOU card without Face ID to view (Edit / Save / Erase still
-Face ID). Owner `ContentView.onAppear` starts crash
+then `ConsentGateView` on first launch (or policy-version bump) — Agree
+clickwrap only (no Face ID on that page), then Main after Agree. Later cold
+starts skip the gate. Same session stays in Main. No cream lock in front of
+Main. Owner RedMed tab shows the YOU card without Face ID to view (Edit /
+Save / Erase still Face ID). Owner `ContentView.onAppear` starts crash
 monitoring; `.background` stops CoreMotion; `.active` restarts it; `.inactive`
 does not stop it. `.task` calls `profile.restoreOnLaunch()` ASAP after one
 yield (owner only — scanners must not hit owner Keychain). Do **not** add a
-fixed Face ID-every-open stagger before restore — consent Face ID runs before
-Main is armed; returning opens skip consent. A UserDefaults gate
+fixed Face ID stagger before restore — consent is Agree-only; returning opens
+skip consent. A UserDefaults gate
 (`ProfileData.storedProfileGateKey`) plus `hasStoredProfile()` hints that a
 blob is expected so the empty funnel stays hidden while restore is in flight.
 Do not call Keychain decode in `@State` defaults.
