@@ -29,11 +29,12 @@ struct RedMedApp: App {
                 }
             }
             // Associated Domains (applinks:roooted1776.github.io).
-            // Band on wrist + phone nearby must not Safari-hijack an iPhone that
-            // already has RedMed. BTR / NFC opens this app instead of Safari.
-            // Own matching #d= → foreground only (no SOS, no card sheet).
-            // Other person's #d= → in-app tap card (no Keychain write, no SOS).
-            // Undecodable / missing fragment → foreground only.
+            // Wrist-band proximity must not Safari-hijack an iPhone that already
+            // has RedMed. BTR / NFC opens this app instead of Safari.
+            // Own band / empty RAM (restore in flight) / bad #d= → foreground
+            // only — never present a tap-card sheet (that is still "setting off"
+            // the phone). Other person's #d= with a loaded owner profile →
+            // in-app tap card (no Keychain write, no SOS).
             // Phones without RedMed still get Safari + band-tap SOS auto-arm.
             .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
                 guard let url = activity.webpageURL else { return }
@@ -42,9 +43,9 @@ struct RedMedApp: App {
                 guard let chip = ProfileNFCCodec.decodeProfile(fromURLString: url.absoluteString) else {
                     return
                 }
-                if profile.matchesBand(chip) {
-                    return
-                }
+                // No sheet while Keychain restore is empty / in flight, or when
+                // this chip is the owner's own band.
+                guard profile.hasData, !profile.matchesBand(chip) else { return }
                 NotificationCenter.default.post(
                     name: .redMedOpenBandURL,
                     object: url.absoluteString
