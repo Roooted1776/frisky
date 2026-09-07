@@ -140,12 +140,15 @@ function redmedAssetURL(file) {
        EMT open after first online load; activate clears prior CACHE buckets
        (bump redmed-tapper-vN). Never wait on network when a shell copy exists.
      - Real bracelet NFC tap (`tapper.html#d=…`) → everything stays on that phone
-       (profile, 911, Aid). Local only once tap — no server. Band tap does **not**
-       auto-arm SOS (owner pocket/clasp must not scream; card still opens). Explicit
-       SOS · Locate Me opens `tel:` then siren. Crash waits the US Crash Detection
-       delay (10s alert + 30s countdown) then the same `tel:` unless Stop.
-       Bare /tapper/ without `#d=` and in-app Preview/Scan (`?src=app`) also
-       never auto-arm. Stop on Find Help or Aid.
+       (profile, 911, Aid, SOS siren). Local only once tap — everyone and
+       everything. No server / no online. Bare /tapper/ without `#d=` and in-app
+       Preview/Scan (`?src=app`) do not auto-arm SOS. Stop on Find Help or Aid.
+       Explicit SOS tap opens `tel:` immediately (no in-page confirm). Crash
+       waits the US Crash Detection delay (10s alert + 30s countdown) then
+       the same `tel:` unless Stop. Band-tap auto-arm is siren only.
+       Phones with RedMed installed should not hit this Safari path once
+       Associated Domains is live (app opens instead — own band quiet,
+       other band in-app card). Do not invent BLE / local-network ranging.
        Bare /tapper/ without `#d=` (and a failed / empty `#d=`) paints the
        No Patient empty state — not a blank YOU chart with dashes. #911 /
        #aid / ?tab= still open those panels; #d= stays the profile payload.
@@ -2242,8 +2245,8 @@ function redmedAssetURL(file) {
 
   var firstPhone = '';
   /// True only after a successful `decodeProfile()` (or native embed) that
-  /// actually has medical fields. Used for YOU chart vs No Patient empty state.
-  /// Band tap never auto-arms SOS (explicit SOS / crash only).
+  /// actually has medical fields. Used to refuse SOS auto-arm on garbage
+  /// `#d=`, empty `{}` / `[]`, and the No Patient empty state.
   var paintedFromBand = false;
 
   function profileHasContent(p) {
@@ -2484,7 +2487,7 @@ function redmedAssetURL(file) {
     // Band payload lives in the fragment. A same-document hash swap
     // (paste #d=, in-page test) must re-decode — first paint already ran.
     // Native embed keeps the injected profile. Do not re-arm SOS here
-    // (redmed-profile-painted is once; band tap never auto-arms).
+    // (redmed-profile-painted is once; first load owns auto-arm).
     if (window.__redmedNativeProfile || window.__REDMED_PROFILE) return;
     decodeProfile().then(function (p) {
       renderProfile(p, p != null);
@@ -3091,7 +3094,7 @@ function redmedAssetURL(file) {
 // Real bracelet NFC open with #d= → arm + PLAY local siren (no server).
 // Explicit SOS tap: tel: immediately (no in-page confirm), then siren.
 // DeviceMotion crash: US Crash Detection delay (10s + 30s) then tel: unless Stop.
-// Band tap never auto-arms — explicit SOS / crash only. Crash path ignores sex, masturbation, walking,
+// Band-tap auto-arm is siren only (Safari / no-app path). Crash path ignores sex, masturbation, walking,
 // eating, daily rhythm (same gates as native CrashMotionGuard).
 // Web Audio + wake lock only.
 (function () {
@@ -3690,20 +3693,23 @@ function redmedAssetURL(file) {
     }
   } catch (e) {}
 
-  // Band tap paints the card only — never auto-arm SOS. Pocket/clasp + BTR must
-  // not scream on a phone that has (or does not have) RedMed. Explicit SOS and
-  // crash still call arm() directly. Associated Domains (when restored) opens
-  // the app instead of Safari for installed phones — see docs/associated-domains-restore.md.
-  // Do not invent BLE / local-network band ranging; the chip is passive HF NFC.
+  // Real HF NFC band tap brings #d= that decrypts — arm local SOS on this phone
+  // only when Safari opened the card (passerby / no RedMed app). No auto-arm for
+  // bare /tapper/, garbage `#d=`, or in-app Preview/Scan (?src=app). Phones with
+  // RedMed installed use Associated Domains (applinks) so BTR opens the app
+  // instead — own wrist band must not Safari-hijack that iPhone. See
+  // docs/associated-domains-restore.md. No BLE / local-network band ranging.
   function hasBandPayload() {
     // Require non-empty fragment after #d= — bare "#d=" is not a real band tap.
     var h = location.hash || '';
     return /^#d=.+/.test(h) && !appPreview();
   }
   function shouldAutoArm() {
-    return false;
+    return hasBandPayload() && paintedFromBand && !appPreview();
   }
-  // Paint after profile decrypt. Crash / explicit SOS still call arm() post-paint.
+  // Band tap: wait for profile paint before arm/siren so decrypt is not fighting PCM.
+  // Crash / explicit SOS still call arm() directly (post-paint). Do not arm on a
+  // hash that failed to decode (No patient empty state).
   document.addEventListener('redmed-profile-painted', function () {
     if (shouldAutoArm()) arm();
     else paint();

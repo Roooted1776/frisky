@@ -18,7 +18,7 @@ This is RedMed: a native iOS medical ID plus a static passerby HTML shell. There
 
 1. Paid Apple Developer: NFC Tag Reading on App ID `com.redmed.app`, then `nfcHardwareEnabled = true` + entitlement (`docs/NFC-RESTORE.md`). Until then, NFC tab Share Band URL programs a blank NTAG216 via Shortcuts / NFC Tools. Linked still needs CoreNFC.
 2. Restore push/PR iOS CI after billing. `#d=` Swift/JS lockstep now runs as `node scripts/test-d-codec.mjs` (pages-deploy + local). No XCTest target.
-3. Leave HealthKit / Associated Domains parked until a paid Apple team can provision them. Host `https://roooted1776.github.io/tapper/` is already live.
+3. Leave HealthKit parked until a paid Apple team can provision it. Associated Domains is in `RedMed.entitlements` (`associatedDomainsEnabled = true`) — App ID still needs the capability on a paid team. Host `https://roooted1776.github.io/tapper/` is already live.
 
 ---
 
@@ -236,7 +236,7 @@ No SPM / CocoaPods / npm lockfile in this repo, so there is no app dependency CV
 
 `EmergencyView` 14–18 / 150–163 and `SeizureTimerStrip` 122: Call is an explicit button. `PublicEmergencyAid.dial()` opens `EmergencyNumber.dialURL`. SOS (`FindHelpSOSButton` 98–116) only `armSOS()` / `disarm()`.
 
-Tapper SOS auto-arm (`shouldAutoArm`): always false — band tap opens the card only; explicit SOS · Locate Me / crash arm the siren.
+Tapper SOS auto-arm (`shouldAutoArm`): `#d=` decoded + `paintedFromBand` + not `?src=app`. Phones with RedMed installed use Associated Domains (no Safari auto-arm).
 
 Residual: a hard drop of the phone can still siren. That is documented risk, not a logic hole.
 

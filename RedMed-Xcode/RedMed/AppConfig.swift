@@ -95,13 +95,20 @@ enum AppConfig {
     /// `false` parks hardware sessions (pack-only simulate + Share Band URL).
     static let nfcHardwareEnabled = false
 
+    /// `true` = `RedMed.entitlements` includes `applinks:` so a phone with RedMed
+    /// installed opens the app on `/tapper/` band taps instead of Safari (own
+    /// wrist proximity must not hijack that iPhone). Requires Associated Domains
+    /// on App ID `com.redmed.app` + paid Apple Developer — see
+    /// `docs/associated-domains-restore.md`. Keep in lockstep with the entitlement.
+    static let associatedDomainsEnabled = true
+
     /// Product kill switch for the optional Apple Health import on the empty-profile
     /// funnel / Edit. `true` = `HealthKitProfileImport` may call HealthKit.
     /// Requires the HealthKit capability on App ID `com.redmed.app` + paid Apple
     /// Developer — see `docs/healthkit-restore.md`. Parked (`false`): personal/free
-    /// teams cannot provision HealthKit (same class of problem as NFC Tag Reading
-    /// and Associated Domains), so the entitlement stays out of `RedMed.entitlements`
-    /// and the "Fill From Apple Health" button stays hidden until restored.
+    /// teams cannot provision HealthKit (same class of problem as NFC Tag Reading),
+    /// so the entitlement stays out of `RedMed.entitlements` and the
+    /// "Fill From Apple Health" button stays hidden until restored.
     static let healthKitImportEnabled = false
 
     /// Hardware RF contract for the RedMed bracelet.
@@ -191,11 +198,11 @@ enum AppConfig {
         }
 
         /// What can still open the URL later (Apple OS path; phone off / locked OK).
-        /// Band tap never auto-arms SOS (explicit SOS · Locate Me). Associated
-        /// Domains (paid Program) opens the app when RedMed is installed.
-        /// No BLE / local-network band ranging — chip has nothing to advertise.
+        /// Associated Domains: phone with RedMed opens the app instead of Safari
+        /// (own wrist band must not hijack that iPhone). Passerby / no-app keeps
+        /// Safari + SOS auto-arm. No BLE / local-network band ranging.
         static var backgroundTagReadingSummary: String {
-            "iOS Background Tag Reading can still open the card later — phone can be off or locked; a deliberate tap (phone top \(intentionalTapRangeLabel) from the band) still works. Band tap opens the card but does not auto-arm SOS — use SOS · Locate Me for the siren. With Associated Domains restored, a phone that already has RedMed opens the app instead of Safari. Wrist + pocket is usually fine. Phone pressed to the clasp can pop the card. Writing the chip does not change that. Band stays passive — no battery, no Bluetooth to find nearby."
+            "iOS Background Tag Reading can still open the card later — phone can be off or locked; a deliberate tap (phone top \(intentionalTapRangeLabel) from the band) still works. With RedMed installed, Associated Domains opens the app instead of Safari so your own wrist band does not take over this iPhone. Passerby phones without RedMed still get Safari. Wrist + pocket is usually fine; phone pressed to the clasp can still couple. Writing the chip does not change that. Band stays passive — no battery, no Bluetooth to find nearby."
         }
 
         static var paymentPOSSummary: String {

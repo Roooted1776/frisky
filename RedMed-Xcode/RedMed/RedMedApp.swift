@@ -28,17 +28,21 @@ struct RedMedApp: App {
                     NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
                 }
             }
-            // Associated Domains (parked — docs/associated-domains-restore.md).
-            // With the entitlement restored, /tapper/ opens this app instead of
-            // Safari. Never arm SOS. Own band → foreground only. Other band →
-            // in-app tap card (?src=app path via notification) so we do not
-            // interfere with reading someone else's ID.
+            // Associated Domains (applinks:roooted1776.github.io).
+            // Band on wrist + phone nearby must not Safari-hijack an iPhone that
+            // already has RedMed. BTR / NFC opens this app instead of Safari.
+            // Own matching #d= → foreground only (no SOS, no card sheet).
+            // Other person's #d= → in-app tap card (no Keychain write, no SOS).
+            // Undecodable / missing fragment → foreground only.
+            // Phones without RedMed still get Safari + band-tap SOS auto-arm.
             .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
                 guard let url = activity.webpageURL else { return }
                 let path = url.path.lowercased()
                 guard path == "/tapper" || path.hasPrefix("/tapper/") else { return }
-                if let chip = ProfileNFCCodec.decodeProfile(fromURLString: url.absoluteString),
-                   profile.matchesBand(chip) {
+                guard let chip = ProfileNFCCodec.decodeProfile(fromURLString: url.absoluteString) else {
+                    return
+                }
+                if profile.matchesBand(chip) {
                     return
                 }
                 NotificationCenter.default.post(

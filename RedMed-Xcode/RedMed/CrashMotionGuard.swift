@@ -51,8 +51,9 @@ enum USCrashDetectionCall {
 /// Cancel on Aid or Stop SOS on Find Help.
 /// SOS tap opens `tel:` immediately (no in-app prompt, no countdown).
 /// Crash follows `USCrashDetectionCall` (10s alert + 30s countdown) then the
-/// same `tel:` unless Stop. Not Apple's sensor fusion / API. Band tap does
-/// **not** auto-arm SOS (card only; explicit SOS · Locate Me for siren).
+/// same `tel:` unless Stop. Not Apple's sensor fusion / API. NFC band-tap
+/// auto-arm is siren only on the Safari / no-app path (Associated Domains
+/// keeps installed RedMed out of that path).
 /// Motion path ignores running, walking, eating, sex / masturbation / intimate
 /// motion, rhythmic daily activity, and hand/wrist handling.
 ///
