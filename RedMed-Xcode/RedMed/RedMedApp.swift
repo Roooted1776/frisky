@@ -16,8 +16,8 @@ struct RedMedApp: App {
             .task {
                 // Snapshot observers + haptics only. Do not warm WKWebView
                 // or read tapper.html here — that raced the first Main frame.
-                // Keychain restore is owned by ContentView after a short
-                // stagger so Face ID's sheet gets the first tick.
+                // Keychain restore is owned by ContentView (ASAP after one
+                // yield — no fixed Face ID stagger on returning opens).
                 SnapshotSafeCover.activate()
                 await Task.yield()
                 RedMedHaptics.prepare()

@@ -1,5 +1,12 @@
 # Cold Start Speed Audit
 
+> **2026-09 update:** ContentView no longer sleeps a fixed 300ms before
+> `restoreOnLaunch()`. ConsentGate arms Main only after Agree, so that sleep
+> was pure shipping lag on returning opens. Restore is yield-then-ASAP; a short
+> stagger remains only if consent Face ID somehow still owns `evaluatePolicy`.
+> `LaunchRoot.holdLaunchCream` still drops after two yields (no `.active` wait).
+
+
 **Launch lock is gone.** Current path is `RedMedApp` → `PrivacySnapshotGuard` →
 `ConsentGateView` → `Main` → `ContentView`. Face ID sits on the owner RedMed
 tab immediately before the YOU card (stored ID), plus Edit / Save / Erase.

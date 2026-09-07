@@ -75,12 +75,16 @@ struct ContentView: View {
         .ignoresSafeArea(edges: .bottom)
         .task {
             guard !isScannerSession else { return }
-            // Stagger past Face ID sheet presentation (returning RedMed
-            // unlock or first-launch ConsentGate). Starting SecItem in the
-            // same turn as evaluatePolicy contended for the sheet's first
-            // tick — see docs/cold-start-audit.md. Prefetch still overlaps
-            // the Face ID interaction; it just does not lead it.
-            try? await Task.sleep(nanoseconds: 300_000_000)
+            // ConsentGate arms Main only after Agree — this task does not
+            // overlap first-launch consent Face ID. Returning cold starts
+            // skip consent. Do not pay a fixed 300ms sleep on every open
+            // (shipping lag). Yield once for first paint, then restore.
+            // Short stagger only if consent Face ID somehow still owns the
+            // sheet (erase → re-ack edge); Keychain is not biometry ACL.
+            await Task.yield()
+            if !ConsentSettings.hasAcceptedCurrent, BiometricAuth.isEvaluating {
+                try? await Task.sleep(nanoseconds: 80_000_000)
+            }
             guard !Task.isCancelled else { return }
             await profile.restoreOnLaunch()
         }
@@ -90,10 +94,10 @@ struct ContentView: View {
             // Same-turn mount in scannerSafeTab already paints 911 / Aid / NFC
             // on first tap. Do not pre-stack those pages under RedMed — that
             // kept GPS / Aid catalog / NFC WK warm compositing for the session.
-            // First paint first — haptics / CoreMotion after the YOU card yields.
+            // First paint first — CoreMotion after the YOU card yields.
+            // Haptics already warmed in RedMedApp.task (do not prepare twice).
             Task { @MainActor in
                 await Task.yield()
-                RedMedHaptics.prepare()
                 try? await Task.sleep(nanoseconds: 400_000_000)
                 guard !Task.isCancelled else { return }
                 guard scenePhase == .active else { return }
