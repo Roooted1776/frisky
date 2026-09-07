@@ -2,7 +2,7 @@ import SwiftUI
 import WebKit
 import UIKit
 
-/// Bundled owner Help: one HTML file, four policy anchors. Offline. No network.
+/// Bundled owner Help: one HTML file, five policy anchors. Offline. No network.
 enum HelpDocument {
     static let bundledFile = "Help"
 
@@ -11,6 +11,7 @@ enum HelpDocument {
         case security
         case terms
         case medicalDisclaimer
+        case shipsWhenReady
 
         var id: String { rawValue }
 
@@ -20,6 +21,7 @@ enum HelpDocument {
             case .security: return "Security"
             case .terms: return "Terms"
             case .medicalDisclaimer: return "Medical Disclaimer"
+            case .shipsWhenReady: return "Ships When Ready"
             }
         }
 
@@ -30,6 +32,7 @@ enum HelpDocument {
             case .security: return "🔐"
             case .terms: return "📜"
             case .medicalDisclaimer: return "⚕️"
+            case .shipsWhenReady: return "📦"
             }
         }
 
@@ -38,6 +41,7 @@ enum HelpDocument {
         var fragment: String {
             switch self {
             case .medicalDisclaimer: return "medical-disclaimer"
+            case .shipsWhenReady: return "ships-when-ready"
             default: return rawValue
             }
         }

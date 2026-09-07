@@ -13,7 +13,7 @@ shared “do not tap-track the medical card.” Do not mash them into one ad.
 
 Paid ads and “available now” stay off until the **shared product gate** is
 green. View B has a **second company gate** on top of that. Same rule as
-Help → Terms §12 (**ships when ready**): no calendar promise, no “available
+Help → Terms §12 / <strong>Ships When Ready</strong> (**ships when ready**): no calendar promise, no “available
 now” before the gate is actually green.
 
 Full claim bans also live in [`DO-NOT.md`](DO-NOT.md). Hardware sequence:

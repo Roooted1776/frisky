@@ -155,7 +155,6 @@ struct ConsentGateView<Content: View>: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("RedMed is a personal medical ID and first-aid reference on this iPhone. It is not a medical device, does not diagnose or treat, and does not replace emergency dispatch. Always call emergency services first in a real emergency.")
                         Text("Your profile stays on this iPhone, and on a band if you write one — RedMed runs no server for it.")
-                        Text("Ships when ready: RedMed does not promise ship dates, launch windows, or feature ETAs. App updates, band hardware, App Store listing, NFC write, and other product pieces land when they are ready. Ads and “coming soon” copy are not a calendar promise. Use only what is available on this phone and band today (Terms §12).")
                     }
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.redmedMuted)
@@ -203,7 +202,7 @@ struct ConsentGateView<Content: View>: View {
                         Image(systemName: checked ? "checkmark.square.fill" : "square")
                             .font(.system(size: 22))
                             .foregroundColor(checked ? .redmedAccent : .redmedMuted)
-                        Text("I have read and agree to the RedMed Terms, Privacy, and Security pages, including the medical-device disclaimer, ships-when-ready availability (Terms §12), liability limits, and binding arbitration / class-action waiver in Terms.")
+                        Text("I have read and agree to the RedMed Terms, Privacy, Security, Medical Disclaimer, and Ships When Ready pages, including the medical-device disclaimer, liability limits, and binding arbitration / class-action waiver in Terms.")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.redmedDark)
                             .fixedSize(horizontal: false, vertical: true)
