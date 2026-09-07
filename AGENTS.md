@@ -89,7 +89,9 @@ The app has no backend, database, or web service.
   the patient session so Auto-Lock does not blank the card while a helper
   tends to the person (SOS wake lock remains as well). Shell open is SW
   cache-first (multi-key) after the first visit so a later tap paints almost
-  instantly; `#d=` decrypt is prioritized over the brand logo on the wire.
+  instantly; `#d=` treat fields (name / blood / allergies / meds) decrypt as
+  soon as the YOU-card DOM exists — before 911 / Aid HTML — so EMT info wins
+  the wire over logo, siren, and wake lock.
   Native **Help** chrome is on 911, Aid, NFC, and in-app scanner screens.
   Not on Edit (that modal bar is Cancel / Save
   only), and not a bottom dock on the owner RedMed tab (that dock was
