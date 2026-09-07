@@ -39,16 +39,26 @@ struct RedMedApp: App {
 /// this tree.
 private struct LaunchRoot: View {
     /// Flat cream matching UILaunchScreen for the SplashBoard → first-layout
-    /// gap only. Dropped after two yields with `animation: nil` (no fade).
-    /// Do **not** wait for `scenePhase == .active`: cold start and Xcode
-    /// Debug Stop→Run begin `.inactive`, and debugger attach can sit there
-    /// for seconds — that was a full-screen cream hang over Consent/Main /
-    /// Face ID. Rose wash stays deferred in `RedMedPageBackground`.
+    /// gap only. Dropped on ConsentGate's first appear (+ one yield) with
+    /// `animation: nil` (no fade). Do **not** wait for `scenePhase == .active`:
+    /// cold start and Xcode Debug Stop→Run begin `.inactive`, and debugger
+    /// attach can sit there for seconds — that was a full-screen cream hang.
+    /// Rose wash stays deferred in `RedMedPageBackground`.
     @State private var holdLaunchCream = true
 
     var body: some View {
         ZStack {
             ConsentGateView { Main() }
+                .onAppear {
+                    guard holdLaunchCream else { return }
+                    Task { @MainActor in
+                        await Task.yield()
+                        guard holdLaunchCream else { return }
+                        var t = Transaction()
+                        t.animation = nil
+                        withTransaction(t) { holdLaunchCream = false }
+                    }
+                }
 
             if holdLaunchCream {
                 Color.redmedBg
@@ -56,14 +66,6 @@ private struct LaunchRoot: View {
                     .allowsHitTesting(false)
                     .accessibilityHidden(true)
             }
-        }
-        .task {
-            guard holdLaunchCream else { return }
-            await Task.yield()
-            await Task.yield()
-            var t = Transaction()
-            t.animation = nil
-            withTransaction(t) { holdLaunchCream = false }
         }
     }
 }

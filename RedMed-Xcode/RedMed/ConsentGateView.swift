@@ -4,7 +4,8 @@ import UIKit
 /// Legal consent. First launch (or after a material policy version bump)
 /// only — stored version skips the page on later cold starts. Agree +
 /// checkbox only; no Face ID on Before You Continue. Face ID runs once
-/// immediately after Agree (cream wait / Retry until success), then Main.
+/// immediately after Agree (cream wait / Retry until success) while Main
+/// warms underneath, then Main.
 /// Returning opens skip both. Edit / Save / Clear (via Save) / Erase /
 /// Load From Band still Face ID. Never an app-wide cream lock. Never on
 /// passerby tapper.
@@ -245,9 +246,10 @@ struct ConsentGateView<Content: View>: View {
         var t = Transaction()
         t.animation = nil
         withTransaction(t) {
-            // Keep contentArmed false until Face ID succeeds — Main stays hidden.
+            // Arm Main under the Face ID cream so success reveals a warm tab
+            // tree instead of a cold mount. Hit-testing stays off until auth.
             hasAccepted = false
-            contentArmed = false
+            contentArmed = true
             awaitingPostAgreeFaceID = true
         }
         // Honor the Location toggle. Do not fire iOS When-In-Use here —
