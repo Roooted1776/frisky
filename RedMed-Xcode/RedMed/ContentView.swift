@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 /// Root tab shell.
@@ -17,8 +18,11 @@ struct ContentView: View {
     @State private var tab: AppTab = .redmed
     /// Only mount a tab's heavy subtree after first visit; keep it alive after.
     @State private var mountedTabs: Set<AppTab> = [.redmed]
-    /// Owned here so the NFC tab tap can begin CoreNFC on the same gesture stack.
-    @StateObject private var nfcBand = NFCBandManager()
+    /// Lazy: returning cold Main must not construct NFCWriter/Reader + Combine
+    /// until first NFC tab mount or Write gesture. `ensure()` stays synchronous
+    /// so CoreNFC `session.begin()` can still ride the gesture stack when
+    /// `AppConfig.nfcHardwareEnabled` is restored (paid Apple Developer).
+    @StateObject private var nfcBandBox = NFCBandBox()
 
     /// Owner-only fourth tab. Scanners never see NFC.
     private var showsNFC: Bool { !isScannerSession }
@@ -61,7 +65,7 @@ struct ContentView: View {
                 mountedTab(.aid) { AidView() }
                 if showsNFC {
                     mountedTab(.nfc, refreshOnHide: true) {
-                        NFCView(isVisible: activeTab == .nfc, band: nfcBand)
+                        NFCView(isVisible: activeTab == .nfc, band: nfcBandBox.ensure())
                     }
                 }
             }
@@ -81,6 +85,12 @@ struct ContentView: View {
             await Task.yield()
             guard !Task.isCancelled else { return }
             await profile.restoreOnLaunch()
+            guard !Task.isCancelled else { return }
+            // Start CoreMotion only after Keychain adopt so restore and
+            // 50 Hz motion do not overlap the first interactive seconds.
+            if scenePhase == .active {
+                startCrashMonitorIfOwner()
+            }
         }
         .onAppear {
             mountedTabs.insert(activeTab)
@@ -88,20 +98,15 @@ struct ContentView: View {
             // Same-turn mount in scannerSafeTab already paints 911 / Aid / NFC
             // on first tap. Do not pre-stack those pages under RedMed — that
             // kept GPS / Aid catalog / NFC WK warm compositing for the session.
-            // First paint first — CoreMotion after the YOU card yields.
+            // Crash monitor starts after restoreOnLaunch in `.task` (not here).
             // Haptics already warmed in RedMedApp.task (do not prepare twice).
-            Task { @MainActor in
-                await Task.yield()
-                try? await Task.sleep(nanoseconds: 400_000_000)
-                guard !Task.isCancelled else { return }
-                guard scenePhase == .active else { return }
-                startCrashMonitorIfOwner()
-            }
         }
         .onChange(of: scenePhase) { _, phase in
             guard !isScannerSession else { return }
             switch phase {
             case .active:
+                // Do not outrun Keychain restore on cold open.
+                guard !profile.isRestoringFromKeychain else { return }
                 startCrashMonitorIfOwner()
             case .background:
                 // No motion background mode — CoreMotion is useless when
@@ -118,7 +123,7 @@ struct ContentView: View {
         .onChange(of: tab) { _, newTab in
             mountedTabs.insert(newTab)
             if newTab != .nfc {
-                nfcBand.cancelSessions()
+                nfcBandBox.cancelSessions()
             }
         }
         .onChange(of: isScannerSession) { _, _ in clampScannerTab() }
@@ -143,7 +148,7 @@ struct ContentView: View {
         guard showsNFC, !isScannerSession else { return }
         guard AppConfig.nfcHardwareEnabled else { return }
         guard profile.hasData else { return }
-        nfcBand.writeBand(from: profile, isScannerSession: false)
+        nfcBandBox.ensure().writeBand(from: profile, isScannerSession: false)
     }
 
     @ViewBuilder
@@ -175,6 +180,31 @@ struct ContentView: View {
     private func startCrashMonitorIfOwner() {
         guard !isScannerSession else { return }
         CrashMotionGuard.shared.startMonitoring()
+    }
+}
+
+/// Owns `NFCBandManager` only after first NFC use (tab mount or Write).
+/// Avoids CoreNFC ObservableObject + Combine sink cost on returning cold Main
+/// when only the RedMed tab is mounted. Creation is synchronous for the
+/// gesture-stack Write path when hardware is later re-enabled.
+@MainActor
+private final class NFCBandBox: ObservableObject {
+    private var instance: NFCBandManager?
+    private var forward: AnyCancellable?
+
+    func ensure() -> NFCBandManager {
+        if let instance { return instance }
+        let band = NFCBandManager()
+        instance = band
+        forward = band.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }
+        objectWillChange.send()
+        return band
+    }
+
+    func cancelSessions() {
+        instance?.cancelSessions()
     }
 }
 
