@@ -17,7 +17,9 @@ RedMed installed, iOS opens the **app** instead of Safari.
 | RedMed **not** installed | Safari card + band-tap SOS auto-arm (passerby / EMT unchanged) |
 
 AASA is live (`apple-app-site-association` + `.well-known/`, paths
-`/tapper`, `/tapper/`, `/tapper/*`). Entitlement is in `RedMed.entitlements`.
+`/tapper`, `/tapper/`, `/tapper/*`, plus `components` / `appIDs`). Entitlement
+is in `RedMed.entitlements`. After merge, re-run Publish tapper /
+`scripts/publish-github-io.sh` so github.io picks up the widened AASA.
 
 ## Rejected: local-network / BLE band ranging
 

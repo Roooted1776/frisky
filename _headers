@@ -2,6 +2,14 @@
 # CSP keeps 'unsafe-inline' (decrypt / locale / SOS / SW register are inline)
 # and media-src blob: (the SOS siren WAV is generated in JS, played via blob:).
 # #d= payload is never an HTTP cache key.
+# AASA Content-Type is for Cloudflare Pages only — github.io ignores _headers
+# but still serves the files (Apple accepts octet-stream there).
+
+/apple-app-site-association
+  Content-Type: application/json
+
+/.well-known/apple-app-site-association
+  Content-Type: application/json
 
 /tapper/sw.js
   Cache-Control: public, max-age=0, must-revalidate

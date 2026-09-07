@@ -39,7 +39,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 
 | Area | Status |
 |------|--------|
-| Band write host | Live: `https://roooted1776.github.io/tapper/` (smoke green 2026-08-31). In-repo CoreNFC is parked (`nfcHardwareEnabled = false`, empty entitlements). Automatic Signing does not need NFC Tag Reading. Restore via `docs/NFC-RESTORE.md` |
+| Band write host | Live: `https://roooted1776.github.io/tapper/` (smoke green 2026-08-31). In-repo CoreNFC is parked (`nfcHardwareEnabled = false`, no NFC entitlement). Associated Domains entitlement is on (`associatedDomainsEnabled = true`) so installed RedMed does not Safari-open on wrist-band proximity — App ID capability needs paid Program. Automatic Signing does not need NFC Tag Reading. Restore CoreNFC via `docs/NFC-RESTORE.md` |
 | `redmed.pages.dev` | 404 until CF secrets / Git connect |
 | XCTest | No iOS test target. Codec lockstep is Node, not XCTest |
 | App Store package | `PrivacyInfo.xcprivacy` + export flag exist; listing is parked |
