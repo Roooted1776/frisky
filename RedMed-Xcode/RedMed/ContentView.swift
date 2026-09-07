@@ -77,9 +77,11 @@ struct ContentView: View {
             guard !isScannerSession else { return }
             // Consent is Agree-only; Face ID is post-Agree (first launch /
             // after Erase). Returning cold starts skip both. Yield once for
-            // first paint, then restore ASAP — Keychain is not biometry ACL.
+            // first YOU paint, then haptics + restore. Prefetch may already
+            // be running from RedMedApp.task.
             await Task.yield()
             guard !Task.isCancelled else { return }
+            RedMedHaptics.prepare()
             await profile.restoreOnLaunch()
         }
         .onAppear {
@@ -88,11 +90,12 @@ struct ContentView: View {
             // Same-turn mount in scannerSafeTab already paints 911 / Aid / NFC
             // on first tap. Do not pre-stack those pages under RedMed — that
             // kept GPS / Aid catalog / NFC WK warm compositing for the session.
-            // First paint first — CoreMotion after the YOU card yields.
-            // Haptics already warmed in RedMedApp.task (do not prepare twice).
+            // First paint first — CoreMotion well after the YOU card.
+            // Haptics prepare in .task after the same first-paint yield.
             Task { @MainActor in
                 await Task.yield()
-                try? await Task.sleep(nanoseconds: 400_000_000)
+                // After YOU is up — don't contend with first scroll / restore.
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
                 guard !Task.isCancelled else { return }
                 guard scenePhase == .active else { return }
                 startCrashMonitorIfOwner()
