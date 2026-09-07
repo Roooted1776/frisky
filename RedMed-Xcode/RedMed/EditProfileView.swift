@@ -686,7 +686,6 @@ struct EditProfileView: View {
                     commitSave()
                 } else if outcome == .notVerified {
                     showAuthFailedAlert = true
-                    VaultHistoryStore.shared.record(.unlockFailed, detail: "editSave")
                 } else if case .unavailable(let reason) = outcome {
                     authUnavailableMessage = reason.message
                 }
@@ -767,7 +766,6 @@ struct EditProfileView: View {
             return
         }
         OwnerRedMedGate.unlock()
-        VaultHistoryStore.shared.record(.profileSaved)
         dismiss()
     }
 }

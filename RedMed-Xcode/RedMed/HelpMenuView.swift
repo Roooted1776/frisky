@@ -536,12 +536,10 @@ struct HelpMenuView: View {
                 RedMedHaptics.error()
                 isErasing = false
                 eraseAuthFailed = true
-                VaultHistoryStore.shared.record(.unlockFailed, detail: "erase")
             case .unavailable(let reason):
                 RedMedHaptics.error()
                 isErasing = false
                 authUnavailableMessage = reason.message
-                VaultHistoryStore.shared.record(.unlockFailed, detail: "erase")
             case .declined, .notInteractive, .timedOut:
                 isErasing = false
             }

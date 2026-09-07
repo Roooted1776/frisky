@@ -417,13 +417,11 @@ struct NFCView: View {
                 case .success:
                     if profile.setBraceletPaired(true) {
                         band.statusMessage = "This band matches RedMed. Linked."
-                        VaultHistoryStore.shared.record(.braceletWritten, detail: "bandLoadMatch")
                     } else {
                         band.alertMessage = "Couldn't save the linked status. Try again."
                     }
                 case .notVerified:
                     showLoadAuthFailedAlert = true
-                    VaultHistoryStore.shared.record(.unlockFailed, detail: "bandLoad")
                 case .unavailable(let reason):
                     loadAuthUnavailableMessage = reason.message
                 default:
@@ -444,14 +442,12 @@ struct NFCView: View {
                     if profile.adoptBandSnapshot(chip) {
                         pendingLoadChip = nil
                         band.statusMessage = "Loaded into RedMed."
-                        VaultHistoryStore.shared.record(.profileSaved, detail: "bandLoad")
                     } else {
                         pendingLoadChip = nil
                         band.alertMessage = "Couldn't save the band into RedMed. Try again."
                     }
                 case .notVerified:
                     showLoadAuthFailedAlert = true
-                    VaultHistoryStore.shared.record(.unlockFailed, detail: "bandLoad")
                 case .unavailable(let reason):
                     loadAuthUnavailableMessage = reason.message
                 default:

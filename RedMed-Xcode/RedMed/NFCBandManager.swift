@@ -152,7 +152,6 @@ final class NFCBandManager: ObservableObject {
             alertMessage = "Bracelet write succeeded, but RedMed couldn't save the paired status. Try again."
             return
         }
-        VaultHistoryStore.shared.record(.braceletWritten, detail: detail)
     }
 
     // MARK: - Private
@@ -180,7 +179,6 @@ final class NFCBandManager: ObservableObject {
                 }
                 if !self.writer.isWriting, !self.writer.success, !msg.isEmpty, msg != "Cancelled." {
                     self.alertMessage = msg
-                    VaultHistoryStore.shared.record(.nfcWriteFailed, detail: String(msg.prefix(120)))
                 }
             }
             .store(in: &cancellables)

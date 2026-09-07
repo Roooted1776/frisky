@@ -286,7 +286,6 @@ struct ConsentGateView<Content: View>: View {
                 case .notVerified:
                     biometryFailed = true
                     showRetry = true
-                    VaultHistoryStore.shared.record(.unlockFailed, detail: "consent")
                 case .unavailable(let reason):
                     unavailableReason = reason
                     showRetry = true
