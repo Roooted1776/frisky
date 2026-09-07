@@ -152,7 +152,7 @@ struct PrivacySnapshotGuard<Content: View>: View {
 /// an incoming call) because the snapshot risk exists at every one of
 /// those transitions, not only true `.background`.
 ///
-/// Face ID on the RedMed user page / Edit / Save / Erase also resigns active.
+/// Face ID on post-Agree / Edit / Save / Erase also resigns active.
 /// The system sheet sits above this window cover; `didBecomeActive` drops it
 /// when the prompt ends.
 final class SnapshotSafeCover {
@@ -162,7 +162,7 @@ final class SnapshotSafeCover {
     /// Cold launch / Xcode debugger attach fire willResignActive before the
     /// first Main frame. Covering then is the cream hang after the launch screen.
     private var hasBeenActive = false
-    /// Cover only while PHI is in RAM. Face ID on Before you continue has
+    /// Cover only while PHI is in RAM. Consent / post-Agree Face ID has
     /// no profile yet — cream over that page is the stuck launch.
     static var phiInMemory = false
 

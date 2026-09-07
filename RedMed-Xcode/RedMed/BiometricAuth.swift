@@ -5,10 +5,10 @@ import UIKit
 /// NFC Preview — tap-to-view stays ungated
 /// (no Face ID, no passcode, no login).
 ///
-/// First-launch consent, owner RedMed user view, Edit, Save, Erase, and
-/// Load From Band pass `force: true`. NFC write, 911, Aid, later app launch,
-/// and tapper do not (later opens Face ID on the RedMed user page when a
-/// stored ID exists).
+/// Post-Agree Face ID (first launch / policy bump / after Erase), Edit,
+/// Save, Clear (empty fields + Save), Erase, and Load From Band pass
+/// `force: true`. NFC write, 911, Aid, later app launch, viewing the YOU
+/// card, and tapper do not. Before You Continue itself is Agree-only.
 /// There is no process-wide skip flag.
 ///
 /// On success the `LAContext` is **parked** (not invalidated) so
@@ -92,9 +92,8 @@ enum BiometricAuth {
         _ = force
 
         // Simulator: never evaluatePolicy and never a UIKit alert.
-        // Auto-succeed so first-launch consent / RedMed view / Edit /
-        // Save / Erase can proceed without a device. Device still uses
-        // real Face ID.
+        // Auto-succeed so post-Agree / Edit / Save / Erase can proceed
+        // without a device. Device still uses real Face ID.
         #if targetEnvironment(simulator)
         _ = cancelInFlight()
         markSessionEnded()
@@ -253,8 +252,8 @@ enum BiometricAuth {
     }
 
     /// `evaluatePolicy` before a key window never presents a sheet and can
-    /// hang until the hang clock. ConsentGate and the owner RedMed view
-    /// both wait for this (and retry on `UIWindow.didBecomeKeyNotification`).
+    /// hang until the hang clock. ConsentGate post-Agree Face ID waits for
+    /// this (and retries on `UIWindow.didBecomeKeyNotification`).
     static var hasKeyWindow: Bool {
         UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }

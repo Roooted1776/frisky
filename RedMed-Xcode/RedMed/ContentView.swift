@@ -75,9 +75,9 @@ struct ContentView: View {
         .ignoresSafeArea(edges: .bottom)
         .task {
             guard !isScannerSession else { return }
-            // Consent is Agree-only (no Face ID on Before You Continue).
-            // Returning cold starts skip consent. Yield once for first
-            // paint, then restore — Keychain is not biometry ACL.
+            // Consent is Agree-only; Face ID is post-Agree (first launch /
+            // after Erase). Returning cold starts skip both. Yield once for
+            // first paint, then restore ASAP — Keychain is not biometry ACL.
             await Task.yield()
             guard !Task.isCancelled else { return }
             await profile.restoreOnLaunch()
