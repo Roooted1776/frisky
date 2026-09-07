@@ -156,8 +156,10 @@ function redmedAssetURL(file) {
        insets, no horizontal scroll. Tap-to-view: no account, no login, and no
        authentication gate before or on this page — EMT / helper open the card
        immediately from `#d=`. Nothing covers or blocks the YOU card (no login,
-       no overlay, no privacy veil). Owner unlock / edit / band write stay in the
-       native app only.
+       no overlay, no privacy veil). Helper may put the phone down to tend to
+       the person — Screen Wake Lock holds the display on for the whole band-tap
+       patient session (not only while SOS is armed). Owner unlock / edit /
+       band write stay in the native app only.
        iOS may need a gesture to unmute AudioContext; motion permission only
        when the helper taps SOS (not an auth gate).
      - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
@@ -3151,6 +3153,9 @@ function redmedAssetURL(file) {
   var gain = null;
   var lfo = null;
   var wake = null;
+  /// Screen must stay on while a helper tends the patient (phone often set
+  /// down). `session` = band-tap patient card open; `sos` = survival siren.
+  var wakeReasons = { session: false, sos: false };
   var beepTimer = null;
 
   var motionListening = false;
@@ -3388,12 +3393,47 @@ function redmedAssetURL(file) {
       try { htmlAudio.pause(); htmlAudio.currentTime = 0; } catch (e) {}
       htmlAudio = null;
     }
-    if (wake) {
-      try { wake.release(); } catch (e) {}
-      wake = null;
-    }
+    wakeReasons.sos = false;
+    syncWakeLock();
     audioNeedsGesture = false;
     stoppingAudio = false;
+  }
+
+  /// Keep the display awake for the band-tap card and/or armed SOS so a helper
+  /// can set the phone down without Auto-Lock blanking the medical ID.
+  function syncWakeLock() {
+    var want = !!(wakeReasons.session || wakeReasons.sos);
+    if (!want) {
+      if (wake) {
+        try { wake.release(); } catch (e) {}
+        wake = null;
+      }
+      return;
+    }
+    if (wake) return;
+    if (!(navigator.wakeLock && navigator.wakeLock.request)) return;
+    if (document.visibilityState && document.visibilityState !== 'visible') return;
+    navigator.wakeLock.request('screen').then(function (lock) {
+      if (!(wakeReasons.session || wakeReasons.sos)) {
+        try { lock.release(); } catch (e) {}
+        return;
+      }
+      wake = lock;
+      try {
+        lock.addEventListener('release', function () {
+          if (wake === lock) wake = null;
+          if ((wakeReasons.session || wakeReasons.sos) &&
+              (!document.visibilityState || document.visibilityState === 'visible')) {
+            syncWakeLock();
+          }
+        });
+      } catch (e) {}
+    }).catch(function () {});
+  }
+
+  function holdPatientSessionWake() {
+    wakeReasons.session = true;
+    syncWakeLock();
   }
 
   function startAudio() {
@@ -3435,11 +3475,8 @@ function redmedAssetURL(file) {
     fireTimer = setInterval(fireSirenBurst, 5000);
     keepAliveTimer = setInterval(ensurePlaying, 1000);
 
-    if (navigator.wakeLock && navigator.wakeLock.request) {
-      navigator.wakeLock.request('screen').then(function (lock) {
-        wake = lock;
-      }).catch(function () {});
-    }
+    wakeReasons.sos = true;
+    syncWakeLock();
   }
 
   function resetMotionTransient() {
@@ -3677,12 +3714,15 @@ function redmedAssetURL(file) {
   }
 
   document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') syncWakeLock();
     if (armed) reclaimAudio();
   });
   window.addEventListener('pageshow', function () {
+    syncWakeLock();
     if (armed) reclaimAudio();
   });
   window.addEventListener('focus', function () {
+    syncWakeLock();
     if (armed) reclaimAudio();
   });
   try {
@@ -3707,13 +3747,17 @@ function redmedAssetURL(file) {
   function shouldAutoArm() {
     return hasBandPayload() && paintedFromBand && !appPreview();
   }
-  // Band tap: wait for profile paint before arm/siren so decrypt is not fighting PCM.
-  // Crash / explicit SOS still call arm() directly (post-paint). Do not arm on a
-  // hash that failed to decode (No patient empty state).
+  // Band tap: hold Screen Wake Lock for the whole patient session (helper may
+  // set the phone down). Then arm SOS when appropriate.
   document.addEventListener('redmed-profile-painted', function () {
+    if (paintedFromBand && !appEmbed()) holdPatientSessionWake();
     if (shouldAutoArm()) arm();
     else paint();
   }, { once: true });
+  // iOS may need a gesture before Wake Lock sticks — re-request on first tap.
+  document.addEventListener('pointerdown', function () {
+    if (wakeReasons.session || wakeReasons.sos) syncWakeLock();
+  }, { passive: true });
   setTimeout(function () {
     if (!hasBandPayload() && !armed) paint();
   }, 900);

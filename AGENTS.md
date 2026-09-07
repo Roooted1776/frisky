@@ -85,7 +85,9 @@ The app has no backend, database, or web service.
   Passerby HTML never asks.
   **Nothing blocks the tap card** (YOU card / Preview / Scan / band tap): no
   privacy veil, no native overlay stealing taps, no login. Safari opens
-  `tapper.html#d=` immediately.
+  `tapper.html#d=` immediately. Passerby band-tap holds Screen Wake Lock for
+  the patient session so Auto-Lock does not blank the card while a helper
+  tends to the person (SOS wake lock remains as well).
   Native **Help** chrome is on 911, Aid, NFC, and in-app scanner screens.
   Not on Edit (that modal bar is Cancel / Save
   only), and not a bottom dock on the owner RedMed tab (that dock was
