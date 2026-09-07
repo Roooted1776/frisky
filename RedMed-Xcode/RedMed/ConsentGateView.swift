@@ -11,7 +11,7 @@ import UIKit
 /// passerby tapper.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
-    static let currentVersion = "4.7"
+    static let currentVersion = "4.8"
 
     static var hasAcceptedCurrent: Bool {
         UserDefaults.standard.string(forKey: acceptedVersionKey) == currentVersion
