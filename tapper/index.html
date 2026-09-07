@@ -3150,7 +3150,7 @@ function redmedAssetURL(file) {
   var wake = null;
   // Keep the medical card readable for helpers: do not let the phone sleep
   // while this page is visible with a painted profile (or an armed SOS).
-  // Not a Face ID / app lock — tapper never prompts. Wake Lock API (Safari 16.4+);
+  // Not an app lock — tapper never prompts. Wake Lock API (Safari 16.4+);
   // no-ops where unsupported. Owner RedMed YOU card mirrors via MedicalCardScreenWake.
   var cardSessionAwake = false;
   function ensureScreenWake() {
