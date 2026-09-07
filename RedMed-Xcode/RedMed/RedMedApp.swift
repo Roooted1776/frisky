@@ -33,9 +33,10 @@ struct RedMedApp: App {
     }
 }
 
-/// First launch (or policy-version bump): Before you continue with Face ID
-/// on that page, then Main after Agree. Later cold starts skip the gate.
-/// No cream Face ID lock. Passerby tapper is not in this tree.
+/// First launch (or policy-version bump): Before you continue (Agree only),
+/// then Face ID once, then Main. Later cold starts skip consent and that
+/// post-Agree Face ID. No app-wide cream lock. Passerby tapper is not in
+/// this tree.
 private struct LaunchRoot: View {
     /// Flat cream matching UILaunchScreen for the SplashBoard → first-layout
     /// gap only. Dropped after two yields with `animation: nil` (no fade).

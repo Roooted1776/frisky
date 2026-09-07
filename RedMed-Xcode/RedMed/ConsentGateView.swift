@@ -3,8 +3,11 @@ import UIKit
 
 /// Legal consent. First launch (or after a material policy version bump)
 /// only — stored version skips the page on later cold starts. Agree +
-/// checkbox only; no Face ID on this page. Face ID stays on Edit / Save /
-/// Erase (+ Load From Band). Never a cream lock. Never on passerby tapper.
+/// checkbox only; no Face ID on Before You Continue. Face ID runs once
+/// immediately after Agree (cream wait / Retry until success), then Main.
+/// Returning opens skip both. Edit / Save / Clear (via Save) / Erase /
+/// Load From Band still Face ID. Never an app-wide cream lock. Never on
+/// passerby tapper.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
     static let currentVersion = "4.7"
@@ -24,11 +27,20 @@ enum ConsentSettings {
 }
 
 struct ConsentGateView<Content: View>: View {
-    /// Returning owners skip the gate — first SwiftUI frame is Main.
+    /// Returning owners skip consent + post-Agree Face ID — first frame is Main.
     @State private var hasAccepted = ConsentSettings.hasAcceptedCurrent
     @State private var contentArmed = ConsentSettings.hasAcceptedCurrent
+    /// True after Agree while waiting for post-Agree Face ID (or Retry).
+    @State private var awaitingPostAgreeFaceID = false
+    @State private var isAuthenticating = false
+    @State private var didAutoPrompt = false
+    @State private var showRetry = false
+    @State private var biometryFailed = false
+    @State private var notInteractive = false
+    @State private var unavailableReason: BiometricAuth.UnavailableReason?
     @State private var checked = false
     @State private var openPolicy: HelpDocument.Policy?
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @ViewBuilder var content: () -> Content
@@ -40,12 +52,23 @@ struct ConsentGateView<Content: View>: View {
                     .accessibilityHidden(!hasAccepted)
                     .allowsHitTesting(hasAccepted)
             }
-            if !hasAccepted {
+            if awaitingPostAgreeFaceID {
+                postAgreeFaceIDPane
+            } else if !hasAccepted {
                 gate
             }
         }
         .onAppear {
             SnapshotSafeCover.shared.reveal()
+            tryPromptPostAgreeFaceID()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIWindow.didBecomeKeyNotification)) { _ in
+            tryPromptPostAgreeFaceID()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                tryPromptPostAgreeFaceID()
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .redMedDidEraseLocalData)) { _ in
             returnToAcknowledgment()
@@ -55,12 +78,66 @@ struct ConsentGateView<Content: View>: View {
     private func returnToAcknowledgment() {
         checked = false
         openPolicy = nil
+        awaitingPostAgreeFaceID = false
+        isAuthenticating = false
+        didAutoPrompt = false
+        showRetry = false
+        biometryFailed = false
+        notInteractive = false
+        unavailableReason = nil
         var t = Transaction()
         t.animation = nil
         withTransaction(t) {
             hasAccepted = false
             contentArmed = false
         }
+    }
+
+    /// Flat cream while Face ID runs after Agree — no second Before You Continue,
+    /// no Face ID icon blocking Agree, no Proceed chrome unless retry/cancel.
+    private var postAgreeFaceIDPane: some View {
+        VStack(spacing: 16) {
+            Spacer(minLength: 0)
+            if let unavailableReason {
+                Text(unavailableReason.message)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.redmedAccent)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, RedMedChrome.pagePadX)
+                PrimaryButton(title: "Open Settings", flatten: false) {
+                    guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+                    UIApplication.shared.open(url)
+                }
+                .padding(.horizontal, RedMedChrome.pagePadX)
+            } else if showRetry {
+                if biometryFailed {
+                    Text("Couldn't verify it's you. Try again.")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.redmedAccent)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, RedMedChrome.pagePadX)
+                } else if notInteractive {
+                    Text("Couldn't open Face ID. Try again.")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.redmedAccent)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, RedMedChrome.pagePadX)
+                }
+                PrimaryButton(title: "Retry Face ID", flatten: false) {
+                    didAutoPrompt = false
+                    showRetry = false
+                    runPostAgreeFaceID()
+                }
+                .padding(.horizontal, RedMedChrome.pagePadX)
+            }
+            // While authenticating: empty cream — system Face ID sheet is the UI.
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background { RedMedPageBackground() }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Confirm with Face ID to open RedMed")
     }
 
     private var gate: some View {
@@ -152,22 +229,86 @@ struct ConsentGateView<Content: View>: View {
         }
     }
 
+    /// Record acceptance on Agree, dismiss ack UI, then Face ID before Main.
     private func enterApp() {
         checked = true
         ConsentSettings.recordAcceptance()
         RedMedHaptics.success()
         SnapshotSafeCover.shared.reveal()
+        openPolicy = nil
+        didAutoPrompt = false
+        showRetry = false
+        biometryFailed = false
+        notInteractive = false
+        unavailableReason = nil
+        isAuthenticating = false
         var t = Transaction()
         t.animation = nil
         withTransaction(t) {
-            contentArmed = true
-            hasAccepted = true
+            // Keep contentArmed false until Face ID succeeds — Main stays hidden.
+            hasAccepted = false
+            contentArmed = false
+            awaitingPostAgreeFaceID = true
         }
         // Honor the Location toggle. Do not fire iOS When-In-Use here —
         // they just agreed. Find Help / hospitals request when GPS starts.
         // Do not spawn a spare WKWebView on this turn — that raced the
         // owner RedMed embed and made tabs feel laggy after Agree.
         // NFCView warms the preview shell after that tab is first opened.
+        tryPromptPostAgreeFaceID()
+    }
+
+    private func armMainAfterFaceID() {
+        RedMedHaptics.success()
+        SnapshotSafeCover.shared.reveal()
+        var t = Transaction()
+        t.animation = nil
+        withTransaction(t) {
+            awaitingPostAgreeFaceID = false
+            contentArmed = true
+            hasAccepted = true
+        }
+    }
+
+    private func tryPromptPostAgreeFaceID() {
+        guard awaitingPostAgreeFaceID, !hasAccepted, !didAutoPrompt, !isAuthenticating else { return }
+        guard scenePhase != .background else { return }
+        #if !targetEnvironment(simulator)
+        guard BiometricAuth.hasKeyWindow else { return }
+        #endif
+        didAutoPrompt = true
+        runPostAgreeFaceID()
+    }
+
+    private func runPostAgreeFaceID() {
+        guard awaitingPostAgreeFaceID, !hasAccepted, !isAuthenticating else { return }
+        isAuthenticating = true
+        biometryFailed = false
+        notInteractive = false
+        unavailableReason = nil
+        showRetry = false
+        BiometricAuth.authenticate(
+            reason: "Confirm with Face ID, Touch ID, or passcode to open RedMed.",
+            force: true,
+            allowPasscode: true
+        ) { outcome in
+            Task { @MainActor in
+                isAuthenticating = false
+                switch outcome {
+                case .success:
+                    armMainAfterFaceID()
+                case .notVerified:
+                    biometryFailed = true
+                    showRetry = true
+                case .unavailable(let reason):
+                    unavailableReason = reason
+                    showRetry = true
+                case .declined, .notInteractive, .timedOut:
+                    notInteractive = (outcome == .notInteractive)
+                    showRetry = true
+                }
+            }
+        }
     }
 
     @ViewBuilder
