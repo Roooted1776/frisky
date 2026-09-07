@@ -35,22 +35,21 @@ The app has no backend, database, or web service.
 - **Face ID:** first launch (or policy-version bump) runs Face ID **on**
   `ConsentGateView` (Before you continue). After it succeeds the same page
   is usable; Agree enters Main. Later cold starts skip consent. Face ID
-  then sits on the **owner RedMed page immediately before the user / YOU
-  card** (when a stored ID exists), plus Edit / Save / Erase / Load From
-  Band. Not 911 / Aid / NFC write, not tapper. Tapper has no biometrics
-  and no acknowledgement page. Do not remount `OwnerAppLock` /
-  `LockEntryPage` / `FacePage` as an app-wide cream lock.
-  Tabs stay reachable without Face ID. The RedMed tab does not paint PHI
-  until Face ID succeeds. Relock that view on true `.background` only.
-  Crash monitor starts from owner `Main` / `ContentView.onAppear`, not from
-  a lock. CoreMotion stops on true `.background` (no motion background
-  mode) and restarts on `.active`. `.inactive` — Face ID on the RedMed
-  user page / Edit / Save / Erase, Control Center — does not stop it. An
-  armed siren is independent. Profile restores from Keychain on owner Main
-  appear (device-unlocked Keychain). Face ID gates **display** of that
-  profile on the RedMed tab, not the Keychain read, not NFC write. Owner
-  **Load From Band** (NFC tab) reads `#d=` then Face IDs and persist()s
-  into Keychain — scanners never. The band is the product, not optional.
+  then sits on **Edit / Save / Erase / Load From Band** only — **not**
+  opening / viewing the owner YOU card, not app launch / Main, not 911 /
+  Aid / NFC write, not tapper. Tapper has no biometrics and no
+  acknowledgement page. Do not remount `OwnerAppLock` / `LockEntryPage` /
+  `FacePage` / `OwnerRedMedGate` as an app-wide or YOU-card cream lock.
+  Tabs stay reachable without Face ID. The RedMed tab paints the YOU card
+  from RAM / Keychain restore without a view unlock. Crash monitor starts
+  from owner `Main` / `ContentView.onAppear`, not from a lock. CoreMotion
+  stops on true `.background` (no motion background mode) and restarts on
+  `.active`. `.inactive` — Face ID on Edit / Save / Erase, Control Center —
+  does not stop it. An armed siren is independent. Profile restores from
+  Keychain on owner Main appear (device-unlocked Keychain) **without Face
+  ID to view**. Owner **Load From Band** (NFC tab) reads `#d=` then Face
+  IDs and persist()s into Keychain — scanners never. The band is the
+  product, not optional.
 - **Owner app** (`Main` → `ContentView`, `isScannerSession == false`): tabs are
   **RedMed · 911 · Aid · NFC**. Edit is available on RedMed. NFC tab is always
   visible for owners; `AppConfig.nfcHardwareEnabled` only gates CoreNFC
@@ -60,8 +59,8 @@ The app has no backend, database, or web service.
   **Load From Band** is the reverse owner path: CoreNFC read of `#d=` → Face
   ID → Keychain. Preview does not persist. Launch path is `ConsentGateView` on first launch (or policy-version bump)
   with Face ID on that page, then Main after Agree. Later cold starts skip
-  the gate and open Main; Face ID is the RedMed tab before the YOU card
-  when a stored ID exists. Same session stays in Main. No cream lock in
+  the gate and open Main; the YOU card is visible without Face ID (Edit /
+  Save / Erase still Face ID). Same session stays in Main. No cream lock in
   front of Main (911 / Aid / NFC stay reachable).
 - **Scanner / passerby shell** (`OwnerHelpChrome` / bracelet tap → `tapper.html#d=…`,
   `isScannerSession == true`): tabs are **RedMed · 911 · Aid** only — **no Edit**,
@@ -73,7 +72,7 @@ The app has no backend, database, or web service.
   unregistered host onto bands. `redmed.pages.dev` stays
   optional until Cloudflare secrets / Pages Git connect land.
   **Tap-to-view never requires Face ID / biometrics / passcode / login** — owner biometrics gate
-  the RedMed user page, Edit, Save, Erase, and Load From Band. NFC write, 911, Aid, and app launch do not prompt.
+  Edit, Save, Erase, and Load From Band (not viewing the YOU card). NFC write, 911, Aid, and app launch do not prompt.
   Passerby HTML never asks.
   **Nothing blocks the tap card** (YOU card / Preview / Scan / band tap): no
   privacy veil, no native overlay stealing taps, no login. Safari opens
@@ -153,22 +152,21 @@ The app has no backend, database, or web service.
 - **No cream lock in front of Main.** Do not remount `OwnerAppLock` /
   `LockEntryPage` / `FacePage`. Passerby `tapper.html` never has Face ID,
   passcode, login, or any page in front of the card.
-- Face ID / Touch ID with device passcode fallback is **viewing the owner
-  RedMed user page, Edit, Save, Erase, and Load From Band** (`force: true`, reuse duration
-  **0**). NFC write, 911, Aid, app launch, and tapper do not prompt. Apple
-  locks Face ID after **5 unsuccessful matches** until device passcode
-  succeeds (system-wide). `BiometricAuth.Outcome.unavailable` is distinct
-  from `.notVerified`.
+- Face ID / Touch ID with device passcode fallback is **Edit, Save, Erase,
+  and Load From Band** (`force: true`, reuse duration **0**) — **not**
+  viewing the owner YOU card. NFC write, 911, Aid, app launch, and tapper
+  do not prompt. Apple locks Face ID after **5 unsuccessful matches** until
+  device passcode succeeds (system-wide). `BiometricAuth.Outcome.unavailable`
+  is distinct from `.notVerified`.
 - Profile Keychain is `WhenPasscodeSetThisDeviceOnly` with **no** biometry
   ACL — readable when the device is unlocked; excluded from iCloud/backups.
   Face ID is UI-only, not SecItem. Restore on owner `ContentView` appear
   (`ProfileData.restoreOnLaunch`). One interactive Face ID is allowed only
   to migrate an old `biometryCurrentSet` blob (Keychain ACL), then never
-  again to *load*. Display of the YOU card still Face IDs when a stored
-  ID exists. If a stored profile is expected and RAM is empty, keep the
-  funnel hidden (unlock pane until Face ID, then native YOU card with
-  empty slots if restore is still in flight — not cream-over-WKWebView).
-  `persist()` must not save an empty RAM profile over
+  again to *load* or *view*. If a stored profile is expected and RAM is
+  empty, keep the funnel hidden and show the native YOU card with empty
+  slots while restore is in flight — not cream-over-WKWebView, not a Face
+  ID unlock pane. `persist()` must not save an empty RAM profile over
   a stored blob (erase deletes Keychain first).
 - Fresh install (no stored blob) shows the native **setup funnel** (Fill
   medical ID → Save → Write the band). Not on passerby tapper.
@@ -183,8 +181,8 @@ The app has no backend, database, or web service.
 - `PrivacySnapshotGuard` cover must appear opaque with **no** opacity fade;
   app-switcher snapshots can capture mid-transition PHI. Capture cover **only
   while PHI is in RAM**. Non-capture cover is true **`.background` only** (with
-  PHI) — never on `.inactive` (Face ID / LAContext on the RedMed user page /
-  Edit/Save/Erase blanks the UI mid-prompt), and **never over the tap card** (NFC Preview / Scan /
+  PHI) — never on `.inactive` (Face ID / LAContext on Edit/Save/Erase
+  blanks the UI mid-prompt), and **never over the tap card** (NFC Preview / Scan /
   `PasserbyHTMLCardView`). Copy should say screen sharing, not a vague
   “Profile hidden”.
 - Local vault history helpers (`HIPAAOfflineVault` / `VaultHistoryStore`) are
@@ -206,8 +204,8 @@ shell (`redmedBg` / `LaunchBackground` on `UILaunchScreen`, no BrandLogo splash)
 then `ConsentGateView` on first launch (or policy-version bump) with Face ID
 on that page, then Main after Agree. Later cold starts skip the gate.
 Same session stays in Main. No cream lock in front of Main. Owner RedMed
-tab Face IDs before painting the YOU card when a stored ID exists.
-Owner `ContentView.onAppear` starts crash
+tab shows the YOU card without Face ID to view (Edit / Save / Erase still
+Face ID). Owner `ContentView.onAppear` starts crash
 monitoring; `.background` stops CoreMotion; `.active` restarts it; `.inactive`
 does not stop it. `.task` calls `profile.restoreOnLaunch()` ASAP after one
 yield (owner only — scanners must not hit owner Keychain). Do **not** add a

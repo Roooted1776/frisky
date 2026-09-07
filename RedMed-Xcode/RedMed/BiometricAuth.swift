@@ -459,12 +459,3 @@ enum BiometricAuth {
     static let unavailableAlertTitle = "Face ID Unavailable"
 }
 
-/// Foreground unlock for the owner RedMed user page (YOU card).
-/// Not an app-wide lock — 911 / Aid / NFC stay reachable without this.
-/// Relock on true `.background` only (not `.inactive` / Face ID sheet).
-enum OwnerRedMedGate {
-    static var isUnlocked = false
-
-    static func unlock() { isUnlocked = true }
-    static func lock() { isUnlocked = false }
-}
