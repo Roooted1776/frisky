@@ -8,6 +8,8 @@ enum BrightnessBoost {
     private static var savedBrightness: CGFloat?
     private static var savedIdleTimerDisabled: Bool?
     private static var survivalHold = false
+    /// True while crash/SOS brightness+idle hold is active.
+    static var isSurvivalHold: Bool { survivalHold }
     private static var foregroundObserver: NSObjectProtocol?
     private static var activeObserver: NSObjectProtocol?
 
