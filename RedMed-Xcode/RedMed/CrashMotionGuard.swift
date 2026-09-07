@@ -120,6 +120,9 @@ final class CrashMotionGuard: ObservableObject {
     /// Claims the arm token on the calling MainActor — does not wait on the
     /// CoreMotion serial queue (that hop made the SOS button feel lagged).
     func armSOS() {
+        // UI only calls this when disarmed; still refuse a second dial if a
+        // stale caller races after crash already armed the hold.
+        guard !isArmed else { return }
         let generation = engine.claimArmGeneration()
         PublicEmergencyAid.dial()
         applyArm(generation: generation, source: .sos)
@@ -247,6 +250,10 @@ final class CrashMotionGuard: ObservableObject {
             }
             motionArmed = true
             armGeneration &+= 1
+            // Same cooldown clock as crash `armNow` — otherwise Stop after SOS
+            // left lastArmAt nil and a busy-handling spike could re-arm crash
+            // with no 90s gate.
+            lastArmAt = Date()
             return armGeneration
         }
 
