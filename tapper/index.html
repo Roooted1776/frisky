@@ -3148,6 +3148,41 @@ function redmedAssetURL(file) {
   var gain = null;
   var lfo = null;
   var wake = null;
+  // Keep the medical card readable for helpers: do not let the phone sleep
+  // while this page is visible with a painted profile (or an armed SOS).
+  // Not an app lock — tapper never prompts. Wake Lock API (Safari 16.4+);
+  // no-ops where unsupported. Owner RedMed YOU card mirrors via MedicalCardScreenWake.
+  var cardSessionAwake = false;
+  function ensureScreenWake() {
+    if (!cardSessionAwake && !armed) return;
+    if (document.visibilityState !== 'visible') return;
+    if (!navigator.wakeLock || !navigator.wakeLock.request) return;
+    if (wake) return;
+    navigator.wakeLock.request('screen').then(function (lock) {
+      wake = lock;
+      try {
+        lock.addEventListener('release', function () {
+          if (wake === lock) wake = null;
+          // Re-acquire if we still want the screen on (iOS releases on hide).
+          if (document.visibilityState === 'visible' && (cardSessionAwake || armed)) {
+            ensureScreenWake();
+          }
+        });
+      } catch (e) {}
+    }).catch(function () {});
+  }
+  function releaseScreenWake() {
+    if (wake) {
+      try { wake.release(); } catch (e) {}
+      wake = null;
+    }
+  }
+  function setCardSessionAwake(on) {
+    cardSessionAwake = !!on;
+    if (cardSessionAwake) ensureScreenWake();
+    else if (!armed) releaseScreenWake();
+  }
+
   var beepTimer = null;
 
   var motionListening = false;
@@ -3385,10 +3420,7 @@ function redmedAssetURL(file) {
       try { htmlAudio.pause(); htmlAudio.currentTime = 0; } catch (e) {}
       htmlAudio = null;
     }
-    if (wake) {
-      try { wake.release(); } catch (e) {}
-      wake = null;
-    }
+    // Screen wake is owned by card-session helpers (not SOS-only).
     audioNeedsGesture = false;
     stoppingAudio = false;
   }
@@ -3432,11 +3464,7 @@ function redmedAssetURL(file) {
     fireTimer = setInterval(fireSirenBurst, 5000);
     keepAliveTimer = setInterval(ensurePlaying, 1000);
 
-    if (navigator.wakeLock && navigator.wakeLock.request) {
-      navigator.wakeLock.request('screen').then(function (lock) {
-        wake = lock;
-      }).catch(function () {});
-    }
+    ensureScreenWake();
   }
 
   function resetMotionTransient() {
@@ -3675,6 +3703,8 @@ function redmedAssetURL(file) {
 
   document.addEventListener('visibilitychange', function () {
     if (armed) reclaimAudio();
+    if (document.visibilityState === 'visible') ensureScreenWake();
+    else releaseScreenWake();
   });
   window.addEventListener('pageshow', function () {
     if (armed) reclaimAudio();
@@ -3704,6 +3734,7 @@ function redmedAssetURL(file) {
   // Crash / explicit SOS still call arm() directly (post-paint). Do not arm on a
   // hash that failed to decode (No patient empty state).
   document.addEventListener('redmed-profile-painted', function () {
+    setCardSessionAwake(true);
     if (shouldAutoArm()) arm();
     else paint();
   }, { once: true });
