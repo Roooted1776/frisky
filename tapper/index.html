@@ -79,7 +79,8 @@ function redmedAssetURL(file) {
   return file;
 }
 </script>
-<link rel="preload" as="image" href="BrandLogo.png" fetchpriority="high" id="redmedLogoPreload">
+<!-- Logo after #d= decrypt — do not steal bandwidth on band-tap open. -->
+<link rel="preload" as="image" href="BrandLogo.png" fetchpriority="low" id="redmedLogoPreload">
 <script>
 (function () {
   var link = document.getElementById('redmedLogoPreload');
@@ -169,7 +170,9 @@ function redmedAssetURL(file) {
      - Logo: BrandLogo.png only on YOU-card — cream #fff7f7 watermark tile (216px).
        Not transparent BrandLogo (NFC / wordmark only). Bundle /tapper/ + assets/
        header mark stays next to the name on empty and named cards. Deferred
-       until after profile paint (in-app Preview / owner embed included).
+       until after profile paint so band-tap #d= decrypt wins the wire (in-app
+       Preview / owner embed included). Shell is SW cache-first for almost-
+       instant reopen; first visit still needs network once.
      - Legacy card.html / get.html /get/ redirect to /tapper/ and keep #d=
      Source of truth: tapper/index.html. Xcode copies it into the app bundle as tapper.html
      at build (pbxproj “Bundle passerby tapper”). Repo-root tapper.html is a #d=-preserving
@@ -1497,7 +1500,7 @@ function redmedAssetURL(file) {
       <div class="rm-header">
         <p class="rm-note">Tap To Scan · No Login · No Server · No App</p>
         <div class="rm-title-row">
-          <img class="rm-logo" id="rmLogo" src="BrandLogo.png" width="72" height="72" alt="RedMed" decoding="async" fetchpriority="high">
+          <img class="rm-logo" id="rmLogo" src="BrandLogo.png" width="72" height="72" alt="RedMed" decoding="async" fetchpriority="low" loading="lazy">
           <div>
             <h1 class="rm-name" id="name">RedMed</h1>
             <div class="rm-meta">
@@ -1739,8 +1742,7 @@ function redmedAssetURL(file) {
 
 
   // YOU-card mark — empty and named cards keep the heart next to the name.
-  // Load immediately so the logo/photo shows on first paint.
-  // Icons are injected here so the head can advertise the same logo.
+  // After profile paint only — band-tap open prioritizes #d= decrypt over logo.
   function resolveLogo() {
     var img = document.getElementById('rmLogo');
     if (!img) return;
@@ -2419,12 +2421,18 @@ function redmedAssetURL(file) {
 
   // Kick profile paint ASAP — overlaps embed chrome + status wiring below.
   // Sync path when native injected __REDMED_PROFILE; band taps decrypt now
-  // (AES key already prefetched when #d= is present).
+  // (AES key already prefetched when #d= is present). Logo waits until after
+  // paint so BrandLogo.png does not race decrypt on a cold tap.
   (function bootProfile() {
-    // Eager logo/photo load: avoid any "missing image" flash during decrypt.
-    try { resolveBrandAssets(); } catch (e0) {}
     function afterPaint() {
       try { document.dispatchEvent(new Event('redmed-profile-painted')); } catch (e2) {}
+      try {
+        if (typeof scheduleIdle === 'function') {
+          scheduleIdle(function () { resolveBrandAssets(); }, 600);
+        } else {
+          setTimeout(function () { resolveBrandAssets(); }, 0);
+        }
+      } catch (e3) {}
     }
     try {
       if (window.__REDMED_PROFILE) {

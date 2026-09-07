@@ -23,7 +23,7 @@
  * only replicated onto SHELL_KEYS when the body contains data-tab="medical"
  * — redirect stubs (card.html / get.html / index.html) must never land there.
  */
-var CACHE = 'redmed-tapper-v146';
+var CACHE = 'redmed-tapper-v147';
 var ASSETS = [
   './pheart.png',
   './BrandLogo.png',
@@ -157,7 +157,11 @@ self.addEventListener('activate', function (event) {
         })
       );
     }).then(function () {
-      return self.clients.claim();
+      // Cold cache: let the browser fetch the shell while SW boots.
+      var preload = (self.registration.navigationPreload)
+        ? self.registration.navigationPreload.enable().catch(function () {})
+        : Promise.resolve();
+      return preload.then(function () { return self.clients.claim(); });
     })
   );
 });
@@ -177,8 +181,21 @@ self.addEventListener('fetch', function (event) {
           event.waitUntil(refresh);
           return cached;
         }
-        return refresh.then(function (res) {
-          return res || cachedShell(req);
+        // No shell in Cache Storage yet — prefer navigation preload if any,
+        // else network. First EMT tap on a phone still pays network once.
+        var preloaded = event.preloadResponse
+          ? event.preloadResponse.catch(function () { return null; })
+          : Promise.resolve(null);
+        return preloaded.then(function (pre) {
+          if (pre && pre.ok) {
+            caches.open(CACHE).then(function (cache) {
+              putShell(cache, req, pre.clone());
+            });
+            return pre;
+          }
+          return refresh.then(function (res) {
+            return res || cachedShell(req);
+          });
         });
       })
     );
