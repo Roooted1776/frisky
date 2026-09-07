@@ -92,8 +92,8 @@ class ProfileData: ObservableObject {
     /// One-shot so RedMedApp / ContentView cannot restore twice in one process.
     private var didAttemptLaunchRestore = false
     /// Off-main Keychain+JSON started after first paint so restore can adopt
-    /// the blob without blocking the first frame. Display of the YOU card
-    /// still waits on Face ID when a stored ID exists.
+    /// the blob without blocking the first frame. YOU card paints from RAM
+    /// after restore — no Face ID to view.
     private var launchPrefetchTask: Task<PersistedProfile?, Never>?
 
     private func setField<T: Equatable>(_ storage: inout T, _ newValue: T) {
@@ -130,8 +130,8 @@ class ProfileData: ObservableObject {
         AppConfig.nfcHardwareEnabled && braceletLinked && isEmergencyProfileConfigured
     }
 
-    /// Any RedMed profile content that should require Face ID / passcode
-    /// to view or edit.
+    /// Any RedMed profile content (PHI in RAM). Used for privacy cover,
+    /// NFC hints, and funnel vs YOU-card chrome — not a Face ID view gate.
     var hasSensitiveProfileData: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             || !birthDate.isEmpty
@@ -559,7 +559,6 @@ class ProfileData: ObservableObject {
         ConsentSettings.clearAcceptance()
         purgeFromMemory()
         SecurePasteboard.clear()
-        OwnerRedMedGate.lock()
         NotificationCenter.default.post(name: .redMedDidEraseLocalData, object: nil)
     }
 }

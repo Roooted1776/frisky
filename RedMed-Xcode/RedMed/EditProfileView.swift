@@ -765,7 +765,6 @@ struct EditProfileView: View {
             showSaveFailedAlert = true
             return
         }
-        OwnerRedMedGate.unlock()
         dismiss()
     }
 }

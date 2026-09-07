@@ -75,7 +75,6 @@ struct ConsentGateView<Content: View>: View {
             isAuthenticating = false
             showRetry = false
             faceVerified = true
-            OwnerRedMedGate.unlock()
             #else
             // Live Face ID / passcode puts the scene `.inactive`. Do not
             // tear that down at 1.5s — only kill a hung evaluate with no UI.
@@ -237,7 +236,6 @@ struct ConsentGateView<Content: View>: View {
     private func enterApp() {
         checked = true
         ConsentSettings.recordAcceptance()
-        OwnerRedMedGate.unlock()
         RedMedHaptics.success()
         SnapshotSafeCover.shared.reveal()
         var t = Transaction()
@@ -282,8 +280,7 @@ struct ConsentGateView<Content: View>: View {
                 case .success:
                     faceVerified = true
                     showRetry = false
-                    OwnerRedMedGate.unlock()
-                case .notVerified:
+                        case .notVerified:
                     biometryFailed = true
                     showRetry = true
                 case .unavailable(let reason):
