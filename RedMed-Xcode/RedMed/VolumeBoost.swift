@@ -172,14 +172,21 @@ enum VolumeBoost {
         suppressingObservation = true
         // Immediate write when the slider is already wired; retry catches
         // the common first-frame miss after MPVolumeView attach.
-        slider.value = clamped
+        // Assigning `.value` alone is often a no-op for system volume — also
+        // send the control event so SOS actually reaches 100%.
+        applySlider(slider, value: clamped)
         DispatchQueue.main.async {
-            slider.value = clamped
+            applySlider(slider, value: clamped)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                slider.value = clamped
+                applySlider(slider, value: clamped)
                 suppressingObservation = false
             }
         }
+    }
+
+    private static func applySlider(_ slider: UISlider, value: Float) {
+        slider.value = value
+        slider.sendActions(for: .valueChanged)
     }
 
     private static func keyWindow() -> UIWindow? {

@@ -29,7 +29,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | Hospital search | Native: MapKit / Apple Maps. Passerby: OpenStreetMap Overpass (`overpass-api.de`). Disclosed in Help 4.3 |
 | ATS | Arbitrary loads + local networking **false** |
 | Snapshot / pasteboard | Privacy cover + secure pasteboard clear on background |
-| Consent | `ConsentGateView` every cold start; stored version **4.7** is legal record only (does not skip ack); never Face ID on that path; never on tapper |
+| Consent | `ConsentGateView` on first launch or policy bump (**4.7**); stored version skips the page on later cold starts; Face ID runs on that page before Agree; never on tapper |
 | Apple Health import | Parked (`healthKitImportEnabled = false`) |
 | iOS CI | `workflow_dispatch` only (billing). Does not gate merges |
 | `#d=` codec | `node scripts/test-d-codec.mjs` — AES / zlib / compact / URI lockstep |
@@ -53,6 +53,6 @@ Not doing these in git until you have the Program and an app ID:
 3. `AppConfig.appStoreURL` is `nil` (no placeholder listing).
 4. App Store Connect package / Archive.
 
-Legal policies stay in Help.html. User acknowledgments stay on `ConsentGateView` (every cold start; Agree this process stays in Main). Face ID is not in front of that screen.
+Legal policies stay in Help.html. User acknowledgments stay on `ConsentGateView` (first launch / policy bump; Agree this process stays in Main). Face ID runs on that page before Agree — it is not an app-open cream lock in front of Main.
 
 Custom HTML domain is still TBD (`docs/domain.md`). Write base `/tapper/` is green.

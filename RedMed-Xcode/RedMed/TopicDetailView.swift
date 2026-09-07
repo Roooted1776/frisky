@@ -218,7 +218,7 @@ private struct LiveNearbyHospitalsSection: View {
                 .padding(.top, 24)
 
             if !locationEnabled {
-                Text("Location is off. Enable it on Before You Continue (every cold start) or in iOS Settings to find nearby hospitals. This screen uses Apple Maps on this phone. A band tap in a browser uses OpenStreetMap Overpass instead.")
+                Text("Location is off. Enable it on Before You Continue (first launch or after a policy update) or in iOS Settings to find nearby hospitals. This screen uses Apple Maps on this phone. A band tap in a browser uses OpenStreetMap Overpass instead.")
                     .font(.system(size: 13))
                     .foregroundColor(.redmedMuted)
                     .padding(.vertical, 12)
@@ -276,6 +276,12 @@ private struct LiveNearbyHospitalsSection: View {
                     }
                 }
                 .redmedBox()
+                Text("Apple Maps POI search on this phone — not a certified trauma Level I/II directory. Apple may see the query and region. Not a RedMed upload.")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.redmedMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 10)
+                    .padding(.horizontal, 4)
             }
         }
         .task {

@@ -11,7 +11,7 @@ struct NearbyHospital: Identifiable {
     let mapItem: MKMapItem
 }
 
-/// Finds real nearby hospitals/trauma centers using the device's current location + MapKit search.
+/// Finds nearby hospital / ER POIs via MapKit search (not a certified trauma Level I/II directory).
 class NearbyHospitalFinder: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var hospitals: [NearbyHospital] = []
     @Published var isLoading = false

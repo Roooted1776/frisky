@@ -83,7 +83,8 @@ private struct FindHelpLocationBlock: View {
             .padding(.top, 7)
             .accessibilityHint("Copies the live GPS coordinates to the clipboard.")
             GPSCard(
-                location: locationEnabled ? locationManager.location : nil
+                location: locationEnabled ? locationManager.location : nil,
+                locationEnabled: locationEnabled
             )
             .padding(.top, 10)
         }
@@ -308,14 +309,21 @@ private final class SeizureTimerEngine {
 
 struct GPSCard: View {
     let location: CLLocation?
+    /// Mirrors the Find Help Location toggle — badge must not say LIVE when off.
+    var locationEnabled: Bool = true
     /// Six decimals (~11 cm). Same string the card shows and Copy Coordinates writes.
     static func coordinateText(_ location: CLLocation) -> String {
         String(format: "%.6f, %.6f", location.coordinate.latitude, location.coordinate.longitude)
     }
+    private var statusTitle: String {
+        if !locationEnabled { return "GPS OFF" }
+        if location != nil { return "LIVE GPS" }
+        return "ACQUIRING GPS"
+    }
     var accuracy: String { location.map { "±\(Int($0.horizontalAccuracy)) m" } ?? "––" }
     var body: some View {
         VStack(spacing: 0) {
-            Text("LIVE GPS")
+            Text(statusTitle)
                 .font(.system(size: 9, weight: .bold))
                 .kerning(1.1)
                 .foregroundColor(.redmedAccent)
@@ -324,6 +332,7 @@ struct GPSCard: View {
                     RoundedRectangle(cornerRadius: RedMedChrome.chipRadius)
                         .fill(Color.redmedAccent.opacity(0.1))
                 )
+                .accessibilityLabel(statusTitle)
             Text(location.map(Self.coordinateText) ?? "–––, –––")
                 .font(.system(size: 15, weight: .bold, design: .monospaced))
                 .foregroundColor(.redmedDark)
