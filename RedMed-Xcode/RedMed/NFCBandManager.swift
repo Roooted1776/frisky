@@ -35,12 +35,31 @@ final class NFCBandManager: ObservableObject {
         let embedJSON: String?
     }
 
-    private let writer = NFCWriter()
-    private let reader = NFCReader()
+    /// CoreNFC sessions stay cold until first write/read — YOU-card open
+    /// must not pay for NFCWriter / NFCReader construction.
+    private var writerStorage: NFCWriter?
+    private var readerStorage: NFCReader?
+    private var didBindSessions = false
     private var cancellables = Set<AnyCancellable>()
     var isBusy: Bool { isWriting || isReading }
 
-    init() {
+    private var writer: NFCWriter {
+        ensureSessions()
+        return writerStorage!
+    }
+
+    private var reader: NFCReader {
+        ensureSessions()
+        return readerStorage!
+    }
+
+    init() {}
+
+    private func ensureSessions() {
+        if writerStorage == nil { writerStorage = NFCWriter() }
+        if readerStorage == nil { readerStorage = NFCReader() }
+        guard !didBindSessions else { return }
+        didBindSessions = true
         bindSessions()
     }
 
@@ -82,6 +101,7 @@ final class NFCBandManager: ObservableObject {
 
     /// Drop a live write/read sheet when leaving the NFC tab.
     func cancelSessions() {
+        guard didBindSessions else { return }
         writer.cancel()
         reader.cancel()
     }
