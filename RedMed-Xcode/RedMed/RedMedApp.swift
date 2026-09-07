@@ -39,12 +39,11 @@ struct RedMedApp: App {
 /// this tree.
 private struct LaunchRoot: View {
     /// Flat cream matching UILaunchScreen for the SplashBoard → first-layout
-    /// gap only. Dropped after **two** MainActor yields with `animation: nil`
-    /// — same cadence as `RedMedPageBackground`'s rose wash, so the veil
-    /// never lifts onto a flat Main frame (that was the open-app flash).
-    /// Do **not** wait for `scenePhase == .active`: cold start and Xcode
-    /// Debug Stop→Run begin `.inactive`, and debugger attach can sit there
-    /// for seconds. Rose wash stays deferred in `RedMedPageBackground`.
+    /// gap only. Dropped after **one** MainActor yield with `animation: nil`
+    /// — same cadence as `RedMedPageBackground`'s rose wash (also one yield),
+    /// so the veil never lifts onto a flat Main frame. One yield is the
+    /// minimum that still lets ConsentGate/Main lay out under the veil.
+    /// Do **not** wait for `scenePhase == .active`.
     @State private var holdLaunchCream = true
 
     var body: some View {
@@ -60,7 +59,6 @@ private struct LaunchRoot: View {
         }
         .task {
             guard holdLaunchCream else { return }
-            await Task.yield()
             await Task.yield()
             var t = Transaction()
             t.animation = nil
