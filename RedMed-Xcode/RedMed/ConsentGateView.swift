@@ -2,9 +2,9 @@ import SwiftUI
 import UIKit
 
 /// Legal consent. First launch (or after a material policy version bump)
-/// only — stored version skips the page on later cold starts. Face ID runs
-/// on this page; after it succeeds the same page is usable. Agree enters
-/// Main. Never a cream lock. Never on passerby tapper.
+/// only — stored version skips the page on later cold starts. Agree +
+/// checkbox only; no Face ID on this page. Face ID stays on Edit / Save /
+/// Erase (+ Load From Band). Never a cream lock. Never on passerby tapper.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
     static let currentVersion = "4.7"
@@ -27,19 +27,8 @@ struct ConsentGateView<Content: View>: View {
     /// Returning owners skip the gate — first SwiftUI frame is Main.
     @State private var hasAccepted = ConsentSettings.hasAcceptedCurrent
     @State private var contentArmed = ConsentSettings.hasAcceptedCurrent
-    /// First launch: Face ID on this page before Agree is usable.
-    /// Returning owners never show this page, so start verified.
-    @State private var faceVerified = ConsentSettings.hasAcceptedCurrent
-    @State private var isAuthenticating = false
-    @State private var didAutoPrompt = false
-    @State private var showRetry = false
-    @State private var biometryFailed = false
-    @State private var notInteractive = false
-    @State private var unavailableReason: BiometricAuth.UnavailableReason?
-    @State private var authGeneration = 0
     @State private var checked = false
     @State private var openPolicy: HelpDocument.Policy?
-    @Environment(\.scenePhase) private var scenePhase
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @ViewBuilder var content: () -> Content
@@ -57,52 +46,21 @@ struct ConsentGateView<Content: View>: View {
         }
         .onAppear {
             SnapshotSafeCover.shared.reveal()
-            tryPromptFaceID()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: UIWindow.didBecomeKeyNotification)) { _ in
-            tryPromptFaceID()
         }
         .onReceive(NotificationCenter.default.publisher(for: .redMedDidEraseLocalData)) { _ in
             returnToAcknowledgment()
-        }
-        .task(id: authGeneration) {
-            guard !hasAccepted, !faceVerified, isAuthenticating else { return }
-            try? await Task.sleep(nanoseconds: 1_500_000_000)
-            guard !hasAccepted, !faceVerified, isAuthenticating else { return }
-            #if targetEnvironment(simulator)
-            // Auto-success should already have landed. If it did not, do
-            // not sit on a dead Authenticate alert — enter the usable page.
-            isAuthenticating = false
-            showRetry = false
-            faceVerified = true
-            #else
-            // Live Face ID / passcode puts the scene `.inactive`. Do not
-            // tear that down at 1.5s — only kill a hung evaluate with no UI.
-            if BiometricAuth.isEvaluating, scenePhase != .active { return }
-            BiometricAuth.cancelInFlight()
-            isAuthenticating = false
-            showRetry = true
-            #endif
         }
     }
 
     private func returnToAcknowledgment() {
         checked = false
         openPolicy = nil
-        faceVerified = false
-        isAuthenticating = false
-        didAutoPrompt = false
-        showRetry = false
-        biometryFailed = false
-        notInteractive = false
-        unavailableReason = nil
         var t = Transaction()
         t.animation = nil
         withTransaction(t) {
             hasAccepted = false
             contentArmed = false
         }
-        tryPromptFaceID()
     }
 
     private var gate: some View {
@@ -115,14 +73,6 @@ struct ConsentGateView<Content: View>: View {
                         .foregroundColor(.redmedDark)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.top, 20)
-
-                    if !faceVerified {
-                        Image(systemName: "faceid")
-                            .font(.system(size: 28, weight: .medium))
-                            .foregroundColor(.redmedAccent)
-                            .frame(maxWidth: .infinity)
-                            .accessibilityLabel("Face ID")
-                    }
 
                     VStack(alignment: .leading, spacing: 10) {
                         Text("RedMed is a personal medical ID and first-aid reference on this iPhone. It is not a medical device, does not diagnose or treat, and does not replace emergency dispatch. Always call emergency services first in a real emergency.")
@@ -166,58 +116,28 @@ struct ConsentGateView<Content: View>: View {
             }
 
             VStack(spacing: 12) {
-                if let unavailableReason {
-                    Text(unavailableReason.message)
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.redmedAccent)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                    PrimaryButton(title: "Open Settings", flatten: false) {
-                        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
-                        UIApplication.shared.open(url)
+                Button {
+                    RedMedHaptics.light()
+                    checked.toggle()
+                } label: {
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: checked ? "checkmark.square.fill" : "square")
+                            .font(.system(size: 22))
+                            .foregroundColor(checked ? .redmedAccent : .redmedMuted)
+                        Text("I have read and agree to the RedMed Terms, Privacy, and Security pages, including the medical-device disclaimer, liability limits, and binding arbitration / class-action waiver in Terms.")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.redmedDark)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-                } else if showRetry, !faceVerified {
-                    if biometryFailed {
-                        Text("Couldn't verify it's you. Try again.")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(.redmedAccent)
-                            .multilineTextAlignment(.center)
-                    } else if notInteractive {
-                        Text("Couldn't open Face ID. Try again.")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(.redmedAccent)
-                            .multilineTextAlignment(.center)
-                    }
-                    PrimaryButton(title: "Proceed", flatten: false) {
-                        didAutoPrompt = false
-                        showRetry = false
-                        runFaceID()
-                    }
+                    .padding(.vertical, 4)
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
+                .accessibilityAddTraits(checked ? [.isButton, .isSelected] : .isButton)
 
-                if faceVerified {
-                    Button {
-                        RedMedHaptics.light()
-                        checked.toggle()
-                    } label: {
-                        HStack(alignment: .top, spacing: 10) {
-                            Image(systemName: checked ? "checkmark.square.fill" : "square")
-                                .font(.system(size: 22))
-                                .foregroundColor(checked ? .redmedAccent : .redmedMuted)
-                            Text("I have read and agree to the RedMed Terms, Privacy, and Security pages, including the medical-device disclaimer, liability limits, and binding arbitration / class-action waiver in Terms.")
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(.redmedDark)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        .padding(.vertical, 4)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
-                    .accessibilityAddTraits(checked ? [.isButton, .isSelected] : .isButton)
-
-                    PrimaryButton(title: "Agree And Continue", flatten: false) {
-                        enterApp()
-                    }
+                PrimaryButton(title: "Agree And Continue", flatten: false) {
+                    guard checked else { return }
+                    enterApp()
                 }
             }
             .padding(.horizontal, RedMedChrome.pagePadX)
@@ -226,7 +146,6 @@ struct ConsentGateView<Content: View>: View {
             .background(Color.redmedBg)
         }
         .background { RedMedPageBackground() }
-        .allowsHitTesting(faceVerified || showRetry || unavailableReason != nil)
         .sheet(item: $openPolicy) { policy in
             ConsentPolicySheet(policy: policy)
                 .presentationBackground(Color.redmedBg)
@@ -249,49 +168,6 @@ struct ConsentGateView<Content: View>: View {
         // Do not spawn a spare WKWebView on this turn — that raced the
         // owner RedMed embed and made tabs feel laggy after Agree.
         // NFCView warms the preview shell after that tab is first opened.
-    }
-
-    private func tryPromptFaceID() {
-        guard !hasAccepted, !faceVerified, !didAutoPrompt, !isAuthenticating else { return }
-        guard scenePhase != .background else { return }
-        #if !targetEnvironment(simulator)
-        guard BiometricAuth.hasKeyWindow else { return }
-        #endif
-        didAutoPrompt = true
-        runFaceID()
-    }
-
-    private func runFaceID() {
-        guard !hasAccepted, !faceVerified, !isAuthenticating else { return }
-        isAuthenticating = true
-        biometryFailed = false
-        notInteractive = false
-        unavailableReason = nil
-        showRetry = false
-        authGeneration &+= 1
-        BiometricAuth.authenticate(
-            reason: "Confirm with Face ID, Touch ID, or passcode to continue.",
-            force: true,
-            allowPasscode: true
-        ) { outcome in
-            Task { @MainActor in
-                isAuthenticating = false
-                switch outcome {
-                case .success:
-                    faceVerified = true
-                    showRetry = false
-                        case .notVerified:
-                    biometryFailed = true
-                    showRetry = true
-                case .unavailable(let reason):
-                    unavailableReason = reason
-                    showRetry = true
-                case .declined, .notInteractive, .timedOut:
-                    notInteractive = (outcome == .notInteractive)
-                    showRetry = true
-                }
-            }
-        }
     }
 
     @ViewBuilder

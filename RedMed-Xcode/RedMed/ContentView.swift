@@ -75,16 +75,10 @@ struct ContentView: View {
         .ignoresSafeArea(edges: .bottom)
         .task {
             guard !isScannerSession else { return }
-            // ConsentGate arms Main only after Agree — this task does not
-            // overlap first-launch consent Face ID. Returning cold starts
-            // skip consent. Do not pay a fixed 300ms sleep on every open
-            // (shipping lag). Yield once for first paint, then restore.
-            // Short stagger only if consent Face ID somehow still owns the
-            // sheet (erase → re-ack edge); Keychain is not biometry ACL.
+            // Consent is Agree-only (no Face ID on Before You Continue).
+            // Returning cold starts skip consent. Yield once for first
+            // paint, then restore — Keychain is not biometry ACL.
             await Task.yield()
-            if !ConsentSettings.hasAcceptedCurrent, BiometricAuth.isEvaluating {
-                try? await Task.sleep(nanoseconds: 80_000_000)
-            }
             guard !Task.isCancelled else { return }
             await profile.restoreOnLaunch()
         }
