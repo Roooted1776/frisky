@@ -549,7 +549,7 @@ class ProfileData: ObservableObject {
         braceletLinked = false
     }
 
-    /// Owner Help erase — Keychain profile, vault files, RAM, pasteboard.
+    /// Owner Help erase — Keychain profile, RAM, pasteboard.
     /// Does not rewrite or wipe a physical band (passive NFC; no remote erase).
     /// Call only after Face ID / passcode success.
     func eraseAllLocalData() {
@@ -558,8 +558,6 @@ class ProfileData: ObservableObject {
         Self.setStoredProfileGate(false)
         ConsentSettings.clearAcceptance()
         purgeFromMemory()
-        VaultHistoryStore.shared.clear()
-        HIPAAOfflineVault.removeAll()
         SecurePasteboard.clear()
         OwnerRedMedGate.lock()
         NotificationCenter.default.post(name: .redMedDidEraseLocalData, object: nil)
@@ -567,7 +565,7 @@ class ProfileData: ObservableObject {
 }
 
 extension Notification.Name {
-    /// Posted after owner Help erase clears Keychain + vault.
+    /// Posted after owner Help erase clears Keychain + RAM + pasteboard.
     static let redMedDidEraseLocalData = Notification.Name("redMedDidEraseLocalData")
     /// Crash / SOS armed — ContentView jumps to 911 without observing CrashMotionGuard.
     static let redMedSurvivalArmed = Notification.Name("redMedSurvivalArmed")

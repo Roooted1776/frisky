@@ -21,7 +21,7 @@
 		AABB0000000000000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000000C /* Assets.xcassets */; };
 		AABB00000000000000000010 /* NearbyHospitals.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000010 /* NearbyHospitals.swift */; };
 		AABB00000000000000000011 /* MedicationData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000011 /* MedicationData.swift */; };
-		AABB00000000000000000012 /* PublicCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000012 /* PublicCardView.swift */; };
+		AABB00000000000000000012 /* OwnerHelpChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000012 /* OwnerHelpChrome.swift */; };
 		AABB00000000000000000013 /* LocationAccessSuggester.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000013 /* LocationAccessSuggester.swift */; };
 		AABB00000000000000000014 /* BiometricAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000014 /* BiometricAuth.swift */; };
 		AABB0000000000000000001A /* legal-doc.css in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001A /* legal-doc.css */; };
@@ -39,8 +39,6 @@
 		AABB0000000000000000002B /* BrightnessBoost.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002B /* BrightnessBoost.swift */; };
 		AABB0000000000000000002C /* LocatorBeacon.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002C /* LocatorBeacon.swift */; };
 		AABB0000000000000000002D /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002D /* AppSettings.swift */; };
-		AABB0000000000000000002E /* HIPAAOfflineVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002E /* HIPAAOfflineVault.swift */; };
-		AABB0000000000000000002F /* VaultHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000002F /* VaultHistoryStore.swift */; };
 		AABB00000000000000000030 /* CrashMotionGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000030 /* CrashMotionGuard.swift */; };
 		AABB00000000000000000031 /* NFCBandManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000031 /* NFCBandManager.swift */; };
 		AABB00000000000000000032 /* SatelliteFieldUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000032 /* SatelliteFieldUI.swift */; };
@@ -76,7 +74,7 @@
 		AAAA0000000000000000000F /* RedMed.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RedMed.entitlements; sourceTree = "<group>"; };
 		AAAA00000000000000000010 /* NearbyHospitals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyHospitals.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000011 /* MedicationData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationData.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000012 /* PublicCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicCardView.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000012 /* OwnerHelpChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwnerHelpChrome.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000013 /* LocationAccessSuggester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationAccessSuggester.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000014 /* BiometricAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuth.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000001A /* legal-doc.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = "legal-doc.css"; sourceTree = "<group>"; };
@@ -94,8 +92,6 @@
 		AAAA0000000000000000002B /* BrightnessBoost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessBoost.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000002C /* LocatorBeacon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocatorBeacon.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000002D /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
-		AAAA0000000000000000002E /* HIPAAOfflineVault.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HIPAAOfflineVault.swift; sourceTree = "<group>"; };
-		AAAA0000000000000000002F /* VaultHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultHistoryStore.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000030 /* CrashMotionGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashMotionGuard.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000031 /* NFCBandManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFCBandManager.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000032 /* SatelliteFieldUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatelliteFieldUI.swift; sourceTree = "<group>"; };
@@ -187,7 +183,7 @@
 		AAAA00000000000000000045 /* Scanner */ = {
 			isa = PBXGroup;
 			children = (
-				AAAA00000000000000000012 /* PublicCardView.swift */,
+				AAAA00000000000000000012 /* OwnerHelpChrome.swift */,
 				AAAA0000000000000000004C /* PasserbyHTMLCardView.swift */,
 			);
 			name = Scanner;
@@ -198,8 +194,6 @@
 			children = (
 				AAAA0000000000000000001B /* KeychainStore.swift */,
 				AAAA00000000000000000014 /* BiometricAuth.swift */,
-				AAAA0000000000000000002E /* HIPAAOfflineVault.swift */,
-				AAAA0000000000000000002F /* VaultHistoryStore.swift */,
 				AAAA00000000000000000029 /* PrivacySnapshotGuard.swift */,
 				AAAA00000000000000000034 /* SecurePasteboard.swift */,
 			);
@@ -408,7 +402,7 @@
 				AABB00000000000000000009 /* TopicDetailView.swift in Sources */,
 				AABB00000000000000000010 /* NearbyHospitals.swift in Sources */,
 				AABB00000000000000000011 /* MedicationData.swift in Sources */,
-				AABB00000000000000000012 /* PublicCardView.swift in Sources */,
+				AABB00000000000000000012 /* OwnerHelpChrome.swift in Sources */,
 				AABB0000000000000000004C /* PasserbyHTMLCardView.swift in Sources */,
 				AABB00000000000000000013 /* LocationAccessSuggester.swift in Sources */,
 				AABB00000000000000000014 /* BiometricAuth.swift in Sources */,
@@ -419,8 +413,6 @@
 				AABB0000000000000000002C /* LocatorBeacon.swift in Sources */,
 				AABB0000000000000000002D /* AppSettings.swift in Sources */,
 				AABB0000000000000000001B /* KeychainStore.swift in Sources */,
-				AABB0000000000000000002E /* HIPAAOfflineVault.swift in Sources */,
-				AABB0000000000000000002F /* VaultHistoryStore.swift in Sources */,
 				AABB00000000000000000029 /* PrivacySnapshotGuard.swift in Sources */,
 				AABB00000000000000000030 /* CrashMotionGuard.swift in Sources */,
 				AABB00000000000000000032 /* SatelliteFieldUI.swift in Sources */,

@@ -111,12 +111,6 @@ struct PrivacySnapshotGuard<Content: View>: View {
             if !nowCaptured {
                 manualCaptureOverride = false
             }
-            if nowCaptured {
-                // Don't log a cover we refused to paint over the tap card.
-                if phiInMemory, !tapCardVisible {
-                    VaultHistoryStore.shared.record(.screenCaptureCovered, detail: "share")
-                }
-            }
         }
     }
 

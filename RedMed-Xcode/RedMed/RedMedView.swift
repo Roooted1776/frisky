@@ -246,7 +246,6 @@ struct RedMedView: View {
                 case .notVerified:
                     authFailedAction = "view"
                     showAuthFailedAlert = true
-                    VaultHistoryStore.shared.record(.unlockFailed, detail: "view")
                 case .unavailable(let reason):
                     authUnavailableMessage = reason.message
                 case .declined, .notInteractive, .timedOut:
@@ -272,7 +271,6 @@ struct RedMedView: View {
                 case .notVerified:
                     authFailedAction = "edit"
                     showAuthFailedAlert = true
-                    VaultHistoryStore.shared.record(.unlockFailed, detail: "edit")
                 case .unavailable(let reason):
                     authUnavailableMessage = reason.message
                 case .declined, .notInteractive, .timedOut:

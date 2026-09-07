@@ -62,7 +62,7 @@ The app has no backend, database, or web service.
   the gate and open Main; Face ID is the RedMed tab before the YOU card
   when a stored ID exists. Same session stays in Main. No cream lock in
   front of Main (911 / Aid / NFC stay reachable).
-- **Scanner / passerby shell** (`PublicCardView` / bracelet tap → `tapper.html#d=…`,
+- **Scanner / passerby shell** (`OwnerHelpChrome` / bracelet tap → `tapper.html#d=…`,
   `isScannerSession == true`): tabs are **RedMed · 911 · Aid** only — **no Edit**,
   **no NFC**. Profile is a snapshot; mutations must not touch owner Keychain or
   owner `@AppStorage` / UserDefaults prefs. Hosted passerby path is
@@ -146,8 +146,9 @@ The app has no backend, database, or web service.
   or Find Help (same copy both places, owner and `tapper.html`).
 
 **Vault / privacy (permanent):**
-- `VaultHistoryView` was deleted. `VaultHistoryStore` still records events
-  (no UI). Do not remount a Face ID vault screen.
+- `VaultHistoryView` / `VaultHistoryStore` / `HIPAAOfflineVault` were removed
+  (no local history UI). Do not remount a Face ID vault screen or re-add
+  no-UI history recording.
 - **No cream lock in front of Main.** Do not remount `OwnerAppLock` /
   `LockEntryPage` / `FacePage`. Passerby `tapper.html` never has Face ID,
   passcode, login, or any page in front of the card.
@@ -185,8 +186,8 @@ The app has no backend, database, or web service.
   Edit/Save/Erase blanks the UI mid-prompt), and **never over the tap card** (NFC Preview / Scan /
   `PasserbyHTMLCardView`). Copy should say screen sharing, not a vague
   “Profile hidden”.
-- `HIPAAOfflineVault`: complete file protection + backup exclusion; history
-  events are timestamps/kind only (no field values).
+- Local vault history helpers (`HIPAAOfflineVault` / `VaultHistoryStore`) are
+  gone — profile lives in Keychain; no on-device history trail.
 - **Apple Health import (optional, owner only):** `HealthKitProfileImport`
   reads birth date and blood type into Edit draft. Read-only. Never writes
   to Health. Never runs on passerby / scanner. Persist still requires Save

@@ -296,7 +296,7 @@ Residual: a hard drop of the phone can still siren. That is documented risk, not
 | Control | Evidence |
 |---------|----------|
 | No `print()` of PHI | Swift `print(` grep empty; `os.Logger` in `RedMedSignpost` is lock diagnostics, `.public` strings like `generation=` |
-| Vault history is kind + timestamp | `VaultHistoryStore.swift` header; no field values |
+| Vault history | Removed (`VaultHistoryStore` / `HIPAAOfflineVault` deleted; no local history UI) |
 | Notes stay off the chip | `NFCChipProfile` has no `notes`; `PersistedProfile.notes` is Keychain-only |
 | Snapshot / capture cover | `PrivacySnapshotGuard` — `.background` + capture only, never tap card, no opacity fade |
 | Secure pasteboard | `SecurePasteboard` local-only + expiry; cleared on relock |
@@ -325,7 +325,7 @@ Single target, 42 Swift files, no modules. Boundaries are conventions (`isScanne
 |--------|--------|
 | `OwnerAppLock` | Deleted — do not remount |
 | `FacePage`, `LockEntryPage`, `VaultHistoryView`, `MainInfoView` | Deleted (comments only) |
-| `VaultHistoryStore` | Live, no UI |
+| `VaultHistoryStore` / `HIPAAOfflineVault` | Removed — no local history UI |
 | `HealthKitProfileImport` | Stub (`isAvailable` false) |
 | `card.html` / `get.html` / `get/` | Redirects to `/tapper/` |
 | `AppConfig.supportURL` / `privacyPolicyURL` | Unused in Swift |
@@ -356,7 +356,7 @@ Treat **code** as what ships. `#476` stripped the launch lock. This follow-up do
 | pages.dev | Optional; secrets missing; 404 today. `_headers` now allows Overpass `connect-src`. |
 | SW stale cache | Mitigated by `CACHE` bump + activate delete. Drift caught by `sync-tapper.sh` if someone runs it. |
 | Host cutover | Old bands keep the old host forever. `docs/domain.md` says keep old hosts up. github.io `/tapper/` is up. |
-| Backups | Keychain + vault excluded from backup by design. Wipe = empty app. Band is the backup — only if H1 is fixed and the chip was actually written. |
+| Backups | Keychain excluded from backup by design. Wipe = empty app. Band is the backup — only if H1 is fixed and the chip was actually written. |
 | Erase | Cannot wipe a physical band (`ProfileData.eraseAllLocalData` comment 479). |
 | Rate limits | No RedMed API. Overpass can 429 / 15s timeout (`tapper/index.html` 2647–2649). Native MapKit has a 15s watchdog (`NearbyHospitals.swift` 66–71). |
 | Logging | No PHI logs found. Location is displayed, not logged. |
@@ -364,7 +364,7 @@ Treat **code** as what ships. `#476` stripped the launch lock. This follow-up do
 | Cold start | `docs/cold-start-audit.md` covers Face ID window / key-window races. Matches current lock path. |
 | Public repo | Source + public AES label + team ID + personal `MAX.md` handles are world-readable. AES label was already public-by-design. |
 
-HIPAA: `Help.html` 60–65 is careful (operator-aligned, not certified). The type name `HIPAAOfflineVault` is a file-protection helper, not a compliance program.
+HIPAA: `Help.html` 60–65 is careful (operator-aligned, not certified). No HIPAA certification claim; former `HIPAAOfflineVault` helper was removed with the no-UI history trail.
 
 ---
 
@@ -398,6 +398,6 @@ Swift: `KeychainStore.exists` fail-closed; encode clips to tapper `MAX_STR`/`MAX
 
 ## Files read (primary)
 
-`AppConfig.swift`, `RedMedApp.swift`, `OwnerAppLock.swift`, `BiometricAuth.swift`, `KeychainStore.swift`, `ProfileData.swift`, `ProfileNFCCodec.swift`, `ContentView.swift`, `RedMedView.swift`, `EditProfileView.swift`, `ConsentGateView.swift`, `CrashMotionGuard.swift`, `EmergencyView.swift`, `EmergencyNumber.swift`, `NFCBandManager.swift`, `NFCReader.swift`, `NFCWriter.swift`, `PasserbyHTMLCardView.swift`, `PrivacySnapshotGuard.swift`, `HelpMenuView.swift`, `NearbyHospitals.swift`, `LocationAccessSuggester.swift`, `HIPAAOfflineVault.swift`, `VaultHistoryStore.swift`, `SecurePasteboard.swift`, `RedMedSignpost.swift`, `Info.plist`, `RedMed.entitlements`, `PrivacyInfo.xcprivacy`, `Help.html`, `tapper/index.html`, `sw.js`, `_headers`, `_redirects`, `wrangler.toml`, `.github/workflows/*`, `scripts/*`, `docs/PRODUCTION.md`, `docs/domain.md`, `docs/APP-STORE.md`, `docs/SECURITY.md`, `docs/STRUCTURE.md`, `AGENTS.md`, `MAX.md`, `support/index.html`, `privacy/index.html`, AASA files.
+`AppConfig.swift`, `RedMedApp.swift`, `OwnerAppLock.swift`, `BiometricAuth.swift`, `KeychainStore.swift`, `ProfileData.swift`, `ProfileNFCCodec.swift`, `ContentView.swift`, `RedMedView.swift`, `EditProfileView.swift`, `ConsentGateView.swift`, `CrashMotionGuard.swift`, `EmergencyView.swift`, `EmergencyNumber.swift`, `NFCBandManager.swift`, `NFCReader.swift`, `NFCWriter.swift`, `PasserbyHTMLCardView.swift`, `PrivacySnapshotGuard.swift`, `HelpMenuView.swift`, `NearbyHospitals.swift`, `LocationAccessSuggester.swift`, `SecurePasteboard.swift`, `RedMedSignpost.swift`, `Info.plist`, `RedMed.entitlements`, `PrivacyInfo.xcprivacy`, `Help.html`, `tapper/index.html`, `sw.js`, `_headers`, `_redirects`, `wrangler.toml`, `.github/workflows/*`, `scripts/*`, `docs/PRODUCTION.md`, `docs/domain.md`, `docs/APP-STORE.md`, `docs/SECURITY.md`, `docs/STRUCTURE.md`, `AGENTS.md`, `MAX.md`, `support/index.html`, `privacy/index.html`, AASA files.
 
 Probes: `gh repo view` (frisky public; `Roooted1776.github.io` missing; `redmed-privacy` public), `gh run list`, `curl` github.io / pages.dev / jsDelivr, `scripts/smoke-pages.sh` against github.io.
