@@ -121,11 +121,11 @@ The app has no backend, database, or web service.
   AirTag / BLE / recurring cell). RedMed cannot disable that OS path; do not
   claim “no background NFC” without the BTR caveat
   (`BraceletRF.backgroundTagReadingSummary`). **Do not** add local-network /
-  BLE “find nearby bands” — the chip has no radio. Owner phones must not
-  Safari-auto-arm SOS on band tap: restore Associated Domains
-  (`docs/associated-domains-restore.md`) so installed RedMed opens the app
-  and drops `#d=` (any RedMed band, not only the owner's). Passerby phones
-  without the app keep Safari + SOS auto-arm.
+  BLE “find nearby bands” — the chip has no radio. Band tap does **not**
+  auto-arm SOS (card still opens; explicit SOS · Locate Me for the siren).
+  Associated Domains (`docs/associated-domains-restore.md`) still preferred so
+  an installed RedMed opens the app instead of Safari: own matching band →
+  foreground only; other `#d=` → in-app tap card (no Keychain write, no SOS).
 
 **Settings vs automatic (permanent):**
 - Haptic feedback + Location toggles (`AppSettings` / `HapticEngine.enabledKey`)
@@ -136,18 +136,20 @@ The app has no backend, database, or web service.
 - **Brightness + sound are survival-alarm only (not Settings):**
   arm `BrightnessBoost` + `VolumeBoost` + `LocatorBeacon` only when (1) on-device crash /
   hard-impact detection (`CrashMotionGuard`) fires for **vehicle crash /
-  high-speed impact only** (not running or daily activity), (2) owner taps
-  **SOS · Locate me** on Find Help, or (3) a **real bracelet NFC tap** opens
-  passerby `tapper.html#d=…` (hardware-local SOS on that phone — no server; bare
-  `/tapper/` without `#d=` and in-app scanner preview do **not** auto-arm).
+  high-speed impact only** (not running or daily activity), or (2) the user taps
+  **SOS · Locate me** (owner Find Help or passerby `tapper.html`). Band tap
+  opens the card but does **not** auto-arm SOS (pocket/clasp must not scream;
+  Associated Domains when restored keeps installed phones out of Safari —
+  `docs/associated-domains-restore.md`). Bare `/tapper/` without `#d=` and
+  in-app scanner preview also do not auto-arm.
   **SOS tap** (owner Find Help and passerby SOS button) opens `tel:` to
   `EmergencyNumber` **immediately** — no in-app confirmation, no countdown —
   then arms the alarm. iOS may still show its system Call sheet (cannot suppress).
   **Crash detection** keeps vehicle-crash-only `CrashMotionThresholds` and uses
   the US Crash Detection **call delay** (Apple Support 104959: 10s alert + 30s
   countdown) then the same `tel:` unless Stop The Alarm. Not Apple's Crash
-  Detection API, not FDA-cleared, not a certified medical device. NFC band-tap
-  auto-arm is siren only (no autodial). Seizure timer still does not autodial.
+  Detection API, not FDA-cleared, not a certified medical device. Seizure timer
+  still does not autodial.
   Opening owner Find Help must not force brightness, max volume, or play the
   siren by itself. Do not add Settings off switches for the survival alarm.
 - **LocatorBeacon** / **BrightnessBoost** / **VolumeBoost** survival hold may keep sounding /
@@ -275,14 +277,14 @@ delete every prior `CACHE` name so deploys clear stale decrypt/layout. Bump
 `CACHE` (`redmed-tapper-vN`) in lockstep across `sw.js`, `tapper/sw.js`, and the
 bundled copy on every SW / decrypt deploy. Register the SW ASAP in `tapper.html`
 (not on `window.load`). Legacy zlib inflate is bounded (64 KiB) in Swift +
-streaming bound in `tapper.html`. Passerby HTML **arms local SOS only on a real
-bracelet NFC open with `#d=`** (hardware-local on that phone; no server; siren
-only — no autodial). Bare `/tapper/` and in-app preview do not auto-arm. Bare
-`/tapper/` without `#d=` shows a **No patient** empty state (not a blank YOU
-chart); 911 / Aid remain. Explicit SOS tap opens `tel:` immediately then the
-siren. DeviceMotion crash waits the US 10s+30s delay then `tel:` unless Stop.
-iOS may need a gesture to unmute AudioContext / grant motion. Native still owns
-system volume / brightness boost.
+streaming bound in `tapper.html`. Passerby HTML does **not** auto-arm SOS on
+band tap (card opens; explicit SOS · Locate Me for siren + `tel:`). Bare
+`/tapper/` and in-app preview also do not auto-arm. Bare `/tapper/` without
+`#d=` shows a **No patient** empty state (not a blank YOU chart); 911 / Aid
+remain. Explicit SOS tap opens `tel:` immediately then the siren. DeviceMotion
+crash waits the US 10s+30s delay then `tel:` unless Stop. iOS may need a
+gesture to unmute AudioContext / grant motion. Native still owns system
+volume / brightness boost.
 
 **Repo hygiene:** `main` is the only long-lived branch. After merges, delete
 feature branches on the remote; do not leave parallel “brainchild” branches.
@@ -321,8 +323,8 @@ Use `127.0.0.1` (not a LAN IP) so `#d=` decode works. The medical card renders f
 renders a full RedMed · 911 · Aid card in Chrome without the owner app or any real encryption. This
 is the fastest way to eyeball tapper/SW/redirect changes here. Cloudflare `_headers` / `_redirects`
 are **not** honored by `http.server` (Pages-only), so the legacy `/get.html` etc. serve their
-in-file meta-refresh HTML rather than a 30x here. Note SOS auto-arm still needs a real `#d=` band
-tap on hardware, so the survival alarm is not exercised by this local render.
+in-file meta-refresh HTML rather than a 30x here. Band-tap SOS auto-arm is off — exercise
+the siren via the SOS · Locate Me button on a local `#d=` render.
 
 **Consequence for cloud agents:** the update script is intentionally a no-op (both `python3` and
 `node` are already in the base image; the iOS app has no installable deps). Code review and static

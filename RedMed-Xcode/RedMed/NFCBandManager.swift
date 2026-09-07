@@ -145,6 +145,12 @@ final class NFCBandManager: ObservableObject {
         scannedCard = nil
     }
 
+    /// Universal Link / notification path: open the hosted `#d=` as an in-app
+    /// tap card (`?src=app`, no SOS). Does not touch owner Keychain.
+    func presentBandURLFromUniversalLink(_ urlString: String) {
+        presentHTMLCard(payloadOrURL: urlString)
+    }
+
     /// Mark owner bracelet paired after a real CoreNFC write **and** matching read-back.
     func linkBracelet(on profile: ProfileData, detail: String) {
         guard AppConfig.nfcHardwareEnabled, writeVerified else { return }

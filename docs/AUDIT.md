@@ -236,7 +236,7 @@ No SPM / CocoaPods / npm lockfile in this repo, so there is no app dependency CV
 
 `EmergencyView` 14–18 / 150–163 and `SeizureTimerStrip` 122: Call is an explicit button. `PublicEmergencyAid.dial()` opens `EmergencyNumber.dialURL`. SOS (`FindHelpSOSButton` 98–116) only `armSOS()` / `disarm()`.
 
-Tapper SOS auto-arm (`shouldAutoArm`, ~3472): requires `#d=` that decoded, `paintedFromBand`, and not `?src=app`. Bare `/tapper/` and in-app preview do not arm.
+Tapper SOS auto-arm (`shouldAutoArm`): always false — band tap opens the card only; explicit SOS · Locate Me / crash arm the siren.
 
 Residual: a hard drop of the phone can still siren. That is documented risk, not a logic hole.
 
