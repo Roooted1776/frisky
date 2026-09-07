@@ -28,7 +28,19 @@ struct RedMedApp: App {
                     NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
                 }
             }
-            .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { _ in }
+            // Associated Domains (parked — docs/associated-domains-restore.md).
+            // With the entitlement restored, any hosted /tapper/ open (own band
+            // or another RedMed band) brings this app forward instead of Safari.
+            // Drop webpageURL / #d= — do not decode, do not arm SOS. Passerby
+            // phones without RedMed still get Safari + band-tap SOS auto-arm.
+            // NFC Scan (?src=app) is how an installed owner reads someone else's band.
+            .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
+                guard let url = activity.webpageURL else { return }
+                let path = url.path.lowercased()
+                guard path == "/tapper" || path.hasPrefix("/tapper/") else { return }
+                // Intentional no-op: foreground only. Never load #d= into ProfileData.
+                _ = url
+            }
         }
     }
 }

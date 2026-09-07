@@ -191,8 +191,11 @@ enum AppConfig {
         }
 
         /// What can still open the URL later (Apple OS path; phone off / locked OK).
+        /// Associated Domains (paid Program) intercepts /tapper/ when RedMed is
+        /// installed — app foreground, no Safari SOS. Until then BTR → Safari.
+        /// No BLE / local-network band ranging — chip has nothing to advertise.
         static var backgroundTagReadingSummary: String {
-            "iOS Background Tag Reading can still open the card later — phone can be off or locked; a deliberate tap (phone top \(intentionalTapRangeLabel) from the band) still works. Safari opens the tap card immediately — no Face ID, no login, no app. Wrist + pocket is usually fine. Phone pressed to the clasp can pop Safari. Same for any passerby. Writing the chip does not change that. Band stays passive — no battery."
+            "iOS Background Tag Reading can still open the card later — phone can be off or locked; a deliberate tap (phone top \(intentionalTapRangeLabel) from the band) still works. With Associated Domains restored, a phone that already has RedMed opens the app instead (no Safari, no SOS auto-arm on that tap). Until then Safari opens the tap card — no Face ID, no login. Wrist + pocket is usually fine. Phone pressed to the clasp can pop Safari. Passerby phones without RedMed always get Safari. Writing the chip does not change that. Band stays passive — no battery, no Bluetooth to find nearby."
         }
 
         static var paymentPOSSummary: String {

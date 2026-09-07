@@ -120,7 +120,12 @@ The app has no backend, database, or web service.
   write does not change likelihood. Band stays **passive — no battery** (not
   AirTag / BLE / recurring cell). RedMed cannot disable that OS path; do not
   claim “no background NFC” without the BTR caveat
-  (`BraceletRF.backgroundTagReadingSummary`).
+  (`BraceletRF.backgroundTagReadingSummary`). **Do not** add local-network /
+  BLE “find nearby bands” — the chip has no radio. Owner phones must not
+  Safari-auto-arm SOS on band tap: restore Associated Domains
+  (`docs/associated-domains-restore.md`) so installed RedMed opens the app
+  and drops `#d=` (any RedMed band, not only the owner's). Passerby phones
+  without the app keep Safari + SOS auto-arm.
 
 **Settings vs automatic (permanent):**
 - Haptic feedback + Location toggles (`AppSettings` / `HapticEngine.enabledKey`)

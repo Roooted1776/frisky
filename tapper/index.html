@@ -3692,6 +3692,9 @@ function redmedAssetURL(file) {
 
   // Real HF NFC band tap brings #d= that decrypts — arm local SOS on this phone only.
   // No auto-arm for bare /tapper/, garbage `#d=`, or in-app Preview/Scan (?src=app).
+  // Phones with RedMed installed should not reach this path once Associated
+  // Domains is restored (app opens, #d= dropped — see docs/associated-domains-restore.md).
+  // Do not invent BLE / local-network band ranging; the chip is passive HF NFC.
   function hasBandPayload() {
     // Require non-empty fragment after #d= — bare "#d=" is not a real band tap.
     var h = location.hash || '';
