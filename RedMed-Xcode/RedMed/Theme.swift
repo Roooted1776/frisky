@@ -69,8 +69,9 @@ struct RedMedPageBackground: View {
             .accessibilityHidden(true)
             .task {
                 guard !showWash else { return }
-                // Two yields: LaunchRoot’s cream veil drops after the same
-                // two yields, so this stays flat under that handoff, then wash.
+                // Two yields — must stay locked with LaunchRoot’s cream veil
+                // (also two yields). One-yield veil drop flashed Main/flat
+                // cream for a frame before this wash landed.
                 await Task.yield()
                 await Task.yield()
                 var t = Transaction()
