@@ -79,7 +79,8 @@ function redmedAssetURL(file) {
   return file;
 }
 </script>
-<link rel="preload" as="image" href="BrandLogo.png" fetchpriority="high" id="redmedLogoPreload">
+<!-- Logo after #d= decrypt — do not steal bandwidth on band-tap open. -->
+<link rel="preload" as="image" href="BrandLogo.png" fetchpriority="low" id="redmedLogoPreload">
 <script>
 (function () {
   var link = document.getElementById('redmedLogoPreload');
@@ -146,6 +147,9 @@ function redmedAssetURL(file) {
        Explicit SOS tap opens `tel:` immediately (no in-page confirm). Crash
        waits the US Crash Detection delay (10s alert + 30s countdown) then
        the same `tel:` unless Stop. Band-tap auto-arm is siren only.
+       Phones with RedMed installed should not hit this Safari path once
+       Associated Domains is live (app opens instead — own band quiet,
+       other band in-app card). Do not invent BLE / local-network ranging.
        Bare /tapper/ without `#d=` (and a failed / empty `#d=`) paints the
        No Patient empty state — not a blank YOU chart with dashes. #911 /
        #aid / ?tab= still open those panels; #d= stays the profile payload.
@@ -153,8 +157,12 @@ function redmedAssetURL(file) {
        insets, no horizontal scroll. Tap-to-view: no account, no login, and no
        authentication gate before or on this page — EMT / helper open the card
        immediately from `#d=`. Nothing covers or blocks the YOU card (no login,
-       no overlay, no privacy veil). Owner unlock / edit / band write stay in the
-       native app only.
+       no overlay, no privacy veil). Treat fields (name, blood, allergies, meds,
+       conditions) start decrypting as soon as the YOU-card DOM exists — before
+       911 / Aid HTML finishes parsing. Helper may put the phone down to tend to
+       the person — Screen Wake Lock holds the display on for the whole band-tap
+       patient session (not only while SOS is armed). SOS / wake run after vitals
+       paint. Owner unlock / edit / band write stay in the native app only.
        iOS may need a gesture to unmute AudioContext; motion permission only
        when the helper taps SOS (not an auth gate).
      - Tap physics (matches AppConfig.BraceletRF): intentional ~1–2″,
@@ -164,7 +172,9 @@ function redmedAssetURL(file) {
      - Logo: BrandLogo.png only on YOU-card — cream #fff7f7 watermark tile (216px).
        Not transparent BrandLogo (NFC / wordmark only). Bundle /tapper/ + assets/
        header mark stays next to the name on empty and named cards. Deferred
-       until after profile paint (in-app Preview / owner embed included).
+       until after profile paint so band-tap #d= decrypt wins the wire (in-app
+       Preview / owner embed included). Shell is SW cache-first for almost-
+       instant reopen; first visit still needs network once.
      - Legacy card.html / get.html /get/ redirect to /tapper/ and keep #d=
      Source of truth: tapper/index.html. Xcode copies it into the app bundle as tapper.html
      at build (pbxproj “Bundle passerby tapper”). Repo-root tapper.html is a #d=-preserving
@@ -1492,7 +1502,7 @@ function redmedAssetURL(file) {
       <div class="rm-header">
         <p class="rm-note">Tap To Scan · No Login · No Server · No App</p>
         <div class="rm-title-row">
-          <img class="rm-logo" id="rmLogo" src="BrandLogo.png" width="72" height="72" alt="RedMed" decoding="async" fetchpriority="high">
+          <img class="rm-logo" id="rmLogo" src="BrandLogo.png" width="72" height="72" alt="RedMed" decoding="async" fetchpriority="low" loading="lazy">
           <div>
             <h1 class="rm-name" id="name">RedMed</h1>
             <div class="rm-meta">
@@ -1554,6 +1564,175 @@ function redmedAssetURL(file) {
       </div>
 
     </div>
+
+    <!-- Treat-first: start #d= decrypt as soon as YOU-card DOM exists — do not
+         wait for 911 / Aid HTML or the rest of the shell script. SOS / wake /
+         geo stay off this path. -->
+    <script>
+    (function () {
+      try {
+        if (window.__REDMED_APP_PREVIEW || window.__REDMED_APP_EMBED) return;
+        if (new URLSearchParams(location.search || '').get('src') === 'app') return;
+      } catch (e0) { return; }
+      var hash = location.hash || '';
+      if (!/^#d=/.test(hash)) return;
+      if (!window.crypto || !window.crypto.subtle) return;
+
+      function setTxt(id, val) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        var s = (val == null ? '' : String(val)).trim();
+        el.textContent = s || '—';
+        el.classList.toggle('empty', !s);
+      }
+      function fillList(bodyId, countId, dropId, items) {
+        var body = document.getElementById(bodyId);
+        var count = document.getElementById(countId);
+        var drop = document.getElementById(dropId);
+        if (!body) return;
+        body.textContent = '';
+        var arr = Array.isArray(items) ? items : (items ? String(items).split(',') : []);
+        var cleaned = [];
+        for (var i = 0; i < arr.length && cleaned.length < 40; i++) {
+          var t = String(arr[i] == null ? '' : arr[i]).trim();
+          if (t) cleaned.push(t.slice(0, 200));
+        }
+        if (count) {
+          if (cleaned.length) {
+            count.textContent = String(cleaned.length);
+            count.hidden = false;
+            count.classList.remove('empty');
+          } else {
+            count.textContent = '—';
+            count.hidden = false;
+            count.classList.add('empty');
+          }
+        }
+        if (drop) {
+          drop.classList.toggle('is-empty', !cleaned.length);
+          try { drop.open = !!cleaned.length; } catch (e1) {}
+        }
+        cleaned.forEach(function (t) {
+          var d = document.createElement('div');
+          d.className = 'chip';
+          d.textContent = t;
+          body.appendChild(d);
+        });
+      }
+      function paintVitals(p) {
+        if (!p) return;
+        var name = (p.name || '').trim();
+        var blood = (p.blood || '').trim();
+        var nameEl = document.getElementById('name');
+        if (nameEl && name) nameEl.textContent = name;
+        try {
+          if (name) document.title = name + ' · RedMed';
+        } catch (e2) {}
+        var emptyEl = document.getElementById('rmEmpty');
+        try {
+          document.documentElement.classList.remove('is-unlinked');
+          if (emptyEl) emptyEl.hidden = true;
+        } catch (e3) {}
+        var noteEl = document.querySelector('.rm-note');
+        if (noteEl) noteEl.classList.add('is-filled');
+        setTxt('rowName', p.name);
+        setTxt('rowDob', p.dob);
+        setTxt('rowBlood', p.blood);
+        setTxt('rowDonor', p.donor ? 'Yes' : '');
+        setTxt('rowPregnant', p.pregnant ? 'Yes' : '');
+        setTxt('rowDeaf', p.deafOrVisionImpaired ? 'Yes' : '');
+        var bloodRow = document.getElementById('rowBloodRow');
+        if (bloodRow) bloodRow.classList.toggle('has-blood', !!blood);
+        fillList('allergies', 'countAllergies', 'dropAllergies', p.allergies);
+        fillList('meds', 'countMedications', 'dropMedications', p.meds);
+        fillList('conditions', 'countConditions', 'dropConditions', p.conditions);
+        window.__redmedEarlyVitals = true;
+      }
+      function fromArray(a) {
+        if (!a || !a.length) return null;
+        // Prefer current compact when donor flag sits at [8] (AES writes).
+        var donorAt8 = a.length >= 9 && (a[8] === true || a[8] === false || a[8] === 0 || a[8] === 1 || a[8] === '0' || a[8] === '1');
+        if (donorAt8) {
+          return {
+            blood: a[0] || '',
+            allergies: a[1],
+            meds: a[2],
+            name: a[4] || '',
+            dob: a[5] || '',
+            conditions: a[6],
+            donor: !!(a[8] === true || a[8] === 1 || a[8] === '1'),
+            pregnant: !!(a[10] === true || a[10] === 1 || a[10] === '1'),
+            deafOrVisionImpaired: !!(a[11] === true || a[11] === 1 || a[11] === '1')
+          };
+        }
+        // Legacy: [name, dob, blood, donor, allergies, meds, conditions, ...]
+        return {
+          name: a[0] || '',
+          dob: a[1] || '',
+          blood: a[2] || '',
+          donor: !!(a[3] === true || a[3] === 1 || a[3] === '1'),
+          allergies: a[4],
+          meds: a[5],
+          conditions: a[6]
+        };
+      }
+      function parseBytes(bytes) {
+        if (!bytes || !bytes.length) return null;
+        var c = bytes[0];
+        if (c === 0x7b || c === 0x5b) {
+          try {
+            var raw = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+            if (Array.isArray(raw)) return fromArray(raw);
+            return raw;
+          } catch (e4) { return null; }
+        }
+        return null;
+      }
+      function b64urlToBytes(raw) {
+        try {
+          var b64 = raw.replace(/-/g, '+').replace(/_/g, '/');
+          while (b64.length % 4) b64 += '=';
+          var bin = atob(b64);
+          if (bin.length > 8192) return null;
+          return Uint8Array.from(bin, function (ch) { return ch.charCodeAt(0); });
+        } catch (e5) { return null; }
+      }
+
+      var raw = '';
+      try { raw = decodeURIComponent(hash.slice(3).split('&')[0] || ''); } catch (e6) { return; }
+      var bytes = b64urlToBytes(raw);
+      if (!bytes || !bytes.length) return;
+
+      function done(p) {
+        if (!p) return;
+        // Vitals only — do not set __REDMED_PROFILE (contacts come from the
+        // full shell decrypt). Flag so we know treat fields already painted.
+        window.__redmedEarlyVitals = true;
+        paintVitals(p);
+      }
+
+      if (bytes[0] === 0x02) {
+        if (bytes.length < 1 + 12 + 16) return;
+        var iv = bytes.subarray(1, 13);
+        var cipher = bytes.subarray(13);
+        var keyP = window.__redmedAesKeyPromise;
+        if (!keyP) {
+          keyP = crypto.subtle.digest('SHA-256', new TextEncoder().encode('RedMed-NFC-AES-GCM-v1'))
+            .then(function (h) {
+              return crypto.subtle.importKey('raw', h, { name: 'AES-GCM' }, false, ['decrypt']);
+            });
+          window.__redmedAesKeyPromise = keyP;
+        }
+        keyP.then(function (key) {
+          return crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, key, cipher);
+        }).then(function (plain) {
+          done(parseBytes(new Uint8Array(plain)));
+        }).catch(function () {});
+        return;
+      }
+      done(parseBytes(bytes));
+    })();
+    </script>
 
     <!-- 911 — mirrors owner EmergencyView (content-first, no page header). -->
     <div class="panel" id="panel-911" data-panel="911" role="tabpanel" aria-labelledby="tab-911" aria-hidden="true">
@@ -1734,8 +1913,7 @@ function redmedAssetURL(file) {
 
 
   // YOU-card mark — empty and named cards keep the heart next to the name.
-  // Load immediately so the logo/photo shows on first paint.
-  // Icons are injected here so the head can advertise the same logo.
+  // After profile paint only — band-tap open prioritizes #d= decrypt over logo.
   function resolveLogo() {
     var img = document.getElementById('rmLogo');
     if (!img) return;
@@ -2414,12 +2592,18 @@ function redmedAssetURL(file) {
 
   // Kick profile paint ASAP — overlaps embed chrome + status wiring below.
   // Sync path when native injected __REDMED_PROFILE; band taps decrypt now
-  // (AES key already prefetched when #d= is present).
+  // (AES key already prefetched when #d= is present). Logo waits until after
+  // paint so BrandLogo.png does not race decrypt on a cold tap.
   (function bootProfile() {
-    // Eager logo/photo load: avoid any "missing image" flash during decrypt.
-    try { resolveBrandAssets(); } catch (e0) {}
     function afterPaint() {
       try { document.dispatchEvent(new Event('redmed-profile-painted')); } catch (e2) {}
+      try {
+        if (typeof scheduleIdle === 'function') {
+          scheduleIdle(function () { resolveBrandAssets(); }, 600);
+        } else {
+          setTimeout(function () { resolveBrandAssets(); }, 0);
+        }
+      } catch (e3) {}
     }
     try {
       if (window.__REDMED_PROFILE) {
@@ -3091,7 +3275,7 @@ function redmedAssetURL(file) {
 // Real bracelet NFC open with #d= → arm + PLAY local siren (no server).
 // Explicit SOS tap: tel: immediately (no in-page confirm), then siren.
 // DeviceMotion crash: US Crash Detection delay (10s + 30s) then tel: unless Stop.
-// Band-tap auto-arm is siren only. Crash path ignores sex, masturbation, walking,
+// Band-tap auto-arm is siren only (Safari / no-app path). Crash path ignores sex, masturbation, walking,
 // eating, daily rhythm (same gates as native CrashMotionGuard).
 // Web Audio + wake lock only.
 (function () {
@@ -3708,9 +3892,11 @@ function redmedAssetURL(file) {
   });
   window.addEventListener('pageshow', function () {
     if (armed) reclaimAudio();
+    ensureScreenWake();
   });
   window.addEventListener('focus', function () {
     if (armed) reclaimAudio();
+    ensureScreenWake();
   });
   try {
     if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
@@ -3720,8 +3906,12 @@ function redmedAssetURL(file) {
     }
   } catch (e) {}
 
-  // Real HF NFC band tap brings #d= that decrypts — arm local SOS on this phone only.
-  // No auto-arm for bare /tapper/, garbage `#d=`, or in-app Preview/Scan (?src=app).
+  // Real HF NFC band tap brings #d= that decrypts — arm local SOS on this phone
+  // only when Safari opened the card (passerby / no RedMed app). No auto-arm for
+  // bare /tapper/, garbage `#d=`, or in-app Preview/Scan (?src=app). Phones with
+  // RedMed installed use Associated Domains (applinks) so BTR opens the app
+  // instead — own wrist band must not Safari-hijack that iPhone. See
+  // docs/associated-domains-restore.md. No BLE / local-network band ranging.
   function hasBandPayload() {
     // Require non-empty fragment after #d= — bare "#d=" is not a real band tap.
     var h = location.hash || '';
@@ -3730,14 +3920,27 @@ function redmedAssetURL(file) {
   function shouldAutoArm() {
     return hasBandPayload() && paintedFromBand && !appPreview();
   }
-  // Band tap: wait for profile paint before arm/siren so decrypt is not fighting PCM.
-  // Crash / explicit SOS still call arm() directly (post-paint). Do not arm on a
-  // hash that failed to decode (No patient empty state).
+  // Band tap: vitals already on screen from the early #d= script when possible.
+  // Card-session wake + SOS arm after that treat paint — siren must not delay ID.
+  // Wake API matches main (#523) / MedicalCardScreenWake naming.
   document.addEventListener('redmed-profile-painted', function () {
-    setCardSessionAwake(true);
-    if (shouldAutoArm()) arm();
-    else paint();
+    function afterVitals(fn) {
+      if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(function () { requestAnimationFrame(fn); });
+      } else {
+        setTimeout(fn, 0);
+      }
+    }
+    afterVitals(function () {
+      setCardSessionAwake(true);
+      if (shouldAutoArm()) arm();
+      else paint();
+    });
   }, { once: true });
+  // iOS may need a gesture before Wake Lock sticks — re-request on first tap.
+  document.addEventListener('pointerdown', function () {
+    ensureScreenWake();
+  }, { passive: true });
   setTimeout(function () {
     if (!hasBandPayload() && !armed) paint();
   }, 900);

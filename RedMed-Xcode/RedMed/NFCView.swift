@@ -75,15 +75,8 @@ struct NFCView: View {
             .environment(\.isScannerSession, true)
             .presentationBackground(Color.redmedBg)
         }
-        .fullScreenCover(item: $band.scannedCard) { session in
-            PasserbyHTMLCardView(
-                payloadOrURL: session.payload,
-                braceletLinked: profile.showsBraceletAsLinked,
-                embedProfileJSON: session.embedJSON
-            )
-            .environment(\.isScannerSession, true)
-            .presentationBackground(Color.redmedBg)
-        }
+        // scannedCard cover lives on ContentView so Universal Link opens work
+        // even before the NFC tab is mounted.
         .alert("Bracelet", isPresented: Binding(
             get: { band.alertMessage != nil },
             set: { if !$0 { band.alertMessage = nil } }

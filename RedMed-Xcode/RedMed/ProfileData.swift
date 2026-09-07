@@ -573,6 +573,10 @@ extension Notification.Name {
     static let redMedOpenNFCTab = Notification.Name("redMedOpenNFCTab")
     /// Preview / Scan tap card presented — PrivacySnapshotGuard must not cover it.
     static let redMedTapCardPresentationDidChange = Notification.Name("redMedTapCardPresentationDidChange")
+    /// Associated Domains: foreign (or unmatched) `/tapper/#d=` while RedMed is
+    /// installed — show in-app tap card (no SOS). Own matching band is ignored
+    /// in `RedMedApp` (foreground only).
+    static let redMedOpenBandURL = Notification.Name("redMedOpenBandURL")
 }
 
 struct EmergencyContact: Identifiable, Equatable {

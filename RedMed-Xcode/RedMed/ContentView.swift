@@ -137,6 +137,21 @@ struct ContentView: View {
             mountedTabs.insert(.nfc)
             startHoldToWriteFromNFCTab()
         }
+        // Associated Domains: foreign / unmatched band URL → in-app tap card (no SOS).
+        .onReceive(NotificationCenter.default.publisher(for: .redMedOpenBandURL)) { note in
+            guard !isScannerSession else { return }
+            guard let urlString = note.object as? String else { return }
+            nfcBand.presentBandURLFromUniversalLink(urlString)
+        }
+        .fullScreenCover(item: $nfcBand.scannedCard) { session in
+            PasserbyHTMLCardView(
+                payloadOrURL: session.payload,
+                braceletLinked: profile.showsBraceletAsLinked,
+                embedProfileJSON: session.embedJSON
+            )
+            .environment(\.isScannerSession, true)
+            .presentationBackground(Color.redmedBg)
+        }
         .presentsOwnerHelp()
     }
 

@@ -1,49 +1,54 @@
 # Associated Domains (Universal Links)
 
-`RedMedApp.onContinueUserActivity(NSUserActivityTypeBrowsingWeb)` exists so a
-device that already has RedMed installed opens the app (foreground only,
-same as tapping the icon) instead of Safari when its *own* band is tapped.
-Nothing renders from the intercepted URL — the owner already has full app
-access, and the tapped `#d=` payload is deliberately dropped.
+## Problem this solves
 
-## Currently parked (personal team signing)
+The wearer's band on their wrist must not **Safari-hijack their own iPhone**
+when the phone is nearby (pocket / clasp / Background Tag Reading). That is
+not only the SOS siren — opening the full passerby card on the owner's phone
+is the interference.
 
-`RedMed.entitlements` has **no** `com.apple.developer.associated-domains` key.
-Free / personal Apple Developer teams cannot provision the **Associated
-Domains** capability — Xcode automatic signing fails the whole build with
-"Cannot create a iOS App Development provisioning profile" while the
-entitlement is present but the account is a personal team. Same class of
-problem as CoreNFC — see `docs/NFC-RESTORE.md` for the parked-entitlement
-pattern this mirrors.
+**Fix:** Associated Domains. Hosted `/tapper/` is a Universal Link. With
+RedMed installed, iOS opens the **app** instead of Safari.
 
-While parked, `onContinueUserActivity` never fires. A phone with RedMed
-installed tapping its own band behaves exactly like a passerby's phone:
-Safari opens the hosted `tapper.html#d=…` card. This is not a functional
-regression for anyone else — passerby tap-to-view was always Safari-only.
+| Phone | Band tap |
+| --- | --- |
+| RedMed installed, `#d=` matches owner Keychain | App foreground only — no Safari, no SOS, no card sheet |
+| RedMed installed, other person's `#d=` | In-app tap card (no Keychain write, no SOS) — does not steal the helper path |
+| RedMed **not** installed | Safari card + band-tap SOS auto-arm (passerby / EMT unchanged) |
 
-## Restore (paid Program)
+AASA is live (`apple-app-site-association` + `.well-known/`, paths
+`/tapper`, `/tapper/`, `/tapper/*`, plus `components` / `appIDs`). Entitlement
+is in `RedMed.entitlements`. After merge, re-run Publish tapper /
+`scripts/publish-github-io.sh` so github.io picks up the widened AASA.
 
-1. Add back to `RedMed.entitlements`:
-   ```xml
-   <key>com.apple.developer.associated-domains</key>
-   <array>
-       <string>applinks:roooted1776.github.io</string>
-   </array>
-   ```
-2. Confirm `apple-app-site-association` (repo root and `.well-known/`) is
-   served over HTTPS at the domain root with the correct `appID` (Team ID +
-   `com.redmed.app`) and `paths` limited to `/tapper/*`.
-3. Xcode → Signing & Capabilities → **Associated Domains** should show the
-   host with no errors once the team has a paid Apple Developer Program
-   membership.
-4. Device test: with RedMed installed, tap the owner's own band → app comes
-   to the foreground instead of Safari opening `tapper.html`.
-5. If the custom domain (`docs/domain.md`) goes live before this is
-   restored, update the `applinks:` host and `apple-app-site-association`
-   together.
+## Rejected: local-network / BLE band ranging
 
-## Park again (optional)
+Do **not** add Bonjour, Multipeer, Wi‑Fi Aware, CoreBluetooth, or "find bands
+nearby." NTAG216 is **passive** — no battery, no radio. It never appears on a
+local network. HF NFC physics + Universal Links are the controls.
 
-1. Remove `com.apple.developer.associated-domains` from `RedMed.entitlements`.
-2. Leave `onContinueUserActivity` in place — it is a no-op without the
-   entitlement.
+## Signing note (paid Program)
+
+`applinks:roooted1776.github.io` is in `RedMed.entitlements`. The App ID
+`com.redmed.app` must have **Associated Domains** enabled on a **paid** Apple
+Developer Program team. Personal / free teams cannot provision that capability
+— Automatic Signing fails until the capability is on the App ID or you park
+the entitlement again (empty `<dict></dict>`, same pattern as CoreNFC).
+
+## Device tests
+
+1. RedMed installed + tap **own** wrist band → app foreground (or already
+   open stays put), **no Safari**, no SOS auto-arm.
+2. RedMed installed + tap **another** RedMed band → in-app tap card, no
+   Keychain write, no SOS.
+3. RedMed **not** installed + tap any band → Safari card + SOS auto-arm.
+4. After custom domain cutover (`docs/domain.md`), update `applinks:` host and
+   both AASA files together.
+
+## Park again (personal team only)
+
+1. Remove `com.apple.developer.associated-domains` from `RedMed.entitlements`
+   (leave an empty `<dict></dict>` if NFC / HealthKit are also parked).
+2. Leave `onContinueUserActivity` in place — no-op without the entitlement.
+3. Without the entitlement, wrist proximity can Safari-open again on a phone
+   that has RedMed installed.
