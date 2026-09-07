@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import WebKit
 
 /// NFC Preview / NFC Scan — same bundled `tapper.html#d=` shell a stranger
@@ -120,8 +121,47 @@ enum TapCardPresentation {
         lock.unlock()
         guard changed else { return }
         NotificationCenter.default.post(name: .redMedTapCardPresentationDidChange, object: nil)
+        // Helpers reading Preview / Scan / tap-card must not lose the screen to
+        // idle lock. No Face ID here — screen wake only. Survival SOS hold wins
+        // if already keeping the idle timer disabled.
+        Task { @MainActor in
+            TapCardScreenWake.setActive(visible)
+        }
     }
 }
+
+/// Keeps the display awake while an in-app tap card (Preview / Scan shell) is up.
+/// Passerby Safari uses the HTML Wake Lock API instead. Does not present Face ID.
+@MainActor
+private enum TapCardScreenWake {
+    private static var savedIdleTimerDisabled: Bool?
+    private static var holding = false
+
+    static func setActive(_ active: Bool) {
+        if active {
+            if !holding {
+                savedIdleTimerDisabled = UIApplication.shared.isIdleTimerDisabled
+                holding = true
+            }
+            UIApplication.shared.isIdleTimerDisabled = true
+            return
+        }
+        guard holding else { return }
+        holding = false
+        // Leave idle disabled if crash/SOS survival is still holding it.
+        if BrightnessBoost.isSurvivalHold {
+            savedIdleTimerDisabled = nil
+            return
+        }
+        if let savedIdleTimerDisabled {
+            UIApplication.shared.isIdleTimerDisabled = savedIdleTimerDisabled
+        } else {
+            UIApplication.shared.isIdleTimerDisabled = false
+        }
+        savedIdleTimerDisabled = nil
+    }
+}
+
 
 struct PasserbyHTMLShell: View {
     let encodedPayload: String
