@@ -147,9 +147,10 @@ function redmedAssetURL(file) {
        Explicit SOS tap opens `tel:` immediately (no in-page confirm). Crash
        waits the US Crash Detection delay (10s alert + 30s countdown) then
        the same `tel:` unless Stop. Band-tap auto-arm is siren only.
-       Phones with RedMed installed should not hit this Safari path once
-       Associated Domains is live (app opens instead — own band quiet,
-       other band in-app card). Do not invent BLE / local-network ranging.
+       Phones with RedMed installed should not hit this Safari SOS path:
+       Associated Domains when AASA is live, else `redmed://band#d=` handoff
+       before arm (own band quiet; other band in-app card). Do not invent
+       BLE / local-network ranging.
        Bare /tapper/ without `#d=` (and a failed / empty `#d=`) paints the
        No Patient empty state — not a blank YOU chart with dashes. #911 /
        #aid / ?tab= still open those panels; #d= stays the profile payload.
@@ -3909,9 +3910,9 @@ function redmedAssetURL(file) {
   // Real HF NFC band tap brings #d= that decrypts — arm local SOS on this phone
   // only when Safari opened the card (passerby / no RedMed app). No auto-arm for
   // bare /tapper/, garbage `#d=`, or in-app Preview/Scan (?src=app). Phones with
-  // RedMed installed use Associated Domains (applinks) so BTR opens the app
-  // instead — own wrist band must not Safari-hijack that iPhone. See
-  // docs/associated-domains-restore.md. No BLE / local-network band ranging.
+  // RedMed installed: Associated Domains (applinks) when AASA is live, else
+  // `redmed://band#d=` handoff before SOS so the wearer's own iPhone stays quiet.
+  // See docs/associated-domains-restore.md. No BLE / local-network band ranging.
   function hasBandPayload() {
     // Require non-empty fragment after #d= — bare "#d=" is not a real band tap.
     var h = location.hash || '';
@@ -3919,6 +3920,40 @@ function redmedAssetURL(file) {
   }
   function shouldAutoArm() {
     return hasBandPayload() && paintedFromBand && !appPreview();
+  }
+  // Installed RedMed claims the tap via custom scheme when UL did not.
+  // If the page hides / blurs (app opened), cancel SOS. No app → arm after a
+  // short wait so helpers without RedMed still get the siren.
+  function handoffToInstalledAppThenMaybeArm() {
+    if (!shouldAutoArm()) {
+      paint();
+      return;
+    }
+    var settled = false;
+    function finish(doArm) {
+      if (settled) return;
+      settled = true;
+      try {
+        document.removeEventListener('visibilitychange', onLeave);
+        window.removeEventListener('pagehide', onLeave);
+        window.removeEventListener('blur', onLeave);
+      } catch (e) {}
+      if (doArm && shouldAutoArm() && !document.hidden) arm();
+      else paint();
+    }
+    function onLeave() {
+      if (document.hidden) finish(false);
+    }
+    document.addEventListener('visibilitychange', onLeave);
+    window.addEventListener('pagehide', onLeave);
+    window.addEventListener('blur', onLeave);
+    try {
+      // Keep #d= on the custom URL so the app can own-match / show a foreign card.
+      window.location.href = 'redmed://band' + (location.hash || '');
+    } catch (e) {}
+    setTimeout(function () {
+      finish(!(document.hidden));
+    }, 650);
   }
   // Band tap: vitals already on screen from the early #d= script when possible.
   // Card-session wake + SOS arm after that treat paint — siren must not delay ID.
@@ -3933,8 +3968,7 @@ function redmedAssetURL(file) {
     }
     afterVitals(function () {
       setCardSessionAwake(true);
-      if (shouldAutoArm()) arm();
-      else paint();
+      handoffToInstalledAppThenMaybeArm();
     });
   }, { once: true });
   // iOS may need a gesture before Wake Lock sticks — re-request on first tap.

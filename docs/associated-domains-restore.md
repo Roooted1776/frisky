@@ -21,6 +21,11 @@ AASA is live (`apple-app-site-association` + `.well-known/`, paths
 is in `RedMed.entitlements`. After merge, re-run Publish tapper /
 `scripts/publish-github-io.sh` so github.io picks up the widened AASA.
 
+**Safari fallback (AASA stale / UL miss):** passerby `tapper` tries
+`redmed://band#d=` before SOS auto-arm. Installed RedMed claims it (same quiet
+rules via `onOpenURL`). No app → page stays put → SOS arms after ~650ms.
+Custom scheme needs no Associated Domains entitlement.
+
 ## Rejected: local-network / BLE band ranging
 
 Do **not** add Bonjour, Multipeer, Wi‑Fi Aware, CoreBluetooth, or "find bands
