@@ -21,9 +21,17 @@ struct RedMedApp: App {
                 profile.beginLaunchPrefetch()
             }
             .onOpenURL { url in
-                if (url.scheme ?? "").lowercased() == "redmed",
-                   (url.host ?? "").lowercased() == "nfc" {
+                let scheme = (url.scheme ?? "").lowercased()
+                let host = (url.host ?? "").lowercased()
+                if scheme == "redmed", host == "nfc" {
                     NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
+                    return
+                }
+                // Safari tapper handoff when Associated Domains / AASA did not
+                // claim the tap (stale github.io AASA, personal-team signing).
+                // `redmed://band#d=` — same quiet rules as Universal Links.
+                if scheme == "redmed", host == "band" || host == "tapper" {
+                    handleIncomingBandURL(url.absoluteString, profile: profile)
                 }
             }
             // Associated Domains (applinks:roooted1776.github.io).
@@ -31,26 +39,31 @@ struct RedMedApp: App {
             // has RedMed. BTR / NFC opens this app instead of Safari.
             // Own band / empty RAM (restore in flight) / bad #d= → foreground
             // only — never present a tap-card sheet (that is still "setting off"
-            // the phone). Other person's #d= with a loaded owner profile →
+            // the phone). Other person's `#d=` with a loaded owner profile →
             // in-app tap card (no Keychain write, no SOS).
-            // Phones without RedMed still get Safari + band-tap SOS auto-arm.
+            // UL often drops the URL fragment — no `#d=` still means quiet
+            // (owner phone must not scream). Phones without RedMed keep Safari
+            // + band-tap SOS; tapper also tries `redmed://band` before arming.
             .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
                 guard let url = activity.webpageURL else { return }
                 let path = url.path.lowercased()
                 guard path == "/tapper" || path.hasPrefix("/tapper/") else { return }
-                guard let chip = ProfileNFCCodec.decodeProfile(fromURLString: url.absoluteString) else {
-                    return
-                }
-                // No sheet while Keychain restore is empty / in flight, or when
-                // this chip is the owner's own band.
-                guard profile.hasData, !profile.matchesBand(chip) else { return }
-                NotificationCenter.default.post(
-                    name: .redMedOpenBandURL,
-                    object: url.absoluteString
-                )
+                handleIncomingBandURL(url.absoluteString, profile: profile)
             }
         }
     }
+}
+
+/// Own / empty / undecodable `#d=` → foreground only. Foreign chip → in-app card.
+private func handleIncomingBandURL(_ urlString: String, profile: ProfileData) {
+    guard let chip = ProfileNFCCodec.decodeProfile(fromURLString: urlString) else {
+        return
+    }
+    guard profile.hasData, !profile.matchesBand(chip) else { return }
+    NotificationCenter.default.post(
+        name: .redMedOpenBandURL,
+        object: urlString
+    )
 }
 
 /// First launch (or policy-version bump): Before you continue (Agree only),

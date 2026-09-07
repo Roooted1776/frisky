@@ -12,7 +12,8 @@ no `NFCReaderUsageDescription`) so Automatic Signing works without NFC Tag
 Reading on App ID `com.redmed.app`. **Associated Domains is enabled**
 (`applinks:roooted1776.github.io` in `RedMed.entitlements`) so a phone with
 RedMed installed does not Safari-open on wrist-band proximity — see
-`docs/associated-domains-restore.md`. That capability needs paid Program on
+`docs/associated-domains-restore.md`. Safari also tries `redmed://band#d=`
+before SOS when AASA/UL miss. That capability needs paid Program on
 the App ID (personal/free teams cannot provision it; park the entitlement
 again only if you must device-sign on a personal team). The owner NFC tab
 stays visible; Write / Scan are pack-only + Share Band URL. Restore real
