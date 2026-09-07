@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import WebKit
 
 /// NFC Preview / NFC Scan — same bundled `tapper.html#d=` shell a stranger
@@ -120,6 +121,12 @@ enum TapCardPresentation {
         lock.unlock()
         guard changed else { return }
         NotificationCenter.default.post(name: .redMedTapCardPresentationDidChange, object: nil)
+        // Helpers reading Preview / Scan must not lose the screen to idle lock.
+        // Passerby Safari uses the HTML Wake Lock API; owner YOU card uses
+        // RedMedView → MedicalCardScreenWake. Survival SOS hold wins if armed.
+        Task { @MainActor in
+            MedicalCardScreenWake.setActive(visible)
+        }
     }
 }
 

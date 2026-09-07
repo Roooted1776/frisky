@@ -11,7 +11,8 @@ import SwiftUI
 /// on 911 / Aid / NFC — not on Edit. Fresh install: native setup funnel.
 /// Passerby tapper is unchanged.
 struct RedMedView: View {
-    /// Parent keep-alive still passes tab visibility; view gate no longer uses it.
+    /// Parent keep-alive still passes tab visibility — used for screen wake
+    /// (opacity keep-alive does not fire onDisappear on tab switch).
     var isVisible: Bool = true
 
     @EnvironmentObject var profile: ProfileData
@@ -25,6 +26,8 @@ struct RedMedView: View {
     @State private var healthImportMessage: String?
     /// HealthKit characteristics to seed Edit. Not written to ProfileData until Save.
     @State private var healthSeed: HealthKitProfileImport.Draft?
+    /// Tracks whether this tab currently holds MedicalCardScreenWake.
+    @State private var holdingScreenWake = false
 
     /// Owner empty profile — native steps instead of a blank YOU card.
     /// Hidden while a stored ID is expected or restore is in flight
@@ -35,6 +38,12 @@ struct RedMedView: View {
             && !profile.hasSensitiveProfileData
             && !profile.isRestoringFromKeychain
             && !ProfileData.prefersLockOnLaunch
+    }
+
+    /// Match tapper: keep the display awake while a medical card is readable
+    /// (owner YOU / scanner snapshot). Setup funnel does not hold wake.
+    private var wantsScreenWake: Bool {
+        isVisible && !showsOwnerSetupFunnel && !showEdit
     }
 
     var body: some View {
@@ -119,6 +128,23 @@ struct RedMedView: View {
                 .environmentObject(profile)
                 .presentationBackground(Color.redmedBg)
         }
+        .onAppear { syncScreenWake() }
+        .onChange(of: isVisible) { _, _ in syncScreenWake() }
+        .onChange(of: showsOwnerSetupFunnel) { _, _ in syncScreenWake() }
+        .onChange(of: showEdit) { _, _ in syncScreenWake() }
+        .onDisappear {
+            if holdingScreenWake {
+                MedicalCardScreenWake.setActive(false)
+                holdingScreenWake = false
+            }
+        }
+    }
+
+    private func syncScreenWake() {
+        let want = wantsScreenWake
+        guard want != holdingScreenWake else { return }
+        MedicalCardScreenWake.setActive(want)
+        holdingScreenWake = want
     }
 
     /// Sibling above the YOU card — never an overlay on the tap card.

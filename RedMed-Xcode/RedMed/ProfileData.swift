@@ -152,7 +152,7 @@ class ProfileData: ObservableObject {
         self.persists = persisting
         // UserDefaults only — a SecItem + LAContext exists() here ran on the
         // main thread before the first ConsentGate / Main frame and contended
-        // with Face ID. Prefetch starts after first paint (`RedMedApp.task`).
+        // with Face ID. Prefetch starts from `RedMedApp.task` (off-main).
         if persisting && Self.prefersLockOnLaunch {
             self.isRestoringFromKeychain = true
         }
@@ -160,8 +160,8 @@ class ProfileData: ObservableObject {
 
     /// Non-interactive Keychain read + JSON decode. Idempotent. Does not touch
     /// `@Published` fields until `restoreOnLaunch` adopts the result.
-    /// Call after first paint — never from `init`. ContentView restores ASAP
-    /// after one yield (no fixed 300ms Face ID stagger on returning opens).
+    /// Call from `RedMedApp.task` (off-main decode) — never from `init`.
+    /// ContentView adopts via `restoreOnLaunch` after one yield.
     /// Prefetch uses `.userInitiated` so the blob lands before YOU paints empty.
     /// UserDefaults gate only — no SecItem exists() here.
     func beginLaunchPrefetch() {

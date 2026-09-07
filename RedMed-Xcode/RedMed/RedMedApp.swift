@@ -14,13 +14,11 @@ struct RedMedApp: App {
             .background(CreamWindowBackground())
             .preferredColorScheme(.light)
             .task {
-                // Snapshot observers + haptics only. Do not warm WKWebView
-                // or read tapper.html here — that raced the first Main frame.
-                // Keychain restore is owned by ContentView (ASAP after one
-                // yield — no fixed Face ID stagger on returning opens).
+                // Snapshot observers only. Keychain prefetch starts here so
+                // the blob is in flight during SplashBoard → first frame.
+                // Haptics prepare after YOU paints (ContentView) — not here.
                 SnapshotSafeCover.activate()
-                await Task.yield()
-                RedMedHaptics.prepare()
+                profile.beginLaunchPrefetch()
             }
             .onOpenURL { url in
                 if (url.scheme ?? "").lowercased() == "redmed",
@@ -60,13 +58,11 @@ struct RedMedApp: App {
 /// post-Agree Face ID. No app-wide cream lock. Passerby tapper is not in
 /// this tree.
 private struct LaunchRoot: View {
-    /// Flat cream matching UILaunchScreen for the SplashBoard → first-layout
-    /// gap only. Dropped after **one** MainActor yield with `animation: nil`
-    /// — same cadence as `RedMedPageBackground`'s rose wash (also one yield),
-    /// so the veil never lifts onto a flat Main frame. One yield is the
-    /// minimum that still lets ConsentGate/Main lay out under the veil.
-    /// Do **not** wait for `scenePhase == .active`.
-    @State private var holdLaunchCream = true
+    /// Returning opens: no SwiftUI cream veil — UILaunchScreen already matches
+    /// and ConsentGate goes straight to Main. First launch (or after Erase /
+    /// policy bump): flat cream for SplashBoard → Agree layout, dropped after
+    /// one yield locked with `RedMedPageBackground`'s wash.
+    @State private var holdLaunchCream = !ConsentSettings.hasAcceptedCurrent
 
     var body: some View {
         ZStack {
