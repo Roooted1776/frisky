@@ -1,10 +1,14 @@
 # Cold Start Speed Audit
 
-> **2026-09 update:** ContentView no longer sleeps a fixed 300ms before
-> `restoreOnLaunch()`. ConsentGate arms Main only after Agree, so that sleep
-> was pure shipping lag on returning opens. Restore is yield-then-ASAP; a short
-> stagger remains only if consent Face ID somehow still owns `evaluatePolicy`.
-> `LaunchRoot.holdLaunchCream` still drops after two yields (no `.active` wait).
+> **2026-09 update:** Consent is **4.10** (Agree covers location). A version
+> bump forces Before You Continue + Face ID + When-In-Use once — that is
+> intentional, not a paint regression. Returning opens after Agree skip all
+> three. `ContentView` restores ASAP after one yield (no fixed 300ms sleep).
+> `LaunchRoot` cream drops after one yield (first launch / policy bump only).
+> Scheme: `enableGPUValidationMode = "1"` is **Disabled** (Apple’s encoding);
+> `"2"` turns Metal API Validation back on — do not “fix” that to 2.
+> Pre-app cream with no `ColdLaunch` Console lines = Xcode install / LLDB
+> attach. Use scheme **RedMed-NoDebug** for a fair check.
 
 
 **Launch lock is gone.** Current path is `RedMedApp` → `PrivacySnapshotGuard` →

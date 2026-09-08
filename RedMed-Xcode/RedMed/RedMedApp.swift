@@ -4,6 +4,12 @@ import SwiftUI
 struct RedMedApp: App {
     @StateObject private var profile = ProfileData()
 
+    init() {
+        // Marks process start after dyld / debugger attach.
+        // Cream with no ColdLaunch lines yet = Xcode install + LLDB, not SwiftUI.
+        RedMedSignpost.coldLaunchMark("app.init")
+    }
+
     var body: some Scene {
         WindowGroup {
             PrivacySnapshotGuard {
@@ -88,12 +94,21 @@ private struct LaunchRoot: View {
                     .accessibilityHidden(true)
             }
         }
+        .onAppear {
+            // Ends coldLaunchWindow at firstFrame (app.init → first paint).
+            // Lag *before* app.init (no ColdLaunch lines) is install/attach.
+            RedMedSignpost.coldLaunchFirstFrameOnce()
+            if !holdLaunchCream {
+                RedMedSignpost.coldLaunchMainReady("returning skip consent")
+            }
+        }
         .task {
             guard holdLaunchCream else { return }
             await Task.yield()
             var t = Transaction()
             t.animation = nil
             withTransaction(t) { holdLaunchCream = false }
+            RedMedSignpost.coldMark("cream dropped")
         }
     }
 }
