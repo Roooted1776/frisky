@@ -8,9 +8,10 @@ import Security
 /// with **no** `kSecAttrAccessControl`. Readable whenever this device is
 /// unlocked. Excluded from iCloud Keychain and encrypted backups
 /// (`kSecAttrSynchronizable = false`). Face ID is **UI-only** on
-/// post-Agree, Edit / Save / Erase / Load From Band (`BiometricAuth`) —
-/// not a SecItem ACL. Keychain load does not prompt. Viewing the YOU
-/// card does not prompt. 911, Aid, NFC write, later app launch, and
+/// post-Agree / returning cold re-entry, Edit / Save / Erase / Load From
+/// Band (`BiometricAuth`) — not a SecItem ACL. Cold Keychain restore does
+/// not prompt (ConsentGate owns the launch sheet). Viewing the YOU card
+/// after that Face ID does not prompt again. 911, Aid, NFC write, and
 /// tapper do not prompt.
 ///
 /// **Legacy items:** `biometryCurrentSet` ACL (older builds) or plain
@@ -34,10 +35,11 @@ enum KeychainStore {
     }
 
     /// Attach parked LAContext so a leftover biometry ACL row can update/delete
-    /// without a second prompt after Edit / Save / Erase Face ID.
+    /// without a second prompt after Edit / Save / Erase / cold-open Face ID.
     private static func withAuthContext(_ query: inout [String: Any], extra: LAContext? = nil) {
         if let ctx = extra ?? BiometricAuth.peekAuthenticationContext() {
-            ctx.interactionNotAllowed = extra == nil
+            // Do not set interactionNotAllowed — the parked evaluate must be
+            // usable for SecItem on leftover biometryCurrentSet rows.
             query[kSecUseAuthenticationContext as String] = ctx
         }
     }
@@ -143,7 +145,11 @@ enum KeychainStore {
     ) -> Data? {
         let parked = context ?? BiometricAuth.peekAuthenticationContext()
         // (a) Non-interactive — WhenPasscodeSet / WhenUnlocked items, and some legacy.
+        // Parked post-Face-ID context can also read leftover biometry ACL rows.
         if let data = loadNonInteractive(account: account, service: service, context: parked) {
+            if parked != nil {
+                forceMigrateUnlocked(data, account: account, service: service, authContext: parked)
+            }
             return data
         }
         // (b) Legacy plain-accessibility query (no parked context).
@@ -161,13 +167,16 @@ enum KeychainStore {
             delete(account: stagingAccount(account), service: service)
             return data
         }
-        // (d) One interactive load for old biometryCurrentSet items, then migrate
-        // to the ACL-less WhenPasscodeSetThisDeviceOnly form.
+        // (d) Interactive load for old biometryCurrentSet items, then migrate
+        // to the ACL-less WhenPasscodeSetThisDeviceOnly form. Prefer calling
+        // this only when a parked post-Face-ID context is unavailable —
+        // ConsentGate cold re-entry Face ID + `reloadAfterOwnerFaceID` is the
+        // shipping path so returning opens do not stack a second SecItem sheet.
         if allowInteractive {
             let ctx = LAContext()
             ctx.localizedReason = "Restore your RedMed medical ID."
             if let data = loadInteractive(account: account, service: service, context: ctx) {
-                _ = migrateUnlocked(data, account: account, service: service, authContext: ctx)
+                forceMigrateUnlocked(data, account: account, service: service, authContext: ctx)
                 return data
             }
             if let data = loadInteractive(
@@ -175,12 +184,30 @@ enum KeychainStore {
                 service: service,
                 context: ctx
             ) {
-                _ = migrateUnlocked(data, account: account, service: service, authContext: ctx)
+                forceMigrateUnlocked(data, account: account, service: service, authContext: ctx)
                 delete(account: stagingAccount(account), service: service)
                 return data
             }
         }
         return nil
+    }
+
+    /// Migrate must stick — a soft `migrateUnlocked` miss left biometry ACL
+    /// on disk and Face ID'd every cold restore. Staging replace is the
+    /// reliable path after an authenticated read.
+    private static func forceMigrateUnlocked(
+        _ data: Data,
+        account: String,
+        service: String,
+        authContext: LAContext?
+    ) {
+        if migrateUnlocked(data, account: account, service: service, authContext: authContext) {
+            // Confirm the canonical row is now readable without interaction.
+            if loadNonInteractive(account: account, service: service, context: nil) != nil {
+                return
+            }
+        }
+        _ = replaceViaStaging(data, account: account, service: service, authContext: authContext)
     }
 
     private static func loadNonInteractive(
@@ -191,9 +218,15 @@ enum KeychainStore {
         var query = baseQuery(account: account, service: service)
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
-        let ctx = context ?? LAContext()
-        ctx.interactionNotAllowed = true
-        query[kSecUseAuthenticationContext as String] = ctx
+        if let context {
+            // Parked post-Face-ID context: keep interaction allowed so a
+            // leftover biometryCurrentSet row can read without a new sheet.
+            query[kSecUseAuthenticationContext as String] = context
+        } else {
+            let ctx = LAContext()
+            ctx.interactionNotAllowed = true
+            query[kSecUseAuthenticationContext as String] = ctx
+        }
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
         guard status == errSecSuccess else { return nil }

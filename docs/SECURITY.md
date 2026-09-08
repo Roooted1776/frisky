@@ -13,8 +13,9 @@ Engineer-facing threat model for RedMed. User-facing copy lives in
 - **Face ID is UI-only.** Profile Keychain is `WhenPasscodeSetThisDeviceOnly`
   with **no biometry ACL** (`KeychainStore` never sets `kSecAttrAccessControl`).
   Readable while this iPhone is unlocked; excluded from iCloud Keychain and
-  encrypted backups. Face ID / passcode gates post-Agree, Edit, Save, Erase,
-  and Load From Band — not viewing the YOU card, not Keychain `SecItem` itself.
+  encrypted backups. Face ID / passcode gates post-Agree, returning cold
+  re-entry (once per process), Edit, Save, Erase, and Load From Band — not
+  a second YOU-card view unlock, not Keychain `SecItem` itself.
   Do not re-bind blobs to `biometryCurrentSet`.
 - **Not HIPAA certified.** Local-only ≠ covered-entity / BA program. Help says
   this out loud; do not market otherwise.
@@ -32,9 +33,11 @@ Engineer-facing threat model for RedMed. User-facing copy lives in
 | Service | `com.redmed.app.profile` |
 
 **Contract:** blob is readable whenever this iPhone is unlocked. Face ID is
-**UI-only** (`BiometricAuth`) on post-Agree (once), Edit, Save, Erase, and Load
-From Band — not a SecItem ACL. Keychain `load` does not prompt. Viewing the YOU
-card does not prompt. 911 / Aid / NFC write / returning launch / tapper do not.
+**UI-only** (`BiometricAuth`) on post-Agree / returning cold re-entry, Edit,
+Save, Erase, and Load From Band — not a SecItem ACL. Cold Keychain `load`
+does not prompt (ConsentGate owns the launch sheet). After that Face ID,
+viewing the YOU card does not prompt again. 911 / Aid / NFC write /
+same-session resume / tapper do not.
 
 **Legacy:** old `biometryCurrentSet` rows still load. One interactive migrate
 (`allowInteractive: true` on owner `restoreOnLaunch`) rewrites to the unbound

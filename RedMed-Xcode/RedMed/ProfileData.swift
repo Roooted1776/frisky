@@ -358,9 +358,11 @@ class ProfileData: ObservableObject {
     }
 
     /// Owner Main appear — load the Keychain blob into RAM. Prefetch is the
-    /// common path (device-unlocked, no Face ID). `allowInteractive` is only
-    /// the one-shot migrate of an old `biometryCurrentSet` item. Scanner
-    /// sessions must not call this (owner Keychain).
+    /// common path (device-unlocked, no Face ID). Do **not** interactive-migrate
+    /// here: ConsentGate already Face IDs on cold re-entry; a SecItem prompt
+    /// would stack a second sheet and put Face ID on every boot until an old
+    /// biometry ACL migrates. Parked post-Face-ID context is applied via
+    /// `reloadAfterOwnerFaceID`. Scanner sessions must not call this.
     @MainActor
     func restoreOnLaunch() async {
         guard persists else { return }
@@ -393,10 +395,11 @@ class ProfileData: ObservableObject {
             }
         }
 
-        // Prefetch miss on an expected blob — one interactive migrate of a
-        // leftover biometry ACL row, then never again to view.
+        // Prefetch miss — non-interactive only (speed; no Face ID on restore).
+        // Leftover biometry ACL rows migrate after ConsentGate Face ID via
+        // `reloadAfterOwnerFaceID` using the parked LAContext.
         if expected {
-            let ok = await reloadFromKeychainAsync(allowInteractive: true)
+            let ok = await reloadFromKeychainAsync(allowInteractive: false)
             if ok {
                 Self.setStoredProfileGate(true)
                 isRestoringFromKeychain = false
@@ -405,6 +408,28 @@ class ProfileData: ObservableObject {
             Self.setStoredProfileGate(true)
         } else {
             Self.setStoredProfileGate(false)
+        }
+        isRestoringFromKeychain = false
+    }
+
+    /// After cold-open / post-Agree Face ID — retry Keychain with the parked
+    /// LAContext so a leftover `biometryCurrentSet` row migrates without a
+    /// second sheet. No-op when RAM already has the blob or Keychain is empty.
+    @MainActor
+    func reloadAfterOwnerFaceID() async {
+        guard persists else { return }
+        if hasSensitiveProfileData {
+            // Still try migrate in case RAM came from a prior in-process write
+            // but the on-disk row is legacy ACL — peek parked context in load.
+            _ = await reloadFromKeychainAsync(allowInteractive: false)
+            return
+        }
+        guard Self.prefersLockOnLaunch || Self.hasStoredProfile() else { return }
+        isRestoringFromKeychain = true
+        let ok = await reloadFromKeychainAsync(allowInteractive: false)
+        if ok {
+            Self.setStoredProfileGate(true)
+            RedMedSignpost.coldMark("reloadAfterOwnerFaceID applied")
         }
         isRestoringFromKeychain = false
     }
@@ -429,7 +454,8 @@ class ProfileData: ObservableObject {
     }
 
     /// Off-main Keychain + JSON decode, then apply on MainActor.
-    /// `allowInteractive` is for the one-time launch migrate only — not every save.
+    /// `allowInteractive` is retained for rare callers; cold restore uses
+    /// `false` so ConsentGate Face ID is the only launch sheet.
     @MainActor
     @discardableResult
     func reloadFromKeychainAsync(allowInteractive: Bool = false) async -> Bool {
@@ -440,6 +466,9 @@ class ProfileData: ObservableObject {
             // Interactive migrate may present Face ID — stay on main.
             let data = KeychainStore.load(account: account, allowInteractive: true)
             blob = Self.decodeBlob(data)
+        } else if BiometricAuth.peekAuthenticationContext() != nil {
+            // Parked context must be used on main — don't hop to detached.
+            blob = Self.decodeBlob(KeychainStore.load(account: account, allowInteractive: false))
         } else {
             blob = await Task.detached(priority: .userInitiated) {
                 Self.decodeBlob(KeychainStore.load(account: account, allowInteractive: false))

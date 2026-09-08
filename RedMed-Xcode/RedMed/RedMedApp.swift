@@ -75,15 +75,17 @@ private func handleIncomingBandURL(_ urlString: String, profile: ProfileData) {
 }
 
 /// First launch (or policy-version bump): Before you continue (Agree only),
-/// then Face ID once, then Main. Later cold starts skip consent and that
-/// post-Agree Face ID. No app-wide cream lock. Passerby tapper is not in
-/// this tree.
+/// then Face ID while Main warms, then Main interactive. Later cold starts
+/// skip Before You Continue but still Face ID once on cream over warm Main
+/// (Keychain restore / prefetch already racing underneath — no fixed sleep).
+/// Same-session resume does not re-prompt. No OwnerAppLock relock. Passerby
+/// tapper is not in this tree.
 private struct LaunchRoot: View {
     /// Returning opens: no SwiftUI cream veil — UILaunchScreen already matches
-    /// and ConsentGate goes straight to Main. First launch (or after Erase /
-    /// policy bump): flat cream for SplashBoard → Agree layout, dropped after
-    /// one yield. Page rose wash is deferred (~400ms) so it does not fight
-    /// that drop or a returning Keychain adopt.
+    /// and ConsentGate paints Face ID cream over armed Main. First launch
+    /// (or after Erase / policy bump): flat cream for SplashBoard → Agree
+    /// layout, dropped after one yield. Page rose wash is deferred (~400ms)
+    /// so it does not fight that drop or a returning Keychain adopt.
     @State private var holdLaunchCream = !ConsentSettings.hasAcceptedCurrent
 
     var body: some View {
@@ -101,9 +103,7 @@ private struct LaunchRoot: View {
             // Ends coldLaunchWindow at firstFrame (app.init → first paint).
             // Lag *before* app.init (no ColdLaunch lines) is install/attach.
             RedMedSignpost.coldLaunchFirstFrameOnce()
-            if !holdLaunchCream {
-                RedMedSignpost.coldLaunchMainReady("returning skip consent")
-            }
+            // Main-ready is ConsentGate after Face ID (returning and fresh).
         }
         .task {
             guard holdLaunchCream else { return }
