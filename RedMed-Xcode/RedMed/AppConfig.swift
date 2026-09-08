@@ -57,6 +57,11 @@ enum AppConfig {
             "Owner writes #d= on-chip — no vendor cloud, no social/short URL, no BLE."
         }
 
+        /// Phone Keychain and chip are two copies. Neither depends on the other.
+        static var storesIndependenceSummary: String {
+            "This iPhone keeps your ID in Keychain. The chip keeps its own copy. Phone off, wiped, or in another state does not blank the band."
+        }
+
         /// The band is the credential. Packing is not a secret lock.
         static var packingHonestySummary: String {
             "The band is the credential. #d= is packed so any phone can open it — not a secret lock on the chip."
@@ -198,6 +203,12 @@ enum AppConfig {
             "\(chipPart), \(carrierLabel), ISO 14443A Type 2, NDEF blank unlocked. No pre-encode, no lock. Not NTAG213, MIFARE, LF, or UHF."
         }
 
+        /// Hardware SKU: bracelet ships finished. Owner only programs NDEF.
+        /// Just the chip — no battery, no extra electronics.
+        static var completeBandSummary: String {
+            "Band comes complete. Just the chip is needed. No battery."
+        }
+
         static var laserFaceSummary: String {
             "Laser face: \(laserFace) only."
         }
@@ -240,7 +251,7 @@ enum AppConfig {
         static var noBluetoothSummary: String { carrierVsBluetoothSummary }
 
         static var hardwareParkedSummary: String {
-            "CoreNFC write is parked until a paid Apple Developer team can provision NFC Tag Reading. Share Band URL is the same #d= payload Write would program — Shortcuts or NFC Tools can put it on a blank NTAG216. Linked still requires a real CoreNFC write."
+            "CoreNFC write is parked until a paid Apple Developer team can provision NFC Tag Reading. Share Band URL is the same #d= payload Write would program onto the band's chip (Shortcuts or NFC Tools). The band comes complete — just the chip, no battery. Linked still requires a real CoreNFC write."
         }
     }
 

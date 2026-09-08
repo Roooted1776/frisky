@@ -342,6 +342,8 @@ private struct OwnerYouCard: View {
             youRow(label: "Pregnant", value: profile.isPregnant ? "Yes" : "")
             Divider().overlay(Color.redmedDivider)
             youRow(label: "Deaf / Vision Impaired", value: profile.isDeafOrVisionImpaired ? "Yes" : "")
+            Divider().overlay(Color.redmedDivider)
+            youRow(label: "Notes", value: profile.notes.trimmingCharacters(in: .whitespacesAndNewlines))
         }
         // flatten: false — compositingGroup kept the empty "—" paint after
         // Keychain restore (same reason Edit uses flatten: false).
@@ -359,6 +361,7 @@ private struct OwnerYouCard: View {
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(shown.isEmpty ? Color.redmedDark.opacity(0.4) : .redmedDark)
                 .multilineTextAlignment(.trailing)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, RedMedChrome.pagePadX)
         .padding(.vertical, 11)
@@ -635,9 +638,9 @@ private struct OwnerSetupFunnel: View {
                 .padding(.bottom, 2)
             stepRow(number: "1", title: "Fill Your Medical ID", detail: "Name, birth date, blood type. Allergies and contacts help EMS.")
             Divider().overlay(Color.redmedDivider).padding(.leading, 54)
-            stepRow(number: "2", title: "Save", detail: "Face ID writes it to this iPhone's Keychain. Nothing leaves the phone.")
+            stepRow(number: "2", title: "Save", detail: "Face ID writes it to this iPhone's Keychain. This device only — not iCloud, not a US-state account.")
             Divider().overlay(Color.redmedDivider).padding(.leading, 54)
-            stepRow(number: "3", title: AppConfig.nfcHardwareEnabled ? "Write The Band" : "Preview The Helper Card", detail: AppConfig.nfcHardwareEnabled ? "NFC tab packs the card onto the chip. Helpers tap. No app, no login." : "NFC tab packs the card for Preview. Live band write ships when NFC Tag Reading is on the App ID.")
+            stepRow(number: "3", title: AppConfig.nfcHardwareEnabled ? "Write The Band" : "Preview The Helper Card", detail: AppConfig.nfcHardwareEnabled ? "NFC tab writes the same ID onto the chip. \(AppConfig.BraceletRF.completeBandSummary) Helpers tap. No app, no login." : "NFC tab packs the same ID for Preview. Live band write ships when NFC Tag Reading is on the App ID. \(AppConfig.BraceletRF.completeBandSummary)")
         }
         .redmedBox()
     }

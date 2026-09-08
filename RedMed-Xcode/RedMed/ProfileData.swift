@@ -75,8 +75,8 @@ class ProfileData: ObservableObject {
         get { _lastUpdated }
         set { setField(&_lastUpdated, newValue) }
     }
-    /// Free-text notes. Capped at 150 words in the editor UI so the Keychain
-    /// blob (decoded on every unlock) stays small and fast to parse.
+    /// Free-text notes. Capped in Edit so Keychain and the chip hold the same
+    /// text (NTAG216 / `MAX_STR`). Shown on the YOU card and packed into `#d=`.
     var notes: String {
         get { _notes }
         set { setField(&_notes, newValue) }
@@ -264,9 +264,13 @@ class ProfileData: ObservableObject {
     }
 
     /// - Returns: `true` when the Keychain write succeeded.
+    /// This iPhone only — not iCloud, not another device, not US-state.
+    /// Linked chrome, NFC parked, and scenePhase do not gate the blob.
     /// Never writes an empty RAM profile (empty-funnel Save with no fields,
     /// or blank-all over a stored blob). First-install Save of a newly
     /// filled ID is fine. Explicit erase deletes Keychain first.
+    /// The band is a separate copy (`#d=` on the chip) — persist() does not
+    /// write NFC; owner Write / Share Band URL does.
     @discardableResult
     func persist() -> Bool {
         guard persists else { return false }
@@ -488,7 +492,7 @@ class ProfileData: ObservableObject {
         }
     }
 
-    /// Durable medical fields match this chip (ignore `updated` / notes).
+    /// Durable medical fields match this chip (ignore `updated`).
     func matchesBand(_ chip: NFCChipProfile) -> Bool {
         let live = ProfileNFCCodec.chipProfile(from: self)
         guard live.contacts.count == chip.contacts.count else { return false }
@@ -504,6 +508,7 @@ class ProfileData: ObservableObject {
             && live.allergies == chip.allergies
             && live.meds == chip.meds
             && live.conditions == chip.conditions
+            && live.notes == chip.notes
             && contactsMatch
     }
 
@@ -524,11 +529,12 @@ class ProfileData: ObservableObject {
         if !chip.updated.isEmpty {
             lastUpdated = chip.updated
         }
+        notes = chip.notes
     }
 
     /// Owner-only: replace RAM + Keychain with a band `#d=` snapshot.
-    /// Notes are not on the chip — cleared so leftover PHI from a previous ID
-    /// cannot mix. Marks Linked when hardware is on (this read *is* the band).
+    /// Notes ride the chip (empty on old bands). Marks Linked when hardware
+    /// is on (this read *is* the band).
     /// Scanners / `persists == false` snapshots must not call this.
     @discardableResult
     func adoptBandSnapshot(_ chip: NFCChipProfile) -> Bool {
@@ -537,7 +543,6 @@ class ProfileData: ObservableObject {
         let previous = snapshot()
         withBulkUpdate {
             applyChipFields(chip)
-            notes = ""
             if AppConfig.nfcHardwareEnabled {
                 braceletLinked = true
             }

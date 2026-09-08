@@ -16,6 +16,9 @@ struct NFCChipProfile: Codable, Equatable, Sendable {
     var conditions: [String] = []
     var contacts: [NFCChipContact] = []
     var updated: String = ""
+    /// Free-text note. Same cap as other strings (`maxStr`). On-chip so the
+    /// band matches this iPhone — not Keychain-only.
+    var notes: String = ""
 
     /// Anything persist() would treat as a real ID. Empty `#d=` must not clobber Keychain.
     var hasAnyProfileData: Bool {
@@ -29,6 +32,7 @@ struct NFCChipProfile: Codable, Equatable, Sendable {
             || !meds.isEmpty
             || !conditions.isEmpty
             || contacts.contains { !$0.name.isEmpty || !$0.phone.isEmpty }
+            || !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }
 
@@ -42,10 +46,10 @@ struct NFCChipContact: Codable, Equatable, Sendable {
 ///
 /// Wire format (new writes):
 /// 1. Profile → flat positional array (no JSON keys):
-///    `[blood, allergies, meds, emergencyPhone, name, dob, conditions, contacts, donor, updated?, pregnant?, deafOrVisionImpaired?]`
+///    `[blood, allergies, meds, emergencyPhone, name, dob, conditions, contacts, donor, updated?, pregnant?, deafOrVisionImpaired?, notes?]`
 ///    Indices 0–3 match the product compact schema; 4+ keep the full card usable.
-///    `pregnant`/`deafOrVisionImpaired` only appear when either is true (see `compactArray`),
-///    so older readers that stop at `updated` are unaffected.
+///    Trailing `pregnant`/`deaf`/`notes` only appear when the wire needs them
+///    (see `compactArray`), so older readers that stop at `updated` are unaffected.
 ///    List fields are comma-joined strings; contacts are `[name, rel, phone]` rows.
 /// 2. UTF-8 JSON array (no spaces) sealed with AES-GCM (CryptoKit).
 /// 3. Bytes `0x02 || nonce(12) || ciphertext+tag` → base64url after `#d=`.
@@ -87,6 +91,7 @@ enum ProfileNFCCodec {
         static let updated = 9
         static let pregnant = 10
         static let deafOrVisionImpaired = 11
+        static let notes = 12
     }
 
     /// Pre-AES compact array: `[name, dob, blood, donor, allergies, meds, conditions, contacts, updated?]`
@@ -123,7 +128,8 @@ enum ProfileNFCCodec {
                     phone: contact.dialDigits.isEmpty ? contact.phone : contact.dialDigits
                 )
             },
-            updated: profile.lastUpdated
+            updated: profile.lastUpdated,
+            notes: String(profile.notes.trimmingCharacters(in: .whitespacesAndNewlines).prefix(200))
         )
     }
 
@@ -224,7 +230,8 @@ enum ProfileNFCCodec {
             "allergies": chip.allergies,
             "meds": chip.meds,
             "conditions": chip.conditions,
-            "contacts": contacts
+            "contacts": contacts,
+            "notes": chip.notes
         ]
         guard JSONSerialization.isValidJSONObject(obj),
               let data = try? JSONSerialization.data(withJSONObject: obj, options: []),
@@ -352,10 +359,14 @@ enum ProfileNFCCodec {
         }
         // Trailing optional flags — only appended when the wire needs them, so
         // legacy readers that stop at `updated` (index 9) are unaffected.
-        if chip.pregnant || chip.deafOrVisionImpaired {
+        // `notes` sits at 12; pad pregnant/deaf when notes is present so a
+        // note string cannot land on the flag slots.
+        let notes = clipStr(chip.notes.trimmingCharacters(in: .whitespacesAndNewlines))
+        if chip.pregnant || chip.deafOrVisionImpaired || !notes.isEmpty {
             if chip.updated.isEmpty { row.append("") }
             row.append(chip.pregnant ? 1 : 0)
             row.append(chip.deafOrVisionImpaired ? 1 : 0)
+            if !notes.isEmpty { row.append(notes) }
         }
         return row
     }
@@ -484,7 +495,8 @@ enum ProfileNFCCodec {
             meds: list(Idx.meds),
             conditions: list(Idx.conditions),
             contacts: contacts(Idx.contacts),
-            updated: str(Idx.updated)
+            updated: str(Idx.updated),
+            notes: str(Idx.notes)
         )
         // Reject lone "0"/"1" so a misclassified legacy donor never becomes tel:1.
         let emergency = usableEmergencyPhone(str(Idx.emergencyPhone))
@@ -595,7 +607,8 @@ enum ProfileNFCCodec {
             meds: list("meds"),
             conditions: list("conditions"),
             contacts: contactRows,
-            updated: str("updated")
+            updated: str("updated"),
+            notes: str("notes")
         )
     }
 

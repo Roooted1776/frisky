@@ -77,7 +77,7 @@ final class NFCBandManager: ObservableObject {
     func writeBand(from profile: ProfileData, isScannerSession: Bool) {
         guard !isScannerSession else { return }
         guard !isBusy else { return }
-        guard profile.hasData else { return }
+        guard profile.hasSensitiveProfileData else { return }
 
         let chip = ProfileNFCCodec.chipProfile(from: profile)
         guard let urlString = ProfileNFCCodec.buildURLString(chip: chip),

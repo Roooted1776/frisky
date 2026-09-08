@@ -67,7 +67,7 @@ private func handleIncomingBandURL(_ urlString: String, profile: ProfileData) {
     guard let chip = ProfileNFCCodec.decodeProfile(fromURLString: urlString) else {
         return
     }
-    guard profile.hasData, !profile.matchesBand(chip) else { return }
+    guard profile.hasSensitiveProfileData, !profile.matchesBand(chip) else { return }
     NotificationCenter.default.post(
         name: .redMedOpenBandURL,
         object: urlString

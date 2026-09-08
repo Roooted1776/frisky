@@ -55,6 +55,7 @@ parked, the listing is parked, or the band host 404s.
 
 - Self-reported medical ID
 - Passive NFC (no battery, not Bluetooth)
+- Band comes complete — just the chip, no battery
 - Any phone can tap
 - Data stays on the chip and the iPhone
 - Not a substitute for calling emergency services
