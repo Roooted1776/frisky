@@ -7,8 +7,7 @@ struct RedMedApp: App {
     init() {
         // Marks process start after dyld / debugger attach.
         // Cream with no ColdLaunch lines yet = Xcode install + LLDB, not SwiftUI.
-        RedMedSignpost.coldMark("app.init")
-        RedMedSignpost.begin(.coldLaunchWindow)
+        RedMedSignpost.coldLaunchMark("app.init")
     }
 
     var body: some Scene {
@@ -26,6 +25,9 @@ struct RedMedApp: App {
                 // Haptics prepare after YOU paints (ContentView) — not here.
                 SnapshotSafeCover.activate()
                 profile.beginLaunchPrefetch()
+                if ConsentSettings.hasAcceptedCurrent {
+                    RedMedSignpost.coldLaunchMainReady("returning skip")
+                }
             }
             .onOpenURL { url in
                 let scheme = (url.scheme ?? "").lowercased()
