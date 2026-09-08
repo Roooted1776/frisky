@@ -16,13 +16,13 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 
 | Area | Status |
 |------|--------|
-| Owner Face ID gate | Post-Agree once (first launch / policy bump / after Erase), then Edit / Save / Erase / Load From Band (`force: true`). **Not** viewing the YOU card. No cream lock in front of Main — 911 / Aid / NFC stay reachable. No YOU-view relock on `.background`. No Face ID toggle on Before you continue (Haptic + Location only). Profile restores on Main appear (device-unlocked Keychain) without Face ID to view |
+| Owner Face ID gate | Post-Agree once (first launch / policy bump / after Erase), then Edit / Save / Erase / Load From Band (`force: true`). **Not** viewing the YOU card. No cream lock in front of Main — 911 / Aid / NFC stay reachable. No YOU-view relock on `.background`. No Face ID toggle on Before you continue (Haptic only). Profile restores on Main appear (device-unlocked Keychain) without Face ID to view |
 | Clear vs Erase | Edit has field-level Clear only (blood type / birth date) — no Clear-all. Partial clear + Save can persist; blank-all + Save refuses empty (alert: Use Erase to Wipe when stored, else fill-first; no Face ID). Full wipe is Help → **Erase All User Data** (Face ID). Band is not wiped remotely |
 | Empty-funnel Save | Fresh / Erase empty funnel: Fill → Edit (Face ID) → Save (Face ID `force: true`) → `persist()`. Empty draft Save refused (no blank Keychain / no gate flip). Blank-over-stored same refuse; Erase is the wipe path |
 | Load From Band | Code PASS; UI parked with CoreNFC. Path: read → empty alert / match→link / mismatch+existing→Replace / empty funnel→adopt. Face ID before `authenticateAndLinkMatchingBand` and `authenticateAndAdopt` → `adoptBandSnapshot`. Write ungated. See `docs/NFC-RESTORE.md` |
 | Crash motion | Starts after owner Main paints. Stops CoreMotion on `.background`. Restarts on `.active`. Does not stop on `.inactive` (Face ID on post-Agree / Edit / Save / Erase / Load From Band). Armed siren is independent. Scanner / tapper never start it. |
 | Keychain profile | `WhenPasscodeSetThisDeviceOnly`, **no** biometry ACL (`kSecAttrAccessControl` never set). Face ID is UI-only (`BiometricAuth`), not SecItem. Save fail-closed; never synchronizable. Legacy `biometryCurrentSet` rows migrate once on load — never write a new bound item |
-| Location toggle | Honored on Agree. Agree does not present When-In-Use. System sheet + GPS start/stop are Find Help only |
+| Location | On as part of Agree (no in-app toggle). When-In-Use after post-Agree Face ID. GPS start/stop are Find Help only. Off switch is iOS Settings |
 | Owner tabs | RedMed · 911 · Aid · NFC; scanners never see NFC |
 | NFC Preview + Scan | Preview uses `fullScreenCover(item:)` after pack — no empty-cover race. CoreNFC is parked (`nfcHardwareEnabled = false`); Write is pack-only + Share Band URL; Load From Band button hidden. Linked needs restored hardware (`docs/NFC-RESTORE.md`) |
 | Passerby shell | One file `tapper/index.html`; Xcode copies it to the app bundle as `tapper.html` at build; repo-root `tapper.html` redirects to `/tapper/` |
@@ -32,7 +32,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | Hospital search | Native: MapKit / Apple Maps. Passerby: OpenStreetMap Overpass (`overpass-api.de`). Disclosed in Help 4.3 |
 | ATS | Arbitrary loads + local networking **false** |
 | Snapshot / pasteboard | Privacy cover + secure pasteboard clear on background |
-| Consent | `ConsentGateView` on first launch or policy bump (**4.8**); Agree + checkbox only on that page (no Face ID there); Face ID runs **once after Agree**, then Main; stored version skips consent **and** that post-Agree Face ID on later cold starts; never on tapper |
+| Consent | `ConsentGateView` on first launch or policy bump (**4.10**); Agree + checkbox only on that page (no Face ID there); Face ID runs **once after Agree**, then When-In-Use once, then Main; stored version skips consent **and** that post-Agree Face ID on later cold starts; never on tapper |
 | Apple Health import | Parked (`healthKitImportEnabled = false`) |
 | iOS CI | `workflow_dispatch` only (billing). Does not gate merges |
 | `#d=` codec | `node scripts/test-d-codec.mjs` — AES / zlib / compact / URI lockstep |

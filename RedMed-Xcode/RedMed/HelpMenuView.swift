@@ -345,8 +345,7 @@ struct HelpMenuView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.isScannerSession) private var isScannerSession
     @EnvironmentObject private var profile: ProfileData
-    /// Settings (Haptic feedback / Location) moved to `ConsentGateView` — read
-    /// here only to gate the location-suggester refresh below.
+    /// Settings (Haptic feedback) lives on `ConsentGateView`. Location is on as part of Agree.
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
     var onOpenNFC: (() -> Void)? = nil
@@ -365,7 +364,7 @@ struct HelpMenuView: View {
     }
 
     /// Owner-only: Erase, Write to NFC. Scanner Help is policies only.
-    /// Settings (Haptic feedback / Location) lives on `ConsentGateView` now.
+    /// Settings (Haptic feedback) lives on `ConsentGateView` now. Location is on as part of Agree.
     private var showsOwnerTools: Bool { !isScannerSession }
 
     private var firstHelpSection: String {
@@ -449,7 +448,7 @@ struct HelpMenuView: View {
                                 .disabled(isErasing)
                                 .accessibilityLabel("Erase All User Data")
                             }
-                            Text("Deletes the profile from this iPhone’s Keychain. Haptic and Location prefs stay. The physical band is not wiped remotely — rewrite or discard it.")
+                            Text("Deletes the profile from this iPhone’s Keychain. Haptic prefs stay. The physical band is not wiped remotely — rewrite or discard it.")
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundColor(.redmedMuted)
                                 .padding(.horizontal, 4)

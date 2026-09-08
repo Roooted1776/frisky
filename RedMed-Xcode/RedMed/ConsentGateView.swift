@@ -3,15 +3,16 @@ import UIKit
 
 /// Legal consent. First launch (or after a material policy version bump)
 /// only — stored version skips the page on later cold starts. Agree +
-/// checkbox only; no Face ID on Before You Continue. Face ID runs once
-/// immediately after Agree (cream wait / Retry until success) while Main
-/// warms underneath, then Main.
+/// checkbox only; no Face ID on Before You Continue. Agree covers location
+/// and motion while the app is open. Face ID runs once immediately after
+/// Agree (cream wait / Retry until success) while Main warms underneath,
+/// then iOS When-In-Use once, then Main.
 /// Returning opens skip both. Edit / Save / Erase /
 /// Load From Band still Face ID. Never an app-wide cream lock. Never on
 /// passerby tapper.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
-    static let currentVersion = "4.9"
+    static let currentVersion = "4.10"
 
     static var hasAcceptedCurrent: Bool {
         UserDefaults.standard.string(forKey: acceptedVersionKey) == currentVersion
@@ -155,6 +156,7 @@ struct ConsentGateView<Content: View>: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("RedMed is a personal medical ID and first-aid reference on this iPhone. It is not a medical device, does not diagnose or treat, and does not replace emergency dispatch. Always call emergency services first in a real emergency.")
                         Text("Your profile stays on this iPhone, and on a band if you write one — RedMed runs no server for it.")
+                        Text("Agree covers location and motion while RedMed is open — Find Help GPS and crash detection. GPS stops when you leave or close the app. Never sent to us. iOS may ask Allow once after Face ID so 911 is not blocked later.")
                     }
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.redmedMuted)
@@ -167,15 +169,6 @@ struct ConsentGateView<Content: View>: View {
                             .tint(.redmedAccent)
                             .padding(.horizontal, RedMedChrome.pagePadX)
                             .padding(.vertical, RedMedChrome.rowVPad)
-                        Divider().overlay(Color.redmedDivider).padding(.leading, RedMedChrome.pagePadX)
-                        Toggle("Location", isOn: $locationEnabled)
-                            .font(.system(size: RedMedChrome.rowFont, weight: .medium))
-                            .tint(.redmedAccent)
-                            .padding(.horizontal, RedMedChrome.pagePadX)
-                            .padding(.vertical, RedMedChrome.rowVPad)
-                            .onChange(of: locationEnabled) { _, on in
-                                if on { LocationAccessSuggester.shared.refresh() }
-                            }
                     }
                     .redmedBox(flatten: false)
 
@@ -202,7 +195,7 @@ struct ConsentGateView<Content: View>: View {
                         Image(systemName: checked ? "checkmark.square.fill" : "square")
                             .font(.system(size: 22))
                             .foregroundColor(checked ? .redmedAccent : .redmedMuted)
-                        Text("I have read and agree to the RedMed Terms, Privacy, Security, Medical Disclaimer, and Ships When Ready pages, including the medical-device disclaimer, liability limits, and binding arbitration / class-action waiver in Terms.")
+                        Text("I have read and agree to the RedMed Terms, Privacy, Security, Medical Disclaimer, and Ships When Ready pages, including the medical-device disclaimer, liability limits, and binding arbitration / class-action waiver in Terms. Agree includes using location and motion on this iPhone while RedMed is open.")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.redmedDark)
                             .fixedSize(horizontal: false, vertical: true)
@@ -233,6 +226,7 @@ struct ConsentGateView<Content: View>: View {
     /// Record acceptance on Agree, dismiss ack UI, then Face ID before Main.
     private func enterApp() {
         checked = true
+        locationEnabled = true
         ConsentSettings.recordAcceptance()
         RedMedHaptics.success()
         SnapshotSafeCover.shared.reveal()
@@ -252,10 +246,11 @@ struct ConsentGateView<Content: View>: View {
             contentArmed = true
             awaitingPostAgreeFaceID = true
         }
-        // Honor the Location toggle. Do not fire iOS When-In-Use here —
-        // they just agreed. Find Help / hospitals request when GPS starts.
-        // Do not spawn a spare WKWebView on this turn — that raced the
-        // owner RedMed embed and made tabs feel laggy after Agree.
+        // Location is on as part of Agree. Do not fire iOS When-In-Use
+        // here — it would stack with Face ID. After Face ID, request
+        // When-In-Use so 911 is not blocked later. GPS still starts on
+        // Find Help. Do not spawn a spare WKWebView on this turn — that
+        // raced the owner RedMed embed and made tabs feel laggy after Agree.
         // NFCView warms the preview shell after that tab is first opened.
         tryPromptPostAgreeFaceID()
     }
@@ -269,6 +264,10 @@ struct ConsentGateView<Content: View>: View {
             awaitingPostAgreeFaceID = false
             contentArmed = true
             hasAccepted = true
+        }
+        Task { @MainActor in
+            await Task.yield()
+            LocationAccessSuggester.shared.requestWhenInUseIfNeeded()
         }
     }
 

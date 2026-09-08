@@ -56,35 +56,49 @@ struct EmergencyView: View {
 private struct FindHelpLocationBlock: View {
     var isVisible: Bool = true
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
+    @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
     @StateObject private var locationManager = LocationManager()
     @State private var copied = false
     @State private var copyReset: Task<Void, Never>?
 
+    private var gpsBlocked: Bool {
+        !locationEnabled || locationSuggester.mustOpenSettings
+    }
+
     private var copyTitle: String {
+        if locationSuggester.mustOpenSettings {
+            return "Location Denied — Open Settings"
+        }
         if !locationEnabled {
-            return "Location Off — Enable It On Before You Continue Or In Settings"
+            return "Location Off — Allow It In iOS Settings"
         }
         return copied ? "Copied" : "Copy Coordinates"
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            CompactFillButton(title: "Refresh", disabled: !locationEnabled) {
-                guard locationEnabled else { return }
+            CompactFillButton(title: "Refresh", disabled: gpsBlocked) {
+                guard !gpsBlocked else { return }
                 RedMedHaptics.light()
                 locationManager.refresh()
             }
             CompactFillButton(
                 title: copyTitle,
-                disabled: !locationEnabled || !locationManager.hasUsableFix
+                disabled: locationSuggester.mustOpenSettings ? false : (gpsBlocked || !locationManager.hasUsableFix)
             ) {
+                if locationSuggester.mustOpenSettings {
+                    locationSuggester.openSettings()
+                    return
+                }
                 copyCoordinates()
             }
             .padding(.top, 7)
-            .accessibilityHint("Copies the live GPS coordinates to the clipboard.")
+            .accessibilityHint(locationSuggester.mustOpenSettings
+                ? "Opens iOS Settings so you can allow Location."
+                : "Copies the live GPS coordinates to the clipboard.")
             GPSCard(
-                location: locationEnabled ? locationManager.location : nil,
-                locationEnabled: locationEnabled
+                location: gpsBlocked ? nil : locationManager.location,
+                locationEnabled: !gpsBlocked
             )
             .padding(.top, 10)
         }
@@ -97,11 +111,16 @@ private struct FindHelpLocationBlock: View {
             // Let 911 paint first — startUpdatingLocation hitch on the tap turn.
             try? await Task.sleep(nanoseconds: 80_000_000)
             guard !Task.isCancelled, isVisible else { return }
-            if locationEnabled { locationManager.start() }
+            locationSuggester.refresh()
+            if locationEnabled, !locationSuggester.mustOpenSettings { locationManager.start() }
         }
         .onChange(of: locationEnabled) { _, on in
             guard isVisible else { return }
-            if on { locationManager.start() } else { locationManager.stop() }
+            if on, !locationSuggester.mustOpenSettings { locationManager.start() } else { locationManager.stop() }
+        }
+        .onChange(of: locationSuggester.mustOpenSettings) { _, denied in
+            guard isVisible else { return }
+            if denied { locationManager.stop() } else if locationEnabled { locationManager.start() }
         }
         .onDisappear {
             locationManager.stop()
@@ -309,7 +328,7 @@ private final class SeizureTimerEngine {
 
 struct GPSCard: View {
     let location: CLLocation?
-    /// Mirrors the Find Help Location toggle — badge must not say LIVE when off.
+    /// Mirrors the in-app location flag — badge must not say LIVE when off.
     var locationEnabled: Bool = true
     /// Six decimals (~11 cm). Same string the card shows and Copy Coordinates writes.
     static func coordinateText(_ location: CLLocation) -> String {
