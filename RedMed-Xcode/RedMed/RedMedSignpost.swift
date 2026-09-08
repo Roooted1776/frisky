@@ -3,10 +3,9 @@ import os
 
 /// Diagnostic-only `os_signpost` + cold-launch breadcrumbs.
 /// Face ID: `faceIDEvaluate` spans `LAContext.evaluatePolicy`.
-/// Cold launch: `coldMark` / `coldLaunchWindow` — Console.app filter
-/// subsystem `com.redmed.app`, category `ColdLaunch`. Times are ms since
-/// process start (first Swift mark). Cream sitting with **no** ColdLaunch
-/// lines yet is still Xcode install / debugger attach — not app code.
+/// Cold launch: Console.app → subsystem `com.redmed.app`, category `ColdLaunch`.
+/// Times are ms since first Swift mark (`app.init`). Cream with **no**
+/// ColdLaunch lines yet = Xcode install / debugger attach, not app code.
 enum RedMedSignpost {
     enum Interval {
         case coldLaunchWindow
@@ -24,20 +23,19 @@ enum RedMedSignpost {
     private static let lock = NSLock()
     private static var states: [String: OSSignpostIntervalState] = [:]
 
-    /// Persistent breadcrumb for Face ID evaluate — `os_log` in Console.app
-    /// (filter subsystem "com.redmed.app"). Cheap enough to leave in.
+    /// Face ID evaluate breadcrumbs — filter subsystem `com.redmed.app`.
     private static let log = os.Logger(subsystem: "com.redmed.app", category: "AppLock")
-
     private static let coldLog = os.Logger(subsystem: "com.redmed.app", category: "ColdLaunch")
-    /// Process-relative clock for cold marks. Set on first `coldMark` / `begin(.coldLaunchWindow)`.
+
     private static let t0Lock = NSLock()
     private static var t0: CFAbsoluteTime?
+    private static var didMarkFirstFrame = false
 
     static func trace(_ message: String) {
         log.notice("\(message, privacy: .public)")
     }
 
-    /// `+NNN.Nms event` since first cold mark. No-op cost: one os_log.
+    /// `+NNN.Nms event` since first cold mark.
     static func coldMark(_ event: String) {
         let now = CFAbsoluteTimeGetCurrent()
         t0Lock.lock()
@@ -48,11 +46,34 @@ enum RedMedSignpost {
         coldLog.notice("+\(ms, format: .fixed(precision: 1))ms \(event, privacy: .public)")
     }
 
-    /// No-ops if already begun — callers don't need to track their own state.
+    /// First SwiftUI frame after SplashBoard. Call once from LaunchRoot.
+    /// Ends `coldLaunchWindow` (app.init → firstFrame).
+    static func coldLaunchFirstFrameOnce() {
+        t0Lock.lock()
+        let already = didMarkFirstFrame
+        if !already { didMarkFirstFrame = true }
+        t0Lock.unlock()
+        guard !already else { return }
+        let accepted = ConsentSettings.hasAcceptedCurrent
+        coldMark(
+            accepted
+                ? "firstFrame consent=\(ConsentSettings.currentVersion) → Main"
+                : "firstFrame consent pending (\(ConsentSettings.currentVersion)) → Before You Continue"
+        )
+        end(.coldLaunchWindow)
+    }
+
+    /// Main interactive (returning skip, or post-Agree Face ID success).
+    static func coldLaunchMainReady(_ reason: String) {
+        coldMark("mainReady \(reason)")
+    }
+
+    /// Alias kept for call sites that still use the older name.
+    static func coldLaunchMark(_ event: String) {
+        coldMark(event)
+    }
+
     static func begin(_ interval: Interval) {
-        if interval == .coldLaunchWindow {
-            coldMark("begin coldLaunchWindow")
-        }
         lock.lock()
         defer { lock.unlock() }
         let key = "\(interval)"
@@ -60,11 +81,7 @@ enum RedMedSignpost {
         states[key] = signposter.beginInterval(interval.name)
     }
 
-    /// No-ops if never begun (or already ended).
     static func end(_ interval: Interval) {
-        if interval == .coldLaunchWindow {
-            coldMark("end coldLaunchWindow")
-        }
         lock.lock()
         let key = "\(interval)"
         let state = states.removeValue(forKey: key)

@@ -265,9 +265,11 @@ struct ConsentGateView<Content: View>: View {
             contentArmed = true
             hasAccepted = true
         }
+        RedMedSignpost.coldLaunchMainReady("post-Agree Face ID")
         Task { @MainActor in
             await Task.yield()
             LocationAccessSuggester.shared.requestWhenInUseIfNeeded()
+            RedMedSignpost.coldMark("When-In-Use requested (if needed)")
         }
     }
 
@@ -288,6 +290,7 @@ struct ConsentGateView<Content: View>: View {
         notInteractive = false
         unavailableReason = nil
         showRetry = false
+        RedMedSignpost.coldMark("post-Agree Face ID evaluate start")
         BiometricAuth.authenticate(
             reason: "Confirm with Face ID, Touch ID, or passcode to open RedMed.",
             force: true,
@@ -295,6 +298,7 @@ struct ConsentGateView<Content: View>: View {
         ) { outcome in
             Task { @MainActor in
                 isAuthenticating = false
+                RedMedSignpost.coldMark("post-Agree Face ID → \(outcome)")
                 switch outcome {
                 case .success:
                     armMainAfterFaceID()

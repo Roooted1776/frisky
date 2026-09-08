@@ -86,7 +86,9 @@ struct ContentView: View {
             await Task.yield()
             guard !Task.isCancelled else { return }
             RedMedHaptics.prepare()
+            RedMedSignpost.coldMark("restoreOnLaunch start")
             await profile.restoreOnLaunch()
+            RedMedSignpost.coldMark("restoreOnLaunch done")
             guard !Task.isCancelled else { return }
             // Start CoreMotion only after Keychain adopt so restore and
             // 50 Hz motion do not overlap the first interactive seconds.

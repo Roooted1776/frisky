@@ -96,8 +96,12 @@ private struct LaunchRoot: View {
             }
         }
         .onAppear {
-            RedMedSignpost.coldMark("firstFrame")
-            RedMedSignpost.end(.coldLaunchWindow)
+            // Ends coldLaunchWindow — time from app.init → first frame.
+            // Lag *before* app.init (no ColdLaunch lines) is install/attach.
+            RedMedSignpost.coldLaunchFirstFrameOnce()
+            if !holdLaunchCream {
+                RedMedSignpost.coldLaunchMainReady("returning skip consent")
+            }
         }
         .task {
             guard holdLaunchCream else { return }
@@ -105,6 +109,7 @@ private struct LaunchRoot: View {
             var t = Transaction()
             t.animation = nil
             withTransaction(t) { holdLaunchCream = false }
+            RedMedSignpost.coldMark("cream dropped")
         }
     }
 }
