@@ -19,8 +19,8 @@ import Security
 /// Never write a new `biometryCurrentSet` item.
 ///
 /// `load` / `save` may still attach `BiometricAuth.peekAuthenticationContext()`
-/// so a just-completed view/Edit/Save Face ID can update or replace an old
-/// biometry row without a second sheet.
+/// so a just-completed Edit / Save / Erase Face ID can update or replace an
+/// old biometry row without a second sheet. Never write a new ACL.
 enum KeychainStore {
     private static let defaultService = "com.redmed.app.profile"
 
@@ -34,7 +34,7 @@ enum KeychainStore {
     }
 
     /// Attach parked LAContext so a leftover biometry ACL row can update/delete
-    /// without a second prompt after view/Edit/Save Face ID.
+    /// without a second prompt after Edit / Save / Erase Face ID.
     private static func withAuthContext(_ query: inout [String: Any], extra: LAContext? = nil) {
         if let ctx = extra ?? BiometricAuth.peekAuthenticationContext() {
             ctx.interactionNotAllowed = extra == nil
