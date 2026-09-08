@@ -10,6 +10,12 @@ Engineer-facing threat model for RedMed. User-facing copy lives in
   the passerby card. Do not put secrets you would not show a first responder.
 - **No RedMed profile cloud.** Owner PHI is Keychain + RAM; band PHI is the
   `#d=` fragment only. Passerby shell is static HTML + SW.
+- **Face ID is UI-only.** Profile Keychain is `WhenPasscodeSetThisDeviceOnly`
+  with **no biometry ACL** (`KeychainStore` never sets `kSecAttrAccessControl`).
+  Readable while this iPhone is unlocked; excluded from iCloud Keychain and
+  encrypted backups. Face ID / passcode gates post-Agree, Edit, Save, Erase,
+  and Load From Band — not viewing the YOU card, not Keychain `SecItem` itself.
+  Do not re-bind blobs to `biometryCurrentSet`.
 - **Not HIPAA certified.** Local-only ≠ covered-entity / BA program. Help says
   this out loud; do not market otherwise.
 - **AES on the chip is packing, not a vault.** Public client key so EMS decrypts

@@ -13,9 +13,11 @@ import UIKit
 /// and does not Face ID when a stored blob would be refused.
 /// There is no process-wide skip flag.
 ///
-/// On success the `LAContext` is **parked** (not invalidated) so
-/// `KeychainStore.load(context:)` can use `kSecUseAuthenticationContext`
-/// without a second Face ID sheet. Background / consume clears the park.
+/// On success the `LAContext` is **parked** (not invalidated) so a leftover
+/// `biometryCurrentSet` Keychain row can migrate via
+/// `kSecUseAuthenticationContext` without a second Face ID sheet. New saves
+/// stay unbound (`WhenPasscodeSetThisDeviceOnly`, no ACL). Background /
+/// consume clears the park.
 enum BiometricAuth {
     enum Outcome: Equatable {
         case success
