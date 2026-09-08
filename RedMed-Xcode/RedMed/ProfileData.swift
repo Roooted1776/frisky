@@ -96,6 +96,10 @@ class ProfileData: ObservableObject {
     /// `RedMedApp.task` after the first SwiftUI frame. YOU card paints from
     /// RAM after restore — no Face ID to view.
     private var launchPrefetchTask: Task<PersistedProfile?, Never>?
+    /// One MainActor adopt waiter — init and beginLaunchPrefetch must not
+    /// schedule two (race while the first has cleared `launchPrefetchTask`
+    /// but not yet set `didAttemptLaunchRestore`).
+    private var didScheduleLaunchAdopt = false
 
     private func setField<T: Equatable>(_ storage: inout T, _ newValue: T) {
         guard storage != newValue else { return }
@@ -154,26 +158,40 @@ class ProfileData: ObservableObject {
         // UserDefaults gate only on the main thread — never SecItem / LAContext
         // / exists() here (that contended with Face ID and blocked first frame).
         // Detached Keychain+JSON starts immediately so SplashBoard overlaps
-        // decode; ContentView adopts ASAP in `.task` (no pre-restore yield).
+        // decode; MainActor adopt starts in the same breath so a finished
+        // blob can land in RAM before the first YOU body (ContentView.task
+        // is then a no-op).
         if persisting && Self.prefersLockOnLaunch {
             self.isRestoringFromKeychain = true
             startLaunchPrefetchTask()
+            scheduleLaunchAdopt()
         }
     }
 
     /// Non-interactive Keychain read + JSON decode. Idempotent. Does not touch
-    /// `@Published` fields until `restoreOnLaunch` adopts the result.
-    /// Prefer `init` (gate-on path). `RedMedApp.task` may call this as a
-    /// safety net if init skipped. ContentView adopts ASAP (no fixed yield).
+    /// `@Published` fields until adopt / restore applies the result.
+    /// Prefer `init` (gate-on path starts prefetch + MainActor adopt).
+    /// `RedMedApp.task` may call this as a safety net. ContentView restore
+    /// is a no-op when adopt already won the race.
     /// Prefetch uses `.userInitiated` so the blob lands before YOU paints empty.
     /// UserDefaults gate only — no SecItem exists() on the caller.
     func beginLaunchPrefetch() {
         guard persists else { return }
         guard !didAttemptLaunchRestore else { return }
-        guard launchPrefetchTask == nil else { return }
         guard Self.prefersLockOnLaunch else { return }
         if !isRestoringFromKeychain { isRestoringFromKeychain = true }
-        startLaunchPrefetchTask()
+        if launchPrefetchTask == nil {
+            startLaunchPrefetchTask()
+        }
+        scheduleLaunchAdopt()
+    }
+
+    private func scheduleLaunchAdopt() {
+        guard !didScheduleLaunchAdopt else { return }
+        didScheduleLaunchAdopt = true
+        Task { @MainActor in
+            await self.adoptLaunchPrefetch()
+        }
     }
 
     private func startLaunchPrefetchTask() {
@@ -313,9 +331,10 @@ class ProfileData: ObservableObject {
         return loadFromKeychain()
     }
 
-    /// Apply prefetch on owner Main appear. Does not present Face ID.
-    /// Falls through to restoreOnLaunch on a prefetch miss so an old
-    /// biometry ACL row can migrate using a parked Edit/Save context.
+    /// Apply prefetch as soon as the detached decode finishes. Does not
+    /// present Face ID. Falls through to restoreOnLaunch on a prefetch miss
+    /// so an old biometry ACL row can migrate. May complete during SplashBoard
+    /// — before the first YOU body — when install/attach is not the bottleneck.
     @MainActor
     func adoptLaunchPrefetch() async {
         guard persists else { return }
@@ -327,6 +346,7 @@ class ProfileData: ObservableObject {
                 apply(blob)
                 Self.setStoredProfileGate(true)
                 isRestoringFromKeychain = false
+                RedMedSignpost.coldMark("adoptLaunchPrefetch applied")
                 return
             }
         }
