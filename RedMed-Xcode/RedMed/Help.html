@@ -78,7 +78,7 @@
 
     <h2><span class="sec-num">5</span> Where it lives</h2>
     <p>Your profile stays on your iPhone Keychain and, if you write one, on the band’s NFC chip. It is not uploaded, synced, or backed up to any RedMed server — we do not operate one for profiles.</p>
-    <p>On iOS we use the <code>WhenPasscodeSetThisDeviceOnly</code> Keychain class with <strong>no biometry ACL</strong>: readable while this iPhone is unlocked, and <strong>excluded from iCloud and encrypted backups</strong>. It does not sync to your other Apple devices. Face ID gates post-Agree (first launch / after Erase), Edit, Save, Clear (empty fields + Save), Erase, and Load From Band — not viewing the YOU card, not 911, not Aid, not NFC write, not returning app launch, not tapper. Keychain restore loads the profile on Main without Face ID to view. The band is still the credential for tap-to-view — no Face ID on a passerby tap.</p>
+    <p>On iOS we use the <code>WhenPasscodeSetThisDeviceOnly</code> Keychain class with <strong>no biometry ACL</strong>: readable while this iPhone is unlocked, and <strong>excluded from iCloud and encrypted backups</strong>. It does not sync to your other Apple devices. Face ID gates post-Agree (first launch / after Erase), Edit, Save, Erase, and Load From Band — not viewing the YOU card, not 911, not Aid, not NFC write, not returning app launch, not tapper. Field-level Clear in Edit (blood type / birth date) does not prompt until you Save. Keychain restore loads the profile on Main without Face ID to view. The band is still the credential for tap-to-view — no Face ID on a passerby tap.</p>
     <p>When someone taps the band, nothing is fetched from us. The card is built from what is on the chip (<code>#d=</code> in the URL fragment).</p>
 
     <h2><span class="sec-num">6</span> The band is readable by design</h2>
@@ -104,7 +104,7 @@
 
     <h2><span class="sec-num">9</span> How long it lasts</h2>
     <p>We keep none of your RedMed profile, because we receive none. It stays on your phone and band until you remove it.</p>
-    <p>On the phone: Help → <strong>Erase All User Data</strong> (Face ID) deletes the Keychain profile on this iPhone and returns you to Before You Continue on next open. Clearing fields in Edit and Save still prompts Face ID, but blank-all + Save does <strong>not</strong> wipe a stored blob (`persist()` refuses empty-over-stored; the UI may show Couldn't Save). Full wipe is Erase All User Data, or delete the app. On the band: overwrite the chip or dispose of the band securely. We cannot wipe a band remotely — there is no link from us to the chip.</p>
+    <p>On the phone: Help → <strong>Erase All User Data</strong> (Face ID), or delete the app. Edit has field-level Clear only (blood type / birth date) — there is no Clear-all. Clearing some fields and Save updates the stored ID; blanking every field and Save does <strong>not</strong> wipe Keychain — use Erase. On the band: overwrite the chip or dispose of the band securely. We cannot wipe a band remotely — there is no link from us to the chip.</p>
     <p>Support emails are kept only as long as needed to answer you, then deleted.</p>
 
     <h2><span class="sec-num">10</span> Your rights (United States)</h2>
@@ -141,7 +141,7 @@
     <p class="legal-parties">How RedMed protects the iPhone app, the passerby card, and the NFC band in the United States</p>
     <div class="legal-notice">
       <strong>In short</strong>
-      Profile stays on your phone (Keychain) and on the band if you write one. No RedMed profile backend. Owner Face ID gates post-Agree (first launch / after Erase), Edit, Save, Clear (empty fields + Save), Erase, and Load From Band — not viewing the YOU card. NFC write, 911, Aid, returning app launch, and tapper do not prompt. Band tap needs <strong>no</strong> Face ID — EMS must read it cold. Packing on the chip is obfuscation, not a private vault.
+      Profile stays on your phone (Keychain) and on the band if you write one. No RedMed profile backend. Owner Face ID gates post-Agree (first launch / after Erase), Edit, Save, Erase, and Load From Band — not viewing the YOU card. NFC write, 911, Aid, returning app launch, and tapper do not prompt. Band tap needs <strong>no</strong> Face ID — EMS must read it cold. Packing on the chip is obfuscation, not a private vault.
     </div>
     <article class="legal-body">
       <p>This page describes how RedMed approaches security. It is informational, <strong>not a warranty</strong>, and does not change the medical-device, no-outcome, or liability terms in <a href="#terms">Terms</a>.</p>
@@ -154,10 +154,10 @@
       <li>Profile fields in iOS <strong>Keychain</strong> with <code>WhenPasscodeSetThisDeviceOnly</code> and <strong>no biometry ACL</strong>. Older biometry-bound blobs migrate on the next owner open (one Face ID, then never again to view).</li>
       <li>Readable while the device is unlocked; excluded from iCloud and encrypted backups.</li>
       <li>Local history / vault files use complete file protection and backup exclusion.</li>
-      <li>Owner Face ID gates post-Agree (first launch / after Erase), Edit, Save, Clear (empty fields + Save), Erase, and Load From Band — not viewing the YOU card. 911, Aid, NFC write, returning app launch, and tapper do not prompt.</li>
+      <li>Owner Face ID gates post-Agree (first launch / after Erase), Edit, Save, Erase, and Load From Band — not viewing the YOU card. 911, Aid, NFC write, returning app launch, and tapper do not prompt.</li>
       <li>Passerby <code>tapper.html</code> never asks for Face ID, passcode, or login — tap opens the card from <code>#d=</code>.</li>
       <li>App-switcher snapshots are covered while profile data is in memory so live fields are not cached in the system snapshot.</li>
-      <li>Help → <strong>Erase All User Data</strong> deletes Keychain profile and vault files on this iPhone (Face ID). Blank-all fields in Edit + Save cannot replace a stored blob — use Erase for a full wipe. The physical band is not wiped remotely.</li>
+      <li>Help → <strong>Erase All User Data</strong> deletes Keychain profile and vault files on this iPhone (Face ID). Edit has no Clear-all — blank-all + Save cannot replace a stored blob. The physical band is not wiped remotely.</li>
     </ul>
 
     <h2><span class="sec-num">3</span> NFC band</h2>
@@ -205,7 +205,7 @@
     <h2><span class="sec-num">2</span> Agreement</h2>
     <p>These Terms govern the RedMed iPhone app and any associated passive NFC medical band programmed through the app (together, the “App”).</p>
     <p>By downloading, installing, opening, or using the App — as the person who creates a profile, or as anyone who views a card by tapping a band or opening a <code>#d=</code> link — you agree to these Terms and to <a href="#privacy">Privacy</a>. If you do not agree, do not use the App.</p>
-    <p>In the owner iPhone app, first launch (or a material policy-version bump / after Erase) shows Before You Continue — checkbox + Agree And Continue only (no Face ID on that page). Immediately after Agree, Face ID / Touch ID / passcode runs once, then Main. Later cold starts skip Before You Continue and that post-Agree Face ID when the stored policy version still matches and open Main directly. Same session after Agree stays in Main. Before You Continue is not an app-open cream lock. Face ID also gates Edit, Save, Clear (empty fields + Save), Erase, and Load From Band — not viewing the YOU card. A passerby who only views a band card agrees by opening that card.</p>
+    <p>In the owner iPhone app, first launch (or a material policy-version bump / after Erase) shows Before You Continue — checkbox + Agree And Continue only (no Face ID on that page). Immediately after Agree, Face ID / Touch ID / passcode runs once, then Main. Later cold starts skip Before You Continue and that post-Agree Face ID when the stored policy version still matches and open Main directly. Same session after Agree stays in Main. Before You Continue is not an app-open cream lock. Face ID also gates Edit, Save, Erase, and Load From Band — not viewing the YOU card. A passerby who only views a band card agrees by opening that card.</p>
     <p>Nothing here limits rights you cannot waive under US consumer-protection law. Where a term conflicts with a non-waivable statutory right, that right wins.</p>
 
     <h2><span class="sec-num">3</span> What the App does</h2>
