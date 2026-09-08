@@ -1,14 +1,21 @@
 name: iOS build
 
-# AUTOMATIC CI OFF — GitHub Actions billing/spending limit fails every runner
-# (ubuntu and macos) before jobs start, which paints commits red.
+# Compiles RedMed on macos-latest so Swift errors surface without a local Mac.
+# Path-filtered: doc/HTML-only changes skip the macOS runner (10x bill rate on
+# private repos; public repo minutes are still finite).
 #
-# After you fix Billing & plans:
-# 1. Restore the push/pull_request triggers below (see git history).
-# 2. Re-run or delete the failed runs in the Actions tab.
-#
-# Manual compile when billing works: Actions → Run workflow.
+# Billing previously forced workflow_dispatch-only. Ubuntu Pages and manual
+# macOS builds are green again — restore automatic push/PR compile.
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'RedMed-Xcode/**'
+      - '.github/workflows/ios-build.yml'
+  pull_request:
+    paths:
+      - 'RedMed-Xcode/**'
+      - '.github/workflows/ios-build.yml'
   workflow_dispatch:
 
 concurrency:
