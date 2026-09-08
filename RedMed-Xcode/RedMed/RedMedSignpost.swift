@@ -57,13 +57,13 @@ enum RedMedSignpost {
         let accepted = ConsentSettings.hasAcceptedCurrent
         coldMark(
             accepted
-                ? "firstFrame consent=\(ConsentSettings.currentVersion) → Main"
+                ? "firstFrame consent=\(ConsentSettings.currentVersion) → Face ID over Main"
                 : "firstFrame consent pending (\(ConsentSettings.currentVersion)) → Before You Continue"
         )
         end(.coldLaunchWindow)
     }
 
-    /// Main interactive (returning skip, or post-Agree Face ID success).
+    /// Main interactive (after cold Face ID — returning or post-Agree).
     static func coldLaunchMainReady(_ reason: String) {
         coldMark("mainReady \(reason)")
     }

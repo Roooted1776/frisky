@@ -1,28 +1,33 @@
 # Cold Start Speed Audit
 
 > **2026-09 update:** Consent is **4.10** (Agree covers location). A version
-> bump forces Before You Continue + Face ID + When-In-Use once — that is
-> intentional, not a paint regression. Returning opens after Agree skip all
-> three. `LaunchRoot` cream drops after one yield (first launch / policy bump
-> only). Scheme: `enableGPUValidationMode = "1"` is **Disabled** (Apple’s
-> encoding); `"2"` turns Metal API Validation back on — do not “fix” that to 2.
+> bump forces Before You Continue + Face ID once — that is intentional, not a
+> paint regression. Returning cold opens skip Before You Continue but still
+> Face ID once on cream over warm Main (Keychain prefetch/restore races
+> underneath; no fixed sleep; same-session resume does not re-prompt).
+> `LaunchRoot` cream drops after one yield (first launch / policy bump only).
+> Scheme: `enableGPUValidationMode = "1"` is **Disabled** (Apple’s encoding);
+> `"2"` turns Metal API Validation back on — do not “fix” that to 2.
 > Pre-app cream with no `ColdLaunch` Console lines = Xcode install / LLDB
 > attach. Use scheme **RedMed-NoDebug** for a fair check.
 >
 > **Returning YOU fill:** Prefetch starts in `ProfileData.init` (detached
 > SecItem + JSON) and MainActor `adoptLaunchPrefetch` starts in the same
-> breath so a finished blob can land before the first YOU body.
-> ContentView `restoreOnLaunch` is a no-op when adopt already won. Haptics,
-> tab-bar `drawingGroup`, page rose wash, next-step banner, and CoreMotion /
-> alarm-WAV warm stay ~400ms past first paint. Do not remount `OwnerYouCard`
-> via `.id(cardEpoch)` on adopt.
+> breath so a finished blob can land before / under the Face ID cream.
+> ContentView `restoreOnLaunch` is non-interactive (no SecItem Face ID).
+> After ConsentGate Face ID, `reloadAfterOwnerFaceID` migrates leftover
+> biometry ACL via the parked LAContext. Haptics, tab-bar `drawingGroup`,
+> page rose wash, next-step banner, and CoreMotion / alarm-WAV warm stay
+> ~400ms past first paint. Do not remount `OwnerYouCard` via `.id(cardEpoch)`
+> on adopt.
 
 
 **Launch lock is gone.** Current path is `RedMedApp` → `PrivacySnapshotGuard` →
-`ConsentGateView` → `Main` → `ContentView`. Face ID runs once **after** Agree
-(first launch / policy bump / after Erase), plus Edit / Save / Erase /
-Load From Band — **not** viewing the YOU card. Do not treat the `OwnerAppLock`
-notes below as current product.
+`ConsentGateView` → `Main` → `ContentView`. Face ID runs after Agree and on
+every cold re-entry (cream over warm Main), plus Edit / Save / Erase /
+Load From Band — **not** a second YOU-card view unlock and **not** a
+background `OwnerAppLock` relock. Do not treat the `OwnerAppLock` notes
+below as current product.
 
 The rest of this file is a **historical** read-through of the cream-lock launch path
 (key-window races, `evaluatePolicy` during `.inactive`, Proceed / FacePage). Keep it

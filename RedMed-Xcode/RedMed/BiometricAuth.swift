@@ -5,13 +5,13 @@ import UIKit
 /// NFC Preview — tap-to-view stays ungated
 /// (no Face ID, no passcode, no login).
 ///
-/// Post-Agree Face ID (first launch / policy bump / after Erase), Edit,
-/// Save, Erase, and Load From Band pass `force: true`. NFC write, 911,
-/// Aid, later app launch, viewing the YOU card, and tapper do not.
-/// Before You Continue itself is Agree-only. Edit has field-level Clear
-/// only (blood type / birth date) — blank-all + Save is not a wipe path
-/// and does not Face ID when a stored blob would be refused.
-/// There is no process-wide skip flag.
+/// Post-Agree / returning cold re-entry Face ID, Edit, Save, Erase, and
+/// Load From Band pass `force: true`. NFC write, 911, Aid, same-session
+/// resume, and tapper do not. Before You Continue itself is Agree-only.
+/// After cold-open Face ID, viewing the YOU card does not prompt again.
+/// Edit has field-level Clear only (blood type / birth date) — blank-all +
+/// Save is not a wipe path and does not Face ID when a stored blob would
+/// be refused. There is no process-wide skip flag.
 ///
 /// On success the `LAContext` is **parked** (not invalidated) so a leftover
 /// `biometryCurrentSet` Keychain row can migrate via

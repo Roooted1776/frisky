@@ -2,14 +2,15 @@ import SwiftUI
 import UIKit
 
 /// Legal consent. First launch (or after a material policy version bump)
-/// only — stored version skips the page on later cold starts. Agree +
-/// checkbox only; no Face ID on Before You Continue. Agree covers location
-/// and motion while the app is open. Face ID runs once immediately after
-/// Agree (cream wait / Retry until success) while Main warms underneath,
-/// then iOS When-In-Use once, then Main.
-/// Returning opens skip both. Edit / Save / Erase /
-/// Load From Band still Face ID. Never an app-wide cream lock. Never on
-/// passerby tapper.
+/// only — stored version skips Before You Continue on later cold starts.
+/// Agree + checkbox only; no Face ID on that page. Agree covers location
+/// and motion while the app is open. Face ID runs on cream (Retry until
+/// success) while Main warms underneath — once after Agree, and again on
+/// every cold re-entry after acknowledge — then iOS When-In-Use once when
+/// still `.notDetermined`, then Main is interactive.
+/// Same-session background → foreground does **not** re-prompt (no
+/// OwnerAppLock relock). Edit / Save / Erase / Load From Band still Face ID.
+/// Never on passerby tapper.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
     static let currentVersion = "4.10"
@@ -29,11 +30,18 @@ enum ConsentSettings {
 }
 
 struct ConsentGateView<Content: View>: View {
-    /// Returning owners skip consent + post-Agree Face ID — first frame is Main.
-    @State private var hasAccepted = ConsentSettings.hasAcceptedCurrent
+    /// Agree already stored when this gate was created — skip Before You
+    /// Continue, warm Main under Face ID cream. Fresh / Erase / policy bump
+    /// starts at the gate. Captured at init (not a static) so Agree → Face ID
+    /// in the same process still labels as post-Agree, not returning.
+    private let consentedAtLaunch = ConsentSettings.hasAcceptedCurrent
+
+    /// Hit-testing unlocked only after Face ID succeeds this process.
+    @State private var hasAccepted = false
+    /// Arm Main under the Face ID cream so success is not a cold tab mount.
     @State private var contentArmed = ConsentSettings.hasAcceptedCurrent
-    /// True after Agree while waiting for post-Agree Face ID (or Retry).
-    @State private var awaitingPostAgreeFaceID = false
+    /// True until Face ID succeeds (Agree path, or returning cold re-entry).
+    @State private var awaitingPostAgreeFaceID = ConsentSettings.hasAcceptedCurrent
     @State private var isAuthenticating = false
     @State private var didAutoPrompt = false
     @State private var showRetry = false
@@ -43,6 +51,7 @@ struct ConsentGateView<Content: View>: View {
     @State private var checked = false
     @State private var showPolicies = false
     @Environment(\.scenePhase) private var scenePhase
+    @EnvironmentObject private var profile: ProfileData
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @ViewBuilder var content: () -> Content
@@ -269,8 +278,14 @@ struct ConsentGateView<Content: View>: View {
             contentArmed = true
             hasAccepted = true
         }
-        RedMedSignpost.coldLaunchMainReady("post-Agree Face ID")
+        let readyLabel = consentedAtLaunch
+            ? "returning cold Face ID"
+            : "post-Agree Face ID"
+        RedMedSignpost.coldLaunchMainReady(readyLabel)
         Task { @MainActor in
+            // Parked LAContext can finish a leftover biometry ACL migrate
+            // without a second sheet — restore may have raced Face ID.
+            await profile.reloadAfterOwnerFaceID()
             await Task.yield()
             LocationAccessSuggester.shared.requestWhenInUseIfNeeded()
             RedMedSignpost.coldMark("When-In-Use requested (if needed)")
