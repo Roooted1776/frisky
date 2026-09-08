@@ -161,6 +161,7 @@ struct TopicDetailView: View {
                                 Image(systemName: "chevron.right")
                                     .font(.system(size: 10, weight: .bold))
                                     .foregroundColor(.redmedAccent)
+                                    .frame(width: 14, alignment: .center)
                                     .padding(.top, 4)
                                 Text(step)
                                     .font(.system(size: 15))

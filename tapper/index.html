@@ -1168,12 +1168,13 @@ function redmedAssetURL(file) {
   @media (prefers-reduced-motion: reduce) {
     .aid-chevron::before { transition: none; }
   }
-  /* Topic rows — same as owner PaneCard open body */
+  /* Topic rows — same as owner PaneCard open body.
+     Trailing pad 0 + topic trailing 12 + 28px chevron = pane header ">" column. */
   .aid-topics {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    padding: 0 10px 12px;
+    padding: 0 0 12px 10px;
   }
   .aid-topic {
     display: flex;
@@ -1181,7 +1182,7 @@ function redmedAssetURL(file) {
     gap: 10px;
     width: 100%;
     margin: 0;
-    padding: 14px;
+    padding: 14px 12px 14px 14px;
     border: none;
     border-radius: var(--box);
     background: var(--surface);
@@ -1202,8 +1203,8 @@ function redmedAssetURL(file) {
     word-break: break-word;
   }
   .aid-topic-chevron {
-    width: 18px;
-    height: 18px;
+    width: 28px;
+    height: 28px;
     flex-shrink: 0;
     position: relative;
     opacity: 0.55;
@@ -1211,10 +1212,10 @@ function redmedAssetURL(file) {
   .aid-topic-chevron::before {
     content: '';
     position: absolute;
-    top: 4px;
-    left: 5px;
-    width: 7px;
-    height: 7px;
+    top: 9px;
+    left: 9px;
+    width: 8px;
+    height: 8px;
     border-right: 2px solid var(--accent);
     border-bottom: 2px solid var(--accent);
     transform: rotate(-45deg);
@@ -1295,6 +1296,15 @@ function redmedAssetURL(file) {
   .aid-sec-row .care-mark {
     flex-shrink: 0;
     margin-top: 4px;
+    width: 14px;
+    height: 10px;
+    position: relative;
+  }
+  .aid-sec-row .care-mark::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 3px;
     width: 0;
     height: 0;
     border-top: 5px solid transparent;
