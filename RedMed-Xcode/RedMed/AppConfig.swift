@@ -91,7 +91,8 @@ enum AppConfig {
     // MARK: - Paid Apple Developer Program (temporarily parked — do not delete)
     // CoreNFC Tag Reading, HealthKit, and a live App Store URL need a paid team
     // + App ID capabilities. Keep these false/nil until Max re-enables them.
-    // Restore: docs/NFC-RESTORE.md, docs/healthkit-restore.md. Do not remove code paths.
+    // Restore: docs/NFC-RESTORE.md, docs/associated-domains-restore.md,
+    // docs/healthkit-restore.md. Do not remove code paths.
 
     /// Product kill switch for CoreNFC write/read sessions only.
     /// Owner still always sees the NFC tab (ContentView.showsNFC); scanners never do.
@@ -110,7 +111,10 @@ enum AppConfig {
     /// wrist proximity must not hijack that iPhone). Requires Associated Domains
     /// on App ID `com.redmed.app` + paid Apple Developer — see
     /// `docs/associated-domains-restore.md`. Keep in lockstep with the entitlement.
-    static let associatedDomainsEnabled = true
+    /// Parked (`false`): personal/free teams cannot provision Associated Domains
+    /// (same class of problem as CoreNFC). Safari still tries `redmed://band#d=`
+    /// before SOS. Restore after paid Program.
+    static let associatedDomainsEnabled = false
 
     /// Product kill switch for the optional Apple Health import on the empty-profile
     /// funnel / Edit. `true` = `HealthKitProfileImport` may call HealthKit.
@@ -208,11 +212,15 @@ enum AppConfig {
         }
 
         /// What can still open the URL later (Apple OS path; phone off / locked OK).
-        /// Associated Domains: phone with RedMed opens the app instead of Safari
-        /// (own wrist band must not hijack that iPhone). Passerby / no-app keeps
-        /// Safari + SOS auto-arm. No BLE / local-network band ranging.
+        /// Associated Domains (when enabled): phone with RedMed opens the app
+        /// instead of Safari (own wrist band must not hijack that iPhone).
+        /// Parked: Safari tries `redmed://band` before SOS. Passerby / no-app
+        /// keeps Safari + SOS auto-arm. No BLE / local-network band ranging.
         static var backgroundTagReadingSummary: String {
-            "iOS Background Tag Reading can still open the card later — phone can be off or locked; a deliberate tap (phone top \(intentionalTapRangeLabel) from the band) still works. With RedMed installed, Associated Domains opens the app instead of Safari so your own wrist band does not take over this iPhone. Passerby phones without RedMed still get Safari. Wrist + pocket is usually fine; phone pressed to the clasp can still couple. Writing the chip does not change that. Band stays passive — no battery, no Bluetooth to find nearby."
+            let installPath = AppConfig.associatedDomainsEnabled
+                ? "With RedMed installed, Associated Domains opens the app instead of Safari so your own wrist band does not take over this iPhone."
+                : "With RedMed installed, Safari tries redmed://band before SOS so the app can claim the tap; Associated Domains is parked until paid Program."
+            return "iOS Background Tag Reading can still open the card later — phone can be off or locked; a deliberate tap (phone top \(intentionalTapRangeLabel) from the band) still works. \(installPath) Passerby phones without RedMed still get Safari. Wrist + pocket is usually fine; phone pressed to the clasp can still couple. Writing the chip does not change that. Band stays passive — no battery, no Bluetooth to find nearby."
         }
 
         static var paymentPOSSummary: String {

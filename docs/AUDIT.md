@@ -29,7 +29,7 @@ Keychain, Overpass GPS, CSP `unsafe-inline`, CoreNFC/HealthKit parked.
 
 1. Paid Apple Developer: NFC Tag Reading on App ID `com.redmed.app`, then `nfcHardwareEnabled = true` + entitlement (`docs/NFC-RESTORE.md`). Until then, NFC tab Share Band URL programs a blank NTAG216 via Shortcuts / NFC Tools. Linked still needs CoreNFC.
 2. Restore push/PR iOS CI after billing. `#d=` Swift/JS lockstep now runs as `node scripts/test-d-codec.mjs` (pages-deploy + local). No XCTest target.
-3. Leave HealthKit parked until a paid Apple team can provision it. Associated Domains is in `RedMed.entitlements` (`associatedDomainsEnabled = true`) — App ID still needs the capability on a paid team. Host `https://roooted1776.github.io/tapper/` is already live.
+3. Leave HealthKit parked until a paid Apple team can provision it. Associated Domains is parked (`associatedDomainsEnabled = false`, no `applinks:` in `RedMed.entitlements`) so personal-team Automatic Signing works. Restore via `docs/associated-domains-restore.md`. Host `https://roooted1776.github.io/tapper/` is already live.
 4. Do not re-bind Keychain to `biometryCurrentSet` (Face ID stays UI-only by product contract).
 
 ---
@@ -40,7 +40,7 @@ No committed secrets, no XSS in profile render, no autodial, no scanner write in
 
 **Highest-severity facts:**
 
-1. **Passerby host is live; CoreNFC write is not.** `https://roooted1776.github.io/tapper/` 200s and smoke-pages is green. `#d=` paints the YOU card. `nfcHardwareEnabled = false` (no NFC entitlement). Associated Domains entitlement is present for owner wrist-proximity (paid App ID capability required). NFC tab Share Band URL is that host + `#d=` for a blank NTAG216. Linked still needs paid NFC Tag Reading. `redmed.pages.dev` is still 404.
+1. **Passerby host is live; CoreNFC write is not.** `https://roooted1776.github.io/tapper/` 200s and smoke-pages is green. `#d=` paints the YOU card. `nfcHardwareEnabled = false` (no NFC entitlement). Associated Domains is parked (`associatedDomainsEnabled = false`) so personal-team signing works; Safari `redmed://band` remains. NFC tab Share Band URL is that host + `#d=` for a blank NTAG216. Linked still needs paid NFC Tag Reading. `redmed.pages.dev` is still 404.
 2. **iOS CI does not gate merges.** `.github/workflows/ios-build.yml` is `workflow_dispatch` only. `#d=` encode/decode lockstep is `scripts/test-d-codec.mjs` (AES-GCM, zlib, current vs legacy compact, URI contract). No XCTest.
 3. **Passerby hospital search sends GPS to `overpass-api.de`.** Native uses MapKit. Help 4.3 names both. Residual: the public OSM API still sees a rescuer’s coordinates on a band tap — disclosed, not removed.
 4. **`OwnerAppLock` was live** (resolved in `#476`). Face ID is Edit / Save / Erase. Crash motion runs while owner Main is in the foreground.
@@ -289,9 +289,9 @@ and advisory path. `docs/PRODUCTION.md` rewritten (no fake Face ID toggle;
 github.io live). `docs/cold-start-audit.md` is historical (`OwnerAppLock` path).
 AGENTS matches the stripped-lock product.
 
-#### L5. AASA team ID is public; Associated Domains entitlement is present
+#### L5. AASA team ID is public; Associated Domains entitlement is parked
 
-`.well-known/apple-app-site-association` and root `apple-app-site-association`: `appID` `33F9FQ4VBU.com.redmed.app`, paths `/tapper`, `/tapper/`, `/tapper/*`. `RedMed.entitlements` has `applinks:roooted1776.github.io` (`associatedDomainsEnabled = true`). App ID capability still needs paid Program. No secret.
+`.well-known/apple-app-site-association` and root `apple-app-site-association`: `appID` `33F9FQ4VBU.com.redmed.app`, paths `/tapper`, `/tapper/`, `/tapper/*`. Associated Domains entitlement is parked (`associatedDomainsEnabled = false`, empty `RedMed.entitlements`) so personal-team Automatic Signing works. Restore via `docs/associated-domains-restore.md`. No secret.
 
 #### L6. `pbxproj` sequential `AAAA`/`AABB` IDs
 
@@ -404,7 +404,7 @@ Still blocked on Max / billing / Apple, not this follow-up.
 
 1. **Write a physical band.** Paid Apple NFC Tag Reading (`docs/NFC-RESTORE.md`) is the product Write. Until then, NFC tab Share Band URL → Shortcuts / NFC Tools onto a blank unlocked NTAG216. Linked still needs CoreNFC. Host `/tapper/` is already green — do not flip `AppConfig.medicalCardBaseURL`.
 2. **Restore iOS CI on `RedMed-Xcode/**` after billing.** Codec lockstep is already `node scripts/test-d-codec.mjs`. XCTest on a Mac runner is still missing.
-3. Leave HealthKit parked until a paid Apple team can provision it. Associated Domains entitlement is on — enable the capability on the App ID. Do not claim in-app CoreNFC Write until that entitlement signs.
+3. Leave HealthKit parked until a paid Apple team can provision it. Associated Domains is parked for personal-team signing — restore via `docs/associated-domains-restore.md`. Do not claim in-app CoreNFC Write until that entitlement signs.
 
 ## Code changes in the follow-up
 
