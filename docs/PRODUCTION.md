@@ -16,7 +16,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 
 | Area | Status |
 |------|--------|
-| Owner Face ID gate | Post-Agree once (first launch / policy bump / after Erase), then Edit / Save / Erase / Load From Band (`force: true`). **Not** viewing the YOU card. No cream lock in front of Main — 911 / Aid / NFC stay reachable. No YOU-view relock on `.background`. No Face ID toggle on Before you continue (Haptic only). Profile restores on Main appear (device-unlocked Keychain) without Face ID to view |
+| Owner Face ID gate | Post-Agree once (first launch / policy bump / after Erase), returning cold re-entry once per process (cream over warm Main), then Edit / Save / Erase / Load From Band (`force: true`). **Not** viewing the YOU card. Same-session resume does not re-prompt. No Face ID toggle on Before you continue (Haptic only). Profile restores under Face ID cream (device-unlocked Keychain) without a second view unlock |
 | Clear vs Erase | Edit has field-level Clear only (blood type / birth date) — no Clear-all. Partial clear + Save can persist; blank-all + Save refuses empty (alert: Use Erase to Wipe when stored, else fill-first; no Face ID). Full wipe is Help → **Erase All User Data** (Face ID). Band is not wiped remotely |
 | Empty-funnel Save | Fresh / Erase empty funnel: Fill → Edit (Face ID) → Save (Face ID `force: true`) → `persist()`. Empty draft Save refused (no blank Keychain / no gate flip). Blank-over-stored same refuse; Erase is the wipe path |
 | Load From Band | Code PASS; UI parked with CoreNFC. Path: read → empty alert / match→link / mismatch+existing→Replace / empty funnel→adopt. Face ID before `authenticateAndLinkMatchingBand` and `authenticateAndAdopt` → `adoptBandSnapshot`. Write ungated. See `docs/NFC-RESTORE.md` |
@@ -32,7 +32,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | Hospital search | Native: MapKit / Apple Maps. Passerby: OpenStreetMap Overpass (`overpass-api.de`). Disclosed in Help 4.3 |
 | ATS | Arbitrary loads + local networking **false** |
 | Snapshot / pasteboard | Privacy cover + secure pasteboard clear on background |
-| Consent | `ConsentGateView` on first launch or policy bump (**4.10**); Agree + checkbox only on that page (no Face ID there); Face ID runs after Agree and on every cold re-entry (cream over warm Main; restore races underneath); When-In-Use once when still notDetermined; same-session resume does not re-prompt; never on tapper |
+| Consent | `ConsentGateView` on first launch or policy bump (**4.12**); Agree + checkbox only on that page (no Face ID there); Face ID runs after Agree and on every cold re-entry (cream over warm Main; restore races underneath); When-In-Use once when still notDetermined; same-session resume does not re-prompt; never on tapper |
 | Apple Health import | Parked (`healthKitImportEnabled = false`) |
 | iOS CI | Push/PR on `RedMed-Xcode/**` (unsigned Simulator compile). Manual `workflow_dispatch` still works. No XCTest |
 | `#d=` codec | `node scripts/test-d-codec.mjs` — AES / zlib / compact / URI lockstep |
