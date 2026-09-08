@@ -4,7 +4,13 @@
     "details": [
       {
         "appID": "33F9FQ4VBU.com.redmed.app",
-        "paths": ["/tapper/*"]
+        "paths": ["/tapper", "/tapper/", "/tapper/*"],
+        "appIDs": ["33F9FQ4VBU.com.redmed.app"],
+        "components": [
+          { "/": "/tapper" },
+          { "/": "/tapper/" },
+          { "/": "/tapper/*" }
+        ]
       }
     ]
   }

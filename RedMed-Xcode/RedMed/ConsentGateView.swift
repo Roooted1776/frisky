@@ -11,7 +11,7 @@ import UIKit
 /// passerby tapper.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
-    static let currentVersion = "4.7"
+    static let currentVersion = "4.8"
 
     static var hasAcceptedCurrent: Bool {
         UserDefaults.standard.string(forKey: acceptedVersionKey) == currentVersion
@@ -202,7 +202,7 @@ struct ConsentGateView<Content: View>: View {
                         Image(systemName: checked ? "checkmark.square.fill" : "square")
                             .font(.system(size: 22))
                             .foregroundColor(checked ? .redmedAccent : .redmedMuted)
-                        Text("I have read and agree to the RedMed Terms, Privacy, and Security pages, including the medical-device disclaimer, liability limits, and binding arbitration / class-action waiver in Terms.")
+                        Text("I have read and agree to the RedMed Terms, Privacy, Security, Medical Disclaimer, and Ships When Ready pages, including the medical-device disclaimer, liability limits, and binding arbitration / class-action waiver in Terms.")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.redmedDark)
                             .fixedSize(horizontal: false, vertical: true)

@@ -81,9 +81,11 @@ struct ContentView: View {
             guard !isScannerSession else { return }
             // Consent is Agree-only; Face ID is post-Agree (first launch /
             // after Erase). Returning cold starts skip both. Yield once for
-            // first paint, then restore ASAP — Keychain is not biometry ACL.
+            // first YOU paint, then haptics + restore. Prefetch may already
+            // be running from RedMedApp.task.
             await Task.yield()
             guard !Task.isCancelled else { return }
+            RedMedHaptics.prepare()
             await profile.restoreOnLaunch()
             guard !Task.isCancelled else { return }
             // Start CoreMotion only after Keychain adopt so restore and
@@ -99,7 +101,7 @@ struct ContentView: View {
             // on first tap. Do not pre-stack those pages under RedMed — that
             // kept GPS / Aid catalog / NFC WK warm compositing for the session.
             // Crash monitor starts after restoreOnLaunch in `.task` (not here).
-            // Haptics already warmed in RedMedApp.task (do not prepare twice).
+            // Haptics prepare in `.task` after the same first-paint yield.
         }
         .onChange(of: scenePhase) { _, phase in
             guard !isScannerSession else { return }
@@ -114,8 +116,8 @@ struct ContentView: View {
                 // start a fresh one. Does not cancel an armed siren.
                 CrashMotionGuard.shared.stopMonitoring()
             default:
-                // `.inactive` is Face ID on the RedMed user page / Edit /
-                // Save / Erase, Control Center, app switcher peek. Keep
+                // `.inactive` is Face ID on post-Agree / Edit / Save /
+                // Erase, Control Center, app switcher peek. Keep
                 // listening.
                 break
             }
@@ -138,6 +140,21 @@ struct ContentView: View {
             tab = .nfc
             mountedTabs.insert(.nfc)
             startHoldToWriteFromNFCTab()
+        }
+        // Associated Domains: foreign / unmatched band URL → in-app tap card (no SOS).
+        .onReceive(NotificationCenter.default.publisher(for: .redMedOpenBandURL)) { note in
+            guard !isScannerSession else { return }
+            guard let urlString = note.object as? String else { return }
+            nfcBandBox.ensure().presentBandURLFromUniversalLink(urlString)
+        }
+        .fullScreenCover(item: nfcBandBox.scannedCardBinding) { session in
+            PasserbyHTMLCardView(
+                payloadOrURL: session.payload,
+                braceletLinked: profile.showsBraceletAsLinked,
+                embedProfileJSON: session.embedJSON
+            )
+            .environment(\.isScannerSession, true)
+            .presentationBackground(Color.redmedBg)
         }
         .presentsOwnerHelp()
     }
@@ -201,6 +218,14 @@ private final class NFCBandBox: ObservableObject {
         }
         objectWillChange.send()
         return band
+    }
+
+    /// Universal Link / scan cover — nil until `ensure()` (cold Main stays cheap).
+    var scannedCardBinding: Binding<NFCBandManager.ScannedCardSession?> {
+        Binding(
+            get: { self.instance?.scannedCard },
+            set: { self.instance?.scannedCard = $0 }
+        )
     }
 
     func cancelSessions() {
@@ -271,6 +296,9 @@ struct CustomTabBar: View {
     var showsNFC: Bool = true
     /// Owner NFC tab tap — begin CoreNFC write on this gesture so hold finishes it.
     var onNFCWrite: (() -> Void)? = nil
+    /// Flatten fill/stroke/shadow after first YOU paint — drawingGroup is a
+    /// Metal texture cost we don't want on the cold-open critical path.
+    @State private var flattenChrome = false
 
     /// Continuous rounded top — polished bottom chrome without frost (opaque cream).
     private var barShape: UnevenRoundedRectangle {
@@ -310,22 +338,29 @@ struct CustomTabBar: View {
                 .accessibilityHidden(true)
         }
         .background {
-            barShape
+            let chrome = barShape
                 .fill(Color.redmedBg)
                 .overlay {
                     barShape.strokeBorder(Color.redmedDivider, lineWidth: 0.5)
                 }
                 .shadow(color: RedMedChrome.cardShadow, radius: 10, y: -2)
-                // This bar is on-screen behind every tab's scroll content —
-                // flatten its static fill/stroke/shadow to one GPU texture so
-                // scrolling underneath doesn't force a CPU shadow recompute
-                // on every frame.
-                .drawingGroup()
-                .allowsHitTesting(false)
+            Group {
+                if flattenChrome {
+                    chrome.drawingGroup()
+                } else {
+                    chrome
+                }
+            }
+            .allowsHitTesting(false)
         }
         // Bar bounds only — upward shadow must not eat YOU-card / list taps.
         .contentShape(barShape)
         .accessibilityElement(children: .contain)
+        .task {
+            guard !flattenChrome else { return }
+            await Task.yield()
+            flattenChrome = true
+        }
     }
 
     private func select(_ next: AppTab) {

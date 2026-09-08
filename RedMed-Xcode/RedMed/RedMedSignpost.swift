@@ -2,7 +2,7 @@ import Foundation
 import os
 
 /// Diagnostic-only `os_signpost` markers for Face ID evaluate
-/// (RedMed user view / Edit / Save / Erase). No behavior change.
+/// (post-Agree / Edit / Save / Erase / Load From Band). No behavior change.
 /// `coldLaunchWindow` is unused after the launch lock was removed;
 /// `faceIDEvaluate` still spans `LAContext.evaluatePolicy`.
 enum RedMedSignpost {

@@ -14,23 +14,56 @@ struct RedMedApp: App {
             .background(CreamWindowBackground())
             .preferredColorScheme(.light)
             .task {
-                // Snapshot observers + haptics only. Do not warm WKWebView
-                // or read tapper.html here — that raced the first Main frame.
-                // Keychain restore is owned by ContentView (ASAP after one
-                // yield — no fixed Face ID stagger on returning opens).
+                // Snapshot observers only. Keychain prefetch starts here so
+                // the blob is in flight during SplashBoard → first frame.
+                // Haptics prepare after YOU paints (ContentView) — not here.
                 SnapshotSafeCover.activate()
-                await Task.yield()
-                RedMedHaptics.prepare()
+                profile.beginLaunchPrefetch()
             }
             .onOpenURL { url in
-                if (url.scheme ?? "").lowercased() == "redmed",
-                   (url.host ?? "").lowercased() == "nfc" {
+                let scheme = (url.scheme ?? "").lowercased()
+                let host = (url.host ?? "").lowercased()
+                if scheme == "redmed", host == "nfc" {
                     NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
+                    return
+                }
+                // Safari tapper handoff when Associated Domains / AASA did not
+                // claim the tap (stale github.io AASA, personal-team signing).
+                // `redmed://band#d=` — same quiet rules as Universal Links.
+                if scheme == "redmed", host == "band" || host == "tapper" {
+                    handleIncomingBandURL(url.absoluteString, profile: profile)
                 }
             }
-            .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { _ in }
+            // Associated Domains (applinks:roooted1776.github.io).
+            // Wrist-band proximity must not Safari-hijack an iPhone that already
+            // has RedMed. BTR / NFC opens this app instead of Safari.
+            // Own band / empty RAM (restore in flight) / bad #d= → foreground
+            // only — never present a tap-card sheet (that is still "setting off"
+            // the phone). Other person's `#d=` with a loaded owner profile →
+            // in-app tap card (no Keychain write, no SOS).
+            // UL often drops the URL fragment — no `#d=` still means quiet
+            // (owner phone must not scream). Phones without RedMed keep Safari
+            // + band-tap SOS; tapper also tries `redmed://band` before arming.
+            .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
+                guard let url = activity.webpageURL else { return }
+                let path = url.path.lowercased()
+                guard path == "/tapper" || path.hasPrefix("/tapper/") else { return }
+                handleIncomingBandURL(url.absoluteString, profile: profile)
+            }
         }
     }
+}
+
+/// Own / empty / undecodable `#d=` → foreground only. Foreign chip → in-app card.
+private func handleIncomingBandURL(_ urlString: String, profile: ProfileData) {
+    guard let chip = ProfileNFCCodec.decodeProfile(fromURLString: urlString) else {
+        return
+    }
+    guard profile.hasData, !profile.matchesBand(chip) else { return }
+    NotificationCenter.default.post(
+        name: .redMedOpenBandURL,
+        object: urlString
+    )
 }
 
 /// First launch (or policy-version bump): Before you continue (Agree only),
@@ -38,27 +71,15 @@ struct RedMedApp: App {
 /// post-Agree Face ID. No app-wide cream lock. Passerby tapper is not in
 /// this tree.
 private struct LaunchRoot: View {
-    /// Flat cream matching UILaunchScreen for the SplashBoard → first-layout
-    /// gap only. Dropped on ConsentGate's first appear (+ one yield) with
-    /// `animation: nil` (no fade). Do **not** wait for `scenePhase == .active`:
-    /// cold start and Xcode Debug Stop→Run begin `.inactive`, and debugger
-    /// attach can sit there for seconds — that was a full-screen cream hang.
-    /// Rose wash stays deferred in `RedMedPageBackground`.
-    @State private var holdLaunchCream = true
+    /// Returning opens: no SwiftUI cream veil — UILaunchScreen already matches
+    /// and ConsentGate goes straight to Main. First launch (or after Erase /
+    /// policy bump): flat cream for SplashBoard → Agree layout, dropped after
+    /// one yield locked with `RedMedPageBackground`'s wash.
+    @State private var holdLaunchCream = !ConsentSettings.hasAcceptedCurrent
 
     var body: some View {
         ZStack {
             ConsentGateView { Main() }
-                .onAppear {
-                    guard holdLaunchCream else { return }
-                    Task { @MainActor in
-                        await Task.yield()
-                        guard holdLaunchCream else { return }
-                        var t = Transaction()
-                        t.animation = nil
-                        withTransaction(t) { holdLaunchCream = false }
-                    }
-                }
 
             if holdLaunchCream {
                 Color.redmedBg
@@ -66,6 +87,13 @@ private struct LaunchRoot: View {
                     .allowsHitTesting(false)
                     .accessibilityHidden(true)
             }
+        }
+        .task {
+            guard holdLaunchCream else { return }
+            await Task.yield()
+            var t = Transaction()
+            t.animation = nil
+            withTransaction(t) { holdLaunchCream = false }
         }
     }
 }

@@ -15,7 +15,7 @@
 <div class="legal-sheet" id="top">
   <header class="legal-letterhead">
     <p class="legal-firm">RedMed</p>
-    <p class="legal-tagline">Help · Privacy, Security, Terms, And Medical Disclaimer</p>
+    <p class="legal-tagline">Help · Privacy, Security, Terms, Medical Disclaimer, And Ships When Ready</p>
     <p class="legal-entity">RedMed · Local medical ID on your iPhone and band</p>
   </header>
 
@@ -31,14 +31,15 @@
     <a href="#security" role="tab" id="tab-security" aria-controls="security" aria-selected="false" tabindex="-1"><span class="legal-nav-ico" aria-hidden="true">🔐</span>Security</a>
     <a href="#terms" role="tab" id="tab-terms" aria-controls="terms" aria-selected="false" tabindex="-1"><span class="legal-nav-ico" aria-hidden="true">📜</span>Terms</a>
     <a href="#medical-disclaimer" role="tab" id="tab-medical-disclaimer" aria-controls="medical-disclaimer" aria-selected="false" tabindex="-1"><span class="legal-nav-ico" aria-hidden="true">⚕️</span>Medical Disclaimer</a>
+    <a href="#ships-when-ready" role="tab" id="tab-ships-when-ready" aria-controls="ships-when-ready" aria-selected="false" tabindex="-1"><span class="legal-nav-ico" aria-hidden="true">📦</span>Ships When Ready</a>
   </nav>
 
   <section id="privacy" class="legal-policy active" role="tabpanel" aria-labelledby="tab-privacy" aria-hidden="false">
     <hr class="legal-rule-thin" aria-hidden="true">
     <h1 class="legal-doc-title"><span class="legal-title-ico" aria-hidden="true">🔒</span>Privacy</h1>
     <p class="legal-meta">
-      <strong>Effective</strong> August 2026<br>
-      <strong>Version</strong> 4.7 (United States)<br>
+      <strong>Effective</strong> September 2026<br>
+      <strong>Version</strong> 4.8 (United States)<br>
       <strong>Law</strong> US federal and state privacy law (including CCPA/CPRA for California residents)
     </p>
     <p class="legal-parties">Applies to people in the United States who use the RedMed app or a RedMed NFC band</p>
@@ -90,7 +91,7 @@
     <p>Find Help shows coordinates only while that screen is open. GPS starts when Find Help needs it and stops when you leave or close the app. Location is not used for ads, profiling, or background tracking, and is never sent to us.</p>
     <p>Location defaults on (toggle on the "Before You Continue" screen — first launch or after a policy update; later cold starts skip that page when the stored policy version still matches). Agree does not show iOS’s When-In-Use dialog — you already chose Location there. If Location stayed on, the first time Find Help needs GPS iOS may show its Allow sheet — Apple requires that tap; we cannot auto-accept it. If you turn Location off, Find Help does not start GPS and does not prompt. RedMed does not show an in-app location gate.</p>
     <p>The 911 coordinate readout stays on this iPhone. GPS is never attached to a <code>tel:</code> call. Find Nearby Hospitals has two paths: in the RedMed iPhone app, that search asks Apple Maps (MapKit) on this phone for ER POIs — Apple may see the query and region. On a band tap in a browser (<code>tapper.html</code>), that search sends this phone’s coordinates to OpenStreetMap’s Overpass API (<code>overpass-api.de</code>) because the browser has no MapKit. Overpass may see that location. Neither path is a RedMed upload, and RedMed does not receive the coordinates.</p>
-    <p>The Call button and <strong>SOS · Locate Me</strong> open the system Phone app to your regional emergency number only. SOS does that on the tap, with no in-app confirmation and no countdown. Crash detection waits the US Crash Detection delay (10-second alert + 30-second countdown) before the same <code>tel:</code> open, unless you tap Stop The Alarm. A band-tap auto-arm on a helper’s phone does not place a call. <strong>RedMed does not attach name, medical fields, contacts, GPS, or any other profile data to that call.</strong> iOS may still show its own Call sheet; RedMed cannot suppress that.</p>
+    <p>The Call button and <strong>SOS · Locate Me</strong> open the system Phone app to your regional emergency number only. SOS does that on the tap, with no in-app confirmation and no countdown. Crash detection waits the US Crash Detection delay (10-second alert + 30-second countdown) before the same <code>tel:</code> open, unless you tap Stop The Alarm. A band-tap auto-arm on a helper’s phone (no RedMed app) does not place a call. Phones with RedMed installed open the app on band tap instead of Safari. <strong>RedMed does not attach name, medical fields, contacts, GPS, or any other profile data to that call.</strong> iOS may still show its own Call sheet; RedMed cannot suppress that.</p>
 
     <h2><span class="sec-num">8</span> Who else can see data</h2>
     <ul>
@@ -103,7 +104,7 @@
 
     <h2><span class="sec-num">9</span> How long it lasts</h2>
     <p>We keep none of your RedMed profile, because we receive none. It stays on your phone and band until you remove it.</p>
-    <p>On the phone: Help → <strong>Erase All User Data</strong> (Face ID), clear fields in Edit and Save (Face ID), or delete the app. On the band: overwrite the chip or dispose of the band securely. We cannot wipe a band remotely — there is no link from us to the chip.</p>
+    <p>On the phone: Help → <strong>Erase All User Data</strong> (Face ID) deletes the Keychain profile on this iPhone and returns you to Before You Continue on next open. Clearing fields in Edit and Save still prompts Face ID, but blank-all + Save does <strong>not</strong> wipe a stored blob (`persist()` refuses empty-over-stored; the UI may show Couldn't Save). Full wipe is Erase All User Data, or delete the app. On the band: overwrite the chip or dispose of the band securely. We cannot wipe a band remotely — there is no link from us to the chip.</p>
     <p>Support emails are kept only as long as needed to answer you, then deleted.</p>
 
     <h2><span class="sec-num">10</span> Your rights (United States)</h2>
@@ -133,8 +134,8 @@
     <hr class="legal-rule-thin" aria-hidden="true">
     <h1 class="legal-doc-title"><span class="legal-title-ico" aria-hidden="true">🔐</span>Security</h1>
     <p class="legal-meta">
-      <strong>Effective</strong> August 2026<br>
-      <strong>Version</strong> 4.7 (United States)<br>
+      <strong>Effective</strong> September 2026<br>
+      <strong>Version</strong> 4.8 (United States)<br>
       <strong>Read with</strong> <a href="#privacy">Privacy</a> and <a href="#terms">Terms</a>
     </p>
     <p class="legal-parties">How RedMed protects the iPhone app, the passerby card, and the NFC band in the United States</p>
@@ -156,7 +157,7 @@
       <li>Owner Face ID gates post-Agree (first launch / after Erase), Edit, Save, Clear (empty fields + Save), Erase, and Load From Band — not viewing the YOU card. 911, Aid, NFC write, returning app launch, and tapper do not prompt.</li>
       <li>Passerby <code>tapper.html</code> never asks for Face ID, passcode, or login — tap opens the card from <code>#d=</code>.</li>
       <li>App-switcher snapshots are covered while profile data is in memory so live fields are not cached in the system snapshot.</li>
-      <li>Help → <strong>Erase All User Data</strong> deletes Keychain profile and vault files on this iPhone. The physical band is not wiped remotely.</li>
+      <li>Help → <strong>Erase All User Data</strong> deletes Keychain profile and vault files on this iPhone (Face ID). Blank-all fields in Edit + Save cannot replace a stored blob — use Erase for a full wipe. The physical band is not wiped remotely.</li>
     </ul>
 
     <h2><span class="sec-num">3</span> NFC band</h2>
@@ -188,8 +189,8 @@
     <hr class="legal-rule-thin" aria-hidden="true">
     <h1 class="legal-doc-title"><span class="legal-title-ico" aria-hidden="true">📜</span>Terms</h1>
     <p class="legal-meta">
-      <strong>Effective</strong> August 2026<br>
-      <strong>Version</strong> 4.7 (United States)<br>
+      <strong>Effective</strong> September 2026<br>
+      <strong>Version</strong> 4.8 (United States)<br>
       <strong>Governing law</strong> Laws of the State of <strong>New Jersey</strong>, United States
     </p>
     <p class="legal-parties">Applies to people in the United States who use the RedMed app or a RedMed NFC band</p>
@@ -249,8 +250,9 @@
     <h2><span class="sec-num">11</span> Helping someone else</h2>
     <p>Many US states have Good Samaritan laws that can limit civil liability for people who render emergency aid in good faith. Those laws vary. This is general information, not legal advice. RedMed does not represent that any particular action taken with the App will be protected under any state’s law.</p>
 
-    <h2><span class="sec-num">12</span> Availability</h2>
+    <h2 id="availability"><span class="sec-num">12</span> Availability — ships when ready</h2>
     <p>RedMed does not warrant uninterrupted service, or that GPS, NFC, compass, motion sensors, or other device features will work on every phone or in every situation. Those features come from your device and OS.</p>
+    <p><strong>Ships when ready.</strong> RedMed does not promise ship dates, launch windows, or feature ETAs. App updates, band hardware, App Store listing, NFC write, custom domain cutover, and other product pieces land when they are ready — not on a calendar commitment. Announcements, roadmaps, ads, build-in-public posts, or “coming soon” copy are not a guarantee that anything will ship by a particular date, or at all. Do not rely on a stated or implied timeline for emergency readiness; use only what is actually available on your phone and band today. Same rule as <a href="#ships-when-ready">Ships When Ready</a>.</p>
 
     <h2><span class="sec-num">13</span> Disclaimers</h2>
     <p>TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE APP AND ANY BAND ARE PROVIDED “AS IS” AND “AS AVAILABLE,” WITHOUT WARRANTIES OF ANY KIND, EXPRESS, IMPLIED, OR STATUTORY, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. WITHOUT LIMITING THE FOREGOING, REDMED DISCLAIMS ANY WARRANTY THAT THE APP OR BAND WILL (A) FUNCTION AS A MEDICAL DEVICE; (B) DETECT, DIAGNOSE, TREAT, OR PREVENT ANY CONDITION; (C) REACH EMS OR ANY THIRD PARTY; (D) PRODUCE ANY PARTICULAR MEDICAL OR RESCUE OUTCOME; (E) DETECT A REAL CRASH OR SEVERE IMPACT, OR AVOID TRIGGERING THE ALARM IN §7 WHEN NO CRASH OCCURRED; OR (F) BE ERROR-FREE, AVAILABLE, OR COMPATIBLE WITH EVERY DEVICE OR NETWORK. SOME STATES DO NOT ALLOW LIMITATIONS ON IMPLIED WARRANTIES, SO SOME OF THE ABOVE MAY NOT APPLY TO YOU.</p>
@@ -298,8 +300,8 @@
     <hr class="legal-rule-thin" aria-hidden="true">
     <h1 class="legal-doc-title"><span class="legal-title-ico" aria-hidden="true">⚕️</span>Medical Disclaimer</h1>
     <p class="legal-meta">
-      <strong>Effective</strong> August 2026<br>
-      <strong>Version</strong> 4.7 (United States)<br>
+      <strong>Effective</strong> September 2026<br>
+      <strong>Version</strong> 4.8 (United States)<br>
       <strong>Read with</strong> <a href="#terms">Terms</a> §8–§10
     </p>
     <p class="legal-parties">Applies to people in the United States who use the RedMed app or a RedMed NFC band</p>
@@ -318,9 +320,29 @@
     </article>
   </section>
 
+  <section id="ships-when-ready" class="legal-policy" role="tabpanel" aria-labelledby="tab-ships-when-ready" aria-hidden="true">
+    <hr class="legal-rule-thin" aria-hidden="true">
+    <h1 class="legal-doc-title"><span class="legal-title-ico" aria-hidden="true">📦</span>Ships When Ready</h1>
+    <p class="legal-meta">
+      <strong>Effective</strong> September 2026<br>
+      <strong>Version</strong> 4.8 (United States)<br>
+      <strong>Read with</strong> <a href="#terms">Terms</a> §12
+    </p>
+    <p class="legal-parties">Applies to people in the United States who use the RedMed app or a RedMed NFC band</p>
+    <div class="legal-notice">
+      <strong>In short</strong>
+      No ship dates. No launch windows. No feature ETAs. Product pieces land when they are ready — not on a calendar promise. Use what is on your phone and band today.
+    </div>
+    <article class="legal-body">
+    <h2><span class="sec-num">12</span> Availability — ships when ready</h2>
+    <p>RedMed does not warrant uninterrupted service, or that GPS, NFC, compass, motion sensors, or other device features will work on every phone or in every situation. Those features come from your device and OS.</p>
+    <p><strong>Ships when ready.</strong> RedMed does not promise ship dates, launch windows, or feature ETAs. App updates, band hardware, App Store listing, NFC write, custom domain cutover, and other product pieces land when they are ready — not on a calendar commitment. Announcements, roadmaps, ads, build-in-public posts, or “coming soon” copy are not a guarantee that anything will ship by a particular date, or at all. Do not rely on a stated or implied timeline for emergency readiness; use only what is actually available on your phone and band today.</p>
+    </article>
+  </section>
+
   <footer class="legal-footer">
     <p>© 2026 RedMed · All rights reserved</p>
-    <p><a href="#privacy"><span aria-hidden="true">🔒</span> Privacy</a> · <a href="#security"><span aria-hidden="true">🔐</span> Security</a> · <a href="#terms"><span aria-hidden="true">📜</span> Terms</a> · <a href="#medical-disclaimer"><span aria-hidden="true">⚕️</span> Medical Disclaimer</a></p>
+    <p><a href="#privacy"><span aria-hidden="true">🔒</span> Privacy</a> · <a href="#security"><span aria-hidden="true">🔐</span> Security</a> · <a href="#terms"><span aria-hidden="true">📜</span> Terms</a> · <a href="#medical-disclaimer"><span aria-hidden="true">⚕️</span> Medical Disclaimer</a> · <a href="#ships-when-ready"><span aria-hidden="true">📦</span> Ships When Ready</a></p>
     <p class="legal-footer-disclaimer">This document is for information and is not legal advice. It has not yet been reviewed by qualified US counsel.</p>
   </footer>
 </div>
@@ -331,7 +353,8 @@
     privacy: { title: "Privacy", emoji: "🔒" },
     security: { title: "Security", emoji: "🔐" },
     terms: { title: "Terms", emoji: "📜" },
-    "medical-disclaimer": { title: "Medical Disclaimer", emoji: "⚕️" }
+    "medical-disclaimer": { title: "Medical Disclaimer", emoji: "⚕️" },
+    "ships-when-ready": { title: "Ships When Ready", emoji: "📦" }
   };
   window.__rmPolicies = POLICIES;
 

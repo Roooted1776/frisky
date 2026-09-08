@@ -11,6 +11,9 @@ enum BrightnessBoost {
     private static var foregroundObserver: NSObjectProtocol?
     private static var activeObserver: NSObjectProtocol?
 
+    /// True while crash/SOS brightness+idle hold is active.
+    static var isSurvivalHold: Bool { survivalHold }
+
     /// Survival arm — keeps max brightness even while backgrounded.
     static func beginSurvival() {
         if !survivalHold {
@@ -29,6 +32,10 @@ enum BrightnessBoost {
         restoreSaved()
         savedBrightness = nil
         savedIdleTimerDisabled = nil
+        // Card session may still need idle disabled (owner YOU / Preview).
+        if MedicalCardScreenWake.isHolding {
+            UIApplication.shared.isIdleTimerDisabled = true
+        }
     }
 
     private static func installLifecycleObservers() {
@@ -80,5 +87,45 @@ enum BrightnessBoost {
         if let savedIdleTimerDisabled {
             UIApplication.shared.isIdleTimerDisabled = savedIdleTimerDisabled
         }
+    }
+}
+
+/// Keeps the display awake while a medical card is on screen — owner RedMed
+/// YOU card, in-app Preview / Scan, matching passerby tapper Wake Lock.
+/// No Face ID. Survival SOS hold wins if already keeping the idle timer off.
+@MainActor
+enum MedicalCardScreenWake {
+    private static var savedIdleTimerDisabled: Bool?
+    private static var holding = false
+    /// Refcount: owner YOU tab + Preview/Scan can overlap briefly.
+    private static var holders = 0
+
+    static var isHolding: Bool { holders > 0 }
+
+    static func setActive(_ active: Bool) {
+        if active {
+            holders += 1
+            if !holding {
+                savedIdleTimerDisabled = UIApplication.shared.isIdleTimerDisabled
+                holding = true
+            }
+            UIApplication.shared.isIdleTimerDisabled = true
+            return
+        }
+        guard holders > 0 else { return }
+        holders -= 1
+        guard holders == 0 else { return }
+        holding = false
+        // Leave idle disabled if crash/SOS survival is still holding it.
+        if BrightnessBoost.isSurvivalHold {
+            savedIdleTimerDisabled = nil
+            return
+        }
+        if let savedIdleTimerDisabled {
+            UIApplication.shared.isIdleTimerDisabled = savedIdleTimerDisabled
+        } else {
+            UIApplication.shared.isIdleTimerDisabled = false
+        }
+        savedIdleTimerDisabled = nil
     }
 }

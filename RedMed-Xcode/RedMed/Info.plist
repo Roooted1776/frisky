@@ -41,7 +41,7 @@
 		<false/>
 	</dict>
 	<key>NSFaceIDUsageDescription</key>
-	<string>RedMed uses Face ID or Touch ID to view, edit, save, load from a band, or erase your medical ID. Device passcode can be used if biometrics are unavailable.</string>
+	<string>RedMed uses Face ID or Touch ID after you Agree, and to edit, save, clear, load from a band, or erase your medical ID. Viewing the card does not require Face ID. Device passcode can be used if biometrics are unavailable.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Shows your coordinates on Find Help so you can read them to emergency services.</string>
 	<key>UIBackgroundModes</key>

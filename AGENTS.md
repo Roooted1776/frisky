@@ -7,11 +7,17 @@ notes (Debug install lag ≠ App Store). Product invariants below stay
 authoritative for code.
 
 **Ship blocker:** the passerby host `https://roooted1776.github.io/tapper/` is live.
-Owner NFC hardware is parked (`nfcHardwareEnabled = false`, empty
-entitlements, no `NFCReaderUsageDescription`) so Automatic Signing works
-without NFC Tag Reading on App ID `com.redmed.app`. The owner NFC tab stays
-visible; Write / Scan are pack-only + Share Band URL. Restore real CoreNFC
-after paid Program + NFC Tag Reading — see `docs/NFC-RESTORE.md`.
+Owner NFC hardware is parked (`nfcHardwareEnabled = false`, no NFC entitlement,
+no `NFCReaderUsageDescription`) so Automatic Signing works without NFC Tag
+Reading on App ID `com.redmed.app`. **Associated Domains is enabled**
+(`applinks:roooted1776.github.io` in `RedMed.entitlements`) so a phone with
+RedMed installed does not Safari-open on wrist-band proximity — see
+`docs/associated-domains-restore.md`. Safari also tries `redmed://band#d=`
+before SOS when AASA/UL miss. That capability needs paid Program on
+the App ID (personal/free teams cannot provision it; park the entitlement
+again only if you must device-sign on a personal team). The owner NFC tab
+stays visible; Write / Scan are pack-only + Share Band URL. Restore real
+CoreNFC after paid Program + NFC Tag Reading — see `docs/NFC-RESTORE.md`.
 `medicalCardBaseURL#d=` is unchanged. Linked only after write + matching
 read-back. Do not spend PRs on tab chrome or copy.
 
@@ -80,7 +86,13 @@ The app has no backend, database, or web service.
   Passerby HTML never asks.
   **Nothing blocks the tap card** (YOU card / Preview / Scan / band tap): no
   privacy veil, no native overlay stealing taps, no login. Safari opens
-  `tapper.html#d=` immediately.
+  `tapper.html#d=` immediately. Passerby band-tap holds Screen Wake Lock for
+  the patient session so Auto-Lock does not blank the card while a helper
+  tends to the person (SOS wake lock remains as well). Shell open is SW
+  cache-first (multi-key) after the first visit so a later tap paints almost
+  instantly; `#d=` treat fields (name / blood / allergies / meds) decrypt as
+  soon as the YOU-card DOM exists — before 911 / Aid HTML — so EMT info wins
+  the wire over logo, siren, and wake lock.
   Native **Help** chrome is on 911, Aid, NFC, and in-app scanner screens.
   Not on Edit (that modal bar is Cancel / Save
   only), and not a bottom dock on the owner RedMed tab (that dock was
@@ -120,7 +132,13 @@ The app has no backend, database, or web service.
   write does not change likelihood. Band stays **passive — no battery** (not
   AirTag / BLE / recurring cell). RedMed cannot disable that OS path; do not
   claim “no background NFC” without the BTR caveat
-  (`BraceletRF.backgroundTagReadingSummary`).
+  (`BraceletRF.backgroundTagReadingSummary`). **Do not** add local-network /
+  BLE “find nearby bands” — the chip has no radio. **Associated Domains**
+  (`docs/associated-domains-restore.md`): phone with RedMed installed opens
+  the app on band tap instead of Safari — own matching band → foreground
+  only (wrist proximity must not Safari-hijack); other `#d=` → in-app tap
+  card (no Keychain write, no SOS). Passerby phones without the app keep
+  Safari + band-tap SOS auto-arm.
 
 **Settings vs automatic (permanent):**
 - Haptic feedback + Location toggles (`AppSettings` / `HapticEngine.enabledKey`)
@@ -131,10 +149,13 @@ The app has no backend, database, or web service.
 - **Brightness + sound are survival-alarm only (not Settings):**
   arm `BrightnessBoost` + `VolumeBoost` + `LocatorBeacon` only when (1) on-device crash /
   hard-impact detection (`CrashMotionGuard`) fires for **vehicle crash /
-  high-speed impact only** (not running or daily activity), (2) owner taps
-  **SOS · Locate me** on Find Help, or (3) a **real bracelet NFC tap** opens
-  passerby `tapper.html#d=…` (hardware-local SOS on that phone — no server; bare
-  `/tapper/` without `#d=` and in-app scanner preview do **not** auto-arm).
+  high-speed impact only** (not running or daily activity), (2) the user taps
+  **SOS · Locate me** (owner Find Help or passerby `tapper.html`), or (3) a
+  **real bracelet NFC tap** opens passerby Safari `tapper.html#d=…` on a phone
+  **without** RedMed (hardware-local SOS on that phone — no server). Phones
+  **with** RedMed installed use Associated Domains — app opens, no Safari
+  auto-arm. Bare `/tapper/` without `#d=` and in-app scanner preview do **not**
+  auto-arm.
   **SOS tap** (owner Find Help and passerby SOS button) opens `tel:` to
   `EmergencyNumber` **immediately** — no in-app confirmation, no countdown —
   then arms the alarm. iOS may still show its system Call sheet (cannot suppress).
@@ -142,7 +163,8 @@ The app has no backend, database, or web service.
   the US Crash Detection **call delay** (Apple Support 104959: 10s alert + 30s
   countdown) then the same `tel:` unless Stop The Alarm. Not Apple's Crash
   Detection API, not FDA-cleared, not a certified medical device. NFC band-tap
-  auto-arm is siren only (no autodial). Seizure timer still does not autodial.
+  auto-arm (no-app Safari only) is siren only (no autodial). Seizure timer
+  still does not autodial.
   Opening owner Find Help must not force brightness, max volume, or play the
   siren by itself. Do not add Settings off switches for the survival alarm.
 - **LocatorBeacon** / **BrightnessBoost** / **VolumeBoost** survival hold may keep sounding /
@@ -172,7 +194,10 @@ The app has no backend, database, or web service.
   empty, keep the funnel hidden and show the native YOU card with empty
   slots while restore is in flight — not cream-over-WKWebView, not a Face
   ID unlock pane. `persist()` must not save an empty RAM profile over
-  a stored blob (erase deletes Keychain first).
+  a stored blob (erase deletes Keychain first). Blank-all fields in Edit
+  + Save still Face IDs but cannot replace Keychain — UI may show
+  Couldn't Save; full wipe is Help → **Erase All User Data** only
+  (`eraseAllLocalData()`). Do not treat empty-Save as a wipe path.
 - Fresh install (no stored blob) shows the native **setup funnel** (Fill
   medical ID → Save → Write the band). Not on passerby tapper.
 - `SnapshotSafeCover` is the app-switcher cream thumbnail. Do **not** play
@@ -271,13 +296,14 @@ delete every prior `CACHE` name so deploys clear stale decrypt/layout. Bump
 bundled copy on every SW / decrypt deploy. Register the SW ASAP in `tapper.html`
 (not on `window.load`). Legacy zlib inflate is bounded (64 KiB) in Swift +
 streaming bound in `tapper.html`. Passerby HTML **arms local SOS only on a real
-bracelet NFC open with `#d=`** (hardware-local on that phone; no server; siren
-only — no autodial). Bare `/tapper/` and in-app preview do not auto-arm. Bare
-`/tapper/` without `#d=` shows a **No patient** empty state (not a blank YOU
-chart); 911 / Aid remain. Explicit SOS tap opens `tel:` immediately then the
-siren. DeviceMotion crash waits the US 10s+30s delay then `tel:` unless Stop.
-iOS may need a gesture to unmute AudioContext / grant motion. Native still owns
-system volume / brightness boost.
+bracelet NFC open with `#d=` in Safari** (phone without RedMed; hardware-local;
+siren only — no autodial). Phones with RedMed installed use Associated Domains
+and do not Safari-auto-arm. Bare `/tapper/` and in-app preview do not auto-arm.
+Bare `/tapper/` without `#d=` shows a **No patient** empty state (not a blank
+YOU chart); 911 / Aid remain. Explicit SOS tap opens `tel:` immediately then
+the siren. DeviceMotion crash waits the US 10s+30s delay then `tel:` unless
+Stop. iOS may need a gesture to unmute AudioContext / grant motion. Native
+still owns system volume / brightness boost.
 
 **Repo hygiene:** `main` is the only long-lived branch. After merges, delete
 feature branches on the remote; do not leave parallel “brainchild” branches.
@@ -317,7 +343,7 @@ renders a full RedMed · 911 · Aid card in Chrome without the owner app or any 
 is the fastest way to eyeball tapper/SW/redirect changes here. Cloudflare `_headers` / `_redirects`
 are **not** honored by `http.server` (Pages-only), so the legacy `/get.html` etc. serve their
 in-file meta-refresh HTML rather than a 30x here. Note SOS auto-arm still needs a real `#d=` band
-tap on hardware, so the survival alarm is not exercised by this local render.
+tap on hardware (Safari / no-app path), so the survival alarm is not exercised by this local render.
 
 **Consequence for cloud agents:** the update script is intentionally a no-op (both `python3` and
 `node` are already in the base image; the iOS app has no installable deps). Code review and static

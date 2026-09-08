@@ -7,10 +7,11 @@ import Security
 /// **Current contract:** `kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly`
 /// with **no** `kSecAttrAccessControl`. Readable whenever this device is
 /// unlocked. Excluded from iCloud Keychain and encrypted backups
-/// (`kSecAttrSynchronizable = false`). Face ID is **UI-only** on the owner
-/// RedMed user page, Edit / Save / Erase (`BiometricAuth`) — not a SecItem
-/// ACL. Keychain load does not prompt. Display of the YOU card does.
-/// 911, Aid, NFC write, app launch, and tapper do not prompt.
+/// (`kSecAttrSynchronizable = false`). Face ID is **UI-only** on
+/// post-Agree, Edit / Save / Erase / Load From Band (`BiometricAuth`) —
+/// not a SecItem ACL. Keychain load does not prompt. Viewing the YOU
+/// card does not prompt. 911, Aid, NFC write, later app launch, and
+/// tapper do not prompt.
 ///
 /// **Legacy items:** `biometryCurrentSet` ACL (older builds) or plain
 /// accessibility with no ACL. `load` still reads them. A successful read

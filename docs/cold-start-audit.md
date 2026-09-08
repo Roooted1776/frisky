@@ -8,9 +8,10 @@
 
 
 **Launch lock is gone.** Current path is `RedMedApp` → `PrivacySnapshotGuard` →
-`ConsentGateView` → `Main` → `ContentView`. Face ID sits on the owner RedMed
-tab immediately before the YOU card (stored ID), plus Edit / Save / Erase.
-Do not treat the `OwnerAppLock` notes below as current product.
+`ConsentGateView` → `Main` → `ContentView`. Face ID runs once **after** Agree
+(first launch / policy bump / after Erase), plus Edit / Save / Clear / Erase /
+Load From Band — **not** viewing the YOU card. Do not treat the `OwnerAppLock`
+notes below as current product.
 
 The rest of this file is a **historical** read-through of the cream-lock launch path
 (key-window races, `evaluatePolicy` during `.inactive`, Proceed / FacePage). Keep it

@@ -35,12 +35,31 @@ final class NFCBandManager: ObservableObject {
         let embedJSON: String?
     }
 
-    private let writer = NFCWriter()
-    private let reader = NFCReader()
+    /// CoreNFC sessions stay cold until first write/read — YOU-card open
+    /// must not pay for NFCWriter / NFCReader construction.
+    private var writerStorage: NFCWriter?
+    private var readerStorage: NFCReader?
+    private var didBindSessions = false
     private var cancellables = Set<AnyCancellable>()
     var isBusy: Bool { isWriting || isReading }
 
-    init() {
+    private var writer: NFCWriter {
+        ensureSessions()
+        return writerStorage!
+    }
+
+    private var reader: NFCReader {
+        ensureSessions()
+        return readerStorage!
+    }
+
+    init() {}
+
+    private func ensureSessions() {
+        if writerStorage == nil { writerStorage = NFCWriter() }
+        if readerStorage == nil { readerStorage = NFCReader() }
+        guard !didBindSessions else { return }
+        didBindSessions = true
         bindSessions()
     }
 
@@ -51,7 +70,8 @@ final class NFCBandManager: ObservableObject {
     /// Once the sheet is up, hold the band ~1–2″ to finish. CoreNFC drops the
     /// sheet if Write hops through `Task` / `Task.detached` first.
     /// Parked Share Band URL on the NFC tab is the same `OwnerBandURI` string.
-    /// No Face ID here — view / Edit / Save / Erase / Load From Band only.
+    /// No Face ID here — post-Agree / Edit / Save / Erase / Load From Band only
+    /// (not viewing the YOU card).
     /// Linked / Not linked flips only after a real verified CoreNFC write, or
     /// owner Load From Band that persist()s the chip — never simulate or share.
     func writeBand(from profile: ProfileData, isScannerSession: Bool) {
@@ -82,6 +102,7 @@ final class NFCBandManager: ObservableObject {
 
     /// Drop a live write/read sheet when leaving the NFC tab.
     func cancelSessions() {
+        guard didBindSessions else { return }
         writer.cancel()
         reader.cancel()
     }
@@ -143,6 +164,12 @@ final class NFCBandManager: ObservableObject {
 
     func dismissScannedCard() {
         scannedCard = nil
+    }
+
+    /// Universal Link / notification path: open the hosted `#d=` as an in-app
+    /// tap card (`?src=app`, no SOS). Does not touch owner Keychain.
+    func presentBandURLFromUniversalLink(_ urlString: String) {
+        presentHTMLCard(payloadOrURL: urlString)
     }
 
     /// Mark owner bracelet paired after a real CoreNFC write **and** matching read-back.

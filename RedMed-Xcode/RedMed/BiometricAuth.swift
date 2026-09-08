@@ -179,8 +179,8 @@ enum BiometricAuth {
     }
 
     /// Live `evaluatePolicy` in progress (including the teardown wait).
-    /// Scene `.inactive` during this is the Face ID sheet on the owner
-    /// RedMed user view / Edit / Save / Erase — do not treat it as a leave.
+    /// Scene `.inactive` during this is the Face ID sheet on post-Agree /
+    /// Edit / Save / Erase / Load From Band — do not treat it as a leave.
     static var isEvaluating: Bool {
         parkLock.lock()
         defer { parkLock.unlock() }

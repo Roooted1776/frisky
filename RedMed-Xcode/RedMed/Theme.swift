@@ -46,7 +46,8 @@ extension Color {
 ///
 /// First frame is flat `redmedBg` matching UILaunchScreen / LaunchBackground
 /// (`#fff7f7`) so SplashBoard → SwiftUI has no one-frame rose-wash jump.
-/// Wash lands after two MainActor yields with `animation: nil` (no fade flash).
+/// Wash lands after one MainActor yield with `animation: nil` — locked with
+/// LaunchRoot's cream veil (also one yield) for fastest flash-free open.
 struct RedMedPageBackground: View {
     @State private var showWash = false
 
@@ -69,9 +70,8 @@ struct RedMedPageBackground: View {
             .accessibilityHidden(true)
             .task {
                 guard !showWash else { return }
-                // Two yields: LaunchRoot’s cream veil drops after the same
-                // two yields, so this stays flat under that handoff, then wash.
-                await Task.yield()
+                // One yield — locked with LaunchRoot’s cream veil (also one).
+                // Same-frame drop+wash = fastest open without the flat-Main flash.
                 await Task.yield()
                 var t = Transaction()
                 t.animation = nil

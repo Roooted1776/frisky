@@ -366,7 +366,9 @@ const tapperSrc = readFileSync(join(ROOT, 'tapper/index.html'), 'utf8');
 assert('profileHasContent in tapper', tapperSrc.includes('function profileHasContent'));
 assert('is-unlinked toggle in tapper', tapperSrc.includes("classList.toggle('is-unlinked'"));
 assert('paintedFromBand requires content', tapperSrc.includes('paintedFromBand = !!fromBand && hasPatient'));
+assert('treat-first early vitals script', tapperSrc.includes('__redmedEarlyVitals') && tapperSrc.includes('Treat-first:'));
 assert('hashchange re-decodes #d=', tapperSrc.includes('decodeProfile().then(function (p)') && tapperSrc.includes('hashchange'));
+assert('own-phone handoff before SOS', tapperSrc.includes('redmed://band') && tapperSrc.includes('handoffToInstalledAppThenMaybeArm'));
 const extracted = tapperSrc.match(/function profileHasContent\(p\) \{[\s\S]*?\n  \}/);
 assert('profileHasContent extract', !!extracted);
 if (extracted) {

@@ -24,6 +24,9 @@
   --cat-medical:       var(--accent);
   --cat-medical-soft:  var(--accent-soft);
   --cat-medical-shadow: rgba(225, 29, 72, 0.35);
+  --cat-ships:       var(--accent);
+  --cat-ships-soft:  var(--accent-soft);
+  --cat-ships-shadow: rgba(225, 29, 72, 0.35);
   --text: #1c1917;                        /* Color.redmedDark — headings + primary ink */
   --text-muted: #78716c;                  /* Color.redmedMuted */
   --text-dim: rgba(28, 25, 23, 0.45);
@@ -129,6 +132,7 @@ body {
 .legal-nav a[href="#security"] { --chip: var(--cat-security); --chip-soft: var(--cat-security-soft); --chip-shadow: var(--cat-security-shadow); }
 .legal-nav a[href="#terms"]    { --chip: var(--cat-terms);    --chip-soft: var(--cat-terms-soft);    --chip-shadow: var(--cat-terms-shadow); }
 .legal-nav a[href="#medical-disclaimer"] { --chip: var(--cat-medical); --chip-soft: var(--cat-medical-soft); --chip-shadow: var(--cat-medical-shadow); }
+.legal-nav a[href="#ships-when-ready"] { --chip: var(--cat-ships); --chip-soft: var(--cat-ships-soft); --chip-shadow: var(--cat-ships-shadow); }
 
 .legal-nav a {
   font-family: var(--font);
@@ -193,6 +197,7 @@ body {
 #security { --accent: var(--cat-security); --accent-soft: var(--cat-security-soft); }
 #terms    { --accent: var(--cat-terms);    --accent-soft: var(--cat-terms-soft); }
 #medical-disclaimer { --accent: var(--cat-medical); --accent-soft: var(--cat-medical-soft); }
+#ships-when-ready { --accent: var(--cat-ships); --accent-soft: var(--cat-ships-soft); }
 
 @media (prefers-reduced-motion: reduce) {
   .legal-nav a { transition: none; }

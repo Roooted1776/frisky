@@ -12,7 +12,9 @@ shared “do not tap-track the medical card.” Do not mash them into one ad.
 | **B. Facility / EMS** | Station, agency, or facility that wants staff to *recognize and tap* a `MED ID` band, or (later) issue bands | Faster ICE on scene. Not an EHR. Not dispatch | Outbound / PO. Not Facebook |
 
 Paid ads and “available now” stay off until the **shared product gate** is
-green. View B has a **second company gate** on top of that.
+green. View B has a **second company gate** on top of that. Same rule as
+Help → Terms §12 / <strong>Ships When Ready</strong> (**ships when ready**): no calendar promise, no “available
+now” before the gate is actually green.
 
 Full claim bans also live in [`DO-NOT.md`](DO-NOT.md). Hardware sequence:
 [`band-engraving-and-nfc-sourcing.md`](band-engraving-and-nfc-sourcing.md).

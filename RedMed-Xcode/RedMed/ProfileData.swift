@@ -152,7 +152,7 @@ class ProfileData: ObservableObject {
         self.persists = persisting
         // UserDefaults only — a SecItem + LAContext exists() here ran on the
         // main thread before the first ConsentGate / Main frame and contended
-        // with Face ID. Prefetch starts after first paint (`RedMedApp.task`).
+        // with Face ID. Prefetch starts from `RedMedApp.task` (off-main).
         if persisting && Self.prefersLockOnLaunch {
             self.isRestoringFromKeychain = true
         }
@@ -160,8 +160,8 @@ class ProfileData: ObservableObject {
 
     /// Non-interactive Keychain read + JSON decode. Idempotent. Does not touch
     /// `@Published` fields until `restoreOnLaunch` adopts the result.
-    /// Call after first paint — never from `init`. ContentView restores ASAP
-    /// after one yield (no fixed 300ms Face ID stagger on returning opens).
+    /// Call from `RedMedApp.task` (off-main decode) — never from `init`.
+    /// ContentView adopts via `restoreOnLaunch` after one yield.
     /// Prefetch uses `.userInitiated` so the blob lands before YOU paints empty.
     /// UserDefaults gate only — no SecItem exists() here.
     func beginLaunchPrefetch() {
@@ -573,6 +573,10 @@ extension Notification.Name {
     static let redMedOpenNFCTab = Notification.Name("redMedOpenNFCTab")
     /// Preview / Scan tap card presented — PrivacySnapshotGuard must not cover it.
     static let redMedTapCardPresentationDidChange = Notification.Name("redMedTapCardPresentationDidChange")
+    /// Associated Domains: foreign (or unmatched) `/tapper/#d=` while RedMed is
+    /// installed — show in-app tap card (no SOS). Own matching band is ignored
+    /// in `RedMedApp` (foreground only).
+    static let redMedOpenBandURL = Notification.Name("redMedOpenBandURL")
 }
 
 struct EmergencyContact: Identifiable, Equatable {
