@@ -154,7 +154,7 @@ class ProfileData: ObservableObject {
         // UserDefaults gate only on the main thread — never SecItem / LAContext
         // / exists() here (that contended with Face ID and blocked first frame).
         // Detached Keychain+JSON starts immediately so SplashBoard overlaps
-        // decode; ContentView adopts after one yield.
+        // decode; ContentView adopts ASAP in `.task` (no pre-restore yield).
         if persisting && Self.prefersLockOnLaunch {
             self.isRestoringFromKeychain = true
             startLaunchPrefetchTask()
@@ -164,7 +164,7 @@ class ProfileData: ObservableObject {
     /// Non-interactive Keychain read + JSON decode. Idempotent. Does not touch
     /// `@Published` fields until `restoreOnLaunch` adopts the result.
     /// Prefer `init` (gate-on path). `RedMedApp.task` may call this as a
-    /// safety net if init skipped. ContentView adopts after one yield.
+    /// safety net if init skipped. ContentView adopts ASAP (no fixed yield).
     /// Prefetch uses `.userInitiated` so the blob lands before YOU paints empty.
     /// UserDefaults gate only — no SecItem exists() on the caller.
     func beginLaunchPrefetch() {

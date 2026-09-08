@@ -1,17 +1,19 @@
 # Cold Start Speed Audit
 
-> **2026-09 update:** ContentView no longer sleeps a fixed 300ms before
-> `restoreOnLaunch()`. ConsentGate arms Main only after Agree, so that sleep
-> was pure shipping lag on returning opens. Restore is yield-then-ASAP.
-> `LaunchRoot.holdLaunchCream` drops after one yield when consent is pending
-> (returning opens skip the veil).
+> **2026-09 update:** Consent is **4.10** (Agree covers location). A version
+> bump forces Before You Continue + Face ID + When-In-Use once — that is
+> intentional, not a paint regression. Returning opens after Agree skip all
+> three. `LaunchRoot` cream drops after one yield (first launch / policy bump
+> only). Scheme: `enableGPUValidationMode = "1"` is **Disabled** (Apple’s
+> encoding); `"2"` turns Metal API Validation back on — do not “fix” that to 2.
+> Pre-app cream with no `ColdLaunch` Console lines = Xcode install / LLDB
+> attach. Use scheme **RedMed-NoDebug** for a fair check.
 >
-> **2026-09 follow-up (returning YOU fill):** Prefetch now starts in
-> `ProfileData.init` (detached SecItem + JSON) so SplashBoard overlaps decode —
-> not from `RedMedApp.task` after first SwiftUI frame. ContentView adopts
-> Keychain *before* `RedMedHaptics.prepare()` and defers CoreMotion /
-> `LocatorBeacon.warmAlarmCache` ~400ms past adopt so those do not hitch the
-> filled-card paint. Do not put haptics or crash-monitor start ahead of restore.
+> **Returning YOU fill:** Prefetch starts in `ProfileData.init` (detached
+> SecItem + JSON) so SplashBoard overlaps decode. ContentView adopts Keychain
+> immediately in `.task` (no pre-restore yield). Haptics, tab-bar
+> `drawingGroup`, and CoreMotion / alarm-WAV warm stay ~400ms past adopt.
+> Do not put those ahead of restore.
 
 
 **Launch lock is gone.** Current path is `RedMedApp` → `PrivacySnapshotGuard` →
