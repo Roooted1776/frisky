@@ -192,11 +192,14 @@ struct PaneCard: View, Equatable {
                                     .fixedSize(horizontal: false, vertical: true)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .layoutPriority(1)
+                                // Same 28pt column + 12 trailing as pane header so every ">" shares one line.
                                 Image(systemName: "chevron.right")
                                     .font(.system(size: 13, weight: .semibold))
                                     .foregroundColor(.redmedAccent.opacity(0.55))
+                                    .frame(width: 28, height: 28)
                             }
-                            .padding(.horizontal, 14)
+                            .padding(.leading, 14)
+                            .padding(.trailing, 12)
                             .padding(.vertical, 14)
                             .background(Color.redmedSurface)
                             .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius))
@@ -205,7 +208,9 @@ struct PaneCard: View, Equatable {
                         .accessibilityLabel(topic.label)
                     }
                 }
-                .padding(.horizontal, 10)
+                // Trailing 0 so topic chevron column meets the pane header chevron column.
+                .padding(.leading, 10)
+                .padding(.trailing, 0)
                 .padding(.bottom, 12)
             }
         }
