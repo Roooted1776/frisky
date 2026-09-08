@@ -36,8 +36,8 @@ struct EditProfileView: View {
     @State private var healthImportMessage: String?
 
     private static let bloodTypeChoices = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
-    /// Keeps the Keychain blob small so decode on Main appear stays fast.
-    private static let notesWordLimit = 150
+    /// Capped so this iPhone and the NTAG216 hold the same note (`MAX_STR` 200).
+    private static let notesWordLimit = 40
 
     /// One body size across the edit form (labels, fields, prompts).
     /// Nav bar metrics live in `RedMedChrome` so Cancel / Save stay even.
@@ -750,10 +750,10 @@ struct EditProfileView: View {
         let nextAllergies = allergies.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         let nextMeds = medications.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         let nextConditions = conditions.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-        let nextNotes = Self.capToWordLimit(
+        let nextNotes = String(Self.capToWordLimit(
             notes.trimmingCharacters(in: .whitespacesAndNewlines),
             limit: Self.notesWordLimit
-        )
+        ).prefix(200))
         let nextContacts = contacts.compactMap { contact -> EmergencyContact? in
             let trimmedName = contact.name.trimmingCharacters(in: .whitespacesAndNewlines)
             let trimmedPhone = contact.phone.trimmingCharacters(in: .whitespacesAndNewlines)

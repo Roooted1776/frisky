@@ -1,7 +1,7 @@
 # Security
 
 Engineer-facing threat model for RedMed. User-facing copy lives in
-`RedMed-Xcode/RedMed/Help.html` (§Security). Product “do not claim” rules:
+`RedMed-Xcode/RedMed/Document/Document.html` (§Security). Product “do not claim” rules:
 `docs/DO-NOT.md`. Broader audit trail: `docs/AUDIT.md`.
 
 ## Posture (short)
@@ -46,7 +46,7 @@ deletes Keychain first. `exists` unknown SecItem errors → `false` (empty funne
 not a locked ghost). Scanner / `persists == false` snapshots never touch owner
 Keychain.
 
-**Notes** stay Keychain-only (`NFCChipProfile` has no `notes` field).
+**Notes** ride both stores (`NFCChipProfile.notes`, compact index 12). Same `MAX_STR` cap as other strings so the Keychain blob and the chip match.
 
 ## `#d=` codec (`ProfileNFCCodec.swift` ↔ `tapper/index.html`)
 
@@ -54,7 +54,7 @@ Wire (new writes):
 
 1. Flat positional array (no JSON keys) — blood / allergies / meds / emergency
    phone / name / dob / conditions / contacts / donor / updated? /
-   pregnant? / deafOrVisionImpaired?
+   pregnant? / deafOrVisionImpaired? / notes?
 2. UTF-8 JSON array sealed with AES-256-GCM (CryptoKit / WebCrypto)
 3. Bytes `0x02 \|\| nonce(12) \|\| ciphertext+tag` → base64url after `#d=`
 
@@ -68,7 +68,12 @@ zlib (and bare zlib), plaintext `{`/`[` first byte. Caps: `MAX_STR=200`,
 
 Write gate (`AppConfig.OwnerBandURI.isValidWriteURL`): exact
 `medicalCardBaseURL` + non-empty `#d=` + base64url charset only — rejects
-vendor/social/short hosts, query smuggling, second `#`, whitespace.
+vendor/social/short hosts, query smuggling, `&tab=`, second `#`, whitespace.
+
+Decode extract (`ProfileNFCCodec.extractPayload` ↔ tapper
+`hash.slice(3).split('&')[0]`): deep links may be `#d=<payload>&tab=aid`;
+only the base64url segment is decoded. Decode also fails closed on non-base64url
+charset (same alphabet as the write gate).
 
 Lockstep: `node scripts/test-d-codec.mjs` (AES / zlib / compact / URI).
 

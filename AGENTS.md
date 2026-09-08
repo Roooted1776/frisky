@@ -9,13 +9,11 @@ authoritative for code.
 **Ship blocker:** the passerby host `https://roooted1776.github.io/tapper/` is live.
 Owner NFC hardware is parked (`nfcHardwareEnabled = false`, no NFC entitlement,
 no `NFCReaderUsageDescription`) so Automatic Signing works without NFC Tag
-Reading on App ID `com.redmed.app`. **Associated Domains is enabled**
-(`applinks:roooted1776.github.io` in `RedMed.entitlements`) so a phone with
-RedMed installed does not Safari-open on wrist-band proximity — see
-`docs/associated-domains-restore.md`. Safari also tries `redmed://band#d=`
-before SOS when AASA/UL miss. That capability needs paid Program on
-the App ID (personal/free teams cannot provision it; park the entitlement
-again only if you must device-sign on a personal team). The owner NFC tab
+Reading on App ID `com.redmed.app`. **Associated Domains is parked**
+(`associatedDomainsEnabled = false`, no `applinks:` in `RedMed.entitlements`)
+so Automatic Signing works on a personal/free team. Safari still tries
+`redmed://band#d=` before SOS. Restore Associated Domains after paid Program
+— see `docs/associated-domains-restore.md`. The owner NFC tab
 stays visible; Write is pack-only + Share Band URL; **Load From Band UI is
 hidden** while parked. Restore real CoreNFC after paid Program + NFC Tag
 Reading — see `docs/NFC-RESTORE.md`.
@@ -106,12 +104,12 @@ The app has no backend, database, or web service.
   Erase, or Write to NFC) so it cannot mutate owner Keychain or `@AppStorage`.
   Passerby `tapper.html` has no Help button.
 - Product HTML is only (1) one passerby file `tapper/index.html` (Xcode copies it into the app bundle as `tapper.html` at build; repo-root `tapper.html` is a `#d=`-preserving redirect to `/tapper/`; legacy `card.html` / `get.html` / `/get/` also redirect to `/tapper/`, preserving `#d=`) and
-  (2) policy pages bundled solely under `RedMed-Xcode/RedMed/`: one `Help.html`
-  (Privacy + TOS + Security, in-file anchors) plus `legal-doc.css`. Legacy
-  `PrivacyPolicy.html` / `TOS.html` / `security.html` redirect into `Help.html`.
-  `HowItWorks.html` redirects into `redmed://main`. Policies CTA to the owner
-  app; they do not host owner edit UI. Do not reintroduce repo-root copies of
-  the policy HTML.   Owner Help menu is Write the band + Privacy / TOS / Security /
+  (2) policy pages bundled solely under `RedMed-Xcode/RedMed/Document/`: one
+  `Document.html` (Privacy + TOS + Security + Medical Disclaimer + Ships When
+  Ready, in-file anchors) plus `legal-doc.css`. Legacy `Help.html` at the RedMed
+  root redirects into `Document/Document.html` (hash preserved). Policies CTA to
+  the owner app; they do not host owner edit UI. Do not reintroduce repo-root
+  copies of the policy HTML. Owner Help menu is Write the band + Privacy / TOS / Security /
   Medical disclaimer + Erase all user data (no Settings section, no
   in-app How It Works / MainInfoView, no Local History row, no local tapper.html
   WebView). Help is on 911 / Aid / NFC (top chrome) — not on Edit, whose

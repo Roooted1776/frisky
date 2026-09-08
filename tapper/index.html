@@ -134,7 +134,7 @@ function redmedAssetURL(file) {
        (public client key) → base64url. Legacy still works: named JSON,
        pre-AES compact arrays, optional 0x01 zlib.
        New array: [blood, allergies, meds, emergencyPhone, name, dob,
-       conditions, contacts, donor, updated?, pregnant?, deafOrVisionImpaired?]
+       conditions, contacts, donor, updated?, pregnant?, deafOrVisionImpaired?, notes?]
        Legacy array: [name, dob, blood, donor, allergies, meds,
        conditions, contacts, updated?]
      - Offline: sw.js Cache Storage — cache-first multi-key shell for almost-instant
@@ -1168,12 +1168,13 @@ function redmedAssetURL(file) {
   @media (prefers-reduced-motion: reduce) {
     .aid-chevron::before { transition: none; }
   }
-  /* Topic rows — same as owner PaneCard open body */
+  /* Topic rows — same as owner PaneCard open body.
+     Trailing pad 0 + topic trailing 12 + 28px chevron = pane header ">" column. */
   .aid-topics {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    padding: 0 10px 12px;
+    padding: 0 0 12px 10px;
   }
   .aid-topic {
     display: flex;
@@ -1181,7 +1182,7 @@ function redmedAssetURL(file) {
     gap: 10px;
     width: 100%;
     margin: 0;
-    padding: 14px;
+    padding: 14px 12px 14px 14px;
     border: none;
     border-radius: var(--box);
     background: var(--surface);
@@ -1202,8 +1203,8 @@ function redmedAssetURL(file) {
     word-break: break-word;
   }
   .aid-topic-chevron {
-    width: 18px;
-    height: 18px;
+    width: 28px;
+    height: 28px;
     flex-shrink: 0;
     position: relative;
     opacity: 0.55;
@@ -1211,10 +1212,10 @@ function redmedAssetURL(file) {
   .aid-topic-chevron::before {
     content: '';
     position: absolute;
-    top: 4px;
-    left: 5px;
-    width: 7px;
-    height: 7px;
+    top: 9px;
+    left: 9px;
+    width: 8px;
+    height: 8px;
     border-right: 2px solid var(--accent);
     border-bottom: 2px solid var(--accent);
     transform: rotate(-45deg);
@@ -1295,6 +1296,15 @@ function redmedAssetURL(file) {
   .aid-sec-row .care-mark {
     flex-shrink: 0;
     margin-top: 4px;
+    width: 14px;
+    height: 10px;
+    position: relative;
+  }
+  .aid-sec-row .care-mark::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 3px;
     width: 0;
     height: 0;
     border-top: 5px solid transparent;
@@ -1527,6 +1537,7 @@ function redmedAssetURL(file) {
         <div class="row row-donor" id="rowDonorRow"><span class="k">Organ Donor</span><span class="v empty" id="rowDonor">—</span></div>
         <div class="row row-pregnant" id="rowPregnantRow"><span class="k">Pregnant</span><span class="v empty" id="rowPregnant">—</span></div>
         <div class="row row-deaf" id="rowDeafRow"><span class="k">Deaf / Vision Impaired</span><span class="v empty" id="rowDeaf">—</span></div>
+        <div class="row" id="rowNotesRow"><span class="k">Notes</span><span class="v empty" id="rowNotes">—</span></div>
       </div>
 
       <div class="list-grid">
@@ -1642,6 +1653,7 @@ function redmedAssetURL(file) {
         setTxt('rowDonor', p.donor ? 'Yes' : '');
         setTxt('rowPregnant', p.pregnant ? 'Yes' : '');
         setTxt('rowDeaf', p.deafOrVisionImpaired ? 'Yes' : '');
+        setTxt('rowNotes', p.notes || '');
         var bloodRow = document.getElementById('rowBloodRow');
         if (bloodRow) bloodRow.classList.toggle('has-blood', !!blood);
         fillList('allergies', 'countAllergies', 'dropAllergies', p.allergies);
@@ -1663,7 +1675,8 @@ function redmedAssetURL(file) {
             conditions: a[6],
             donor: !!(a[8] === true || a[8] === 1 || a[8] === '1'),
             pregnant: !!(a[10] === true || a[10] === 1 || a[10] === '1'),
-            deafOrVisionImpaired: !!(a[11] === true || a[11] === 1 || a[11] === '1')
+            deafOrVisionImpaired: !!(a[11] === true || a[11] === 1 || a[11] === '1'),
+            notes: a[12] || ''
           };
         }
         // Legacy: [name, dob, blood, donor, allergies, meds, conditions, ...]
@@ -2127,7 +2140,8 @@ function redmedAssetURL(file) {
       donor: !!(arr[8] === true || arr[8] === 1 || arr[8] === '1'),
       updated: asString(str(9)),
       pregnant: !!(arr[10] === true || arr[10] === 1 || arr[10] === '1'),
-      deafOrVisionImpaired: !!(arr[11] === true || arr[11] === 1 || arr[11] === '1')
+      deafOrVisionImpaired: !!(arr[11] === true || arr[11] === 1 || arr[11] === '1'),
+      notes: asString(str(12))
     };
   }
 
@@ -2159,7 +2173,8 @@ function redmedAssetURL(file) {
       allergies: splitList(raw.allergies),
       meds: splitList(raw.meds != null ? raw.meds : raw.medications),
       conditions: splitList(raw.conditions),
-      contacts: contacts
+      contacts: contacts,
+      notes: asString(raw.notes)
     };
   }
 
@@ -2437,6 +2452,7 @@ function redmedAssetURL(file) {
     }
     if (p.contacts && p.contacts.length) return true;
     if (p.donor || p.pregnant || p.deafOrVisionImpaired) return true;
+    if ((p.notes || '').trim()) return true;
     return false;
   }
 
@@ -2495,6 +2511,7 @@ function redmedAssetURL(file) {
     setRow('rowDonor', p.donor ? 'Yes' : '');
     setRow('rowPregnant', p.pregnant ? 'Yes' : '');
     setRow('rowDeaf', p.deafOrVisionImpaired ? 'Yes' : '');
+    setRow('rowNotes', p.notes || '');
     var bloodRow = document.getElementById('rowBloodRow');
     if (bloodRow) {
       if (rawBlood) bloodRow.classList.add('has-blood');

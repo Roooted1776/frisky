@@ -16,6 +16,9 @@ struct NFCChipProfile: Codable, Equatable, Sendable {
     var conditions: [String] = []
     var contacts: [NFCChipContact] = []
     var updated: String = ""
+    /// Free-text note. Same cap as other strings (`maxStr`). On-chip so the
+    /// band matches this iPhone — not Keychain-only.
+    var notes: String = ""
 
     /// Anything persist() would treat as a real ID. Empty `#d=` must not clobber Keychain.
     var hasAnyProfileData: Bool {
@@ -29,6 +32,7 @@ struct NFCChipProfile: Codable, Equatable, Sendable {
             || !meds.isEmpty
             || !conditions.isEmpty
             || contacts.contains { !$0.name.isEmpty || !$0.phone.isEmpty }
+            || !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }
 
@@ -42,10 +46,10 @@ struct NFCChipContact: Codable, Equatable, Sendable {
 ///
 /// Wire format (new writes):
 /// 1. Profile → flat positional array (no JSON keys):
-///    `[blood, allergies, meds, emergencyPhone, name, dob, conditions, contacts, donor, updated?, pregnant?, deafOrVisionImpaired?]`
+///    `[blood, allergies, meds, emergencyPhone, name, dob, conditions, contacts, donor, updated?, pregnant?, deafOrVisionImpaired?, notes?]`
 ///    Indices 0–3 match the product compact schema; 4+ keep the full card usable.
-///    `pregnant`/`deafOrVisionImpaired` only appear when either is true (see `compactArray`),
-///    so older readers that stop at `updated` are unaffected.
+///    Trailing `pregnant`/`deaf`/`notes` only appear when the wire needs them
+///    (see `compactArray`), so older readers that stop at `updated` are unaffected.
 ///    List fields are comma-joined strings; contacts are `[name, rel, phone]` rows.
 /// 2. UTF-8 JSON array (no spaces) sealed with AES-GCM (CryptoKit).
 /// 3. Bytes `0x02 || nonce(12) || ciphertext+tag` → base64url after `#d=`.
@@ -87,6 +91,7 @@ enum ProfileNFCCodec {
         static let updated = 9
         static let pregnant = 10
         static let deafOrVisionImpaired = 11
+        static let notes = 12
     }
 
     /// Pre-AES compact array: `[name, dob, blood, donor, allergies, meds, conditions, contacts, updated?]`
@@ -123,7 +128,8 @@ enum ProfileNFCCodec {
                     phone: contact.dialDigits.isEmpty ? contact.phone : contact.dialDigits
                 )
             },
-            updated: profile.lastUpdated
+            updated: profile.lastUpdated,
+            notes: String(profile.notes.trimmingCharacters(in: .whitespacesAndNewlines).prefix(200))
         )
     }
 
@@ -172,15 +178,23 @@ enum ProfileNFCCodec {
     }
 
     /// Strip `#d=` from a full tapper URL (or pass through a bare fragment).
+    /// Matches `tapper.html` `hash.slice(3).split('&')[0]` — deep links may be
+    /// `#d=<payload>&tab=aid`; only the base64url segment is the chip payload.
     /// `nonisolated` — NFC callbacks / `Task.detached` pack path.
     nonisolated static func extractPayload(fromURLString raw: String) -> String? {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
+        var payload: String
         if let range = trimmed.range(of: "#d=") {
-            let payload = String(trimmed[range.upperBound...])
-            return payload.isEmpty ? nil : payload
+            payload = String(trimmed[range.upperBound...])
+        } else {
+            payload = trimmed
         }
-        return trimmed
+        // Same cut as passerby JS — reject `&tab=` / query smuggling into decode.
+        if let amp = payload.firstIndex(of: "&") {
+            payload = String(payload[..<amp])
+        }
+        return payload.isEmpty ? nil : payload
     }
 
     /// Owner RedMed / prefetch — stable `#d=` fragment only (no URL prefix).
@@ -216,7 +230,8 @@ enum ProfileNFCCodec {
             "allergies": chip.allergies,
             "meds": chip.meds,
             "conditions": chip.conditions,
-            "contacts": contacts
+            "contacts": contacts,
+            "notes": chip.notes
         ]
         guard JSONSerialization.isValidJSONObject(obj),
               let data = try? JSONSerialization.data(withJSONObject: obj, options: []),
@@ -240,9 +255,11 @@ enum ProfileNFCCodec {
     }
 
     static func decodeProfile(fromURLString urlString: String) -> NFCChipProfile? {
-        guard let range = urlString.range(of: "#d=") else { return nil }
-        let encoded = String(urlString[range.upperBound...])
-        guard encoded.utf8.count <= maxEncodedLength else { return nil }
+        // Require `#d=` so bare strings without a fragment do not decode as chips
+        // (extractPayload alone would pass a non-URL string through).
+        guard urlString.range(of: "#d=") != nil,
+              let encoded = extractPayload(fromURLString: urlString),
+              encoded.utf8.count <= maxEncodedLength else { return nil }
         return decodePayload(encoded)
     }
 
@@ -276,8 +293,19 @@ enum ProfileNFCCodec {
         return encoded
     }
 
+    /// Same charset as `OwnerBandURI.isValidWriteURL` — fail closed on smuggled bytes.
+    private static func isBase64urlCharset(_ encoded: String) -> Bool {
+        encoded.unicodeScalars.allSatisfy { scalar in
+            switch scalar.value {
+            case 0x30...0x39, 0x41...0x5A, 0x61...0x7A, 0x2D, 0x5F: return true
+            default: return false
+            }
+        }
+    }
+
     private static func decodePayload(_ encoded: String) -> NFCChipProfile? {
-        guard let data = base64urlDecode(encoded), data.count <= maxEncodedLength, !data.isEmpty else {
+        guard isBase64urlCharset(encoded),
+              let data = base64urlDecode(encoded), data.count <= maxEncodedLength, !data.isEmpty else {
             return nil
         }
         if data[data.startIndex] == aesVersion {
@@ -331,10 +359,14 @@ enum ProfileNFCCodec {
         }
         // Trailing optional flags — only appended when the wire needs them, so
         // legacy readers that stop at `updated` (index 9) are unaffected.
-        if chip.pregnant || chip.deafOrVisionImpaired {
+        // `notes` sits at 12; pad pregnant/deaf when notes is present so a
+        // note string cannot land on the flag slots.
+        let notes = clipStr(chip.notes.trimmingCharacters(in: .whitespacesAndNewlines))
+        if chip.pregnant || chip.deafOrVisionImpaired || !notes.isEmpty {
             if chip.updated.isEmpty { row.append("") }
             row.append(chip.pregnant ? 1 : 0)
             row.append(chip.deafOrVisionImpaired ? 1 : 0)
+            if !notes.isEmpty { row.append(notes) }
         }
         return row
     }
@@ -463,7 +495,8 @@ enum ProfileNFCCodec {
             meds: list(Idx.meds),
             conditions: list(Idx.conditions),
             contacts: contacts(Idx.contacts),
-            updated: str(Idx.updated)
+            updated: str(Idx.updated),
+            notes: str(Idx.notes)
         )
         // Reject lone "0"/"1" so a misclassified legacy donor never becomes tel:1.
         let emergency = usableEmergencyPhone(str(Idx.emergencyPhone))
@@ -574,7 +607,8 @@ enum ProfileNFCCodec {
             meds: list("meds"),
             conditions: list("conditions"),
             contacts: contactRows,
-            updated: str("updated")
+            updated: str("updated"),
+            notes: str("notes")
         )
     }
 

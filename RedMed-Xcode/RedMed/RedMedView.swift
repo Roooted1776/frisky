@@ -28,6 +28,9 @@ struct RedMedView: View {
     @State private var healthSeed: HealthKitProfileImport.Draft?
     /// Tracks whether this tab currently holds MedicalCardScreenWake.
     @State private var holdingScreenWake = false
+    /// Next-step banner waits past Keychain adopt so it does not insert
+    /// above the YOU card in the same layout commit as the field fill.
+    @State private var nextStepBannerReady = false
 
     /// Owner empty profile — native steps instead of a blank YOU card.
     /// Hidden while a stored ID is expected or restore is in flight
@@ -132,6 +135,14 @@ struct RedMedView: View {
                 .presentationBackground(Color.redmedBg)
         }
         .onAppear { syncScreenWake() }
+        .task {
+            guard !isScannerSession else { return }
+            // Same cadence as haptics / wash — after YOU fill can commit.
+            await Task.yield()
+            try? await Task.sleep(nanoseconds: 400_000_000)
+            guard !Task.isCancelled else { return }
+            nextStepBannerReady = true
+        }
         .onChange(of: isVisible) { _, _ in syncScreenWake() }
         .onChange(of: showsOwnerSetupFunnel) { _, _ in syncScreenWake() }
         .onChange(of: showEdit) { _, _ in syncScreenWake() }
@@ -151,9 +162,11 @@ struct RedMedView: View {
     }
 
     /// Sibling above the YOU card — never an overlay on the tap card.
+    /// Hidden while restore is in flight and for ~400ms after first paint so
+    /// the banner does not insert in the same commit as Keychain field fill.
     @ViewBuilder
     private var ownerNextStepBanner: some View {
-        if profile.isRestoringFromKeychain {
+        if profile.isRestoringFromKeychain || !nextStepBannerReady {
             EmptyView()
         } else if !profile.isEmergencyProfileConfigured {
             OwnerNextStepBanner(
@@ -329,6 +342,8 @@ private struct OwnerYouCard: View {
             youRow(label: "Pregnant", value: profile.isPregnant ? "Yes" : "")
             Divider().overlay(Color.redmedDivider)
             youRow(label: "Deaf / Vision Impaired", value: profile.isDeafOrVisionImpaired ? "Yes" : "")
+            Divider().overlay(Color.redmedDivider)
+            youRow(label: "Notes", value: profile.notes.trimmingCharacters(in: .whitespacesAndNewlines))
         }
         // flatten: false — compositingGroup kept the empty "—" paint after
         // Keychain restore (same reason Edit uses flatten: false).
@@ -346,6 +361,7 @@ private struct OwnerYouCard: View {
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(shown.isEmpty ? Color.redmedDark.opacity(0.4) : .redmedDark)
                 .multilineTextAlignment(.trailing)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, RedMedChrome.pagePadX)
         .padding(.vertical, 11)
@@ -622,9 +638,9 @@ private struct OwnerSetupFunnel: View {
                 .padding(.bottom, 2)
             stepRow(number: "1", title: "Fill Your Medical ID", detail: "Name, birth date, blood type. Allergies and contacts help EMS.")
             Divider().overlay(Color.redmedDivider).padding(.leading, 54)
-            stepRow(number: "2", title: "Save", detail: "Face ID writes it to this iPhone's Keychain. Nothing leaves the phone.")
+            stepRow(number: "2", title: "Save", detail: "Face ID writes it to this iPhone's Keychain. This device only — not iCloud, not a US-state account.")
             Divider().overlay(Color.redmedDivider).padding(.leading, 54)
-            stepRow(number: "3", title: AppConfig.nfcHardwareEnabled ? "Write The Band" : "Preview The Helper Card", detail: AppConfig.nfcHardwareEnabled ? "NFC tab packs the card onto the chip. Helpers tap. No app, no login." : "NFC tab packs the card for Preview. Live band write ships when NFC Tag Reading is on the App ID.")
+            stepRow(number: "3", title: AppConfig.nfcHardwareEnabled ? "Write The Band" : "Preview The Helper Card", detail: AppConfig.nfcHardwareEnabled ? "NFC tab writes the same ID onto the chip. \(AppConfig.BraceletRF.completeBandSummary) Helpers tap. No app, no login." : "NFC tab packs the same ID for Preview. Live band write ships when NFC Tag Reading is on the App ID. \(AppConfig.BraceletRF.completeBandSummary)")
         }
         .redmedBox()
     }

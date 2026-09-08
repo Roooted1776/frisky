@@ -42,10 +42,10 @@ enum AppConfig {
     /// Live App Store listing URL. `nil` until a paid Apple Developer account
     /// has a real app ID — never write a placeholder onto QR or NFC.
     static let appStoreURL: String? = nil
-    /// Unused in Swift (in-app Help is bundled `Help.html`). Connect placeholders
+    /// Unused in Swift (in-app Help is bundled `Document/Document.html`). Connect placeholders
     /// stay in this repo — not jsDelivr `@main` of a second tree.
     static let supportURL = "https://github.com/Roooted1776/frisky/blob/main/support/index.html"
-    static let privacyPolicyURL = "https://github.com/Roooted1776/frisky/blob/main/RedMed-Xcode/RedMed/Help.html"
+    static let privacyPolicyURL = "https://github.com/Roooted1776/frisky/blob/main/RedMed-Xcode/RedMed/Document/Document.html"
 
     /// Owner band NDEF contract (permanent): write only
     /// `medicalCardBaseURL + "#d=" + base64url`. Profile stays in the fragment —
@@ -55,6 +55,11 @@ enum AppConfig {
         /// NFC tab fact line — single source for “data independence” copy.
         static var dataIndependenceSummary: String {
             "Owner writes #d= on-chip — no vendor cloud, no social/short URL, no BLE."
+        }
+
+        /// Phone Keychain and chip are two copies. Neither depends on the other.
+        static var storesIndependenceSummary: String {
+            "This iPhone keeps your ID in Keychain. The chip keeps its own copy. Phone off, wiped, or in another state does not blank the band."
         }
 
         /// The band is the credential. Packing is not a secret lock.
@@ -71,8 +76,11 @@ enum AppConfig {
             guard rest.hasPrefix("#d=") else { return false }
             let payload = rest.dropFirst(3)
             guard !payload.isEmpty else { return false }
-            // Fragment only — reject query smuggling / second hashes / whitespace.
-            if payload.contains(where: { $0 == "#" || $0 == "?" || $0 == " " || $0 == "\n" || $0 == "\r" }) {
+            // Fragment only — reject query smuggling / `&tab=` / second hashes / whitespace.
+            // Charset below also rejects `&`; keep the explicit set for fail-closed clarity.
+            if payload.contains(where: {
+                $0 == "#" || $0 == "?" || $0 == "&" || $0 == " " || $0 == "\n" || $0 == "\r"
+            }) {
                 return false
             }
             // AES-GCM wire is base64url (A–Z a–z 0–9 - _).
@@ -88,7 +96,8 @@ enum AppConfig {
     // MARK: - Paid Apple Developer Program (temporarily parked — do not delete)
     // CoreNFC Tag Reading, HealthKit, and a live App Store URL need a paid team
     // + App ID capabilities. Keep these false/nil until Max re-enables them.
-    // Restore: docs/NFC-RESTORE.md, docs/healthkit-restore.md. Do not remove code paths.
+    // Restore: docs/NFC-RESTORE.md, docs/associated-domains-restore.md,
+    // docs/healthkit-restore.md. Do not remove code paths.
 
     /// Product kill switch for CoreNFC write/read sessions only.
     /// Owner still always sees the NFC tab (ContentView.showsNFC); scanners never do.
@@ -107,7 +116,10 @@ enum AppConfig {
     /// wrist proximity must not hijack that iPhone). Requires Associated Domains
     /// on App ID `com.redmed.app` + paid Apple Developer — see
     /// `docs/associated-domains-restore.md`. Keep in lockstep with the entitlement.
-    static let associatedDomainsEnabled = true
+    /// Parked (`false`): personal/free teams cannot provision Associated Domains
+    /// (same class of problem as CoreNFC). Safari still tries `redmed://band#d=`
+    /// before SOS. Restore after paid Program.
+    static let associatedDomainsEnabled = false
 
     /// Product kill switch for the optional Apple Health import on the empty-profile
     /// funnel / Edit. `true` = `HealthKitProfileImport` may call HealthKit.
@@ -191,6 +203,12 @@ enum AppConfig {
             "\(chipPart), \(carrierLabel), ISO 14443A Type 2, NDEF blank unlocked. No pre-encode, no lock. Not NTAG213, MIFARE, LF, or UHF."
         }
 
+        /// Hardware SKU: bracelet ships finished. Owner only programs NDEF.
+        /// Just the chip — no battery, no extra electronics.
+        static var completeBandSummary: String {
+            "Band comes complete. Just the chip is needed. No battery."
+        }
+
         static var laserFaceSummary: String {
             "Laser face: \(laserFace) only."
         }
@@ -205,11 +223,15 @@ enum AppConfig {
         }
 
         /// What can still open the URL later (Apple OS path; phone off / locked OK).
-        /// Associated Domains: phone with RedMed opens the app instead of Safari
-        /// (own wrist band must not hijack that iPhone). Passerby / no-app keeps
-        /// Safari + SOS auto-arm. No BLE / local-network band ranging.
+        /// Associated Domains (when enabled): phone with RedMed opens the app
+        /// instead of Safari (own wrist band must not hijack that iPhone).
+        /// Parked: Safari tries `redmed://band` before SOS. Passerby / no-app
+        /// keeps Safari + SOS auto-arm. No BLE / local-network band ranging.
         static var backgroundTagReadingSummary: String {
-            "iOS Background Tag Reading can still open the card later — phone can be off or locked; a deliberate tap (phone top \(intentionalTapRangeLabel) from the band) still works. With RedMed installed, Associated Domains opens the app instead of Safari so your own wrist band does not take over this iPhone. Passerby phones without RedMed still get Safari. Wrist + pocket is usually fine; phone pressed to the clasp can still couple. Writing the chip does not change that. Band stays passive — no battery, no Bluetooth to find nearby."
+            let installPath = AppConfig.associatedDomainsEnabled
+                ? "With RedMed installed, Associated Domains opens the app instead of Safari so your own wrist band does not take over this iPhone."
+                : "With RedMed installed, Safari tries redmed://band before SOS so the app can claim the tap; Associated Domains is parked until paid Program."
+            return "iOS Background Tag Reading can still open the card later — phone can be off or locked; a deliberate tap (phone top \(intentionalTapRangeLabel) from the band) still works. \(installPath) Passerby phones without RedMed still get Safari. Wrist + pocket is usually fine; phone pressed to the clasp can still couple. Writing the chip does not change that. Band stays passive — no battery, no Bluetooth to find nearby."
         }
 
         static var paymentPOSSummary: String {
@@ -229,7 +251,7 @@ enum AppConfig {
         static var noBluetoothSummary: String { carrierVsBluetoothSummary }
 
         static var hardwareParkedSummary: String {
-            "CoreNFC write is parked until a paid Apple Developer team can provision NFC Tag Reading. Share Band URL is the same #d= payload Write would program — Shortcuts or NFC Tools can put it on a blank NTAG216. Linked still requires a real CoreNFC write."
+            "CoreNFC write is parked until a paid Apple Developer team can provision NFC Tag Reading. Share Band URL is the same #d= payload Write would program onto the band's chip (Shortcuts or NFC Tools). The band comes complete — just the chip, no battery. Linked still requires a real CoreNFC write."
         }
     }
 

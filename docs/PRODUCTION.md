@@ -42,7 +42,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 
 | Area | Status |
 |------|--------|
-| Band write host | Live: `https://roooted1776.github.io/tapper/` (smoke green 2026-08-31). In-repo CoreNFC is parked (`nfcHardwareEnabled = false`, no NFC entitlement). Associated Domains entitlement is on (`associatedDomainsEnabled = true`) so installed RedMed does not Safari-open on wrist-band proximity — App ID capability needs paid Program. Automatic Signing does not need NFC Tag Reading. Restore CoreNFC via `docs/NFC-RESTORE.md` |
+| Band write host | Live: `https://roooted1776.github.io/tapper/` (smoke green 2026-08-31). In-repo CoreNFC is parked (`nfcHardwareEnabled = false`, no NFC entitlement). Associated Domains is parked (`associatedDomainsEnabled = false`, no `applinks:` key) so Automatic Signing works on a personal/free team. Safari still tries `redmed://band#d=` before SOS. Restore Associated Domains via `docs/associated-domains-restore.md`. Restore CoreNFC via `docs/NFC-RESTORE.md` |
 | `redmed.pages.dev` | 404 until CF secrets / Git connect |
 | XCTest | No iOS test target. Codec lockstep is Node, not XCTest |
 | App Store package | `PrivacyInfo.xcprivacy` + export flag exist; listing is parked |
@@ -52,10 +52,11 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 Not doing these in git until you have the Program and an app ID:
 
 1. NFC Tag Reading on App ID `com.redmed.app` (portal + Xcode capability), then restore in-repo flag, entitlement, and usage string — see `docs/NFC-RESTORE.md`.
-2. HealthKit entitlement — keep `healthKitImportEnabled = false`.
-3. `AppConfig.appStoreURL` is `nil` (no placeholder listing).
-4. App Store Connect package / Archive.
+2. Associated Domains on App ID `com.redmed.app`, then restore in-repo flag + `applinks:` — see `docs/associated-domains-restore.md`.
+3. HealthKit entitlement — keep `healthKitImportEnabled = false`.
+4. `AppConfig.appStoreURL` is `nil` (no placeholder listing).
+5. App Store Connect package / Archive.
 
-Legal policies stay in Help.html. User acknowledgments stay on `ConsentGateView` (first launch / policy bump; Agree this process stays in Main). Face ID runs **after** Agree — not on Before You Continue, and not as an app-open cream lock in front of Main.
+Legal policies stay in `Document/Document.html`. User acknowledgments stay on `ConsentGateView` (first launch / policy bump; Agree this process stays in Main). Face ID runs **after** Agree — not on Before You Continue, and not as an app-open cream lock in front of Main.
 
 Custom HTML domain is still TBD (`docs/domain.md`). Write base `/tapper/` is green.

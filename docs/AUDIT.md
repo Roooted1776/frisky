@@ -4,6 +4,10 @@
 **Default branch:** `main` @ `90d4b0b` (“Skip WebKit pre-warm on the NFC tab.”)  
 **Date:** 2026-08-31  
 **Follow-up:** same day. In-repo cleanup of findings that did not need a new host or paid Apple team.  
+**Follow-up (2026-09-08):** basic security re-audit (Linux VM). Live host + AASA +
+codec/smoke green. Hardened Swift `#d=` extract to match tapper `&` strip +
+base64url charset fail-closed on decode. No Critical remote exploit. Threat
+boundary remains physical band custody + intentional tap.
 **Method:** static read of Swift / HTML / CI / docs on this tree, plus live HTTP probes. No iOS build (this environment is Linux; Xcode is macOS-only). No secrets were found that needed rotation.
 
 This is RedMed: a native iOS medical ID plus a static passerby HTML shell. There is no application server and no profile API. Confirmed from `AppConfig.swift`, `ProfileData.swift`, `tapper/index.html`, and the absence of any backend package.
@@ -14,11 +18,19 @@ This is RedMed: a native iOS medical ID plus a static passerby HTML shell. There
 
 `#476` stripped `OwnerAppLock`. Face ID is Edit / Save / Erase. `#474` named Overpass and honored the Location toggle. This PR keeps the rest of the in-repo audit work: `KeychainStore.exists` fail-closed, cream-only launch screen, README / PRODUCTION / domain / SECURITY, pages-deploy fail-closed github.io smoke, Actions SHA pins, privacy URLs in this repo, Swift encode clips to tapper `MAX_STR`/`MAX_LIST`, and `scripts/test-d-codec.mjs`.
 
+**2026-09-08 harden:** Swift `extractPayload` / `decodeProfile` strip at `&`
+(match tapper `#d=…&tab=aid`); decode `isBase64urlCharset` fail-closed; write
+gate explicit `&` reject; codec lockstep asserts. Probes: live
+`/tapper/` 200, AASA for `33F9FQ4VBU.com.redmed.app`, `test-d-codec` +
+`smoke-pages` OK. Accepted residuals: public AES packing key, Face ID UI-only
+Keychain, Overpass GPS, CSP `unsafe-inline`, CoreNFC/HealthKit parked.
+
 **Still open (needs Max, not this tree):**
 
 1. Paid Apple Developer: NFC Tag Reading on App ID `com.redmed.app`, then `nfcHardwareEnabled = true` + entitlement (`docs/NFC-RESTORE.md`). Until then, NFC tab Share Band URL programs a blank NTAG216 via Shortcuts / NFC Tools. Linked still needs CoreNFC.
 2. Restore push/PR iOS CI after billing. `#d=` Swift/JS lockstep now runs as `node scripts/test-d-codec.mjs` (pages-deploy + local). No XCTest target.
-3. Leave HealthKit parked until a paid Apple team can provision it. Associated Domains is in `RedMed.entitlements` (`associatedDomainsEnabled = true`) — App ID still needs the capability on a paid team. Host `https://roooted1776.github.io/tapper/` is already live.
+3. Leave HealthKit parked until a paid Apple team can provision it. Associated Domains is parked (`associatedDomainsEnabled = false`, no `applinks:` in `RedMed.entitlements`) so personal-team Automatic Signing works. Restore via `docs/associated-domains-restore.md`. Host `https://roooted1776.github.io/tapper/` is already live.
+4. Do not re-bind Keychain to `biometryCurrentSet` (Face ID stays UI-only by product contract).
 
 ---
 
@@ -28,7 +40,7 @@ No committed secrets, no XSS in profile render, no autodial, no scanner write in
 
 **Highest-severity facts:**
 
-1. **Passerby host is live; CoreNFC write is not.** `https://roooted1776.github.io/tapper/` 200s and smoke-pages is green. `#d=` paints the YOU card. `nfcHardwareEnabled = false` (no NFC entitlement). Associated Domains entitlement is present for owner wrist-proximity (paid App ID capability required). NFC tab Share Band URL is that host + `#d=` for a blank NTAG216. Linked still needs paid NFC Tag Reading. `redmed.pages.dev` is still 404.
+1. **Passerby host is live; CoreNFC write is not.** `https://roooted1776.github.io/tapper/` 200s and smoke-pages is green. `#d=` paints the YOU card. `nfcHardwareEnabled = false` (no NFC entitlement). Associated Domains is parked (`associatedDomainsEnabled = false`) so personal-team signing works; Safari `redmed://band` remains. NFC tab Share Band URL is that host + `#d=` for a blank NTAG216. Linked still needs paid NFC Tag Reading. `redmed.pages.dev` is still 404.
 2. **iOS CI does not gate merges.** `.github/workflows/ios-build.yml` is `workflow_dispatch` only. `#d=` encode/decode lockstep is `scripts/test-d-codec.mjs` (AES-GCM, zlib, current vs legacy compact, URI contract). No XCTest.
 3. **Passerby hospital search sends GPS to `overpass-api.de`.** Native uses MapKit. Help 4.3 names both. Residual: the public OSM API still sees a rescuer’s coordinates on a band tap — disclosed, not removed.
 4. **`OwnerAppLock` was live** (resolved in `#476`). Face ID is Edit / Save / Erase. Crash motion runs while owner Main is in the foreground.
@@ -43,11 +55,11 @@ RedMed is a **local-only medical ID**:
 
 | Surface | What it is | Data |
 |---------|------------|------|
-| Owner iOS app (`RedMed-Xcode/`) | SwiftUI tabs: RedMed · 911 · Aid · NFC | Profile in Keychain. Notes stay on-device. |
+| Owner iOS app (`RedMed-Xcode/`) | SwiftUI tabs: RedMed · 911 · Aid · NFC | Profile in Keychain. Same fields on the chip. |
 | Passerby shell (`tapper/index.html`) | Static HTML: RedMed · 911 · Aid. No Edit, no NFC, no Face ID | Snapshot in URL `#d=` only |
 | Band | Passive NXP NTAG216, NDEF URI | `medicalCardBaseURL#d=<base64url>` |
 
-There is no login, no profile backend, no analytics SDK. `docs/DO-NOT.md` and `Help.html` correctly refuse “HIPAA certified” and “encrypted band” marketing.
+There is no login, no profile backend, no analytics SDK. `docs/DO-NOT.md` and `Document/Document.html` correctly refuse “HIPAA certified” and “encrypted band” marketing.
 
 Repo name is `frisky`. GitHub visibility is **public**. Empty root `README.md` was filled in the follow-up. No license.
 
@@ -140,14 +152,14 @@ A Swift compile break or a Swift/JS schema drift (pregnant / deaf flags, compact
 - Passerby: `tapper/index.html` 2658–2665 builds an Overpass query with `lat,lon` and `fetch('https://overpass-api.de/api/interpreter?data=' + …)`.
 - Meta CSP allows it: `connect-src 'self' https://overpass-api.de` (`tapper/index.html` 13).
 - User-facing copy does not:
-  - `Help.html` 92, 99: “Find Nearby Hospitals … asks Apple Maps”
+  - `Document/Document.html` 92, 99: “Find Nearby Hospitals … asks Apple Maps”
   - `AppConfig.Satellite.localOnlyLine` (232–233): same Apple Maps claim
   - `Info.plist` `NSLocationWhenInUseUsageDescription` (46–47): Apple Maps
   - `TopicDetailView.swift` 221: Apple Maps
 
 **Why it matters**
 
-Consent version 4.2 (`ConsentGateView` / `Help.html`) names Apple Maps (owner app) and OpenStreetMap Overpass (band tap). A helper on the 911/Aid shell who taps hospitals still sends coordinates to `overpass-api.de` (public OSM API, not Apple, not RedMed). Disclosed, not removed.
+Consent version 4.2 (`ConsentGateView` / `Document/Document.html`) names Apple Maps (owner app) and OpenStreetMap Overpass (band tap). A helper on the 911/Aid shell who taps hospitals still sends coordinates to `overpass-api.de` (public OSM API, not Apple, not RedMed). Disclosed, not removed.
 
 **Follow-up:** Help 4.2 / Satellite / Info.plist name Apple Maps (owner app) and OpenStreetMap Overpass (band tap). `_headers` `connect-src` includes `https://overpass-api.de`. The third-party GPS send is unchanged; the disclosure hole is closed.
 
@@ -168,7 +180,7 @@ private struct LaunchRoot: View {
 - `OwnerAppLock.swift` 8–11, 81–139, 175–178: Face ID on every cold open and after leave; `relock` calls `CrashMotionGuard.shared.stopMonitoring()` (line 138); 250 ms `.inactive` timer can relock from app switcher.
 - `CrashMotionGuard.swift` 74–76: stop is CoreMotion only; an already-armed siren keeps going.
 - `AGENTS.md` / `MAX.md`: “No cream lock in front of Main. Face ID is Edit / Save / Erase only. Not app launch.”
-- `Help.html` 80, 142, 155: same Edit/Save/Erase story; “app launch … do not prompt.”
+- `Document/Document.html` 80, 142, 155: same Edit/Save/Erase story; “app launch … do not prompt.”
 - `PRODUCTION.md` 19, 29: documents app-open Face ID as “green,” and cites a Before-you-continue **Face ID toggle that does not exist** (`ConsentGateView` only has Haptic + Location).
 - Edit open is **not** gated: `RedMedView.requestEdit()` 119–122. Save is: `EditProfileView.save()` 673–675. Erase is: `HelpMenuView.requestErase()` ~421.
 
@@ -176,7 +188,7 @@ private struct LaunchRoot: View {
 
 This is stricter privacy for the owner phone and worse emergency access on that same phone. A helper who opens the **app** (not the band) hits Face ID. Crash / high-impact monitoring only runs while the owner session is unlocked. The band tap path stays ungated — if the band host is up (see H1).
 
-This is a product fork, not a one-line bug. Do not “fix” it in passing. Pick one story and make `AGENTS.md`, `MAX.md`, `PRODUCTION.md`, `Help.html`, `Info.plist` `NSFaceIDUsageDescription`, and `support/index.html` match the code.
+This is a product fork, not a one-line bug. Do not “fix” it in passing. Pick one story and make `AGENTS.md`, `MAX.md`, `PRODUCTION.md`, `Document/Document.html`, `Info.plist` `NSFaceIDUsageDescription`, and `support/index.html` match the code.
 
 **Resolved:** `#476` stripped `OwnerAppLock`. Face ID is Edit / Save / Erase. Crash motion starts from owner Main, stops CoreMotion on `.background`, restarts on `.active`, does not stop on `.inactive`. Band tap stays ungated. Consent 4.3.
 
@@ -188,7 +200,7 @@ This is a product fork, not a one-line bug. Do not “fix” it in passing. Pick
 
 `ConsentGateView.enterApp()` (159–175) sets `locationEnabled = true` and calls `LocationAccessSuggester.requestWhenInUseIfNeeded()` even if the user flipped Location off. Commit `ab8bad2` (“request location on Agree”) made this explicit.
 
-`AGENTS.md` says When-In-Use starts on Find Help only and Help must not call `requestWhenInUseAuthorization`. Help.html 91 still says the first system Allow sheet is when Find Help needs GPS.
+`AGENTS.md` says When-In-Use starts on Find Help only and Help must not call `requestWhenInUseAuthorization`. Document.html 91 still says the first system Allow sheet is when Find Help needs GPS.
 
 The toggle is not a real choice. Either honor it or remove it.
 
@@ -198,7 +210,7 @@ The toggle is not a real choice. Either honor it or remove it.
 
 `ProfileNFCCodec.swift` 39–42, 54–55, 88: `keyLabel = "RedMed-NFC-AES-GCM-v1"` → SHA-256 → AES-256-GCM. Same label in `tapper/index.html` 1784. CryptoKit `seal` uses a random 12-byte nonce + 16-byte tag (`encodePayload` 258–271). Tamper-without-reseal fails `AES.GCM.open`.
 
-Anyone who loads `tapper.html` can forge a valid `#d=`. `AppConfig.OwnerBandURI.packingHonestySummary` and `Help.html` 85 say this out loud. Trust boundary is **physical band + intentional tap**, not cryptography. Fine for EMS-with-no-account. Do not market the chip as confidential (`docs/DO-NOT.md`).
+Anyone who loads `tapper.html` can forge a valid `#d=`. `AppConfig.OwnerBandURI.packingHonestySummary` and `Document/Document.html` 85 say this out loud. Trust boundary is **physical band + intentional tap**, not cryptography. Fine for EMS-with-no-account. Do not market the chip as confidential (`docs/DO-NOT.md`).
 
 Legacy decode still accepts plaintext JSON and zlib (`decodePayload` 275–303). Smoke tests use plaintext `#d=` on purpose. A copied URL is as good as a tap.
 
@@ -214,7 +226,7 @@ An unlocked iPhone + a process that can call SecItem can read the blob. That is 
 
 `AppConfig.supportURL` / `privacyPolicyURL` (45–46), `privacy/index.html`, `docs/APP-STORE.md` 6–8: `https://cdn.jsdelivr.net/gh/Roooted1776/redmed-privacy@main/…`.
 
-`Roooted1776/redmed-privacy` is public. jsDelivr `@main` tracks whatever lands on that default branch, cached for days. In-app Help uses bundled `Help.html` (not these URLs). Connect’s privacy URL, if you submit, is a CDN of a different git tree. Compromise or a sloppy push there changes the listed policy without a frisky commit.
+`Roooted1776/redmed-privacy` is public. jsDelivr `@main` tracks whatever lands on that default branch, cached for days. In-app Help uses bundled `Document/Document.html` (not these URLs). Connect’s privacy URL, if you submit, is a CDN of a different git tree. Compromise or a sloppy push there changes the listed policy without a frisky commit.
 
 Those two `AppConfig` strings are unused in Swift (grep). Dead config pointing at the CDN.
 
@@ -277,9 +289,9 @@ and advisory path. `docs/PRODUCTION.md` rewritten (no fake Face ID toggle;
 github.io live). `docs/cold-start-audit.md` is historical (`OwnerAppLock` path).
 AGENTS matches the stripped-lock product.
 
-#### L5. AASA team ID is public; Associated Domains entitlement is present
+#### L5. AASA team ID is public; Associated Domains entitlement is parked
 
-`.well-known/apple-app-site-association` and root `apple-app-site-association`: `appID` `33F9FQ4VBU.com.redmed.app`, paths `/tapper`, `/tapper/`, `/tapper/*`. `RedMed.entitlements` has `applinks:roooted1776.github.io` (`associatedDomainsEnabled = true`). App ID capability still needs paid Program. No secret.
+`.well-known/apple-app-site-association` and root `apple-app-site-association`: `appID` `33F9FQ4VBU.com.redmed.app`, paths `/tapper`, `/tapper/`, `/tapper/*`. Associated Domains entitlement is parked (`associatedDomainsEnabled = false`, empty `RedMed.entitlements`) so personal-team Automatic Signing works. Restore via `docs/associated-domains-restore.md`. No secret.
 
 #### L6. `pbxproj` sequential `AAAA`/`AABB` IDs
 
@@ -301,7 +313,7 @@ AGENTS matches the stripped-lock product.
 |---------|----------|
 | No `print()` of PHI | Swift `print(` grep empty; `os.Logger` in `RedMedSignpost` is lock diagnostics, `.public` strings like `generation=` |
 | Vault history | Removed (`VaultHistoryStore` / `HIPAAOfflineVault` deleted; no local history UI) |
-| Notes stay off the chip | `NFCChipProfile` has no `notes`; `PersistedProfile.notes` is Keychain-only |
+| Notes on both stores | `NFCChipProfile.notes` compact index 12; Keychain `PersistedProfile.notes`; YOU card + tapper |
 | Snapshot / capture cover | `PrivacySnapshotGuard` — `.background` + capture only, never tap card, no opacity fade |
 | Secure pasteboard | `SecurePasteboard` local-only + expiry; cleared on relock |
 | ATS | `NSAllowsArbitraryLoads` / local networking **false** |
@@ -313,7 +325,7 @@ AGENTS matches the stripped-lock product.
 | Lazy tabs + GPS | `EmergencyView` takes `isVisible`; GPS start/stop on that flag (`79–88`), not `onDisappear` alone |
 | NFC preview cover | `fullScreenCover(item:)` after pack (`NFCView` / `NFCBandManager.ScannedCardSession`) |
 | Linked flag | `setBraceletPaired(true)` requires `nfcHardwareEnabled` (`ProfileData` 458–459); simulate never sets Linked |
-| Consent / Help | Bundled `Help.html` + `legal-doc.css` only; no repo-root policy copies |
+| Consent / Help | Bundled `Document/Document.html` + `legal-doc.css` only; legacy `Help.html` redirects; no repo-root policy copies |
 | `IPHONEOS_DEPLOYMENT_TARGET` | Literal `17.0` × 4 |
 | No app dependencies | No SPM / CocoaPods / npm |
 
@@ -368,7 +380,7 @@ Treat **code** as what ships. `#476` stripped the launch lock. This follow-up do
 | Cold start | `docs/cold-start-audit.md` covers Face ID window / key-window races. Matches current lock path. |
 | Public repo | Source + public AES label + team ID + personal `MAX.md` handles are world-readable. AES label was already public-by-design. |
 
-HIPAA: `Help.html` 60–65 is careful (operator-aligned, not certified). No HIPAA certification claim; former `HIPAAOfflineVault` helper was removed with the no-UI history trail.
+HIPAA: `Document/Document.html` 60–65 is careful (operator-aligned, not certified). No HIPAA certification claim; former `HIPAAOfflineVault` helper was removed with the no-UI history trail.
 
 ---
 
@@ -392,7 +404,7 @@ Still blocked on Max / billing / Apple, not this follow-up.
 
 1. **Write a physical band.** Paid Apple NFC Tag Reading (`docs/NFC-RESTORE.md`) is the product Write. Until then, NFC tab Share Band URL → Shortcuts / NFC Tools onto a blank unlocked NTAG216. Linked still needs CoreNFC. Host `/tapper/` is already green — do not flip `AppConfig.medicalCardBaseURL`.
 2. **Restore iOS CI on `RedMed-Xcode/**` after billing.** Codec lockstep is already `node scripts/test-d-codec.mjs`. XCTest on a Mac runner is still missing.
-3. Leave HealthKit parked until a paid Apple team can provision it. Associated Domains entitlement is on — enable the capability on the App ID. Do not claim in-app CoreNFC Write until that entitlement signs.
+3. Leave HealthKit parked until a paid Apple team can provision it. Associated Domains is parked for personal-team signing — restore via `docs/associated-domains-restore.md`. Do not claim in-app CoreNFC Write until that entitlement signs.
 
 ## Code changes in the follow-up
 
@@ -402,6 +414,6 @@ Swift: `KeychainStore.exists` fail-closed; encode clips to tapper `MAX_STR`/`MAX
 
 ## Files read (primary)
 
-`AppConfig.swift`, `RedMedApp.swift`, `OwnerAppLock.swift`, `BiometricAuth.swift`, `KeychainStore.swift`, `ProfileData.swift`, `ProfileNFCCodec.swift`, `ContentView.swift`, `RedMedView.swift`, `EditProfileView.swift`, `ConsentGateView.swift`, `CrashMotionGuard.swift`, `EmergencyView.swift`, `EmergencyNumber.swift`, `NFCBandManager.swift`, `NFCReader.swift`, `NFCWriter.swift`, `PasserbyHTMLCardView.swift`, `PrivacySnapshotGuard.swift`, `HelpMenuView.swift`, `NearbyHospitals.swift`, `LocationAccessSuggester.swift`, `SecurePasteboard.swift`, `RedMedSignpost.swift`, `Info.plist`, `RedMed.entitlements`, `PrivacyInfo.xcprivacy`, `Help.html`, `tapper/index.html`, `sw.js`, `_headers`, `_redirects`, `wrangler.toml`, `.github/workflows/*`, `scripts/*`, `docs/PRODUCTION.md`, `docs/domain.md`, `docs/APP-STORE.md`, `docs/SECURITY.md`, `docs/STRUCTURE.md`, `AGENTS.md`, `MAX.md`, `support/index.html`, `privacy/index.html`, AASA files.
+`AppConfig.swift`, `RedMedApp.swift`, `OwnerAppLock.swift`, `BiometricAuth.swift`, `KeychainStore.swift`, `ProfileData.swift`, `ProfileNFCCodec.swift`, `ContentView.swift`, `RedMedView.swift`, `EditProfileView.swift`, `ConsentGateView.swift`, `CrashMotionGuard.swift`, `EmergencyView.swift`, `EmergencyNumber.swift`, `NFCBandManager.swift`, `NFCReader.swift`, `NFCWriter.swift`, `PasserbyHTMLCardView.swift`, `PrivacySnapshotGuard.swift`, `HelpMenuView.swift`, `NearbyHospitals.swift`, `LocationAccessSuggester.swift`, `SecurePasteboard.swift`, `RedMedSignpost.swift`, `Info.plist`, `RedMed.entitlements`, `PrivacyInfo.xcprivacy`, `Document/Document.html`, `tapper/index.html`, `sw.js`, `_headers`, `_redirects`, `wrangler.toml`, `.github/workflows/*`, `scripts/*`, `docs/PRODUCTION.md`, `docs/domain.md`, `docs/APP-STORE.md`, `docs/SECURITY.md`, `docs/STRUCTURE.md`, `AGENTS.md`, `MAX.md`, `support/index.html`, `privacy/index.html`, AASA files.
 
 Probes: `gh repo view` (frisky public; `Roooted1776.github.io` missing; `redmed-privacy` public), `gh run list`, `curl` github.io / pages.dev / jsDelivr, `scripts/smoke-pages.sh` against github.io.

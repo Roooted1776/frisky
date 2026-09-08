@@ -41,7 +41,7 @@ struct ConsentGateView<Content: View>: View {
     @State private var notInteractive = false
     @State private var unavailableReason: BiometricAuth.UnavailableReason?
     @State private var checked = false
-    @State private var openPolicy: HelpDocument.Policy?
+    @State private var showPolicies = false
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
@@ -79,7 +79,7 @@ struct ConsentGateView<Content: View>: View {
 
     private func returnToAcknowledgment() {
         checked = false
-        openPolicy = nil
+        showPolicies = false
         awaitingPostAgreeFaceID = false
         isAuthenticating = false
         didAutoPrompt = false
@@ -173,12 +173,16 @@ struct ConsentGateView<Content: View>: View {
                     .redmedBox(flatten: false)
 
                     VStack(spacing: 0) {
-                        ForEach(Array(HelpDocument.Policy.allCases.enumerated()), id: \.element.id) { index, policy in
-                            if index > 0 {
-                                Divider().overlay(Color.redmedDivider).padding(.leading, RedMedChrome.pagePadX)
-                            }
-                            policyRow(policy)
+                        Button {
+                            RedMedHaptics.light()
+                            showPolicies = true
+                        } label: {
+                            HelpPoliciesRowLabel(titleWeight: .semibold)
                         }
+                        .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
+                        .accessibilityAddTraits(.isButton)
+                        .accessibilityLabel(HelpDocument.combinedTitle)
+                        .accessibilityHint("Opens Privacy, Security, Terms, Medical Disclaimer, and Ships When Ready")
                     }
                     .redmedBox(flatten: false)
                 }
@@ -195,7 +199,7 @@ struct ConsentGateView<Content: View>: View {
                         Image(systemName: checked ? "checkmark.square.fill" : "square")
                             .font(.system(size: 22))
                             .foregroundColor(checked ? .redmedAccent : .redmedMuted)
-                        Text("I have read and agree to the RedMed Terms, Privacy, Security, Medical Disclaimer, and Ships When Ready pages, including the medical-device disclaimer, liability limits, and binding arbitration / class-action waiver in Terms. Agree includes using location and motion on this iPhone while RedMed is open.")
+                        Text("I have read and agree to the RedMed Policies document (Privacy, Security, Terms, Medical Disclaimer, and Ships When Ready), including the medical-device disclaimer, liability limits, and binding arbitration / class-action waiver in Terms. Agree includes using location and motion on this iPhone while RedMed is open.")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.redmedDark)
                             .fixedSize(horizontal: false, vertical: true)
@@ -217,8 +221,8 @@ struct ConsentGateView<Content: View>: View {
             .background(Color.redmedBg)
         }
         .background { RedMedPageBackground() }
-        .sheet(item: $openPolicy) { policy in
-            ConsentPolicySheet(policy: policy)
+        .sheet(isPresented: $showPolicies) {
+            ConsentPolicySheet()
                 .presentationBackground(Color.redmedBg)
         }
     }
@@ -230,7 +234,7 @@ struct ConsentGateView<Content: View>: View {
         ConsentSettings.recordAcceptance()
         RedMedHaptics.success()
         SnapshotSafeCover.shared.reveal()
-        openPolicy = nil
+        showPolicies = false
         didAutoPrompt = false
         showRetry = false
         biometryFailed = false
@@ -326,28 +330,14 @@ struct ConsentGateView<Content: View>: View {
         }
     }
 
-    @ViewBuilder
-    private func policyRow(_ policy: HelpDocument.Policy) -> some View {
-        Button {
-            RedMedHaptics.light()
-            openPolicy = policy
-        } label: {
-            HelpPolicyRowLabel(policy: policy, titleWeight: .semibold)
-        }
-        .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
-        .accessibilityAddTraits(.isButton)
-        .accessibilityLabel(policy.title)
-        .accessibilityHint("Opens \(policy.title)")
-    }
 }
 
 private struct ConsentPolicySheet: View {
     @Environment(\.dismiss) private var dismiss
-    let policy: HelpDocument.Policy
 
     var body: some View {
         NavigationStack {
-            HelpPolicyPage(policy: policy, showsDoneChrome: true, onDone: { dismiss() })
+            HelpPolicyPage(showsDoneChrome: true, onDone: { dismiss() })
         }
     }
 }

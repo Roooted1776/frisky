@@ -186,13 +186,12 @@ body {
 }
 .legal-policy {
   scroll-margin-top: 64px;
-  display: none;
+  display: block;
 }
-.legal-policy.active { display: block; }
 
 /* Section-scoped accent — the numbered badges, notice callout, and links
-   inside each tab pick up that tab's chip color instead of the flat brand
-   red, so the active color carries through the whole panel, not just the nav. */
+   inside each section pick up that section's chip color instead of the flat brand
+   red, so the section color carries through the whole block, not just the nav. */
 #privacy  { --accent: var(--cat-privacy);  --accent-soft: var(--cat-privacy-soft); }
 #security { --accent: var(--cat-security); --accent-soft: var(--cat-security-soft); }
 #terms    { --accent: var(--cat-terms);    --accent-soft: var(--cat-terms-soft); }

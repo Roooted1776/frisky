@@ -75,10 +75,12 @@ function compactArray(chip) {
     chip.donor ? 1 : 0,
   ];
   if (chip.updated) row.push(clipStr(chip.updated));
-  if (chip.pregnant || chip.deafOrVisionImpaired) {
+  const notes = clipStr(String(chip.notes || '').trim());
+  if (chip.pregnant || chip.deafOrVisionImpaired || notes) {
     if (!chip.updated) row.push('');
     row.push(chip.pregnant ? 1 : 0);
     row.push(chip.deafOrVisionImpaired ? 1 : 0);
+    if (notes) row.push(notes);
   }
   return row;
 }
@@ -166,6 +168,7 @@ function profileFromCurrentArray(arr) {
     updated: clipStr(str(9)),
     pregnant: !!(arr[10] === true || arr[10] === 1 || arr[10] === '1'),
     deafOrVisionImpaired: !!(arr[11] === true || arr[11] === 1 || arr[11] === '1'),
+    notes: clipStr(str(12)),
   };
 }
 
@@ -234,8 +237,26 @@ function isValidWriteURL(urlString, base = WRITE_BASE) {
   if (!rest.startsWith('#d=')) return false;
   const payload = rest.slice(3);
   if (!payload) return false;
-  if (/[#?\s]/.test(payload)) return false;
+  // Match Swift OwnerBandURI — reject # ? & whitespace before charset check.
+  if (/[#?&\s]/.test(payload)) return false;
   return /^[A-Za-z0-9_-]+$/.test(payload);
+}
+
+/** Mirror Swift `ProfileNFCCodec.extractPayload` + tapper `split('&')[0]`. */
+function extractPayload(raw) {
+  const trimmed = String(raw || '').trim();
+  if (!trimmed) return null;
+  let payload;
+  const idx = trimmed.indexOf('#d=');
+  if (idx >= 0) payload = trimmed.slice(idx + 3);
+  else payload = trimmed;
+  const amp = payload.indexOf('&');
+  if (amp >= 0) payload = payload.slice(0, amp);
+  return payload || null;
+}
+
+function isBase64urlCharset(s) {
+  return /^[A-Za-z0-9_-]*$/.test(s);
 }
 
 function sampleChip() {
@@ -274,6 +295,7 @@ assert('MAX_LIST Swift', /maxList = 40/.test(swift));
 assert('MAX_LIST tapper', tapper.includes('MAX_LIST = 40'));
 assert('current idx name=4 Swift', /static let name = 4/.test(swift));
 assert('current idx blood=0 Swift', /static let blood = 0/.test(swift));
+assert('current idx notes=12 Swift', /static let notes = 12/.test(swift));
 assert('legacy idx name=0 Swift', /static let name = 0/.test(swift));
 assert('write base AppConfig', appConfig.includes(`"${WRITE_BASE}"`));
 assert('empty persist guard', profileData.includes('if !hasSensitiveProfileData') && profileData.includes('return false'));
@@ -287,6 +309,17 @@ assert('URI reject query', !isValidWriteURL(`${WRITE_BASE}#d=abc?x=1`));
 assert('URI reject second hash', !isValidWriteURL(`${WRITE_BASE}#d=abc#more`));
 assert('URI reject space', !isValidWriteURL(`${WRITE_BASE}#d=ab c`));
 assert('URI reject +', !isValidWriteURL(`${WRITE_BASE}#d=ab+c`));
+assert('URI reject amp tab', !isValidWriteURL(`${WRITE_BASE}#d=abc&tab=aid`));
+assert('Swift strips amp in extract', /firstIndex\(of: "&"\)/.test(swift));
+assert('Swift decode charset gate', swift.includes('isBase64urlCharset'));
+assert('tapper splits amp', /hash\.slice\(3\)\.split\('&'\)\[0\]/.test(tapper));
+
+const ampPayload = b64url(Buffer.from('x'));
+assert('extract strips &tab=', extractPayload(`${WRITE_BASE}#d=${ampPayload}&tab=aid`) === ampPayload);
+assert('extract bare payload', extractPayload(ampPayload) === ampPayload);
+assert('extract empty after amp', extractPayload('#d=&tab=aid') === null);
+assert('charset rejects plus', !isBase64urlCharset('ab+c'));
+assert('charset accepts url', isBase64urlCharset(ampPayload));
 
 const tapperCrash = appConfig.match(/static let tapperNote =\s+"([^"]+)"/);
 assert('crash tapper note lockstep', !!(tapperCrash && tapper.includes(tapperCrash[1])));
@@ -318,6 +351,14 @@ const fromCurrent = profileFromCurrentArray(current);
 assert('current decode name', fromCurrent.name === 'Jane Doe');
 assert('current decode pregnant', fromCurrent.pregnant === true);
 assert('current decode deaf false', fromCurrent.deafOrVisionImpaired === false);
+assert('current decode notes empty', !fromCurrent.notes);
+
+const withNotes = Object.assign({}, sampleChip(), { notes: 'Pacemaker. No MRI.' });
+const notesRow = compactArray(withNotes);
+assert('notes at 12', notesRow[12] === 'Pacemaker. No MRI.');
+const fromNotes = profileFromCurrentArray(notesRow);
+assert('notes decode', fromNotes.notes === 'Pacemaker. No MRI.');
+assert('notes keeps pregnant', fromNotes.pregnant === true);
 
 // --- legacy compact ---
 const legacy = ['Jane Doe', '1990-03-14', 'O+', 1, ['Penicillin'], ['Levothyroxine'], ['Hypothyroidism'], [['Sam', 'Spouse', '5551212']], '2026-08-31'];
@@ -344,6 +385,10 @@ assert('AES round blood', round && round.blood === 'O+');
 assert('AES round pregnant', round && round.pregnant === true);
 assert('AES round contact', round && round.contacts[0] && round.contacts[0].name === 'Sam');
 assert('AES write URL', isValidWriteURL(`${WRITE_BASE}#d=${encoded}`));
+
+const notesJson = Buffer.from(JSON.stringify(notesRow));
+const notesRound = decodePayload(b64url(aesSeal(notesJson)));
+assert('AES round notes', notesRound && notesRound.notes === 'Pacemaker. No MRI.');
 
 const tampered = Buffer.from(sealed);
 tampered[20] ^= 0xff;
@@ -378,6 +423,7 @@ if (extracted) {
   assert('null no content', profileHasContent(null) === false);
   assert('name is content', profileHasContent({ name: 'Jane Doe' }) === true);
   assert('blood is content', profileHasContent({ blood: 'O+' }) === true);
+  assert('notes is content', profileHasContent({ notes: 'Pacemaker' }) === true);
   assert('blank name no content', profileHasContent({ name: '  ' }) === false);
 }
 
