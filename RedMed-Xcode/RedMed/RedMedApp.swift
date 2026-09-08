@@ -14,8 +14,9 @@ struct RedMedApp: App {
             .background(CreamWindowBackground())
             .preferredColorScheme(.light)
             .task {
-                // Snapshot observers only. Keychain prefetch starts here so
-                // the blob is in flight during SplashBoard → first frame.
+                // Snapshot observers only. Keychain prefetch already started
+                // from ProfileData.init (SplashBoard overlap). This call is a
+                // no-op when the gate was set — safety net if init skipped.
                 // Haptics prepare after YOU paints (ContentView) — not here.
                 SnapshotSafeCover.activate()
                 profile.beginLaunchPrefetch()

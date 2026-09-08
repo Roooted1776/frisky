@@ -2,9 +2,16 @@
 
 > **2026-09 update:** ContentView no longer sleeps a fixed 300ms before
 > `restoreOnLaunch()`. ConsentGate arms Main only after Agree, so that sleep
-> was pure shipping lag on returning opens. Restore is yield-then-ASAP; a short
-> stagger remains only if consent Face ID somehow still owns `evaluatePolicy`.
-> `LaunchRoot.holdLaunchCream` still drops after two yields (no `.active` wait).
+> was pure shipping lag on returning opens. Restore is yield-then-ASAP.
+> `LaunchRoot.holdLaunchCream` drops after one yield when consent is pending
+> (returning opens skip the veil).
+>
+> **2026-09 follow-up (returning YOU fill):** Prefetch now starts in
+> `ProfileData.init` (detached SecItem + JSON) so SplashBoard overlaps decode —
+> not from `RedMedApp.task` after first SwiftUI frame. ContentView adopts
+> Keychain *before* `RedMedHaptics.prepare()` and defers CoreMotion /
+> `LocatorBeacon.warmAlarmCache` ~400ms past adopt so those do not hitch the
+> filled-card paint. Do not put haptics or crash-monitor start ahead of restore.
 
 
 **Launch lock is gone.** Current path is `RedMedApp` → `PrivacySnapshotGuard` →

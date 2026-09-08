@@ -91,9 +91,10 @@ class ProfileData: ObservableObject {
     @Published private(set) var cardEpoch: UInt = 0
     /// One-shot so RedMedApp / ContentView cannot restore twice in one process.
     private var didAttemptLaunchRestore = false
-    /// Off-main Keychain+JSON started after first paint so restore can adopt
-    /// the blob without blocking the first frame. YOU card paints from RAM
-    /// after restore — no Face ID to view.
+    /// Off-main Keychain+JSON. Started from `init` when a stored ID is
+    /// expected so SplashBoard overlaps SecItem + decode — not from
+    /// `RedMedApp.task` after the first SwiftUI frame. YOU card paints from
+    /// RAM after restore — no Face ID to view.
     private var launchPrefetchTask: Task<PersistedProfile?, Never>?
 
     private func setField<T: Equatable>(_ storage: inout T, _ newValue: T) {
@@ -150,20 +151,22 @@ class ProfileData: ObservableObject {
 
     init(persisting: Bool = true) {
         self.persists = persisting
-        // UserDefaults only — a SecItem + LAContext exists() here ran on the
-        // main thread before the first ConsentGate / Main frame and contended
-        // with Face ID. Prefetch starts from `RedMedApp.task` (off-main).
+        // UserDefaults gate only on the main thread — never SecItem / LAContext
+        // / exists() here (that contended with Face ID and blocked first frame).
+        // Detached Keychain+JSON starts immediately so SplashBoard overlaps
+        // decode; ContentView adopts after one yield.
         if persisting && Self.prefersLockOnLaunch {
             self.isRestoringFromKeychain = true
+            startLaunchPrefetchTask()
         }
     }
 
     /// Non-interactive Keychain read + JSON decode. Idempotent. Does not touch
     /// `@Published` fields until `restoreOnLaunch` adopts the result.
-    /// Call from `RedMedApp.task` (off-main decode) — never from `init`.
-    /// ContentView adopts via `restoreOnLaunch` after one yield.
+    /// Prefer `init` (gate-on path). `RedMedApp.task` may call this as a
+    /// safety net if init skipped. ContentView adopts after one yield.
     /// Prefetch uses `.userInitiated` so the blob lands before YOU paints empty.
-    /// UserDefaults gate only — no SecItem exists() here.
+    /// UserDefaults gate only — no SecItem exists() on the caller.
     func beginLaunchPrefetch() {
         guard persists else { return }
         guard !didAttemptLaunchRestore else { return }
@@ -174,6 +177,7 @@ class ProfileData: ObservableObject {
     }
 
     private func startLaunchPrefetchTask() {
+        guard launchPrefetchTask == nil else { return }
         let account = Self.keychainAccount
         launchPrefetchTask = Task.detached(priority: .userInitiated) {
             Self.decodeBlob(KeychainStore.load(account: account, allowInteractive: false))
