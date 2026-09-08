@@ -640,7 +640,7 @@ private struct OwnerSetupFunnel: View {
             Divider().overlay(Color.redmedDivider).padding(.leading, 54)
             stepRow(number: "2", title: "Save", detail: "Face ID writes it to this iPhone's Keychain. This device only — not iCloud, not a US-state account.")
             Divider().overlay(Color.redmedDivider).padding(.leading, 54)
-            stepRow(number: "3", title: AppConfig.nfcHardwareEnabled ? "Write The Band" : "Preview The Helper Card", detail: AppConfig.nfcHardwareEnabled ? "NFC tab writes the same ID onto the chip. Band comes complete — no battery, just the chip. Helpers tap. No app, no login." : "NFC tab packs the same ID for Preview. Live band write ships when NFC Tag Reading is on the App ID. Band comes complete — no battery, just the chip.")
+            stepRow(number: "3", title: AppConfig.nfcHardwareEnabled ? "Write The Band" : "Preview The Helper Card", detail: AppConfig.nfcHardwareEnabled ? "NFC tab writes the same ID onto the chip. \(AppConfig.BraceletRF.completeBandSummary) Helpers tap. No app, no login." : "NFC tab packs the same ID for Preview. Live band write ships when NFC Tag Reading is on the App ID. \(AppConfig.BraceletRF.completeBandSummary)")
         }
         .redmedBox()
     }

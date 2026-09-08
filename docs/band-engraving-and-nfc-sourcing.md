@@ -40,7 +40,7 @@ App Store listing are green ([`docs/ADVERTISING.md`](ADVERTISING.md)).
 | Form | **Adult silicone wristband** with a **flat laser face** (clasp plate or tag plate, ~15–20 mm readable width). Soft silicone emboss alone is **not** the face. |
 | Size | Adult (adjustable / standard adult circumference). No child SKU in v1. |
 | Color | **Wine / burgundy** silicone only — target `#6B1E2F` (fashionable deep wine; practical dirt/hide). Not bright app accent `#e11d48`, not pink, not cherry, not purple plum. Closest house stock to wine-burgundy. **No black, navy, clear, or multi-color v1.** |
-| Chip seat | Embedded **NXP NTAG216**, 13.56 MHz HF, ISO 14443A **Type 2**, NDEF **unlocked / blank** at factory. No pre-encode, no lock. Band ships complete — owner only writes the chip. No battery. No extra parts. |
+| Chip seat | Embedded **NXP NTAG216**, 13.56 MHz HF, ISO 14443A **Type 2**, NDEF **unlocked / blank** at factory. No pre-encode, no lock. Band comes complete. Just the chip is needed. No battery. |
 | Finish | Matte or satin silicone OK; no glitter, glow, or dual-tone. |
 | Logo print | Optional pad-print wordmark only if laser `MED ID` already fits; logo never replaces engraving. |
 

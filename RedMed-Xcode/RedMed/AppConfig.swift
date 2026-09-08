@@ -204,8 +204,9 @@ enum AppConfig {
         }
 
         /// Hardware SKU: bracelet ships finished. Owner only programs NDEF.
+        /// Just the chip — no battery, no extra electronics.
         static var completeBandSummary: String {
-            "Band comes complete. You only write the chip. Passive — no battery, no extra parts."
+            "Band comes complete. Just the chip is needed. No battery."
         }
 
         static var laserFaceSummary: String {
@@ -250,7 +251,7 @@ enum AppConfig {
         static var noBluetoothSummary: String { carrierVsBluetoothSummary }
 
         static var hardwareParkedSummary: String {
-            "CoreNFC write is parked until a paid Apple Developer team can provision NFC Tag Reading. Share Band URL is the same #d= payload Write would program — Shortcuts or NFC Tools can put it on a blank NTAG216. Linked still requires a real CoreNFC write."
+            "CoreNFC write is parked until a paid Apple Developer team can provision NFC Tag Reading. Share Band URL is the same #d= payload Write would program onto the band's chip (Shortcuts or NFC Tools). The band comes complete — just the chip, no battery. Linked still requires a real CoreNFC write."
         }
     }
 

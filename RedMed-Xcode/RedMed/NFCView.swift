@@ -285,12 +285,14 @@ struct NFCView: View {
             VStack(alignment: .leading, spacing: 8) {
                 if AppConfig.nfcHardwareEnabled {
                     tipRow("Open NFC (or tap Write) — then hold the band to the top of the phone \(AppConfig.BraceletRF.intentionalTapRangeLabel).")
+                    tipRow(AppConfig.BraceletRF.completeBandSummary)
                     tipRow("Write packs #d= onto the chip only — never a vendor cloud or social/short link.")
                     tipRow("Preview: same HTML card helpers get — quick, no login, no server, no app.")
                     tipRow("Load From Band reads #d= into this iPhone (Face ID). Replaces RedMed here.")
                     tipRow("Linked after write + matching read-back, or after Load From Band.")
                 } else {
-                    tipRow("CoreNFC write is parked. Share Band URL onto a blank NTAG216 (Shortcuts or NFC Tools).")
+                    tipRow(AppConfig.BraceletRF.completeBandSummary)
+                    tipRow("CoreNFC write is parked. Share Band URL onto the band's chip (Shortcuts or NFC Tools).")
                     tipRow("Preview is the same HTML a helper sees. Linked still needs a real NFC write.")
                 }
             }
@@ -323,7 +325,7 @@ struct NFCView: View {
             .disabled(band.isBusy)
             .opacity(band.isBusy ? 0.72 : 1)
             .accessibilityLabel("Share Band URL")
-            .accessibilityHint("Same #d= URL CoreNFC Write would put on a blank NTAG216. Shortcuts or NFC Tools can write it. Does not mark Linked.")
+            .accessibilityHint("Same #d= URL CoreNFC Write would put on the band's chip. Shortcuts or NFC Tools can write it. Band comes complete — just the chip, no battery. Does not mark Linked.")
         }
     }
 
