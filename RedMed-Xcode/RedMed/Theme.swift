@@ -326,27 +326,33 @@ struct OwnerModalChrome<Trailing: View>: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                OwnerModalBarButton(
-                    title: leadingTitle,
-                    weight: leadingWeight,
-                    alignment: .leading,
-                    action: leadingAction
-                )
-                .frame(minWidth: RedMedChrome.modalSideMinWidth, alignment: .leading)
+            // Overlay title so Help / policy names sit on the true bar
+            // center. EmptyView trailing ignores minWidth, which shoved
+            // "Help" right of Done when it lived in the HStack.
+            ZStack {
+                HStack(spacing: 0) {
+                    OwnerModalBarButton(
+                        title: leadingTitle,
+                        weight: leadingWeight,
+                        alignment: .leading,
+                        action: leadingAction
+                    )
+                    .frame(minWidth: RedMedChrome.modalSideMinWidth, alignment: .leading)
 
-                Spacer(minLength: 8)
+                    Spacer(minLength: 0)
+
+                    trailing
+                        .frame(minWidth: RedMedChrome.modalSideMinWidth, alignment: .trailing)
+                }
 
                 Text(title)
                     .font(RedMedChrome.navTitleFont)
                     .foregroundColor(.redmedDark)
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
-
-                Spacer(minLength: 8)
-
-                trailing
-                    .frame(minWidth: RedMedChrome.modalSideMinWidth, alignment: .trailing)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, RedMedChrome.modalSideMinWidth)
+                    .allowsHitTesting(false)
             }
             .padding(.horizontal, RedMedChrome.pagePadX)
             .frame(height: RedMedChrome.modalBarHeight)
@@ -442,16 +448,16 @@ extension OwnerModalActionBar where Center == EmptyView {
     }
 }
 
-extension OwnerModalChrome where Trailing == EmptyView {
-    /// Leading-only bar (Help Done) — empty trailing keeps title centered
-    /// via the shared `modalSideMinWidth` frame on the trailing slot.
+extension OwnerModalChrome where Trailing == Color {
+    /// Leading-only bar (Help Done). Clear trailing occupies
+    /// `modalSideMinWidth`; the title is overlay-centered in `body`.
     init(title: String, leadingTitle: String, leadingWeight: Font.Weight = .regular, leadingAction: @escaping () -> Void) {
         self.init(
             title: title,
             leadingTitle: leadingTitle,
             leadingWeight: leadingWeight,
             leadingAction: leadingAction,
-            trailing: { EmptyView() }
+            trailing: { Color.clear }
         )
     }
 }
