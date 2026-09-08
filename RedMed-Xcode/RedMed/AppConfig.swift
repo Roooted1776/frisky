@@ -85,6 +85,11 @@ enum AppConfig {
         }
     }
 
+    // MARK: - Paid Apple Developer Program (temporarily parked — do not delete)
+    // CoreNFC Tag Reading, HealthKit, and a live App Store URL need a paid team
+    // + App ID capabilities. Keep these false/nil until Max re-enables them.
+    // Restore: docs/NFC-RESTORE.md, docs/healthkit-restore.md. Do not remove code paths.
+
     /// Product kill switch for CoreNFC write/read sessions only.
     /// Owner still always sees the NFC tab (ContentView.showsNFC); scanners never do.
     /// `true` = owner Write/Scan start real `NFCNDEFReaderSession` against blank

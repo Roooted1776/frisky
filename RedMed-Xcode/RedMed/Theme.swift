@@ -118,7 +118,9 @@ struct PrimaryButton: View {
     var systemImage: String? = nil
     var busy: Bool = false
     var disabled: Bool = false
-    var flatten: Bool = true
+    /// Default false — Metal `drawingGroup` on CTAs costs GPU for little gain;
+    /// Consent already opted out. Pass `flatten: true` only for static chrome.
+    var flatten: Bool = false
     let action: () -> Void
 
     var body: some View {
