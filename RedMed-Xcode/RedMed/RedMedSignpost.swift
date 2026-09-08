@@ -68,8 +68,11 @@ enum RedMedSignpost {
         coldMark("mainReady \(reason)")
     }
 
-    /// Alias kept for call sites that still use the older name.
+    /// Alias at `@main` — starts `coldLaunchWindow` on `app.init`.
     static func coldLaunchMark(_ event: String) {
+        if event == "app.init" {
+            begin(.coldLaunchWindow)
+        }
         coldMark(event)
     }
 
