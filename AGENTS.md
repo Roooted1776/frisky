@@ -16,8 +16,9 @@ RedMed installed does not Safari-open on wrist-band proximity — see
 before SOS when AASA/UL miss. That capability needs paid Program on
 the App ID (personal/free teams cannot provision it; park the entitlement
 again only if you must device-sign on a personal team). The owner NFC tab
-stays visible; Write / Scan are pack-only + Share Band URL. Restore real
-CoreNFC after paid Program + NFC Tag Reading — see `docs/NFC-RESTORE.md`.
+stays visible; Write is pack-only + Share Band URL; **Load From Band UI is
+hidden** while parked. Restore real CoreNFC after paid Program + NFC Tag
+Reading — see `docs/NFC-RESTORE.md`.
 `medicalCardBaseURL#d=` is unchanged. Linked only after write + matching
 read-back. Do not spend PRs on tab chrome or copy.
 
@@ -193,8 +194,8 @@ The app has no backend, database, or web service.
   again to *load* or *view*. If a stored profile is expected and RAM is
   empty, keep the funnel hidden and show the native YOU card with empty
   slots while restore is in flight — not cream-over-WKWebView, not a Face
-  ID unlock pane. `persist()` must not save an empty RAM profile over
-  a stored blob (erase deletes Keychain first). Blank-all fields in Edit
+  ID unlock pane. `persist()` must not save an empty RAM profile (empty
+  funnel draft or blank-over-stored). Explicit erase deletes Keychain first. Blank-all fields in Edit
   + Save still Face IDs but cannot replace Keychain — UI may show
   Couldn't Save; full wipe is Help → **Erase All User Data** only
   (`eraseAllLocalData()`). Do not treat empty-Save as a wipe path.
@@ -264,8 +265,9 @@ kept alive after). Opacity keep-alive **does not** fire
 `onDisappear` on tab switch — any side effect that must stop when leaving a
 tab (Find Help GPS, seizure timer, etc.) needs an explicit `isVisible`
 (or equivalent) hook from `ContentView`, not `onDisappear` alone.
-`persist()` must not overwrite a stored Keychain blob with an empty RAM
-profile. Empty Keychain (fresh install) may open the setup funnel. Vault prep
+`persist()` must not overwrite Keychain with an empty RAM profile (first-install
+empty Save or blank-over-stored). Empty Keychain (fresh install) may open the
+setup funnel. Vault prep
 runs off the main thread after first paint. `UILaunchScreen` must use
 `LaunchBackground` (same as `redmedBg`, including dark appearance) — never an
 empty dict (system black).

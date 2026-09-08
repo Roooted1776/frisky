@@ -242,13 +242,15 @@ class ProfileData: ObservableObject {
     }
 
     /// - Returns: `true` when the Keychain write succeeded.
-    /// Refuses to save an empty RAM profile over a stored Keychain blob
-    /// (empty-funnel Save must not clobber). First-install Save of a newly
-    /// filled ID is fine (no stored blob yet). Explicit erase deletes Keychain first.
+    /// Never writes an empty RAM profile (empty-funnel Save with no fields,
+    /// or blank-all over a stored blob). First-install Save of a newly
+    /// filled ID is fine. Explicit erase deletes Keychain first.
     @discardableResult
     func persist() -> Bool {
         guard persists else { return false }
-        if !hasSensitiveProfileData && (Self.hasStoredProfile() || Self.prefersLockOnLaunch) {
+        // Empty Keychain write would set the stored-profile gate and hide the
+        // setup funnel behind a blank YOU card — refuse every empty persist.
+        if !hasSensitiveProfileData {
             return false
         }
         let stamp = DateFormatter.localizedString(from: Date(), dateStyle: .medium, timeStyle: .none)

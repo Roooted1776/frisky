@@ -762,12 +762,15 @@ struct EditProfileView: View {
         }
 
         guard profile.persist() else {
-            let blankOverStored = !profile.hasSensitiveProfileData
+            let emptyDraft = !profile.hasSensitiveProfileData
+            let blankOverStored = emptyDraft
                 && (ProfileData.hasStoredProfile() || ProfileData.prefersLockOnLaunch)
             profile.restore(from: prior)
             saveFailedMessage = blankOverStored
                 ? "Blanking every field does not erase a stored medical ID. Use Help → Erase All User Data to wipe this iPhone."
-                : "Your profile could not be written to the secure on-device Keychain. Try again."
+                : emptyDraft
+                    ? "Add your name or medical details before saving."
+                    : "Your profile could not be written to the secure on-device Keychain. Try again."
             showSaveFailedAlert = true
             return
         }

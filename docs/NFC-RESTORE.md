@@ -23,22 +23,26 @@ Written-but-unverified stays Not linked.
 `AppConfig.nfcHardwareEnabled = false`,
 `RedMed.entitlements` is a bare empty `<dict></dict>` (no NFC key), and
 `Info.plist` has no `NFCReaderUsageDescription`. Owner NFC tab stays
-visible. Write / Scan are pack-only simulate + Share Band URL. Real
-`NFCNDEFReaderSession` is parked until paid Program + **NFC Tag Reading**
-on App ID `com.redmed.app`. Keep flag, entitlement, and usage string in
-lockstep when restoring.
+visible. Write is pack-only + Share Band URL; Preview stays. **Load From
+Band UI is hidden** while parked (gate logic still correct for restore).
+Real `NFCNDEFReaderSession` is parked until paid Program + **NFC Tag
+Reading** on App ID `com.redmed.app`. Keep flag, entitlement, and usage
+string in lockstep when restoring.
 
 Automatic Signing no longer needs NFC on the App ID. Free / personal
 teams can device-build. Portal + Xcode capability are not git; see Restore
 below when a paid team can provision Tag Reading.
 
 **Do not hide the owner NFC tab** — owners always get RedMed · 911 · Aid ·
-NFC; scanners never get NFC. The flag only gates `NFCWriter` / `NFCReader`
-sessions (simulate / pack-only + Share Band URL return if the flag is
+NFC; scanners never get NFC. The flag only gates CoreNFC sessions and the
+Load From Band button (pack-only Write + Share Band URL + Preview when
 parked). Linked after a real write + matching read-back, or Load From Band.
 
-Owner NFC page keeps **Write**, **Preview**, and **Load From Band** on one screen.
-Load is owner-only (Face ID + Keychain). Preview does not persist.
+When hardware is on, owner NFC keeps **Write**, **Preview**, and **Load From
+Band** on one screen. Load path: read chip → empty-band alert / match→link /
+mismatch+existing→Replace confirm / empty funnel→adopt. Face ID
+(`force: true`) before link and adopt. Write stays ungated. Preview does
+not persist.
 
 ## RF / hardware contract
 

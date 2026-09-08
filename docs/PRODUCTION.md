@@ -1,6 +1,6 @@
 # Production readiness — RedMed
 
-Last checked against `main` after the Face ID post-Agree / no-YOU-gate sync (2026-09). App Store submit is **parked** (no paid listing / Connect app yet). Keep `docs/APP-STORE.md` for later; do not treat it as a current ship checklist.
+Last checked against `main` after Load From Band + empty-funnel Save pass (2026-09). App Store submit is **parked** (no paid listing / Connect app yet). Keep `docs/APP-STORE.md` for later; do not treat it as a current ship checklist.
 
 ## Permanent rule: local, always loadable
 
@@ -17,12 +17,14 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | Area | Status |
 |------|--------|
 | Owner Face ID gate | Post-Agree once (first launch / policy bump / after Erase), then Edit / Save / Clear (empty fields + Save) / Erase / Load From Band (`force: true`). **Not** viewing the YOU card. No cream lock in front of Main — 911 / Aid / NFC stay reachable. No YOU-view relock on `.background`. No Face ID toggle on Before you continue (Haptic + Location only). Profile restores on Main appear (device-unlocked Keychain) without Face ID to view |
-| Clear vs Erase | Blank-all + Save does **not** wipe Keychain (`persist()` refuses empty-over-stored; UI may show Couldn't Save). Full wipe is Help → **Erase All User Data** (Face ID). Band is not wiped remotely |
+| Clear vs Erase | Blank-all + Save does **not** wipe Keychain (`persist()` refuses empty; UI may show Couldn't Save). Full wipe is Help → **Erase All User Data** (Face ID). Band is not wiped remotely |
+| Empty-funnel Save | Fresh / Erase empty funnel: Fill → Edit (Face ID) → Save (Face ID `force: true`) → `persist()`. Empty draft Save refused (no blank Keychain / no gate flip). Blank-over-stored same refuse; Erase is the wipe path |
+| Load From Band | Code PASS; UI parked with CoreNFC. Path: read → empty alert / match→link / mismatch+existing→Replace / empty funnel→adopt. Face ID before `authenticateAndLinkMatchingBand` and `authenticateAndAdopt` → `adoptBandSnapshot`. Write ungated. See `docs/NFC-RESTORE.md` |
 | Crash motion | Starts after owner Main paints. Stops CoreMotion on `.background`. Restarts on `.active`. Does not stop on `.inactive` (Face ID on post-Agree / Edit / Save / Erase / Load From Band). Armed siren is independent. Scanner / tapper never start it. |
 | Keychain profile | `WhenPasscodeSetThisDeviceOnly`, no biometry ACL; save fail-closed; never synchronizable |
 | Location toggle | Honored on Agree. Agree does not present When-In-Use. System sheet + GPS start/stop are Find Help only |
 | Owner tabs | RedMed · 911 · Aid · NFC; scanners never see NFC |
-| NFC Preview + Scan | Preview uses `fullScreenCover(item:)` after pack — no empty-cover race. CoreNFC is parked (`nfcHardwareEnabled = false`); Write / Scan are pack-only simulate + Share Band URL. Load From Band and Linked need restored hardware (`docs/NFC-RESTORE.md`) |
+| NFC Preview + Scan | Preview uses `fullScreenCover(item:)` after pack — no empty-cover race. CoreNFC is parked (`nfcHardwareEnabled = false`); Write is pack-only + Share Band URL; Load From Band button hidden. Linked needs restored hardware (`docs/NFC-RESTORE.md`) |
 | Passerby shell | One file `tapper/index.html`; Xcode copies it to the app bundle as `tapper.html` at build; repo-root `tapper.html` redirects to `/tapper/` |
 | Offline shell | SW cache precaches HTML + pheart / BrandLogo / BrandWordmark |
 | Band URI contract | Write only `medicalCardBaseURL + #d=` base64url; vendor/social/short URLs rejected |
