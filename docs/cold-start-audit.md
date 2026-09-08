@@ -12,8 +12,10 @@
 > **Returning YOU fill:** Prefetch starts in `ProfileData.init` (detached
 > SecItem + JSON) so SplashBoard overlaps decode. ContentView adopts Keychain
 > immediately in `.task` (no pre-restore yield). Haptics, tab-bar
-> `drawingGroup`, and CoreMotion / alarm-WAV warm stay ~400ms past adopt.
-> Do not put those ahead of restore.
+> `drawingGroup`, page rose wash, and CoreMotion / alarm-WAV warm stay ~400ms
+> past adopt. Do not remount `OwnerYouCard` via `.id(cardEpoch)` on adopt —
+> that tore down the ScrollView on every cold fill; keep-alive front re-diff
+> + parked-tab `epoch` are enough.
 
 
 **Launch lock is gone.** Current path is `RedMedApp` → `PrivacySnapshotGuard` →
