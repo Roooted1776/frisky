@@ -449,7 +449,7 @@ struct HelpMenuView: View {
                                 .disabled(isErasing)
                                 .accessibilityLabel("Erase All User Data")
                             }
-                            Text("Deletes the profile from this iPhone’s Keychain and clears local history. Settings prefs stay. The physical band is not wiped remotely — rewrite or discard it.")
+                            Text("Deletes the profile from this iPhone’s Keychain. Haptic and Location prefs stay. The physical band is not wiped remotely — rewrite or discard it.")
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundColor(.redmedMuted)
                                 .padding(.horizontal, 4)
@@ -479,7 +479,7 @@ struct HelpMenuView: View {
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Face ID or passcode is required. Profile and local history are removed from this phone. The bracelet still holds its last write until you overwrite or discard it.")
+                Text("Face ID or passcode is required. Profile is removed from this phone. The bracelet still holds its last write until you overwrite or discard it.")
             }
             .alert("Couldn't verify it's you", isPresented: $eraseAuthFailed) {
                 Button("OK", role: .cancel) {}

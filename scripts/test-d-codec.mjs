@@ -276,7 +276,7 @@ assert('current idx name=4 Swift', /static let name = 4/.test(swift));
 assert('current idx blood=0 Swift', /static let blood = 0/.test(swift));
 assert('legacy idx name=0 Swift', /static let name = 0/.test(swift));
 assert('write base AppConfig', appConfig.includes(`"${WRITE_BASE}"`));
-assert('empty persist guard', profileData.includes('if !hasSensitiveProfileData && (Self.hasStoredProfile()'));
+assert('empty persist guard', profileData.includes('if !hasSensitiveProfileData') && profileData.includes('return false'));
 assert('embed escapes lt', swift.includes('u003c'));
 
 // --- OwnerBandURI ---

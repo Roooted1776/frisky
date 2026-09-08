@@ -153,11 +153,10 @@
     <ul>
       <li>Profile fields in iOS <strong>Keychain</strong> with <code>WhenPasscodeSetThisDeviceOnly</code> and <strong>no biometry ACL</strong>. Older biometry-bound blobs migrate on the next owner open (one Face ID, then never again to view).</li>
       <li>Readable while the device is unlocked; excluded from iCloud and encrypted backups.</li>
-      <li>Local history / vault files use complete file protection and backup exclusion.</li>
       <li>Owner Face ID gates post-Agree (first launch / after Erase), Edit, Save, Erase, and Load From Band — not viewing the YOU card. 911, Aid, NFC write, returning app launch, and tapper do not prompt.</li>
       <li>Passerby <code>tapper.html</code> never asks for Face ID, passcode, or login — tap opens the card from <code>#d=</code>.</li>
       <li>App-switcher snapshots are covered while profile data is in memory so live fields are not cached in the system snapshot.</li>
-      <li>Help → <strong>Erase All User Data</strong> deletes Keychain profile and vault files on this iPhone (Face ID). Edit has no Clear-all — blank-all + Save cannot replace a stored blob. The physical band is not wiped remotely.</li>
+      <li>Help → <strong>Erase All User Data</strong> deletes the Keychain profile on this iPhone (Face ID). Edit has no Clear-all — blank-all + Save cannot replace a stored blob. The physical band is not wiped remotely.</li>
     </ul>
 
     <h2><span class="sec-num">3</span> NFC band</h2>
@@ -175,10 +174,10 @@
     <p>Same posture as <a href="#privacy">Privacy</a>: no profile on our systems → RedMed is outside the covered-entity / BA path for that profile. Device Keychain and no backend are the controls. They are not a hospital Security Rule program and not a “HIPAA certified” claim.</p>
 
     <h2><span class="sec-num">7</span> Report a vulnerability</h2>
-    <p>Open a private GitHub security advisory on <a href="https://github.com/Roooted1776/frisky">Roooted1776/frisky</a> for XSS in <code>#d=</code> rendering, Keychain / vault bypass, or owner post-Agree / Edit / Save / Erase / Load From Band gate bypass. Or email <a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a>. Do not file public issues with live keys or real medical payloads. See <code>docs/SECURITY.md</code>.</p>
+    <p>Open a private GitHub security advisory on <a href="https://github.com/Roooted1776/frisky">Roooted1776/frisky</a> for XSS in <code>#d=</code> rendering, Keychain bypass, or owner post-Agree / Edit / Save / Erase / Load From Band gate bypass. Or email <a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a>. Do not file public issues with live keys or real medical payloads. See <code>docs/SECURITY.md</code>.</p>
 
     <h2><span class="sec-num">8</span> Trust root</h2>
-    <p>There is no RedMed profile server. The trust root is the owner’s iPhone: Keychain, biometrics gates, RAM purge on background, vault file protection, and the band fragment if written.</p>
+    <p>There is no RedMed profile server. The trust root is the owner’s iPhone: Keychain, biometrics gates, RAM purge on background, and the band fragment if written.</p>
 
     <h2><span class="sec-num">9</span> Contact</h2>
     <p><a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a></p>
