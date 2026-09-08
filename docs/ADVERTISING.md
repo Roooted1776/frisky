@@ -180,7 +180,7 @@ KPI: band orders + App Store downloads.
 
 ## View B — facility / EMS
 
-This is a **sales motion**, not a Facebook campaign. Help.html today: RedMed
+This is a **sales motion**, not a Facebook campaign. Document.html today: RedMed
 is an individual in NJ, not a covered entity, not a BA, not an FDA device.
 You cannot honestly sell “hospital ICE infrastructure” on that posture.
 

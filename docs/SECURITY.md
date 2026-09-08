@@ -1,7 +1,7 @@
 # Security
 
 Engineer-facing threat model for RedMed. User-facing copy lives in
-`RedMed-Xcode/RedMed/Help.html` (§Security). Product “do not claim” rules:
+`RedMed-Xcode/RedMed/Document/Document.html` (§Security). Product “do not claim” rules:
 `docs/DO-NOT.md`. Broader audit trail: `docs/AUDIT.md`.
 
 ## Posture (short)

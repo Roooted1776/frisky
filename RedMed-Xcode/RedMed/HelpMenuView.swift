@@ -4,7 +4,7 @@ import UIKit
 
 /// Bundled owner Help: one HTML file, five in-doc anchors. Offline. No network.
 enum HelpDocument {
-    static let bundledFile = "Help"
+    static let bundledFile = "Document"
     /// Single Help / consent row — opens the combined Policies document.
     static let combinedTitle = "Policies"
     static let combinedEmoji = "📋"
@@ -30,7 +30,7 @@ enum HelpDocument {
             }
         }
 
-        /// Keep lockstep with Help.html nav, h1, footer, and `__rmPolicies`.
+        /// Keep lockstep with Document.html nav, h1, footer, and `__rmPolicies`.
         var emoji: String {
             switch self {
             case .privacy: return "🔒"
@@ -61,7 +61,7 @@ enum HelpDocument {
 struct LocalWebView: UIViewRepresentable {
     let filename: String
     var fragment: String? = nil
-    /// Help.html section id — optional native hook when the sticky nav jumps.
+    /// Document.html section id — optional native hook when the sticky nav jumps.
     var onPolicyChange: ((HelpDocument.Policy) -> Void)? = nil
 
     func makeCoordinator() -> Coordinator { Coordinator() }
@@ -111,14 +111,14 @@ struct LocalWebView: UIViewRepresentable {
         guard let url = Bundle.main.url(forResource: filename, withExtension: "html") else { return }
         context.coordinator.loadedKey = key
         context.coordinator.didLoadHTML = true
-        // Real file load so #privacy / #terms / #security and sibling Help.html
+        // Real file load so #privacy / #terms / #security and sibling Document.html
         // links resolve. loadHTMLString blocked those as local-resource navigations.
         webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
     }
 
     /// Policy HTML + stylesheet only — never lateral loads into tapper.html.
     private static let allowedFileBasenames: Set<String> = [
-        "Help.html",
+        "Document.html",
         "legal-doc.css"
     ]
 
@@ -160,7 +160,7 @@ struct LocalWebView: UIViewRepresentable {
             let safe = id.filter { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" }
             guard safe == id, !safe.isEmpty else { return }
             // replaceState, not location.hash — assigning hash can reload the file.
-            // window.__rmShowPolicy (defined in Help.html) scrolls to the
+            // window.__rmShowPolicy (defined in Document.html) scrolls to the
             // section in the continuous document; fall back to a plain
             // scroll if the page's own script hasn't run yet for some reason.
             webView.evaluateJavaScript(
@@ -232,8 +232,8 @@ struct LocalWebView: UIViewRepresentable {
         }
 
         private func isShowingHelp(_ webView: WKWebView) -> Bool {
-            if webView.url?.lastPathComponent == "Help.html" { return true }
-            if loadedKey?.split(separator: "#", maxSplits: 1).first.map(String.init) == "Help" {
+            if webView.url?.lastPathComponent == "Document.html" { return true }
+            if loadedKey?.split(separator: "#", maxSplits: 1).first.map(String.init) == "Document" {
                 return true
             }
             return false
@@ -255,7 +255,7 @@ struct LocalWebView: UIViewRepresentable {
         private static let helpFragments: Set<String> = Set(HelpDocument.Policy.allCases.map(\.fragment))
 
         private static func policyDestination(file: String, fragment: String?) -> String? {
-            guard file == "Help.html", let fragment, helpFragments.contains(fragment) else {
+            guard file == "Document.html", let fragment, helpFragments.contains(fragment) else {
                 return nil
             }
             return fragment

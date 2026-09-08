@@ -57,6 +57,6 @@ Not doing these in git until you have the Program and an app ID:
 4. `AppConfig.appStoreURL` is `nil` (no placeholder listing).
 5. App Store Connect package / Archive.
 
-Legal policies stay in Help.html. User acknowledgments stay on `ConsentGateView` (first launch / policy bump; Agree this process stays in Main). Face ID runs **after** Agree — not on Before You Continue, and not as an app-open cream lock in front of Main.
+Legal policies stay in `Document/Document.html`. User acknowledgments stay on `ConsentGateView` (first launch / policy bump; Agree this process stays in Main). Face ID runs **after** Agree — not on Before You Continue, and not as an app-open cream lock in front of Main.
 
 Custom HTML domain is still TBD (`docs/domain.md`). Write base `/tapper/` is green.
