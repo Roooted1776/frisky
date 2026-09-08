@@ -16,3 +16,4 @@ Permanent product rules. Do not ship copy or URLs that break these.
 
 - **Do not** ask support mailers for a full medical profile. `help.RedMed@gmail.com` is for app/band troubleshooting only. Delete support threads when resolved — that inbox is the only path from users to the operator.
 - **Do not** fork a second Privacy policy. Source of truth is in-app Help → Policies → Privacy (`RedMed-Xcode/RedMed/Document/Document.html`). When Connect or the band host needs a Privacy Policy URL, serve that same Privacy text (tagged/hashed on the live host) — never a separate git tree or rewritten public page.
+- **Do not** leave App Store Age at a different floor than Terms §16. Listing is **12+**; Terms eligibility is **12+**.
