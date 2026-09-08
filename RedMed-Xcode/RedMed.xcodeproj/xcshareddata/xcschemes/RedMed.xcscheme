@@ -29,6 +29,7 @@
       shouldUseLaunchSchemeArgsEnv = "YES"
       shouldAutocreateTestPlan = "YES">
    </TestAction>
+   <!-- enableGPUValidationMode 1 = Disabled (XcodeProj). Value 2 re-enables Metal API Validation. -->
    <LaunchAction
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"

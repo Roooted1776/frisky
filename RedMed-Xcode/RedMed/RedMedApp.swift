@@ -5,9 +5,10 @@ struct RedMedApp: App {
     @StateObject private var profile = ProfileData()
 
     init() {
-        // DEBUG: marks process start after dyld / debugger attach.
-        // Lag before this line is Xcode install + LLDB — not SwiftUI.
-        RedMedSignpost.coldLaunchMark("app.init")
+        // Marks process start after dyld / debugger attach.
+        // Cream with no ColdLaunch lines yet = Xcode install + LLDB, not SwiftUI.
+        RedMedSignpost.coldMark("app.init")
+        RedMedSignpost.begin(.coldLaunchWindow)
     }
 
     var body: some Scene {
@@ -95,7 +96,8 @@ private struct LaunchRoot: View {
             }
         }
         .onAppear {
-            RedMedSignpost.coldLaunchFirstFrameOnce()
+            RedMedSignpost.coldMark("firstFrame")
+            RedMedSignpost.end(.coldLaunchWindow)
         }
         .task {
             guard holdLaunchCream else { return }
