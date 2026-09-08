@@ -1496,7 +1496,7 @@ function redmedAssetURL(file) {
 </style>
 </head>
 <body>
-  <a class="skip-link" href="#panel-medical">Skip To Card</a>
+  <a class="skip-link" href="#panel-medical" id="skipToCard">Skip To Card</a>
   <div class="app">
     <!-- RedMed — same header + YOU card as owner RedMedView (no Edit). -->
     <div class="panel active" id="panel-medical" data-panel="medical" role="tabpanel" aria-labelledby="tab-medical" aria-hidden="false">
@@ -2659,6 +2659,30 @@ function redmedAssetURL(file) {
     if (start !== '911' && start !== 'aid') start = 'medical';
     showTab(start);
   })();
+  // Skip To Card must not assign location.hash to #panel-medical — that
+  // replaces #d= and hashchange would wipe the YOU card (issue #527).
+  (function wireSkipToCard() {
+    var skip = document.getElementById('skipToCard') || document.querySelector('.skip-link');
+    if (!skip) return;
+    skip.addEventListener('click', function (e) {
+      try { e.preventDefault(); } catch (e0) {}
+      showTab('medical');
+      var panel = document.getElementById('panel-medical');
+      if (!panel) return;
+      if (!panel.hasAttribute('tabindex')) panel.setAttribute('tabindex', '-1');
+      try {
+        panel.focus({ preventScroll: false });
+      } catch (e1) {
+        try { panel.focus(); } catch (e2) {}
+      }
+      try {
+        panel.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      } catch (e3) {
+        try { panel.scrollIntoView(true); } catch (e4) {}
+      }
+    });
+  })();
+
   window.addEventListener('hashchange', function () {
     var next = 'medical';
     try {
@@ -2666,11 +2690,16 @@ function redmedAssetURL(file) {
     } catch (eH) {}
     if (next !== '911' && next !== 'aid') next = 'medical';
     showTab(next);
-    // Band payload lives in the fragment. A same-document hash swap
+    // Band payload lives in the fragment. A same-document #d= swap
     // (paste #d=, in-page test) must re-decode — first paint already ran.
     // Native embed keeps the injected profile. Do not re-arm SOS here
     // (redmed-profile-painted is once; first load owns auto-arm).
+    // Non-#d= fragments (#panel-medical, #911, #aid) only switch tabs —
+    // never re-decode to null and paint No Patient over a live card.
     if (window.__redmedNativeProfile || window.__REDMED_PROFILE) return;
+    var h = '';
+    try { h = location.hash || ''; } catch (eHash) {}
+    if (!/^#d=/i.test(h)) return;
     decodeProfile().then(function (p) {
       renderProfile(p, p != null);
     });
