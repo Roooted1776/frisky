@@ -9,13 +9,11 @@ authoritative for code.
 **Ship blocker:** the passerby host `https://roooted1776.github.io/tapper/` is live.
 Owner NFC hardware is parked (`nfcHardwareEnabled = false`, no NFC entitlement,
 no `NFCReaderUsageDescription`) so Automatic Signing works without NFC Tag
-Reading on App ID `com.redmed.app`. **Associated Domains is enabled**
-(`applinks:roooted1776.github.io` in `RedMed.entitlements`) so a phone with
-RedMed installed does not Safari-open on wrist-band proximity — see
-`docs/associated-domains-restore.md`. Safari also tries `redmed://band#d=`
-before SOS when AASA/UL miss. That capability needs paid Program on
-the App ID (personal/free teams cannot provision it; park the entitlement
-again only if you must device-sign on a personal team). The owner NFC tab
+Reading on App ID `com.redmed.app`. **Associated Domains is parked**
+(`associatedDomainsEnabled = false`, no `applinks:` in `RedMed.entitlements`)
+so Automatic Signing works on a personal/free team. Safari still tries
+`redmed://band#d=` before SOS. Restore Associated Domains after paid Program
+— see `docs/associated-domains-restore.md`. The owner NFC tab
 stays visible; Write is pack-only + Share Band URL; **Load From Band UI is
 hidden** while parked. Restore real CoreNFC after paid Program + NFC Tag
 Reading — see `docs/NFC-RESTORE.md`.
