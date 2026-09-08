@@ -40,6 +40,8 @@ frisky/
 | `docs/NFC-RESTORE.md` | CoreNFC entitlement restore |
 | `docs/band-engraving-and-nfc-sourcing.md` | Hardware |
 | `docs/ADVERTISING.md` | Two ad views: wearer/family (DTC) and facility/EMS; shared gate + banned claims |
+| `docs/IP-ASSIGNMENT.md` | How-to: confirmatory IP assignment (code, tapper, brand, band → LLC) |
+| `docs/ip-assignment.html` | Printable one-page instrument (sign; do not commit the signed copy) |
 
 ## Code organization (logical)
 

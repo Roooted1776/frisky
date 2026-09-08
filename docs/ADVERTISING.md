@@ -189,7 +189,7 @@ You cannot honestly sell “hospital ICE infrastructure” on that posture.
 Zero outbound to materials management / GPO / hospital admin, and **$0 paid
 media aimed at facilities**, until:
 
-- LLC (or equivalent), product liability insurance
+- LLC (or equivalent), confirmatory IP assignment (`docs/IP-ASSIGNMENT.md`), product liability insurance
 - Counsel on FDA “medical device” for *facility-issued* ID bands
 - A written decision on BAAs (today’s Help text says you will not sign)
 - A SKU story that matches the chip: **blank NDEF, wearer/staff writes from
