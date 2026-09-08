@@ -58,13 +58,13 @@ enum USCrashDetectionCall {
 /// motion, rhythmic daily activity, and hand/wrist handling.
 ///
 /// Motion samples run on a private serial queue (not the main thread) so Face ID /
-/// Face ID / first tabs stay responsive. UI + brightness/volume/siren hop to main.
+/// first tabs stay responsive. UI + brightness/volume/siren hop to main.
 /// Arm/disarm uses a generation token so a late arm Task cannot restart the alarm
 /// after Stop / disarm.
 /// Main starts monitoring once owner tabs are up. SOS / survival hold is
 /// separate — stopMonitoring does not cancel an armed siren. Face ID gates
-/// post-Agree (once), Edit / Save / Erase / Load From Band — not viewing
-/// the YOU card; crash motion is not gated on a view unlock.
+/// post-Agree / Edit / Save / Clear / Erase / Load From Band — not viewing
+/// the YOU card; crash motion is not gated on a YOU-view unlock.
 
 @MainActor
 final class CrashMotionGuard: ObservableObject {
