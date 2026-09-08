@@ -4,6 +4,12 @@ import SwiftUI
 struct RedMedApp: App {
     @StateObject private var profile = ProfileData()
 
+    init() {
+        // DEBUG: marks process start after dyld / debugger attach.
+        // Lag before this line is Xcode install + LLDB — not SwiftUI.
+        RedMedSignpost.coldLaunchMark("app.init")
+    }
+
     var body: some Scene {
         WindowGroup {
             PrivacySnapshotGuard {
@@ -87,6 +93,9 @@ private struct LaunchRoot: View {
                     .allowsHitTesting(false)
                     .accessibilityHidden(true)
             }
+        }
+        .onAppear {
+            RedMedSignpost.coldLaunchFirstFrameOnce()
         }
         .task {
             guard holdLaunchCream else { return }
