@@ -16,8 +16,9 @@ RedMed installed does not Safari-open on wrist-band proximity — see
 before SOS when AASA/UL miss. That capability needs paid Program on
 the App ID (personal/free teams cannot provision it; park the entitlement
 again only if you must device-sign on a personal team). The owner NFC tab
-stays visible; Write / Scan are pack-only + Share Band URL. Restore real
-CoreNFC after paid Program + NFC Tag Reading — see `docs/NFC-RESTORE.md`.
+stays visible; Write is pack-only + Share Band URL; **Load From Band UI is
+hidden** while parked. Restore real CoreNFC after paid Program + NFC Tag
+Reading — see `docs/NFC-RESTORE.md`.
 `medicalCardBaseURL#d=` is unchanged. Linked only after write + matching
 read-back. Do not spend PRs on tab chrome or copy.
 
@@ -62,12 +63,14 @@ The app has no backend, database, or web service.
   optional.
 - **Owner app** (`Main` → `ContentView`, `isScannerSession == false`): tabs are
   **RedMed · 911 · Aid · NFC**. Edit is available on RedMed. NFC tab is always
-  visible for owners; `AppConfig.nfcHardwareEnabled` only gates CoreNFC
-  write/read sessions, never tab chrome. Owner writes the passive HF NFC band
-  from the NFC tab (no Face ID on write) as `medicalCardBaseURL#d=` only
-  (`AppConfig.OwnerBandURI`) — no vendor cloud, no social/short URL, no BLE.
-  **Load From Band** is the reverse owner path: CoreNFC read of `#d=` → Face
-  ID → Keychain. Preview does not persist. Launch path is `ConsentGateView`
+  visible for owners; `AppConfig.nfcHardwareEnabled` gates CoreNFC write/read
+  sessions and the Load From Band button — never tab chrome. Owner writes the
+  passive HF NFC band from the NFC tab (no Face ID on write) as
+  `medicalCardBaseURL#d=` only (`AppConfig.OwnerBandURI`) — no vendor cloud,
+  no social/short URL, no BLE. **Load From Band** (when hardware is on) is the
+  reverse owner path: CoreNFC read of `#d=` → Face ID → Keychain (empty band
+  alert / match→link / mismatch+existing→Replace / empty funnel→adopt).
+  Preview does not persist. Launch path is `ConsentGateView`
   on first launch (or policy-version bump / after Erase) — Agree clickwrap
   only (no Face ID on that page), then Face ID once, then Main. Later cold
   starts skip consent and that post-Agree Face ID; the YOU card is visible
@@ -195,11 +198,12 @@ The app has no backend, database, or web service.
   again to *load* or *view*. If a stored profile is expected and RAM is
   empty, keep the funnel hidden and show the native YOU card with empty
   slots while restore is in flight — not cream-over-WKWebView, not a Face
-  ID unlock pane. `persist()` must not save an empty RAM profile over
-  a stored blob (erase deletes Keychain first). Edit has **field-level
-  Clear only** (blood type / birth date) — no Clear-all. Partial clear +
-  Save can persist; blank-all + Save refuses empty-over-stored (UI: Use
-  Erase to Wipe, skip Face ID). Full wipe is Help → **Erase All User Data**
+  ID unlock pane. `persist()` must not save an empty RAM profile (empty
+  funnel draft or blank-over-stored; erase deletes Keychain first). Edit has
+  **field-level Clear only** (blood type / birth date) — no Clear-all.
+  Partial clear + Save can persist; blank-all + Save refuses empty
+  (UI: Use Erase to Wipe when a stored blob exists, else fill-first; skip
+  Face ID for that doomed Save). Full wipe is Help → **Erase All User Data**
   only (`eraseAllLocalData()`). Do not treat empty-Save as a wipe path.
 - Fresh install (no stored blob) shows the native **setup funnel** (Fill
   medical ID → Save → Write the band). Not on passerby tapper.
@@ -267,8 +271,9 @@ kept alive after). Opacity keep-alive **does not** fire
 `onDisappear` on tab switch — any side effect that must stop when leaving a
 tab (Find Help GPS, seizure timer, etc.) needs an explicit `isVisible`
 (or equivalent) hook from `ContentView`, not `onDisappear` alone.
-`persist()` must not overwrite a stored Keychain blob with an empty RAM
-profile. Empty Keychain (fresh install) may open the setup funnel. Vault prep
+`persist()` must not overwrite Keychain with an empty RAM profile (first-install
+empty Save or blank-over-stored). Empty Keychain (fresh install) may open the
+setup funnel. Vault prep
 runs off the main thread after first paint. `UILaunchScreen` must use
 `LaunchBackground` (same as `redmedBg`, including dark appearance) — never an
 empty dict (system black).

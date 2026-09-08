@@ -679,11 +679,15 @@ struct EditProfileView: View {
             dismiss()
             return
         }
-        // Blank-all is not a wipe path — no Clear-all control. Field Clear
-        // (blood type / birth date) + partial Save can persist; empty-over-stored
-        // cannot. Skip Face ID and point at Erase instead of a Keychain fault.
-        if draftIsFullyBlank && (ProfileData.hasStoredProfile() || ProfileData.prefersLockOnLaunch) {
-            presentBlankOverStoredAlert()
+        // Blank Save is not a wipe / not a first-fill. Field Clear (blood type /
+        // birth date) + partial Save can persist; empty drafts cannot.
+        // Skip Face ID and show the right refuse alert.
+        if draftIsFullyBlank {
+            if ProfileData.hasStoredProfile() || ProfileData.prefersLockOnLaunch {
+                presentBlankOverStoredAlert()
+            } else {
+                presentEmptyDraftAlert()
+            }
             return
         }
         BiometricAuth.authenticate(
@@ -725,6 +729,12 @@ struct EditProfileView: View {
         saveFailedTitle = "Use Erase to Wipe"
         saveFailedMessage =
             "Edit only clears individual fields (blood type, birth date). Blanking everything and saving does not remove a stored medical ID. Use Help → Erase All User Data."
+        showSaveFailedAlert = true
+    }
+
+    private func presentEmptyDraftAlert() {
+        saveFailedTitle = "Couldn't Save"
+        saveFailedMessage = "Add your name or medical details before saving."
         showSaveFailedAlert = true
     }
 
@@ -796,11 +806,14 @@ struct EditProfileView: View {
         }
 
         guard profile.persist() else {
-            let blankOverStored = !profile.hasSensitiveProfileData
+            let emptyDraft = !profile.hasSensitiveProfileData
+            let blankOverStored = emptyDraft
                 && (ProfileData.hasStoredProfile() || ProfileData.prefersLockOnLaunch)
             profile.restore(from: prior)
             if blankOverStored {
                 presentBlankOverStoredAlert()
+            } else if emptyDraft {
+                presentEmptyDraftAlert()
             } else {
                 saveFailedTitle = "Couldn't Save"
                 saveFailedMessage =
