@@ -33,6 +33,17 @@ jobs:
       - name: Show toolchain
         run: xcodebuild -version
 
+      - name: Refuse merge-conflict markers in entitlements
+        run: |
+          set -euo pipefail
+          f=RedMed-Xcode/RedMed/RedMed.entitlements
+          if grep -qE '^(<<<<<<<|=======|>>>>>>>)' "$f"; then
+            echo "::error::$f has unresolved merge conflict markers — Automatic Signing will fail"
+            exit 1
+          fi
+          python3 -c "import xml.etree.ElementTree as ET; ET.parse('$f')"
+          echo "OK $f is valid XML plist"
+
       - name: Build RedMed
         run: |
           xcodebuild build \
