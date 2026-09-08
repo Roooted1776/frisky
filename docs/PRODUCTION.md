@@ -1,6 +1,6 @@
 # Production readiness — RedMed
 
-Last checked against `main` after the 2026-08-31 audit follow-up. App Store submit is **parked** (no paid listing / Connect app yet). Keep `docs/APP-STORE.md` for later; do not treat it as a current ship checklist.
+Last checked against `main` after the Face ID post-Agree / no-YOU-gate sync (2026-09). App Store submit is **parked** (no paid listing / Connect app yet). Keep `docs/APP-STORE.md` for later; do not treat it as a current ship checklist.
 
 ## Permanent rule: local, always loadable
 
@@ -16,7 +16,8 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 
 | Area | Status |
 |------|--------|
-| Owner Face ID gate | Post-Agree once (first launch / policy bump / after Erase), then Edit / Save / Clear (empty fields + Save) / Erase / Load From Band (`force: true`). Before You Continue is Agree + checkbox only (Haptic + Location; no Face ID on that page). No cream lock in front of Main — 911 / Aid / NFC stay reachable. No Face ID to view the YOU card; no relock-YOU-on-background. Profile restores on Main appear (device-unlocked Keychain) without Face ID to view. Blank-all + Save does not wipe Keychain (`persist()` refuses empty-over-stored); full wipe is Help → Erase All User Data |
+| Owner Face ID gate | Post-Agree once (first launch / policy bump / after Erase), then Edit / Save / Clear (empty fields + Save) / Erase / Load From Band (`force: true`). **Not** viewing the YOU card. No cream lock in front of Main — 911 / Aid / NFC stay reachable. No YOU-view relock on `.background`. No Face ID toggle on Before you continue (Haptic + Location only). Profile restores on Main appear (device-unlocked Keychain) without Face ID to view |
+| Clear vs Erase | Blank-all + Save does **not** wipe Keychain (`persist()` refuses empty-over-stored; UI may show Couldn't Save). Full wipe is Help → **Erase All User Data** (Face ID). Band is not wiped remotely |
 | Crash motion | Starts after owner Main paints. Stops CoreMotion on `.background`. Restarts on `.active`. Does not stop on `.inactive` (Face ID on post-Agree / Edit / Save / Erase / Load From Band). Armed siren is independent. Scanner / tapper never start it. |
 | Keychain profile | `WhenPasscodeSetThisDeviceOnly`, no biometry ACL; save fail-closed; never synchronizable |
 | Location toggle | Honored on Agree. Agree does not present When-In-Use. System sheet + GPS start/stop are Find Help only |
@@ -29,7 +30,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | Hospital search | Native: MapKit / Apple Maps. Passerby: OpenStreetMap Overpass (`overpass-api.de`). Disclosed in Help 4.3 |
 | ATS | Arbitrary loads + local networking **false** |
 | Snapshot / pasteboard | Privacy cover + secure pasteboard clear on background |
-| Consent | `ConsentGateView` on first launch or policy bump (**4.8**); Agree + checkbox only (no Face ID on that page); Face ID once after Agree then Main; stored version skips consent and that Face ID on later cold starts; never on tapper |
+| Consent | `ConsentGateView` on first launch or policy bump (**4.8**); Agree + checkbox only on that page (no Face ID there); Face ID runs **once after Agree**, then Main; stored version skips consent **and** that post-Agree Face ID on later cold starts; never on tapper |
 | Apple Health import | Parked (`healthKitImportEnabled = false`) |
 | iOS CI | `workflow_dispatch` only (billing). Does not gate merges |
 | `#d=` codec | `node scripts/test-d-codec.mjs` — AES / zlib / compact / URI lockstep |
@@ -53,6 +54,6 @@ Not doing these in git until you have the Program and an app ID:
 3. `AppConfig.appStoreURL` is `nil` (no placeholder listing).
 4. App Store Connect package / Archive.
 
-Legal policies stay in Help.html. User acknowledgments stay on `ConsentGateView` (first launch / policy bump; Agree this process stays in Main). Before You Continue is Agree-only; Face ID runs once after Agree — it is not an app-open cream lock in front of Main.
+Legal policies stay in Help.html. User acknowledgments stay on `ConsentGateView` (first launch / policy bump; Agree this process stays in Main). Face ID runs **after** Agree — not on Before You Continue, and not as an app-open cream lock in front of Main.
 
 Custom HTML domain is still TBD (`docs/domain.md`). Write base `/tapper/` is green.

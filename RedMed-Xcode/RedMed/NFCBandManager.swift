@@ -70,7 +70,8 @@ final class NFCBandManager: ObservableObject {
     /// Once the sheet is up, hold the band ~1–2″ to finish. CoreNFC drops the
     /// sheet if Write hops through `Task` / `Task.detached` first.
     /// Parked Share Band URL on the NFC tab is the same `OwnerBandURI` string.
-    /// No Face ID here — view / Edit / Save / Erase / Load From Band only.
+    /// No Face ID here — post-Agree / Edit / Save / Erase / Load From Band only
+    /// (not viewing the YOU card).
     /// Linked / Not linked flips only after a real verified CoreNFC write, or
     /// owner Load From Band that persist()s the chip — never simulate or share.
     func writeBand(from profile: ProfileData, isScannerSession: Bool) {

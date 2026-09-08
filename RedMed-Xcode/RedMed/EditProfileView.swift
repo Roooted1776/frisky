@@ -23,6 +23,7 @@ struct EditProfileView: View {
     @State private var showAuthFailedAlert = false
     @State private var authUnavailableMessage: String?
     @State private var showSaveFailedAlert = false
+    @State private var saveFailedMessage = "Your profile could not be written to the secure on-device Keychain. Try again."
     @State private var showBirthDatePicker = false
     @State private var showBloodTypePicker = false
     @State private var pickerBirthDate = EditProfileView.defaultBirthDate
@@ -231,7 +232,7 @@ struct EditProfileView: View {
         .alert("Couldn't Save", isPresented: $showSaveFailedAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Your profile could not be written to the secure on-device Keychain. Blanking every field does not wipe a stored ID — use Help → Erase All User Data for a full wipe. Otherwise try again.")
+            Text(saveFailedMessage)
         }
         .sheet(isPresented: $showBirthDatePicker) {
             birthDatePickerSheet
@@ -761,7 +762,12 @@ struct EditProfileView: View {
         }
 
         guard profile.persist() else {
+            let blankOverStored = !profile.hasSensitiveProfileData
+                && (ProfileData.hasStoredProfile() || ProfileData.prefersLockOnLaunch)
             profile.restore(from: prior)
+            saveFailedMessage = blankOverStored
+                ? "Blanking every field does not erase a stored medical ID. Use Help → Erase All User Data to wipe this iPhone."
+                : "Your profile could not be written to the secure on-device Keychain. Try again."
             showSaveFailedAlert = true
             return
         }
