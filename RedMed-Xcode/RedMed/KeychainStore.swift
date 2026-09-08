@@ -19,8 +19,8 @@ import Security
 /// Never write a new `biometryCurrentSet` item.
 ///
 /// `load` / `save` may still attach `BiometricAuth.peekAuthenticationContext()`
-/// so a just-completed Edit / Save / Erase Face ID can update or replace an
-/// old biometry row without a second sheet. Never write a new ACL.
+/// so a just-completed Edit / Save / Erase / Load From Band Face ID can update
+/// or replace an old biometry row without a second sheet. Never write a new ACL.
 enum KeychainStore {
     private static let defaultService = "com.redmed.app.profile"
 

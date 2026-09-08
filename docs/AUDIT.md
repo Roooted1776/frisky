@@ -271,7 +271,11 @@ Residual: a hard drop of the phone can still siren. That is documented risk, not
 
 #### L4. Empty README, stub SECURITY.md, public repo named frisky
 
-**Follow-up:** README filled. `docs/SECURITY.md` points at Help + advisory path. `docs/PRODUCTION.md` rewritten (no fake Face ID toggle; github.io listed as 404). `docs/cold-start-audit.md` is historical (`OwnerAppLock` path). AGENTS matches the stripped-lock product.
+**Follow-up:** README filled. `docs/SECURITY.md` covers Keychain class, `#d=`
+codec (public AES key), tapper XSS sinks (`textContent` / `esc` / CSP residual),
+and advisory path. `docs/PRODUCTION.md` rewritten (no fake Face ID toggle;
+github.io live). `docs/cold-start-audit.md` is historical (`OwnerAppLock` path).
+AGENTS matches the stripped-lock product.
 
 #### L5. AASA team ID is public; Associated Domains entitlement is present
 
