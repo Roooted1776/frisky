@@ -23,10 +23,9 @@ struct RedMedApp: App {
             .background(CreamWindowBackground())
             .preferredColorScheme(.light)
             .task {
-                // Keychain prefetch already started from ProfileData.init
-                // (SplashBoard overlap). This call is a no-op when the gate
-                // was set — safety net if init skipped. Haptics prepare after
-                // YOU paints (ContentView) — not here.
+                // Prefetch + MainActor adopt already started from ProfileData.init.
+                // Safety net if init skipped the gate path. Haptics stay in
+                // ContentView after YOU paints.
                 profile.beginLaunchPrefetch()
             }
             .onOpenURL { url in

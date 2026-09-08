@@ -79,12 +79,10 @@ struct ContentView: View {
         .ignoresSafeArea(edges: .bottom)
         .task {
             guard !isScannerSession else { return }
-            // Consent is Agree-only; Face ID is post-Agree (first launch /
-            // after Erase). Returning cold starts skip both. Prefetch usually
-            // started in ProfileData.init (SplashBoard overlap). Adopt ASAP —
-            // no pre-restore yield (that forced an empty YOU frame after the
-            // blob was already ready). Haptics / CoreMotion / tab Metal stay
-            // past the filled-card commit.
+            // Prefetch + MainActor adopt usually started in ProfileData.init
+            // (may have filled RAM before this task). restoreOnLaunch is a
+            // no-op when adopt already won. Haptics / CoreMotion / tab Metal
+            // stay past the filled-card commit.
             RedMedSignpost.coldMark("restoreOnLaunch start")
             await profile.restoreOnLaunch()
             RedMedSignpost.coldMark("restoreOnLaunch done")
