@@ -4,6 +4,10 @@
 **Default branch:** `main` @ `90d4b0b` (“Skip WebKit pre-warm on the NFC tab.”)  
 **Date:** 2026-08-31  
 **Follow-up:** same day. In-repo cleanup of findings that did not need a new host or paid Apple team.  
+**Follow-up (2026-09-08):** basic security re-audit (Linux VM). Live host + AASA +
+codec/smoke green. Hardened Swift `#d=` extract to match tapper `&` strip +
+base64url charset fail-closed on decode. No Critical remote exploit. Threat
+boundary remains physical band custody + intentional tap.
 **Method:** static read of Swift / HTML / CI / docs on this tree, plus live HTTP probes. No iOS build (this environment is Linux; Xcode is macOS-only). No secrets were found that needed rotation.
 
 This is RedMed: a native iOS medical ID plus a static passerby HTML shell. There is no application server and no profile API. Confirmed from `AppConfig.swift`, `ProfileData.swift`, `tapper/index.html`, and the absence of any backend package.
@@ -14,11 +18,19 @@ This is RedMed: a native iOS medical ID plus a static passerby HTML shell. There
 
 `#476` stripped `OwnerAppLock`. Face ID is Edit / Save / Erase. `#474` named Overpass and honored the Location toggle. This PR keeps the rest of the in-repo audit work: `KeychainStore.exists` fail-closed, cream-only launch screen, README / PRODUCTION / domain / SECURITY, pages-deploy fail-closed github.io smoke, Actions SHA pins, privacy URLs in this repo, Swift encode clips to tapper `MAX_STR`/`MAX_LIST`, and `scripts/test-d-codec.mjs`.
 
+**2026-09-08 harden:** Swift `extractPayload` / `decodeProfile` strip at `&`
+(match tapper `#d=…&tab=aid`); decode `isBase64urlCharset` fail-closed; write
+gate explicit `&` reject; codec lockstep asserts. Probes: live
+`/tapper/` 200, AASA for `33F9FQ4VBU.com.redmed.app`, `test-d-codec` +
+`smoke-pages` OK. Accepted residuals: public AES packing key, Face ID UI-only
+Keychain, Overpass GPS, CSP `unsafe-inline`, CoreNFC/HealthKit parked.
+
 **Still open (needs Max, not this tree):**
 
 1. Paid Apple Developer: NFC Tag Reading on App ID `com.redmed.app`, then `nfcHardwareEnabled = true` + entitlement (`docs/NFC-RESTORE.md`). Until then, NFC tab Share Band URL programs a blank NTAG216 via Shortcuts / NFC Tools. Linked still needs CoreNFC.
 2. Restore push/PR iOS CI after billing. `#d=` Swift/JS lockstep now runs as `node scripts/test-d-codec.mjs` (pages-deploy + local). No XCTest target.
 3. Leave HealthKit parked until a paid Apple team can provision it. Associated Domains is in `RedMed.entitlements` (`associatedDomainsEnabled = true`) — App ID still needs the capability on a paid team. Host `https://roooted1776.github.io/tapper/` is already live.
+4. Do not re-bind Keychain to `biometryCurrentSet` (Face ID stays UI-only by product contract).
 
 ---
 
