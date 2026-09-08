@@ -20,7 +20,7 @@ Only what must live at the deploy / GitHub surface:
 ```text
 frisky/
 ├── README.md · AGENTS.md · MAX.md
-├── RedMed-Xcode/          # native owner app
+├── RedMed-Xcode/          # native owner app (+ Document/ policies)
 ├── tapper/                # passerby shell + shell-relative PNGs
 ├── assets/                # canonical brand PNGs / SVG
 ├── docs/                  # all long-form docs (this file, MAX, SECURITY, product notes)
@@ -34,7 +34,7 @@ frisky/
 | File | Role |
 |------|------|
 | `../MAX.md` | Max profile + shipped history (agent memory; linked from `AGENTS.md`) |
-| `docs/SECURITY.md` | Advisory pointer into Help.html |
+| `docs/SECURITY.md` | Advisory pointer into Document.html |
 | `docs/STRUCTURE.md` | This map |
 | `docs/domain.md` | getredmed.com cutover |
 | `docs/NFC-RESTORE.md` | CoreNFC entitlement restore |
@@ -44,6 +44,9 @@ frisky/
 ## Code organization (logical)
 
 Xcode groups under target **RedMed**. Disk stays flat under `RedMed-Xcode/RedMed/`
-so `pbxproj` paths and `Bundle.main` basename loads stay stable.
+except policies: `Document/Document.html` + `Document/legal-doc.css` (Xcode group
+`Document`, path = Document). `Bundle.main` loads by basename; WKWebView read
+access is the Document folder so the stylesheet resolves. Legacy
+`RedMed/Help.html` is a hash-preserving redirect stub (not bundled).
 
 Pull `main` on the MacBook after merges.

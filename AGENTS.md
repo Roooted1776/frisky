@@ -104,12 +104,12 @@ The app has no backend, database, or web service.
   Erase, or Write to NFC) so it cannot mutate owner Keychain or `@AppStorage`.
   Passerby `tapper.html` has no Help button.
 - Product HTML is only (1) one passerby file `tapper/index.html` (Xcode copies it into the app bundle as `tapper.html` at build; repo-root `tapper.html` is a `#d=`-preserving redirect to `/tapper/`; legacy `card.html` / `get.html` / `/get/` also redirect to `/tapper/`, preserving `#d=`) and
-  (2) policy pages bundled solely under `RedMed-Xcode/RedMed/`: one `Help.html`
-  (Privacy + TOS + Security, in-file anchors) plus `legal-doc.css`. Legacy
-  `PrivacyPolicy.html` / `TOS.html` / `security.html` redirect into `Help.html`.
-  `HowItWorks.html` redirects into `redmed://main`. Policies CTA to the owner
-  app; they do not host owner edit UI. Do not reintroduce repo-root copies of
-  the policy HTML.   Owner Help menu is Write the band + Privacy / TOS / Security /
+  (2) policy pages bundled solely under `RedMed-Xcode/RedMed/Document/`: one
+  `Document.html` (Privacy + TOS + Security + Medical Disclaimer + Ships When
+  Ready, in-file anchors) plus `legal-doc.css`. Legacy `Help.html` at the RedMed
+  root redirects into `Document/Document.html` (hash preserved). Policies CTA to
+  the owner app; they do not host owner edit UI. Do not reintroduce repo-root
+  copies of the policy HTML. Owner Help menu is Write the band + Privacy / TOS / Security /
   Medical disclaimer + Erase all user data (no Settings section, no
   in-app How It Works / MainInfoView, no Local History row, no local tapper.html
   WebView). Help is on 911 / Aid / NFC (top chrome) — not on Edit, whose
