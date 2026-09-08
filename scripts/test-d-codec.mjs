@@ -234,8 +234,26 @@ function isValidWriteURL(urlString, base = WRITE_BASE) {
   if (!rest.startsWith('#d=')) return false;
   const payload = rest.slice(3);
   if (!payload) return false;
-  if (/[#?\s]/.test(payload)) return false;
+  // Match Swift OwnerBandURI — reject # ? & whitespace before charset check.
+  if (/[#?&\s]/.test(payload)) return false;
   return /^[A-Za-z0-9_-]+$/.test(payload);
+}
+
+/** Mirror Swift `ProfileNFCCodec.extractPayload` + tapper `split('&')[0]`. */
+function extractPayload(raw) {
+  const trimmed = String(raw || '').trim();
+  if (!trimmed) return null;
+  let payload;
+  const idx = trimmed.indexOf('#d=');
+  if (idx >= 0) payload = trimmed.slice(idx + 3);
+  else payload = trimmed;
+  const amp = payload.indexOf('&');
+  if (amp >= 0) payload = payload.slice(0, amp);
+  return payload || null;
+}
+
+function isBase64urlCharset(s) {
+  return /^[A-Za-z0-9_-]*$/.test(s);
 }
 
 function sampleChip() {
@@ -287,6 +305,17 @@ assert('URI reject query', !isValidWriteURL(`${WRITE_BASE}#d=abc?x=1`));
 assert('URI reject second hash', !isValidWriteURL(`${WRITE_BASE}#d=abc#more`));
 assert('URI reject space', !isValidWriteURL(`${WRITE_BASE}#d=ab c`));
 assert('URI reject +', !isValidWriteURL(`${WRITE_BASE}#d=ab+c`));
+assert('URI reject amp tab', !isValidWriteURL(`${WRITE_BASE}#d=abc&tab=aid`));
+assert('Swift strips amp in extract', /firstIndex\(of: "&"\)/.test(swift));
+assert('Swift decode charset gate', swift.includes('isBase64urlCharset'));
+assert('tapper splits amp', /hash\.slice\(3\)\.split\('&'\)\[0\]/.test(tapper));
+
+const ampPayload = b64url(Buffer.from('x'));
+assert('extract strips &tab=', extractPayload(`${WRITE_BASE}#d=${ampPayload}&tab=aid`) === ampPayload);
+assert('extract bare payload', extractPayload(ampPayload) === ampPayload);
+assert('extract empty after amp', extractPayload('#d=&tab=aid') === null);
+assert('charset rejects plus', !isBase64urlCharset('ab+c'));
+assert('charset accepts url', isBase64urlCharset(ampPayload));
 
 const tapperCrash = appConfig.match(/static let tapperNote =\s+"([^"]+)"/);
 assert('crash tapper note lockstep', !!(tapperCrash && tapper.includes(tapperCrash[1])));
