@@ -38,11 +38,13 @@ set up a working runtime here:
 The app has no backend, database, or web service.
 
 **Roles / shells (permanent — do not regress):**
-- **Face ID:** sits on **post-Agree (once)**, **Edit / Save / Clear (empty
-  fields + Save) / Erase / Load From Band** — **not** on Before You Continue
+- **Face ID:** sits on **post-Agree (once)**, **Edit / Save / Erase / Load From Band** — **not** on Before You Continue
   itself (Agree clickwrap only), not opening / viewing the owner YOU card,
   not app launch / Main for returning users, not 911 / Aid / NFC write, not
-  tapper. First launch (or policy-version bump / after Erase): Before you
+  tapper. Edit has **field-level Clear only** (blood type / birth date) —
+  no Clear-all control; blank-all + Save is not a wipe path (alert points
+  at Erase, no Face ID for that doomed Save). First launch (or
+  policy-version bump / after Erase): Before you
   continue (checkbox + Agree) → Face ID once → Main. Later cold starts skip
   consent **and** that post-Agree Face ID (straight to Main with card).
   Tapper has no biometrics and no acknowledgement page. Do not remount
@@ -69,7 +71,7 @@ The app has no backend, database, or web service.
   on first launch (or policy-version bump / after Erase) — Agree clickwrap
   only (no Face ID on that page), then Face ID once, then Main. Later cold
   starts skip consent and that post-Agree Face ID; the YOU card is visible
-  without Face ID (Edit / Save / Clear / Erase still Face ID). Same session
+  without Face ID (Edit / Save / Erase still Face ID). Same session
   stays in Main. No app-wide cream lock in front of Main (911 / Aid / NFC
   stay reachable).
 - **Scanner / passerby shell** (`OwnerHelpChrome` / bracelet tap → `tapper.html#d=…`,
@@ -82,7 +84,7 @@ The app has no backend, database, or web service.
   unregistered host onto bands. `redmed.pages.dev` stays
   optional until Cloudflare secrets / Pages Git connect land.
   **Tap-to-view never requires Face ID / biometrics / passcode / login** — owner biometrics gate
-  post-Agree (first launch / after Erase), Edit, Save, Clear (via Save), Erase, and Load From Band (not viewing the YOU card). NFC write, 911, Aid, and returning app launch do not prompt.
+  post-Agree (first launch / after Erase), Edit, Save, Erase, and Load From Band (not viewing the YOU card). NFC write, 911, Aid, and returning app launch do not prompt.
   Passerby HTML never asks.
   **Nothing blocks the tap card** (YOU card / Preview / Scan / band tap): no
   privacy veil, no native overlay stealing taps, no login. Safari opens
@@ -179,7 +181,7 @@ The app has no backend, database, or web service.
   `LockEntryPage` / `FacePage`. Passerby `tapper.html` never has Face ID,
   passcode, login, or any page in front of the card.
 - Face ID / Touch ID with device passcode fallback is **post-Agree (once),
-  Edit, Save, Clear (empty fields + Save), Erase, and Load From Band**
+  Edit, Save, Erase, and Load From Band**
   (`force: true`, reuse duration **0**) — **not** on Before You Continue,
   **not** viewing the owner YOU card. NFC write, 911, Aid, returning app
   launch, and tapper do not prompt. Apple locks Face ID after **5
@@ -194,10 +196,11 @@ The app has no backend, database, or web service.
   empty, keep the funnel hidden and show the native YOU card with empty
   slots while restore is in flight — not cream-over-WKWebView, not a Face
   ID unlock pane. `persist()` must not save an empty RAM profile over
-  a stored blob (erase deletes Keychain first). Blank-all fields in Edit
-  + Save still Face IDs but cannot replace Keychain — UI may show
-  Couldn't Save; full wipe is Help → **Erase All User Data** only
-  (`eraseAllLocalData()`). Do not treat empty-Save as a wipe path.
+  a stored blob (erase deletes Keychain first). Edit has **field-level
+  Clear only** (blood type / birth date) — no Clear-all. Partial clear +
+  Save can persist; blank-all + Save refuses empty-over-stored (UI: Use
+  Erase to Wipe, skip Face ID). Full wipe is Help → **Erase All User Data**
+  only (`eraseAllLocalData()`). Do not treat empty-Save as a wipe path.
 - Fresh install (no stored blob) shows the native **setup funnel** (Fill
   medical ID → Save → Write the band). Not on passerby tapper.
 - `SnapshotSafeCover` is the app-switcher cream thumbnail. Do **not** play
@@ -235,7 +238,7 @@ then `ConsentGateView` on first launch (or policy-version bump / after Erase)
 — Agree clickwrap only (no Face ID on that page), then Face ID once on cream,
 then Main. Later cold starts skip consent **and** that post-Agree Face ID.
 Same session stays in Main. No app-wide cream lock in front of Main. Owner
-RedMed tab shows the YOU card without Face ID to view (Edit / Save / Clear /
+RedMed tab shows the YOU card without Face ID to view (Edit / Save /
 Erase still Face ID). Owner `ContentView.onAppear` starts crash monitoring
 (deferred after first paint); `.background` stops CoreMotion; `.active`
 restarts it; `.inactive` does not stop it. `.task` calls

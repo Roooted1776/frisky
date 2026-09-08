@@ -16,8 +16,8 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 
 | Area | Status |
 |------|--------|
-| Owner Face ID gate | Post-Agree once (first launch / policy bump / after Erase), then Edit / Save / Clear (empty fields + Save) / Erase / Load From Band (`force: true`). **Not** viewing the YOU card. No cream lock in front of Main — 911 / Aid / NFC stay reachable. No YOU-view relock on `.background`. No Face ID toggle on Before you continue (Haptic + Location only). Profile restores on Main appear (device-unlocked Keychain) without Face ID to view |
-| Clear vs Erase | Blank-all + Save does **not** wipe Keychain (`persist()` refuses empty-over-stored; UI may show Couldn't Save). Full wipe is Help → **Erase All User Data** (Face ID). Band is not wiped remotely |
+| Owner Face ID gate | Post-Agree once (first launch / policy bump / after Erase), then Edit / Save / Erase / Load From Band (`force: true`). **Not** viewing the YOU card. No cream lock in front of Main — 911 / Aid / NFC stay reachable. No YOU-view relock on `.background`. No Face ID toggle on Before you continue (Haptic + Location only). Profile restores on Main appear (device-unlocked Keychain) without Face ID to view |
+| Clear vs Erase | Edit has field-level Clear only (blood type / birth date) — no Clear-all. Partial clear + Save can persist; blank-all + Save refuses empty-over-stored (alert: Use Erase to Wipe, no Face ID). Full wipe is Help → **Erase All User Data** (Face ID). Band is not wiped remotely |
 | Crash motion | Starts after owner Main paints. Stops CoreMotion on `.background`. Restarts on `.active`. Does not stop on `.inactive` (Face ID on post-Agree / Edit / Save / Erase / Load From Band). Armed siren is independent. Scanner / tapper never start it. |
 | Keychain profile | `WhenPasscodeSetThisDeviceOnly`, no biometry ACL; save fail-closed; never synchronizable |
 | Location toggle | Honored on Agree. Agree does not present When-In-Use. System sheet + GPS start/stop are Find Help only |

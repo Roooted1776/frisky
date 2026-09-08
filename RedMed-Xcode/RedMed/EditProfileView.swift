@@ -23,6 +23,7 @@ struct EditProfileView: View {
     @State private var showAuthFailedAlert = false
     @State private var authUnavailableMessage: String?
     @State private var showSaveFailedAlert = false
+    @State private var saveFailedTitle = "Couldn't Save"
     @State private var saveFailedMessage = "Your profile could not be written to the secure on-device Keychain. Try again."
     @State private var showBirthDatePicker = false
     @State private var showBloodTypePicker = false
@@ -229,7 +230,7 @@ struct EditProfileView: View {
         } message: {
             Text(authUnavailableMessage ?? "")
         }
-        .alert("Couldn't Save", isPresented: $showSaveFailedAlert) {
+        .alert(saveFailedTitle, isPresented: $showSaveFailedAlert) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(saveFailedMessage)
@@ -678,6 +679,13 @@ struct EditProfileView: View {
             dismiss()
             return
         }
+        // Blank-all is not a wipe path — no Clear-all control. Field Clear
+        // (blood type / birth date) + partial Save can persist; empty-over-stored
+        // cannot. Skip Face ID and point at Erase instead of a Keychain fault.
+        if draftIsFullyBlank && (ProfileData.hasStoredProfile() || ProfileData.prefersLockOnLaunch) {
+            presentBlankOverStoredAlert()
+            return
+        }
         BiometricAuth.authenticate(
             reason: "Confirm with Face ID, Touch ID, or passcode to save your RedMed profile.",
             force: true
@@ -692,6 +700,32 @@ struct EditProfileView: View {
                 }
             }
         }
+    }
+
+    /// Edit has field-level Clear only (blood type / birth date). No Clear-all.
+    private var draftIsFullyBlank: Bool {
+        youFullName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && birthDate.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && bloodType.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !isOrganDonor
+            && !isPregnant
+            && !isDeafOrVisionImpaired
+            && allergies.allSatisfy { $0.text.trimmingCharacters(in: .whitespaces).isEmpty }
+            && medications.allSatisfy { $0.text.trimmingCharacters(in: .whitespaces).isEmpty }
+            && conditions.allSatisfy { $0.text.trimmingCharacters(in: .whitespaces).isEmpty }
+            && notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && contacts.allSatisfy {
+                $0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    && $0.relationship.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    && $0.phone.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            }
+    }
+
+    private func presentBlankOverStoredAlert() {
+        saveFailedTitle = "Use Erase to Wipe"
+        saveFailedMessage =
+            "Edit only clears individual fields (blood type, birth date). Blanking everything and saving does not remove a stored medical ID. Use Help → Erase All User Data."
+        showSaveFailedAlert = true
     }
 
     private func commitSave() {
@@ -765,10 +799,14 @@ struct EditProfileView: View {
             let blankOverStored = !profile.hasSensitiveProfileData
                 && (ProfileData.hasStoredProfile() || ProfileData.prefersLockOnLaunch)
             profile.restore(from: prior)
-            saveFailedMessage = blankOverStored
-                ? "Blanking every field does not erase a stored medical ID. Use Help → Erase All User Data to wipe this iPhone."
-                : "Your profile could not be written to the secure on-device Keychain. Try again."
-            showSaveFailedAlert = true
+            if blankOverStored {
+                presentBlankOverStoredAlert()
+            } else {
+                saveFailedTitle = "Couldn't Save"
+                saveFailedMessage =
+                    "Your profile could not be written to the secure on-device Keychain. Try again."
+                showSaveFailedAlert = true
+            }
             return
         }
         dismiss()

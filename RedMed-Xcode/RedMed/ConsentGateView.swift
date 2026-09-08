@@ -6,7 +6,7 @@ import UIKit
 /// checkbox only; no Face ID on Before You Continue. Face ID runs once
 /// immediately after Agree (cream wait / Retry until success) while Main
 /// warms underneath, then Main.
-/// Returning opens skip both. Edit / Save / Clear (via Save) / Erase /
+/// Returning opens skip both. Edit / Save / Erase /
 /// Load From Band still Face ID. Never an app-wide cream lock. Never on
 /// passerby tapper.
 enum ConsentSettings {
