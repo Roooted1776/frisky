@@ -21,7 +21,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | Empty-funnel Save | Fresh / Erase empty funnel: Fill → Edit (Face ID) → Save (Face ID `force: true`) → `persist()`. Empty draft Save refused (no blank Keychain / no gate flip). Blank-over-stored same refuse; Erase is the wipe path |
 | Load From Band | Code PASS; UI parked with CoreNFC. Path: read → empty alert / match→link / mismatch+existing→Replace / empty funnel→adopt. Face ID before `authenticateAndLinkMatchingBand` and `authenticateAndAdopt` → `adoptBandSnapshot`. Write ungated. See `docs/NFC-RESTORE.md` |
 | Crash motion | Starts after owner Main paints. Stops CoreMotion on `.background`. Restarts on `.active`. Does not stop on `.inactive` (Face ID on post-Agree / Edit / Save / Erase / Load From Band). Armed siren is independent. Scanner / tapper never start it. |
-| Keychain profile | `WhenPasscodeSetThisDeviceOnly`, no biometry ACL; save fail-closed; never synchronizable |
+| Keychain profile | `WhenPasscodeSetThisDeviceOnly`, **no** biometry ACL (`kSecAttrAccessControl` never set). Face ID is UI-only (`BiometricAuth`), not SecItem. Save fail-closed; never synchronizable. Legacy `biometryCurrentSet` rows migrate once on load — never write a new bound item |
 | Location toggle | Honored on Agree. Agree does not present When-In-Use. System sheet + GPS start/stop are Find Help only |
 | Owner tabs | RedMed · 911 · Aid · NFC; scanners never see NFC |
 | NFC Preview + Scan | Preview uses `fullScreenCover(item:)` after pack — no empty-cover race. CoreNFC is parked (`nfcHardwareEnabled = false`); Write is pack-only + Share Band URL; Load From Band button hidden. Linked needs restored hardware (`docs/NFC-RESTORE.md`) |
