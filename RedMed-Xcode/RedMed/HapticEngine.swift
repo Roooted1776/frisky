@@ -5,7 +5,7 @@ import UIKit
 
 /// Light UIKit taps shared by tabs / chrome / SOS / Aid. Respects the haptic toggle.
 enum RedMedHaptics {
-    /// `@AppStorage` / Before you continue toggle. Default on when unset.
+    /// `@AppStorage` / Before you continue haptic toggle. Default on when unset.
     /// Lives here (not on `@MainActor` `HapticEngine`) so nonisolated callers stay clean under Swift 6.
     static let enabledKey = "redmed.hapticsEnabled"
 

@@ -7,7 +7,7 @@ struct TopicDetailView: View {
     let topic: AidTopic
     @Environment(\.dismiss) var dismiss
     /// Engine lives in the view hierarchy — prepared on appear, fired on tap / beat.
-    /// Enable/disable lives on the Before you continue screen (not on this card).
+    /// Haptic enable/disable lives on Before you continue (not on this card).
     @StateObject private var hapticEngine = HapticEngine()
     @State private var cprRunning = false
     @State private var cprCount = 0
@@ -218,7 +218,7 @@ private struct LiveNearbyHospitalsSection: View {
                 .padding(.top, 24)
 
             if !locationEnabled {
-                Text("Location is off. Enable it on Before You Continue (first launch or after a policy update) or in iOS Settings to find nearby hospitals. This screen uses Apple Maps on this phone. A band tap in a browser uses OpenStreetMap Overpass instead.")
+                Text("Location is off. Allow Location in iOS Settings to find nearby hospitals. This screen uses Apple Maps on this phone. A band tap in a browser uses OpenStreetMap Overpass instead.")
                     .font(.system(size: 13))
                     .foregroundColor(.redmedMuted)
                     .padding(.vertical, 12)

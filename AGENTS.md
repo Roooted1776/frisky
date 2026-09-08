@@ -146,11 +146,14 @@ The app has no backend, database, or web service.
   Safari + band-tap SOS auto-arm.
 
 **Settings vs automatic (permanent):**
-- Haptic feedback + Location toggles (`AppSettings` / `HapticEngine.enabledKey`)
-  live on `ConsentGateView`'s "Before you continue" screen, not Help —
+- Haptic feedback toggle (`HapticEngine.enabledKey`) lives on
+  `ConsentGateView`'s "Before you continue" screen, not Help —
   first launch / policy-version bump; same session after Agree stays in Main.
-  Later cold starts skip that page. No other toggles there,
-  and Help no longer has a Settings section at all.
+  Later cold starts skip that page. **Location is on as part of Agree** (no
+  in-app Location toggle). After post-Agree Face ID, present iOS When-In-Use
+  once so 911 is not blocked by Apple's Allow sheet. GPS still starts only on
+  Find Help. Help must not call `requestWhenInUseAuthorization`. Help has no
+  Settings section.
 - **Brightness + sound are survival-alarm only (not Settings):**
   arm `BrightnessBoost` + `VolumeBoost` + `LocatorBeacon` only when (1) on-device crash /
   hard-impact detection (`CrashMotionGuard`) fires for **vehicle crash /
@@ -252,14 +255,15 @@ not hit owner Keychain). Do **not** add a fixed Face ID stagger before restore
 (`ProfileData.storedProfileGateKey`) plus `hasStoredProfile()` hints that a
 blob is expected so the empty funnel stays hidden while restore is in flight.
 Do not call Keychain decode in `@State` defaults.
-Location defaults on (Before you continue — first launch / policy bump) with
-**no RedMed location gate / banner / Allow popup** — Help must not
-call `requestWhenInUseAuthorization`. Honor the Location toggle: Agree must
-not force `locationEnabled = true`. Agree must not present When-In-Use —
-they already chose Location. GPS updates (`LocationManager.start` →
-`startUpdatingLocation()`) start on Find Help while the 911 tab is visible.
-iOS may show its system Allow sheet once then (cannot auto-accept). The
-usage string stays one short purpose line. Passerby
+Location is on as part of Agree (first launch / policy bump). Agree forces
+`locationEnabled = true`. After post-Agree Face ID, present iOS When-In-Use
+once so panic 911 is not blocked by Apple's Allow sheet — Apple still requires
+that tap; we cannot auto-accept. Do not fire When-In-Use on Agree itself
+(would stack with Face ID) and do not create `CLLocationManager` at `@main`.
+Help must not call `requestWhenInUseAuthorization`. GPS updates
+(`LocationManager.start` → `startUpdatingLocation()`) still start on Find Help
+while the 911 tab is visible. Off switch is iOS Settings (denied / restricted),
+not an in-app toggle. The usage string stays one short purpose line. Passerby
 `tapper.html` must not call `geolocation` until the 911 tab opens. Nearby
 hospitals in the app is a one-shot MapKit POI search (Apple may see query +
 region). Passerby `tapper.html` hospital search POSTs coordinates to
