@@ -166,7 +166,7 @@ struct ContentView: View {
     private func startHoldToWriteFromNFCTab() {
         guard showsNFC, !isScannerSession else { return }
         guard AppConfig.nfcHardwareEnabled else { return }
-        guard profile.hasData else { return }
+        guard profile.hasSensitiveProfileData else { return }
         nfcBandBox.ensure().writeBand(from: profile, isScannerSession: false)
     }
 

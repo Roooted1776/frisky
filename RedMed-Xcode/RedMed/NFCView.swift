@@ -108,7 +108,7 @@ struct NFCView: View {
         } message: {
             Text(loadAuthUnavailableMessage ?? "")
         }
-        .task(id: isVisible) {
+        .task(id: "\(isVisible)-\(profile.cardEpoch)") {
             // HTML string only, off the main actor. Do not create a WKWebView
             // on this tab — that was the long NFC load.
             // Session cancel on leave is ContentView (owns the band).
@@ -200,6 +200,8 @@ struct NFCView: View {
 
             factRow(icon: "cpu", text: rf.chipSpecSummary)
             thinRule
+            factRow(icon: "checkmark.seal", text: rf.completeBandSummary)
+            thinRule
             factRow(icon: "textformat", text: rf.laserFaceSummary)
             thinRule
             factRow(icon: "hand.point.up.left.fill", text: rf.tapDistanceSummary)
@@ -209,6 +211,8 @@ struct NFCView: View {
             factRow(icon: "lock.open.fill", text: rf.backgroundTagReadingSummary)
             thinRule
             factRow(icon: "person.2.fill", text: rf.passerbyTapSummary)
+            thinRule
+            factRow(icon: "internaldrive", text: AppConfig.OwnerBandURI.storesIndependenceSummary)
             thinRule
             factRow(icon: "key.horizontal", text: AppConfig.OwnerBandURI.packingHonestySummary)
         }
@@ -223,7 +227,7 @@ struct NFCView: View {
                 title: writeButtonTitle,
                 systemImage: band.isWriting ? nil : "wave.3.right",
                 busy: band.isWriting,
-                disabled: !profile.hasData || band.isBusy,
+                disabled: !profile.hasSensitiveProfileData || band.isBusy,
                 flatten: false
             ) {
                 band.writeBand(from: profile, isScannerSession: isScannerSession)
@@ -232,7 +236,7 @@ struct NFCView: View {
             OutlineButton(
                 title: "Preview",
                 systemImage: "eye",
-                disabled: !profile.hasData || band.isBusy || previewSession != nil
+                disabled: !profile.hasSensitiveProfileData || band.isBusy || previewSession != nil
             ) {
                 openFirstResponderPreview()
             }
@@ -254,11 +258,11 @@ struct NFCView: View {
                 parkedShareControl
             }
 
-            if !profile.hasData {
+            if !profile.hasSensitiveProfileData {
                 Text(
                     AppConfig.nfcHardwareEnabled
-                        ? "Add your name on RedMed before writing or previewing. Load From Band reads a written bracelet into this iPhone."
-                        : "Add your name on RedMed before writing or previewing the band."
+                        ? "Fill RedMed before writing or previewing. Load From Band reads a written bracelet into this iPhone."
+                        : "Fill RedMed before writing or previewing the band."
                 )
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.redmedAccent)
@@ -324,7 +328,7 @@ struct NFCView: View {
     }
 
     private func refreshParkedBandURL() async {
-        guard !AppConfig.nfcHardwareEnabled, profile.hasData else {
+        guard !AppConfig.nfcHardwareEnabled, profile.hasSensitiveProfileData else {
             parkedBandURL = nil
             parkedPackNote = ""
             return
@@ -348,7 +352,7 @@ struct NFCView: View {
     }
 
     private func openFirstResponderPreview() {
-        guard !isScannerSession, profile.hasData, previewSession == nil else { return }
+        guard !isScannerSession, profile.hasSensitiveProfileData, previewSession == nil else { return }
         let chip = ProfileNFCCodec.chipProfile(from: profile)
         let linked = profile.showsBraceletAsLinked
         Task { @MainActor in

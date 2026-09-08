@@ -67,7 +67,7 @@
 
     <h2><span class="sec-num">4</span> What information exists</h2>
     <ul>
-      <li><strong>Medical ID (self-reported):</strong> name, birth date, blood type, allergies, medications, conditions — fields a responder may need fast.</li>
+      <li><strong>Medical ID (self-reported):</strong> name, birth date, blood type, allergies, medications, conditions, notes — fields a responder may need fast.</li>
       <li><strong>Emergency contacts:</strong> names, relationships, and phones you choose to list. Tell those people you listed them.</li>
       <li><strong>Location:</strong> coordinates and heading shown only while Find Help is open, so you can read them to a dispatcher. Find Nearby Hospitals also uses GPS: Apple Maps in the iPhone app; OpenStreetMap Overpass on a band tap in a browser (see §7).</li>
       <li><strong>Apple Health (optional, parked):</strong> when HealthKit import is restored, Fill From Apple Health would read birth date and blood type from HealthKit on this iPhone — read-only, never written back to Health, never sent to us. That control is <strong>not available in this build</strong> (HealthKit capability parked).</li>
@@ -77,12 +77,12 @@
     <p>Providing a profile is optional. Leaving fields blank is fine; an empty card is less useful in an emergency.</p>
 
     <h2><span class="sec-num">5</span> Where it lives</h2>
-    <p>Your profile stays on your iPhone Keychain and, if you write one, on the band’s NFC chip. It is not uploaded, synced, or backed up to any RedMed server — we do not operate one for profiles.</p>
+    <p>Your profile stays on your iPhone Keychain and, if you write one, on the band’s NFC chip. Those are two copies. Neither depends on the other — a dead or wiped phone does not blank the chip, and a rewrite does not need iCloud or an account. It is not uploaded, synced, or backed up to any RedMed server — we do not operate one for profiles.</p>
     <p>On iOS we use the <code>WhenPasscodeSetThisDeviceOnly</code> Keychain class with <strong>no biometry ACL</strong>: readable while this iPhone is unlocked, and <strong>excluded from iCloud and encrypted backups</strong>. It does not sync to your other Apple devices. Face ID gates post-Agree (first launch / after Erase), Edit, Save, Erase, and Load From Band — not viewing the YOU card, not 911, not Aid, not NFC write, not returning app launch, not tapper. Field-level Clear in Edit (blood type / birth date) does not prompt until you Save. Keychain restore loads the profile on Main without Face ID to view. The band is still the credential for tap-to-view — no Face ID on a passerby tap.</p>
     <p>When someone taps the band, nothing is fetched from us. The card is built from what is on the chip (<code>#d=</code> in the URL fragment).</p>
 
     <h2><span class="sec-num">6</span> The band is readable by design</h2>
-    <p>A RedMed band uses a <strong>passive NXP NTAG216</strong> HF NFC chip (13.56 MHz, ISO 14443A Type 2). No battery. No Bluetooth. The phone powers it only during a close write or tap. In this build, CoreNFC write from the app is parked — you can pack and share a <code>#d=</code> URL (or Preview) and write a blank tag with Shortcuts / NFC Tools; in-app write returns when NFC Tag Reading is restored (<a href="#ships-when-ready">Ships When Ready</a>).</p>
+    <p>A RedMed band uses a <strong>passive NXP NTAG216</strong> HF NFC chip (13.56 MHz, ISO 14443A Type 2). The bracelet comes complete — you only write the chip. No battery. No Bluetooth. The phone powers it only during a close write or tap. In this build, CoreNFC write from the app is parked — you can pack and share a <code>#d=</code> URL (or Preview) and write a blank tag with Shortcuts / NFC Tools; in-app write returns when NFC Tag Reading is restored (<a href="#ships-when-ready">Ships When Ready</a>).</p>
     <p><strong>Anyone who deliberately taps the band can open the card</strong> — no app, no account, no password. New writes use AES-GCM packing with a <strong>public client key</strong> shared by the app and the passerby page. That hides casual plaintext in the fragment; it is <strong>not</strong> confidentiality against a responder (or anyone else) who opens the URL.</p>
     <p>Treat the band like a wallet medical ID. Do not put anything on it that you would not accept a stranger reading. Leave sensitive fields blank if you prefer.</p>
     <p>Casual walk-by distance will not fire the band. A deliberate ~1–2″ antenna tap can. Separately, <strong>iOS Background Tag Reading</strong> can open the card on that kind of tap even when the phone is off or locked — Apple’s path, not RedMed. Payment terminals speak EMV and do not open the RedMed card. More detail: <a href="#security">Security</a>.</p>

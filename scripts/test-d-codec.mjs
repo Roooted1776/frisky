@@ -75,10 +75,12 @@ function compactArray(chip) {
     chip.donor ? 1 : 0,
   ];
   if (chip.updated) row.push(clipStr(chip.updated));
-  if (chip.pregnant || chip.deafOrVisionImpaired) {
+  const notes = clipStr(String(chip.notes || '').trim());
+  if (chip.pregnant || chip.deafOrVisionImpaired || notes) {
     if (!chip.updated) row.push('');
     row.push(chip.pregnant ? 1 : 0);
     row.push(chip.deafOrVisionImpaired ? 1 : 0);
+    if (notes) row.push(notes);
   }
   return row;
 }
@@ -166,6 +168,7 @@ function profileFromCurrentArray(arr) {
     updated: clipStr(str(9)),
     pregnant: !!(arr[10] === true || arr[10] === 1 || arr[10] === '1'),
     deafOrVisionImpaired: !!(arr[11] === true || arr[11] === 1 || arr[11] === '1'),
+    notes: clipStr(str(12)),
   };
 }
 
@@ -292,6 +295,7 @@ assert('MAX_LIST Swift', /maxList = 40/.test(swift));
 assert('MAX_LIST tapper', tapper.includes('MAX_LIST = 40'));
 assert('current idx name=4 Swift', /static let name = 4/.test(swift));
 assert('current idx blood=0 Swift', /static let blood = 0/.test(swift));
+assert('current idx notes=12 Swift', /static let notes = 12/.test(swift));
 assert('legacy idx name=0 Swift', /static let name = 0/.test(swift));
 assert('write base AppConfig', appConfig.includes(`"${WRITE_BASE}"`));
 assert('empty persist guard', profileData.includes('if !hasSensitiveProfileData') && profileData.includes('return false'));
@@ -347,6 +351,14 @@ const fromCurrent = profileFromCurrentArray(current);
 assert('current decode name', fromCurrent.name === 'Jane Doe');
 assert('current decode pregnant', fromCurrent.pregnant === true);
 assert('current decode deaf false', fromCurrent.deafOrVisionImpaired === false);
+assert('current decode notes empty', !fromCurrent.notes);
+
+const withNotes = Object.assign({}, sampleChip(), { notes: 'Pacemaker. No MRI.' });
+const notesRow = compactArray(withNotes);
+assert('notes at 12', notesRow[12] === 'Pacemaker. No MRI.');
+const fromNotes = profileFromCurrentArray(notesRow);
+assert('notes decode', fromNotes.notes === 'Pacemaker. No MRI.');
+assert('notes keeps pregnant', fromNotes.pregnant === true);
 
 // --- legacy compact ---
 const legacy = ['Jane Doe', '1990-03-14', 'O+', 1, ['Penicillin'], ['Levothyroxine'], ['Hypothyroidism'], [['Sam', 'Spouse', '5551212']], '2026-08-31'];
@@ -373,6 +385,10 @@ assert('AES round blood', round && round.blood === 'O+');
 assert('AES round pregnant', round && round.pregnant === true);
 assert('AES round contact', round && round.contacts[0] && round.contacts[0].name === 'Sam');
 assert('AES write URL', isValidWriteURL(`${WRITE_BASE}#d=${encoded}`));
+
+const notesJson = Buffer.from(JSON.stringify(notesRow));
+const notesRound = decodePayload(b64url(aesSeal(notesJson)));
+assert('AES round notes', notesRound && notesRound.notes === 'Pacemaker. No MRI.');
 
 const tampered = Buffer.from(sealed);
 tampered[20] ^= 0xff;
@@ -407,6 +423,7 @@ if (extracted) {
   assert('null no content', profileHasContent(null) === false);
   assert('name is content', profileHasContent({ name: 'Jane Doe' }) === true);
   assert('blood is content', profileHasContent({ blood: 'O+' }) === true);
+  assert('notes is content', profileHasContent({ notes: 'Pacemaker' }) === true);
   assert('blank name no content', profileHasContent({ name: '  ' }) === false);
 }
 

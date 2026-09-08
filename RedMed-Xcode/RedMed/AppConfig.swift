@@ -57,6 +57,11 @@ enum AppConfig {
             "Owner writes #d= on-chip — no vendor cloud, no social/short URL, no BLE."
         }
 
+        /// Phone Keychain and chip are two copies. Neither depends on the other.
+        static var storesIndependenceSummary: String {
+            "This iPhone keeps your ID in Keychain. The chip keeps its own copy. Phone off, wiped, or in another state does not blank the band."
+        }
+
         /// The band is the credential. Packing is not a secret lock.
         static var packingHonestySummary: String {
             "The band is the credential. #d= is packed so any phone can open it — not a secret lock on the chip."
@@ -196,6 +201,11 @@ enum AppConfig {
 
         static var chipSpecSummary: String {
             "\(chipPart), \(carrierLabel), ISO 14443A Type 2, NDEF blank unlocked. No pre-encode, no lock. Not NTAG213, MIFARE, LF, or UHF."
+        }
+
+        /// Hardware SKU: bracelet ships finished. Owner only programs NDEF.
+        static var completeBandSummary: String {
+            "Band comes complete. You only write the chip. Passive — no battery, no extra parts."
         }
 
         static var laserFaceSummary: String {

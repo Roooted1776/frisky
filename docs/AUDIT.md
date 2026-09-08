@@ -55,7 +55,7 @@ RedMed is a **local-only medical ID**:
 
 | Surface | What it is | Data |
 |---------|------------|------|
-| Owner iOS app (`RedMed-Xcode/`) | SwiftUI tabs: RedMed · 911 · Aid · NFC | Profile in Keychain. Notes stay on-device. |
+| Owner iOS app (`RedMed-Xcode/`) | SwiftUI tabs: RedMed · 911 · Aid · NFC | Profile in Keychain. Same fields on the chip. |
 | Passerby shell (`tapper/index.html`) | Static HTML: RedMed · 911 · Aid. No Edit, no NFC, no Face ID | Snapshot in URL `#d=` only |
 | Band | Passive NXP NTAG216, NDEF URI | `medicalCardBaseURL#d=<base64url>` |
 
@@ -313,7 +313,7 @@ AGENTS matches the stripped-lock product.
 |---------|----------|
 | No `print()` of PHI | Swift `print(` grep empty; `os.Logger` in `RedMedSignpost` is lock diagnostics, `.public` strings like `generation=` |
 | Vault history | Removed (`VaultHistoryStore` / `HIPAAOfflineVault` deleted; no local history UI) |
-| Notes stay off the chip | `NFCChipProfile` has no `notes`; `PersistedProfile.notes` is Keychain-only |
+| Notes on both stores | `NFCChipProfile.notes` compact index 12; Keychain `PersistedProfile.notes`; YOU card + tapper |
 | Snapshot / capture cover | `PrivacySnapshotGuard` — `.background` + capture only, never tap card, no opacity fade |
 | Secure pasteboard | `SecurePasteboard` local-only + expiry; cleared on relock |
 | ATS | `NSAllowsArbitraryLoads` / local networking **false** |
