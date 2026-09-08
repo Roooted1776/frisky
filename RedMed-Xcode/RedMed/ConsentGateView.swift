@@ -298,7 +298,17 @@ struct ConsentGateView<Content: View>: View {
         ) { outcome in
             Task { @MainActor in
                 isAuthenticating = false
-                RedMedSignpost.coldMark("post-Agree Face ID → \(outcome)")
+                let label: String = {
+                    switch outcome {
+                    case .success: return "success"
+                    case .notVerified: return "notVerified"
+                    case .declined: return "declined"
+                    case .notInteractive: return "notInteractive"
+                    case .timedOut: return "timedOut"
+                    case .unavailable(let reason): return "unavailable(\(reason))"
+                    }
+                }()
+                RedMedSignpost.coldMark("post-Agree Face ID → \(label)")
                 switch outcome {
                 case .success:
                     armMainAfterFaceID()

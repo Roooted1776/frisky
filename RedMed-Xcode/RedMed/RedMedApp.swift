@@ -25,9 +25,6 @@ struct RedMedApp: App {
                 // Haptics prepare after YOU paints (ContentView) — not here.
                 SnapshotSafeCover.activate()
                 profile.beginLaunchPrefetch()
-                if ConsentSettings.hasAcceptedCurrent {
-                    RedMedSignpost.coldLaunchMainReady("returning skip")
-                }
             }
             .onOpenURL { url in
                 let scheme = (url.scheme ?? "").lowercased()
@@ -98,7 +95,6 @@ private struct LaunchRoot: View {
             }
         }
         .onAppear {
-            // Ends coldLaunchWindow — time from app.init → first frame.
             // Lag *before* app.init (no ColdLaunch lines) is install/attach.
             RedMedSignpost.coldLaunchFirstFrameOnce()
             if !holdLaunchCream {

@@ -14,6 +14,7 @@ Working notes. Product invariants live in `AGENTS.md`.
   3. Scheme Run → **Release** / Archive.
   If NoDebug / Without Debugging is fast and normal Debug Run is slow → attach, not Swift.
   Console ColdLaunch: `app.init` → `firstFrame` — if cream sits with **no** ColdLaunch lines yet after Xcode’s “Running…”, lag is still install/attach.
+  Right now consent **4.10** also forces Before You Continue + Face ID once (policy bump) — that is *after* firstFrame, not install lag.
 - Face ID test path: **Run Without Debugging** / **RedMed-NoDebug** (debugger attach skews the sheet).
 - Product: Before You Continue = Agree only (covers location + motion while the app is open). Face ID once immediately after Agree (first launch / policy bump / after Erase), then iOS Location Allow once. Returning opens skip consent **and** that post-Agree Face ID. Face ID also on Edit / Save / Erase (+ Load From Band if present). **Not** before opening / viewing the YOU card. No cream `OwnerAppLock`. Face ID is UI-only — Keychain is `WhenPasscodeSetThisDeviceOnly` with **no** biometry ACL. Edit field Clear (blood / DOB) only — blank-all Save is not a wipe (points at Erase). Band is the product.
 
