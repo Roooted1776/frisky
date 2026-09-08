@@ -94,8 +94,11 @@ struct RedMedView: View {
                         if !isScannerSession {
                             ownerNextStepBanner
                         }
+                        // No `.id(cardEpoch)` — that tore down ScrollView + rows on
+                        // every Keychain adopt (cold-open hitch). Front keep-alive
+                        // always re-diffs; `cardEpoch` still refreshes a parked
+                        // RedMed tab via ContentView's mountedTab epoch.
                         OwnerYouCard()
-                            .id(profile.cardEpoch)
                     }
                 }
             }

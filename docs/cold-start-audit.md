@@ -3,12 +3,19 @@
 > **2026-09 update:** Consent is **4.10** (Agree covers location). A version
 > bump forces Before You Continue + Face ID + When-In-Use once — that is
 > intentional, not a paint regression. Returning opens after Agree skip all
-> three. `ContentView` restores ASAP after one yield (no fixed 300ms sleep).
-> `LaunchRoot` cream drops after one yield (first launch / policy bump only).
-> Scheme: `enableGPUValidationMode = "1"` is **Disabled** (Apple’s encoding);
-> `"2"` turns Metal API Validation back on — do not “fix” that to 2.
+> three. `LaunchRoot` cream drops after one yield (first launch / policy bump
+> only). Scheme: `enableGPUValidationMode = "1"` is **Disabled** (Apple’s
+> encoding); `"2"` turns Metal API Validation back on — do not “fix” that to 2.
 > Pre-app cream with no `ColdLaunch` Console lines = Xcode install / LLDB
 > attach. Use scheme **RedMed-NoDebug** for a fair check.
+>
+> **Returning YOU fill:** Prefetch starts in `ProfileData.init` (detached
+> SecItem + JSON) so SplashBoard overlaps decode. ContentView adopts Keychain
+> immediately in `.task` (no pre-restore yield). Haptics, tab-bar
+> `drawingGroup`, page rose wash, and CoreMotion / alarm-WAV warm stay ~400ms
+> past adopt. Do not remount `OwnerYouCard` via `.id(cardEpoch)` on adopt —
+> that tore down the ScrollView on every cold fill; keep-alive front re-diff
+> + parked-tab `epoch` are enough.
 
 
 **Launch lock is gone.** Current path is `RedMedApp` → `PrivacySnapshotGuard` →

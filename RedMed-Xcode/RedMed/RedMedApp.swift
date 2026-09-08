@@ -8,6 +8,9 @@ struct RedMedApp: App {
         // Marks process start after dyld / debugger attach.
         // Cream with no ColdLaunch lines yet = Xcode install + LLDB, not SwiftUI.
         RedMedSignpost.coldLaunchMark("app.init")
+        // Register switcher-cover observers before the first resign (Debug
+        // attach can resign before any SwiftUI .task).
+        SnapshotSafeCover.activate()
     }
 
     var body: some Scene {
@@ -20,10 +23,10 @@ struct RedMedApp: App {
             .background(CreamWindowBackground())
             .preferredColorScheme(.light)
             .task {
-                // Snapshot observers only. Keychain prefetch starts here so
-                // the blob is in flight during SplashBoard → first frame.
-                // Haptics prepare after YOU paints (ContentView) — not here.
-                SnapshotSafeCover.activate()
+                // Keychain prefetch already started from ProfileData.init
+                // (SplashBoard overlap). This call is a no-op when the gate
+                // was set — safety net if init skipped. Haptics prepare after
+                // YOU paints (ContentView) — not here.
                 profile.beginLaunchPrefetch()
             }
             .onOpenURL { url in
@@ -80,7 +83,8 @@ private struct LaunchRoot: View {
     /// Returning opens: no SwiftUI cream veil — UILaunchScreen already matches
     /// and ConsentGate goes straight to Main. First launch (or after Erase /
     /// policy bump): flat cream for SplashBoard → Agree layout, dropped after
-    /// one yield locked with `RedMedPageBackground`'s wash.
+    /// one yield. Page rose wash is deferred (~400ms) so it does not fight
+    /// that drop or a returning Keychain adopt.
     @State private var holdLaunchCream = !ConsentSettings.hasAcceptedCurrent
 
     var body: some View {

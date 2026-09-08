@@ -80,18 +80,21 @@ struct ContentView: View {
         .task {
             guard !isScannerSession else { return }
             // Consent is Agree-only; Face ID is post-Agree (first launch /
-            // after Erase). Returning cold starts skip both. Yield once for
-            // first YOU paint, then haptics + restore. Prefetch may already
-            // be running from RedMedApp.task.
-            await Task.yield()
-            guard !Task.isCancelled else { return }
-            RedMedHaptics.prepare()
+            // after Erase). Returning cold starts skip both. Prefetch usually
+            // started in ProfileData.init (SplashBoard overlap). Adopt ASAP —
+            // no pre-restore yield (that forced an empty YOU frame after the
+            // blob was already ready). Haptics / CoreMotion / tab Metal stay
+            // past the filled-card commit.
             RedMedSignpost.coldMark("restoreOnLaunch start")
             await profile.restoreOnLaunch()
             RedMedSignpost.coldMark("restoreOnLaunch done")
             guard !Task.isCancelled else { return }
-            // Start CoreMotion only after Keychain adopt so restore and
-            // 50 Hz motion do not overlap the first interactive seconds.
+            // Let the filled YOU card commit, then warm Taptic + 50 Hz motion
+            // + alarm WAV so they do not hitch the adopt paint.
+            await Task.yield()
+            try? await Task.sleep(nanoseconds: 400_000_000)
+            guard !Task.isCancelled else { return }
+            RedMedHaptics.prepare()
             if scenePhase == .active {
                 startCrashMonitorIfOwner()
             }
@@ -102,8 +105,7 @@ struct ContentView: View {
             // Same-turn mount in scannerSafeTab already paints 911 / Aid / NFC
             // on first tap. Do not pre-stack those pages under RedMed — that
             // kept GPS / Aid catalog / NFC WK warm compositing for the session.
-            // Crash monitor starts after restoreOnLaunch in `.task` (not here).
-            // Haptics prepare in `.task` after the same first-paint yield.
+            // Crash monitor + haptics start after restore in `.task`.
         }
         .onChange(of: scenePhase) { _, phase in
             guard !isScannerSession else { return }
@@ -360,7 +362,11 @@ struct CustomTabBar: View {
         .accessibilityElement(children: .contain)
         .task {
             guard !flattenChrome else { return }
+            // Past Keychain adopt + YOU fill — Metal flatten must not fight
+            // the first meaningful card paint (same window as crash monitor).
             await Task.yield()
+            try? await Task.sleep(nanoseconds: 400_000_000)
+            guard !Task.isCancelled else { return }
             flattenChrome = true
         }
     }
