@@ -95,6 +95,7 @@ private struct LaunchRoot: View {
             }
         }
         .onAppear {
+            // Ends coldLaunchWindow at firstFrame (app.init → first paint).
             // Lag *before* app.init (no ColdLaunch lines) is install/attach.
             RedMedSignpost.coldLaunchFirstFrameOnce()
             if !holdLaunchCream {
