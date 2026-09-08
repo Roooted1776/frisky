@@ -61,12 +61,14 @@ The app has no backend, database, or web service.
   optional.
 - **Owner app** (`Main` → `ContentView`, `isScannerSession == false`): tabs are
   **RedMed · 911 · Aid · NFC**. Edit is available on RedMed. NFC tab is always
-  visible for owners; `AppConfig.nfcHardwareEnabled` only gates CoreNFC
-  write/read sessions, never tab chrome. Owner writes the passive HF NFC band
-  from the NFC tab (no Face ID on write) as `medicalCardBaseURL#d=` only
-  (`AppConfig.OwnerBandURI`) — no vendor cloud, no social/short URL, no BLE.
-  **Load From Band** is the reverse owner path: CoreNFC read of `#d=` → Face
-  ID → Keychain. Preview does not persist. Launch path is `ConsentGateView`
+  visible for owners; `AppConfig.nfcHardwareEnabled` gates CoreNFC write/read
+  sessions and the Load From Band button — never tab chrome. Owner writes the
+  passive HF NFC band from the NFC tab (no Face ID on write) as
+  `medicalCardBaseURL#d=` only (`AppConfig.OwnerBandURI`) — no vendor cloud,
+  no social/short URL, no BLE. **Load From Band** (when hardware is on) is the
+  reverse owner path: CoreNFC read of `#d=` → Face ID → Keychain (empty band
+  alert / match→link / mismatch+existing→Replace / empty funnel→adopt).
+  Preview does not persist. Launch path is `ConsentGateView`
   on first launch (or policy-version bump / after Erase) — Agree clickwrap
   only (no Face ID on that page), then Face ID once, then Main. Later cold
   starts skip consent and that post-Agree Face ID; the YOU card is visible
