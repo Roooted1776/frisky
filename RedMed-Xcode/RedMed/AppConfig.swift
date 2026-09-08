@@ -71,8 +71,11 @@ enum AppConfig {
             guard rest.hasPrefix("#d=") else { return false }
             let payload = rest.dropFirst(3)
             guard !payload.isEmpty else { return false }
-            // Fragment only — reject query smuggling / second hashes / whitespace.
-            if payload.contains(where: { $0 == "#" || $0 == "?" || $0 == " " || $0 == "\n" || $0 == "\r" }) {
+            // Fragment only — reject query smuggling / `&tab=` / second hashes / whitespace.
+            // Charset below also rejects `&`; keep the explicit set for fail-closed clarity.
+            if payload.contains(where: {
+                $0 == "#" || $0 == "?" || $0 == "&" || $0 == " " || $0 == "\n" || $0 == "\r"
+            }) {
                 return false
             }
             // AES-GCM wire is base64url (A–Z a–z 0–9 - _).

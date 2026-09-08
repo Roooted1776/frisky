@@ -68,7 +68,12 @@ zlib (and bare zlib), plaintext `{`/`[` first byte. Caps: `MAX_STR=200`,
 
 Write gate (`AppConfig.OwnerBandURI.isValidWriteURL`): exact
 `medicalCardBaseURL` + non-empty `#d=` + base64url charset only — rejects
-vendor/social/short hosts, query smuggling, second `#`, whitespace.
+vendor/social/short hosts, query smuggling, `&tab=`, second `#`, whitespace.
+
+Decode extract (`ProfileNFCCodec.extractPayload` ↔ tapper
+`hash.slice(3).split('&')[0]`): deep links may be `#d=<payload>&tab=aid`;
+only the base64url segment is decoded. Decode also fails closed on non-base64url
+charset (same alphabet as the write gate).
 
 Lockstep: `node scripts/test-d-codec.mjs` (AES / zlib / compact / URI).
 

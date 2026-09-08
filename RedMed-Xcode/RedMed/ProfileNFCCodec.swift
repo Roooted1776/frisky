@@ -172,15 +172,23 @@ enum ProfileNFCCodec {
     }
 
     /// Strip `#d=` from a full tapper URL (or pass through a bare fragment).
+    /// Matches `tapper.html` `hash.slice(3).split('&')[0]` — deep links may be
+    /// `#d=<payload>&tab=aid`; only the base64url segment is the chip payload.
     /// `nonisolated` — NFC callbacks / `Task.detached` pack path.
     nonisolated static func extractPayload(fromURLString raw: String) -> String? {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
+        var payload: String
         if let range = trimmed.range(of: "#d=") {
-            let payload = String(trimmed[range.upperBound...])
-            return payload.isEmpty ? nil : payload
+            payload = String(trimmed[range.upperBound...])
+        } else {
+            payload = trimmed
         }
-        return trimmed
+        // Same cut as passerby JS — reject `&tab=` / query smuggling into decode.
+        if let amp = payload.firstIndex(of: "&") {
+            payload = String(payload[..<amp])
+        }
+        return payload.isEmpty ? nil : payload
     }
 
     /// Owner RedMed / prefetch — stable `#d=` fragment only (no URL prefix).
@@ -240,9 +248,11 @@ enum ProfileNFCCodec {
     }
 
     static func decodeProfile(fromURLString urlString: String) -> NFCChipProfile? {
-        guard let range = urlString.range(of: "#d=") else { return nil }
-        let encoded = String(urlString[range.upperBound...])
-        guard encoded.utf8.count <= maxEncodedLength else { return nil }
+        // Require `#d=` so bare strings without a fragment do not decode as chips
+        // (extractPayload alone would pass a non-URL string through).
+        guard urlString.range(of: "#d=") != nil,
+              let encoded = extractPayload(fromURLString: urlString),
+              encoded.utf8.count <= maxEncodedLength else { return nil }
         return decodePayload(encoded)
     }
 
@@ -276,8 +286,19 @@ enum ProfileNFCCodec {
         return encoded
     }
 
+    /// Same charset as `OwnerBandURI.isValidWriteURL` — fail closed on smuggled bytes.
+    private static func isBase64urlCharset(_ encoded: String) -> Bool {
+        encoded.unicodeScalars.allSatisfy { scalar in
+            switch scalar.value {
+            case 0x30...0x39, 0x41...0x5A, 0x61...0x7A, 0x2D, 0x5F: return true
+            default: return false
+            }
+        }
+    }
+
     private static func decodePayload(_ encoded: String) -> NFCChipProfile? {
-        guard let data = base64urlDecode(encoded), data.count <= maxEncodedLength, !data.isEmpty else {
+        guard isBase64urlCharset(encoded),
+              let data = base64urlDecode(encoded), data.count <= maxEncodedLength, !data.isEmpty else {
             return nil
         }
         if data[data.startIndex] == aesVersion {
