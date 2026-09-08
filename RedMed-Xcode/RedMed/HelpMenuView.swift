@@ -2,9 +2,14 @@ import SwiftUI
 import WebKit
 import UIKit
 
-/// Bundled owner Help: one HTML file, five policy anchors. Offline. No network.
+/// Bundled owner Help: one HTML file, five in-doc anchors. Offline. No network.
 enum HelpDocument {
     static let bundledFile = "Help"
+    /// Single Help / consent row — opens the combined Policies document.
+    static let combinedTitle = "Policies"
+    static let combinedEmoji = "📋"
+    static var combinedMarkedTitle: String { "\(combinedEmoji) \(combinedTitle)" }
+    static let defaultPolicy: Policy = .privacy
 
     enum Policy: String, CaseIterable, Identifiable {
         case privacy
@@ -56,7 +61,7 @@ enum HelpDocument {
 struct LocalWebView: UIViewRepresentable {
     let filename: String
     var fragment: String? = nil
-    /// Help.html tab id only — native chrome (Help push + consent sheet) stays on the visible policy.
+    /// Help.html section id — optional native hook when the sticky nav jumps.
     var onPolicyChange: ((HelpDocument.Policy) -> Void)? = nil
 
     func makeCoordinator() -> Coordinator { Coordinator() }
@@ -155,8 +160,8 @@ struct LocalWebView: UIViewRepresentable {
             let safe = id.filter { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" }
             guard safe == id, !safe.isEmpty else { return }
             // replaceState, not location.hash — assigning hash can reload the file.
-            // window.__rmShowPolicy (defined in Help.html) switches the colored
-            // tab and hides the other three sections; fall back to a plain
+            // window.__rmShowPolicy (defined in Help.html) scrolls to the
+            // section in the continuous document; fall back to a plain
             // scroll if the page's own script hasn't run yet for some reason.
             webView.evaluateJavaScript(
                 """
@@ -272,42 +277,29 @@ struct LocalWebView: UIViewRepresentable {
     }
 }
 
-// MARK: - Policy page (Help push + Before You Continue sheet)
-/// Same WebView + marks on both Help sides. Chrome title follows HTML tab switches.
+// MARK: - Policies document (Help push + Before You Continue sheet)
+/// One WebView for the combined Policies document. Chrome title stays Policies.
 struct HelpPolicyPage: View {
-    let policy: HelpDocument.Policy
+    var startAt: HelpDocument.Policy = HelpDocument.defaultPolicy
     var showsDoneChrome: Bool = false
     var onDone: (() -> Void)? = nil
-    @State private var visible: HelpDocument.Policy
-
-    init(
-        policy: HelpDocument.Policy,
-        showsDoneChrome: Bool = false,
-        onDone: (() -> Void)? = nil
-    ) {
-        self.policy = policy
-        self.showsDoneChrome = showsDoneChrome
-        self.onDone = onDone
-        _visible = State(initialValue: policy)
-    }
 
     var body: some View {
         VStack(spacing: 0) {
             if showsDoneChrome {
                 OwnerModalChrome(
-                    title: visible.markedTitle,
+                    title: HelpDocument.combinedMarkedTitle,
                     leadingTitle: "Done",
                     leadingAction: { onDone?() }
                 )
             }
             LocalWebView(
                 filename: HelpDocument.bundledFile,
-                fragment: visible.fragment,
-                onPolicyChange: { visible = $0 }
+                fragment: startAt.fragment
             )
         }
         .background { RedMedPageBackground() }
-        .navigationTitle(visible.markedTitle)
+        .navigationTitle(HelpDocument.combinedMarkedTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(showsDoneChrome ? .hidden : .visible, for: .navigationBar)
         .toolbarBackground(Color.redmedBg, for: .navigationBar)
@@ -316,17 +308,16 @@ struct HelpPolicyPage: View {
     }
 }
 
-struct HelpPolicyRowLabel: View {
-    let policy: HelpDocument.Policy
+struct HelpPoliciesRowLabel: View {
     var titleWeight: Font.Weight = .medium
 
     var body: some View {
         HStack(spacing: 10) {
-            Text(policy.emoji)
+            Text(HelpDocument.combinedEmoji)
                 .font(.system(size: 17))
                 .frame(width: 22, alignment: .center)
                 .accessibilityHidden(true)
-            Text(policy.title)
+            Text(HelpDocument.combinedTitle)
                 .font(.system(size: RedMedChrome.rowFont, weight: titleWeight))
                 .foregroundColor(.redmedDark)
             Spacer(minLength: 0)
@@ -410,12 +401,14 @@ struct HelpMenuView: View {
 
                         helpSectionLabel("Policies")
                         helpCard {
-                            ForEach(HelpDocument.Policy.allCases) { policy in
-                                if policy != .privacy {
-                                    Divider().padding(.leading, Metrics.rowHPad)
-                                }
-                                policyLink(policy)
+                            NavigationLink {
+                                HelpPolicyPage()
+                            } label: {
+                                HelpPoliciesRowLabel()
                             }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(HelpDocument.combinedTitle)
+                            .accessibilityHint("Opens Privacy, Security, Terms, Medical Disclaimer, and Ships When Ready")
                         }
 
                         if showsOwnerTools {
@@ -509,17 +502,6 @@ struct HelpMenuView: View {
     ) -> some View {
         VStack(spacing: 0) { content() }
             .redmedBox(flatten: flatten)
-    }
-
-    @ViewBuilder
-    private func policyLink(_ policy: HelpDocument.Policy) -> some View {
-        NavigationLink {
-            HelpPolicyPage(policy: policy)
-        } label: {
-            HelpPolicyRowLabel(policy: policy)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(policy.title)
     }
 
     private func requestErase() {

@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#fff7f7">
 <meta name="color-scheme" content="light">
 <meta name="referrer" content="no-referrer">
-<title>RedMed — Help</title>
+<title>RedMed — Policies</title>
 <style>html,body{background:#fff7f7!important;margin:0}</style>
 <link rel="stylesheet" href="legal-doc.css">
 </head>
@@ -15,7 +15,7 @@
 <div class="legal-sheet" id="top">
   <header class="legal-letterhead">
     <p class="legal-firm">RedMed</p>
-    <p class="legal-tagline">Help · Privacy, Security, Terms, Medical Disclaimer, And Ships When Ready</p>
+    <p class="legal-tagline">Policies · Privacy, Security, Terms, Medical Disclaimer, And Ships When Ready</p>
     <p class="legal-entity">RedMed · Local medical ID on your iPhone and band</p>
   </header>
 
@@ -26,15 +26,15 @@
     · <a href="tapper.html">Emergency card (any phone)</a>
   </aside>
 
-  <nav class="legal-nav legal-nav-sticky" role="tablist" aria-label="Help sections">
-    <a href="#privacy" role="tab" id="tab-privacy" aria-controls="privacy" aria-selected="true" tabindex="0"><span class="legal-nav-ico" aria-hidden="true">🔒</span>Privacy</a>
-    <a href="#security" role="tab" id="tab-security" aria-controls="security" aria-selected="false" tabindex="-1"><span class="legal-nav-ico" aria-hidden="true">🔐</span>Security</a>
-    <a href="#terms" role="tab" id="tab-terms" aria-controls="terms" aria-selected="false" tabindex="-1"><span class="legal-nav-ico" aria-hidden="true">📜</span>Terms</a>
-    <a href="#medical-disclaimer" role="tab" id="tab-medical-disclaimer" aria-controls="medical-disclaimer" aria-selected="false" tabindex="-1"><span class="legal-nav-ico" aria-hidden="true">⚕️</span>Medical Disclaimer</a>
-    <a href="#ships-when-ready" role="tab" id="tab-ships-when-ready" aria-controls="ships-when-ready" aria-selected="false" tabindex="-1"><span class="legal-nav-ico" aria-hidden="true">📦</span>Ships When Ready</a>
+  <nav class="legal-nav legal-nav-sticky" aria-label="Policies sections">
+    <a href="#privacy" id="tab-privacy" aria-current="page"><span class="legal-nav-ico" aria-hidden="true">🔒</span>Privacy</a>
+    <a href="#security" id="tab-security"><span class="legal-nav-ico" aria-hidden="true">🔐</span>Security</a>
+    <a href="#terms" id="tab-terms"><span class="legal-nav-ico" aria-hidden="true">📜</span>Terms</a>
+    <a href="#medical-disclaimer" id="tab-medical-disclaimer"><span class="legal-nav-ico" aria-hidden="true">⚕️</span>Medical Disclaimer</a>
+    <a href="#ships-when-ready" id="tab-ships-when-ready"><span class="legal-nav-ico" aria-hidden="true">📦</span>Ships When Ready</a>
   </nav>
 
-  <section id="privacy" class="legal-policy active" role="tabpanel" aria-labelledby="tab-privacy" aria-hidden="false">
+  <section id="privacy" class="legal-policy">
     <hr class="legal-rule-thin" aria-hidden="true">
     <h1 class="legal-doc-title"><span class="legal-title-ico" aria-hidden="true">🔒</span>Privacy</h1>
     <p class="legal-meta">
@@ -130,7 +130,7 @@
     </article>
   </section>
 
-  <section id="security" class="legal-policy" role="tabpanel" aria-labelledby="tab-security" aria-hidden="true">
+  <section id="security" class="legal-policy">
     <hr class="legal-rule-thin" aria-hidden="true">
     <h1 class="legal-doc-title"><span class="legal-title-ico" aria-hidden="true">🔐</span>Security</h1>
     <p class="legal-meta">
@@ -184,7 +184,7 @@
     </article>
   </section>
 
-  <section id="terms" class="legal-policy" role="tabpanel" aria-labelledby="tab-terms" aria-hidden="true">
+  <section id="terms" class="legal-policy">
     <hr class="legal-rule-thin" aria-hidden="true">
     <h1 class="legal-doc-title"><span class="legal-title-ico" aria-hidden="true">📜</span>Terms</h1>
     <p class="legal-meta">
@@ -295,7 +295,7 @@
     </article>
   </section>
 
-  <section id="medical-disclaimer" class="legal-policy" role="tabpanel" aria-labelledby="tab-medical-disclaimer" aria-hidden="true">
+  <section id="medical-disclaimer" class="legal-policy">
     <hr class="legal-rule-thin" aria-hidden="true">
     <h1 class="legal-doc-title"><span class="legal-title-ico" aria-hidden="true">⚕️</span>Medical Disclaimer</h1>
     <p class="legal-meta">
@@ -319,7 +319,7 @@
     </article>
   </section>
 
-  <section id="ships-when-ready" class="legal-policy" role="tabpanel" aria-labelledby="tab-ships-when-ready" aria-hidden="true">
+  <section id="ships-when-ready" class="legal-policy">
     <hr class="legal-rule-thin" aria-hidden="true">
     <h1 class="legal-doc-title"><span class="legal-title-ico" aria-hidden="true">📦</span>Ships When Ready</h1>
     <p class="legal-meta">
@@ -362,7 +362,7 @@
     function (el) { return el.id; }
   );
   // Every element id inside a section maps back to that section, so a
-  // cross-reference like #crash-alarm (inside Terms) opens the right tab.
+  // cross-reference like #crash-alarm (inside Terms) scrolls to the right place.
   var sectionOf = {};
   ids.forEach(function (id) {
     var sec = document.getElementById(id);
@@ -373,33 +373,22 @@
     });
   });
 
-  function showSection(sec) {
-    ids.forEach(function (id) {
-      var el = document.getElementById(id);
-      if (!el) return;
-      var on = id === sec;
-      el.classList.toggle("active", on);
-      el.setAttribute("aria-hidden", on ? "false" : "true");
-    });
+  function markNav(sec) {
     document.querySelectorAll(".legal-nav a").forEach(function (a) {
       var on = a.getAttribute("href") === "#" + sec;
-      a.setAttribute("aria-selected", on ? "true" : "false");
-      a.tabIndex = on ? 0 : -1;
       if (on) a.setAttribute("aria-current", "page");
       else a.removeAttribute("aria-current");
     });
   }
 
-  // Switches tabs and, when scroll is true, jumps to the exact target
-  // (which may be a sub-heading inside the active section). Exposed on
-  // window so the native app's WKWebView bridge (HelpMenuView.swift) can
-  // drive the same tab-filtering instead of duplicating this logic.
+  // Scrolls to a section (or sub-heading). All sections stay visible — one
+  // continuous Policies document. Exposed on window so the native app's
+  // WKWebView bridge (HelpMenuView.swift) can drive the same jump.
   function goTo(id, scroll) {
     var target = sectionOf[id] ? id : "privacy";
     var sec = sectionOf[target] || "privacy";
-    showSection(sec);
-    var meta = POLICIES[sec];
-    if (meta) document.title = meta.emoji + " " + meta.title + " — RedMed";
+    markNav(sec);
+    document.title = "Policies — RedMed";
     try {
       if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.rmPolicy) {
         window.webkit.messageHandlers.rmPolicy.postMessage(sec);
