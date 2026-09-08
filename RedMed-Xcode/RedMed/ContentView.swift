@@ -112,8 +112,8 @@ struct ContentView: View {
                 // start a fresh one. Does not cancel an armed siren.
                 CrashMotionGuard.shared.stopMonitoring()
             default:
-                // `.inactive` is Face ID on the RedMed user page / Edit /
-                // Save / Erase, Control Center, app switcher peek. Keep
+                // `.inactive` is Face ID on post-Agree / Edit / Save /
+                // Erase, Control Center, app switcher peek. Keep
                 // listening.
                 break
             }

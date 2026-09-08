@@ -194,7 +194,10 @@ The app has no backend, database, or web service.
   empty, keep the funnel hidden and show the native YOU card with empty
   slots while restore is in flight — not cream-over-WKWebView, not a Face
   ID unlock pane. `persist()` must not save an empty RAM profile over
-  a stored blob (erase deletes Keychain first).
+  a stored blob (erase deletes Keychain first). Blank-all fields in Edit
+  + Save still Face IDs but cannot replace Keychain — UI may show
+  Couldn't Save; full wipe is Help → **Erase All User Data** only
+  (`eraseAllLocalData()`). Do not treat empty-Save as a wipe path.
 - Fresh install (no stored blob) shows the native **setup funnel** (Fill
   medical ID → Save → Write the band). Not on passerby tapper.
 - `SnapshotSafeCover` is the app-switcher cream thumbnail. Do **not** play

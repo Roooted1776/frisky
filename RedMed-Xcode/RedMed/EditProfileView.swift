@@ -231,7 +231,7 @@ struct EditProfileView: View {
         .alert("Couldn't Save", isPresented: $showSaveFailedAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Your profile could not be written to the secure on-device Keychain. Try again.")
+            Text("Your profile could not be written to the secure on-device Keychain. Blanking every field does not wipe a stored ID — use Help → Erase All User Data for a full wipe. Otherwise try again.")
         }
         .sheet(isPresented: $showBirthDatePicker) {
             birthDatePickerSheet
