@@ -28,7 +28,7 @@ No committed secrets, no XSS in profile render (`textContent` / `esc()`), no aut
 
 **Still needs Max (not this tree):**
 
-1. Paid Apple Developer: NFC Tag Reading on App ID `com.redmed.app`, then restore (`docs/NFC-RESTORE.md`). Until then, NFC tab Share Band URL programs a blank NTAG216 via Shortcuts / NFC Tools. Linked still needs CoreNFC.
+1. Paid Apple Developer: NFC Tag Reading on App ID `com.redmed.app`, then restore (`docs/NFC-RESTORE.md`). CoreNFC stays parked and flagged until that lands. Share Band URL / Preview are pack-only — not a write path, not a blank-band sell CTA.
 2. Restore Associated Domains after paid Program (`docs/associated-domains-restore.md`).
 3. Leave HealthKit parked until a paid team can provision it.
 4. Do not re-bind Keychain to `biometryCurrentSet` (Face ID stays UI-only).

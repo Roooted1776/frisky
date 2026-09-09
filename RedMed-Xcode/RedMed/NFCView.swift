@@ -21,7 +21,8 @@ struct NFCView: View {
     /// Owned by ContentView so the NFC tab tap can begin write on the same gesture.
     @ObservedObject var band: NFCBandManager
     @State private var previewSession: PreviewSession?
-    /// Parked CoreNFC: packed `medicalCardBaseURL#d=` for Share → Shortcuts / NFC Tools.
+    /// Parked CoreNFC: packed `medicalCardBaseURL#d=` for Share Band URL only
+    /// (pack/export — not a chip write, not a blank-band sell path).
     /// Nil until pack finishes; never used to flip Linked.
     @State private var parkedBandURL: String?
     @State private var parkedPackNote: String = ""
@@ -292,8 +293,8 @@ struct NFCView: View {
                     tipRow("Linked after write + matching read-back, or after Load From Band.")
                 } else {
                     tipRow(AppConfig.BraceletRF.completeBandSummary)
-                    tipRow("CoreNFC write is parked. Share Band URL onto the band's chip (Shortcuts or NFC Tools).")
-                    tipRow("Preview is the same HTML a helper sees. Linked still needs a real NFC write.")
+                    tipRow(AppConfig.BraceletRF.hardwareParkedSummary)
+                    tipRow("Preview is the same HTML a helper sees. No blank-band sales until Tag Reading is live.")
                 }
             }
             .padding(.top, 2)
@@ -325,7 +326,7 @@ struct NFCView: View {
             .disabled(band.isBusy)
             .opacity(band.isBusy ? 0.72 : 1)
             .accessibilityLabel("Share Band URL")
-            .accessibilityHint("Same #d= URL CoreNFC Write would put on the band's chip. Shortcuts or NFC Tools can write it. Band comes complete — just the chip, no battery. Does not mark Linked.")
+            .accessibilityHint("Packs the same #d= URL CoreNFC Write will put on the chip when Tag Reading is restored. Does not write the band and does not mark Linked.")
         }
     }
 

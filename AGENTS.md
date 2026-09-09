@@ -9,7 +9,9 @@ authoritative for code.
 **Ship blocker:** the passerby host `https://roooted1776.github.io/tapper/` is live.
 Owner NFC hardware is parked (`nfcHardwareEnabled = false`, no NFC entitlement,
 no `NFCReaderUsageDescription`) so Automatic Signing works without NFC Tag
-Reading on App ID `com.redmed.app`. **Associated Domains is parked**
+Reading on App ID `com.redmed.app`. **Do not sell blank bands** or ship
+“program with Shortcuts / NFC Tools” copy while parked — Share Band URL /
+Preview are pack-only, not a write path. **Associated Domains is parked**
 (`associatedDomainsEnabled = false`, no `applinks:` in `RedMed.entitlements`)
 so Automatic Signing works on a personal/free team. Safari still tries
 `redmed://band#d=` before SOS. Restore Associated Domains after paid Program
