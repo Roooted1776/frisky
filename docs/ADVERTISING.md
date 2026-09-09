@@ -38,6 +38,12 @@ build-in-public with no buy CTA is fine.
 Do not skip to Shopify, Meta, Google, or hospital outbound while NFC is
 parked, the listing is parked, or the band host 404s.
 
+**While CoreNFC is parked:** no blank-band sell copy from Max. No Shopify /
+caption / leave-behind that sells an unwritten NTAG216, and no “program it
+with Shortcuts / NFC Tools” workaround as the product path. Sample stock for
+entitlement proof is fine; a buy CTA is not. Restore Tag Reading first
+(`docs/NFC-RESTORE.md`).
+
 ### Shared banned copy (both views)
 
 - HIPAA certified / HIPAA compliant product
@@ -48,6 +54,8 @@ parked, the listing is parked, or the band host 404s.
 - Walk-by tap at 6–8 inches (reliable coupling dies past ~4 inches; walk-by does not fire)
 - Lives saved / we dispatch help
 - Android can fill and write the band
+- Sell blank bands / “program with Shortcuts or NFC Tools” while
+  `nfcHardwareEnabled = false` (CoreNFC parked until real Tag Reading)
 - Mixing views: do not tell families “hospitals use this,” and do not tell
   facilities “download on the App Store and check out.”
 

@@ -38,6 +38,12 @@ NFC; scanners never get NFC. The flag only gates CoreNFC sessions and the
 Load From Band button (pack-only Write + Share Band URL + Preview when
 parked). Linked after a real write + matching read-back, or Load From Band.
 
+**While parked — no blank-band sell copy.** Do not advertise or sell unwritten
+NTAG216 stock, and do not tell owners to program the chip with Shortcuts /
+NFC Tools. Share Band URL packs the same `#d=` Write would use; it does not
+write the chip and does not mark Linked. Factory “NDEF blank unlocked” is
+procurement only. Band sales wait on Tag Reading restore + proven owner Write.
+
 When hardware is on, owner NFC keeps **Write**, **Preview**, and **Load From
 Band** on one screen. Load path: read chip → empty-band alert / match→link /
 mismatch+existing→Replace confirm / empty funnel→adopt. Face ID

@@ -28,6 +28,8 @@ passive Type 2 NDEF. Hardware work is procurement + Apple portal + factory:
 
 Do not substitute Shopify / storefront / custom firmware for that sequence.
 Do not MOQ before blank stock and entitlement are proven on a physical iPhone.
+Do **not** sell blank bands or ship “buy blank + Shortcuts / NFC Tools”
+copy while CoreNFC is parked — sample stock for Tag Reading proof only.
 Paid ads stay at **$0** until this sequence plus a live `/tapper/` and a real
 App Store listing are green ([`docs/ADVERTISING.md`](ADVERTISING.md)).
 
