@@ -1,4 +1,5 @@
 import AVFoundation
+import os
 
 /// Survival siren for crash / severe-impact or Find Help SOS (owner + tapper).
 /// Plays through the silent switch (`.playback`) and keeps sounding in background until cancelled.
@@ -306,21 +307,16 @@ private final class SirenPlayerBox: @unchecked Sendable {
 
 /// Written on MainActor, read from `AudioSessionGate.queue` — lock-guarded so a
 /// stale-epoch check on that queue always sees the latest arm/end, not a torn
-/// or cached read (matches `TapCardPresentation`'s cross-thread bool pattern).
+/// or cached read.
+/// Uses `OSAllocatedUnfairLock` (not `NSLock`): Stop The Alarm calls
+/// `endSurvival` from an async `Task` (`CrashMotionGuard.disarm`), and
+/// `NSLock.lock`/`unlock` are `@available(*, noasync)` — Xcode 27 flags the
+/// `publishedEpoch.value = …` assignment on that path.
 private final class EpochBox: @unchecked Sendable {
-    private let lock = NSLock()
-    private var _value: UInt64 = 0
+    private let lock = OSAllocatedUnfairLock(initialState: UInt64(0))
 
     var value: UInt64 {
-        get {
-            lock.lock()
-            defer { lock.unlock() }
-            return _value
-        }
-        set {
-            lock.lock()
-            _value = newValue
-            lock.unlock()
-        }
+        get { lock.withLock { $0 } }
+        set { lock.withLock { $0 = newValue } }
     }
 }
