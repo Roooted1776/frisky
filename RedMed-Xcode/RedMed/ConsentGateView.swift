@@ -169,7 +169,8 @@ struct ConsentGateView<Content: View>: View {
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background { RedMedPageBackground() }
+        // Flat cream — no rose wash / RadialGradient while Face ID is up.
+        .background(Color.redmedBg.ignoresSafeArea())
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Confirm with Face ID to open RedMed")
     }
@@ -335,8 +336,9 @@ struct ConsentGateView<Content: View>: View {
             : "post-Agree Face ID"
         RedMedSignpost.coldLaunchMainReady(readyLabel)
         Task { @MainActor in
-            // Parked LAContext can finish a leftover biometry ACL migrate
-            // without a second sheet — restore may have raced Face ID.
+            // Cream drop first — Keychain migrate / When-In-Use must not hitch
+            // the same turn as Face ID success revealing Main.
+            await Task.yield()
             await profile.reloadAfterOwnerFaceID()
             await Task.yield()
             LocationAccessSuggester.shared.requestWhenInUseIfNeeded()
