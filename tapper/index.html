@@ -1430,10 +1430,13 @@ function redmedAssetURL(file) {
     flex: 1;
     border: 0;
     background: transparent;
-    padding: 2px 0 0;
+    padding: 0;
+    /* Same grid as owner TabBarItem: icon 26 + gap 2 + label 12 = 40 in 44. */
     min-height: 44px;
+    height: 44px;
+    box-sizing: border-box;
     color: var(--tab-off);
-    font-size: 12px; /* fallback; .tab-label uses cqh/cqi */
+    font-size: 10px;
     font-weight: 600;
     letter-spacing: -0.1px;
     cursor: pointer;
@@ -1453,11 +1456,13 @@ function redmedAssetURL(file) {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
+    /* Square chip — lockstep with owner CustomTabBar 26×26 + chipRadius 8. */
+    width: 26px;
     height: 26px;
-    border-radius: 11px;
+    flex: 0 0 26px;
+    border-radius: 8px;
     margin: 0;
-    line-height: 1;
+    line-height: 0;
     transition: background 0.14s ease;
   }
   /* Match owner CustomTabBar SF Symbols (person.fill / safari.fill / cross.case.fill).
@@ -1475,13 +1480,16 @@ function redmedAssetURL(file) {
   .tab[data-tab="911"] .icon-wrap svg { transform: scale(0.92); }
   .tab[data-tab="aid"] .icon-wrap svg { transform: translateY(0.25px) scale(1.1); }
   .tab .tab-label {
-    line-height: 1;
+    display: block;
+    height: 12px;
+    line-height: 12px;
     white-space: nowrap;
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     text-align: center;
-    font-size: clamp(9px, min(22cqh, 22cqi), 12px);
+    font-size: 10px;
+    font-weight: inherit;
   }
   .tab.active { color: var(--accent); font-weight: 700; }
   .tab.active .icon-wrap {

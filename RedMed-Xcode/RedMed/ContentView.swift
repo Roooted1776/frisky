@@ -410,12 +410,14 @@ struct TabBarItem: View {
 
     var body: some View {
         Button(action: action) {
+            // Fixed icon (26) + gap (2) + label (12) = 40 — same row height on
+            // every tab. Shrink-to-fit "RedMed" stays inside the label slot so
+            // it cannot pull the baseline below 911 / Aid / NFC.
             VStack(spacing: 2) {
                 Image(systemName: icon)
                     .font(.system(size: 18, weight: isOn ? .semibold : .regular))
                     .symbolRenderingMode(isCompass ? .hierarchical : .monochrome)
                     .foregroundStyle(tint)
-                    // Square W×H so each SF Symbol's glyph center matches the slot center.
                     .frame(width: 26, height: 26, alignment: .center)
                     .background(
                         RoundedRectangle(cornerRadius: RedMedChrome.chipRadius, style: .continuous)
@@ -426,16 +428,13 @@ struct TabBarItem: View {
                     .font(.system(size: 10, weight: isOn ? .semibold : .medium))
                     .foregroundColor(tint)
                     .kerning(-0.1)
-                    // Shrink-to-fit instead of a manual GeometryReader size calc —
-                    // keeps "RedMed" from clipping/overflowing its slot without
-                    // reintroducing the layout complexity 5ada426 added.
                     .lineLimit(1)
                     .minimumScaleFactor(0.65)
                     .multilineTextAlignment(.center)
+                    .frame(height: 12, alignment: .center)
                     .frame(maxWidth: .infinity, alignment: .center)
             }
-            .frame(maxWidth: .infinity, alignment: .center)
-            .frame(minHeight: 44)
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .center)
             // Discrete tint swap — no spring/bounce on every tab hop.
             .transaction { $0.animation = nil }
         }
