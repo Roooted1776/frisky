@@ -91,10 +91,11 @@ class ProfileData: ObservableObject {
     @Published private(set) var cardEpoch: UInt = 0
     /// One-shot so RedMedApp / ContentView cannot restore twice in one process.
     private var didAttemptLaunchRestore = false
-    /// Off-main Keychain+JSON. Started from `init` when a stored ID is
-    /// expected so SplashBoard overlaps SecItem + decode — not from
-    /// `RedMedApp.task` after the first SwiftUI frame. YOU card paints from
-    /// RAM after restore — no Face ID to view.
+    /// Off-main Keychain+JSON. Returning cold (consent accepted) starts from
+    /// `init` at userInitiated + MainActor adopt so SplashBoard overlaps
+    /// decode and YOU can fill under Face ID cream. Consent-pending (Before
+    /// You Continue) only detached-decodes at utility in `init` — MainActor
+    /// adopt waits for `RedMedApp.task` / Agree so first ack paint is free.
     private var launchPrefetchTask: Task<PersistedProfile?, Never>?
     /// One MainActor adopt waiter — init and beginLaunchPrefetch must not
     /// schedule two (race while the first has cleared `launchPrefetchTask`
@@ -157,23 +158,29 @@ class ProfileData: ObservableObject {
         self.persists = persisting
         // UserDefaults gate only on the main thread — never SecItem / LAContext
         // / exists() here (that contended with Face ID and blocked first frame).
-        // Detached Keychain+JSON starts immediately so SplashBoard overlaps
-        // decode; MainActor adopt starts in the same breath so a finished
-        // blob can land in RAM before the first YOU body (ContentView.task
-        // is then a no-op).
-        if persisting && Self.prefersLockOnLaunch {
-            self.isRestoringFromKeychain = true
-            startLaunchPrefetchTask()
+        guard persisting, Self.prefersLockOnLaunch else { return }
+        self.isRestoringFromKeychain = true
+        if ConsentSettings.hasAcceptedCurrent {
+            // Returning cold: race SplashBoard / Face ID cream so YOU can
+            // fill under the cream. userInitiated + MainActor adopt now.
+            startLaunchPrefetchTask(priority: .userInitiated)
             scheduleLaunchAdopt()
+        } else {
+            // Before You Continue (first launch / policy bump / after Erase):
+            // decode off-main at utility only — do not schedule MainActor
+            // adopt until after firstFrame (RedMedApp.task / Agree). Early
+            // adopt publishes PHI under the ack page and can hitch cream
+            // drop / first layout; YOU is not on screen yet.
+            startLaunchPrefetchTask(priority: .utility)
         }
     }
 
     /// Non-interactive Keychain read + JSON decode. Idempotent. Does not touch
     /// `@Published` fields until adopt / restore applies the result.
-    /// Prefer `init` (gate-on path starts prefetch + MainActor adopt).
-    /// `RedMedApp.task` may call this as a safety net. ContentView restore
-    /// is a no-op when adopt already won the race.
-    /// Prefetch uses `.userInitiated` so the blob lands before YOU paints empty.
+    /// Returning cold: `init` already started userInitiated + adopt.
+    /// Consent-pending: `init` only detached-decodes; this schedules adopt
+    /// (from `RedMedApp.task` after firstFrame, or Agree). ContentView
+    /// restore is a no-op when adopt already won.
     /// UserDefaults gate only — no SecItem exists() on the caller.
     func beginLaunchPrefetch() {
         guard persists else { return }
@@ -194,10 +201,10 @@ class ProfileData: ObservableObject {
         }
     }
 
-    private func startLaunchPrefetchTask() {
+    private func startLaunchPrefetchTask(priority: TaskPriority = .userInitiated) {
         guard launchPrefetchTask == nil else { return }
         let account = Self.keychainAccount
-        launchPrefetchTask = Task.detached(priority: .userInitiated) {
+        launchPrefetchTask = Task.detached(priority: priority) {
             Self.decodeBlob(KeychainStore.load(account: account, allowInteractive: false))
         }
     }
