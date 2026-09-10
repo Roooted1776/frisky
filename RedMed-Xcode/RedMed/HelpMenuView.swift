@@ -279,8 +279,33 @@ struct LocalWebView: UIViewRepresentable {
         }
 
         func scrollToFragment(in webView: WKWebView) {
-            guard let fragment else { return }
+            guard let fragment else {
+                // Combined Policies open: letterhead + notice + nav at y=0.
+                // Jumping to #privacy skips that top matter (scroll-margin + sticky nav).
+                scrollToDocumentTop(in: webView)
+                return
+            }
             jumpToPolicyFragment(fragment, in: webView)
+        }
+
+        func scrollToDocumentTop(in webView: WKWebView) {
+            webView.scrollView.setContentOffset(.zero, animated: false)
+            // Mark Privacy in the sticky nav without scrolling past the letterhead.
+            webView.evaluateJavaScript(
+                """
+                (function(){
+                  if (typeof window.__rmShowPolicy === 'function') {
+                    window.__rmShowPolicy('privacy', false);
+                  }
+                  window.scrollTo(0, 0);
+                  try {
+                    if (document.documentElement) document.documentElement.scrollTop = 0;
+                    if (document.body) document.body.scrollTop = 0;
+                  } catch (e0) {}
+                  try { history.replaceState(null, '', location.pathname + location.search); } catch (e1) {}
+                })();
+                """
+            )
         }
 
         func jumpToPolicyFragment(_ id: String, in webView: WKWebView) {
@@ -406,8 +431,9 @@ struct LocalWebView: UIViewRepresentable {
 
 // MARK: - Policies document (Help push + Before You Continue sheet)
 /// One WebView for the combined Policies document. Chrome title stays Policies.
+/// Opens at document top (letterhead). Pass `startAt` only to deep-link a section.
 struct HelpPolicyPage: View {
-    var startAt: HelpDocument.Policy = HelpDocument.defaultPolicy
+    var startAt: HelpDocument.Policy? = nil
     var showsDoneChrome: Bool = false
     var onDone: (() -> Void)? = nil
 
@@ -422,7 +448,7 @@ struct HelpPolicyPage: View {
             }
             LocalWebView(
                 filename: HelpDocument.bundledFile,
-                fragment: startAt.fragment
+                fragment: startAt?.fragment
             )
         }
         .background { RedMedPageBackground() }
