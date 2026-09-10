@@ -25,4 +25,6 @@ Working notes. Product invariants live in `AGENTS.md`.
 ## Cold start (shipping)
 
 Returning cold open: Face ID once over warm Main (prefetch/restore already running — do **not** pay a fixed Face ID stagger). Fresh / Erase / policy bump: Agree (no Face ID on that page) → Face ID → Main. Same-session resume does not re-prompt. Edit / Save / Erase (+ Load From Band) still Face ID.
-Consent-pending path: Keychain MainActor adopt + Document.html WK warm wait until after firstFrame / cream drop so they do not fight the ack paint.
+Consent-pending path: Keychain MainActor adopt waits for Agree (not RedMedApp.task —
+that raced cream drop). Document.html WK warm waits ~500ms past gate appear so
+cream drop + ack layout win.

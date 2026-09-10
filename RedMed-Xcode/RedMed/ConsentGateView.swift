@@ -297,8 +297,8 @@ struct ConsentGateView<Content: View>: View {
         notInteractive = false
         unavailableReason = nil
         isAuthenticating = false
-        // Policy-bump / first-launch path deferred MainActor Keychain adopt
-        // past firstFrame — kick it now so Face ID cream races a filled YOU.
+        // Policy-bump path deferred MainActor Keychain adopt until Agree —
+        // kick it now so Face ID cream races a filled YOU (not under ack).
         profile.beginLaunchPrefetch()
         var t = Transaction()
         t.animation = nil
