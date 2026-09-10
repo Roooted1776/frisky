@@ -155,20 +155,20 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
         }
 
         guard let tag = tags.first else {
-            session.invalidate(errorMessage: "No tag found. Try again.")
+            session.invalidate(errorMessage: AppConfig.NFCWriteCopy.failDetail)
             return
         }
 
         let urlString = urlToWrite
         session.connect(to: tag) { [weak self] error in
-            if let error {
-                session.invalidate(errorMessage: "Connection failed: \(error.localizedDescription)")
+            if error != nil {
+                session.invalidate(errorMessage: AppConfig.NFCWriteCopy.failDetail)
                 return
             }
 
             tag.queryNDEFStatus { status, capacity, error in
-                if let error {
-                    session.invalidate(errorMessage: "Failed to read tag: \(error.localizedDescription)")
+                if error != nil {
+                    session.invalidate(errorMessage: AppConfig.NFCWriteCopy.failDetail)
                     return
                 }
 
@@ -194,19 +194,18 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                         return
                     }
                     tag.writeNDEF(message) { error in
-                        if let error {
-                            let capHint = capacity > 0 ? " Tag capacity: \(capacity) bytes." : ""
-                            session.invalidate(errorMessage: "Write failed: \(error.localizedDescription).\(capHint)")
+                        if error != nil {
+                            session.invalidate(errorMessage: AppConfig.NFCWriteCopy.failDetail)
                             return
                         }
 
                         tag.readNDEF { readMessage, readError in
-                            if let readError {
-                                session.alertMessage = "Written — couldn't verify read-back. Test with another phone."
+                            if readError != nil {
+                                session.alertMessage = AppConfig.NFCWriteCopy.failDetail
                                 self?.finishWrite(
-                                    success: true,
+                                    success: false,
                                     verified: false,
-                                    status: "Tag written. Verification skipped: \(readError.localizedDescription)",
+                                    status: AppConfig.NFCWriteCopy.failTitle,
                                     thenInvalidate: session
                                 )
                                 return
@@ -215,14 +214,14 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                             let written = readMessage?.records.first.flatMap { NFCURICodec.string(from: $0) }
                             let ok = written.map { NFCURICodec.match($0, urlString) } ?? false
                             session.alertMessage = ok
-                                ? "Success! Bracelet programmed and verified."
-                                : "Written, but read-back didn't match. Test with another phone."
+                                ? "\(AppConfig.NFCWriteCopy.successTitle). \(AppConfig.NFCWriteCopy.successDetail)"
+                                : AppConfig.NFCWriteCopy.failDetail
                             self?.finishWrite(
-                                success: true,
+                                success: ok,
                                 verified: ok,
                                 status: ok
-                                    ? "Bracelet programmed and verified. Other phones can tap it; payment terminals cannot."
-                                    : "Written, but verification failed — try writing again.",
+                                    ? AppConfig.NFCWriteCopy.successDetail
+                                    : AppConfig.NFCWriteCopy.failTitle,
                                 thenInvalidate: session
                             )
                         }
@@ -263,7 +262,14 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                readerError.code == .readerSessionInvalidationErrorUserCanceled {
                 self.statusMessage = "Cancelled."
             } else if !self.success {
-                self.statusMessage = error.localizedDescription
+                let desc = error.localizedDescription
+                if desc == AppConfig.NFCWriteCopy.failDetail
+                    || desc.isEmpty
+                    || self.statusMessage == "Hold your iPhone near the NFC tag." {
+                    self.statusMessage = AppConfig.NFCWriteCopy.failTitle
+                } else {
+                    self.statusMessage = desc
+                }
             }
         }
     }

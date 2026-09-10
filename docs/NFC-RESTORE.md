@@ -23,16 +23,17 @@ Written-but-unverified stays Not linked.
 `AppConfig.nfcHardwareEnabled = true`,
 `RedMed.entitlements` has `com.apple.developer.nfc.readersession.formats`
 → `TAG`, and `Info.plist` has `NFCReaderUsageDescription` (Write + Load
-From Band copy below). Owner NFC tab stays visible with Write, Preview,
-and **Load From Band**. Real `NFCNDEFReaderSession` still needs paid
+From Band copy below). Owner NFC tab stays visible with Write The Band, Preview,
+and **Load From Band** (Share Band URL hidden). Real `NFCNDEFReaderSession` still needs paid
 Program + **NFC Tag Reading** on App ID `com.redmed.app` (portal + Xcode
 capability are not git). Keep flag, entitlement, and usage string in
 lockstep if parking again.
 
 **Do not hide the owner NFC tab** — owners always get RedMed · 911 · Aid ·
 NFC; scanners never get NFC. The flag only gates CoreNFC sessions and the
-Load From Band button (pack-only Write + Share Band URL + Preview when
-parked). Linked after a real write + matching read-back, or Load From Band.
+Load From Band button (Pack Band URL + Share Band URL + Preview when
+parked — no Write label). Linked after a real write + matching read-back,
+or Load From Band.
 
 **While parked — no blank-band sell copy.** Do not advertise or sell unwritten
 NTAG216 stock, and do not tell owners to program the chip with Shortcuts /
@@ -40,11 +41,14 @@ NFC Tools. Share Band URL packs the same `#d=` Write would use; it does not
 write the chip and does not mark Linked. Factory “NDEF blank unlocked” is
 procurement only. Band sales wait on Tag Reading restore + proven owner Write.
 
-When hardware is on, owner NFC keeps **Write**, **Preview**, and **Load From
-Band** on one screen. Load path: read chip → empty-band alert / match→link /
-mismatch+existing→Replace confirm / empty funnel→adopt. Face ID
-(`force: true`) before link and adopt. Write stays ungated. Preview does
-not persist.
+When hardware is on, owner NFC keeps **Write The Band**, **Preview**, and
+**Load From Band** on one screen (Share Band URL is hidden). Load path:
+read chip → empty-band alert / match→link / mismatch+existing→Replace
+confirm / empty funnel→adopt. Face ID (`force: true`) before link and
+adopt. Write stays ungated. Preview does not persist. After a verified
+write: **Linked** — anyone can tap this band to open your card. Parked
+(flag off): **Pack Band URL** + Share Band URL + Preview — no Write
+button.
 
 ## RF / hardware contract
 
