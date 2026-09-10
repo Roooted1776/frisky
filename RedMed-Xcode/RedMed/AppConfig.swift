@@ -109,7 +109,9 @@ enum AppConfig {
     /// `false` parks hardware sessions (Pack Band URL + Share Band URL +
     /// Preview; no Write label; Load From Band button hidden). Gate logic
     /// stays correct for restore — see `docs/NFC-RESTORE.md`.
-    static let nfcHardwareEnabled = true
+    /// Parked: entitlement + `NFCReaderUsageDescription` removed (bf3ee60).
+    /// Keep flag false until restore steps in `docs/NFC-RESTORE.md`.
+    static let nfcHardwareEnabled = false
 
     /// `true` = `RedMed.entitlements` includes `applinks:` so a phone with RedMed
     /// installed opens the app on `/tapper/` band taps instead of Safari (own

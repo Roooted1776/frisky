@@ -10,12 +10,12 @@ RedMed is a native iOS medical ID plus a static passerby HTML shell. There is no
 
 ## Current posture
 
-No committed secrets, no XSS in profile render (`textContent` / `esc()`), no autodial on SOS auto-arm, no scanner write into owner Keychain. **The band write host is live.** In-repo CoreNFC lockstep is restored; portal Tag Reading + proven Write on blank NTAG216 remain. Storefront / dept “write from the app” stays off until that checklist is green — blank chips + Share honesty only.
+No committed secrets, no XSS in profile render (`textContent` / `esc()`), no autodial on SOS auto-arm, no scanner write into owner Keychain. **The band write host is live.** In-repo CoreNFC is parked (flag + entitlement + usage string); restore via `docs/NFC-RESTORE.md`. Portal Tag Reading + proven Write on blank NTAG216 remain. Storefront / dept “write from the app” stays off until that checklist is green — blank chips + Share honesty only.
 
 | Area | Status |
 |------|--------|
 | Passerby host | `https://roooted1776.github.io/tapper/` live (HTTP 200, smoke-pages green) |
-| CoreNFC | In-repo restored (`nfcHardwareEnabled = true`, TAG entitlement, `NFCReaderUsageDescription`). Portal Tag Reading on `com.redmed.app` still required for device Write |
+| CoreNFC | In-repo parked (`nfcHardwareEnabled = false`, no TAG entitlement, no `NFCReaderUsageDescription`). Restore via `docs/NFC-RESTORE.md`. Portal Tag Reading on `com.redmed.app` still required for device Write |
 | Associated Domains | Parked (`associatedDomainsEnabled = false`, no `applinks:`). Safari still tries `redmed://band#d=` before SOS |
 | HealthKit | Parked (`healthKitImportEnabled = false`) |
 | `redmed.pages.dev` | 404 until CF secrets / Git connect |
@@ -29,7 +29,7 @@ No committed secrets, no XSS in profile render (`textContent` / `esc()`), no aut
 
 **Still needs Max (not this tree):**
 
-1. Paid Apple Developer: NFC Tag Reading on App ID `com.redmed.app` (portal + Xcode). In-repo lockstep is restored (`nfcHardwareEnabled = true`, TAG entitlement, usage string). Storefront / dept “write from the app” stays off until Tag Reading + Write The Band are proven on blank NTAG216 — until then blank chips + Share honesty only (`docs/ADVERTISING.md`).
+1. Paid Apple Developer: NFC Tag Reading on App ID `com.redmed.app` (portal + Xcode). In-repo CoreNFC is parked (`nfcHardwareEnabled = false`, no TAG entitlement, no usage string) — restore all three together via `docs/NFC-RESTORE.md`. Storefront / dept “write from the app” stays off until Tag Reading + Write The Band are proven on blank NTAG216 — until then blank chips + Share honesty only (`docs/ADVERTISING.md`).
 2. Restore Associated Domains after paid Program (`docs/associated-domains-restore.md`).
 3. Leave HealthKit parked until a paid team can provision it.
 4. Do not re-bind Keychain to `biometryCurrentSet` (Face ID stays UI-only).
