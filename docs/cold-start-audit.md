@@ -18,8 +18,9 @@
 > SecItem + JSON at userInitiated) and MainActor `adoptLaunchPrefetch` starts
 > in the same breath so a finished blob can land before / under the Face ID
 > cream. **Consent-pending** (Before You Continue): init only detached-decodes
-> at utility — MainActor adopt waits for `RedMedApp.task` / Agree; Document.html
-> WK warm waits ~500ms past gate appear so cream drop + ack layout win.
+> at utility — MainActor adopt waits for Agree (not `RedMedApp.task`; that
+> raced cream drop after #563). Document.html WK warm waits ~500ms past gate
+> appear so cream drop + ack layout win.
 > ContentView `restoreOnLaunch` is non-interactive (no SecItem Face ID).
 > After ConsentGate Face ID, `reloadAfterOwnerFaceID` migrates leftover
 > biometry ACL via the parked LAContext. Haptics, tab-bar `drawingGroup`,

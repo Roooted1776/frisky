@@ -95,7 +95,7 @@ class ProfileData: ObservableObject {
     /// `init` at userInitiated + MainActor adopt so SplashBoard overlaps
     /// decode and YOU can fill under Face ID cream. Consent-pending (Before
     /// You Continue) only detached-decodes at utility in `init` — MainActor
-    /// adopt waits for `RedMedApp.task` / Agree so first ack paint is free.
+    /// adopt waits for Agree so cream drop / ack layout stay free.
     private var launchPrefetchTask: Task<PersistedProfile?, Never>?
     /// One MainActor adopt waiter — init and beginLaunchPrefetch must not
     /// schedule two (race while the first has cleared `launchPrefetchTask`
@@ -168,19 +168,19 @@ class ProfileData: ObservableObject {
         } else {
             // Before You Continue (first launch / policy bump / after Erase):
             // decode off-main at utility only — do not schedule MainActor
-            // adopt until after firstFrame (RedMedApp.task / Agree). Early
-            // adopt publishes PHI under the ack page and can hitch cream
-            // drop / first layout; YOU is not on screen yet.
+            // adopt until Agree. Early adopt (including RedMedApp.task right
+            // after firstFrame) publishes PHI under the ack page and hitches
+            // cream drop / first layout; YOU is not on screen yet.
             startLaunchPrefetchTask(priority: .utility)
         }
     }
 
     /// Non-interactive Keychain read + JSON decode. Idempotent. Does not touch
     /// `@Published` fields until adopt / restore applies the result.
-    /// Returning cold: `init` already started userInitiated + adopt.
-    /// Consent-pending: `init` only detached-decodes; this schedules adopt
-    /// (from `RedMedApp.task` after firstFrame, or Agree). ContentView
-    /// restore is a no-op when adopt already won.
+    /// Returning cold: `init` already started userInitiated + adopt;
+    /// `RedMedApp.task` is a safety net only. Consent-pending: `init` only
+    /// detached-decodes; Agree schedules adopt (not RedMedApp.task — that
+    /// raced cream drop). ContentView restore is a no-op when adopt already won.
     /// UserDefaults gate only — no SecItem exists() on the caller.
     func beginLaunchPrefetch() {
         guard persists else { return }

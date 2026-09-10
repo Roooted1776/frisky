@@ -30,11 +30,13 @@ struct RedMedApp: App {
             .background(CreamWindowBackground())
             .preferredColorScheme(.light)
             .task {
-                // Prefetch + MainActor adopt already started from ProfileData.init
-                // on returning cold (consent accepted). Consent-pending only
-                // detached-decodes in init — this task schedules adopt after
-                // firstFrame so the ack page is not fighting objectWillChange.
+                // Returning cold: Prefetch + MainActor adopt already started
+                // from ProfileData.init. This is only a safety net if init
+                // skipped the gate. Consent-pending must NOT adopt here —
+                // that raced cream drop / ack layout (objectWillChange under
+                // Before You Continue). Agree calls beginLaunchPrefetch.
                 // Haptics stay in ContentView after YOU paints.
+                guard ConsentSettings.hasAcceptedCurrent else { return }
                 profile.beginLaunchPrefetch()
             }
             .onOpenURL { url in
