@@ -7,10 +7,13 @@ struct RedMedApp: App {
     init() {
         // Marks process start after dyld / debugger attach.
         // Cream with no ColdLaunch lines yet = Xcode install + LLDB, not SwiftUI.
+        // Multi-second app.init → firstFrame under Debug Run is usually LLDB —
+        // A/B with scheme RedMed-NoDebug / Run Without Debugging.
         RedMedSignpost.coldLaunchMark("app.init")
         // Register switcher-cover observers before the first resign (Debug
         // attach can resign before any SwiftUI .task).
         SnapshotSafeCover.activate()
+        RedMedSignpost.coldMark("SnapshotSafeCover ready")
     }
 
     var body: some Scene {
@@ -23,9 +26,11 @@ struct RedMedApp: App {
             .background(CreamWindowBackground())
             .preferredColorScheme(.light)
             .task {
-                // Prefetch + MainActor adopt already started from ProfileData.init.
-                // Safety net if init skipped the gate path. Haptics stay in
-                // ContentView after YOU paints.
+                // Prefetch + MainActor adopt already started from ProfileData.init
+                // on returning cold (consent accepted). Consent-pending only
+                // detached-decodes in init — this task schedules adopt after
+                // firstFrame so the ack page is not fighting objectWillChange.
+                // Haptics stay in ContentView after YOU paints.
                 profile.beginLaunchPrefetch()
             }
             .onOpenURL { url in

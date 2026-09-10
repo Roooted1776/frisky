@@ -1,19 +1,25 @@
 # Cold Start Speed Audit
 
-> **2026-09 update:** Consent is **4.10** (Agree covers location). A version
-> bump forces Before You Continue + Face ID once — that is intentional, not a
-> paint regression. Returning cold opens skip Before You Continue but still
-> Face ID once on cream over warm Main (Keychain prefetch/restore races
-> underneath; no fixed sleep; same-session resume does not re-prompt).
+> **2026-09 update:** Consent is **4.14** (Agree covers location; product-gate
+> bump). A version bump forces Before You Continue + Face ID once — that is
+> intentional, not a paint regression. Returning cold opens skip Before You
+> Continue but still Face ID once on cream over warm Main (Keychain
+> prefetch/restore races underneath; no fixed sleep; same-session resume does
+> not re-prompt).
 > `LaunchRoot` cream drops after one yield (first launch / policy bump only).
 > Scheme: `enableGPUValidationMode = "1"` is **Disabled** (Apple’s encoding);
 > `"2"` turns Metal API Validation back on — do not “fix” that to 2.
 > Pre-app cream with no `ColdLaunch` Console lines = Xcode install / LLDB
-> attach. Use scheme **RedMed-NoDebug** for a fair check.
+> attach. Use scheme **RedMed-NoDebug** for a fair check. Multi-second
+> `app.init` → `firstFrame` **with** ColdLaunch lines under Debug Run is
+> usually still LLDB — A/B with NoDebug before chasing Swift.
 >
 > **Returning YOU fill:** Prefetch starts in `ProfileData.init` (detached
-> SecItem + JSON) and MainActor `adoptLaunchPrefetch` starts in the same
-> breath so a finished blob can land before / under the Face ID cream.
+> SecItem + JSON at userInitiated) and MainActor `adoptLaunchPrefetch` starts
+> in the same breath so a finished blob can land before / under the Face ID
+> cream. **Consent-pending** (Before You Continue): init only detached-decodes
+> at utility — MainActor adopt waits for `RedMedApp.task` / Agree; Document.html
+> WK warm waits ~500ms past gate appear so cream drop + ack layout win.
 > ContentView `restoreOnLaunch` is non-interactive (no SecItem Face ID).
 > After ConsentGate Face ID, `reloadAfterOwnerFaceID` migrates leftover
 > biometry ACL via the parked LAContext. Haptics, tab-bar `drawingGroup`,

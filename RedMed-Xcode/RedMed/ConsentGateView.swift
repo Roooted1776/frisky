@@ -172,7 +172,8 @@ struct ConsentGateView<Content: View>: View {
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.redmedMuted)
                     .padding(14)
-                    .redmedBox(flatten: false)
+                    // Static copy — flatten for cheaper first ack paint.
+                    .redmedBox(flatten: true)
 
                     VStack(spacing: 0) {
                         Toggle("Haptic Feedback", isOn: $hapticsEnabled)
@@ -181,6 +182,7 @@ struct ConsentGateView<Content: View>: View {
                             .padding(.horizontal, RedMedChrome.pagePadX)
                             .padding(.vertical, RedMedChrome.rowVPad)
                     }
+                    // Live Toggle — flatten:false so compositingGroup cannot eat taps.
                     .redmedBox(flatten: false)
 
                     VStack(spacing: 0) {
@@ -200,7 +202,7 @@ struct ConsentGateView<Content: View>: View {
                             .accessibilityHint("Opens \(policy.title)")
                         }
                     }
-                    .redmedBox(flatten: false)
+                    .redmedBox(flatten: true)
                 }
                 .padding(.horizontal, RedMedChrome.pagePadX)
                 .padding(.bottom, 12)
@@ -237,10 +239,16 @@ struct ConsentGateView<Content: View>: View {
             .background(Color.redmedBg)
         }
         .background { RedMedPageBackground() }
-        .onAppear {
-            // Parse Document.html while the ack text is on screen so a policy
-            // link opens without a cold WKWebView spin. Discarded on Agree.
+        .task {
+            // Defer Document.html WK warm past cream drop + first ack layout.
+            // Immediate warm on appear fought LaunchRoot's one-yield cream
+            // drop and spawned UIKit "keyboard was not even present" noise
+            // from an off-screen WKWebView. Ack reading time is longer than
+            // 500ms — a policy link still opens warm. Discarded on Agree.
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            guard !Task.isCancelled else { return }
             PolicyWebViewPool.warm()
+            RedMedSignpost.coldMark("policy WK warm started")
         }
         .sheet(item: $openPolicy, onDismiss: {
             // Sheet take() emptied the pool — warm again for a second open.
@@ -269,6 +277,9 @@ struct ConsentGateView<Content: View>: View {
         notInteractive = false
         unavailableReason = nil
         isAuthenticating = false
+        // Policy-bump / first-launch path deferred MainActor Keychain adopt
+        // past firstFrame — kick it now so Face ID cream races a filled YOU.
+        profile.beginLaunchPrefetch()
         var t = Transaction()
         t.animation = nil
         withTransaction(t) {

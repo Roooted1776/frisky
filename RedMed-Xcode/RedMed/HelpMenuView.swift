@@ -279,8 +279,33 @@ struct LocalWebView: UIViewRepresentable {
         }
 
         func scrollToFragment(in webView: WKWebView) {
-            guard let fragment else { return }
+            guard let fragment else {
+                // Combined Policies open: letterhead + notice + nav at y=0.
+                // Jumping to #privacy skips that top matter (scroll-margin + sticky nav).
+                scrollToDocumentTop(in: webView)
+                return
+            }
             jumpToPolicyFragment(fragment, in: webView)
+        }
+
+        func scrollToDocumentTop(in webView: WKWebView) {
+            webView.scrollView.setContentOffset(.zero, animated: false)
+            // Mark Privacy in the sticky nav without scrolling past the letterhead.
+            webView.evaluateJavaScript(
+                """
+                (function(){
+                  if (typeof window.__rmShowPolicy === 'function') {
+                    window.__rmShowPolicy('privacy', false);
+                  }
+                  window.scrollTo(0, 0);
+                  try {
+                    if (document.documentElement) document.documentElement.scrollTop = 0;
+                    if (document.body) document.body.scrollTop = 0;
+                  } catch (e0) {}
+                  try { history.replaceState(null, '', location.pathname + location.search); } catch (e1) {}
+                })();
+                """
+            )
         }
 
         func jumpToPolicyFragment(_ id: String, in webView: WKWebView) {
@@ -405,10 +430,11 @@ struct LocalWebView: UIViewRepresentable {
 }
 
 // MARK: - Policies document (Help push + Before You Continue sheet)
-/// One WebView for the combined Policies document. Help chrome stays Policies;
-/// Before You Continue per-doc links pass `pageTitle` / `startAt` for that section.
+/// One WebView for the combined Policies document. Help chrome stays Policies
+/// and opens at document top (letterhead). Before You Continue per-doc links
+/// pass `pageTitle` / `startAt` to deep-link that section.
 struct HelpPolicyPage: View {
-    var startAt: HelpDocument.Policy = HelpDocument.defaultPolicy
+    var startAt: HelpDocument.Policy? = nil
     var showsDoneChrome: Bool = false
     var onDone: (() -> Void)? = nil
     /// Sheet / nav title. Nil → combined Policies (Help). Ack rows pass the section title.
@@ -429,7 +455,7 @@ struct HelpPolicyPage: View {
             }
             LocalWebView(
                 filename: HelpDocument.bundledFile,
-                fragment: startAt.fragment
+                fragment: startAt?.fragment
             )
         }
         .background { RedMedPageBackground() }
