@@ -7,20 +7,6 @@ enum RedMedMotion {
     static let snappy = Animation.spring(response: 0.32, dampingFraction: 0.82)
 }
 
-/// Launch / post-Face-ID pacing. SwiftUI `.task` snapshots `scenePhase` at
-/// start — during returning-cold Face ID that value stays `.inactive` even
-/// after the sheet dismisses, so it cannot gate live work.
-enum RedMedMainPace {
-    /// Face ID / LAContext resigns the scene. Read `UIApplication` live.
-    @MainActor
-    static func waitUntilActive() async {
-        while UIApplication.shared.applicationState != .active {
-            try? await Task.sleep(nanoseconds: 50_000_000)
-            if Task.isCancelled { return }
-        }
-    }
-}
-
 /// Press scale for CTAs and chrome — reactive without fighting scroll.
 /// Default is instant: the 0.32s CTA spring made tab hops and in-app taps feel late.
 struct RedMedPressStyle: ButtonStyle {
@@ -60,8 +46,10 @@ extension Color {
 ///
 /// First frame is flat `redmedBg` matching UILaunchScreen / LaunchBackground
 /// (`#fff7f7`) so SplashBoard → SwiftUI has no one-frame rose-wash jump.
-/// Wash lands ~400ms later *and* after the scene is `.active` — past Keychain
-/// adopt / YOU fill, and not during returning-cold Face ID cream.
+/// Wash lands ~400ms later — past Keychain adopt / YOU fill on returning
+/// opens, and clear of LaunchRoot's one-yield cream drop on first launch.
+/// Face ID cream uses flat `redmedBg` (no wash). Do not wait on
+/// `OwnerSessionGate` here — Before You Continue also uses this background.
 struct RedMedPageBackground: View {
     @State private var showWash = false
 
@@ -86,10 +74,6 @@ struct RedMedPageBackground: View {
                 guard !showWash else { return }
                 await Task.yield()
                 try? await Task.sleep(nanoseconds: 400_000_000)
-                guard !Task.isCancelled else { return }
-                // ContentView is armed under Face ID cream — do not composite
-                // the radial wash while the scene is still inactive.
-                await RedMedMainPace.waitUntilActive()
                 guard !Task.isCancelled else { return }
                 var t = Transaction()
                 t.animation = nil

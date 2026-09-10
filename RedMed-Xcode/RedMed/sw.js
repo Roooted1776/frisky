@@ -9,8 +9,8 @@
  * bracelet tap (EMT / helper, no app) must paint almost instantly from
  * cache — even with no signal.
  *
- * Owner app path is separate: WKWebView loads the *bundled* tapper.html via
- * loadHTMLString (file base) — no network required for Preview / Scan / embed.
+ * Owner app path is separate: WKWebView loads a Caches-staged tapper.html via
+ * loadFileURL (BrandLogo beside it) — no network required for Preview / Scan.
  *
  * Shell strategy: cache-first with multi-key fallback (/tapper/ ↔ index.html);
  * never wait on network when any shell copy exists. Background networkReload

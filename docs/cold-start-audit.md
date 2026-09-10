@@ -25,12 +25,13 @@
 > After ConsentGate Face ID, `reloadAfterOwnerFaceID` migrates leftover
 > biometry ACL via the parked LAContext — deferred ~300ms when prefetch
 > already filled RAM so cream drop is not a SecItem hitch. Empty-RAM still
-> awaits. Haptics, WK Preview pool, page rose wash, and CoreMotion wait
-> until `UIApplication` is `.active` (Face ID cream is `.inactive`; SwiftUI
-> `.task` snapshots `scenePhase` so a 400ms sleep alone still landed
-> mid-sheet). Tab bar does not `drawingGroup`. Aid / Edit catalogs prefetch
-> after interactive. Next-step banner stays ~400ms past first paint. Do not
-> remount `OwnerYouCard` via `.id(cardEpoch)` on adopt.
+> awaits. Haptics, WK Preview pool, and CoreMotion wait on
+> `OwnerSessionGate` (Face ID unlock) — not bare `scenePhase` / `.active`
+> (Retry also reactivates). Tab bar does not `drawingGroup`. Passerby
+> Preview/Scan stages `tapper.html` + BrandLogo under Caches and
+> `loadFileURL` (not bundle-baseURL `loadHTMLString`). Aid / Edit catalogs
+> prefetch after interactive. Next-step banner stays ~400ms past first paint.
+> Do not remount `OwnerYouCard` via `.id(cardEpoch)` on adopt.
 
 
 **Launch lock is gone.** Current path is `RedMedApp` → `PrivacySnapshotGuard` →

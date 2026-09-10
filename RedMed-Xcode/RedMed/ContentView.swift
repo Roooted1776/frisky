@@ -81,9 +81,8 @@ struct ContentView: View {
             guard !isScannerSession else { return }
             // Prefetch + MainActor adopt usually started in ProfileData.init
             // (may have filled RAM before this task). restoreOnLaunch is a
-            // no-op when adopt already won. Haptics / CoreMotion / WK stay
-            // past the filled-card commit *and* past Face ID (Main is armed
-            // under cream — a 400ms sleep alone still lands mid-sheet).
+            // no-op when adopt already won. Haptics / CoreMotion / WK warm
+            // wait for Face ID unlock — Main is armed under cream first.
             RedMedSignpost.coldMark("restoreOnLaunch start")
             await profile.restoreOnLaunch()
             RedMedSignpost.coldMark("restoreOnLaunch done")
@@ -93,13 +92,15 @@ struct ContentView: View {
             await Task.yield()
             try? await Task.sleep(nanoseconds: 400_000_000)
             guard !Task.isCancelled else { return }
-            // `.task` captured scenePhase is stale (.inactive for the whole
-            // Face ID sheet). Read UIApplication live.
-            await RedMedMainPace.waitUntilActive()
-            guard !Task.isCancelled else { return }
+            // ConsentGate Face ID — not bare scenePhase (stale in .task) and
+            // not UIApplication.active alone (Retry also reactivates).
+            await OwnerSessionGate.waitUntilInteractive()
+            guard !Task.isCancelled, OwnerSessionGate.isInteractive else { return }
             await Task.yield()
             RedMedHaptics.prepare()
-            startCrashMonitorIfOwner()
+            if scenePhase == .active {
+                startCrashMonitorIfOwner()
+            }
             // Spare full (non-embed) WKWebView for first NFC Preview / Scan.
             PasserbyWebViewPool.warmFullShell()
             RedMedSignpost.coldMark("post-interactive warm (haptics/motion/WK)")
@@ -123,6 +124,8 @@ struct ContentView: View {
             case .active:
                 // Do not outrun Keychain restore on cold open.
                 guard !profile.isRestoringFromKeychain else { return }
+                // Face ID cream arms Main early — wait for unlock.
+                guard OwnerSessionGate.isInteractive else { return }
                 startCrashMonitorIfOwner()
             case .background:
                 // No motion background mode — CoreMotion is useless when

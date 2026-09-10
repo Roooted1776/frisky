@@ -177,17 +177,25 @@ private enum PasserbyShellCache {
     private static let cacheLock = NSLock()
 
     static func warm() {
+        let needsStaging: Bool
         cacheLock.lock()
-        defer { cacheLock.unlock() }
         if cachedShellHTML != nil {
-            _ = ProfileNFCCodec.placeholderPreviewPayload
-            return
+            cacheLock.unlock()
+            needsStaging = true
+        } else if let url = Bundle.main.url(forResource: "tapper", withExtension: "html"),
+                  let html = try? String(contentsOf: url, encoding: .utf8) {
+            cachedShellFileURL = url
+            cachedShellHTML = html
+            cacheLock.unlock()
+            needsStaging = true
+        } else {
+            cacheLock.unlock()
+            needsStaging = false
         }
-        guard let url = Bundle.main.url(forResource: "tapper", withExtension: "html"),
-              let html = try? String(contentsOf: url, encoding: .utf8) else { return }
-        cachedShellFileURL = url
-        cachedShellHTML = html
         _ = ProfileNFCCodec.placeholderPreviewPayload
+        if needsStaging {
+            _ = PasserbyShellStaging.directory()
+        }
     }
 
     /// Returns the cached shell without touching disk. Nil until `warm()` (or a
@@ -220,6 +228,55 @@ private enum PasserbyShellCache {
         cachedShellFileURL = url
         cachedShellHTML = html
         return html
+    }
+}
+
+/// Writable Caches copy of the passerby shell. `loadHTMLString` with a
+/// `file://` baseURL inside `RedMed.app` makes WebKit try (and fail) to
+/// sandbox-extend the whole bundle — console spam plus broken relative
+/// `BrandLogo.png`. Stage HTML + logo, then `loadFileURL` like Help.
+private enum PasserbyShellStaging {
+    private static let folderName = "redmed-passerby-shell"
+    private static var cachedDir: URL?
+    private static let lock = NSLock()
+
+    static func directory() -> URL? {
+        lock.lock()
+        defer { lock.unlock() }
+        if let cachedDir { return cachedDir }
+        guard let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+        else { return nil }
+        let dir = caches.appendingPathComponent(folderName, isDirectory: true)
+        do {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        } catch {
+            return nil
+        }
+        if let logo = Bundle.main.url(forResource: "BrandLogo", withExtension: "png") {
+            let dest = dir.appendingPathComponent("BrandLogo.png")
+            if !FileManager.default.fileExists(atPath: dest.path) {
+                try? FileManager.default.copyItem(at: logo, to: dest)
+            }
+        }
+        cachedDir = dir
+        return dir
+    }
+
+    /// Writes boot-wrapped HTML next to staged BrandLogo.png. `slot` keeps
+    /// embed/full warm vs live load from racing the same path. Returns the
+    /// file URL for `loadFileURL(_:allowingReadAccessTo:)`.
+    static func writeShellHTML(_ html: String, slot: String) -> URL? {
+        guard let dir = directory() else { return nil }
+        let safe = slot.replacingOccurrences(of: "/", with: "-")
+        let url = dir.appendingPathComponent("tapper-\(safe).html")
+        lock.lock()
+        defer { lock.unlock() }
+        do {
+            try html.write(to: url, atomically: true, encoding: .utf8)
+            return url
+        } catch {
+            return nil
+        }
     }
 }
 
@@ -285,9 +342,8 @@ enum PasserbyWebViewPool {
         let task = Task<WKWebView?, Never> { @MainActor in
             if Task.isCancelled { return .none }
 
-            let prepared: (String, String)? = await Task.detached(priority: .userInitiated) {
-                guard let fileURL = PasserbyShellCache.shellFileURL(),
-                      var html = PasserbyShellCache.shellHTML() else {
+            let preparedHTML: String? = await Task.detached(priority: .userInitiated) {
+                guard var html = PasserbyShellCache.shellHTML() else {
                     return nil
                 }
 
@@ -316,15 +372,22 @@ enum PasserbyWebViewPool {
                 } else {
                     html = boot + html
                 }
-                return (fileURL.path, html)
+                return html
             }.value
 
-            guard let (filePath, html) = prepared else { return .none }
+            guard let html = preparedHTML,
+                  let stagedURL = PasserbyShellStaging.writeShellHTML(
+                      html,
+                      slot: embed ? "embed-warm" : "full-warm"
+                  ) else { return .none }
             if Task.isCancelled { return .none }
 
             let webView = makeConfiguredWebView(navigationDelegate: nil)
             slot.warming = webView
-            webView.loadHTMLString(html, baseURL: URL(fileURLWithPath: filePath))
+            // Caches staging — not loadHTMLString(baseURL: bundle). Bundle
+            // baseURL → sandbox_extension_issue_file on RedMed.app + WebContent
+            // "Couldn't open <private>" while BrandLogo.png fails to resolve.
+            webView.loadFileURL(stagedURL, allowingReadAccessTo: stagedURL.deletingLastPathComponent())
             if Task.isCancelled {
                 webView.stopLoading()
                 webView.navigationDelegate = nil
@@ -579,7 +642,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
 
     /// Builds the boot-wrapped shell HTML and loads it. Always deferred off the
     /// SwiftUI update pass (even on RAM cache hit) so Preview/Scan open does not
-    /// hitch on a same-turn splice + `loadHTMLString`. Disk miss still decodes
+    /// hitch on a same-turn splice + staged write. Disk miss still decodes
     /// off-main first. `loadedKey` is re-checked before the deferred load fires
     /// so a newer call (fresh `payloadOrURL` / visibility flip) wins.
     private static func performFullLoad(
@@ -604,31 +667,32 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         coordinator.loadAttempts += 1
 
         // Always hop off this SwiftUI update pass — even a RAM cache hit still
-        // splices ~100KB HTML + loadHTMLString, which hitch Preview/Scan open
+        // splices ~100KB HTML + a Caches write, which hitch Preview/Scan open
         // when done synchronously inside updateUIView.
-        let peek = PasserbyShellCache.peek()
+        let peekHTML = PasserbyShellCache.peek()?.html
         Task { @MainActor [weak webView, weak coordinator] in
-            let prepared: (URL, String)?
-            if let peek {
-                prepared = (peek.url, peek.html)
+            let shellHTML: String?
+            if let peekHTML {
+                shellHTML = peekHTML
             } else {
-                prepared = await Task.detached(priority: .userInitiated) {
-                    guard let fileURL = PasserbyShellCache.shellFileURL(),
-                          let shellHTML = PasserbyShellCache.shellHTML() else { return nil }
-                    return (fileURL, shellHTML)
+                shellHTML = await Task.detached(priority: .userInitiated) {
+                    PasserbyShellCache.shellHTML()
                 }.value
             }
             guard let webView, let coordinator, coordinator.loadedKey == loadKey,
-                  let (fileURL, shellHTML) = prepared,
+                  let shellHTML,
                   let html = bootedShellHTML(
                       shellHTML: shellHTML,
                       encodedPayload: encodedPayload,
                       braceletLinked: braceletLinked,
                       appEmbed: appEmbed,
                       embedProfileJSON: embedProfileJSON
-                  )
+                  ),
+                  let stagedURL = PasserbyShellStaging.writeShellHTML(html, slot: shellKind)
             else { return }
-            webView.loadHTMLString(html, baseURL: fileURL)
+            // Same staging path as the warm pool — loadFileURL with Caches
+            // read access, not loadHTMLString against the app bundle.
+            webView.loadFileURL(stagedURL, allowingReadAccessTo: stagedURL.deletingLastPathComponent())
             coordinator.scheduleLoadDeadline(for: webView)
         }
     }

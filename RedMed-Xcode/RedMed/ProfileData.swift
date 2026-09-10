@@ -669,6 +669,39 @@ extension Notification.Name {
     static let redMedOpenNFCTab = Notification.Name("redMedOpenNFCTab")
     /// Preview / Scan tap card presented — PrivacySnapshotGuard must not cover it.
     static let redMedTapCardPresentationDidChange = Notification.Name("redMedTapCardPresentationDidChange")
+    /// ConsentGate Face ID succeeded — Main is hit-testable. ContentView may
+    /// start CoreMotion / spare WK warm (not while the system sheet is up).
+    static let redMedOwnerSessionInteractive = Notification.Name("redMedOwnerSessionInteractive")
+}
+
+/// Process-local gate: Main is interactive after cold-open / post-Agree Face ID.
+/// Returning cold arms Main under cream first — restore races Face ID, but
+/// CoreMotion + passerby WK warm wait for this so they do not fight the sheet.
+/// Prefer this over a bare `UIApplication` active check: Face ID Retry also
+/// resigns/activates without unlocking Main.
+@MainActor
+enum OwnerSessionGate {
+    private(set) static var isInteractive = false
+
+    static func markInteractive() {
+        guard !isInteractive else { return }
+        isInteractive = true
+        NotificationCenter.default.post(name: .redMedOwnerSessionInteractive, object: nil)
+    }
+
+    static func resetForConsentGate() {
+        isInteractive = false
+    }
+
+    /// Spin until Face ID unlock (or cancel). Cap ~8s so a stuck gate cannot
+    /// block restore side-effects forever.
+    static func waitUntilInteractive() async {
+        if isInteractive { return }
+        for _ in 0..<400 {
+            if Task.isCancelled || isInteractive { return }
+            try? await Task.sleep(nanoseconds: 20_000_000)
+        }
+    }
 }
 
 struct EmergencyContact: Identifiable, Equatable {
