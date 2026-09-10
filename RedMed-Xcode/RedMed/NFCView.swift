@@ -23,7 +23,7 @@ struct NFCView: View {
     @ObservedObject var band: NFCBandManager
     @State private var previewSession: PreviewSession?
     /// Parked CoreNFC: packed `medicalCardBaseURL#d=` for Share Band URL only
-    /// (pack/export — not a chip write, not a blank-band sell path).
+    /// (pack/export — Share honesty, not a chip write, not Linked).
     /// Nil until pack finishes; never used to flip Linked.
     @State private var parkedBandURL: String?
     @State private var parkedPackNote: String = ""
@@ -306,7 +306,7 @@ struct NFCView: View {
                 } else {
                     tipRow(AppConfig.BraceletRF.completeBandSummary)
                     tipRow(AppConfig.BraceletRF.hardwareParkedSummary)
-                    tipRow("Preview is the same HTML a helper sees. No blank-band sales until Tag Reading is live.")
+                    tipRow("Preview is the same HTML a helper sees. Blank chips + Share honesty until Write The Band is proven on a blank NTAG216.")
                 }
             }
             .padding(.top, 2)
