@@ -24,7 +24,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | Keychain profile | `WhenPasscodeSetThisDeviceOnly`, **no** biometry ACL (`kSecAttrAccessControl` never set). Face ID is UI-only (`BiometricAuth`), not SecItem. Save fail-closed; never synchronizable. Legacy `biometryCurrentSet` rows migrate once on load — never write a new bound item |
 | Location | On as part of Agree (no in-app toggle). When-In-Use after post-Agree Face ID. GPS start/stop are Find Help only. Off switch is iOS Settings |
 | Owner tabs | RedMed · 911 · Aid · NFC; scanners never see NFC |
-| NFC Preview + Scan | Preview uses `fullScreenCover(item:)` after pack — no empty-cover race. In-repo CoreNFC restored (`nfcHardwareEnabled = true`, TAG entitlement, usage string); portal Tag Reading still required for device Write. Storefront “write from the app” stays off until Write is proven on blank NTAG216 — blank chips + Share honesty until then (`docs/ADVERTISING.md`) |
+| NFC Preview + Scan | Preview uses `fullScreenCover(item:)` after pack — no empty-cover race. In-repo CoreNFC parked (`nfcHardwareEnabled = false`, no TAG entitlement, no usage string); restore via `docs/NFC-RESTORE.md`. Portal Tag Reading still required for device Write. Storefront “write from the app” stays off until Write is proven on blank NTAG216 — blank chips + Share honesty until then (`docs/ADVERTISING.md`) |
 | Passerby shell | One file `tapper/index.html`; Xcode copies it to the app bundle as `tapper.html` at build; repo-root `tapper.html` redirects to `/tapper/` |
 | Offline shell | SW cache precaches HTML + pheart / BrandLogo / BrandWordmark |
 | Band URI contract | Write only `medicalCardBaseURL + #d=` base64url; vendor/social/short URLs rejected |
@@ -42,7 +42,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 
 | Area | Status |
 |------|--------|
-| Band write host | Live: `https://roooted1776.github.io/tapper/` (smoke green 2026-08-31). In-repo CoreNFC restored (`nfcHardwareEnabled = true`, TAG entitlement, `NFCReaderUsageDescription`). Portal Tag Reading on `com.redmed.app` still required. Associated Domains is parked (`associatedDomainsEnabled = false`, no `applinks:` key) so Automatic Signing works on a personal/free team for that capability. Safari still tries `redmed://band#d=` before SOS. Restore Associated Domains via `docs/associated-domains-restore.md`. Write-from-app storefront gate: `docs/ADVERTISING.md` / `docs/NFC-RESTORE.md` |
+| Band write host | Live: `https://roooted1776.github.io/tapper/` (smoke green 2026-08-31). In-repo CoreNFC parked (`nfcHardwareEnabled = false`, no TAG entitlement, no `NFCReaderUsageDescription`). Portal Tag Reading on `com.redmed.app` still required. Associated Domains is parked (`associatedDomainsEnabled = false`, no `applinks:` key) so Automatic Signing works on a personal/free team for that capability. Safari still tries `redmed://band#d=` before SOS. Restore Associated Domains via `docs/associated-domains-restore.md`. Write-from-app storefront gate: `docs/ADVERTISING.md` / `docs/NFC-RESTORE.md` |
 | `redmed.pages.dev` | 404 until CF secrets / Git connect |
 | XCTest | No iOS test target. Codec lockstep is Node, not XCTest |
 | App Store package | `PrivacyInfo.xcprivacy` + export flag exist; listing is parked |
