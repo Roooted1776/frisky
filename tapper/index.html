@@ -1454,17 +1454,19 @@ function redmedAssetURL(file) {
   body.aid-topic-open .tabbar { visibility: hidden; pointer-events: none; }
   body.aid-topic-open .app { visibility: hidden; }
 
-  /* —— Tab bar (matches CustomTabBar cream; compact, 44px hit targets) —— */
+  /* —— Tab bar — lockstep with owner CustomTabBar / TabBarItem (no NFC on passerby) —— */
   .tabbar {
     position: relative;
     flex-shrink: 0;
     width: 100%;
-    /* Opaque page cream — same Color.redmedBg as owner CustomTabBar (not frosted white). */
+    /* Opaque page cream — Color.redmedBg (not frosted white). */
     background: var(--bg);
     border: 0.5px solid var(--divider);
     border-bottom: 0;
+    /* RedMedChrome.tabTopRadius = 18 */
     border-radius: 18px 18px 0 0;
-    box-shadow: 0 -2px 10px rgba(28,25,23,0.05);
+    /* RedMedChrome.cardShadow = black 0.045, radius 10, y -2 */
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.045);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1481,13 +1483,14 @@ function redmedAssetURL(file) {
     border: 0;
     background: transparent;
     padding: 0;
-    /* Same grid as owner TabBarItem: icon 26 + gap 2 + label 12 = 40 in 44. */
+    /* Owner TabBarItem: icon 26 + gap 2 + label 12 = 40 in minHeight 44. */
     min-height: 44px;
     height: 44px;
     box-sizing: border-box;
     color: var(--tab-off);
     font-size: 10px;
-    font-weight: 600;
+    /* Owner off label = .medium (500); on = .semibold (600). */
+    font-weight: 500;
     letter-spacing: -0.1px;
     cursor: pointer;
     font-family: inherit;
@@ -1499,23 +1502,25 @@ function redmedAssetURL(file) {
     touch-action: manipulation;
     -webkit-user-select: none;
     user-select: none;
-    transition: color 0.14s ease, transform 0.12s ease;
+    /* Discrete tint like owner `.transaction { $0.animation = nil }`. */
+    transition: none;
   }
-  .tab:active { transform: scale(0.96); }
+  /* Owner RedMedPressStyle(scale: 0.98, animates: false). */
+  .tab:active { transform: scale(0.98); }
   .tab .icon-wrap {
     display: flex;
     align-items: center;
     justify-content: center;
-    /* Square chip — lockstep with owner CustomTabBar 26×26 + chipRadius 8. */
+    /* Owner 26×26 + RedMedChrome.chipRadius 8. */
     width: 26px;
     height: 26px;
     flex: 0 0 26px;
     border-radius: 8px;
     margin: 0;
     line-height: 0;
-    transition: background 0.14s ease;
+    transition: none;
   }
-  /* Match owner CustomTabBar SF Symbols (person.fill / safari.fill / cross.case.fill).
+  /* Match owner SF Symbols (person.fill / safari.fill / cross.case.fill).
      911 SVG uses fill-rule=evenodd so the needle cutout reads as safari.fill. */
   .tab .icon-wrap svg {
     width: 18px;
@@ -1541,11 +1546,13 @@ function redmedAssetURL(file) {
     font-size: 10px;
     font-weight: inherit;
   }
-  .tab.active { color: var(--accent); font-weight: 700; }
+  .tab.active { color: var(--accent); font-weight: 600; }
   .tab.active .icon-wrap {
+    /* Color.redmedAccent.opacity(0.12) */
     background: rgba(225,29,72,0.12);
   }
   .home-pill {
+    /* Owner Capsule 118×4, redmedDark 0.18, padding.top 2 */
     width: 118px;
     height: 4px;
     border-radius: 999px;
