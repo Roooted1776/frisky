@@ -96,6 +96,7 @@ struct ConsentGateView<Content: View>: View {
         biometryFailed = false
         notInteractive = false
         unavailableReason = nil
+        PolicyWebViewPool.discard()
         var t = Transaction()
         t.animation = nil
         withTransaction(t) {
@@ -230,7 +231,15 @@ struct ConsentGateView<Content: View>: View {
             .background(Color.redmedBg)
         }
         .background { RedMedPageBackground() }
-        .sheet(isPresented: $showPolicies) {
+        .onAppear {
+            // Parse Document.html while the ack text is on screen so Policies
+            // opens without a cold WKWebView spin. Discarded on Agree.
+            PolicyWebViewPool.warm()
+        }
+        .sheet(isPresented: $showPolicies, onDismiss: {
+            // Sheet take() emptied the pool — warm again for a second open.
+            PolicyWebViewPool.warm()
+        }) {
             ConsentPolicySheet()
                 .presentationBackground(Color.redmedBg)
         }
@@ -244,6 +253,10 @@ struct ConsentGateView<Content: View>: View {
         RedMedHaptics.success()
         SnapshotSafeCover.shared.reveal()
         showPolicies = false
+        // Drop the policy spare before Face ID / Main — do not keep a
+        // WKWebView alive into the post-Agree path (same race class as the
+        // old Agree-turn passerby shell warm).
+        PolicyWebViewPool.discard()
         didAutoPrompt = false
         showRetry = false
         biometryFailed = false
@@ -351,8 +364,9 @@ private struct ConsentPolicySheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationStack {
-            HelpPolicyPage(showsDoneChrome: true, onDone: { dismiss() })
-        }
+        // No NavigationStack — OwnerModalChrome is the only chrome. Skipping
+        // the stack avoids an extra layout pass before the warmed WKWebView
+        // appears.
+        HelpPolicyPage(showsDoneChrome: true, onDone: { dismiss() })
     }
 }
