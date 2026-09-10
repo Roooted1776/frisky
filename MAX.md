@@ -14,10 +14,15 @@ Working notes. Product invariants live in `AGENTS.md`.
   3. Scheme Run → **Release** / Archive.
   If NoDebug / Without Debugging is fast and normal Debug Run is slow → attach, not Swift.
   Console ColdLaunch: `app.init` → `firstFrame` — if cream sits with **no** ColdLaunch lines yet after Xcode’s “Running…”, lag is still install/attach.
-  Right now consent **4.13** also forces Before You Continue + Face ID once (policy bump) — that is *after* firstFrame, not install lag. Returning cold opens after that Agree still Face ID once over warm Main (not a second Before You Continue).
+  Multi-second `app.init` → `firstFrame` **with** ColdLaunch lines under Debug Run is still usually LLDB stalling MainActor — confirm with NoDebug. Consent **4.14** forces Before You Continue + Face ID once (policy bump) — that is *after* firstFrame, not install lag. Returning cold opens after that Agree still Face ID once over warm Main (not a second Before You Continue).
+- Console noise to ignore (Apple / Simulator, not RedMed bugs):
+  - `PointerUI.pointeruid` non-launching port
+  - `Got a keyboard will change frame notification, but keyboard was not even present`
+  - `Reading from public effective user settings`
 - Face ID test path: **Run Without Debugging** / **RedMed-NoDebug** (debugger attach skews the sheet).
 - Product: Before You Continue = Agree only (covers location + motion while the app is open). Face ID once immediately after Agree (first launch / policy bump / after Erase), then iOS Location Allow once. Returning cold opens skip Before You Continue but Face ID once on cream over warm Main (restore races underneath; no fixed sleep; no background relock). Face ID also on Edit / Save / Erase (+ Load From Band if present). **Not** a second gate after that Face ID to view the YOU card. No `OwnerAppLock` relock. Face ID is UI-only — Keychain is `WhenPasscodeSetThisDeviceOnly` with **no** biometry ACL. Edit field Clear (blood / DOB) only — blank-all Save is not a wipe (points at Erase). Band is the product. Storefront / dept “write from the app” off until Tag Reading + Write The Band on blank NTAG216; until then blank chips + Share honesty only — no Shortcuts write copy.
 
 ## Cold start (shipping)
 
-Returning cold open: Face ID once over warm Main (prefetch/restore already running — do **not** pay a fixed Face ID stagger). Fresh / Erase: Agree (no Face ID on that page) → Face ID → Main. Same-session resume does not re-prompt. Edit / Save / Erase (+ Load From Band) still Face ID.
+Returning cold open: Face ID once over warm Main (prefetch/restore already running — do **not** pay a fixed Face ID stagger). Fresh / Erase / policy bump: Agree (no Face ID on that page) → Face ID → Main. Same-session resume does not re-prompt. Edit / Save / Erase (+ Load From Band) still Face ID.
+Consent-pending path: Keychain MainActor adopt + Document.html WK warm wait until after firstFrame / cream drop so they do not fight the ack paint.
