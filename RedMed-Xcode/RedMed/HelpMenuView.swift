@@ -5,7 +5,7 @@ import UIKit
 /// Bundled owner Help: one HTML file, five in-doc anchors. Offline. No network.
 enum HelpDocument {
     static let bundledFile = "Document"
-    /// Single Help / consent row — opens the combined Policies document.
+    /// Combined Help-menu row title. Before You Continue lists each Policy separately.
     static let combinedTitle = "Policies"
     static let combinedEmoji = "📋"
     static var combinedMarkedTitle: String { "\(combinedEmoji) \(combinedTitle)" }
@@ -430,18 +430,25 @@ struct LocalWebView: UIViewRepresentable {
 }
 
 // MARK: - Policies document (Help push + Before You Continue sheet)
-/// One WebView for the combined Policies document. Chrome title stays Policies.
-/// Opens at document top (letterhead). Pass `startAt` only to deep-link a section.
+/// One WebView for the combined Policies document. Help chrome stays Policies
+/// and opens at document top (letterhead). Before You Continue per-doc links
+/// pass `pageTitle` / `startAt` to deep-link that section.
 struct HelpPolicyPage: View {
     var startAt: HelpDocument.Policy? = nil
     var showsDoneChrome: Bool = false
     var onDone: (() -> Void)? = nil
+    /// Sheet / nav title. Nil → combined Policies (Help). Ack rows pass the section title.
+    var pageTitle: String? = nil
+
+    private var resolvedTitle: String {
+        pageTitle ?? HelpDocument.combinedMarkedTitle
+    }
 
     var body: some View {
         VStack(spacing: 0) {
             if showsDoneChrome {
                 OwnerModalChrome(
-                    title: HelpDocument.combinedMarkedTitle,
+                    title: resolvedTitle,
                     leadingTitle: "Done",
                     leadingAction: { onDone?() }
                 )
@@ -452,7 +459,7 @@ struct HelpPolicyPage: View {
             )
         }
         .background { RedMedPageBackground() }
-        .navigationTitle(HelpDocument.combinedMarkedTitle)
+        .navigationTitle(resolvedTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(showsDoneChrome ? .hidden : .visible, for: .navigationBar)
         .toolbarBackground(Color.redmedBg, for: .navigationBar)
@@ -461,6 +468,7 @@ struct HelpPolicyPage: View {
     }
 }
 
+/// Single combined Policies row (Help menu).
 struct HelpPoliciesRowLabel: View {
     var titleWeight: Font.Weight = .medium
 
@@ -471,6 +479,31 @@ struct HelpPoliciesRowLabel: View {
                 .frame(width: 22, alignment: .center)
                 .accessibilityHidden(true)
             Text(HelpDocument.combinedTitle)
+                .font(.system(size: RedMedChrome.rowFont, weight: titleWeight))
+                .foregroundColor(.redmedDark)
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(.redmedMuted.opacity(0.55))
+        }
+        .padding(.horizontal, RedMedChrome.pagePadX)
+        .padding(.vertical, RedMedChrome.rowVPad)
+        .contentShape(Rectangle())
+    }
+}
+
+/// One policy section row (Before You Continue per-document links).
+struct HelpPolicyRowLabel: View {
+    let policy: HelpDocument.Policy
+    var titleWeight: Font.Weight = .medium
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Text(policy.emoji)
+                .font(.system(size: 17))
+                .frame(width: 22, alignment: .center)
+                .accessibilityHidden(true)
+            Text(policy.title)
                 .font(.system(size: RedMedChrome.rowFont, weight: titleWeight))
                 .foregroundColor(.redmedDark)
             Spacer(minLength: 0)

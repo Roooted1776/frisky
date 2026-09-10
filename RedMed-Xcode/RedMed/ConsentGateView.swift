@@ -49,7 +49,8 @@ struct ConsentGateView<Content: View>: View {
     @State private var notInteractive = false
     @State private var unavailableReason: BiometricAuth.UnavailableReason?
     @State private var checked = false
-    @State private var showPolicies = false
+    /// Which policy section the ack sheet opens — one link per document.
+    @State private var openPolicy: HelpDocument.Policy? = nil
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var profile: ProfileData
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
@@ -88,7 +89,7 @@ struct ConsentGateView<Content: View>: View {
 
     private func returnToAcknowledgment() {
         checked = false
-        showPolicies = false
+        openPolicy = nil
         awaitingPostAgreeFaceID = false
         isAuthenticating = false
         didAutoPrompt = false
@@ -185,16 +186,21 @@ struct ConsentGateView<Content: View>: View {
                     .redmedBox(flatten: false)
 
                     VStack(spacing: 0) {
-                        Button {
-                            RedMedHaptics.light()
-                            showPolicies = true
-                        } label: {
-                            HelpPoliciesRowLabel(titleWeight: .semibold)
+                        ForEach(Array(HelpDocument.Policy.allCases.enumerated()), id: \.element.id) { index, policy in
+                            if index > 0 {
+                                Divider().overlay(Color.redmedDivider)
+                            }
+                            Button {
+                                RedMedHaptics.light()
+                                openPolicy = policy
+                            } label: {
+                                HelpPolicyRowLabel(policy: policy, titleWeight: .semibold)
+                            }
+                            .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
+                            .accessibilityAddTraits(.isButton)
+                            .accessibilityLabel(policy.title)
+                            .accessibilityHint("Opens \(policy.title)")
                         }
-                        .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
-                        .accessibilityAddTraits(.isButton)
-                        .accessibilityLabel(HelpDocument.combinedTitle)
-                        .accessibilityHint("Opens Privacy, Security, Terms, Medical Disclaimer, and Ships When Ready")
                     }
                     .redmedBox(flatten: true)
                 }
@@ -238,17 +244,17 @@ struct ConsentGateView<Content: View>: View {
             // Immediate warm on appear fought LaunchRoot's one-yield cream
             // drop and spawned UIKit "keyboard was not even present" noise
             // from an off-screen WKWebView. Ack reading time is longer than
-            // 500ms — Policies still opens warm. Discarded on Agree.
+            // 500ms — a policy link still opens warm. Discarded on Agree.
             try? await Task.sleep(nanoseconds: 500_000_000)
             guard !Task.isCancelled else { return }
             PolicyWebViewPool.warm()
             RedMedSignpost.coldMark("policy WK warm started")
         }
-        .sheet(isPresented: $showPolicies, onDismiss: {
+        .sheet(item: $openPolicy, onDismiss: {
             // Sheet take() emptied the pool — warm again for a second open.
             PolicyWebViewPool.warm()
-        }) {
-            ConsentPolicySheet()
+        }) { policy in
+            ConsentPolicySheet(policy: policy)
                 .presentationBackground(Color.redmedBg)
         }
     }
@@ -260,7 +266,7 @@ struct ConsentGateView<Content: View>: View {
         ConsentSettings.recordAcceptance()
         RedMedHaptics.success()
         SnapshotSafeCover.shared.reveal()
-        showPolicies = false
+        openPolicy = nil
         // Drop the policy spare before Face ID / Main — do not keep a
         // WKWebView alive into the post-Agree path (same race class as the
         // old Agree-turn passerby shell warm).
@@ -372,12 +378,18 @@ struct ConsentGateView<Content: View>: View {
 }
 
 private struct ConsentPolicySheet: View {
+    let policy: HelpDocument.Policy
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         // No NavigationStack — OwnerModalChrome is the only chrome. Skipping
         // the stack avoids an extra layout pass before the warmed WKWebView
-        // appears.
-        HelpPolicyPage(showsDoneChrome: true, onDone: { dismiss() })
+        // appears. Title matches the ack row that opened this sheet.
+        HelpPolicyPage(
+            startAt: policy,
+            showsDoneChrome: true,
+            onDone: { dismiss() },
+            pageTitle: policy.markedTitle
+        )
     }
 }
