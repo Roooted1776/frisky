@@ -93,14 +93,19 @@ struct ContentView: View {
             await Task.yield()
             try? await Task.sleep(nanoseconds: 400_000_000)
             guard !Task.isCancelled else { return }
+            // ConsentGate Face ID unlock, then live UIApplication active.
             // `.task` captured scenePhase is stale (.inactive for the whole
-            // Face ID sheet). Read UIApplication live.
+            // Face ID sheet).
+            await OwnerSessionGate.waitUntilInteractive()
+            guard !Task.isCancelled, OwnerSessionGate.isInteractive else { return }
             await RedMedMainPace.waitUntilActive()
             guard !Task.isCancelled else { return }
             await Task.yield()
             RedMedHaptics.prepare()
             startCrashMonitorIfOwner()
-            // Spare full (non-embed) WKWebView for first NFC Preview / Scan.
+            // Spare full (non-embed) WKWebView for first NFC Preview / Scan —
+            // only after unlock; never during Face ID.
+            guard !isScannerSession else { return }
             PasserbyWebViewPool.warmFullShell()
             RedMedSignpost.coldMark("post-interactive warm (haptics/motion/WK)")
             // Next-screen catalogs so first Aid topic / Edit keystroke is ready.
@@ -123,6 +128,8 @@ struct ContentView: View {
             case .active:
                 // Do not outrun Keychain restore on cold open.
                 guard !profile.isRestoringFromKeychain else { return }
+                // Face ID cream arms Main early — wait for unlock.
+                guard OwnerSessionGate.isInteractive else { return }
                 startCrashMonitorIfOwner()
             case .background:
                 // No motion background mode — CoreMotion is useless when

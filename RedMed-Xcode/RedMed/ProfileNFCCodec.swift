@@ -236,7 +236,7 @@ enum ProfileNFCCodec {
         guard JSONSerialization.isValidJSONObject(obj),
               let data = try? JSONSerialization.data(withJSONObject: obj, options: []),
               let json = String(data: data, encoding: .utf8) else { return nil }
-        // Safe to splice into a <script> (WKWebView loadHTMLString). Raw
+        // Safe to splice into a <script> (WKWebView staged loadFileURL). Raw
         // JSONSerialization does not escape `<`, so a field containing
         // `</script>` would break out of the boot script.
         return json
