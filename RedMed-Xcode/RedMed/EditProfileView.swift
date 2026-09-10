@@ -34,6 +34,8 @@ struct EditProfileView: View {
     @State private var suggestionMatches: [String] = []
     @State private var healthImportBusy = false
     @State private var healthImportMessage: String?
+    /// Autocomplete catalogs stay off-main until warm finishes.
+    @State private var catalogsReady = false
 
     private static let bloodTypeChoices = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
     /// Capped so this iPhone and the NTAG216 hold the same note (`MAX_STR` 200).
@@ -158,6 +160,7 @@ struct EditProfileView: View {
                             placeholder: "Allergy",
                             addLabel: "Add Allergy",
                             onTextChange: { id, text in
+                                guard catalogsReady else { return }
                                 refreshSuggestions(lineID: id, text: text, lines: allergies, catalog: SuggestionCatalog.allergies)
                             }
                         )
@@ -171,6 +174,7 @@ struct EditProfileView: View {
                             placeholder: "Medicine",
                             addLabel: "Add Medicine",
                             onTextChange: { id, text in
+                                guard catalogsReady else { return }
                                 refreshSuggestions(lineID: id, text: text, lines: medications, catalog: SuggestionCatalog.medications)
                             }
                         )
@@ -184,6 +188,7 @@ struct EditProfileView: View {
                             placeholder: "Condition",
                             addLabel: "Add Condition",
                             onTextChange: { id, text in
+                                guard catalogsReady else { return }
                                 refreshSuggestions(lineID: id, text: text, lines: conditions, catalog: SuggestionCatalog.conditions)
                             }
                         )
@@ -215,7 +220,11 @@ struct EditProfileView: View {
         .privacySensitive()
         .onAppear {
             loadDraft()
-            SuggestionCatalog.warmUp()
+        }
+        .task {
+            await SuggestionCatalog.warmUp()
+            guard !Task.isCancelled else { return }
+            catalogsReady = true
         }
         .alert(BiometricAuth.deniedAlertTitle, isPresented: $showAuthFailedAlert) {
             Button("OK", role: .cancel) {}
