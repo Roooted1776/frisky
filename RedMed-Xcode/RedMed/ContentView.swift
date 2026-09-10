@@ -96,6 +96,11 @@ struct ContentView: View {
             if scenePhase == .active {
                 startCrashMonitorIfOwner()
             }
+            // Spare full (non-embed) WKWebView for first NFC Preview / Scan —
+            // string warm alone still leaves WebKit cold on that tap.
+            // Never during Face ID; only after YOU has painted.
+            guard !isScannerSession else { return }
+            PasserbyWebViewPool.warmFullShell()
         }
         .onAppear {
             mountedTabs.insert(activeTab)

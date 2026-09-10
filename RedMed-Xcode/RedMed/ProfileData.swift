@@ -837,13 +837,29 @@ struct AidTopic {
 
 /// Lazy bag so Aid strings are not built until Roadside Aid is opened.
 enum AidTopicCatalog {
-    static let topics: [String: AidTopic] = _makeTopics()
+    private static let lock = NSLock()
+    private static var cached: [String: AidTopic]?
 
-    /// Prefetch off the main thread after Aid's first paint.
-    static func warmUp() {
-        DispatchQueue.global(qos: .userInitiated).async {
+    /// Thread-safe read — builds once. Prefer `warmUp()` off-main first so a
+    /// fast topic tap does not pay `_makeTopics()` on the main thread.
+    static var topics: [String: AidTopic] {
+        lock.lock()
+        if let cached { lock.unlock(); return cached }
+        lock.unlock()
+        let built = _makeTopics()
+        lock.lock()
+        if let cached { lock.unlock(); return cached }
+        cached = built
+        lock.unlock()
+        return built
+    }
+
+    /// Prefetch off the main thread after Aid's first paint. Await so the
+    /// Aid UI can gate topic opens until the catalog is ready.
+    static func warmUp() async {
+        await Task.detached(priority: .userInitiated) {
             _ = topics
-        }
+        }.value
     }
 
     private static func _makeTopics() -> [String: AidTopic] {

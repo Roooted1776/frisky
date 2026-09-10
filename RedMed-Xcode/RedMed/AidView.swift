@@ -50,6 +50,8 @@ struct AidView: View {
     @Environment(\.isScannerSession) private var isScannerSession
     @State private var openPane: String? = nil
     @State private var activeTopic: AidTopic? = nil
+    /// Topic bodies stay off-main until warm finishes — taps wait on this.
+    @State private var topicsReady = false
 
     var body: some View {
         // Full-width accordion — life-saving: big targets, text always fits, no
@@ -72,7 +74,9 @@ struct AidView: View {
                                     withTransaction(t) {
                                         openPane = isOpen ? nil : pane.id
                                     }
-                                } else if let k = key, let topic = AidTopicCatalog.topics[k] {
+                                } else if let k = key {
+                                    guard topicsReady,
+                                          let topic = AidTopicCatalog.topics[k] else { return }
                                     RedMedHaptics.light()
                                     activeTopic = topic
                                 }
@@ -124,7 +128,9 @@ struct AidView: View {
         }
         .task {
             await Task.yield()
-            AidTopicCatalog.warmUp()
+            await AidTopicCatalog.warmUp()
+            guard !Task.isCancelled else { return }
+            topicsReady = true
             #if DEBUG
             AidPaneCatalog.assertTopicCoverage()
             #endif
