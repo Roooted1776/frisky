@@ -18,20 +18,16 @@ unavailable, write fails and the band is not marked linked.
 (`writeVerified`), or after owner **Load From Band** persist()s the chip.
 Written-but-unverified stays Not linked.
 
-## Currently parked (in-repo)
+## Currently restored (in-repo)
 
-`AppConfig.nfcHardwareEnabled = false`,
-`RedMed.entitlements` is a bare empty `<dict></dict>` (no NFC key), and
-`Info.plist` has no `NFCReaderUsageDescription`. Owner NFC tab stays
-visible. Write is pack-only + Share Band URL; Preview stays. **Load From
-Band UI is hidden** while parked (gate logic still correct for restore).
-Real `NFCNDEFReaderSession` is parked until paid Program + **NFC Tag
-Reading** on App ID `com.redmed.app`. Keep flag, entitlement, and usage
-string in lockstep when restoring.
-
-Automatic Signing no longer needs NFC on the App ID. Free / personal
-teams can device-build. Portal + Xcode capability are not git; see Restore
-below when a paid team can provision Tag Reading.
+`AppConfig.nfcHardwareEnabled = true`,
+`RedMed.entitlements` has `com.apple.developer.nfc.readersession.formats`
+→ `TAG`, and `Info.plist` has `NFCReaderUsageDescription` (Write + Load
+From Band copy below). Owner NFC tab stays visible with Write, Preview,
+and **Load From Band**. Real `NFCNDEFReaderSession` still needs paid
+Program + **NFC Tag Reading** on App ID `com.redmed.app` (portal + Xcode
+capability are not git). Keep flag, entitlement, and usage string in
+lockstep if parking again.
 
 **Do not hide the owner NFC tab** — owners always get RedMed · 911 · Aid ·
 NFC; scanners never get NFC. The flag only gates CoreNFC sessions and the
@@ -89,16 +85,16 @@ not persist.
 
 ## Restore (paid Program + device)
 
-In-repo flag, entitlement, and usage string are parked. Do all of these
-after a paid Program can provision NFC Tag Reading:
+In-repo flag, entitlement, and usage string are restored. Still do portal +
+Xcode + device after a paid Program can provision NFC Tag Reading:
 
-1. Set `AppConfig.nfcHardwareEnabled = true`
-2. Put `com.apple.developer.nfc.readersession.formats` → `TAG` back in
-   `RedMed.entitlements` (do not use `NDEF`; Apple disallows it and Xcode
+1. `AppConfig.nfcHardwareEnabled = true` (done)
+2. `com.apple.developer.nfc.readersession.formats` → `TAG` in
+   `RedMed.entitlements` (done; do not use `NDEF`; Apple disallows it and Xcode
    rewrites the file during the build)
 3. Developer portal → App ID `com.redmed.app` → enable **NFC Tag Reading**
 4. Xcode → Signing & Capabilities → **Near Field Communication Tag Reading**
-5. Add `NFCReaderUsageDescription` to `Info.plist`:
+5. `NFCReaderUsageDescription` in `Info.plist` (done):
    `RedMed writes your medical ID onto your NFC bracelet and can load a written band into this iPhone. Tag reading starts only when you tap Write or Load From Band.`
 6. Device test on **verified blank NTAG216** stock: Write → second phone Safari
    tap → emergency card. Linked only if read-back matches.
@@ -112,6 +108,7 @@ Linear RED-19.
 ## Park again (optional)
 
 1. Set `AppConfig.nfcHardwareEnabled = false`
-2. Set `RedMed.entitlements` to a bare `<dict/>` (no NFC key, no XML comments)
+2. Remove only `com.apple.developer.nfc.readersession.formats` from
+   `RedMed.entitlements` (leave any other keys, e.g. future `applinks:`)
 3. Remove `NFCReaderUsageDescription` from `Info.plist`
 4. Keep the CoreNFC source files
