@@ -115,6 +115,8 @@ struct SectionLabel: View {
 
 struct PrimaryButton: View {
     let title: String
+    /// Optional one-line under the title (NFC Pack / Write subtitles).
+    var detail: String? = nil
     var systemImage: String? = nil
     var busy: Bool = false
     var disabled: Bool = false
@@ -134,22 +136,32 @@ struct PrimaryButton: View {
         .disabled(disabled || busy)
         .opacity(busy ? 0.72 : (disabled ? RedMedChrome.disabledOpacity : 1))
         .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(detail.map { "\(title). \($0)" } ?? title)
     }
 
     @ViewBuilder
     private var primaryLabel: some View {
-        let core = HStack(spacing: 8) {
-            if busy {
-                ProgressView().tint(.white)
-            } else if let systemImage {
-                Image(systemName: systemImage)
+        let core = VStack(spacing: 4) {
+            HStack(spacing: 8) {
+                if busy {
+                    ProgressView().tint(.white)
+                } else if let systemImage {
+                    Image(systemName: systemImage)
+                }
+                Text(title)
             }
-            Text(title)
+            .font(.system(size: 16, weight: .bold))
+            if let detail, !busy {
+                Text(detail)
+                    .font(.system(size: 12, weight: .medium))
+                    .multilineTextAlignment(.center)
+                    .opacity(0.92)
+            }
         }
-        .font(.system(size: 16, weight: .bold))
         .foregroundColor(.white)
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 15)
+        .padding(.vertical, detail == nil || busy ? 15 : 13)
+        .padding(.horizontal, 12)
         .background(
             LinearGradient(
                 colors: [.redmedAccentLift, .redmedAccent],

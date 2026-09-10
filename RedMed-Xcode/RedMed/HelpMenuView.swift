@@ -385,7 +385,7 @@ struct HelpMenuView: View {
                                             .font(.system(size: 17))
                                             .frame(width: 22, alignment: .center)
                                             .accessibilityHidden(true)
-                                        Text("Write The Band")
+                                        Text(AppConfig.nfcHardwareEnabled ? "Write The Band" : "Pack Band URL")
                                             .font(.system(size: Metrics.font, weight: .medium))
                                             .foregroundColor(.redmedDark)
                                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -395,7 +395,7 @@ struct HelpMenuView: View {
                                     .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
-                                .accessibilityLabel("Write The Band")
+                                .accessibilityLabel(AppConfig.nfcHardwareEnabled ? "Write The Band" : "Pack Band URL")
                             }
                         }
 

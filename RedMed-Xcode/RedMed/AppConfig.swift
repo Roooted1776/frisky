@@ -106,9 +106,9 @@ enum AppConfig {
     /// `medicalCardBaseURL#d=` (`OwnerBandURI`). Requires NFC Tag Reading on App ID
     /// `com.redmed.app` + paid Apple Developer — see `docs/NFC-RESTORE.md`.
     /// Keep this flag in lockstep with `RedMed.entitlements` + `NFCReaderUsageDescription`.
-    /// `false` parks hardware sessions (pack-only Write + Share Band URL +
-    /// Preview; Load From Band button hidden). Gate logic stays correct for
-    /// restore — see `docs/NFC-RESTORE.md`.
+    /// `false` parks hardware sessions (Pack Band URL + Share Band URL +
+    /// Preview; no Write label; Load From Band button hidden). Gate logic
+    /// stays correct for restore — see `docs/NFC-RESTORE.md`.
     static let nfcHardwareEnabled = true
 
     /// `true` = `RedMed.entitlements` includes `applinks:` so a phone with RedMed
@@ -247,11 +247,16 @@ enum AppConfig {
             "Walk-by distance will not fire the band; only a deliberate \(intentionalTapRangeLabel) antenna tap opens the card."
         }
 
+        /// NFC tab tip under Pack / Write — always the same hold-top line.
+        static var holdTopOfPhoneTip: String {
+            "Hold the top of your iPhone to the chip, about \(intentionalTapInchesMin)–\(intentionalTapInchesMax) inches."
+        }
+
         /// Alias for NFC / sourcing copy — band is never a BLE device.
         static var noBluetoothSummary: String { carrierVsBluetoothSummary }
 
         static var hardwareParkedSummary: String {
-            "CoreNFC write is parked until NFC Tag Reading is provisioned on a paid Apple Developer team. Share Band URL and Preview pack the same #d= Write will use — they do not write the chip and do not mark Linked. No blank-band sales while parked. The band comes complete — just the chip, no battery."
+            "CoreNFC write is parked until NFC Tag Reading is provisioned on a paid Apple Developer team. Pack Band URL, Share Band URL, and Preview pack the same #d= Write will use — they do not write the chip and do not mark Linked. No blank-band sales while parked. The band comes complete — just the chip, no battery."
         }
     }
 

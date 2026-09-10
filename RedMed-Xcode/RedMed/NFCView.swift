@@ -1,15 +1,11 @@
 // Owner-only NFC bracelet setup. Ped/EMS scanner shells never mount this tab —
 // see ContentView.showsNFC / scannerSafeTab.
-// One page: Write + Preview + Load From Band.
-// When `AppConfig.nfcHardwareEnabled` is true, Write starts a CoreNFC
-// NDEF session and programs `medicalCardBaseURL#d=` from the live profile.
-// Preview packs the live profile into the same tapper card helpers get.
-// Load From Band reads `#d=` off the chip, Face IDs, then persist()s into
-// owner Keychain (empty funnel restore). Scanners never.
-// Linked after write + matching read-back, or after a successful Load.
-// Parked (`false`): pack-only Write status + Share Band URL + Preview
-// (never flips Linked; Load is hidden).
+// Live (`nfcHardwareEnabled`): Write The Band + Preview + Load From Band.
+// Parked: Pack Band URL + Share Band URL + Preview — no Write label, no
+// silent pack-as-Write, Load hidden. Linked only after real write + matching
+// read-back, or after a successful Load.
 import SwiftUI
+import UIKit
 
 struct NFCView: View {
     @EnvironmentObject var profile: ProfileData
@@ -21,11 +17,12 @@ struct NFCView: View {
     /// Owned by ContentView so the NFC tab tap can begin write on the same gesture.
     @ObservedObject var band: NFCBandManager
     @State private var previewSession: PreviewSession?
-    /// Parked CoreNFC: packed `medicalCardBaseURL#d=` for Share Band URL only
+    /// Parked CoreNFC: packed `medicalCardBaseURL#d=` for Pack / Share only
     /// (pack/export — not a chip write, not a blank-band sell path).
     /// Nil until pack finishes; never used to flip Linked.
     @State private var parkedBandURL: String?
     @State private var parkedPackNote: String = ""
+    @State private var isPackingURL = false
     @State private var pendingLoadChip: NFCChipProfile?
     @State private var showLoadOverwriteConfirm = false
     @State private var showLoadAuthFailedAlert = false
@@ -135,12 +132,15 @@ struct NFCView: View {
 
     private var linkStatus: (title: String, detail: String, linked: Bool) {
         if profile.showsBraceletAsLinked {
-            return ("Linked Bracelet", "Re-write after you edit RedMed", true)
+            return ("Linked", "Anyone can tap this band to open your card.", true)
         }
         if profile.braceletLinked {
             return ("Band Written", "Finish name, birth date, and blood type on RedMed", false)
         }
-        return ("Not Linked", "Write once to set up the bracelet", false)
+        if AppConfig.nfcHardwareEnabled {
+            return ("Not Linked", "Write once to set up the bracelet", false)
+        }
+        return ("Not Linked", "Pack Band URL until Tag Reading is live", false)
     }
 
     /// Obvious done state once write + read-back linked the band.
@@ -150,10 +150,10 @@ struct NFCView: View {
                 .font(.system(size: 44, weight: .semibold))
                 .foregroundColor(.redmedAccent)
                 .accessibilityHidden(true)
-            Text("Setup Complete")
+            Text("Linked")
                 .font(.system(size: 22, weight: .bold))
                 .foregroundColor(.redmedDark)
-            Text("Bracelet linked. Helpers see your card on a tap.")
+            Text("Anyone can tap this band to open your card.")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.redmedMuted)
                 .multilineTextAlignment(.center)
@@ -167,7 +167,7 @@ struct NFCView: View {
         .padding(.vertical, 22)
         .redmedBox()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Setup complete. Bracelet linked. Helpers see your card on a tap. Re-write after you edit RedMed.")
+        .accessibilityLabel("Linked. Anyone can tap this band to open your card. Re-write after you edit RedMed.")
     }
 
     private var factsCard: some View {
@@ -224,25 +224,41 @@ struct NFCView: View {
         VStack(alignment: .leading, spacing: 14) {
             SectionLabel(text: "Set Up")
 
-            PrimaryButton(
-                title: writeButtonTitle,
-                systemImage: band.isWriting ? nil : "wave.3.right",
-                busy: band.isWriting,
-                disabled: !profile.hasSensitiveProfileData || band.isBusy,
-                flatten: false
-            ) {
-                band.writeBand(from: profile, isScannerSession: isScannerSession)
+            if AppConfig.nfcHardwareEnabled {
+                PrimaryButton(
+                    title: writeButtonTitle,
+                    detail: band.isWriting ? nil : "Save your medical ID to this band",
+                    systemImage: band.isWriting ? nil : "wave.3.right",
+                    busy: band.isWriting,
+                    disabled: !profile.hasSensitiveProfileData || band.isBusy,
+                    flatten: false
+                ) {
+                    band.writeBand(from: profile, isScannerSession: isScannerSession)
+                }
+            } else {
+                PrimaryButton(
+                    title: packButtonTitle,
+                    detail: isPackingURL ? nil : "Copy the link your band will open",
+                    systemImage: isPackingURL ? nil : "link",
+                    busy: isPackingURL,
+                    disabled: !profile.hasSensitiveProfileData || band.isBusy || isPackingURL,
+                    flatten: false
+                ) {
+                    packBandURLToClipboard()
+                }
             }
 
-            OutlineButton(
-                title: "Preview",
-                systemImage: "eye",
-                disabled: !profile.hasSensitiveProfileData || band.isBusy || previewSession != nil
-            ) {
-                openFirstResponderPreview()
-            }
+            tipRow(AppConfig.BraceletRF.holdTopOfPhoneTip)
 
             if AppConfig.nfcHardwareEnabled {
+                OutlineButton(
+                    title: "Preview",
+                    systemImage: "eye",
+                    disabled: !profile.hasSensitiveProfileData || band.isBusy || previewSession != nil
+                ) {
+                    openFirstResponderPreview()
+                }
+
                 OutlineButton(
                     title: band.isReading ? "Hold Near The Band…" : "Load From Band",
                     systemImage: band.isReading ? nil : "arrow.down.to.line",
@@ -253,17 +269,24 @@ struct NFCView: View {
                 }
                 .accessibilityLabel("Load From Band")
                 .accessibilityHint("Reads the bracelet into this iPhone. Face ID required. Replaces the RedMed ID here.")
-            }
-
-            if !AppConfig.nfcHardwareEnabled {
+            } else {
+                // Parked secondary: Share Band URL · Preview (no Write, no Load).
                 parkedShareControl
+
+                OutlineButton(
+                    title: "Preview",
+                    systemImage: "eye",
+                    disabled: !profile.hasSensitiveProfileData || band.isBusy || previewSession != nil
+                ) {
+                    openFirstResponderPreview()
+                }
             }
 
             if !profile.hasSensitiveProfileData {
                 Text(
                     AppConfig.nfcHardwareEnabled
                         ? "Fill RedMed before writing or previewing. Load From Band reads a written bracelet into this iPhone."
-                        : "Fill RedMed before writing or previewing the band."
+                        : "Fill RedMed before packing, sharing, or previewing the band URL."
                 )
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.redmedAccent)
@@ -282,22 +305,6 @@ struct NFCView: View {
                     .foregroundColor(.redmedAccent)
                     .fixedSize(horizontal: false, vertical: true)
             }
-
-            VStack(alignment: .leading, spacing: 8) {
-                if AppConfig.nfcHardwareEnabled {
-                    tipRow("Open NFC (or tap Write) — then hold the band to the top of the phone \(AppConfig.BraceletRF.intentionalTapRangeLabel).")
-                    tipRow(AppConfig.BraceletRF.completeBandSummary)
-                    tipRow("Write packs #d= onto the chip only — never a vendor cloud or social/short link.")
-                    tipRow("Preview: same HTML card helpers get — quick, no login, no server, no app.")
-                    tipRow("Load From Band reads #d= into this iPhone (Face ID). Replaces RedMed here.")
-                    tipRow("Linked after write + matching read-back, or after Load From Band.")
-                } else {
-                    tipRow(AppConfig.BraceletRF.completeBandSummary)
-                    tipRow(AppConfig.BraceletRF.hardwareParkedSummary)
-                    tipRow("Preview is the same HTML a helper sees. No blank-band sales until Tag Reading is live.")
-                }
-            }
-            .padding(.top, 2)
         }
         .padding(16)
         .redmedBox()
@@ -323,8 +330,8 @@ struct NFCView: View {
                         .strokeBorder(Color.redmedAccent.opacity(0.45), lineWidth: 1.5)
                 )
             }
-            .disabled(band.isBusy)
-            .opacity(band.isBusy ? 0.72 : 1)
+            .disabled(band.isBusy || isPackingURL)
+            .opacity(band.isBusy || isPackingURL ? 0.72 : 1)
             .accessibilityLabel("Share Band URL")
             .accessibilityHint("Packs the same #d= URL CoreNFC Write will put on the chip when Tag Reading is restored. Does not write the band and does not mark Linked.")
         }
@@ -352,6 +359,34 @@ struct NFCView: View {
         }
         parkedPackNote = ""
         parkedBandURL = packed
+    }
+
+    /// Parked primary: pack `#d=` and copy — never a fake Write.
+    private func packBandURLToClipboard() {
+        guard !AppConfig.nfcHardwareEnabled else { return }
+        guard !isScannerSession, profile.hasSensitiveProfileData, !isPackingURL, !band.isBusy else { return }
+        isPackingURL = true
+        parkedPackNote = ""
+        let chip = ProfileNFCCodec.chipProfile(from: profile)
+        Task { @MainActor in
+            let packed = await Task.detached(priority: .userInitiated) {
+                ProfileNFCCodec.buildURLString(chip: chip)
+            }.value
+            isPackingURL = false
+            guard let packed, AppConfig.OwnerBandURI.isValidWriteURL(packed) else {
+                parkedBandURL = nil
+                parkedPackNote = "Couldn't pack a RedMed #d= URL."
+                return
+            }
+            if packed.utf8.count > 850 {
+                parkedBandURL = nil
+                parkedPackNote = "\(packed.utf8.count) bytes — too large for NXP NTAG216. Shorten RedMed."
+                return
+            }
+            parkedBandURL = packed
+            UIPasteboard.general.string = packed
+            parkedPackNote = "Copied. Use Share Band URL or Preview next."
+        }
     }
 
     private func openFirstResponderPreview() {
@@ -416,7 +451,7 @@ struct NFCView: View {
                 switch outcome {
                 case .success:
                     if profile.setBraceletPaired(true) {
-                        band.statusMessage = "This band matches RedMed. Linked."
+                        band.statusMessage = NFCBandManager.writeLinkedStatus
                     } else {
                         band.alertMessage = "Couldn't save the linked status. Try again."
                     }
@@ -458,11 +493,11 @@ struct NFCView: View {
     }
 
     private var writeButtonTitle: String {
-        if band.isWriting {
-            return AppConfig.nfcHardwareEnabled ? "Hold Near The Band…" : "Packing…"
-        }
-        // Parked Write packs only — Preview is the single helper-card button.
-        return AppConfig.nfcHardwareEnabled ? "Write The Band" : "Pack Band URL"
+        band.isWriting ? "Hold Near The Band…" : "Write The Band"
+    }
+
+    private var packButtonTitle: String {
+        isPackingURL ? "Packing…" : "Pack Band URL"
     }
 
     private var statusIsError: Bool {
@@ -470,7 +505,7 @@ struct NFCView: View {
         if msg.contains("Couldn't") || msg.contains("failed") || msg.contains("Failed") {
             return true
         }
-        if msg.hasPrefix("Loaded") || msg.hasPrefix("This band matches") {
+        if msg.hasPrefix("Loaded") || msg.hasPrefix("This band matches") || msg.hasPrefix("Linked") {
             return false
         }
         return !band.writeSucceeded && !msg.isEmpty && !band.isWriting && !band.isReading

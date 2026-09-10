@@ -179,10 +179,10 @@ struct RedMedView: View {
         } else if !profile.showsBraceletAsLinked {
             OwnerNextStepBanner(
                 icon: "wave.3.right",
-                title: AppConfig.nfcHardwareEnabled ? "Write Your Band" : "Preview The Helper Card",
+                title: AppConfig.nfcHardwareEnabled ? "Write Your Band" : "Pack Band URL",
                 detail: AppConfig.nfcHardwareEnabled
                     ? "Write the band on the NFC tab so a passerby tap opens this card."
-                    : "Band write is preview-only in this build. Open NFC to see what helpers would see.",
+                    : "Open NFC to Pack Band URL, Share, or Preview. Live Write ships when Tag Reading is on.",
                 actionTitle: "NFC",
                 action: {
                     NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
@@ -640,7 +640,7 @@ private struct OwnerSetupFunnel: View {
             Divider().overlay(Color.redmedDivider).padding(.leading, 54)
             stepRow(number: "2", title: "Save", detail: "Face ID writes it to this iPhone's Keychain. This device only — not iCloud, not a US-state account.")
             Divider().overlay(Color.redmedDivider).padding(.leading, 54)
-            stepRow(number: "3", title: AppConfig.nfcHardwareEnabled ? "Write The Band" : "Preview The Helper Card", detail: AppConfig.nfcHardwareEnabled ? "NFC tab writes the same ID onto the chip. \(AppConfig.BraceletRF.completeBandSummary) Helpers tap. No app, no login." : "NFC tab packs the same ID for Preview. Live band write ships when NFC Tag Reading is on the App ID. \(AppConfig.BraceletRF.completeBandSummary)")
+            stepRow(number: "3", title: AppConfig.nfcHardwareEnabled ? "Write The Band" : "Pack Band URL", detail: AppConfig.nfcHardwareEnabled ? "NFC tab writes the same ID onto the chip. \(AppConfig.BraceletRF.completeBandSummary) Helpers tap. No app, no login." : "NFC tab packs the same #d= link (Pack / Share / Preview). Live Write ships when Tag Reading is on the App ID. \(AppConfig.BraceletRF.completeBandSummary)")
         }
         .redmedBox()
     }

@@ -16,9 +16,10 @@ Write is proven — see `docs/NFC-RESTORE.md`. **Associated Domains is parked**
 so Automatic Signing works on a personal/free team for that capability. Safari
 still tries `redmed://band#d=` before SOS. Restore Associated Domains after
 paid Program — see `docs/associated-domains-restore.md`. The owner NFC tab
-stays visible with Write, Preview, and Load From Band when hardware is on.
-`medicalCardBaseURL#d=` is unchanged. Linked only after write + matching
-read-back. Do not spend PRs on tab chrome or copy.
+stays visible: live = Write The Band + Preview + Load From Band; parked =
+Pack Band URL + Share Band URL + Preview (no Write label, no silent
+pack-as-Write). `medicalCardBaseURL#d=` is unchanged. Linked only after write
++ matching read-back. Do not spend PRs on tab chrome beyond that contract.
 
 This repository is a **native iOS/SwiftUI app** (RedMed), located under `RedMed-Xcode/`. It
 builds and runs **only on macOS with Xcode 15+** (prefer Xcode 27 / iOS 27.0 Simulator) and an

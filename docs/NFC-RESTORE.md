@@ -9,42 +9,46 @@ NDEF empty at factory. No pre-encode, no lock. Not NTAG213, MIFARE, LF, or UHF.
 Owner **Write** on the NFC tab programs the chip; locked or non-NDEF tags are
 rejected with a clear error. Face art is logo-print RedMed heart + wordmark on black `#232425` (30×9 mm) — not laser MED ID.
 
-When hardware is off (`AppConfig.nfcHardwareEnabled = false`), `NFCBandManager`
-still simulates Write/Scan by packing the compact `tapper.html#d=` URL. Real
-CoreNFC has **no** Simulator fake-success: if hardware is enabled and NFC is
-unavailable, write fails and the band is not marked linked.
+When hardware is off (`AppConfig.nfcHardwareEnabled = false`), the NFC tab
+uses **Pack Band URL** (clipboard) + **Share Band URL** + **Preview** — no
+Write label, no silent pack-as-Write. `writeBand` refuses while parked.
+Real CoreNFC has **no** Simulator fake-success: if hardware is enabled and NFC
+is unavailable, write fails and the band is not marked linked.
 
 **Linked** after a real CoreNFC write **and** matching read-back
 (`writeVerified`), or after owner **Load From Band** persist()s the chip.
-Written-but-unverified stays Not linked.
+Written-but-unverified stays Not linked. Success copy: Linked — anyone can
+tap. Fail copy: Couldn’t write — hold the top of the phone still.
 
 ## Currently restored (in-repo)
 
 `AppConfig.nfcHardwareEnabled = true`,
 `RedMed.entitlements` has `com.apple.developer.nfc.readersession.formats`
 → `TAG`, and `Info.plist` has `NFCReaderUsageDescription` (Write + Load
-From Band copy below). Owner NFC tab stays visible with Write, Preview,
-and **Load From Band**. Real `NFCNDEFReaderSession` still needs paid
-Program + **NFC Tag Reading** on App ID `com.redmed.app` (portal + Xcode
-capability are not git). Keep flag, entitlement, and usage string in
-lockstep if parking again.
+From Band copy below). Owner NFC tab stays visible with **Write The Band**
+(primary) + **Preview** + **Load From Band** — Share Band URL dropped while
+live. Tip under primary: hold the top of the iPhone to the chip ~1–2″. Real
+`NFCNDEFReaderSession` still needs paid Program + **NFC Tag Reading** on App
+ID `com.redmed.app` (portal + Xcode capability are not git). Keep flag,
+entitlement, and usage string in lockstep if parking again.
 
 **Do not hide the owner NFC tab** — owners always get RedMed · 911 · Aid ·
 NFC; scanners never get NFC. The flag only gates CoreNFC sessions and the
-Load From Band button (pack-only Write + Share Band URL + Preview when
-parked). Linked after a real write + matching read-back, or Load From Band.
+Load From Band button (Pack Band URL + Share Band URL + Preview when
+parked — no Write label). Linked after a real write + matching read-back, or
+Load From Band.
 
 **While parked — no blank-band sell copy.** Do not advertise or sell unwritten
 NTAG216 stock, and do not tell owners to program the chip with Shortcuts /
-NFC Tools. Share Band URL packs the same `#d=` Write would use; it does not
-write the chip and does not mark Linked. Factory “NDEF blank unlocked” is
+NFC Tools. Pack / Share Band URL pack the same `#d=` Write would use; they do
+not write the chip and do not mark Linked. Factory “NDEF blank unlocked” is
 procurement only. Band sales wait on Tag Reading restore + proven owner Write.
 
-When hardware is on, owner NFC keeps **Write**, **Preview**, and **Load From
-Band** on one screen. Load path: read chip → empty-band alert / match→link /
-mismatch+existing→Replace confirm / empty funnel→adopt. Face ID
-(`force: true`) before link and adopt. Write stays ungated. Preview does
-not persist.
+When hardware is on, owner NFC keeps **Write The Band**, **Preview**, and
+**Load From Band** on one screen (no Share). Load path: read chip → empty-band
+alert / match→link / mismatch+existing→Replace confirm / empty funnel→adopt.
+Face ID (`force: true`) before link and adopt. Write stays ungated. Preview
+does not persist.
 
 ## RF / hardware contract
 

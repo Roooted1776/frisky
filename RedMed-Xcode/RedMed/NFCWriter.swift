@@ -195,18 +195,17 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                     }
                     tag.writeNDEF(message) { error in
                         if let error {
-                            let capHint = capacity > 0 ? " Tag capacity: \(capacity) bytes." : ""
-                            session.invalidate(errorMessage: "Write failed: \(error.localizedDescription).\(capHint)")
+                            session.invalidate(errorMessage: NFCBandManager.writeFailedStatus)
                             return
                         }
 
                         tag.readNDEF { readMessage, readError in
                             if let readError {
-                                session.alertMessage = "Written — couldn't verify read-back. Test with another phone."
+                                session.alertMessage = "Couldn't write. Hold the top of the phone still, then try again."
                                 self?.finishWrite(
                                     success: true,
                                     verified: false,
-                                    status: "Tag written. Verification skipped: \(readError.localizedDescription)",
+                                    status: NFCBandManager.writeFailedStatus,
                                     thenInvalidate: session
                                 )
                                 return
@@ -215,14 +214,14 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                             let written = readMessage?.records.first.flatMap { NFCURICodec.string(from: $0) }
                             let ok = written.map { NFCURICodec.match($0, urlString) } ?? false
                             session.alertMessage = ok
-                                ? "Success! Bracelet programmed and verified."
-                                : "Written, but read-back didn't match. Test with another phone."
+                                ? "Linked. Anyone can tap this band to open your card."
+                                : "Couldn't write. Hold the top of the phone still, then try again."
                             self?.finishWrite(
                                 success: true,
                                 verified: ok,
                                 status: ok
-                                    ? "Bracelet programmed and verified. Other phones can tap it; payment terminals cannot."
-                                    : "Written, but verification failed — try writing again.",
+                                    ? NFCBandManager.writeLinkedStatus
+                                    : NFCBandManager.writeFailedStatus,
                                 thenInvalidate: session
                             )
                         }
@@ -263,7 +262,16 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                readerError.code == .readerSessionInvalidationErrorUserCanceled {
                 self.statusMessage = "Cancelled."
             } else if !self.success {
-                self.statusMessage = error.localizedDescription
+                let desc = error.localizedDescription
+                let keepSpecific = desc.contains("locked")
+                    || desc.contains("read-only")
+                    || desc.contains("only holds")
+                    || desc.contains("Shorten")
+                    || desc.hasPrefix("Band write")
+                    || desc.hasPrefix("Couldn't build")
+                    || desc.contains("Unrecognized")
+                    || desc == NFCBandManager.writeFailedStatus
+                self.statusMessage = keepSpecific ? desc : NFCBandManager.writeFailedStatus
             }
         }
     }

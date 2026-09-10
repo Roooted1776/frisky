@@ -28,6 +28,13 @@ final class NFCBandManager: ObservableObject {
     @Published var scannedCard: ScannedCardSession?
     @Published var alertMessage: String?
 
+    /// After a verified CoreNFC write.
+    static let writeLinkedStatus =
+        "Linked. Anyone can tap this band to open your card."
+    /// Hold miss / session fail on Write.
+    static let writeFailedStatus =
+        "Couldn't write. Hold the top of the phone still, then try again."
+
     /// One-shot Scan open — same shape as NFCView.PreviewSession.
     struct ScannedCardSession: Identifiable {
         let id = UUID()
@@ -65,15 +72,16 @@ final class NFCBandManager: ObservableObject {
 
     // MARK: - Write (owner band setup)
 
-    /// Snapshot live RedMed → AES-GCM `#d=` → CoreNFC write (or pack-only when parked).
+    /// Snapshot live RedMed → AES-GCM `#d=` → CoreNFC write.
     /// Pack + `session.begin()` stay on this tap's stack (NFC tab open / Write).
     /// Once the sheet is up, hold the band ~1–2″ to finish. CoreNFC drops the
     /// sheet if Write hops through `Task` / `Task.detached` first.
-    /// Parked Share Band URL on the NFC tab is the same `OwnerBandURI` string.
+    /// Parked builds refuse here — NFC tab Pack Band URL / Share / Preview
+    /// are the only pack paths (no silent pack-as-Write).
     /// No Face ID here — post-Agree / Edit / Save / Erase / Load From Band only
     /// (not viewing the YOU card).
     /// Linked / Not linked flips only after a real verified CoreNFC write, or
-    /// owner Load From Band that persist()s the chip — never simulate or share.
+    /// owner Load From Band that persist()s the chip — never pack or share.
     func writeBand(from profile: ProfileData, isScannerSession: Bool) {
         guard !isScannerSession else { return }
         guard !isBusy else { return }
@@ -90,14 +98,17 @@ final class NFCBandManager: ObservableObject {
             alertMessage = "\(urlString.utf8.count) bytes — too large for NXP NTAG216. Shorten RedMed."
             return
         }
-        if AppConfig.nfcHardwareEnabled {
-            statusMessage = ""
+        guard AppConfig.nfcHardwareEnabled else {
+            // No fake Write while parked — Pack Band URL / Share / Preview only.
             writeSucceeded = false
             writeVerified = false
-            writer.writeURL(urlString)
-        } else {
-            simulateWrite(urlString, profile: profile)
+            statusMessage = "NFC writing is disabled in this build."
+            return
         }
+        statusMessage = ""
+        writeSucceeded = false
+        writeVerified = false
+        writer.writeURL(urlString)
     }
 
     /// Drop a live write/read sheet when leaving the NFC tab.
@@ -179,6 +190,7 @@ final class NFCBandManager: ObservableObject {
             alertMessage = "Bracelet write succeeded, but RedMed couldn't save the paired status. Try again."
             return
         }
+        statusMessage = Self.writeLinkedStatus
     }
 
     // MARK: - Private
@@ -239,24 +251,6 @@ final class NFCBandManager: ObservableObject {
         reader.$isReading
             .receive(on: DispatchQueue.main)
             .assign(to: &$isReading)
-    }
-
-    /// Pack-only fallback when CoreNFC is parked — never marks Linked.
-    /// Does not open the helper card; NFC Preview is the single first-responder preview.
-    private func simulateWrite(_ urlString: String, profile: ProfileData) {
-        isWriting = true
-        writeSucceeded = false
-        writeVerified = false
-        statusMessage = "Packing compact tap card…"
-        lastPackedURL = urlString
-        let note = ProfileNFCCodec.capacityNote(for: profile)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { [weak self] in
-            guard let self else { return }
-            self.isWriting = false
-            self.writeSucceeded = false
-            self.writeVerified = false
-            self.statusMessage = "Packed only (no band) — \(note.text). Use Preview for the helper card; Linked needs a real NFC write."
-        }
     }
 
     private func presentHTMLCard(payloadOrURL: String, embedJSON: String? = nil) {
