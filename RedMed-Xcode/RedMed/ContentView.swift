@@ -96,6 +96,11 @@ struct ContentView: View {
             if scenePhase == .active {
                 startCrashMonitorIfOwner()
             }
+            // Spare full (non-embed) WKWebView for first NFC Preview / Scan —
+            // string warm alone still leaves WebKit cold on that tap.
+            // Never during Face ID; only after YOU has painted.
+            guard !isScannerSession else { return }
+            PasserbyWebViewPool.warmFullShell()
         }
         .onAppear {
             mountedTabs.insert(activeTab)
@@ -143,12 +148,9 @@ struct ContentView: View {
             mountedTabs.insert(.nfc)
             startHoldToWriteFromNFCTab()
         }
-        // Associated Domains: foreign / unmatched band URL → in-app tap card (no SOS).
-        .onReceive(NotificationCenter.default.publisher(for: .redMedOpenBandURL)) { note in
-            guard !isScannerSession else { return }
-            guard let urlString = note.object as? String else { return }
-            nfcBandBox.ensure().presentBandURLFromUniversalLink(urlString)
-        }
+        // Associated Domains / redmed://band: foreign `#d=` presents via
+        // `BandTapIngress` above ConsentGate (ungated). NFC Scan still uses
+        // scannedCard on this tree after owner Face ID.
         .fullScreenCover(item: nfcBandBox.scannedCardBinding) { session in
             PasserbyHTMLCardView(
                 payloadOrURL: session.payload,
@@ -279,11 +281,12 @@ private struct FrozenKeepAliveContent<Content: View>: View, Equatable {
     let content: Content
 
     static func == (lhs: Self, rhs: Self) -> Bool {
-        guard lhs.epoch == rhs.epoch else { return false }
         guard lhs.refreshOnHide == rhs.refreshOnHide else { return false }
         if lhs.isFront == rhs.isFront {
-            // Stay in back: skip. Stay in front: always re-diff.
-            return !lhs.isFront
+            // Parked: skip even when cardEpoch bumps (Save / identical
+            // Face ID reload). Front always re-diffs so YOU fills land.
+            if !lhs.isFront { return true }
+            return false
         }
         if rhs.isFront { return false }
         // Becoming back: skip unless GPS / NFC visibility hooks need a pass.
@@ -404,12 +407,14 @@ struct TabBarItem: View {
 
     var body: some View {
         Button(action: action) {
+            // Fixed icon (26) + gap (2) + label (12) = 40 — same row height on
+            // every tab. Shrink-to-fit "RedMed" stays inside the label slot so
+            // it cannot pull the baseline below 911 / Aid / NFC.
             VStack(spacing: 2) {
                 Image(systemName: icon)
                     .font(.system(size: 18, weight: isOn ? .semibold : .regular))
                     .symbolRenderingMode(isCompass ? .hierarchical : .monochrome)
                     .foregroundStyle(tint)
-                    // Square W×H so each SF Symbol's glyph center matches the slot center.
                     .frame(width: 26, height: 26, alignment: .center)
                     .background(
                         RoundedRectangle(cornerRadius: RedMedChrome.chipRadius, style: .continuous)
@@ -420,16 +425,13 @@ struct TabBarItem: View {
                     .font(.system(size: 10, weight: isOn ? .semibold : .medium))
                     .foregroundColor(tint)
                     .kerning(-0.1)
-                    // Shrink-to-fit instead of a manual GeometryReader size calc —
-                    // keeps "RedMed" from clipping/overflowing its slot without
-                    // reintroducing the layout complexity 5ada426 added.
                     .lineLimit(1)
                     .minimumScaleFactor(0.65)
                     .multilineTextAlignment(.center)
+                    .frame(height: 12, alignment: .center)
                     .frame(maxWidth: .infinity, alignment: .center)
             }
-            .frame(maxWidth: .infinity, alignment: .center)
-            .frame(minHeight: 44)
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .center)
             // Discrete tint swap — no spring/bounce on every tab hop.
             .transaction { $0.animation = nil }
         }

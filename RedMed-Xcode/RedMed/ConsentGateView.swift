@@ -10,7 +10,7 @@ import UIKit
 /// still `.notDetermined`, then Main is interactive.
 /// Same-session background → foreground does **not** re-prompt (no
 /// OwnerAppLock relock). Edit / Save / Erase / Load From Band still Face ID.
-/// Never on passerby tapper.
+/// Never on passerby tapper or in-app band / UL tap card (`BandTapIngress`).
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
     static let currentVersion = "4.14"
@@ -49,9 +49,11 @@ struct ConsentGateView<Content: View>: View {
     @State private var notInteractive = false
     @State private var unavailableReason: BiometricAuth.UnavailableReason?
     @State private var checked = false
-    @State private var showPolicies = false
+    /// Which policy section the ack sheet opens — one link per document.
+    @State private var openPolicy: HelpDocument.Policy? = nil
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var profile: ProfileData
+    @EnvironmentObject private var bandTap: BandTapIngress
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @ViewBuilder var content: () -> Content
@@ -63,10 +65,13 @@ struct ConsentGateView<Content: View>: View {
                     .accessibilityHidden(!hasAccepted)
                     .allowsHitTesting(hasAccepted)
             }
-            if awaitingPostAgreeFaceID {
-                postAgreeFaceIDPane
-            } else if !hasAccepted {
-                gate
+            // Hide owner start screens while an ungated band tap card is up.
+            if !bandTap.isPresentingTapCard {
+                if awaitingPostAgreeFaceID {
+                    postAgreeFaceIDPane
+                } else if !hasAccepted {
+                    gate
+                }
             }
         }
         .onAppear {
@@ -81,6 +86,22 @@ struct ConsentGateView<Content: View>: View {
                 tryPromptPostAgreeFaceID()
             }
         }
+        .onChange(of: bandTap.session?.id) { _, newId in
+            let presenting = newId != nil
+            if presenting {
+                // Tap card wins — cancel any Face ID sheet mid-flight.
+                _ = BiometricAuth.cancelInFlight()
+                isAuthenticating = false
+                didAutoPrompt = false
+                showRetry = false
+                biometryFailed = false
+                notInteractive = false
+                unavailableReason = nil
+            } else {
+                // Card dismissed — resume owner cold-open Face ID if still needed.
+                tryPromptPostAgreeFaceID()
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .redMedDidEraseLocalData)) { _ in
             returnToAcknowledgment()
         }
@@ -88,7 +109,7 @@ struct ConsentGateView<Content: View>: View {
 
     private func returnToAcknowledgment() {
         checked = false
-        showPolicies = false
+        openPolicy = nil
         awaitingPostAgreeFaceID = false
         isAuthenticating = false
         didAutoPrompt = false
@@ -96,6 +117,7 @@ struct ConsentGateView<Content: View>: View {
         biometryFailed = false
         notInteractive = false
         unavailableReason = nil
+        PolicyWebViewPool.discard()
         var t = Transaction()
         t.animation = nil
         withTransaction(t) {
@@ -170,7 +192,8 @@ struct ConsentGateView<Content: View>: View {
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.redmedMuted)
                     .padding(14)
-                    .redmedBox(flatten: false)
+                    // Static copy — flatten for cheaper first ack paint.
+                    .redmedBox(flatten: true)
 
                     VStack(spacing: 0) {
                         Toggle("Haptic Feedback", isOn: $hapticsEnabled)
@@ -179,21 +202,27 @@ struct ConsentGateView<Content: View>: View {
                             .padding(.horizontal, RedMedChrome.pagePadX)
                             .padding(.vertical, RedMedChrome.rowVPad)
                     }
+                    // Live Toggle — flatten:false so compositingGroup cannot eat taps.
                     .redmedBox(flatten: false)
 
                     VStack(spacing: 0) {
-                        Button {
-                            RedMedHaptics.light()
-                            showPolicies = true
-                        } label: {
-                            HelpPoliciesRowLabel(titleWeight: .semibold)
+                        ForEach(Array(HelpDocument.Policy.allCases.enumerated()), id: \.element.id) { index, policy in
+                            if index > 0 {
+                                Divider().overlay(Color.redmedDivider)
+                            }
+                            Button {
+                                RedMedHaptics.light()
+                                openPolicy = policy
+                            } label: {
+                                HelpPolicyRowLabel(policy: policy, titleWeight: .semibold)
+                            }
+                            .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
+                            .accessibilityAddTraits(.isButton)
+                            .accessibilityLabel(policy.title)
+                            .accessibilityHint("Opens \(policy.title)")
                         }
-                        .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
-                        .accessibilityAddTraits(.isButton)
-                        .accessibilityLabel(HelpDocument.combinedTitle)
-                        .accessibilityHint("Opens Privacy, Security, Terms, Medical Disclaimer, and Ships When Ready")
                     }
-                    .redmedBox(flatten: false)
+                    .redmedBox(flatten: true)
                 }
                 .padding(.horizontal, RedMedChrome.pagePadX)
                 .padding(.bottom, 12)
@@ -230,8 +259,22 @@ struct ConsentGateView<Content: View>: View {
             .background(Color.redmedBg)
         }
         .background { RedMedPageBackground() }
-        .sheet(isPresented: $showPolicies) {
-            ConsentPolicySheet()
+        .task {
+            // Defer Document.html WK warm past cream drop + first ack layout.
+            // Immediate warm on appear fought LaunchRoot's one-yield cream
+            // drop and spawned UIKit "keyboard was not even present" noise
+            // from an off-screen WKWebView. Ack reading time is longer than
+            // 500ms — a policy link still opens warm. Discarded on Agree.
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            guard !Task.isCancelled else { return }
+            PolicyWebViewPool.warm()
+            RedMedSignpost.coldMark("policy WK warm started")
+        }
+        .sheet(item: $openPolicy, onDismiss: {
+            // Sheet take() emptied the pool — warm again for a second open.
+            PolicyWebViewPool.warm()
+        }) { policy in
+            ConsentPolicySheet(policy: policy)
                 .presentationBackground(Color.redmedBg)
         }
     }
@@ -243,13 +286,20 @@ struct ConsentGateView<Content: View>: View {
         ConsentSettings.recordAcceptance()
         RedMedHaptics.success()
         SnapshotSafeCover.shared.reveal()
-        showPolicies = false
+        openPolicy = nil
+        // Drop the policy spare before Face ID / Main — do not keep a
+        // WKWebView alive into the post-Agree path (same race class as the
+        // old Agree-turn passerby shell warm).
+        PolicyWebViewPool.discard()
         didAutoPrompt = false
         showRetry = false
         biometryFailed = false
         notInteractive = false
         unavailableReason = nil
         isAuthenticating = false
+        // Policy-bump / first-launch path deferred MainActor Keychain adopt
+        // past firstFrame — kick it now so Face ID cream races a filled YOU.
+        profile.beginLaunchPrefetch()
         var t = Transaction()
         t.animation = nil
         withTransaction(t) {
@@ -293,6 +343,8 @@ struct ConsentGateView<Content: View>: View {
     }
 
     private func tryPromptPostAgreeFaceID() {
+        // Band / UL tap card is ungated — never stack Face ID under it.
+        guard !bandTap.isPresentingTapCard else { return }
         guard awaitingPostAgreeFaceID, !hasAccepted, !didAutoPrompt, !isAuthenticating else { return }
         guard scenePhase != .background else { return }
         #if !targetEnvironment(simulator)
@@ -303,6 +355,7 @@ struct ConsentGateView<Content: View>: View {
     }
 
     private func runPostAgreeFaceID() {
+        guard !bandTap.isPresentingTapCard else { return }
         guard awaitingPostAgreeFaceID, !hasAccepted, !isAuthenticating else { return }
         isAuthenticating = true
         biometryFailed = false
@@ -317,6 +370,11 @@ struct ConsentGateView<Content: View>: View {
         ) { outcome in
             Task { @MainActor in
                 isAuthenticating = false
+                // Band tap card is ungated — ignore Face ID results while it is up.
+                if bandTap.isPresentingTapCard {
+                    didAutoPrompt = false
+                    return
+                }
                 let label: String = {
                     switch outcome {
                     case .success: return "success"
@@ -348,11 +406,18 @@ struct ConsentGateView<Content: View>: View {
 }
 
 private struct ConsentPolicySheet: View {
+    let policy: HelpDocument.Policy
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationStack {
-            HelpPolicyPage(showsDoneChrome: true, onDone: { dismiss() })
-        }
+        // No NavigationStack — OwnerModalChrome is the only chrome. Skipping
+        // the stack avoids an extra layout pass before the warmed WKWebView
+        // appears. Title matches the ack row that opened this sheet.
+        HelpPolicyPage(
+            startAt: policy,
+            showsDoneChrome: true,
+            onDone: { dismiss() },
+            pageTitle: policy.markedTitle
+        )
     }
 }

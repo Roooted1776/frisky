@@ -5,7 +5,7 @@ import UIKit
 /// Bundled owner Help: one HTML file, five in-doc anchors. Offline. No network.
 enum HelpDocument {
     static let bundledFile = "Document"
-    /// Single Help / consent row — opens the combined Policies document.
+    /// Combined Help-menu row title. Before You Continue lists each Policy separately.
     static let combinedTitle = "Policies"
     static let combinedEmoji = "📋"
     static var combinedMarkedTitle: String { "\(combinedEmoji) \(combinedTitle)" }
@@ -57,6 +57,107 @@ enum HelpDocument {
     }
 }
 
+// MARK: - Policy WKWebView pool (Before You Continue + Help)
+/// Pre-parses bundled `Document.html` so the first Policies tap is not a
+/// cold WKWebView spin. ConsentGate warms while the ack text is on screen;
+/// Agree discards so this does not race Main / Face ID. Help can take the
+/// same spare if one is still sitting idle.
+@MainActor
+enum PolicyWebViewPool {
+    private static var warmed: WKWebView?
+    private static var warming: WKWebView?
+    private static var warmTask: Task<WKWebView?, Never>?
+
+    static func warm() {
+        _ = ensureWarmTask()
+    }
+
+    static func discard() {
+        warmTask?.cancel()
+        warmTask = nil
+        if let warming {
+            warming.stopLoading()
+            warming.navigationDelegate = nil
+            self.warming = nil
+        }
+        if let warmed {
+            warmed.stopLoading()
+            warmed.navigationDelegate = nil
+            self.warmed = nil
+        }
+    }
+
+    /// Finished Document.html only — mid-load handoff leaves a blank sheet.
+    static func take() -> WKWebView? {
+        guard let view = warmed else { return nil }
+        guard !view.isLoading, view.url != nil else { return nil }
+        warmed = nil
+        warmTask = nil
+        return view
+    }
+
+    private static func ensureWarmTask() -> Task<WKWebView?, Never> {
+        if let warmed {
+            return Task { @MainActor in warmed }
+        }
+        if let warmTask { return warmTask }
+        let task = Task<WKWebView?, Never> { @MainActor in
+            if Task.isCancelled { return .none }
+            guard let url = Bundle.main.url(
+                forResource: HelpDocument.bundledFile,
+                withExtension: "html"
+            ) else { return .none }
+            if Task.isCancelled { return .none }
+
+            let webView = makeConfiguredWebView(navigationDelegate: nil)
+            warming = webView
+            webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
+            // Wait until parse finishes so take() can hand off a painted doc.
+            // Cap ~1s — ack reading time is longer; miss falls back to cold load.
+            for _ in 0..<50 {
+                if Task.isCancelled { break }
+                if !webView.isLoading, webView.url != nil { break }
+                try? await Task.sleep(nanoseconds: 20_000_000)
+            }
+            if Task.isCancelled {
+                webView.stopLoading()
+                webView.navigationDelegate = nil
+                if warming === webView { warming = nil }
+                return .none
+            }
+            warming = nil
+            warmed = webView
+            return webView
+        }
+        warmTask = task
+        Task { @MainActor in
+            _ = await task.value
+            if warmTask == task { warmTask = nil }
+        }
+        return task
+    }
+
+    static func makeConfiguredWebView(navigationDelegate: WKNavigationDelegate?) -> WKWebView {
+        let config = WKWebViewConfiguration()
+        config.preferences.javaScriptCanOpenWindowsAutomatically = false
+        let cream = UIColor(Color.redmedBg)
+        let webView = WKWebView(frame: .zero, configuration: config)
+        webView.navigationDelegate = navigationDelegate
+        webView.allowsBackForwardNavigationGestures = false
+        webView.allowsLinkPreview = false
+        webView.isOpaque = true
+        webView.backgroundColor = cream
+        webView.scrollView.isOpaque = true
+        webView.scrollView.backgroundColor = cream
+        webView.underPageBackgroundColor = cream
+        webView.scrollView.isScrollEnabled = true
+        webView.scrollView.alwaysBounceVertical = true
+        webView.scrollView.showsVerticalScrollIndicator = true
+        webView.scrollView.showsHorizontalScrollIndicator = false
+        return webView
+    }
+}
+
 // MARK: - WebView wrapper (bundled Help / policy HTML only)
 struct LocalWebView: UIViewRepresentable {
     let filename: String
@@ -67,6 +168,22 @@ struct LocalWebView: UIViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeUIView(context: Context) -> WKWebView {
+        // Prefer a finished Before-You-Continue warm of Document.html.
+        if filename == HelpDocument.bundledFile,
+           let pooled = PolicyWebViewPool.take() {
+            pooled.configuration.userContentController.add(
+                context.coordinator,
+                name: "rmPolicy"
+            )
+            pooled.navigationDelegate = context.coordinator
+            context.coordinator.usingPooled = true
+            context.coordinator.didLoadHTML = true
+            context.coordinator.loadedKey = "\(filename)#\(fragment ?? "")"
+            context.coordinator.fragment = fragment
+            context.coordinator.onPolicyChange = onPolicyChange
+            return pooled
+        }
+
         let config = WKWebViewConfiguration()
         config.userContentController.add(context.coordinator, name: "rmPolicy")
         config.preferences.javaScriptCanOpenWindowsAutomatically = false
@@ -96,6 +213,14 @@ struct LocalWebView: UIViewRepresentable {
         let key = "\(filename)#\(fragment ?? "")"
         context.coordinator.fragment = fragment
         context.coordinator.onPolicyChange = onPolicyChange
+
+        if context.coordinator.usingPooled {
+            context.coordinator.usingPooled = false
+            // Already parsed — jump to start section without a second file load.
+            context.coordinator.scrollToFragment(in: webView)
+            return
+        }
+
         if context.coordinator.loadedKey == key { return }
 
         let loadedFile = context.coordinator.loadedKey?
@@ -135,6 +260,8 @@ struct LocalWebView: UIViewRepresentable {
         var loadedKey: String?
         var fragment: String?
         var didLoadHTML = false
+        /// True for one update after `PolicyWebViewPool.take()` — skip reload.
+        var usingPooled = false
         var onPolicyChange: ((HelpDocument.Policy) -> Void)?
 
         func userContentController(
@@ -152,8 +279,33 @@ struct LocalWebView: UIViewRepresentable {
         }
 
         func scrollToFragment(in webView: WKWebView) {
-            guard let fragment else { return }
+            guard let fragment else {
+                // Combined Policies open: letterhead + notice + nav at y=0.
+                // Jumping to #privacy skips that top matter (scroll-margin + sticky nav).
+                scrollToDocumentTop(in: webView)
+                return
+            }
             jumpToPolicyFragment(fragment, in: webView)
+        }
+
+        func scrollToDocumentTop(in webView: WKWebView) {
+            webView.scrollView.setContentOffset(.zero, animated: false)
+            // Mark Privacy in the sticky nav without scrolling past the letterhead.
+            webView.evaluateJavaScript(
+                """
+                (function(){
+                  if (typeof window.__rmShowPolicy === 'function') {
+                    window.__rmShowPolicy('privacy', false);
+                  }
+                  window.scrollTo(0, 0);
+                  try {
+                    if (document.documentElement) document.documentElement.scrollTop = 0;
+                    if (document.body) document.body.scrollTop = 0;
+                  } catch (e0) {}
+                  try { history.replaceState(null, '', location.pathname + location.search); } catch (e1) {}
+                })();
+                """
+            )
         }
 
         func jumpToPolicyFragment(_ id: String, in webView: WKWebView) {
@@ -278,28 +430,36 @@ struct LocalWebView: UIViewRepresentable {
 }
 
 // MARK: - Policies document (Help push + Before You Continue sheet)
-/// One WebView for the combined Policies document. Chrome title stays Policies.
+/// One WebView for the combined Policies document. Help chrome stays Policies
+/// and opens at document top (letterhead). Before You Continue per-doc links
+/// pass `pageTitle` / `startAt` to deep-link that section.
 struct HelpPolicyPage: View {
-    var startAt: HelpDocument.Policy = HelpDocument.defaultPolicy
+    var startAt: HelpDocument.Policy? = nil
     var showsDoneChrome: Bool = false
     var onDone: (() -> Void)? = nil
+    /// Sheet / nav title. Nil → combined Policies (Help). Ack rows pass the section title.
+    var pageTitle: String? = nil
+
+    private var resolvedTitle: String {
+        pageTitle ?? HelpDocument.combinedMarkedTitle
+    }
 
     var body: some View {
         VStack(spacing: 0) {
             if showsDoneChrome {
                 OwnerModalChrome(
-                    title: HelpDocument.combinedMarkedTitle,
+                    title: resolvedTitle,
                     leadingTitle: "Done",
                     leadingAction: { onDone?() }
                 )
             }
             LocalWebView(
                 filename: HelpDocument.bundledFile,
-                fragment: startAt.fragment
+                fragment: startAt?.fragment
             )
         }
         .background { RedMedPageBackground() }
-        .navigationTitle(HelpDocument.combinedMarkedTitle)
+        .navigationTitle(resolvedTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(showsDoneChrome ? .hidden : .visible, for: .navigationBar)
         .toolbarBackground(Color.redmedBg, for: .navigationBar)
@@ -308,6 +468,7 @@ struct HelpPolicyPage: View {
     }
 }
 
+/// Single combined Policies row (Help menu).
 struct HelpPoliciesRowLabel: View {
     var titleWeight: Font.Weight = .medium
 
@@ -318,6 +479,31 @@ struct HelpPoliciesRowLabel: View {
                 .frame(width: 22, alignment: .center)
                 .accessibilityHidden(true)
             Text(HelpDocument.combinedTitle)
+                .font(.system(size: RedMedChrome.rowFont, weight: titleWeight))
+                .foregroundColor(.redmedDark)
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(.redmedMuted.opacity(0.55))
+        }
+        .padding(.horizontal, RedMedChrome.pagePadX)
+        .padding(.vertical, RedMedChrome.rowVPad)
+        .contentShape(Rectangle())
+    }
+}
+
+/// One policy section row (Before You Continue per-document links).
+struct HelpPolicyRowLabel: View {
+    let policy: HelpDocument.Policy
+    var titleWeight: Font.Weight = .medium
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Text(policy.emoji)
+                .font(.system(size: 17))
+                .frame(width: 22, alignment: .center)
+                .accessibilityHidden(true)
+            Text(policy.title)
                 .font(.system(size: RedMedChrome.rowFont, weight: titleWeight))
                 .foregroundColor(.redmedDark)
             Spacer(minLength: 0)
@@ -464,6 +650,8 @@ struct HelpMenuView: View {
             .tint(.redmedAccent)
             .toolbar(.hidden, for: .navigationBar)
             .onAppear {
+                // Warm Document.html while the Help list is on screen.
+                PolicyWebViewPool.warm()
                 guard showsOwnerTools, locationEnabled else { return }
                 locationSuggester.refresh()
             }

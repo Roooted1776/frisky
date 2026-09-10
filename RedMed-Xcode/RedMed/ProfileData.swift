@@ -91,10 +91,11 @@ class ProfileData: ObservableObject {
     @Published private(set) var cardEpoch: UInt = 0
     /// One-shot so RedMedApp / ContentView cannot restore twice in one process.
     private var didAttemptLaunchRestore = false
-    /// Off-main Keychain+JSON. Started from `init` when a stored ID is
-    /// expected so SplashBoard overlaps SecItem + decode — not from
-    /// `RedMedApp.task` after the first SwiftUI frame. YOU card paints from
-    /// RAM after restore — no Face ID to view.
+    /// Off-main Keychain+JSON. Returning cold (consent accepted) starts from
+    /// `init` at userInitiated + MainActor adopt so SplashBoard overlaps
+    /// decode and YOU can fill under Face ID cream. Consent-pending (Before
+    /// You Continue) only detached-decodes at utility in `init` — MainActor
+    /// adopt waits for `RedMedApp.task` / Agree so first ack paint is free.
     private var launchPrefetchTask: Task<PersistedProfile?, Never>?
     /// One MainActor adopt waiter — init and beginLaunchPrefetch must not
     /// schedule two (race while the first has cleared `launchPrefetchTask`
@@ -157,23 +158,29 @@ class ProfileData: ObservableObject {
         self.persists = persisting
         // UserDefaults gate only on the main thread — never SecItem / LAContext
         // / exists() here (that contended with Face ID and blocked first frame).
-        // Detached Keychain+JSON starts immediately so SplashBoard overlaps
-        // decode; MainActor adopt starts in the same breath so a finished
-        // blob can land in RAM before the first YOU body (ContentView.task
-        // is then a no-op).
-        if persisting && Self.prefersLockOnLaunch {
-            self.isRestoringFromKeychain = true
-            startLaunchPrefetchTask()
+        guard persisting, Self.prefersLockOnLaunch else { return }
+        self.isRestoringFromKeychain = true
+        if ConsentSettings.hasAcceptedCurrent {
+            // Returning cold: race SplashBoard / Face ID cream so YOU can
+            // fill under the cream. userInitiated + MainActor adopt now.
+            startLaunchPrefetchTask(priority: .userInitiated)
             scheduleLaunchAdopt()
+        } else {
+            // Before You Continue (first launch / policy bump / after Erase):
+            // decode off-main at utility only — do not schedule MainActor
+            // adopt until after firstFrame (RedMedApp.task / Agree). Early
+            // adopt publishes PHI under the ack page and can hitch cream
+            // drop / first layout; YOU is not on screen yet.
+            startLaunchPrefetchTask(priority: .utility)
         }
     }
 
     /// Non-interactive Keychain read + JSON decode. Idempotent. Does not touch
     /// `@Published` fields until adopt / restore applies the result.
-    /// Prefer `init` (gate-on path starts prefetch + MainActor adopt).
-    /// `RedMedApp.task` may call this as a safety net. ContentView restore
-    /// is a no-op when adopt already won the race.
-    /// Prefetch uses `.userInitiated` so the blob lands before YOU paints empty.
+    /// Returning cold: `init` already started userInitiated + adopt.
+    /// Consent-pending: `init` only detached-decodes; this schedules adopt
+    /// (from `RedMedApp.task` after firstFrame, or Agree). ContentView
+    /// restore is a no-op when adopt already won.
     /// UserDefaults gate only — no SecItem exists() on the caller.
     func beginLaunchPrefetch() {
         guard persists else { return }
@@ -194,10 +201,10 @@ class ProfileData: ObservableObject {
         }
     }
 
-    private func startLaunchPrefetchTask() {
+    private func startLaunchPrefetchTask(priority: TaskPriority = .userInitiated) {
         guard launchPrefetchTask == nil else { return }
         let account = Self.keychainAccount
-        launchPrefetchTask = Task.detached(priority: .userInitiated) {
+        launchPrefetchTask = Task.detached(priority: priority) {
             Self.decodeBlob(KeychainStore.load(account: account, allowInteractive: false))
         }
     }
@@ -414,13 +421,15 @@ class ProfileData: ObservableObject {
 
     /// After cold-open / post-Agree Face ID — retry Keychain with the parked
     /// LAContext so a leftover `biometryCurrentSet` row migrates without a
-    /// second sheet. No-op when RAM already has the blob or Keychain is empty.
+    /// second sheet. Load still runs when RAM is already filled (migrate);
+    /// `apply` is a no-op if the blob matches so Face ID success does not
+    /// remount the YOU card.
     @MainActor
     func reloadAfterOwnerFaceID() async {
         guard persists else { return }
         if hasSensitiveProfileData {
-            // Still try migrate in case RAM came from a prior in-process write
-            // but the on-disk row is legacy ACL — peek parked context in load.
+            // Migrate leftover ACL via parked context. apply() skips when RAM
+            // already matches (prefetch won the race under Face ID cream).
             _ = await reloadFromKeychainAsync(allowInteractive: false)
             return
         }
@@ -497,6 +506,28 @@ class ProfileData: ObservableObject {
     }
 
     private func apply(_ blob: PersistedProfile) {
+        let nextContacts = blob.contacts.map { $0.asEmergencyContact() }
+        // Compare fields only — EmergencyContact.id is a fresh UUID each map.
+        let contactsChanged = contacts.count != nextContacts.count
+            || zip(contacts, nextContacts).contains {
+                $0.name != $1.name || $0.relationship != $1.relationship || $0.phone != $1.phone
+            }
+        let changed = name != blob.name
+            || birthDate != blob.birthDate
+            || bloodType != blob.bloodType
+            || allergies != blob.allergies
+            || medications != blob.medications
+            || conditions != blob.conditions
+            || contactsChanged
+            || braceletLinked != blob.braceletLinked
+            || isOrganDonor != blob.isOrganDonor
+            || isPregnant != blob.isPregnant
+            || isDeafOrVisionImpaired != blob.isDeafOrVisionImpaired
+            || lastUpdated != blob.lastUpdated
+            || notes != blob.notes
+        // Identical blob (prefetch already adopted) must not objectWillChange
+        // or bump cardEpoch — that remounts parked RedMed after Face ID.
+        guard changed else { return }
         // One objectWillChange for the whole blob — unlock must not storm the tab tree.
         withBulkUpdate {
             if name != blob.name { name = blob.name }
@@ -505,12 +536,6 @@ class ProfileData: ObservableObject {
             if allergies != blob.allergies { allergies = blob.allergies }
             if medications != blob.medications { medications = blob.medications }
             if conditions != blob.conditions { conditions = blob.conditions }
-            let nextContacts = blob.contacts.map { $0.asEmergencyContact() }
-            // Compare fields only — EmergencyContact.id is a fresh UUID each map.
-            let contactsChanged = contacts.count != nextContacts.count
-                || zip(contacts, nextContacts).contains {
-                    $0.name != $1.name || $0.relationship != $1.relationship || $0.phone != $1.phone
-                }
             if contactsChanged { contacts = nextContacts }
             if braceletLinked != blob.braceletLinked { braceletLinked = blob.braceletLinked }
             if isOrganDonor != blob.isOrganDonor { isOrganDonor = blob.isOrganDonor }
@@ -633,10 +658,6 @@ extension Notification.Name {
     static let redMedOpenNFCTab = Notification.Name("redMedOpenNFCTab")
     /// Preview / Scan tap card presented — PrivacySnapshotGuard must not cover it.
     static let redMedTapCardPresentationDidChange = Notification.Name("redMedTapCardPresentationDidChange")
-    /// Associated Domains: foreign (or unmatched) `/tapper/#d=` while RedMed is
-    /// installed — show in-app tap card (no SOS). Own matching band is ignored
-    /// in `RedMedApp` (foreground only).
-    static let redMedOpenBandURL = Notification.Name("redMedOpenBandURL")
 }
 
 struct EmergencyContact: Identifiable, Equatable {
@@ -837,13 +858,29 @@ struct AidTopic {
 
 /// Lazy bag so Aid strings are not built until Roadside Aid is opened.
 enum AidTopicCatalog {
-    static let topics: [String: AidTopic] = _makeTopics()
+    private static let lock = NSLock()
+    private static var cached: [String: AidTopic]?
 
-    /// Prefetch off the main thread after Aid's first paint.
-    static func warmUp() {
-        DispatchQueue.global(qos: .userInitiated).async {
+    /// Thread-safe read — builds once. Prefer `warmUp()` off-main first so a
+    /// fast topic tap does not pay `_makeTopics()` on the main thread.
+    static var topics: [String: AidTopic] {
+        lock.lock()
+        if let cached { lock.unlock(); return cached }
+        lock.unlock()
+        let built = _makeTopics()
+        lock.lock()
+        if let cached { lock.unlock(); return cached }
+        cached = built
+        lock.unlock()
+        return built
+    }
+
+    /// Prefetch off the main thread after Aid's first paint. Await so the
+    /// Aid UI can gate topic opens until the catalog is ready.
+    static func warmUp() async {
+        await Task.detached(priority: .userInitiated) {
             _ = topics
-        }
+        }.value
     }
 
     private static func _makeTopics() -> [String: AidTopic] {

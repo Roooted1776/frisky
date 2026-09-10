@@ -15,13 +15,14 @@ enum SuggestionCatalog {
     static var allergies: [Entry] { locked(&cachedAllergies, _allergies) }
     static var conditions: [Entry] { locked(&cachedConditions, _conditions) }
 
-    /// Prefetch off the main thread when Edit opens — first keystroke stays cheap.
-    static func warmUp() {
-        DispatchQueue.global(qos: .userInitiated).async {
+    /// Prefetch off the main thread when Edit opens. Await so first
+    /// keystroke does not lock or build the catalog on MainActor.
+    static func warmUp() async {
+        await Task.detached(priority: .userInitiated) {
             _ = medications
             _ = allergies
             _ = conditions
-        }
+        }.value
     }
 
     /// Prefix matches first, then contains. Skip exact + already-used rows. Hard cap.
