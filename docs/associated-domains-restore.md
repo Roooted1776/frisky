@@ -28,10 +28,11 @@ arms after ~650ms. Custom scheme needs no Associated Domains entitlement.
 
 ## Currently parked (personal team signing)
 
-`AppConfig.associatedDomainsEnabled = false` and `RedMed.entitlements` is a
-bare empty `<dict></dict>` (no `applinks:` key). Personal / free Apple
-Developer teams cannot provision Associated Domains, so Automatic Signing
-fails ("Cannot create a iOS App Development provisioning profile") while the
+`AppConfig.associatedDomainsEnabled = false` and `RedMed.entitlements` has
+no `applinks:` key (NFC Tag Reading may already be present — add
+`applinks:`, do not wipe the NFC key). Personal / free Apple Developer
+teams cannot provision Associated Domains, so Automatic Signing fails
+("Cannot create a iOS App Development provisioning profile") while the
 entitlement is present — the same class of problem as CoreNFC
 (`docs/NFC-RESTORE.md`).
 
