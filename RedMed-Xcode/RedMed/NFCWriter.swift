@@ -155,20 +155,20 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
         }
 
         guard let tag = tags.first else {
-            session.invalidate(errorMessage: "No tag found. Try again.")
+            session.invalidate(errorMessage: AppConfig.NFCWriteCopy.failDetail)
             return
         }
 
         let urlString = urlToWrite
         session.connect(to: tag) { [weak self] error in
-            if let error {
-                session.invalidate(errorMessage: "Connection failed: \(error.localizedDescription)")
+            if error != nil {
+                session.invalidate(errorMessage: AppConfig.NFCWriteCopy.failDetail)
                 return
             }
 
             tag.queryNDEFStatus { status, capacity, error in
-                if let error {
-                    session.invalidate(errorMessage: "Failed to read tag: \(error.localizedDescription)")
+                if error != nil {
+                    session.invalidate(errorMessage: AppConfig.NFCWriteCopy.failDetail)
                     return
                 }
 
@@ -195,20 +195,17 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                     }
                     tag.writeNDEF(message) { error in
                         if error != nil {
-                            session.invalidate(
-                                errorMessage: "Couldn't write — \(AppConfig.BraceletRF.holdStillRetryTip)"
-                            )
+                            session.invalidate(errorMessage: AppConfig.NFCWriteCopy.failDetail)
                             return
                         }
 
                         tag.readNDEF { readMessage, readError in
                             if readError != nil {
-                                // Bytes may be on the chip; Linked still needs matching read-back.
-                                session.alertMessage = "Written — couldn't verify read-back. Test with another phone."
+                                session.alertMessage = AppConfig.NFCWriteCopy.failDetail
                                 self?.finishWrite(
-                                    success: true,
+                                    success: false,
                                     verified: false,
-                                    status: "Written — couldn't verify. Anyone can tap if the write stuck; Linked needs a matching read-back.",
+                                    status: AppConfig.NFCWriteCopy.failTitle,
                                     thenInvalidate: session
                                 )
                                 return
@@ -217,14 +214,14 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                             let written = readMessage?.records.first.flatMap { NFCURICodec.string(from: $0) }
                             let ok = written.map { NFCURICodec.match($0, urlString) } ?? false
                             session.alertMessage = ok
-                                ? "Linked — anyone can tap this band to open your card."
-                                : "Couldn't write — hold the top of the phone still, then try again."
+                                ? "\(AppConfig.NFCWriteCopy.successTitle). \(AppConfig.NFCWriteCopy.successDetail)"
+                                : AppConfig.NFCWriteCopy.failDetail
                             self?.finishWrite(
                                 success: ok,
                                 verified: ok,
                                 status: ok
-                                    ? "Linked — Anyone can tap this band to open your card."
-                                    : "Couldn't write — \(AppConfig.BraceletRF.holdStillRetryTip)",
+                                    ? AppConfig.NFCWriteCopy.successDetail
+                                    : AppConfig.NFCWriteCopy.failTitle,
                                 thenInvalidate: session
                             )
                         }
@@ -265,24 +262,13 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                readerError.code == .readerSessionInvalidationErrorUserCanceled {
                 self.statusMessage = "Cancelled."
             } else if !self.success {
-                // Keep finishWrite / invalidate(errorMessage:) copy when already set.
-                if self.statusMessage.hasPrefix("Couldn't write")
-                    || self.statusMessage.hasPrefix("Linked")
-                    || self.statusMessage.hasPrefix("Written") {
-                    return
-                }
-                let detail = error.localizedDescription
-                if detail.hasPrefix("Couldn't write")
-                    || detail.contains("locked")
-                    || detail.contains("NTAG216")
-                    || detail.contains("capacity")
-                    || detail.contains("Profile is")
-                    || detail.contains("Couldn't build")
-                    || detail.contains("Not a blank")
-                    || detail.lowercased().contains("more than one") {
-                    self.statusMessage = detail
+                let desc = error.localizedDescription
+                if desc == AppConfig.NFCWriteCopy.failDetail
+                    || desc.isEmpty
+                    || self.statusMessage == "Hold your iPhone near the NFC tag." {
+                    self.statusMessage = AppConfig.NFCWriteCopy.failTitle
                 } else {
-                    self.statusMessage = "Couldn't write — \(AppConfig.BraceletRF.holdStillRetryTip)"
+                    self.statusMessage = desc
                 }
             }
         }

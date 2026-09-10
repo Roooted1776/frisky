@@ -115,7 +115,6 @@ struct SectionLabel: View {
 
 struct PrimaryButton: View {
     let title: String
-    /// Optional second line under the title (NFC Write / Pack CTAs).
     var subtitle: String? = nil
     var systemImage: String? = nil
     var busy: Bool = false
@@ -148,24 +147,21 @@ struct PrimaryButton: View {
 
     @ViewBuilder
     private var primaryLabel: some View {
-        let core = HStack(spacing: 8) {
-            if busy {
-                ProgressView().tint(.white)
-            } else if let systemImage {
-                Image(systemName: systemImage)
-            }
-            if let subtitle, !subtitle.isEmpty, !busy {
-                VStack(spacing: 3) {
-                    Text(title)
-                        .font(.system(size: 16, weight: .bold))
-                    Text(subtitle)
-                        .font(.system(size: 12, weight: .medium))
-                        .opacity(0.92)
+        let core = VStack(spacing: 4) {
+            HStack(spacing: 8) {
+                if busy {
+                    ProgressView().tint(.white)
+                } else if let systemImage {
+                    Image(systemName: systemImage)
                 }
-                .multilineTextAlignment(.center)
-            } else {
                 Text(title)
                     .font(.system(size: 16, weight: .bold))
+            }
+            if let subtitle, !subtitle.isEmpty, !busy {
+                Text(subtitle)
+                    .font(.system(size: 13, weight: .semibold))
+                    .opacity(0.88)
+                    .multilineTextAlignment(.center)
             }
         }
         .foregroundColor(.white)

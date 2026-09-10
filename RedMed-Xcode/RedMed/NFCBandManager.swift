@@ -96,7 +96,12 @@ final class NFCBandManager: ObservableObject {
             writeVerified = false
             writer.writeURL(urlString)
         } else {
-            simulateWrite(urlString, profile: profile)
+            // Parked: pack only — never a Write, never Linked.
+            lastPackedURL = urlString
+            writeSucceeded = false
+            writeVerified = false
+            isWriting = false
+            statusMessage = ""
         }
     }
 
@@ -239,25 +244,6 @@ final class NFCBandManager: ObservableObject {
         reader.$isReading
             .receive(on: DispatchQueue.main)
             .assign(to: &$isReading)
-    }
-
-    /// Pack-only fallback when CoreNFC is parked — never marks Linked.
-    /// Copies the same `OwnerBandURI` Share / Preview use. No chip write.
-    private func simulateWrite(_ urlString: String, profile: ProfileData) {
-        isWriting = true
-        writeSucceeded = false
-        writeVerified = false
-        statusMessage = "Packing…"
-        lastPackedURL = urlString
-        let note = ProfileNFCCodec.capacityNote(for: profile)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { [weak self] in
-            guard let self else { return }
-            self.isWriting = false
-            self.writeSucceeded = false
-            self.writeVerified = false
-            SecurePasteboard.copyEphemeral(urlString, lifetimeSeconds: 600)
-            self.statusMessage = "Packed — link copied. Share Band URL or Preview. Linked needs a real NFC write. \(note.text)."
-        }
     }
 
     private func presentHTMLCard(payloadOrURL: String, embedJSON: String? = nil) {
