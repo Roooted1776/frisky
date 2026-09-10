@@ -26,8 +26,8 @@ Apple Developer / App ID `com.redmed.app` / GitHub stay in your personal account
 |--------|------|
 | Code | `Roooted1776/frisky`, `RedMed-Xcode` (SwiftUI), bundle ID `com.redmed.app` |
 | Tapper | `tapper/` HTML/JS, redirects, SW, Pages host copies |
-| Brand | REDMED / RedMed / MED ID, BrandLogo, BrandWordmark, cream UI, wine/burgundy |
-| Band | Adult wine/burgundy silicone, laser `MED ID`, NXP NTAG216, blank NDEF — same as `docs/band-engraving-and-nfc-sourcing.md` |
+| Brand | REDMED / RedMed / MED ID, BrandLogo, BrandWordmark, cream UI, black band trade dress |
+| Band | Adult black silicone (`#232425`), logo-print RedMed face (30×9 mm), NXP NTAG216 blank NDEF — same as `docs/band-engraving-and-nfc-sourcing.md` |
 | Future | Later RedMed work by Max assigns on creation |
 
 Not transferred: wearer medical profiles (Keychain / `#d=`). Those are not yours.

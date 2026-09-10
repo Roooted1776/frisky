@@ -141,7 +141,7 @@ enum AppConfig {
     ///   NDEF blank unlocked. Different carrier from Bluetooth (~2.4 GHz).
     ///   Do not source NTAG213, MIFARE, LF (~125 kHz), or UHF (~860–960 MHz).
     /// - Factory: no pre-encode, no lock. Owner Write programs NDEF.
-    /// - Laser face is **MED ID** only.
+    /// - Face art is logo-print RedMed heart + wordmark (30×9 mm) on black `#232425` — not laser MED ID.
     /// - Contactless payment POS also uses 13.56 MHz but speaks EMV, not NDEF
     ///   medical URLs — protocol separation, not a distance knob.
     /// - Distances below describe HF NFC physics, not a tunable app setting.
@@ -151,7 +151,7 @@ enum AppConfig {
         static let carrierMHz: Double = 13.56
         static let chipPart = "NXP NTAG216"
         static let family = "ISO 14443A Type 2 (NXP NTAG216)"
-        static let laserFace = "MED ID"
+        static let laserFace = "RedMed" // logo-print face lock; display string for UI
         static let isPassive = true
         /// Blank / not permanently locked at factory — owner Write overwrites NDEF.
         static let isRewritable = true
@@ -210,7 +210,7 @@ enum AppConfig {
         }
 
         static var laserFaceSummary: String {
-            "Laser face: \(laserFace) only."
+            "Face: logo-print RedMed (30×9 mm) on black."
         }
 
         static var rewritableBandSummary: String {

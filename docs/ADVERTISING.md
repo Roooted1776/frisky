@@ -32,7 +32,7 @@ build-in-public with no buy CTA is fine.
 | Live HTTPS `/tapper/` | `BASE=https://<host> ./scripts/smoke-pages.sh` returns OK. `AppConfig.medicalCardBaseURL` is that host. github.io is **404** until `Roooted1776.github.io` is published ([`domain.md`](domain.md)). |
 | App Store listing | Paid Apple Developer. Real `apps.apple.com` ID. `AppConfig.appStoreURL` is that URL, not `nil`, not a placeholder. |
 | NFC write on hardware | NFC Tag Reading on App ID `com.redmed.app`. `nfcHardwareEnabled = true`. Owner iPhone Write → second phone Safari opens the card. Simulator does not count. |
-| Sample bands in hand | 1–10 wine/burgundy NTAG216 silicone, laser `MED ID`, NDEF blank unlocked. Proven write on a physical iPhone. |
+| Sample bands in hand | 1–10 black (`#232425`) NTAG216 silicone, logo-print RedMed face, NDEF blank unlocked. Proven write on a physical iPhone. |
 | Somewhere to buy (view A) | Shopify (or equivalent) **after** the samples write. No storefront in this git tree. |
 
 Do not skip to Shopify, Meta, Google, or hospital outbound while NFC is
@@ -92,7 +92,7 @@ Shoot **one** tap. Cut **two** ads from it. Do not invent a second concept.
 
 ### Shared footage
 
-1. Wine / burgundy adult silicone. Laser plate reads `MED ID` only.
+1. Black (`#232425`) adult silicone. Logo-print RedMed heart + wordmark (30×9 mm).
 2. Top of a phone to the plate, ~1–2 inches. One deliberate tap.
 3. Safari opens the card (name, allergies, meds, contacts, Call). Hold. Cut.
 
@@ -116,7 +116,7 @@ tap, framed as a medic’s phone. End on the card. No “buy now.”
 
 Caption (pick one):
 
-- “MED ID on the wrist. Top of the phone to the plate.”
+- “RedMed on the wrist. Top of the phone to the band.”
 - “No app. No login. Allergies and contacts in Safari.”
 
 CTA: none in paid social. This cut is for the station one-pager, a demo
@@ -213,7 +213,7 @@ selling the hospital a system.
 | Who | Do they buy? | What you offer |
 |-----|----------------|----------------|
 | Street EMS / fire | Almost never a bracelet PO | 60s tap brief + one-pager. Quote for view A ads. |
-| Hospital / clinic admin | Only after the company gate | Lot of the same wine `MED ID` band + “staff tap” card. Owner-write still. No BA, no EHR, no HIPAA badge. |
+| Hospital / clinic admin | Only after the company gate | Lot of the same black RedMed logo-print band + “staff tap” card. Owner-write still. No BA, no EHR, no HIPAA badge. |
 | EMS educator / training officer | Maybe a box of demos | Dummy-profile bands for skills night. Same SKU. |
 
 Do not run a course LMS or “free training → software demo → hardware
@@ -236,7 +236,7 @@ about who you are (an LLC with insurance) or about what the product is
 
 ### 60-second station brief (say this)
 
-If you see a wine wristband with **MED ID** lasered on the plate: hold the
+If you see a black wristband with the **RedMed** logo-print face: hold the
 **top** of the phone to that plate, about an inch or two. Safari opens a
 medical card. No app to install. No login. Allergies, meds, conditions,
 contacts, and a Call button.
@@ -249,7 +249,7 @@ self-reported ICE, not a hospital record. Call emergency services first.
 ```
 RED MED ID band
 
-If you see a wine / burgundy wristband lasered MED ID:
+If you see a black wristband with the RedMed logo-print face:
 
 1. Hold the top of the phone to the metal plate (~1–2 inches).
 2. Safari opens a medical card. No app. No login.
@@ -266,7 +266,7 @@ No affiliate dump.
 ### Offer (view B, only after company gate)
 
 Same physical SKU as view A unless counsel says a facility-issued band needs
-lot tracking. Still NTAG216, wine, laser `MED ID`, blank unlocked, owner
+lot tracking. Still NTAG216, black, logo-print RedMed face, blank unlocked, owner
 Write. Pre-encode and vendor short-links stay forbidden
 ([`band-engraving-and-nfc-sourcing.md`](band-engraving-and-nfc-sourcing.md)).
 

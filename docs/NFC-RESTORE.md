@@ -7,7 +7,7 @@ read-back verify, NDEF URI strip, and CryptoKit AES-GCM via `ProfileNFCCodec`.
 **Target band:** blank unlocked **NXP NTAG216**, 13.56 MHz, ISO 14443A Type 2,
 NDEF empty at factory. No pre-encode, no lock. Not NTAG213, MIFARE, LF, or UHF.
 Owner **Write** on the NFC tab programs the chip; locked or non-NDEF tags are
-rejected with a clear error. Laser face is **MED ID** only.
+rejected with a clear error. Face art is logo-print RedMed heart + wordmark on black `#232425` (30×9 mm) — not laser MED ID.
 
 When hardware is off (`AppConfig.nfcHardwareEnabled = false`), `NFCBandManager`
 still simulates Write/Scan by packing the compact `tapper.html#d=` URL. Real
