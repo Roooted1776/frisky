@@ -284,11 +284,12 @@ private struct FrozenKeepAliveContent<Content: View>: View, Equatable {
     let content: Content
 
     static func == (lhs: Self, rhs: Self) -> Bool {
-        guard lhs.epoch == rhs.epoch else { return false }
         guard lhs.refreshOnHide == rhs.refreshOnHide else { return false }
         if lhs.isFront == rhs.isFront {
-            // Stay in back: skip. Stay in front: always re-diff.
-            return !lhs.isFront
+            // Parked: skip even when cardEpoch bumps (Save / identical
+            // Face ID reload). Front always re-diffs so YOU fills land.
+            if !lhs.isFront { return true }
+            return false
         }
         if rhs.isFront { return false }
         // Becoming back: skip unless GPS / NFC visibility hooks need a pass.

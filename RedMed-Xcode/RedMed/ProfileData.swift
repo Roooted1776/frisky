@@ -414,13 +414,15 @@ class ProfileData: ObservableObject {
 
     /// After cold-open / post-Agree Face ID — retry Keychain with the parked
     /// LAContext so a leftover `biometryCurrentSet` row migrates without a
-    /// second sheet. No-op when RAM already has the blob or Keychain is empty.
+    /// second sheet. Load still runs when RAM is already filled (migrate);
+    /// `apply` is a no-op if the blob matches so Face ID success does not
+    /// remount the YOU card.
     @MainActor
     func reloadAfterOwnerFaceID() async {
         guard persists else { return }
         if hasSensitiveProfileData {
-            // Still try migrate in case RAM came from a prior in-process write
-            // but the on-disk row is legacy ACL — peek parked context in load.
+            // Migrate leftover ACL via parked context. apply() skips when RAM
+            // already matches (prefetch won the race under Face ID cream).
             _ = await reloadFromKeychainAsync(allowInteractive: false)
             return
         }
@@ -497,6 +499,28 @@ class ProfileData: ObservableObject {
     }
 
     private func apply(_ blob: PersistedProfile) {
+        let nextContacts = blob.contacts.map { $0.asEmergencyContact() }
+        // Compare fields only — EmergencyContact.id is a fresh UUID each map.
+        let contactsChanged = contacts.count != nextContacts.count
+            || zip(contacts, nextContacts).contains {
+                $0.name != $1.name || $0.relationship != $1.relationship || $0.phone != $1.phone
+            }
+        let changed = name != blob.name
+            || birthDate != blob.birthDate
+            || bloodType != blob.bloodType
+            || allergies != blob.allergies
+            || medications != blob.medications
+            || conditions != blob.conditions
+            || contactsChanged
+            || braceletLinked != blob.braceletLinked
+            || isOrganDonor != blob.isOrganDonor
+            || isPregnant != blob.isPregnant
+            || isDeafOrVisionImpaired != blob.isDeafOrVisionImpaired
+            || lastUpdated != blob.lastUpdated
+            || notes != blob.notes
+        // Identical blob (prefetch already adopted) must not objectWillChange
+        // or bump cardEpoch — that remounts parked RedMed after Face ID.
+        guard changed else { return }
         // One objectWillChange for the whole blob — unlock must not storm the tab tree.
         withBulkUpdate {
             if name != blob.name { name = blob.name }
@@ -505,12 +529,6 @@ class ProfileData: ObservableObject {
             if allergies != blob.allergies { allergies = blob.allergies }
             if medications != blob.medications { medications = blob.medications }
             if conditions != blob.conditions { conditions = blob.conditions }
-            let nextContacts = blob.contacts.map { $0.asEmergencyContact() }
-            // Compare fields only — EmergencyContact.id is a fresh UUID each map.
-            let contactsChanged = contacts.count != nextContacts.count
-                || zip(contacts, nextContacts).contains {
-                    $0.name != $1.name || $0.relationship != $1.relationship || $0.phone != $1.phone
-                }
             if contactsChanged { contacts = nextContacts }
             if braceletLinked != blob.braceletLinked { braceletLinked = blob.braceletLinked }
             if isOrganDonor != blob.isOrganDonor { isOrganDonor = blob.isOrganDonor }
