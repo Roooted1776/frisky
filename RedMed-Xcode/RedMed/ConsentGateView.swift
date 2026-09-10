@@ -10,7 +10,7 @@ import UIKit
 /// still `.notDetermined`, then Main is interactive.
 /// Same-session background → foreground does **not** re-prompt (no
 /// OwnerAppLock relock). Edit / Save / Erase / Load From Band still Face ID.
-/// Never on passerby tapper.
+/// Never on passerby tapper or in-app band / UL tap card (`BandTapIngress`).
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
     static let currentVersion = "4.14"
@@ -53,6 +53,7 @@ struct ConsentGateView<Content: View>: View {
     @State private var openPolicy: HelpDocument.Policy? = nil
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var profile: ProfileData
+    @EnvironmentObject private var bandTap: BandTapIngress
     @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @ViewBuilder var content: () -> Content
@@ -64,10 +65,13 @@ struct ConsentGateView<Content: View>: View {
                     .accessibilityHidden(!hasAccepted)
                     .allowsHitTesting(hasAccepted)
             }
-            if awaitingPostAgreeFaceID {
-                postAgreeFaceIDPane
-            } else if !hasAccepted {
-                gate
+            // Hide owner start screens while an ungated band tap card is up.
+            if !bandTap.isPresentingTapCard {
+                if awaitingPostAgreeFaceID {
+                    postAgreeFaceIDPane
+                } else if !hasAccepted {
+                    gate
+                }
             }
         }
         .onAppear {
@@ -79,6 +83,22 @@ struct ConsentGateView<Content: View>: View {
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
+                tryPromptPostAgreeFaceID()
+            }
+        }
+        .onChange(of: bandTap.session?.id) { _, newId in
+            let presenting = newId != nil
+            if presenting {
+                // Tap card wins — cancel any Face ID sheet mid-flight.
+                _ = BiometricAuth.cancelInFlight()
+                isAuthenticating = false
+                didAutoPrompt = false
+                showRetry = false
+                biometryFailed = false
+                notInteractive = false
+                unavailableReason = nil
+            } else {
+                // Card dismissed — resume owner cold-open Face ID if still needed.
                 tryPromptPostAgreeFaceID()
             }
         }
@@ -323,6 +343,8 @@ struct ConsentGateView<Content: View>: View {
     }
 
     private func tryPromptPostAgreeFaceID() {
+        // Band / UL tap card is ungated — never stack Face ID under it.
+        guard !bandTap.isPresentingTapCard else { return }
         guard awaitingPostAgreeFaceID, !hasAccepted, !didAutoPrompt, !isAuthenticating else { return }
         guard scenePhase != .background else { return }
         #if !targetEnvironment(simulator)
@@ -333,6 +355,7 @@ struct ConsentGateView<Content: View>: View {
     }
 
     private func runPostAgreeFaceID() {
+        guard !bandTap.isPresentingTapCard else { return }
         guard awaitingPostAgreeFaceID, !hasAccepted, !isAuthenticating else { return }
         isAuthenticating = true
         biometryFailed = false
@@ -347,6 +370,11 @@ struct ConsentGateView<Content: View>: View {
         ) { outcome in
             Task { @MainActor in
                 isAuthenticating = false
+                // Band tap card is ungated — ignore Face ID results while it is up.
+                if bandTap.isPresentingTapCard {
+                    didAutoPrompt = false
+                    return
+                }
                 let label: String = {
                     switch outcome {
                     case .success: return "success"

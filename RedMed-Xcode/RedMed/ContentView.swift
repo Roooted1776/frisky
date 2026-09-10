@@ -148,12 +148,9 @@ struct ContentView: View {
             mountedTabs.insert(.nfc)
             startHoldToWriteFromNFCTab()
         }
-        // Associated Domains: foreign / unmatched band URL → in-app tap card (no SOS).
-        .onReceive(NotificationCenter.default.publisher(for: .redMedOpenBandURL)) { note in
-            guard !isScannerSession else { return }
-            guard let urlString = note.object as? String else { return }
-            nfcBandBox.ensure().presentBandURLFromUniversalLink(urlString)
-        }
+        // Associated Domains / redmed://band: foreign `#d=` presents via
+        // `BandTapIngress` above ConsentGate (ungated). NFC Scan still uses
+        // scannedCard on this tree after owner Face ID.
         .fullScreenCover(item: nfcBandBox.scannedCardBinding) { session in
             PasserbyHTMLCardView(
                 payloadOrURL: session.payload,
