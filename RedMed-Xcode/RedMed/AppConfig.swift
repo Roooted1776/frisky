@@ -247,6 +247,16 @@ enum AppConfig {
             "Walk-by distance will not fire the band; only a deliberate \(intentionalTapRangeLabel) antenna tap opens the card."
         }
 
+        /// NFC tab tip under Pack / Write — phone top to chip.
+        static var holdTopOfPhoneTip: String {
+            "Hold the top of your iPhone to the chip, about \(intentionalTapInchesMin)–\(intentionalTapInchesMax) inches."
+        }
+
+        /// Write-path fail detail after a missed hold / session error.
+        static var holdStillRetryTip: String {
+            "Hold the top of the phone still, then try again."
+        }
+
         /// Alias for NFC / sourcing copy — band is never a BLE device.
         static var noBluetoothSummary: String { carrierVsBluetoothSummary }
 

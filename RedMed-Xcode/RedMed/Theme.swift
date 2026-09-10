@@ -115,6 +115,8 @@ struct SectionLabel: View {
 
 struct PrimaryButton: View {
     let title: String
+    /// Optional second line under the title (NFC Write / Pack CTAs).
+    var subtitle: String? = nil
     var systemImage: String? = nil
     var busy: Bool = false
     var disabled: Bool = false
@@ -134,6 +136,14 @@ struct PrimaryButton: View {
         .disabled(disabled || busy)
         .opacity(busy ? 0.72 : (disabled ? RedMedChrome.disabledOpacity : 1))
         .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(accessibilityTitle)
+    }
+
+    private var accessibilityTitle: String {
+        if let subtitle, !subtitle.isEmpty {
+            return "\(title). \(subtitle)"
+        }
+        return title
     }
 
     @ViewBuilder
@@ -144,12 +154,24 @@ struct PrimaryButton: View {
             } else if let systemImage {
                 Image(systemName: systemImage)
             }
-            Text(title)
+            if let subtitle, !subtitle.isEmpty, !busy {
+                VStack(spacing: 3) {
+                    Text(title)
+                        .font(.system(size: 16, weight: .bold))
+                    Text(subtitle)
+                        .font(.system(size: 12, weight: .medium))
+                        .opacity(0.92)
+                }
+                .multilineTextAlignment(.center)
+            } else {
+                Text(title)
+                    .font(.system(size: 16, weight: .bold))
+            }
         }
-        .font(.system(size: 16, weight: .bold))
         .foregroundColor(.white)
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 15)
+        .padding(.vertical, subtitle == nil || busy ? 15 : 13)
+        .padding(.horizontal, 12)
         .background(
             LinearGradient(
                 colors: [.redmedAccentLift, .redmedAccent],

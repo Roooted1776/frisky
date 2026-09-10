@@ -1,13 +1,14 @@
 // Owner-only NFC bracelet setup. Ped/EMS scanner shells never mount this tab —
 // see ContentView.showsNFC / scannerSafeTab.
-// One page: Write + Preview + Load From Band.
+// One page: Write + Preview + Load From Band (live), or Pack Band URL +
+// Share Band URL + Preview (parked — never a fake Write button).
 // When `AppConfig.nfcHardwareEnabled` is true, Write starts a CoreNFC
 // NDEF session and programs `medicalCardBaseURL#d=` from the live profile.
 // Preview packs the live profile into the same tapper card helpers get.
 // Load From Band reads `#d=` off the chip, Face IDs, then persist()s into
 // owner Keychain (empty funnel restore). Scanners never.
 // Linked after write + matching read-back, or after a successful Load.
-// Parked (`false`): pack-only Write status + Share Band URL + Preview
+// Parked (`false`): Pack Band URL + Share Band URL + Preview
 // (never flips Linked; Load is hidden).
 import SwiftUI
 
@@ -135,7 +136,7 @@ struct NFCView: View {
 
     private var linkStatus: (title: String, detail: String, linked: Bool) {
         if profile.showsBraceletAsLinked {
-            return ("Linked Bracelet", "Re-write after you edit RedMed", true)
+            return ("Linked", "Anyone can tap this band to open your card.", true)
         }
         if profile.braceletLinked {
             return ("Band Written", "Finish name, birth date, and blood type on RedMed", false)
@@ -150,10 +151,10 @@ struct NFCView: View {
                 .font(.system(size: 44, weight: .semibold))
                 .foregroundColor(.redmedAccent)
                 .accessibilityHidden(true)
-            Text("Setup Complete")
+            Text("Linked")
                 .font(.system(size: 22, weight: .bold))
                 .foregroundColor(.redmedDark)
-            Text("Bracelet linked. Helpers see your card on a tap.")
+            Text("Anyone can tap this band to open your card.")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.redmedMuted)
                 .multilineTextAlignment(.center)
@@ -167,7 +168,7 @@ struct NFCView: View {
         .padding(.vertical, 22)
         .redmedBox()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Setup complete. Bracelet linked. Helpers see your card on a tap. Re-write after you edit RedMed.")
+        .accessibilityLabel("Linked. Anyone can tap this band to open your card. Re-write after you edit RedMed.")
     }
 
     private var factsCard: some View {
@@ -221,11 +222,14 @@ struct NFCView: View {
     }
 
     private var setupCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        let live = AppConfig.nfcHardwareEnabled
+        return VStack(alignment: .leading, spacing: 14) {
             SectionLabel(text: "Set Up")
 
+            // Live: Write The Band. Parked: Pack Band URL (never a fake Write).
             PrimaryButton(
                 title: writeButtonTitle,
+                subtitle: band.isWriting ? nil : writeButtonSubtitle,
                 systemImage: band.isWriting ? nil : "wave.3.right",
                 busy: band.isWriting,
                 disabled: !profile.hasSensitiveProfileData || band.isBusy,
@@ -234,15 +238,18 @@ struct NFCView: View {
                 band.writeBand(from: profile, isScannerSession: isScannerSession)
             }
 
-            OutlineButton(
-                title: "Preview",
-                systemImage: "eye",
-                disabled: !profile.hasSensitiveProfileData || band.isBusy || previewSession != nil
-            ) {
-                openFirstResponderPreview()
-            }
+            tipRow(AppConfig.BraceletRF.holdTopOfPhoneTip)
+                .padding(.top, -4)
 
-            if AppConfig.nfcHardwareEnabled {
+            if live {
+                OutlineButton(
+                    title: "Preview",
+                    systemImage: "eye",
+                    disabled: !profile.hasSensitiveProfileData || band.isBusy || previewSession != nil
+                ) {
+                    openFirstResponderPreview()
+                }
+
                 OutlineButton(
                     title: band.isReading ? "Hold Near The Band…" : "Load From Band",
                     systemImage: band.isReading ? nil : "arrow.down.to.line",
@@ -253,17 +260,23 @@ struct NFCView: View {
                 }
                 .accessibilityLabel("Load From Band")
                 .accessibilityHint("Reads the bracelet into this iPhone. Face ID required. Replaces the RedMed ID here.")
-            }
-
-            if !AppConfig.nfcHardwareEnabled {
+            } else {
                 parkedShareControl
+
+                OutlineButton(
+                    title: "Preview",
+                    systemImage: "eye",
+                    disabled: !profile.hasSensitiveProfileData || band.isBusy || previewSession != nil
+                ) {
+                    openFirstResponderPreview()
+                }
             }
 
             if !profile.hasSensitiveProfileData {
                 Text(
-                    AppConfig.nfcHardwareEnabled
+                    live
                         ? "Fill RedMed before writing or previewing. Load From Band reads a written bracelet into this iPhone."
-                        : "Fill RedMed before writing or previewing the band."
+                        : "Fill RedMed before packing or previewing the band."
                 )
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.redmedAccent)
@@ -284,8 +297,7 @@ struct NFCView: View {
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                if AppConfig.nfcHardwareEnabled {
-                    tipRow("Open NFC (or tap Write) — then hold the band to the top of the phone \(AppConfig.BraceletRF.intentionalTapRangeLabel).")
+                if live {
                     tipRow(AppConfig.BraceletRF.completeBandSummary)
                     tipRow("Write packs #d= onto the chip only — never a vendor cloud or social/short link.")
                     tipRow("Preview: same HTML card helpers get — quick, no login, no server, no app.")
@@ -461,12 +473,21 @@ struct NFCView: View {
         if band.isWriting {
             return AppConfig.nfcHardwareEnabled ? "Hold Near The Band…" : "Packing…"
         }
-        // Parked Write packs only — Preview is the single helper-card button.
+        // Parked packs only — never label this Write.
         return AppConfig.nfcHardwareEnabled ? "Write The Band" : "Pack Band URL"
+    }
+
+    private var writeButtonSubtitle: String {
+        AppConfig.nfcHardwareEnabled
+            ? "Save your medical ID to this band"
+            : "Copy the link your band will open"
     }
 
     private var statusIsError: Bool {
         let msg = band.statusMessage
+        if msg.hasPrefix("Linked") {
+            return false
+        }
         if msg.contains("Couldn't") || msg.contains("failed") || msg.contains("Failed") {
             return true
         }

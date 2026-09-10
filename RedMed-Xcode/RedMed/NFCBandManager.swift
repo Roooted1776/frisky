@@ -242,12 +242,12 @@ final class NFCBandManager: ObservableObject {
     }
 
     /// Pack-only fallback when CoreNFC is parked — never marks Linked.
-    /// Does not open the helper card; NFC Preview is the single first-responder preview.
+    /// Copies the same `OwnerBandURI` Share / Preview use. No chip write.
     private func simulateWrite(_ urlString: String, profile: ProfileData) {
         isWriting = true
         writeSucceeded = false
         writeVerified = false
-        statusMessage = "Packing compact tap card…"
+        statusMessage = "Packing…"
         lastPackedURL = urlString
         let note = ProfileNFCCodec.capacityNote(for: profile)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { [weak self] in
@@ -255,7 +255,8 @@ final class NFCBandManager: ObservableObject {
             self.isWriting = false
             self.writeSucceeded = false
             self.writeVerified = false
-            self.statusMessage = "Packed only (no band) — \(note.text). Use Preview for the helper card; Linked needs a real NFC write."
+            SecurePasteboard.copyEphemeral(urlString, lifetimeSeconds: 600)
+            self.statusMessage = "Packed — link copied. Share Band URL or Preview. Linked needs a real NFC write. \(note.text)."
         }
     }
 

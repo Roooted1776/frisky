@@ -194,19 +194,21 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                         return
                     }
                     tag.writeNDEF(message) { error in
-                        if let error {
-                            let capHint = capacity > 0 ? " Tag capacity: \(capacity) bytes." : ""
-                            session.invalidate(errorMessage: "Write failed: \(error.localizedDescription).\(capHint)")
+                        if error != nil {
+                            session.invalidate(
+                                errorMessage: "Couldn't write — \(AppConfig.BraceletRF.holdStillRetryTip)"
+                            )
                             return
                         }
 
                         tag.readNDEF { readMessage, readError in
-                            if let readError {
+                            if readError != nil {
+                                // Bytes may be on the chip; Linked still needs matching read-back.
                                 session.alertMessage = "Written — couldn't verify read-back. Test with another phone."
                                 self?.finishWrite(
                                     success: true,
                                     verified: false,
-                                    status: "Tag written. Verification skipped: \(readError.localizedDescription)",
+                                    status: "Written — couldn't verify. Anyone can tap if the write stuck; Linked needs a matching read-back.",
                                     thenInvalidate: session
                                 )
                                 return
@@ -215,14 +217,14 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                             let written = readMessage?.records.first.flatMap { NFCURICodec.string(from: $0) }
                             let ok = written.map { NFCURICodec.match($0, urlString) } ?? false
                             session.alertMessage = ok
-                                ? "Success! Bracelet programmed and verified."
-                                : "Written, but read-back didn't match. Test with another phone."
+                                ? "Linked — anyone can tap this band to open your card."
+                                : "Couldn't write — hold the top of the phone still, then try again."
                             self?.finishWrite(
-                                success: true,
+                                success: ok,
                                 verified: ok,
                                 status: ok
-                                    ? "Bracelet programmed and verified. Other phones can tap it; payment terminals cannot."
-                                    : "Written, but verification failed — try writing again.",
+                                    ? "Linked — Anyone can tap this band to open your card."
+                                    : "Couldn't write — \(AppConfig.BraceletRF.holdStillRetryTip)",
                                 thenInvalidate: session
                             )
                         }
@@ -263,7 +265,25 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                readerError.code == .readerSessionInvalidationErrorUserCanceled {
                 self.statusMessage = "Cancelled."
             } else if !self.success {
-                self.statusMessage = error.localizedDescription
+                // Keep finishWrite / invalidate(errorMessage:) copy when already set.
+                if self.statusMessage.hasPrefix("Couldn't write")
+                    || self.statusMessage.hasPrefix("Linked")
+                    || self.statusMessage.hasPrefix("Written") {
+                    return
+                }
+                let detail = error.localizedDescription
+                if detail.hasPrefix("Couldn't write")
+                    || detail.contains("locked")
+                    || detail.contains("NTAG216")
+                    || detail.contains("capacity")
+                    || detail.contains("Profile is")
+                    || detail.contains("Couldn't build")
+                    || detail.contains("Not a blank")
+                    || detail.lowercased().contains("more than one") {
+                    self.statusMessage = detail
+                } else {
+                    self.statusMessage = "Couldn't write — \(AppConfig.BraceletRF.holdStillRetryTip)"
+                }
             }
         }
     }
