@@ -118,6 +118,7 @@ struct ConsentGateView<Content: View>: View {
         notInteractive = false
         unavailableReason = nil
         PolicyWebViewPool.discard()
+        OwnerSessionGate.resetForConsentGate()
         var t = Transaction()
         t.animation = nil
         withTransaction(t) {
@@ -328,6 +329,7 @@ struct ConsentGateView<Content: View>: View {
             contentArmed = true
             hasAccepted = true
         }
+        OwnerSessionGate.markInteractive()
         let readyLabel = consentedAtLaunch
             ? "returning cold Face ID"
             : "post-Agree Face ID"
