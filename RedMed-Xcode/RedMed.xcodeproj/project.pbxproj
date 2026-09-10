@@ -24,7 +24,7 @@
 		AABB00000000000000000012 /* OwnerHelpChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000012 /* OwnerHelpChrome.swift */; };
 		AABB00000000000000000013 /* LocationAccessSuggester.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000013 /* LocationAccessSuggester.swift */; };
 		AABB00000000000000000014 /* BiometricAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000014 /* BiometricAuth.swift */; };
-		AABB0000000000000000001A /* legal-doc.css in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001A /* Document/legal-doc.css */; };
+		AABB0000000000000000001A /* legal-doc.css in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001A /* legal-doc.css */; };
 		AABB0000000000000000001B /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001B /* KeychainStore.swift */; };
 		AABB0000000000000000001C /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001C /* AppConfig.swift */; };
 		AABB0000000000000000001D /* ProfileNFCCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001D /* ProfileNFCCodec.swift */; };
@@ -46,7 +46,7 @@
 		AABB00000000000000000035 /* VolumeBoost.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000035 /* VolumeBoost.swift */; };
 		AABB0000000000000000004C /* PasserbyHTMLCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000004C /* PasserbyHTMLCardView.swift */; };
 		AABB0000000000000000004D /* AudioSessionGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000004D /* AudioSessionGate.swift */; };
-		AABB00000000000000000050 /* Document.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000050 /* Document/Document.html */; };
+		AABB00000000000000000050 /* Document.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000050 /* Document.html */; };
 		AABB00000000000000000054 /* pheart.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000054 /* pheart.png */; };
 		AABB00000000000000000055 /* ConsentGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000055 /* ConsentGateView.swift */; };
 		AABB00000000000000000056 /* CountryDialCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000056 /* CountryDialCode.swift */; };
@@ -77,7 +77,7 @@
 		AAAA00000000000000000012 /* OwnerHelpChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwnerHelpChrome.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000013 /* LocationAccessSuggester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationAccessSuggester.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000014 /* BiometricAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuth.swift; sourceTree = "<group>"; };
-		AAAA0000000000000000001A /* legal-doc.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = "legal-doc.css"; sourceTree = "<group>"; }; /* Document/ */
+		AAAA0000000000000000001A /* legal-doc.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = "legal-doc.css"; sourceTree = "<group>"; };
 		AAAA0000000000000000001B /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000001C /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000001D /* ProfileNFCCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileNFCCodec.swift; sourceTree = "<group>"; };
@@ -229,7 +229,6 @@
 				AAAA0000000000000000001A /* legal-doc.css */,
 			);
 			path = Document;
-			name = Document;
 			sourceTree = "<group>";
 		};
 		AAAA0000000000000000004A /* Passerby Bundle */ = {
