@@ -16,18 +16,18 @@ final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManag
     /// Retained only while the When-In-Use sheet is outstanding. Dropped
     /// after the status is determined so `locationd` is not kept awake.
     private var promptManager: CLLocationManager?
+    /// One status reader — recreating `CLLocationManager()` on every
+    /// Refresh / 911 appear wakes `locationd` for a throwaway. Reuse.
+    private lazy var statusManager = CLLocationManager()
 
     private override init() {
         super.init()
     }
 
     /// Read authorization without presenting the system sheet.
-    /// A throwaway `CLLocationManager` is used only to read
-    /// `authorizationStatus` — never retained, never given a delegate —
-    /// so `locationd` is not kept awake across every Face ID → consent
-    /// paint.
+    /// Uses a shared reader manager (no delegate, never starts GPS).
     func refresh() {
-        apply(CLLocationManager().authorizationStatus)
+        apply(statusManager.authorizationStatus)
     }
 
     /// Present When-In-Use if still `.notDetermined`. Call after Face ID
@@ -35,7 +35,7 @@ final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManag
     func requestWhenInUseIfNeeded() {
         guard AppSettings.locationEnabled else { return }
         if promptManager != nil { return }
-        let status = CLLocationManager().authorizationStatus
+        let status = statusManager.authorizationStatus
         switch status {
         case .notDetermined:
             let m = CLLocationManager()

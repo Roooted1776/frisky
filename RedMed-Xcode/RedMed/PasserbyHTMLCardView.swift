@@ -574,14 +574,11 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         return html
     }
 
-    /// Builds the boot-wrapped shell HTML and loads it. When the shell string is
-    /// already cached in memory (the common case — `PasserbyShellCache.warm()`
-    /// runs at cold launch) this happens synchronously on this same SwiftUI
-    /// update pass. On a cache miss the disk read + decode is hopped to a
-    /// background task instead of blocking `updateUIView`'s main-thread pass —
-    /// `loadedKey` is re-checked before the deferred load fires so a newer call
-    /// (a fresh `payloadOrURL` / visibility flip) that landed in the meantime
-    /// wins instead of the stale one.
+    /// Builds the boot-wrapped shell HTML and loads it. Always deferred off the
+    /// SwiftUI update pass (even on RAM cache hit) so Preview/Scan open does not
+    /// hitch on a same-turn splice + `loadHTMLString`. Disk miss still decodes
+    /// off-main first. `loadedKey` is re-checked before the deferred load fires
+    /// so a newer call (fresh `payloadOrURL` / visibility flip) wins.
     private static func performFullLoad(
         into webView: WKWebView,
         coordinator: Coordinator,
@@ -603,25 +600,21 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         coordinator.shellLoaded = false
         coordinator.loadAttempts += 1
 
-        if let cached = PasserbyShellCache.peek() {
-            guard let html = bootedShellHTML(
-                shellHTML: cached.html,
-                encodedPayload: encodedPayload,
-                braceletLinked: braceletLinked,
-                appEmbed: appEmbed,
-                embedProfileJSON: embedProfileJSON
-            ) else { return }
-            webView.loadHTMLString(html, baseURL: cached.url)
-            coordinator.scheduleLoadDeadline(for: webView)
-            return
-        }
-
+        // Always hop off this SwiftUI update pass — even a RAM cache hit still
+        // splices ~100KB HTML + loadHTMLString, which hitch Preview/Scan open
+        // when done synchronously inside updateUIView.
+        let peek = PasserbyShellCache.peek()
         Task { @MainActor [weak webView, weak coordinator] in
-            let prepared: (URL, String)? = await Task.detached(priority: .userInitiated) {
-                guard let fileURL = PasserbyShellCache.shellFileURL(),
-                      let shellHTML = PasserbyShellCache.shellHTML() else { return nil }
-                return (fileURL, shellHTML)
-            }.value
+            let prepared: (URL, String)?
+            if let peek {
+                prepared = (peek.url, peek.html)
+            } else {
+                prepared = await Task.detached(priority: .userInitiated) {
+                    guard let fileURL = PasserbyShellCache.shellFileURL(),
+                          let shellHTML = PasserbyShellCache.shellHTML() else { return nil }
+                    return (fileURL, shellHTML)
+                }.value
+            }
             guard let webView, let coordinator, coordinator.loadedKey == loadKey,
                   let (fileURL, shellHTML) = prepared,
                   let html = bootedShellHTML(

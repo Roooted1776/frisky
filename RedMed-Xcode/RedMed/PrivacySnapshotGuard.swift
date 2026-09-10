@@ -82,24 +82,22 @@ struct PrivacySnapshotGuard<Content: View>: View {
                 hasBeenActive = true
             }
         }
-        .task {
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 2_000_000_000)
-                let nowCaptured = UIScreen.main.isCaptured
-                if nowCaptured != screenCaptured {
-                    screenCaptured = nowCaptured
-                }
-                if !nowCaptured {
-                    manualCaptureOverride = false
-                }
-            }
-        }
+        // Capture flips via `UIScreen.capturedDidChangeNotification` below —
+        // no 2s poll. That loop woke MainActor forever for work the
+        // notification already covers (cold-open / tab-hop cost).
         .onChange(of: phiInMemory) { _, on in
             SnapshotSafeCover.phiInMemory = on
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 hasBeenActive = true
+                // Re-sample on foreground — covers any capture flip that
+                // happened while we were suspended (notification can miss).
+                let nowCaptured = UIScreen.main.isCaptured
+                screenCaptured = nowCaptured
+                if !nowCaptured {
+                    manualCaptureOverride = false
+                }
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .redMedTapCardPresentationDidChange)) { _ in
