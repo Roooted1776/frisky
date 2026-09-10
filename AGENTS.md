@@ -10,13 +10,18 @@ authoritative for code.
 Owner NFC is restored in-repo (`nfcHardwareEnabled = true`, `TAG` entitlement,
 `NFCReaderUsageDescription`) — still needs paid Program + NFC Tag Reading on
 App ID `com.redmed.app` (portal + Xcode capability) before device Write works.
-**Do not sell blank bands** until Tag Reading is live on a device and owner
-Write is proven — see `docs/NFC-RESTORE.md`. **Associated Domains is parked**
-(`associatedDomainsEnabled = false`, no `applinks:` in `RedMed.entitlements`)
-so Automatic Signing works on a personal/free team for that capability. Safari
-still tries `redmed://band#d=` before SOS. Restore Associated Domains after
-paid Program — see `docs/associated-domains-restore.md`. The owner NFC tab
-stays visible with Write, Preview, and Load From Band when hardware is on.
+**Product gate — write from the app:** storefront / dept “write from the app”
+stays **off** until Tag Reading is live **and** Write The Band is proven on a
+blank NTAG216 (`docs/NFC-RESTORE.md`, `docs/ADVERTISING.md`). Until that
+checklist is green: sell **blank chips only** + **Share honesty** (Share Band
+URL / Preview pack `#d=` — not a chip write, not Linked). Do **not** ship
+“program with Shortcuts / NFC Tools” as the product path. **Associated Domains
+is parked** (`associatedDomainsEnabled = false`, no `applinks:` in
+`RedMed.entitlements`) so Automatic Signing works on a personal/free team for
+that capability. Safari still tries `redmed://band#d=` before SOS. Restore
+Associated Domains after paid Program — see
+`docs/associated-domains-restore.md`. The owner NFC tab stays visible with
+Write, Preview, and Load From Band when hardware is on.
 `medicalCardBaseURL#d=` is unchanged. Linked only after write + matching
 read-back. Do not spend PRs on tab chrome or copy.
 

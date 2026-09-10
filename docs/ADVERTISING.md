@@ -25,7 +25,8 @@ Do not put a storefront, course LMS, or ad pixel in this repo.
 ## Shared product gate
 
 **$0 paid media on either view** until every line is true. Organic
-build-in-public with no buy CTA is fine.
+build-in-public is fine. Blank-chip storefront with Share honesty is fine
+before write-from-app is green; do not claim “write from the app” early.
 
 | Gate | How you know it is green |
 |------|--------------------------|
@@ -33,16 +34,27 @@ build-in-public with no buy CTA is fine.
 | App Store listing | Paid Apple Developer. Real `apps.apple.com` ID. `AppConfig.appStoreURL` is that URL, not `nil`, not a placeholder. |
 | NFC write on hardware | NFC Tag Reading on App ID `com.redmed.app`. `nfcHardwareEnabled = true`. Owner iPhone Write → second phone Safari opens the card. Simulator does not count. |
 | Sample bands in hand | 1–10 black (`#232425`) NTAG216 silicone, logo-print RedMed face, NDEF blank unlocked. Proven write on a physical iPhone. |
-| Somewhere to buy (view A) | Shopify (or equivalent) **after** the samples write. No storefront in this git tree. |
+| Somewhere to buy (view A) | Shopify (or equivalent). Blank-chip SKU + Share honesty may list before write is proven. “Write from the app” / full band CTA waits on the write checklist below. No storefront in this git tree. |
 
-Do not skip to Shopify, Meta, Google, or hospital outbound while NFC is
-parked, the listing is parked, or the band host 404s.
+Do not skip to Meta, Google, or hospital outbound while the listing is parked,
+the band host 404s, or write-from-app is still red.
 
-**While CoreNFC is parked:** no blank-band sell copy from Max. No Shopify /
-caption / leave-behind that sells an unwritten NTAG216, and no “program it
-with Shortcuts / NFC Tools” workaround as the product path. Sample stock for
-entitlement proof is fine; a buy CTA is not. Restore Tag Reading first
-(`docs/NFC-RESTORE.md`).
+### Write-from-app checklist (storefront / dept)
+
+Storefront and dept **“write from the app”** stays **off** until both lines
+are green (same bar as Tag Reading + Write The Band on a blank NTAG216):
+
+| Checklist | How you know it is green |
+|-----------|--------------------------|
+| NFC Tag Reading | Paid Program. App ID `com.redmed.app` has Tag Reading. Xcode capability on. Device signing works. |
+| Write The Band live | Owner iPhone Write on a **blank unlocked NTAG216** → matching read-back → second phone Safari opens the card. Simulator does not count. |
+
+**Until that checklist is green:** sell **blank chips only** + **Share
+honesty** — Share Band URL / Preview pack the same `#d=` Write will use; they
+do not write the chip and do not mark Linked. Do **not** sell “program it with
+Shortcuts / NFC Tools” as the product path. In-repo CoreNFC lockstep may
+already be restored (`docs/NFC-RESTORE.md`); portal Tag Reading + proven Write
+are what flip the storefront claim.
 
 ### Shared banned copy (both views)
 
@@ -54,8 +66,9 @@ entitlement proof is fine; a buy CTA is not. Restore Tag Reading first
 - Walk-by tap at 6–8 inches (reliable coupling dies past ~4 inches; walk-by does not fire)
 - Lives saved / we dispatch help
 - Android can fill and write the band
-- Sell blank bands / “program with Shortcuts or NFC Tools” while
-  `nfcHardwareEnabled = false` (CoreNFC parked until real Tag Reading)
+- Storefront / dept “write from the app” / “program the band in RedMed”
+  before Tag Reading + Write The Band are proven on blank NTAG216
+- “Program with Shortcuts or NFC Tools” as the product write path
 - Mixing views: do not tell families “hospitals use this,” and do not tell
   facilities “download on the App Store and check out.”
 
@@ -68,6 +81,7 @@ entitlement proof is fine; a buy CTA is not. Restore Tag Reading first
 - Data stays on the chip and the iPhone
 - Not a substitute for calling emergency services
 - Intentional tap ~1–2 inches (`AppConfig.BraceletRF`, not invented inches)
+- Blank-chip SKU + Share honesty while write-from-app is still red (no write claim)
 
 ### Shared measurement rule
 

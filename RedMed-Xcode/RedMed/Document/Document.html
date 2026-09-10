@@ -21,7 +21,7 @@
 
   <aside class="legal-notice legal-notice-owner">
     <strong>Owner app</strong>
-    Edit your profile, Aid, Find Help, and the NFC tab live in the RedMed iPhone app. CoreNFC write and Load From Band are parked in this build (pack / Share Band URL / Preview only) until NFC Tag Reading is restored.
+    Edit your profile, Aid, Find Help, and the NFC tab live in the RedMed iPhone app. In-app Write and Load From Band need NFC Tag Reading on the App ID; until Write The Band is proven on a blank NTAG216, treat Share Band URL / Preview as pack-only (not a chip write).
     <a href="redmed://main">Open RedMed</a>
     · <a href="tapper.html">Emergency card (any phone)</a>
   </aside>
@@ -55,7 +55,7 @@
     <p>Contact: <a href="mailto:help.RedMed@gmail.com">help.RedMed@gmail.com</a>.</p>
 
     <h2><span class="sec-num">2</span> What RedMed is</h2>
-    <p>RedMed is a consumer app for a <strong>local emergency medical ID</strong>: store self-reported details on your iPhone, optionally put them on a passive NFC band when write is available, call for help, and show on-device first-aid while waiting for professionals. In this build, in-app CoreNFC write and Load From Band are <strong>parked</strong> — the NFC tab still packs a Share Band URL and Preview card; ships when ready.</p>
+    <p>RedMed is a consumer app for a <strong>local emergency medical ID</strong>: store self-reported details on your iPhone, optionally put them on a passive NFC band when write is available, call for help, and show on-device first-aid while waiting for professionals. Share Band URL and Preview pack a helper card; they do not write the chip. In-app Write returns when NFC Tag Reading is live and proven (<a href="#ships-when-ready">Ships When Ready</a>).</p>
     <p>It is not a hospital portal, not an electronic health record, not insurance software, and not a promise that EMS will arrive or that anyone will get a particular medical result. Full limits are in <a href="#terms">Terms</a>.</p>
 
     <h2><span class="sec-num">3</span> HIPAA — local only, not certified</h2>
@@ -82,7 +82,7 @@
     <p>When someone taps the band, nothing is fetched from us. The card is built from what is on the chip (<code>#d=</code> in the URL fragment).</p>
 
     <h2><span class="sec-num">6</span> The band is readable by design</h2>
-    <p>A RedMed band uses a <strong>passive NXP NTAG216</strong> HF NFC chip (13.56 MHz, ISO 14443A Type 2). The bracelet comes complete. Just the chip is needed. No battery. No Bluetooth. The phone powers it only during a close write or tap. In this build, CoreNFC write and Load From Band from the app are <strong>parked</strong> until NFC Tag Reading is restored — the NFC tab can pack and share a <code>#d=</code> URL or Preview the card; that does <strong>not</strong> write the chip and is not a blank-band product path. In-app Write returns when Tag Reading is live (<a href="#ships-when-ready">Ships When Ready</a>).</p>
+    <p>A RedMed band uses a <strong>passive NXP NTAG216</strong> HF NFC chip (13.56 MHz, ISO 14443A Type 2). The bracelet comes complete. Just the chip is needed. No battery. No Bluetooth. The phone powers it only during a close write or tap. Blank chips may ship before in-app Write is proven — Share Band URL / Preview pack a <code>#d=</code> URL or Preview the card; that does <strong>not</strong> write the chip. Storefront “write from the app” stays off until NFC Tag Reading is live and Write The Band works on a blank NTAG216 (<a href="#ships-when-ready">Ships When Ready</a>).</p>
     <p><strong>Anyone who deliberately taps the band can open the card</strong> — no app, no account, no password. New writes use AES-GCM packing with a <strong>public client key</strong> shared by the app and the passerby page. That hides casual plaintext in the fragment; it is <strong>not</strong> confidentiality against a responder (or anyone else) who opens the URL.</p>
     <p>Treat the band like a wallet medical ID. Do not put anything on it that you would not accept a stranger reading. Leave sensitive fields blank if you prefer.</p>
     <p>Casual walk-by distance will not fire the band. A deliberate ~1–2″ antenna tap can. Separately, <strong>iOS Background Tag Reading</strong> can open the card on that kind of tap even when the phone is off or locked — Apple’s path, not RedMed. Payment terminals speak EMV and do not open the RedMed card. More detail: <a href="#security">Security</a>.</p>
@@ -141,7 +141,7 @@
     <p class="legal-parties">How RedMed protects the iPhone app, the passerby card, and the NFC band in the United States</p>
     <div class="legal-notice">
       <strong>In short</strong>
-      Profile stays on your phone (Keychain) and on the band if you write one (CoreNFC write parked in this build — pack / Share / Preview). No RedMed profile backend. Owner Face ID gates post-Agree (first launch / after Erase), returning cold re-entry (once per process), Edit, Save, Erase, and Load From Band — not viewing the YOU card. NFC write, 911, Aid, same-session resume, and tapper do not prompt. Band tap needs <strong>no</strong> Face ID — EMS must read it cold. Packing on the chip is obfuscation, not a private vault.
+      Profile stays on your phone (Keychain) and on the band if you write one (in-app Write needs NFC Tag Reading — Share / Preview pack only until proven). No RedMed profile backend. Owner Face ID gates post-Agree (first launch / after Erase), returning cold re-entry (once per process), Edit, Save, Erase, and Load From Band — not viewing the YOU card. NFC write, 911, Aid, same-session resume, and tapper do not prompt. Band tap needs <strong>no</strong> Face ID — EMS must read it cold. Packing on the chip is obfuscation, not a private vault.
     </div>
     <article class="legal-body">
       <p>This page describes how RedMed approaches security. It is informational, <strong>not a warranty</strong>, and does not change the medical-device, no-outcome, or liability terms in <a href="#terms">Terms</a>.</p>
@@ -209,7 +209,7 @@
 
     <h2><span class="sec-num">3</span> What the App does</h2>
     <ul>
-      <li><strong>Medical ID</strong> — store self-reported name, birth date, blood type, allergies, meds, conditions, and contacts on your phone; optionally put them on a passive NFC band when write is available (CoreNFC write parked in this build — pack / Share / Preview only).</li>
+      <li><strong>Medical ID</strong> — store self-reported name, birth date, blood type, allergies, meds, conditions, and contacts on your phone; optionally put them on a passive NFC band when write is available (Share / Preview pack until Write The Band is proven on a blank NTAG216).</li>
       <li><strong>Find Help</strong> — SOS opens the regional emergency number immediately (no in-app prompt); crash detection waits the US Crash Detection delay then opens the same call unless you stop it; coordinates to read aloud; optional seizure stopwatch you start yourself.</li>
       <li><strong>Aid</strong> — general first-aid / CPR guidance on-device while waiting for professionals.</li>
       <li><strong>Band tap</strong> — any phone that taps a written band can open the emergency card in a browser with no app install and no login.</li>

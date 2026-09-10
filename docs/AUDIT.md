@@ -10,12 +10,12 @@ RedMed is a native iOS medical ID plus a static passerby HTML shell. There is no
 
 ## Current posture
 
-No committed secrets, no XSS in profile render (`textContent` / `esc()`), no autodial on SOS auto-arm, no scanner write into owner Keychain. **The band write host is live.** The remaining ship gap is CoreNFC parked on the free Apple team.
+No committed secrets, no XSS in profile render (`textContent` / `esc()`), no autodial on SOS auto-arm, no scanner write into owner Keychain. **The band write host is live.** In-repo CoreNFC lockstep is restored; portal Tag Reading + proven Write on blank NTAG216 remain. Storefront / dept “write from the app” stays off until that checklist is green — blank chips + Share honesty only.
 
 | Area | Status |
 |------|--------|
 | Passerby host | `https://roooted1776.github.io/tapper/` live (HTTP 200, smoke-pages green) |
-| CoreNFC | Parked (`nfcHardwareEnabled = false`, empty entitlements, no `NFCReaderUsageDescription`) |
+| CoreNFC | In-repo restored (`nfcHardwareEnabled = true`, TAG entitlement, `NFCReaderUsageDescription`). Portal Tag Reading on `com.redmed.app` still required for device Write |
 | Associated Domains | Parked (`associatedDomainsEnabled = false`, no `applinks:`). Safari still tries `redmed://band#d=` before SOS |
 | HealthKit | Parked (`healthKitImportEnabled = false`) |
 | `redmed.pages.dev` | 404 until CF secrets / Git connect |
@@ -24,11 +24,12 @@ No committed secrets, no XSS in profile render (`textContent` / `esc()`), no aut
 | Policies | Bundled `Document/Document.html` + `legal-doc.css`. Legacy `Help.html` is a hash-preserving redirect stub (not bundled) |
 | Notes | Ride both Keychain and chip (`NFCChipProfile.notes`, compact index 12) |
 | Face ID | Post-Agree once, Edit / Save / Erase / Load From Band. No cream lock in front of Main. Keychain is device-unlocked, **no** biometry ACL |
-| Entitlements | Bare empty `<dict></dict>` — no NFC, no applinks, no HealthKit |
+| Entitlements | TAG NFC formats; no applinks; no HealthKit |
+| Write-from-app storefront | Off until Tag Reading + Write The Band on blank NTAG216. Until then: blank chips + Share honesty |
 
 **Still needs Max (not this tree):**
 
-1. Paid Apple Developer: NFC Tag Reading on App ID `com.redmed.app`, then restore (`docs/NFC-RESTORE.md`). CoreNFC stays parked and flagged until that lands. Share Band URL / Preview are pack-only — not a write path, not a blank-band sell CTA.
+1. Paid Apple Developer: NFC Tag Reading on App ID `com.redmed.app` (portal + Xcode). In-repo lockstep is restored (`nfcHardwareEnabled = true`, TAG entitlement, usage string). Storefront / dept “write from the app” stays off until Tag Reading + Write The Band are proven on blank NTAG216 — until then blank chips + Share honesty only (`docs/ADVERTISING.md`).
 2. Restore Associated Domains after paid Program (`docs/associated-domains-restore.md`).
 3. Leave HealthKit parked until a paid team can provision it.
 4. Do not re-bind Keychain to `biometryCurrentSet` (Face ID stays UI-only).
