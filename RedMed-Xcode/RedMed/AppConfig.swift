@@ -106,9 +106,9 @@ enum AppConfig {
     /// `medicalCardBaseURL#d=` (`OwnerBandURI`). Requires NFC Tag Reading on App ID
     /// `com.redmed.app` + paid Apple Developer — see `docs/NFC-RESTORE.md`.
     /// Keep this flag in lockstep with `RedMed.entitlements` + `NFCReaderUsageDescription`.
-    /// `false` parks hardware sessions (pack-only Write + Share Band URL +
-    /// Preview; Load From Band button hidden). Gate logic stays correct for
-    /// restore — see `docs/NFC-RESTORE.md`.
+    /// `false` parks hardware sessions (Pack Band URL + Share Band URL +
+    /// Preview; no Write label; Load From Band button hidden). Gate logic
+    /// stays correct for restore — see `docs/NFC-RESTORE.md`.
     static let nfcHardwareEnabled = true
 
     /// `true` = `RedMed.entitlements` includes `applinks:` so a phone with RedMed
