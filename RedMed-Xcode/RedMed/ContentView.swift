@@ -81,26 +81,33 @@ struct ContentView: View {
             guard !isScannerSession else { return }
             // Prefetch + MainActor adopt usually started in ProfileData.init
             // (may have filled RAM before this task). restoreOnLaunch is a
-            // no-op when adopt already won. Haptics / CoreMotion / tab Metal
-            // stay past the filled-card commit.
+            // no-op when adopt already won. Haptics / CoreMotion / WK stay
+            // past the filled-card commit *and* past Face ID (Main is armed
+            // under cream — a 400ms sleep alone still lands mid-sheet).
             RedMedSignpost.coldMark("restoreOnLaunch start")
             await profile.restoreOnLaunch()
             RedMedSignpost.coldMark("restoreOnLaunch done")
             guard !Task.isCancelled else { return }
-            // Let the filled YOU card commit, then warm Taptic + 50 Hz motion
-            // + alarm WAV so they do not hitch the adopt paint.
+            // String-only tapper.html read — safe during Face ID (no WK).
+            PasserbyHTMLCardView.scheduleShellWarmOnce()
             await Task.yield()
             try? await Task.sleep(nanoseconds: 400_000_000)
             guard !Task.isCancelled else { return }
+            // `.task` captured scenePhase is stale (.inactive for the whole
+            // Face ID sheet). Read UIApplication live.
+            await RedMedMainPace.waitUntilActive()
+            guard !Task.isCancelled else { return }
+            await Task.yield()
             RedMedHaptics.prepare()
-            if scenePhase == .active {
-                startCrashMonitorIfOwner()
-            }
-            // Spare full (non-embed) WKWebView for first NFC Preview / Scan —
-            // string warm alone still leaves WebKit cold on that tap.
-            // Never during Face ID; only after YOU has painted.
-            guard !isScannerSession else { return }
+            startCrashMonitorIfOwner()
+            // Spare full (non-embed) WKWebView for first NFC Preview / Scan.
             PasserbyWebViewPool.warmFullShell()
+            RedMedSignpost.coldMark("post-interactive warm (haptics/motion/WK)")
+            // Next-screen catalogs so first Aid topic / Edit keystroke is ready.
+            Task.detached(priority: .utility) {
+                await AidTopicCatalog.warmUp()
+                await SuggestionCatalog.warmUp()
+            }
         }
         .onAppear {
             mountedTabs.insert(activeTab)
@@ -301,9 +308,6 @@ struct CustomTabBar: View {
     var showsNFC: Bool = true
     /// Owner NFC tab tap — begin CoreNFC write on this gesture so hold finishes it.
     var onNFCWrite: (() -> Void)? = nil
-    /// Flatten fill/stroke/shadow after first YOU paint — drawingGroup is a
-    /// Metal texture cost we don't want on the cold-open critical path.
-    @State private var flattenChrome = false
 
     /// Continuous rounded top — polished bottom chrome without frost (opaque cream).
     private var barShape: UnevenRoundedRectangle {
@@ -343,33 +347,17 @@ struct CustomTabBar: View {
                 .accessibilityHidden(true)
         }
         .background {
-            let chrome = barShape
+            barShape
                 .fill(Color.redmedBg)
                 .overlay {
                     barShape.strokeBorder(Color.redmedDivider, lineWidth: 0.5)
                 }
                 .shadow(color: RedMedChrome.cardShadow, radius: 10, y: -2)
-            Group {
-                if flattenChrome {
-                    chrome.drawingGroup()
-                } else {
-                    chrome
-                }
-            }
-            .allowsHitTesting(false)
+                .allowsHitTesting(false)
         }
         // Bar bounds only — upward shadow must not eat YOU-card / list taps.
         .contentShape(barShape)
         .accessibilityElement(children: .contain)
-        .task {
-            guard !flattenChrome else { return }
-            // Past Keychain adopt + YOU fill — Metal flatten must not fight
-            // the first meaningful card paint (same window as crash monitor).
-            await Task.yield()
-            try? await Task.sleep(nanoseconds: 400_000_000)
-            guard !Task.isCancelled else { return }
-            flattenChrome = true
-        }
     }
 
     private func select(_ next: AppTab) {
