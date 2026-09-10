@@ -27,7 +27,10 @@ struct RedMedView: View {
     /// HealthKit characteristics to seed Edit. Not written to ProfileData until Save.
     @State private var healthSeed: HealthKitProfileImport.Draft?
     /// Tracks whether this tab currently holds MedicalCardScreenWake.
-    @State private var holdingScreenWake = false
+    /// Reference type inside `@State` so release on disappear does not write
+    /// a SwiftUI `@State` Bool (that assignment tripped the purple
+    /// "Modifying state during view update" warning at teardown).
+    @State private var screenWakeHold = ScreenWakeHold()
     /// Next-step banner waits past Keychain adopt so it does not insert
     /// above the YOU card in the same layout commit as the field fill.
     @State private var nextStepBannerReady = false
@@ -147,18 +150,18 @@ struct RedMedView: View {
         .onChange(of: showsOwnerSetupFunnel) { _, _ in syncScreenWake() }
         .onChange(of: showEdit) { _, _ in syncScreenWake() }
         .onDisappear {
-            if holdingScreenWake {
+            if screenWakeHold.active {
                 MedicalCardScreenWake.setActive(false)
-                holdingScreenWake = false
+                screenWakeHold.active = false
             }
         }
     }
 
     private func syncScreenWake() {
         let want = wantsScreenWake
-        guard want != holdingScreenWake else { return }
+        guard want != screenWakeHold.active else { return }
         MedicalCardScreenWake.setActive(want)
-        holdingScreenWake = want
+        screenWakeHold.active = want
     }
 
     /// Sibling above the YOU card — never an overlay on the tap card.
@@ -238,6 +241,12 @@ struct RedMedView: View {
             healthImportMessage = error.localizedDescription
         }
     }
+}
+
+/// Per-tab idle-timer hold flag. Not `@Observable` / not a Bool `@State` —
+/// mutating `active` must not invalidate RedMedView during disappear.
+private final class ScreenWakeHold {
+    var active = false
 }
 
 // MARK: - Tapper header (owner RedMed)
