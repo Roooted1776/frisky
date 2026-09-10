@@ -2,8 +2,8 @@ import LocalAuthentication
 import UIKit
 
 /// Strict owner authentication. Never call from passerby `tapper.html`,
-/// NFC Preview — tap-to-view stays ungated
-/// (no Face ID, no passcode, no login).
+/// NFC Preview, or in-app band / UL tap card (`BandTapIngress`) — tap-to-view
+/// stays ungated (no Face ID, no passcode, no login).
 ///
 /// Post-Agree / returning cold re-entry Face ID, Edit, Save, Erase, and
 /// Load From Band pass `force: true`. NFC write, 911, Aid, same-session

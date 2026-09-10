@@ -13,7 +13,7 @@ RedMed installed, iOS opens the **app** instead of Safari.
 | Phone | Band tap |
 | --- | --- |
 | RedMed installed, `#d=` matches owner Keychain | App foreground only — no Safari, no SOS, no card sheet |
-| RedMed installed, other person's `#d=` | In-app tap card (no Keychain write, no SOS) — does not steal the helper path |
+| RedMed installed, other person's `#d=` (or empty owner funnel) | Ungated in-app tap card above ConsentGate — no Face ID, no Before You Continue, no Keychain write, no SOS |
 | RedMed **not** installed | Safari card + band-tap SOS auto-arm (passerby / EMT unchanged) |
 
 AASA is live (`apple-app-site-association` + `.well-known/`, paths
@@ -61,10 +61,11 @@ local network. HF NFC physics + Universal Links are the controls.
 ## Device tests
 
 1. RedMed installed + tap **own** wrist band → app foreground (or already
-   open stays put), **no Safari**, no SOS auto-arm.
-2. RedMed installed + tap **another** RedMed band → in-app tap card, no
-   Keychain write, no SOS.
-3. RedMed **not** installed + tap any band → Safari card + SOS auto-arm.
+   open stays put), **no Safari**, no SOS auto-arm, no tap card.
+2. RedMed installed + tap **another** RedMed band → ungated in-app tap card
+   (no Face ID / Before You Continue / login), no Keychain write, no SOS.
+3. RedMed **not** installed + tap any band → Safari card + SOS auto-arm
+   (no login, no biometrics, no start screen).
 4. After custom domain cutover (`docs/domain.md`), update `applinks:` host and
    both AASA files together.
 
