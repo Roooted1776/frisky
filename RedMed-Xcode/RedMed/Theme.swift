@@ -115,6 +115,7 @@ struct SectionLabel: View {
 
 struct PrimaryButton: View {
     let title: String
+    var subtitle: String? = nil
     var systemImage: String? = nil
     var busy: Bool = false
     var disabled: Bool = false
@@ -134,22 +135,39 @@ struct PrimaryButton: View {
         .disabled(disabled || busy)
         .opacity(busy ? 0.72 : (disabled ? RedMedChrome.disabledOpacity : 1))
         .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(accessibilityTitle)
+    }
+
+    private var accessibilityTitle: String {
+        if let subtitle, !subtitle.isEmpty {
+            return "\(title). \(subtitle)"
+        }
+        return title
     }
 
     @ViewBuilder
     private var primaryLabel: some View {
-        let core = HStack(spacing: 8) {
-            if busy {
-                ProgressView().tint(.white)
-            } else if let systemImage {
-                Image(systemName: systemImage)
+        let core = VStack(spacing: 4) {
+            HStack(spacing: 8) {
+                if busy {
+                    ProgressView().tint(.white)
+                } else if let systemImage {
+                    Image(systemName: systemImage)
+                }
+                Text(title)
+                    .font(.system(size: 16, weight: .bold))
             }
-            Text(title)
+            if let subtitle, !subtitle.isEmpty, !busy {
+                Text(subtitle)
+                    .font(.system(size: 13, weight: .semibold))
+                    .opacity(0.88)
+                    .multilineTextAlignment(.center)
+            }
         }
-        .font(.system(size: 16, weight: .bold))
         .foregroundColor(.white)
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 15)
+        .padding(.vertical, subtitle == nil || busy ? 15 : 13)
+        .padding(.horizontal, 12)
         .background(
             LinearGradient(
                 colors: [.redmedAccentLift, .redmedAccent],

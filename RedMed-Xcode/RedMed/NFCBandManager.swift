@@ -96,7 +96,12 @@ final class NFCBandManager: ObservableObject {
             writeVerified = false
             writer.writeURL(urlString)
         } else {
-            simulateWrite(urlString, profile: profile)
+            // Parked: pack only — never a Write, never Linked.
+            lastPackedURL = urlString
+            writeSucceeded = false
+            writeVerified = false
+            isWriting = false
+            statusMessage = ""
         }
     }
 
@@ -239,24 +244,6 @@ final class NFCBandManager: ObservableObject {
         reader.$isReading
             .receive(on: DispatchQueue.main)
             .assign(to: &$isReading)
-    }
-
-    /// Pack-only fallback when CoreNFC is parked — never marks Linked.
-    /// Does not open the helper card; NFC Preview is the single first-responder preview.
-    private func simulateWrite(_ urlString: String, profile: ProfileData) {
-        isWriting = true
-        writeSucceeded = false
-        writeVerified = false
-        statusMessage = "Packing compact tap card…"
-        lastPackedURL = urlString
-        let note = ProfileNFCCodec.capacityNote(for: profile)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { [weak self] in
-            guard let self else { return }
-            self.isWriting = false
-            self.writeSucceeded = false
-            self.writeVerified = false
-            self.statusMessage = "Packed only (no band) — \(note.text). Use Preview for the helper card; Linked needs a real NFC write."
-        }
     }
 
     private func presentHTMLCard(payloadOrURL: String, embedJSON: String? = nil) {

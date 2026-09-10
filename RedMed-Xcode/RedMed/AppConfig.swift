@@ -106,9 +106,9 @@ enum AppConfig {
     /// `medicalCardBaseURL#d=` (`OwnerBandURI`). Requires NFC Tag Reading on App ID
     /// `com.redmed.app` + paid Apple Developer — see `docs/NFC-RESTORE.md`.
     /// Keep this flag in lockstep with `RedMed.entitlements` + `NFCReaderUsageDescription`.
-    /// `false` parks hardware sessions (pack-only Write + Share Band URL +
-    /// Preview; Load From Band button hidden). Gate logic stays correct for
-    /// restore — see `docs/NFC-RESTORE.md`.
+    /// `false` parks hardware sessions (Pack Band URL + Share Band URL +
+    /// Preview; no Write label; Load From Band button hidden). Gate logic
+    /// stays correct for restore — see `docs/NFC-RESTORE.md`.
     static let nfcHardwareEnabled = true
 
     /// `true` = `RedMed.entitlements` includes `applinks:` so a phone with RedMed
@@ -253,6 +253,24 @@ enum AppConfig {
         static var hardwareParkedSummary: String {
             "CoreNFC write is parked until NFC Tag Reading is provisioned on a paid Apple Developer team. Share Band URL and Preview pack the same #d= Write will use — they do not write the chip and do not mark Linked. Blank chips + Share honesty only until Write The Band is proven on a blank NTAG216. The band comes complete — just the chip, no battery."
         }
+
+        /// NFC tab tip under the primary CTA — BraceletRF inches, not a hardcoded range.
+        static var holdTopOfPhoneTip: String {
+            "Hold the top of your iPhone to the chip, about \(intentionalTapInchesMin)–\(intentionalTapInchesMax) inches."
+        }
+    }
+
+    /// NFC tab Write / Pack CTA + after-write states. Parked never uses Write copy.
+    enum NFCWriteCopy {
+        static let packTitle = "Pack Band URL"
+        static let packHelp = "Copy the link your band will open"
+        static let writeTitle = "Write The Band"
+        static let writeHelp = "Save your medical ID to this band"
+        static let successTitle = "Linked"
+        static let successDetail = "Anyone can tap this band to open your card."
+        static let failTitle = "Couldn't write"
+        static let failDetail = "Hold the top of the phone still, then try again."
+        static var holdTopTip: String { BraceletRF.holdTopOfPhoneTip }
     }
 
     /// Quiet prayer on owner Aid only (`AidView`, not scanner / tapper shells).
