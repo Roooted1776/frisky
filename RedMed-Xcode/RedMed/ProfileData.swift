@@ -421,16 +421,16 @@ class ProfileData: ObservableObject {
 
     /// After cold-open / post-Agree Face ID — retry Keychain with the parked
     /// LAContext so a leftover `biometryCurrentSet` row migrates without a
-    /// second sheet. Load still runs when RAM is already filled (migrate);
-    /// `apply` is a no-op if the blob matches so Face ID success does not
-    /// remount the YOU card.
+    /// second sheet. When prefetch already filled RAM, migrate is deferred so
+    /// cream drop is not a SecItem Copy+Update hitch; `apply` is still a no-op
+    /// if the blob matches. Empty RAM still awaits (leftover ACL fill).
     @MainActor
     func reloadAfterOwnerFaceID() async {
         guard persists else { return }
         if hasSensitiveProfileData {
-            // Migrate leftover ACL via parked context. apply() skips when RAM
-            // already matches (prefetch won the race under Face ID cream).
-            _ = await reloadFromKeychainAsync(allowInteractive: false)
+            // Prefetch already proved the blob is readable without a SecItem
+            // sheet. Defer leftover-ACL migrate off the cream-drop turn.
+            scheduleDeferredKeychainMigrate()
             return
         }
         guard Self.prefersLockOnLaunch || Self.hasStoredProfile() else { return }
@@ -441,6 +441,17 @@ class ProfileData: ObservableObject {
             RedMedSignpost.coldMark("reloadAfterOwnerFaceID applied")
         }
         isRestoringFromKeychain = false
+    }
+
+    /// Parked-context migrate after YOU is interactive. No-op without a park.
+    private func scheduleDeferredKeychainMigrate() {
+        Task { @MainActor in
+            await Task.yield()
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            guard !Task.isCancelled else { return }
+            guard BiometricAuth.peekAuthenticationContext() != nil else { return }
+            _ = await reloadFromKeychainAsync(allowInteractive: false)
+        }
     }
 
     /// Shared `PersistedProfile` → `NFCChipProfile` mapping.

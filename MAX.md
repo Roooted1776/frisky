@@ -28,7 +28,7 @@ Working notes. Product invariants live in `AGENTS.md`.
 
 ## Cold start (shipping)
 
-Returning cold open: Face ID once over warm Main (prefetch/restore already running — do **not** pay a fixed Face ID stagger). Fresh / Erase / policy bump: Agree (no Face ID on that page) → Face ID → Main. Same-session resume does not re-prompt. Edit / Save / Erase (+ Load From Band) still Face ID.
+Returning cold open: Face ID once over warm Main (prefetch/restore already running — do **not** pay a fixed Face ID stagger). WK / Taptic / 50 Hz motion / rose wash wait until the scene is `.active` — Face ID cream is `.inactive`, so a 400ms sleep alone still landed mid-sheet. Leftover Keychain ACL migrate is deferred ~300ms after cream drop. Aid / Edit catalogs prefetch after interactive. Fresh / Erase / policy bump: Agree (no Face ID on that page) → Face ID → Main. Same-session resume does not re-prompt. Edit / Save / Erase (+ Load From Band) still Face ID.
 Consent-pending path: Keychain MainActor adopt waits for Agree (not RedMedApp.task —
 that raced cream drop). Document.html WK warm waits ~500ms past gate appear so
 cream drop + ack layout win.

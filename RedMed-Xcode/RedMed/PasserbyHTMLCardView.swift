@@ -366,6 +366,9 @@ enum PasserbyWebViewPool {
 
     static func makeConfiguredWebView(navigationDelegate: WKNavigationDelegate?) -> WKWebView {
         let config = WKWebViewConfiguration()
+        // Bundled tapper.html Preview / Scan. App preview skips SW; PHI stays
+        // in `#d=` / boot JS — no persistent WK disk on first open.
+        config.websiteDataStore = .nonPersistent()
         config.preferences.javaScriptCanOpenWindowsAutomatically = false
         let cream = UIColor(Color.redmedBg)
         let webView = WKWebView(frame: .zero, configuration: config)

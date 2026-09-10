@@ -139,6 +139,8 @@ enum PolicyWebViewPool {
 
     static func makeConfiguredWebView(navigationDelegate: WKNavigationDelegate?) -> WKWebView {
         let config = WKWebViewConfiguration()
+        // Bundled Document.html — no cookies / SW disk on first Policies open.
+        config.websiteDataStore = .nonPersistent()
         config.preferences.javaScriptCanOpenWindowsAutomatically = false
         let cream = UIColor(Color.redmedBg)
         let webView = WKWebView(frame: .zero, configuration: config)
@@ -185,6 +187,7 @@ struct LocalWebView: UIViewRepresentable {
         }
 
         let config = WKWebViewConfiguration()
+        config.websiteDataStore = .nonPersistent()
         config.userContentController.add(context.coordinator, name: "rmPolicy")
         config.preferences.javaScriptCanOpenWindowsAutomatically = false
         let cream = UIColor(Color.redmedBg)
