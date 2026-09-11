@@ -3343,9 +3343,7 @@ function redmedAssetURL(file) {
     geoWatchId = navigator.geolocation.watchPosition(function (pos) { apply(pos, false); }, function () {}, GEO_OPTS);
   }
 
-  // One-shot refresh — Refresh button and SOS · Locate Me share this path.
-  // Exposed for SOS (other script) so it does not synthetic-click Refresh.
-  function refreshCoords() {
+  document.getElementById('refreshCoordsBtn').addEventListener('click', function () {
     if (isAppEmbed()) return;
     if (!navigator.geolocation) return;
     if (!window.__redmedLoc) setGpsPill('ACQUIRING GPS');
@@ -3358,9 +3356,7 @@ function redmedAssetURL(file) {
         setGpsPill('GPS OFF');
       }
     }, GEO_OPTS);
-  }
-  window.__redmedRefreshCoords = refreshCoords;
-  document.getElementById('refreshCoordsBtn').addEventListener('click', refreshCoords);
+  });
 
   function copyTextToClipboard(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -4145,11 +4141,6 @@ function redmedAssetURL(file) {
     dialEmergencyNow();
     arm();
     requestMotionThenStart();
-    // Freshest coords after tel: / Stop paint. Same-turn getCurrentPosition
-    // delayed the Call sheet and lagged the button (#571).
-    setTimeout(function () {
-      if (typeof window.__redmedRefreshCoords === 'function') window.__redmedRefreshCoords();
-    }, 0);
   });
   if (aidStop) {
     aidStop.addEventListener('click', function (e) {
