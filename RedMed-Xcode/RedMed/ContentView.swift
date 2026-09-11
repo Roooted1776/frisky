@@ -404,15 +404,16 @@ struct TabBarItem: View {
 
     var body: some View {
         Button(action: action) {
-            // Fixed icon (26) + gap (2) + label (12) = 40 — same row height on
-            // every tab. Shrink-to-fit "RedMed" stays inside the label slot so
-            // it cannot pull the baseline below 911 / Aid / NFC.
+            // Fixed icon (32) + gap (2) + label (12) = 46 — same row height on
+            // every tab inside a 52pt hit column. Shrink-to-fit "RedMed" stays
+            // inside the label slot so it cannot pull the baseline below
+            // 911 / Aid / NFC.
             VStack(spacing: 2) {
                 Image(systemName: icon)
-                    .font(.system(size: 18, weight: isOn ? .semibold : .regular))
+                    .font(.system(size: 20, weight: isOn ? .semibold : .regular))
                     .symbolRenderingMode(isCompass ? .hierarchical : .monochrome)
                     .foregroundStyle(tint)
-                    .frame(width: 26, height: 26, alignment: .center)
+                    .frame(width: 32, height: 32, alignment: .center)
                     .background(
                         RoundedRectangle(cornerRadius: RedMedChrome.chipRadius, style: .continuous)
                             .fill(isOn ? Color.redmedAccent.opacity(0.12) : Color.clear)
@@ -428,7 +429,10 @@ struct TabBarItem: View {
                     .frame(height: 12, alignment: .center)
                     .frame(maxWidth: .infinity, alignment: .center)
             }
-            .frame(maxWidth: .infinity, minHeight: 44, alignment: .center)
+            // Full column hit target — without contentShape, only glyph/text pixels
+            // register taps and tabs feel too tight. 52pt clears the 44pt floor.
+            .frame(maxWidth: .infinity, minHeight: 52, alignment: .center)
+            .contentShape(Rectangle())
             // Discrete tint swap — no spring/bounce on every tab hop.
             .transaction { $0.animation = nil }
         }
