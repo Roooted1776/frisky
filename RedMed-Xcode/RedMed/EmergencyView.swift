@@ -3,6 +3,9 @@ import CoreLocation
 
 struct EmergencyView: View {
     var isVisible: Bool = true
+    /// Shared so SOS · Locate Me can force a one-shot refresh on the same
+    /// CLLocationManager that paints the GPS card.
+    @StateObject private var locationManager = LocationManager()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -11,8 +14,8 @@ struct EmergencyView: View {
                 // Short, fixed page (~6 children). LazyVStack would estimate
                 // off-screen height and keep bookkeeping with no benefit.
                 VStack(alignment: .leading, spacing: 10) {
-                    FindHelpLocationBlock(isVisible: isVisible)
-                    FindHelpSOSButton()
+                    FindHelpLocationBlock(isVisible: isVisible, locationManager: locationManager)
+                    FindHelpSOSButton(locationManager: locationManager)
                     CrashDialCountdownStrip()
                     PrimaryButton(
                         title: "Call \(EmergencyNumber.current)",
@@ -55,9 +58,9 @@ struct EmergencyView: View {
 
 private struct FindHelpLocationBlock: View {
     var isVisible: Bool = true
+    @ObservedObject var locationManager: LocationManager
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
-    @StateObject private var locationManager = LocationManager()
     @State private var copied = false
     @State private var copyReset: Task<Void, Never>?
 
@@ -143,7 +146,15 @@ private struct FindHelpLocationBlock: View {
 }
 
 private struct FindHelpSOSButton: View {
+    @ObservedObject var locationManager: LocationManager
     @ObservedObject private var survivalAlarm = CrashMotionGuard.shared
+    @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
+    @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
+
+    private var gpsBlocked: Bool {
+        !locationEnabled || locationSuggester.mustOpenSettings
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             CompactFillButton(
@@ -160,6 +171,8 @@ private struct FindHelpSOSButton: View {
                     } else {
                         RedMedHaptics.heavy()
                         survivalAlarm.armSOS()
+                        // Same one-shot as Refresh — freshest coords to read aloud.
+                        if !gpsBlocked { locationManager.refresh() }
                     }
                 }
             }
@@ -167,7 +180,7 @@ private struct FindHelpSOSButton: View {
             .accessibilityHint(
                 survivalAlarm.isArmed
                     ? "Stops the alarm and cancels a pending crash call."
-                    : "Calls \(EmergencyNumber.current) immediately and starts the locator alarm."
+                    : "Calls \(EmergencyNumber.current) immediately, starts the locator alarm, and refreshes GPS coordinates."
             )
             Text(AppConfig.CrashAlarmCopy.findHelpNote)
                 .font(.system(size: 11, weight: .medium))
