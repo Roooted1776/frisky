@@ -403,8 +403,9 @@ struct TabBarItem: View {
     var body: some View {
         Button(action: action) {
             // Fixed icon (26) + gap (2) + label (12) = 40 — same row height on
-            // every tab. Shrink-to-fit "RedMed" stays inside the label slot so
-            // it cannot pull the baseline below 911 / Aid / NFC.
+            // every tab inside a 48pt hit column. Shrink-to-fit "RedMed" stays
+            // inside the label slot so it cannot pull the baseline below
+            // 911 / Aid / NFC.
             VStack(spacing: 2) {
                 Image(systemName: icon)
                     .font(.system(size: 18, weight: isOn ? .semibold : .regular))
@@ -426,7 +427,10 @@ struct TabBarItem: View {
                     .frame(height: 12, alignment: .center)
                     .frame(maxWidth: .infinity, alignment: .center)
             }
-            .frame(maxWidth: .infinity, minHeight: 44, alignment: .center)
+            // Full column hit target — without contentShape, only glyph/text pixels
+            // register taps and tabs feel too tight. 48pt clears the 44pt floor.
+            .frame(maxWidth: .infinity, minHeight: 48, alignment: .center)
+            .contentShape(Rectangle())
             // Discrete tint swap — no spring/bounce on every tab hop.
             .transaction { $0.animation = nil }
         }
