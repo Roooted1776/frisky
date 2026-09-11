@@ -5,7 +5,8 @@ import UIKit
 /// Bundled owner Help: one HTML file, five in-doc anchors. Offline. No network.
 enum HelpDocument {
     static let bundledFile = "Document"
-    /// Combined Help-menu row title. Before You Continue lists each Policy separately.
+    /// Section header on Help (owner + scanner) and Before You Continue.
+    /// Each Policy is its own row — not one combined Policies button.
     static let combinedTitle = "Policies"
     static let combinedEmoji = "📋"
     static var combinedMarkedTitle: String { "\(combinedEmoji) \(combinedTitle)" }
@@ -433,18 +434,17 @@ struct LocalWebView: UIViewRepresentable {
 }
 
 // MARK: - Policies document (Help push + Before You Continue sheet)
-/// One WebView for the combined Policies document. Help chrome stays Policies
-/// and opens at document top (letterhead). Before You Continue per-doc links
-/// pass `pageTitle` / `startAt` to deep-link that section.
+/// One WebView for the combined Policies document. Help and Before You Continue
+/// both open per-document rows via `pageTitle` / `startAt` (deep-link that section).
 struct HelpPolicyPage: View {
     var startAt: HelpDocument.Policy? = nil
     var showsDoneChrome: Bool = false
     var onDone: (() -> Void)? = nil
-    /// Sheet / nav title. Nil → combined Policies (Help). Ack rows pass the section title.
+    /// Sheet / nav title. Nil → combined Policies fallback. Per-doc rows pass the section title.
     var pageTitle: String? = nil
 
     private var resolvedTitle: String {
-        pageTitle ?? HelpDocument.combinedMarkedTitle
+        pageTitle ?? startAt?.markedTitle ?? HelpDocument.combinedMarkedTitle
     }
 
     var body: some View {
@@ -471,31 +471,7 @@ struct HelpPolicyPage: View {
     }
 }
 
-/// Single combined Policies row (Help menu).
-struct HelpPoliciesRowLabel: View {
-    var titleWeight: Font.Weight = .medium
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Text(HelpDocument.combinedEmoji)
-                .font(.system(size: 17))
-                .frame(width: 22, alignment: .center)
-                .accessibilityHidden(true)
-            Text(HelpDocument.combinedTitle)
-                .font(.system(size: RedMedChrome.rowFont, weight: titleWeight))
-                .foregroundColor(.redmedDark)
-            Spacer(minLength: 0)
-            Image(systemName: "chevron.right")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(.redmedMuted.opacity(0.55))
-        }
-        .padding(.horizontal, RedMedChrome.pagePadX)
-        .padding(.vertical, RedMedChrome.rowVPad)
-        .contentShape(Rectangle())
-    }
-}
-
-/// One policy section row (Before You Continue per-document links).
+/// One policy section row (Help menu + Before You Continue).
 struct HelpPolicyRowLabel: View {
     let policy: HelpDocument.Policy
     var titleWeight: Font.Weight = .medium
@@ -596,14 +572,22 @@ struct HelpMenuView: View {
 
                         helpSectionLabel("Policies")
                         helpCard {
-                            NavigationLink {
-                                HelpPolicyPage()
-                            } label: {
-                                HelpPoliciesRowLabel()
+                            ForEach(Array(HelpDocument.Policy.allCases.enumerated()), id: \.element.id) { index, policy in
+                                if index > 0 {
+                                    Divider().overlay(Color.redmedDivider)
+                                }
+                                NavigationLink {
+                                    HelpPolicyPage(
+                                        startAt: policy,
+                                        pageTitle: policy.markedTitle
+                                    )
+                                } label: {
+                                    HelpPolicyRowLabel(policy: policy)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel(policy.title)
+                                .accessibilityHint("Opens \(policy.title)")
                             }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel(HelpDocument.combinedTitle)
-                            .accessibilityHint("Opens Privacy, Security, Terms, Medical Disclaimer, and Ships When Ready")
                         }
 
                         if showsOwnerTools {
