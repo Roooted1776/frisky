@@ -132,14 +132,16 @@ struct ContentView: View {
                 guard OwnerSessionGate.isInteractive else { return }
                 startCrashMonitorIfOwner()
             case .background:
-                // No motion background mode — CoreMotion is useless when
-                // suspended. Stop the session so the next `.active` can
-                // start a fresh one. Does not cancel an armed siren.
+                // Hard stop on true background. No short grace /
+                // beginBackgroundTask linger — CoreMotion dies on
+                // suspend anyway, and there is no motion background
+                // mode. Armed siren (audio) is independent.
                 CrashMotionGuard.shared.stopMonitoring()
             default:
-                // `.inactive` is Face ID on post-Agree / Edit / Save /
-                // Erase, Control Center, app switcher peek. Keep
-                // listening.
+                // Only intentional “still around for a moment” path:
+                // Face ID (post-Agree / Edit / Save / Erase / Load From
+                // Band), Control Center, app switcher peek. Keep
+                // listening. Do not invent a post-Home window.
                 break
             }
         }

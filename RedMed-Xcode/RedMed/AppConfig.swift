@@ -283,9 +283,10 @@ enum AppConfig {
     }
 
     /// Honesty for crash / SOS. Not Apple Crash Detection. No motion background mode.
-    /// Owner CoreMotion runs only while the app is in the foreground; an armed
-    /// siren can keep going. Passerby tapper uses DeviceMotion only while the
-    /// page is open. Keep `tapperNote` in lockstep with `tapper/index.html`.
+    /// Owner CoreMotion: foreground + `.inactive` keep-listening only (no
+    /// short-background grace). Armed siren can keep going. Passerby tapper
+    /// uses DeviceMotion only while the page is open. Keep `tapperNote` in
+    /// lockstep with `tapper/index.html`.
     enum CrashAlarmCopy {
         static let findHelpNote =
             "Crash detect only while RedMed is open. Not Apple Crash Detection. SOS · Locate Me still sounds after you arm it."
