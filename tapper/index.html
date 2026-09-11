@@ -2726,7 +2726,15 @@ function redmedAssetURL(file) {
   })();
 
   var tabOrder = ['medical', '911', 'aid'];
+  // Instant tab feedback — lockstep owner RedMedHaptics.selection() on press.
+  // iOS Safari/WK ignore vibrate; Android / supporting browsers tick on finger-down.
+  function tabHaptic() {
+    try {
+      if (navigator.vibrate) navigator.vibrate(10);
+    } catch (eVib) {}
+  }
   document.querySelectorAll('.tab').forEach(function (t) {
+    t.addEventListener('pointerdown', function () { tabHaptic(); }, { passive: true });
     t.addEventListener('click', function () { showTab(t.getAttribute('data-tab')); });
     t.addEventListener('keydown', function (e) {
       var i = tabOrder.indexOf(t.getAttribute('data-tab'));
@@ -2739,7 +2747,7 @@ function redmedAssetURL(file) {
       else return;
       e.preventDefault();
       var btn = document.querySelector('.tab[data-tab="' + tabOrder[next] + '"]');
-      if (btn) { btn.focus(); showTab(tabOrder[next]); }
+      if (btn) { tabHaptic(); btn.focus(); showTab(tabOrder[next]); }
     });
   });
   (function bootStartTab() {
