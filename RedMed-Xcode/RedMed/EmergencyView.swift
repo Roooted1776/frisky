@@ -15,7 +15,12 @@ struct EmergencyView: View {
                 // off-screen height and keep bookkeeping with no benefit.
                 VStack(alignment: .leading, spacing: 10) {
                     FindHelpLocationBlock(isVisible: isVisible, locationManager: locationManager)
-                    FindHelpSOSButton(locationManager: locationManager)
+                    FindHelpSOSButton {
+                        // Same one-shot as Refresh — after tel: + Stop paint.
+                        // Same-turn CLLocationManager hitch delayed the Call sheet
+                        // and made SOS · Locate Me feel lagged (#571).
+                        locationManager.refresh()
+                    }
                     CrashDialCountdownStrip()
                     PrimaryButton(
                         title: "Call \(EmergencyNumber.current)",
@@ -146,7 +151,9 @@ private struct FindHelpLocationBlock: View {
 }
 
 private struct FindHelpSOSButton: View {
-    @ObservedObject var locationManager: LocationManager
+    /// One-shot GPS refresh after arm — not ObservedObject (every fix re-rendered
+    /// this button and lagged the press). Parent owns LocationManager.
+    var onArmedRefresh: (() -> Void)? = nil
     @ObservedObject private var survivalAlarm = CrashMotionGuard.shared
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
@@ -171,8 +178,10 @@ private struct FindHelpSOSButton: View {
                     } else {
                         RedMedHaptics.heavy()
                         survivalAlarm.armSOS()
-                        // Same one-shot as Refresh — freshest coords to read aloud.
-                        if !gpsBlocked { locationManager.refresh() }
+                        // Defer refresh — must not run in the tel: / paint turn.
+                        if !gpsBlocked, let onArmedRefresh {
+                            DispatchQueue.main.async(execute: onArmedRefresh)
+                        }
                     }
                 }
             }
