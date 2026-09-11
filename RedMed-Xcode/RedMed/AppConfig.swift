@@ -248,7 +248,7 @@ enum AppConfig {
         static var noBluetoothSummary: String { carrierVsBluetoothSummary }
 
         static var hardwareParkedSummary: String {
-            "CoreNFC write is parked until NFC Tag Reading is provisioned on a paid Apple Developer team. Share Band URL and Preview pack the same #d= Write will use — they do not write the chip and do not mark Linked. Blank chips + Share honesty only until Write The Band is proven on a blank NTAG216. The band comes complete — just the chip, no battery."
+            "CoreNFC write is parked until NFC Tag Reading is provisioned on a paid Apple Developer team. Share Band URL and Preview pack the same #d= Write will use — they do not write the chip and do not mark Linked. Blank chips + Share honesty only until Write The Band is proven on a blank NTAG216."
         }
 
         /// NFC tab tip under the primary CTA — BraceletRF inches, not a hardcoded range.

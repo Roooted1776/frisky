@@ -204,8 +204,6 @@ struct NFCView: View {
 
             factRow(icon: "cpu", text: rf.chipSpecSummary)
             thinRule
-            factRow(icon: "checkmark.seal", text: rf.completeBandSummary)
-            thinRule
             factRow(icon: "hand.point.up.left.fill", text: rf.tapDistanceSummary)
             thinRule
             factRow(icon: "iphone.radiowaves.left.and.right", text: rf.powerOnTapSummary)
@@ -274,13 +272,11 @@ struct NFCView: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 if AppConfig.nfcHardwareEnabled {
-                    tipRow(AppConfig.BraceletRF.completeBandSummary)
                     tipRow("Write packs #d= onto the chip only — never a vendor cloud or social/short link.")
                     tipRow("Preview: same HTML card helpers get — quick, no login, no server, no app.")
                     tipRow("Load From Band reads #d= into this iPhone (Face ID). Replaces RedMed here.")
                     tipRow("Linked after write + matching read-back, or after Load From Band.")
                 } else {
-                    tipRow(AppConfig.BraceletRF.completeBandSummary)
                     tipRow(AppConfig.BraceletRF.hardwareParkedSummary)
                     tipRow("Preview is the same HTML a helper sees. Blank chips + Share honesty until Write The Band is proven on a blank NTAG216.")
                 }
