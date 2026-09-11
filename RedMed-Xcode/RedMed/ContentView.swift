@@ -365,18 +365,20 @@ struct CustomTabBar: View {
         // Bar bounds only — upward shadow must not eat YOU-card / list taps.
         .contentShape(barShape)
         .accessibilityElement(children: .contain)
+        // Warm Taptic before first press — covers owner + scanner shells
+        // (ContentView.task skips prepare when isScannerSession).
+        .onAppear { RedMedHaptics.prepare() }
     }
 
     private func select(_ next: AppTab) {
+        // Selection haptic fires on press via TabBarItem (instant), not here.
         if tab == next {
-            RedMedHaptics.selection()
             // Re-tap NFC → open write sheet again so hold can finish / retry.
             if next == .nfc {
                 onNFCWrite?()
             }
             return
         }
-        RedMedHaptics.selection()
         // No withAnimation on AppTab — that marks the content ZStack transaction even
         // when mounted tabs suppress animation, and fights opacity keep-alive.
         tab = next
@@ -430,8 +432,12 @@ struct TabBarItem: View {
             // Discrete tint swap — no spring/bounce on every tab hop.
             .transaction { $0.animation = nil }
         }
-        // Instant press — the 0.32s CTA spring made hops feel late.
-        .buttonStyle(RedMedPressStyle(scale: 0.98, haptic: nil, animates: false))
+        // Instant press + selection haptic on finger-down (not release).
+        .buttonStyle(RedMedPressStyle(
+            scale: 0.98,
+            haptic: { RedMedHaptics.selection() },
+            animates: false
+        ))
         .accessibilityLabel(label)
         .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : .isButton)
         .accessibilityHint(isOn ? "Selected" : "Switch to \(label)")
