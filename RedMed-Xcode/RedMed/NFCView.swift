@@ -206,8 +206,6 @@ struct NFCView: View {
             thinRule
             factRow(icon: "checkmark.seal", text: rf.completeBandSummary)
             thinRule
-            factRow(icon: "textformat", text: rf.laserFaceSummary)
-            thinRule
             factRow(icon: "hand.point.up.left.fill", text: rf.tapDistanceSummary)
             thinRule
             factRow(icon: "iphone.radiowaves.left.and.right", text: rf.powerOnTapSummary)
