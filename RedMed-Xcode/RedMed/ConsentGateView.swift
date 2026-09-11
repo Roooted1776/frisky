@@ -4,10 +4,11 @@ import UIKit
 /// Legal consent. First launch (or after a material policy version bump)
 /// only — stored version skips Before You Continue on later cold starts.
 /// Agree + checkbox only; no Face ID on that page. Agree covers location
-/// and motion while the app is open. Face ID runs on cream (Retry until
-/// success) while Main warms underneath — once after Agree, and again on
-/// every cold re-entry after acknowledge — then iOS When-In-Use once when
-/// still `.notDetermined`, then Main is interactive.
+/// and motion while the app is open. Face ID runs on cream (auto-retries
+/// until success; Open Settings only when biometry is unavailable) while
+/// Main warms underneath — once after Agree, and again on every cold
+/// re-entry after acknowledge — then iOS When-In-Use once when still
+/// `.notDetermined`, then Main is interactive.
 /// Same-session background → foreground does **not** re-prompt (no
 /// OwnerAppLock relock). Edit / Save / Erase / Load From Band still Face ID.
 /// Never on passerby tapper or in-app band / UL tap card (`BandTapIngress`).
@@ -44,9 +45,6 @@ struct ConsentGateView<Content: View>: View {
     @State private var awaitingPostAgreeFaceID = ConsentSettings.hasAcceptedCurrent
     @State private var isAuthenticating = false
     @State private var didAutoPrompt = false
-    @State private var showRetry = false
-    @State private var biometryFailed = false
-    @State private var notInteractive = false
     @State private var unavailableReason: BiometricAuth.UnavailableReason?
     @State private var checked = false
     /// Which policy section the ack sheet opens — one link per document.
@@ -83,6 +81,12 @@ struct ConsentGateView<Content: View>: View {
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
+                // Back from Settings (or any leave) while still gated —
+                // clear unavailable chrome and re-prompt Face ID.
+                if unavailableReason != nil, awaitingPostAgreeFaceID, !hasAccepted {
+                    unavailableReason = nil
+                    didAutoPrompt = false
+                }
                 tryPromptPostAgreeFaceID()
             }
         }
@@ -93,9 +97,6 @@ struct ConsentGateView<Content: View>: View {
                 _ = BiometricAuth.cancelInFlight()
                 isAuthenticating = false
                 didAutoPrompt = false
-                showRetry = false
-                biometryFailed = false
-                notInteractive = false
                 unavailableReason = nil
             } else {
                 // Card dismissed — resume owner cold-open Face ID if still needed.
@@ -113,9 +114,6 @@ struct ConsentGateView<Content: View>: View {
         awaitingPostAgreeFaceID = false
         isAuthenticating = false
         didAutoPrompt = false
-        showRetry = false
-        biometryFailed = false
-        notInteractive = false
         unavailableReason = nil
         PolicyWebViewPool.discard()
         OwnerSessionGate.resetForConsentGate()
@@ -128,7 +126,8 @@ struct ConsentGateView<Content: View>: View {
     }
 
     /// Flat cream while Face ID runs after Agree — no second Before You Continue,
-    /// no Face ID icon blocking Agree, no Proceed chrome unless retry/cancel.
+    /// no Face ID icon blocking Agree, no Retry button. System sheet is the UI;
+    /// Open Settings only when biometry cannot run at all.
     private var postAgreeFaceIDPane: some View {
         VStack(spacing: 16) {
             Spacer(minLength: 0)
@@ -144,28 +143,8 @@ struct ConsentGateView<Content: View>: View {
                     UIApplication.shared.open(url)
                 }
                 .padding(.horizontal, RedMedChrome.pagePadX)
-            } else if showRetry {
-                if biometryFailed {
-                    Text("Couldn't verify it's you. Try again.")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.redmedAccent)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, RedMedChrome.pagePadX)
-                } else if notInteractive {
-                    Text("Couldn't open Face ID. Try again.")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.redmedAccent)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, RedMedChrome.pagePadX)
-                }
-                PrimaryButton(title: "Retry Face ID", flatten: false) {
-                    didAutoPrompt = false
-                    showRetry = false
-                    runPostAgreeFaceID()
-                }
-                .padding(.horizontal, RedMedChrome.pagePadX)
             }
-            // While authenticating: empty cream — system Face ID sheet is the UI.
+            // Empty cream while authenticating / auto-retrying — system Face ID sheet is the UI.
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -294,9 +273,6 @@ struct ConsentGateView<Content: View>: View {
         // old Agree-turn passerby shell warm).
         PolicyWebViewPool.discard()
         didAutoPrompt = false
-        showRetry = false
-        biometryFailed = false
-        notInteractive = false
         unavailableReason = nil
         isAuthenticating = false
         // Policy-bump path deferred MainActor Keychain adopt until Agree —
@@ -362,10 +338,7 @@ struct ConsentGateView<Content: View>: View {
         guard !bandTap.isPresentingTapCard else { return }
         guard awaitingPostAgreeFaceID, !hasAccepted, !isAuthenticating else { return }
         isAuthenticating = true
-        biometryFailed = false
-        notInteractive = false
         unavailableReason = nil
-        showRetry = false
         RedMedSignpost.coldMark("post-Agree Face ID evaluate start")
         BiometricAuth.authenticate(
             reason: "Confirm with Face ID, Touch ID, or passcode to open RedMed.",
@@ -393,15 +366,15 @@ struct ConsentGateView<Content: View>: View {
                 switch outcome {
                 case .success:
                     armMainAfterFaceID()
-                case .notVerified:
-                    biometryFailed = true
-                    showRetry = true
                 case .unavailable(let reason):
+                    // Retrying evaluate will not help — user must fix Settings.
                     unavailableReason = reason
-                    showRetry = true
-                case .declined, .notInteractive, .timedOut:
-                    notInteractive = (outcome == .notInteractive)
-                    showRetry = true
+                    didAutoPrompt = false
+                case .notVerified, .declined, .notInteractive, .timedOut:
+                    // No Retry button — stay on cream and re-prompt. Cooldown
+                    // / key-window gates live in BiometricAuth + tryPrompt.
+                    didAutoPrompt = false
+                    tryPromptPostAgreeFaceID()
                 }
             }
         }
