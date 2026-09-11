@@ -293,8 +293,9 @@ enum AppConfig {
             "Crash detect only while this page is open. Not Apple Crash Detection. SOS · Locate Me is this phone's siren."
     }
 
-    /// Carrier notes + local-only rule for Find Help.
+    /// Carrier notes + local-only rule for Aid footers.
     /// Call uses system `tel:` only — never attaches profile / PII / PHI / GPS.
+    /// Keep `localOnlyLine` in lockstep with `tapper/index.html` Aid foot-note.
     enum Satellite {
         /// Permanent product rule — do not soften or time-box.
         static let localOnlyLine =

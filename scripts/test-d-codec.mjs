@@ -324,6 +324,12 @@ assert('charset accepts url', isBase64urlCharset(ampPayload));
 const tapperCrash = appConfig.match(/static let tapperNote =\s+"([^"]+)"/);
 assert('crash tapper note lockstep', !!(tapperCrash && tapper.includes(tapperCrash[1])));
 
+const localOnly = appConfig.match(/static let localOnlyLine =\s+"([^"]+)"/);
+assert('Aid localOnlyLine lockstep', !!(localOnly && tapper.includes(localOnly[1])));
+assert('early vitals expandBlood', /function expandBloodEarly/.test(tapper) && /EARLY_BLOOD/.test(tapper));
+assert('GPS pill status lockstep', /id="gpsPill"/.test(tapper) && /setGpsPill\('LIVE GPS'\)/.test(tapper) && /ACQUIRING GPS/.test(tapper));
+assert('CPR Beat & Breath on tapper', /id="cprToggle"/.test(tapper) && /Start Beat/.test(tapper) && /scheduleCPR\(545\)/.test(tapper));
+
 // --- plaintext named JSON (smoke / Linux preview path) ---
 const named = {
   name: 'Jane Doe',
