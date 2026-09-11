@@ -1669,13 +1669,21 @@ function redmedAssetURL(file) {
         fillList('conditions', 'countConditions', 'dropConditions', p.conditions);
         window.__redmedEarlyVitals = true;
       }
+      // Same table as shell BLOOD / ProfileNFCCodec — expand index before paint.
+      // `a[0] || ''` would drop O+ (index 0) and show a raw digit for other types.
+      var EARLY_BLOOD = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
+      function expandBloodEarly(v) {
+        if (typeof v === 'number' && v >= 0 && v < EARLY_BLOOD.length) return EARLY_BLOOD[v];
+        if (v == null) return '';
+        return String(v);
+      }
       function fromArray(a) {
         if (!a || !a.length) return null;
         // Prefer current compact when donor flag sits at [8] (AES writes).
         var donorAt8 = a.length >= 9 && (a[8] === true || a[8] === false || a[8] === 0 || a[8] === 1 || a[8] === '0' || a[8] === '1');
         if (donorAt8) {
           return {
-            blood: a[0] || '',
+            blood: expandBloodEarly(a[0]),
             allergies: a[1],
             meds: a[2],
             name: a[4] || '',
@@ -1691,7 +1699,7 @@ function redmedAssetURL(file) {
         return {
           name: a[0] || '',
           dob: a[1] || '',
-          blood: a[2] || '',
+          blood: expandBloodEarly(a[2]),
           donor: !!(a[3] === true || a[3] === 1 || a[3] === '1'),
           allergies: a[4],
           meds: a[5],
@@ -1870,7 +1878,8 @@ function redmedAssetURL(file) {
         <button class="aid-stop-alarm" type="button" id="aidStopAlarm">Stop The Alarm <span class="x" aria-hidden="true">✕</span></button>
 
         <p class="foot-note">First-aid reference only. Not medical advice and not a substitute for emergency dispatch. Call emergency services and follow their instructions.</p>
-        <p class="foot-note">Local only once tap — everyone and everything. No servers · no online. No Bluetooth · passive HF NFC. No PII or PHI leaves this device through RedMed.</p>
+        <!-- lockstep AppConfig.Satellite.localOnlyLine (owner AidView) -->
+        <p class="foot-note">Local only once tap — no RedMed servers. No Bluetooth · passive HF NFC. Call uses system tel: only (no profile, no GPS on the call). Nearby hospitals in the app asks Apple Maps on this phone. On a band tap in a browser, hospital search sends coordinates to OpenStreetMap Overpass (overpass-api.de). Neither is a RedMed upload.</p>
       </div>
     </div>
   </div>
