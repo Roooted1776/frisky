@@ -168,7 +168,7 @@ struct ConsentGateView<Content: View>: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("RedMed is a personal medical ID and first-aid reference on this iPhone. It is not a medical device, does not diagnose or treat, and does not replace emergency dispatch. Always call emergency services first in a real emergency.")
                         Text("Your profile stays on this iPhone, and on a band if you write one — RedMed runs no server for it.")
-                        Text("Agree covers location and motion while RedMed is open — Find Help GPS and crash detection. GPS stops when you leave or close the app. Never sent to us. iOS may ask Allow once after Face ID so 911 is not blocked later.")
+                        Text("Agree covers location and motion while RedMed is open — Find Help GPS and crash detection. Crash detect does not run after lock or kill; use iPhone Crash Detection if your device has it. GPS stops when you leave or close the app. Never sent to us. iOS may ask Allow once after Face ID so 911 is not blocked later.")
                     }
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.redmedMuted)

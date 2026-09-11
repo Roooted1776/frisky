@@ -280,6 +280,7 @@ const swift = readFileSync(join(ROOT, 'RedMed-Xcode/RedMed/ProfileNFCCodec.swift
 const tapper = readFileSync(join(ROOT, 'tapper/index.html'), 'utf8');
 const appConfig = readFileSync(join(ROOT, 'RedMed-Xcode/RedMed/AppConfig.swift'), 'utf8');
 const profileData = readFileSync(join(ROOT, 'RedMed-Xcode/RedMed/ProfileData.swift'), 'utf8');
+const support = readFileSync(join(ROOT, 'support/index.html'), 'utf8');
 
 assert('KEY_LABEL in Swift', swift.includes(`keyLabel = "${KEY_LABEL}"`));
 assert('KEY_LABEL in tapper', tapper.includes(`KEY_LABEL = '${KEY_LABEL}'`));
@@ -323,6 +324,21 @@ assert('charset accepts url', isBase64urlCharset(ampPayload));
 
 const tapperCrash = appConfig.match(/static let tapperNote =\s+"([^"]+)"/);
 assert('crash tapper note lockstep', !!(tapperCrash && tapper.includes(tapperCrash[1])));
+
+const findHelpCrash = appConfig.match(/static let findHelpNote =\s+"([^"]+)"/);
+assert(
+  'crash findHelpNote names iPhone Crash Detection for lock/kill',
+  !!(
+    findHelpCrash &&
+    /iPhone Crash Detection/.test(findHelpCrash[1]) &&
+    /lock or kill/.test(findHelpCrash[1]) &&
+    /while RedMed is open/.test(findHelpCrash[1])
+  )
+);
+assert(
+  'support page matches findHelpNote lock/kill honesty',
+  !!(findHelpCrash && /iPhone Crash Detection/.test(support) && /lock or kill/.test(support))
+);
 
 const localOnly = appConfig.match(/static let localOnlyLine =\s+"([^"]+)"/);
 assert('Aid localOnlyLine lockstep', !!(localOnly && tapper.includes(localOnly[1])));
