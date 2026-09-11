@@ -345,7 +345,8 @@ struct CustomTabBar: View {
                     }
                 }
             }
-            .padding(.top, 5)
+            // Extra top pad (5→10) — roomier chrome so tab hops are easier to land.
+            .padding(.top, 10)
 
             Capsule()
                 .fill(Color.redmedDark.opacity(0.18))
