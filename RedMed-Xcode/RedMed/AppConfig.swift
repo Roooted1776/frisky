@@ -62,11 +62,6 @@ enum AppConfig {
             "This iPhone keeps your ID in Keychain. The chip keeps its own copy. Phone off, wiped, or in another state does not blank the band."
         }
 
-        /// The band is the credential. Packing is not a secret lock.
-        static var packingHonestySummary: String {
-            "The band is the credential. #d= is packed so any phone can open it — not a secret lock on the chip."
-        }
-
         /// True only for live owner writes: exact tapper base + non-empty `#d=` payload.
         /// `nonisolated` — codec pack path runs off the main actor.
         nonisolated static func isValidWriteURL(_ urlString: String) -> Bool {
