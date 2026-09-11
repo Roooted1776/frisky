@@ -217,8 +217,6 @@ struct NFCView: View {
             factRow(icon: "person.2.fill", text: rf.passerbyTapSummary)
             thinRule
             factRow(icon: "internaldrive", text: AppConfig.OwnerBandURI.storesIndependenceSummary)
-            thinRule
-            factRow(icon: "key.horizontal", text: AppConfig.OwnerBandURI.packingHonestySummary)
         }
         .redmedBox()
     }
