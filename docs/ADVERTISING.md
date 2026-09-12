@@ -16,8 +16,10 @@ green. View B has a **second company gate** on top of that. Same rule as
 Help → Terms §12 / <strong>Ships When Ready</strong> (**ships when ready**): no calendar promise, no “available
 now” before the gate is actually green.
 
-Full claim bans also live in [`DO-NOT.md`](DO-NOT.md). Hardware sequence:
-[`band-engraving-and-nfc-sourcing.md`](band-engraving-and-nfc-sourcing.md).
+Full claim bans also live in [`DO-NOT.md`](DO-NOT.md). **FDA / wellness
+claims wall** (Arrival Day Pack + station sell — store/transfer/display +
+Share honesty only): [`FDA-CLAIMS-WALL.md`](FDA-CLAIMS-WALL.md). Hardware
+sequence: [`band-engraving-and-nfc-sourcing.md`](band-engraving-and-nfc-sourcing.md).
 Do not put a storefront, course LMS, or ad pixel in this repo.
 
 ---
@@ -58,10 +60,14 @@ are what flip the storefront claim.
 
 ### Shared banned copy (both views)
 
+Canonical FDA / wellness list: [`FDA-CLAIMS-WALL.md`](FDA-CLAIMS-WALL.md).
+
 - HIPAA certified / HIPAA compliant product
 - Encrypted bracelet / locked to your phone / unreadable without Face ID
 - Sends GPS or profile to 911
 - Medical device / diagnoses / detects seizures / crash-proof
+- Clinical-threshold or CDS-style coaching in ads / station email
+  (seizure “at 5:00” sell copy, triage scores, “if allergy X then…”)
 - Fake App Store URL or “available now” before Connect exists
 - Walk-by tap at 6–8 inches (reliable coupling dies past ~4 inches; walk-by does not fire)
 - Lives saved / we dispatch help
@@ -69,12 +75,13 @@ are what flip the storefront claim.
 - Storefront / dept “write from the app” / “program the band in RedMed”
   before Tag Reading + Write The Band are proven on blank NTAG216
 - “Program with Shortcuts or NFC Tools” as the product write path
+- Offering to host / receive station or patient PHI on RedMed systems
 - Mixing views: do not tell families “hospitals use this,” and do not tell
   facilities “download on the App Store and check out.”
 
 ### Shared allowed copy (both views)
 
-- Self-reported medical ID
+- Self-reported medical ID (store / transfer / display — no interpret/analyze claim)
 - Passive NFC (no battery, not Bluetooth)
 - Band comes complete — just the chip, no battery
 - Any phone can tap
@@ -285,7 +292,9 @@ Write. Pre-encode and vendor short-links stay forbidden
 ([`band-engraving-and-nfc-sourcing.md`](band-engraving-and-nfc-sourcing.md)).
 
 No subscription. No “HIPAA mode.” No RedMed server for profiles. If they
-need a BA and an EHR ingest, **walk**. That is a different product.
+need a BA, an EHR ingest, or ask RedMed to **host PHI**, **walk**. That is
+covered-entity / BA creep — different product
+([`FDA-CLAIMS-WALL.md`](FDA-CLAIMS-WALL.md)).
 
 KPI: demo nights run, quotes collected, (after company gate) POs. Not
 impressions.

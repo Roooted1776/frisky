@@ -3,7 +3,7 @@
 Permanent product rules. Do not ship copy or URLs that break these.
 
 - **Do not** market GPS as sent to 911. Coordinates stay on this iPhone for the owner to read. `tel:` does not attach location or profile.
-- **Do not** call RedMed HIPAA-certified or a medical device. Local-only ≠ certification. ICE card ≠ FDA device.
+- **Do not** call RedMed HIPAA-certified, HIPAA-compliant, or a medical device. Local-only ≠ certification. ICE card ≠ FDA device. Arrival Day Pack + station sell stay on store/transfer/display + Share honesty only — see [`FDA-CLAIMS-WALL.md`](FDA-CLAIMS-WALL.md) (§520(o)(1)(D) / General Wellness). No clinical-threshold marketing. No Shortcuts write coaching. No hosting station PHI.
 - **Do not** encode `apps.apple.com/id0000000000` (or any fake listing ID) on a QR, band, or in `AppConfig.appStoreURL`. That value is `nil` until Connect assigns a real ID.
 - **Do not** open a second clone of this repo. Only `/Users/claude/Documents/frisky` → `Roooted1776/frisky` → `main`.
 - **Do not** call the bracelet "encrypted" or "locked to your phone." `#d=` packing uses a public client key so any phone can open the card. The band is the credential.

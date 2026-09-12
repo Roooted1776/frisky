@@ -18,6 +18,11 @@ Ready to Archive as a local medical ID only after the band host is live. No diag
 Listing must not promise live bracelet write until NFC entitlement is restored.
 Do not promise secret encryption on the chip — tap-to-view is ungated by design.
 
+**Claims wall:** Connect promotional text stays on store / transfer / display
++ Share honesty only while Write is parked — [`FDA-CLAIMS-WALL.md`](FDA-CLAIMS-WALL.md).
+Counsel audit: **no** in-repo App Store copy claims write-from-app (listing
+parked; review notes + Promotional Text below are pack/Share only).
+
 | Field | Value |
 |-------|--------|
 | Name | RedMed |
@@ -32,6 +37,21 @@ Do not promise secret encryption on the chip — tap-to-view is ungated by desig
 | Support | help.RedMed@gmail.com + `support/index.html` (troubleshooting only — never request full profiles; delete threads when resolved) |
 | Regulated medical device | No |
 | Contact | help.RedMed@gmail.com |
+
+## Promotional Text (locked draft — paste only this)
+
+Subtitle stays **Medical ID on your iPhone**. Description / promos while
+Write is parked:
+
+> RedMed stores your self-reported emergency ID on this iPhone. Share Band
+> URL and Preview pack a helper card from what you typed — they do not write
+> a chip. When NFC write returns, a passive RedMed band can carry the same
+> card for anyone to tap. Not a medical device. Not HIPAA certified. Call
+> emergency services first.
+
+**Do not** add: write from the app, program with Shortcuts, HIPAA compliant,
+clinical thresholds, crash/seizure detection boasts, or “available to write
+now.”
 
 ## Review notes (paste)
 
