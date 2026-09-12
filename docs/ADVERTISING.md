@@ -20,7 +20,9 @@ Full claim bans also live in [`DO-NOT.md`](DO-NOT.md). **FDA / wellness
 claims wall** (Arrival Day Pack + station sell — store/transfer/display +
 Share honesty only): [`FDA-CLAIMS-WALL.md`](FDA-CLAIMS-WALL.md). Hardware
 sequence: [`band-engraving-and-nfc-sourcing.md`](band-engraving-and-nfc-sourcing.md).
-Do not put a storefront, course LMS, or ad pixel in this repo.
+Founder-why paste (categories only — About / station insert / Pack):
+[`FOUNDER-WHY.md`](FOUNDER-WHY.md). Do not put a storefront, course LMS, or
+ad pixel in this repo.
 
 ---
 
