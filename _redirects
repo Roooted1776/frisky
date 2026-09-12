@@ -15,7 +15,10 @@
 /get/index.html /tapper/ 302
 
 # App Store 5.1.1 — Connect privacy-policy URL (do not send this to /tapper/).
+# privacy/index.html bounces to /Document/#privacy (same Document.html as Help).
+# Do not put #fragments in _redirects destinations — CF strips them.
 /privacy /privacy/ 301
+/Document /Document/ 301
 
 # Legacy root brand URLs → assets/
 /BrandLogo.png /assets/BrandLogo.png 301

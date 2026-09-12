@@ -6,7 +6,7 @@
 
 This repo is **public**. Do not list a jsDelivr `@main` URL of `Roooted1776/redmed-privacy` as Connect’s privacy policy — that is a second git tree with a days-long CDN cache. Pick a tagged / hashed document on the live band host after `/tapper/` is green — **same Privacy wording as Help**, not a rewrite.
 
-Do **not** use `https://roooted1776.github.io/privacy/` until that host exists and serves the Help Privacy text (not a stub that diverges).
+Hosted Privacy URL is `/Document/` (same `Document.html` as in-app Help). `/privacy` redirects there — do not keep a rewritten stub.
 
 **Support mail:** `help.RedMed@gmail.com` is troubleshooting only. Do not ask users for full medical profiles. Delete threads when resolved.
 

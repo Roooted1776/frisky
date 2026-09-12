@@ -22,6 +22,7 @@ frisky/
 ├── README.md · AGENTS.md · MAX.md
 ├── RedMed-Xcode/          # native owner app (+ Document/ policies)
 ├── tapper/                # passerby shell + shell-relative PNGs
+├── Document/              # hosted Help policies (lockstep copy of Xcode Document/)
 ├── assets/                # canonical brand PNGs / SVG
 ├── docs/                  # all long-form docs (this file, MAX, SECURITY, product notes)
 ├── scripts/               # run, deploy, smoke, tapper guard, #d= codec test
@@ -42,6 +43,8 @@ frisky/
 | `docs/ADVERTISING.md` | Two ad views: wearer/family (DTC) and facility/EMS; shared gate + banned claims |
 | `docs/IP-ASSIGNMENT.md` | How-to: confirmatory IP assignment (code, tapper, brand, band → LLC) |
 | `docs/ip-assignment.html` | Printable one-page instrument (sign; do not commit the signed copy) |
+
+Hosted `/Document/` is a lockstep copy of `RedMed-Xcode/RedMed/Document/` (`scripts/sync-document.sh`). Band tap Help opens it straight — no start screen. `/privacy` redirects there.
 
 ## Code organization (logical)
 

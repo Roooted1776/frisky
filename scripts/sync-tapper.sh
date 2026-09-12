@@ -33,4 +33,7 @@ if ! cmp -s sw.js RedMed-Xcode/RedMed/sw.js; then
 fi
 grep -q "redmed-tapper-v" sw.js
 
+# Hosted policies must stay lockstep with in-app Help Document.
+bash "$ROOT/scripts/sync-document.sh"
+
 echo "OK single tapper shell at tapper/index.html"
