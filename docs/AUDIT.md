@@ -26,6 +26,7 @@ No committed secrets, no XSS in profile render (`textContent` / `esc()`), no aut
 | Face ID | Post-Agree once, returning cold re-entry cream once/process, Edit / Save / Erase / Load From Band. No cream lock in front of Main. Keychain is device-unlocked, **no** biometry ACL |
 | Entitlements | Empty dict / NFC parked (not TAG); no applinks; no HealthKit |
 | Write-from-app storefront | Off until Tag Reading + Write The Band on blank NTAG216. Until then: blank chips + Share honesty |
+| FDA / wellness claims | Arrival Day Pack + station: store/transfer/display + Share honesty only (`docs/FDA-CLAIMS-WALL.md`). No “medical device” / “HIPAA compliant” / Shortcuts / clinical-threshold sell copy |
 
 **Still needs Max (not this tree):**
 
