@@ -295,4 +295,18 @@ enum KeychainStore {
         SecItemDelete(query as CFDictionary)
         SecItemDelete(baseQuery(account: account, service: service) as CFDictionary)
     }
+
+    /// Owner Help erase: canonical row plus `account.migrating` leftover from
+    /// `replaceViaStaging`. Generic `delete` must not also wipe staging — that
+    /// would drop the mid-replace copy. Returns true only when neither exists.
+    @discardableResult
+    static func deleteIncludingStaging(
+        account: String,
+        service: String = defaultService,
+        authContext: LAContext? = nil
+    ) -> Bool {
+        delete(account: account, service: service, authContext: authContext)
+        delete(account: stagingAccount(account), service: service, authContext: authContext)
+        return !exists(account: account, service: service)
+    }
 }

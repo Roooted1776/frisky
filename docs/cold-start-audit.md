@@ -1,6 +1,6 @@
 # Cold Start Speed Audit
 
-> **2026-09 update:** Consent is **4.14** (Agree covers location; product-gate
+> **2026-09 update:** Consent is **4.15** (Agree covers location; product-gate
 > bump). A version bump forces Before You Continue + Face ID once — that is
 > intentional, not a paint regression. Returning cold opens skip Before You
 > Continue but still Face ID once on cream over warm Main (Keychain

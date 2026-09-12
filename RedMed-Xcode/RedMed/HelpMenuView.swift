@@ -509,6 +509,7 @@ struct HelpMenuView: View {
     @State private var showEraseConfirm = false
     @State private var isErasing = false
     @State private var eraseAuthFailed = false
+    @State private var eraseIncomplete = false
     @State private var authUnavailableMessage: String?
 
     /// Same metrics as Edit — even horizontal rhythm across Help / Edit.
@@ -659,6 +660,11 @@ struct HelpMenuView: View {
             } message: {
                 Text("Face ID, Touch ID, or passcode is required to erase RedMed data.")
             }
+            .alert("Couldn't erase all data", isPresented: $eraseIncomplete) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("The medical ID may still be on this iPhone. Try Erase again.")
+            }
             .alert(BiometricAuth.unavailableAlertTitle, isPresented: Binding(
                 get: { authUnavailableMessage != nil },
                 set: { if !$0 { authUnavailableMessage = nil } }
@@ -694,10 +700,15 @@ struct HelpMenuView: View {
         ) { outcome in
             switch outcome {
             case .success:
-                profile.eraseAllLocalData()
-                RedMedHaptics.success()
-                isErasing = false
-                dismiss()
+                if profile.eraseAllLocalData() {
+                    RedMedHaptics.success()
+                    isErasing = false
+                    dismiss()
+                } else {
+                    RedMedHaptics.error()
+                    isErasing = false
+                    eraseIncomplete = true
+                }
             case .notVerified:
                 RedMedHaptics.error()
                 isErasing = false

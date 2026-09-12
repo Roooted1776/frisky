@@ -23,8 +23,8 @@ No committed secrets, no XSS in profile render (`textContent` / `esc()`), no aut
 | `#d=` codec | `node scripts/test-d-codec.mjs` on pages-deploy + local |
 | Policies | Bundled `Document/Document.html` + `legal-doc.css`. Legacy `Help.html` is a hash-preserving redirect stub (not bundled) |
 | Notes | Ride both Keychain and chip (`NFCChipProfile.notes`, compact index 12) |
-| Face ID | Post-Agree once, Edit / Save / Erase / Load From Band. No cream lock in front of Main. Keychain is device-unlocked, **no** biometry ACL |
-| Entitlements | TAG NFC formats; no applinks; no HealthKit |
+| Face ID | Post-Agree once, returning cold re-entry cream once/process, Edit / Save / Erase / Load From Band. No cream lock in front of Main. Keychain is device-unlocked, **no** biometry ACL |
+| Entitlements | Empty dict / NFC parked (not TAG); no applinks; no HealthKit |
 | Write-from-app storefront | Off until Tag Reading + Write The Band on blank NTAG216. Until then: blank chips + Share honesty |
 
 **Still needs Max (not this tree):**
