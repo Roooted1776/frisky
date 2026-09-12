@@ -235,10 +235,22 @@ private enum PasserbyShellCache {
 /// `file://` baseURL inside `RedMed.app` makes WebKit try (and fail) to
 /// sandbox-extend the whole bundle — console spam plus broken relative
 /// `BrandLogo.png`. Stage HTML + logo, then `loadFileURL` like Help.
-private enum PasserbyShellStaging {
+enum PasserbyShellStaging {
     private static let folderName = "redmed-passerby-shell"
     private static var cachedDir: URL?
     private static let lock = NSLock()
+
+    /// Preview / Scan write `__REDMED_PROFILE` into Caches HTML. Help erase
+    /// must drop that folder so a later launch cannot reload PHI from disk.
+    static func wipe() {
+        lock.lock()
+        defer { lock.unlock() }
+        cachedDir = nil
+        guard let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+        else { return }
+        let dir = caches.appendingPathComponent(folderName, isDirectory: true)
+        try? FileManager.default.removeItem(at: dir)
+    }
 
     static func directory() -> URL? {
         lock.lock()

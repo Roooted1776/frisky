@@ -14,7 +14,7 @@ Working notes. Product invariants live in `AGENTS.md`.
   3. Scheme Run → **Release** / Archive.
   If NoDebug / Without Debugging is fast and normal Debug Run is slow → attach, not Swift.
   Console ColdLaunch: `app.init` → `firstFrame` — if cream sits with **no** ColdLaunch lines yet after Xcode’s “Running…”, lag is still install/attach.
-  Multi-second `app.init` → `firstFrame` **with** ColdLaunch lines under Debug Run is still usually LLDB stalling MainActor — confirm with NoDebug. Consent **4.14** forces Before You Continue + Face ID once (policy bump) — that is *after* firstFrame, not install lag. Returning cold opens after that Agree still Face ID once over warm Main (not a second Before You Continue).
+  Multi-second `app.init` → `firstFrame` **with** ColdLaunch lines under Debug Run is still usually LLDB stalling MainActor — confirm with NoDebug. Consent **4.15** forces Before You Continue + Face ID once (policy bump) — that is *after* firstFrame, not install lag. Returning cold opens after that Agree still Face ID once over warm Main (not a second Before You Continue).
 - Console noise to ignore (Apple / Simulator, not RedMed bugs):
   - `PointerUI.pointeruid` non-launching port
   - `Got a keyboard will change frame notification, but keyboard was not even present`

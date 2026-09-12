@@ -14,7 +14,7 @@ import UIKit
 /// Never on passerby tapper or in-app band / UL tap card (`BandTapIngress`).
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
-    static let currentVersion = "4.14"
+    static let currentVersion = "4.15"
 
     static var hasAcceptedCurrent: Bool {
         UserDefaults.standard.string(forKey: acceptedVersionKey) == currentVersion

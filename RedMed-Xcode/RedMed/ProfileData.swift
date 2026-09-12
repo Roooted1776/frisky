@@ -412,7 +412,12 @@ class ProfileData: ObservableObject {
                 isRestoringFromKeychain = false
                 return
             }
-            Self.setStoredProfileGate(true)
+            // Stale gate + empty Keychain must not hide Get Started forever.
+            // Keep the gate only when RAM already has an ID or a row still exists
+            // (leftover ACL waits for Face ID retry).
+            if !hasSensitiveProfileData && !Self.hasStoredProfile() {
+                Self.setStoredProfileGate(false)
+            }
         } else {
             Self.setStoredProfileGate(false)
         }
@@ -439,6 +444,9 @@ class ProfileData: ObservableObject {
         if ok {
             Self.setStoredProfileGate(true)
             RedMedSignpost.coldMark("reloadAfterOwnerFaceID applied")
+        } else if !hasSensitiveProfileData {
+            // Face ID already ran; still empty → return Get Started / funnel.
+            Self.setStoredProfileGate(false)
         }
         isRestoringFromKeychain = false
     }
@@ -645,17 +653,23 @@ class ProfileData: ObservableObject {
         braceletLinked = false
     }
 
-    /// Owner Help erase — Keychain profile, RAM, pasteboard.
+    /// Owner Help erase — Keychain profile + staging leftover, Preview Caches
+    /// shell (PHI in staged HTML), RAM, pasteboard.
     /// Does not rewrite or wipe a physical band (passive NFC; no remote erase).
     /// Call only after Face ID / passcode success.
-    func eraseAllLocalData() {
-        guard persists else { return }
-        KeychainStore.delete(account: Self.keychainAccount)
+    /// - Returns: `false` if the canonical or staging Keychain row still exists.
+    @discardableResult
+    func eraseAllLocalData() -> Bool {
+        guard persists else { return false }
+        PasserbyShellStaging.wipe()
+        let gone = KeychainStore.deleteIncludingStaging(account: Self.keychainAccount)
+        guard gone else { return false }
         Self.setStoredProfileGate(false)
         ConsentSettings.clearAcceptance()
         purgeFromMemory()
         SecurePasteboard.clear()
         NotificationCenter.default.post(name: .redMedDidEraseLocalData, object: nil)
+        return true
     }
 }
 

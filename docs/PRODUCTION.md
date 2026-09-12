@@ -32,7 +32,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | Hospital search | Native: MapKit / Apple Maps. Passerby: OpenStreetMap Overpass (`overpass-api.de`). Disclosed in Help 4.3 |
 | ATS | Arbitrary loads + local networking **false** |
 | Snapshot / pasteboard | Privacy cover + secure pasteboard clear on background |
-| Consent | `ConsentGateView` on first launch or policy bump (**4.13**); Agree + checkbox only on that page (no Face ID there); Face ID runs after Agree and on every cold re-entry (cream over warm Main; restore races underneath); When-In-Use once when still notDetermined; same-session resume does not re-prompt; never on tapper |
+| Consent | `ConsentGateView` on first launch or policy bump (**4.15**); Agree + checkbox only on that page (no Face ID there); Face ID runs after Agree and on every cold re-entry (cream over warm Main; restore races underneath); When-In-Use once when still notDetermined; same-session resume does not re-prompt; never on tapper |
 | Apple Health import | Parked (`healthKitImportEnabled = false`) |
 | iOS CI | Push/PR on `RedMed-Xcode/**` (unsigned Simulator compile). Manual `workflow_dispatch` still works. No XCTest |
 | `#d=` codec | `node scripts/test-d-codec.mjs` — AES / zlib / compact / URI lockstep |

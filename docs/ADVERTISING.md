@@ -191,7 +191,7 @@ Order is locked. Do not invert it.
 
 ### Offer (view A)
 
-- **SKU:** wine adult silicone + NTAG216 + laser `MED ID`. One color.
+- **SKU:** black (`#232425`) adult silicone + logo-print RedMed heart 30×9 mm + blank NTAG216. One color.
 - **App:** free or cheap. Margin is the band. No SaaS for a local-only profile.
 - **No subscription.** No server to justify one.
 - Price against Road ID (~$30–70) plus a small NFC premium.
