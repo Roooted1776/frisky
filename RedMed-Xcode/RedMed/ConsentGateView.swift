@@ -14,7 +14,7 @@ import UIKit
 /// Never on passerby tapper or in-app band / UL tap card (`BandTapIngress`).
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
-    static let currentVersion = "4.15"
+    static let currentVersion = "4.16"
 
     static var hasAcceptedCurrent: Bool {
         UserDefaults.standard.string(forKey: acceptedVersionKey) == currentVersion
@@ -168,7 +168,7 @@ struct ConsentGateView<Content: View>: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("RedMed is a personal medical ID and first-aid reference on this iPhone. It is not a medical device, does not diagnose or treat, and does not replace emergency dispatch. Always call emergency services first in a real emergency.")
                         Text("Your profile stays on this iPhone, and on a band if you write one — RedMed runs no server for it.")
-                        Text("Agree covers location and motion while RedMed is open — Find Help GPS and crash detection. Crash detect does not run after lock or kill; use iPhone Crash Detection if your device has it. GPS stops when you leave or close the app. Never sent to us. iOS may ask Allow once after Face ID so 911 is not blocked later.")
+                        Text("Agree covers location and motion while RedMed is on screen — Find Help GPS and crash detection for app users (default thresholds). Crash detect does not run when the phone is locked or you leave the app — even if RedMed was open; use iPhone Crash Detection if your device has it. GPS stops when you leave or close the app. Never sent to us. iOS may ask Allow once after Face ID so 911 is not blocked later.")
                     }
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.redmedMuted)
@@ -218,7 +218,7 @@ struct ConsentGateView<Content: View>: View {
                         Image(systemName: checked ? "checkmark.square.fill" : "square")
                             .font(.system(size: 22))
                             .foregroundColor(checked ? .redmedAccent : .redmedMuted)
-                        Text("I have read and agree to the RedMed Policies document (Privacy, Security, Terms, Medical Disclaimer, and Ships When Ready), including the medical-device disclaimer, liability limits, and binding arbitration / class-action waiver in Terms. Agree includes using location and motion on this iPhone while RedMed is open.")
+                        Text("I have read and agree to the RedMed Policies document (Privacy, Security, Terms, Medical Disclaimer, and Ships When Ready), including the medical-device disclaimer, liability limits, and binding arbitration / class-action waiver in Terms. Agree includes using location and motion on this iPhone while RedMed is on screen; crash detect does not run when the phone is locked or you leave the app.")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.redmedDark)
                             .fixedSize(horizontal: false, vertical: true)

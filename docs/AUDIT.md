@@ -43,7 +43,7 @@ No committed secrets, no XSS in profile render (`textContent` / `esc()`), no aut
 - **Passerby hospital search** POSTs coordinates to `overpass-api.de`. Native uses MapKit. Disclosed in Document.html / Satellite / Info.plist. Not removed.
 - **CSP `unsafe-inline`** for decrypt / SOS / SW register. Host compromise of github.io is still game over for the shell; field XSS is the surface we harden.
 - **Crash-motion false positives** can siren. Thresholds are vehicle-crash-only. SOS tap autodials; crash waits US 10s+30s; band-tap auto-arm is siren only.
-- **No background crash sensing.** CoreMotion is owner foreground + `.inactive` only (`stopMonitoring()` on `.background`). Short post-Home window is parked (`docs/DO-NOT.md`). Find Help / support / Terms point at iPhone Crash Detection for lock/killed.
+- **No background crash sensing.** CoreMotion is owner foreground + `.inactive` only (`stopMonitoring()` on `.background`). Short post-Home window is parked (`docs/DO-NOT.md`). Find Help / support / Terms: app users only, on-screen only; lock or leave stops new detection even if RedMed was open; iPhone Crash Detection for lock/killed.
 
 ---
 
