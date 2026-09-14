@@ -244,9 +244,9 @@ struct ConsentGateView<Content: View>: View {
             // Defer Document.html WK warm past cream drop + first ack layout.
             // Immediate warm on appear fought LaunchRoot's one-yield cream
             // drop and spawned UIKit "keyboard was not even present" noise
-            // from an off-screen WKWebView. Ack reading time is longer than
-            // 500ms — a policy link still opens warm. Discarded on Agree.
-            try? await Task.sleep(nanoseconds: 500_000_000)
+            // from an off-screen WKWebView. Ack reading time is still longer
+            // than 200ms — a policy link opens warm. Discarded on Agree.
+            try? await Task.sleep(nanoseconds: 200_000_000)
             guard !Task.isCancelled else { return }
             PolicyWebViewPool.warm()
             RedMedSignpost.coldMark("policy WK warm started")

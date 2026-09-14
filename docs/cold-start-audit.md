@@ -1,6 +1,6 @@
 # Cold Start Speed Audit
 
-> **2026-09 update:** Consent is **4.15** (Agree covers location; product-gate
+> **2026-09 update:** Consent is **4.16** (Agree covers location; product-gate
 > bump). A version bump forces Before You Continue + Face ID once — that is
 > intentional, not a paint regression. Returning cold opens skip Before You
 > Continue but still Face ID once on cream over warm Main (Keychain
@@ -19,18 +19,19 @@
 > in the same breath so a finished blob can land before / under the Face ID
 > cream. **Consent-pending** (Before You Continue): init only detached-decodes
 > at utility — MainActor adopt waits for Agree (not `RedMedApp.task`; that
-> raced cream drop after #563). Document.html WK warm waits ~500ms past gate
+> raced cream drop after #563). Document.html WK warm waits ~200ms past gate
 > appear so cream drop + ack layout win.
 > ContentView `restoreOnLaunch` is non-interactive (no SecItem Face ID).
 > After ConsentGate Face ID, `reloadAfterOwnerFaceID` migrates leftover
-> biometry ACL via the parked LAContext — deferred ~300ms when prefetch
+> biometry ACL via the parked LAContext — deferred ~100ms when prefetch
 > already filled RAM so cream drop is not a SecItem hitch. Empty-RAM still
 > awaits. Haptics, WK Preview pool, page rose wash, and CoreMotion wait
 > until `UIApplication` is `.active` (Face ID cream is `.inactive`; SwiftUI
-> `.task` snapshots `scenePhase` so a 400ms sleep alone still landed
-> mid-sheet). Tab bar does not `drawingGroup`. Aid / Edit catalogs prefetch
-> after interactive. Next-step banner stays ~400ms past first paint. Do not
-> remount `OwnerYouCard` via `.id(cardEpoch)` on adopt.
+> `.task` snapshots `scenePhase` — do not use a fixed sleep instead of that
+> gate). Tab bar does not `drawingGroup`. Aid / Edit catalogs prefetch at
+> userInitiated after interactive. Next-step banner waits for restore settle
+> + two yields (not a fixed 400ms). Do not remount `OwnerYouCard` via
+> `.id(cardEpoch)` on adopt.
 
 
 **Launch lock is gone.** Current path is `RedMedApp` → `PrivacySnapshotGuard` →

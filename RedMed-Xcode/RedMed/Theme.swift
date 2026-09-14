@@ -60,8 +60,9 @@ extension Color {
 ///
 /// First frame is flat `redmedBg` matching UILaunchScreen / LaunchBackground
 /// (`#fff7f7`) so SplashBoard → SwiftUI has no one-frame rose-wash jump.
-/// Wash lands ~400ms later *and* after the scene is `.active` — past Keychain
-/// adopt / YOU fill, and not during returning-cold Face ID cream.
+/// Wash lands after the scene is `.active` (not during Face ID cream) plus a
+/// short settle so it does not fight Keychain adopt / YOU fill on the same
+/// commit — no fixed 400ms that outlasts a fast unlock.
 struct RedMedPageBackground: View {
     @State private var showWash = false
 
@@ -84,12 +85,12 @@ struct RedMedPageBackground: View {
             .accessibilityHidden(true)
             .task {
                 guard !showWash else { return }
-                await Task.yield()
-                try? await Task.sleep(nanoseconds: 400_000_000)
-                guard !Task.isCancelled else { return }
                 // ContentView is armed under Face ID cream — do not composite
                 // the radial wash while the scene is still inactive.
                 await RedMedMainPace.waitUntilActive()
+                guard !Task.isCancelled else { return }
+                await Task.yield()
+                try? await Task.sleep(nanoseconds: 80_000_000)
                 guard !Task.isCancelled else { return }
                 var t = Transaction()
                 t.animation = nil

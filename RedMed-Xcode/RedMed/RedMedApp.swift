@@ -156,8 +156,8 @@ private struct LaunchRoot: View {
     /// Returning opens: no SwiftUI cream veil — UILaunchScreen already matches
     /// and ConsentGate paints Face ID cream over armed Main. First launch
     /// (or after Erase / policy bump): flat cream for SplashBoard → Agree
-    /// layout, dropped after one yield. Page rose wash is deferred (~400ms)
-    /// so it does not fight that drop or a returning Keychain adopt.
+/// layout, dropped after one yield. Page rose wash waits for `.active` then
+/// a short settle so it does not fight that drop or a returning Keychain adopt.
     @State private var holdLaunchCream = !ConsentSettings.hasAcceptedCurrent
 
     var body: some View {
