@@ -455,7 +455,9 @@ class ProfileData: ObservableObject {
     private func scheduleDeferredKeychainMigrate() {
         Task { @MainActor in
             await Task.yield()
-            try? await Task.sleep(nanoseconds: 300_000_000)
+            // Short settle past cream drop — 300ms was longer than needed once
+            // reloadAfterOwnerFaceID already yields before scheduling this.
+            try? await Task.sleep(nanoseconds: 100_000_000)
             guard !Task.isCancelled else { return }
             guard BiometricAuth.peekAuthenticationContext() != nil else { return }
             _ = await reloadFromKeychainAsync(allowInteractive: false)

@@ -82,8 +82,8 @@ struct ContentView: View {
             // Prefetch + MainActor adopt usually started in ProfileData.init
             // (may have filled RAM before this task). restoreOnLaunch is a
             // no-op when adopt already won. Haptics / CoreMotion / WK stay
-            // past the filled-card commit *and* past Face ID (Main is armed
-            // under cream — a 400ms sleep alone still lands mid-sheet).
+            // past Face ID (Main is armed under cream — gate on interactive
+            // + UIApplication.active, not a fixed sleep).
             RedMedSignpost.coldMark("restoreOnLaunch start")
             await profile.restoreOnLaunch()
             RedMedSignpost.coldMark("restoreOnLaunch done")
@@ -91,11 +91,10 @@ struct ContentView: View {
             // String-only tapper.html read — safe during Face ID (no WK).
             PasserbyHTMLCardView.scheduleShellWarmOnce()
             await Task.yield()
-            try? await Task.sleep(nanoseconds: 400_000_000)
-            guard !Task.isCancelled else { return }
-            // ConsentGate Face ID unlock, then live UIApplication active.
-            // `.task` captured scenePhase is stale (.inactive for the whole
-            // Face ID sheet).
+            // No fixed sleep — waitUntilInteractive / waitUntilActive already
+            // keep WK, Taptic, and CoreMotion off the Face ID cream. A 400ms
+            // pause after restore only delayed post-unlock warm when Face ID
+            // finished early (common on returning cold with prefetch).
             await OwnerSessionGate.waitUntilInteractive()
             guard !Task.isCancelled, OwnerSessionGate.isInteractive else { return }
             await RedMedMainPace.waitUntilActive()
@@ -109,7 +108,7 @@ struct ContentView: View {
             PasserbyWebViewPool.warmFullShell()
             RedMedSignpost.coldMark("post-interactive warm (haptics/motion/WK)")
             // Next-screen catalogs so first Aid topic / Edit keystroke is ready.
-            Task.detached(priority: .utility) {
+            Task.detached(priority: .userInitiated) {
                 await AidTopicCatalog.warmUp()
                 await SuggestionCatalog.warmUp()
             }

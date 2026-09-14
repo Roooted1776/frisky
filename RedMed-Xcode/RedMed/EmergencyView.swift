@@ -109,7 +109,7 @@ private struct FindHelpLocationBlock: View {
             }
             await Task.yield()
             // Let 911 paint first — startUpdatingLocation hitch on the tap turn.
-            try? await Task.sleep(nanoseconds: 80_000_000)
+            try? await Task.sleep(nanoseconds: 40_000_000)
             guard !Task.isCancelled, isVisible else { return }
             locationSuggester.refresh()
             if locationEnabled, !locationSuggester.mustOpenSettings { locationManager.start() }

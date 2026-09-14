@@ -31,8 +31,8 @@ struct RedMedView: View {
     /// a SwiftUI `@State` Bool (that assignment tripped the purple
     /// "Modifying state during view update" warning at teardown).
     @State private var screenWakeHold = ScreenWakeHold()
-    /// Next-step banner waits past Keychain adopt so it does not insert
-    /// above the YOU card in the same layout commit as the field fill.
+    /// Next-step banner waits until Keychain adopt settles + one layout
+    /// commit so it does not insert above the YOU card mid-fill.
     @State private var nextStepBannerReady = false
 
     /// Owner empty profile — native steps instead of a blank YOU card.
@@ -140,9 +140,14 @@ struct RedMedView: View {
         .onAppear { syncScreenWake() }
         .task {
             guard !isScannerSession else { return }
-            // Same cadence as haptics / wash — after YOU fill can commit.
+            // Prefer restore settle over a fixed 400ms — prefetch often fills
+            // under Face ID, so a sleep only delayed the banner after unlock.
+            while profile.isRestoringFromKeychain {
+                try? await Task.sleep(nanoseconds: 20_000_000)
+                if Task.isCancelled { return }
+            }
             await Task.yield()
-            try? await Task.sleep(nanoseconds: 400_000_000)
+            await Task.yield()
             guard !Task.isCancelled else { return }
             nextStepBannerReady = true
         }
@@ -165,7 +170,7 @@ struct RedMedView: View {
     }
 
     /// Sibling above the YOU card — never an overlay on the tap card.
-    /// Hidden while restore is in flight and for ~400ms after first paint so
+    /// Hidden while restore is in flight and until one commit past settle so
     /// the banner does not insert in the same commit as Keychain field fill.
     @ViewBuilder
     private var ownerNextStepBanner: some View {

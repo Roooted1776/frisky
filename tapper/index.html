@@ -2076,7 +2076,7 @@ function redmedAssetURL(file) {
   }
 
   function scheduleIdle(fn, timeoutMs) {
-    var ms = timeoutMs == null ? 1800 : timeoutMs;
+    var ms = timeoutMs == null ? 800 : timeoutMs;
     if (typeof requestIdleCallback === 'function') {
       requestIdleCallback(fn, { timeout: ms });
     } else {
@@ -2714,7 +2714,7 @@ function redmedAssetURL(file) {
       try { document.dispatchEvent(new Event('redmed-profile-painted')); } catch (e2) {}
       try {
         if (typeof scheduleIdle === 'function') {
-          scheduleIdle(function () { resolveBrandAssets(); }, 600);
+          scheduleIdle(function () { resolveBrandAssets(); }, 250);
         } else {
           setTimeout(function () { resolveBrandAssets(); }, 0);
         }
