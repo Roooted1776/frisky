@@ -8,17 +8,12 @@
 <meta name="referrer" content="no-referrer">
 <title>RedMed</title>
 <style>html,body{background:#fff7f7!important;margin:0}</style>
-<!-- Site root → passerby shell. Any phone / tablet / desktop. Preserve #d=. -->
+<!-- Legacy / root URL. Canonical scanner shell is /tapper/ — preserve #d=. -->
 <script>
 (function () {
-  var q = location.search || "";
-  var h = location.hash || "";
-  location.replace("tapper/" + q + h);
+  location.replace("/tapper/" + (location.search || "") + (location.hash || ""));
 })();
 </script>
-<!-- No meta refresh here: it navigates to a fragment-less "tapper/" and would
-     drop the band's #d= payload. The script above and the link below both
-     carry the fragment, matching card.html / get.html / get/index.html. -->
 <style>
   body {
     margin: 0;
@@ -34,10 +29,12 @@
 </style>
 </head>
 <body>
-  <p><a id="go" href="tapper/">Open RedMed card</a></p>
+  <p><a id="fallback" href="/tapper/">Open emergency card</a></p>
   <script>
-    document.getElementById("go").href = "tapper/" + (location.search || "") + (location.hash || "");
+    document.getElementById("fallback").href =
+      "/tapper/" + (location.search || "") + (location.hash || "");
   </script>
-  <noscript><p>JavaScript is off. <a id="ns" href="tapper/">Open emergency card</a> (hash may drop — enable JS to keep #d=).</p></noscript>
+  <noscript><p>JavaScript is off. <a href="/tapper/">Open emergency card</a> (hash may drop — enable JS to keep #d=).</p></noscript>
 </body>
 </html>
+
