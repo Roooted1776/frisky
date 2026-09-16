@@ -11,22 +11,24 @@ Only what must live at the deploy / GitHub surface:
 |------|-------------|
 | `README.md` | GitHub landing (product + run/deploy + dead-host note) |
 | `AGENTS.md` | Cursor / agent rules (must be easy to find) |
-| `tapper.html` · `index.html` · `card.html` · `get.html` · `get/` | Pages URLs + `#d=` redirects |
+| `tapper.html` · `index.html` · `card.html` · `get.html` · `get/` | Identical `#d=` redirect stubs → `/tapper/` (`scripts/write-tapper-redirects.sh`) |
 | `sw.js` · `_headers` · `_redirects` · `wrangler.toml` | Cloudflare / SW |
 | `.gitignore` · `.github/` · `.cursor/` | tooling |
+
+No brand PNGs at repo root — canonical in `assets/`, shell-relative copies in `tapper/`.
 
 ## Folders
 
 ```text
 frisky/
 ├── README.md · AGENTS.md · MAX.md
-├── RedMed-Xcode/          # native owner app (+ Document/ policies)
-├── tapper/                # passerby shell + shell-relative PNGs
-├── Document/              # hosted Help policies (lockstep copy of Xcode Document/)
+├── RedMed-Xcode/          # native owner app (+ Document/ policies source)
+├── tapper/                # passerby shell + shell-relative PNGs + sw.js
+├── Document/              # hosted Help: index.html = full policy; Document.html = redirect
 ├── assets/                # canonical brand PNGs / SVG
 ├── docs/                  # all long-form docs (this file, MAX, SECURITY, product notes)
-├── scripts/               # run, deploy, smoke, tapper guard, #d= codec test
-├── Pages surface files    # tapper.html, redirects, sw, wrangler (see table)
+├── scripts/               # run, deploy, smoke, sync-document, write-tapper-redirects, #d= codec
+├── Pages surface files    # identical redirect stubs, sw, wrangler (see table)
 └── .github/workflows/
 ```
 
@@ -48,7 +50,7 @@ frisky/
 | `docs/spec-exhibit-a-po-qc-rider.html` | Printable bilingual EN/中文 rider (sign; do not commit the filled copy) |
 | `docs/FOUNDER-WHY.md` | Careful founder-why paste (categories only) — About / station insert / Arrival Day Pack |
 
-Hosted `/Document/` is a lockstep copy of `RedMed-Xcode/RedMed/Document/` (`scripts/sync-document.sh`). Band tap Help opens it straight — no start screen. `/privacy` redirects there.
+Hosted `/Document/` stays lockstep with `RedMed-Xcode/RedMed/Document/` via `scripts/sync-document.sh`: `Document/index.html` is the full policy; `Document/Document.html` is a thin hash-preserving redirect to `/Document/` (one tree, no twin full copy). Band tap Help opens `/Document/` straight — no start screen. `/privacy` redirects there.
 
 ## Code organization (logical)
 

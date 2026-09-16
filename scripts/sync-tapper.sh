@@ -35,5 +35,7 @@ grep -q "redmed-tapper-v" sw.js
 
 # Hosted policies must stay lockstep with in-app Help Document.
 bash "$ROOT/scripts/sync-document.sh"
+# Keep every legacy Pages URL on the same #d=-preserving stub.
+bash "$ROOT/scripts/write-tapper-redirects.sh"
 
 echo "OK single tapper shell at tapper/index.html"
