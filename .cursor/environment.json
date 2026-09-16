@@ -1,10 +1,11 @@
 {
   "name": "RedMed (Cloudflare Pages static shell)",
   "install": "echo 'No dependencies to install: static Cloudflare Pages site (no build step, no package.json). Toolchain (node, python3, wrangler) ships in the base image.'",
+  "start": "cd /workspace && if curl -sf -o /dev/null http://127.0.0.1:8787/tapper/; then echo 'pages server already running on 8787'; else nohup python3 -m http.server 8787 --bind 127.0.0.1 >/tmp/pages.log 2>&1 & for i in $(seq 1 20); do curl -sf -o /dev/null http://127.0.0.1:8787/tapper/ && break; sleep 0.5; done; curl -sf -o /dev/null http://127.0.0.1:8787/tapper/ && echo 'pages server up on http://127.0.0.1:8787' || { echo 'pages server failed to start'; cat /tmp/pages.log; exit 1; }; fi",
   "terminals": [
     {
       "name": "pages",
-      "command": "cd /workspace && python3 -m http.server 8787 --bind 127.0.0.1"
+      "command": "cd /workspace && if curl -sf -o /dev/null http://127.0.0.1:8787/tapper/; then echo 'pages server already running (started by start command); tailing log'; touch /tmp/pages.log; tail -f /tmp/pages.log; else python3 -m http.server 8787 --bind 127.0.0.1; fi"
     }
   ],
   "ports": [8787]
