@@ -34,7 +34,7 @@ before write-from-app is green; do not claim “write from the app” early.
 
 | Gate | How you know it is green |
 |------|--------------------------|
-| Live HTTPS `/tapper/` | `BASE=https://<host> ./scripts/smoke-pages.sh` returns OK. `AppConfig.medicalCardBaseURL` is that host. github.io is **404** until `Roooted1776.github.io` is published ([`domain.md`](domain.md)). |
+| Live HTTPS `/tapper/` | `BASE=https://<host> ./scripts/smoke-pages.sh` returns OK. `AppConfig.medicalCardBaseURL` is that host. Interim `https://roooted1776.github.io/tapper/` is live (HTTP 200, probed 2026-09-16). A 404 there means this gate is red ([`domain.md`](domain.md)). |
 | App Store listing | Paid Apple Developer. Real `apps.apple.com` ID. `AppConfig.appStoreURL` is that URL, not `nil`, not a placeholder. |
 | NFC write on hardware | NFC Tag Reading on App ID `com.redmed.app`. `nfcHardwareEnabled = true`. Owner iPhone Write → second phone Safari opens the card. Simulator does not count. |
 | Sample bands in hand | 1–10 black (`#232425`) NTAG216 silicone, logo-print RedMed face, NDEF blank unlocked. Proven write on a physical iPhone. |
