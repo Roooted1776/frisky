@@ -1,0 +1,11 @@
+{
+  "name": "RedMed (Cloudflare Pages static shell)",
+  "install": "echo 'No dependencies to install: static Cloudflare Pages site (no build step, no package.json). Toolchain (node, python3, wrangler) ships in the base image.'",
+  "terminals": [
+    {
+      "name": "pages",
+      "command": "cd /workspace && python3 -m http.server 8787 --bind 127.0.0.1"
+    }
+  ],
+  "ports": [8787]
+}
