@@ -1,0 +1,16 @@
+{
+  "name": "RedMed",
+  "terminals": [
+    {
+      "name": "pages-dev",
+      "command": "cd /workspace && python3 -m http.server 8787 --bind 127.0.0.1",
+      "description": "Static Cloudflare Pages shell served locally. Smoke test: BASE=http://127.0.0.1:8787 bash scripts/smoke-pages.sh"
+    }
+  ],
+  "ports": [
+    {
+      "name": "pages-dev",
+      "port": 8787
+    }
+  ]
+}
