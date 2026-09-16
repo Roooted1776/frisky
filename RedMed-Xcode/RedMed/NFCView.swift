@@ -137,7 +137,10 @@ struct NFCView: View {
         if profile.showsBraceletAsLinked {
             return (AppConfig.NFCWriteCopy.successTitle, AppConfig.NFCWriteCopy.successDetail, true)
         }
-        if profile.braceletLinked {
+        // Incomplete identity after a real CoreNFC write. Parked builds never
+        // write, so a leftover Keychain `braceletLinked` must not show
+        // "Band Written" / "Finish name…" (Share honesty).
+        if AppConfig.nfcHardwareEnabled, profile.braceletLinked {
             return ("Band Written", "Finish name, birth date, and blood type on RedMed", false)
         }
         return (

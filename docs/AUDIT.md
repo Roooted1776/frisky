@@ -58,7 +58,7 @@ No committed secrets, no XSS in profile render (`textContent` / `esc()`), no aut
 | ATS | Arbitrary loads + local networking **false** |
 | WKWebView Help | `Document.html` + `legal-doc.css` only |
 | WKWebView tapper | No `WKScriptMessageHandler`. file/about allow; http(s)/tel/mailto/redmed open outside or cancel; default deny |
-| SW cache | Shell HTML only; `#d=` is a fragment; activate drops old `CACHE` names (`redmed-tapper-v152`) |
+| SW cache | Shell HTML only; `#d=` is a fragment; activate drops old `CACHE` names (`redmed-tapper-v160`) |
 | Zlib bound | Swift 64 KiB; JS `MAX_INFLATED = 65536` |
 | Scanner isolation | `isScannerSession` hides NFC / Edit; `persist()` no-ops when `persists == false` |
 | Linked flag | `setBraceletPaired(true)` requires `nfcHardwareEnabled` |
@@ -66,7 +66,7 @@ No committed secrets, no XSS in profile render (`textContent` / `esc()`), no aut
 | iOS CI | `.github/workflows/ios-build.yml` on push/PR for `RedMed-Xcode/**` |
 | Pages smoke | github.io fail-closed; Actions SHA-pinned |
 
-Engineer threat model: `docs/SECURITY.md`. Restore playbooks: `docs/NFC-RESTORE.md`, `docs/associated-domains-restore.md`, `docs/healthkit-restore.md`.
+Engineer threat model: in-app Help → Security (`RedMed-Xcode/RedMed/Document/Document.html`). `docs/SECURITY.md` was emptied on purpose (5462194) — do not restore without Max. Restore playbooks: `docs/NFC-RESTORE.md`, `docs/associated-domains-restore.md`, `docs/healthkit-restore.md`. Sweep 2026-09-16: `docs/AUDIT-2026-09-16.md`.
 
 ---
 

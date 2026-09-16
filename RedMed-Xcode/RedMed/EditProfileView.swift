@@ -40,6 +40,9 @@ struct EditProfileView: View {
     private static let bloodTypeChoices = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
     /// Capped so this iPhone and the NTAG216 hold the same note (`MAX_STR` 200).
     private static let notesWordLimit = 40
+    /// Match `ProfileNFCCodec` / tapper `MAX_STR` so Save cannot keep more
+    /// than the chip will pack.
+    private static let notesCharLimit = 200
 
     /// One body size across the edit form (labels, fields, prompts).
     /// Nav bar metrics live in `RedMedChrome` so Cancel / Save stay even.
@@ -471,14 +474,15 @@ struct EditProfileView: View {
                 NotesTextView(
                     fieldID: "edit-notes",
                     text: $notes,
-                    wordLimit: Self.notesWordLimit
+                    wordLimit: Self.notesWordLimit,
+                    charLimit: Self.notesCharLimit
                 )
                 .frame(minHeight: 90)
             }
             .padding(.horizontal, Metrics.rowHPad)
             .padding(.top, Metrics.rowVPad)
 
-            Text("\(notesWordCount)/\(Self.notesWordLimit) words")
+            Text("\(notesWordCount)/\(Self.notesWordLimit) words · \(notes.count)/\(Self.notesCharLimit)")
                 .font(.system(size: 12, weight: .medium))
                 .foregroundColor(.redmedMuted)
                 .padding(.horizontal, Metrics.rowHPad)
@@ -762,7 +766,7 @@ struct EditProfileView: View {
         let nextNotes = String(Self.capToWordLimit(
             notes.trimmingCharacters(in: .whitespacesAndNewlines),
             limit: Self.notesWordLimit
-        ).prefix(200))
+        ).prefix(Self.notesCharLimit))
         let nextContacts = contacts.compactMap { contact -> EmergencyContact? in
             let trimmedName = contact.name.trimmingCharacters(in: .whitespacesAndNewlines)
             let trimmedPhone = contact.phone.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1248,17 +1252,19 @@ private struct BirthDateWheel: View {
     }
 }
 
-/// Multi-line notes field. Blocks keystrokes/paste past `wordLimit` at the
-/// point of edit (rather than truncating after the fact) so the cursor never
-/// jumps. Mirrors `RepresentedField`'s PHI lockdown (no autocorrect/spell
-/// check/autofill) since notes are free-text medical content.
+/// Multi-line notes field. Blocks keystrokes/paste past `wordLimit` /
+/// `charLimit` at the point of edit (rather than truncating after the fact)
+/// so the cursor never jumps. Char cap matches chip `MAX_STR`. Mirrors
+/// `RepresentedField`'s PHI lockdown (no autocorrect/spell check/autofill)
+/// since notes are free-text medical content.
 private struct NotesTextView: UIViewRepresentable {
     let fieldID: String
     @Binding var text: String
     let wordLimit: Int
+    let charLimit: Int
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(text: $text, wordLimit: wordLimit)
+        Coordinator(text: $text, wordLimit: wordLimit, charLimit: charLimit)
     }
 
     func makeUIView(context: Context) -> UITextView {
@@ -1288,6 +1294,7 @@ private struct NotesTextView: UIViewRepresentable {
     func updateUIView(_ tv: UITextView, context: Context) {
         context.coordinator.text = $text
         context.coordinator.wordLimit = wordLimit
+        context.coordinator.charLimit = charLimit
         if tv.text != text {
             tv.text = text
         }
@@ -1308,25 +1315,32 @@ private struct NotesTextView: UIViewRepresentable {
     final class Coordinator: NSObject, UITextViewDelegate {
         var text: Binding<String>
         var wordLimit: Int
+        var charLimit: Int
 
-        init(text: Binding<String>, wordLimit: Int) {
+        init(text: Binding<String>, wordLimit: Int, charLimit: Int) {
             self.text = text
             self.wordLimit = wordLimit
+            self.charLimit = charLimit
         }
 
         private func wordCount(_ s: String) -> Int {
             s.split { $0.isWhitespace || $0.isNewline }.count
         }
 
-        /// Block edits that would push the word count past the limit, but
-        /// always allow edits that keep it the same or lower (deletes,
-        /// replacements) so a field pre-filled above the cap stays editable.
+        /// Block edits that would push the word or char count past the
+        /// limit, but always allow edits that keep both the same or lower
+        /// (deletes, replacements) so a field pre-filled above the cap
+        /// stays editable.
         func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText newText: String) -> Bool {
             let current = textView.text as NSString
+            let currentStr = current as String
             let updated = current.replacingCharacters(in: range, with: newText)
-            let updatedCount = wordCount(updated)
-            if updatedCount <= wordLimit { return true }
-            return updatedCount <= wordCount(current as String)
+            let wordsOk = wordCount(updated) <= wordLimit
+            let charsOk = updated.count <= charLimit
+            if wordsOk && charsOk { return true }
+            let wordsDown = wordCount(updated) <= wordCount(currentStr)
+            let charsDown = updated.count <= currentStr.count
+            return wordsDown && charsDown
         }
 
         func textViewDidChange(_ textView: UITextView) {
