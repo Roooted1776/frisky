@@ -1,7 +1,7 @@
 # RedMed tree map
 
 Single source of truth: **git `main`** → `Roooted1776/frisky`.
-Local Mac path: **`/Users/claude/Documents/frisky`** only.
+Local path (one clone per machine): **`~/Documents/frisky`** on MacBook and Mac Mini. See [`DUAL-MAC.md`](DUAL-MAC.md).
 
 ## Root (intentionally small)
 
@@ -39,6 +39,7 @@ frisky/
 | `../MAX.md` | Max profile + shipped history (agent memory; linked from `AGENTS.md`) |
 | `docs/SECURITY.md` | Advisory pointer into Document.html |
 | `docs/STRUCTURE.md` | This map |
+| `docs/DUAL-MAC.md` | MacBook + Mini: Cursor ShipIt repair + `gh` HTTPS push/pull |
 | `docs/domain.md` | getredmed.com cutover |
 | `docs/NFC-RESTORE.md` | CoreNFC entitlement restore |
 | `docs/band-engraving-and-nfc-sourcing.md` | Hardware |
@@ -60,4 +61,4 @@ except policies: `Document/Document.html` + `Document/legal-doc.css` (Xcode grou
 access is the Document folder so the stylesheet resolves. Legacy
 `RedMed/Help.html` is a hash-preserving redirect stub (not bundled).
 
-Pull `main` on the MacBook after merges.
+Pull `main` on whichever Mac you are about to open Xcode on.
