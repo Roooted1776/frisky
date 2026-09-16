@@ -44,6 +44,9 @@ frisky/
 | `docs/FDA-CLAIMS-WALL.md` | §520(o) / General Wellness claims wall — Arrival Day Pack + station sell |
 | `docs/IP-ASSIGNMENT.md` | How-to: confirmatory IP assignment (code, tapper, brand, band → LLC) |
 | `docs/ip-assignment.html` | Printable one-page instrument (sign; do not commit the signed copy) |
+| `docs/SPEC-EXHIBIT-A-PO-QC.md` | Pre-50 factory PO / QC rider how-to (freight line, 5-day QC, no Deposit 2 without written accept/reject) |
+| `docs/spec-exhibit-a-po-qc-rider.html` | Printable bilingual EN/中文 rider (sign; do not commit the filled copy) |
+| `docs/FOUNDER-WHY.md` | Careful founder-why paste (categories only) — About / station insert / Arrival Day Pack |
 
 Hosted `/Document/` is a lockstep copy of `RedMed-Xcode/RedMed/Document/` (`scripts/sync-document.sh`). Band tap Help opens it straight — no start screen. `/privacy` redirects there.
 

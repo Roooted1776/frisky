@@ -19,7 +19,9 @@ Primary FDA guidance (read before any new claim):
 
 Also: [`ADVERTISING.md`](ADVERTISING.md) (banned ad copy),
 [`DO-NOT.md`](DO-NOT.md), [`APP-STORE.md`](APP-STORE.md),
-[`NFC-RESTORE.md`](NFC-RESTORE.md).
+[`NFC-RESTORE.md`](NFC-RESTORE.md),
+[`FOUNDER-WHY.md`](FOUNDER-WHY.md) (About / station / Pack why — categories
+only, no chart dump).
 
 ---
 

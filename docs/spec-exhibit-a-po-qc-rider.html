@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>RedMed Spec Exhibit A — Pre-50 PO / QC Rider</title>
+<style>
+  @page { size: letter; margin: 0.45in; }
+  html, body {
+    margin: 0;
+    background: #fff;
+    color: #111;
+    font: 8.6pt/1.25 "Times New Roman", Times, serif;
+  }
+  .sheet { max-width: 7.6in; margin: 0 auto; padding: 0.45in; }
+  @media print {
+    .sheet { padding: 0; max-width: none; }
+    .noprint { display: none !important; }
+  }
+  h1 {
+    font: 700 11.5pt/1.15 "Times New Roman", Times, serif;
+    text-align: center;
+    margin: 0 0 2pt;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+  .sub { text-align: center; margin: 0 0 6pt; font-size: 8.5pt; }
+  .zh { font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", "Songti SC", SimSun, sans-serif; }
+  p, li { margin: 0 0 4pt; }
+  table.bi {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 5pt;
+  }
+  table.bi td {
+    width: 50%;
+    vertical-align: top;
+    padding: 3pt 6pt 3pt 0;
+    border-top: 1px solid #ccc;
+  }
+  table.bi td + td { padding: 3pt 0 3pt 6pt; border-left: 1px solid #ccc; }
+  table.bi tr:first-child td { border-top: 0; }
+  .blank { border-bottom: 1px solid #111; display: inline-block; min-width: 8em; height: 0.95em; }
+  .blank.w { min-width: 12em; }
+  .blank.s { min-width: 4.5em; }
+  .blank.n { min-width: 3.5em; }
+  h2 {
+    font: 700 9.5pt/1.2 "Times New Roman", Times, serif;
+    margin: 6pt 0 3pt;
+  }
+  .rule { border: 0; border-top: 1px solid #111; margin: 6pt 0 5pt; }
+  .note { font-size: 7.5pt; color: #333; }
+  table.sigs { width: 100%; border-collapse: collapse; margin-top: 4pt; }
+  table.sigs td { width: 50%; vertical-align: top; padding: 0 10pt 0 0; }
+  table.sigs td + td { padding: 0 0 0 10pt; }
+  .line { border-bottom: 1px solid #111; height: 1.25em; margin: 6pt 0 2pt; }
+  .cap { font-size: 8pt; }
+  ol.tight { margin: 0 0 3pt; padding-left: 1.15em; }
+  ol.tight li { margin: 0 0 2pt; }
+  .warn { font-weight: 700; }
+</style>
+</head>
+<body>
+<article class="sheet">
+  <p class="noprint note">Print or PDF this page. Fill blanks. Attach to the Pre-50 PO / Proforma. How-to: docs/SPEC-EXHIBIT-A-PO-QC.md. Physical Spec A: docs/band-engraving-and-nfc-sourcing.md. Do not commit a signed copy with a home address to the public repo. Not legal advice — counsel fills governing law / signer blanks.</p>
+
+  <h1>Spec Exhibit A — Pre-50 PO / QC Rider</h1>
+  <p class="sub zh">规格附件 A — 预生产（&lt;50）采购 / 质检补充条款 · RedMed band</p>
+  <p class="sub">Bilingual EN / 中文. Same meaning. If conflict: English controls until counsel says otherwise.<br>
+  <span class="zh">中英对照，含义相同。冲突时以英文为准（律师另有指示除外）。</span></p>
+
+  <p>This Rider is attached to and part of Purchase Order / Proforma No. <span class="blank s"></span> dated <span class="blank s"></span> (the “PO”) between Buyer <span class="blank w"></span> (“Buyer”) and Seller / Factory <span class="blank w"></span> (“Seller”). Pre-50 lot qty: <span class="blank n"></span> units (must be <strong>&lt; 50</strong>). Unit price (ex-freight): <span class="blank s"></span> USD. Ship-to: <span class="blank w"></span>.</p>
+  <p class="zh">本补充条款构成采购订单 / 形式发票编号 <span class="blank s"></span>、日期 <span class="blank s"></span>（“订单”）的一部分，买方为 <span class="blank w"></span>（“买方”），卖方 / 工厂为 <span class="blank w"></span>（“卖方”）。预生产数量：<span class="blank n"></span> 件（须 <strong>&lt; 50</strong>）。单价（不含运费）：<span class="blank s"></span> 美元。收货地址：<span class="blank w"></span>。</p>
+
+  <hr class="rule">
+  <h2>1. Spec A / 规格 A（locked product law）</h2>
+  <table class="bi">
+    <tr>
+      <td>Goods must match <strong>Spec Exhibit A</strong> (RedMed v1 band): adult black silicone <strong>#232425</strong>, adjustable ~<strong>240 mm</strong>, logo-print RedMed heart + wordmark ~<strong>30×9 mm</strong> (Pantone 4058 C / 191 C / White C), embedded <strong>NXP NTAG216</strong> 13.56 MHz ISO 14443A Type 2, <strong>NDEF blank / unlocked</strong> at factory (no pre-encode, no lock). No wine/burgundy. No laser-only <code>MED ID</code> face for this SKU. No vendor short-link / cloud URL on the chip.</td>
+      <td class="zh">货物须符合<strong>规格附件 A</strong>（RedMed v1 腕带）：成人黑色硅胶 <strong>#232425</strong>，可调节约 <strong>240 mm</strong>，表面丝印 / 移印 RedMed 心形标 + 字标约 <strong>30×9 mm</strong>（Pantone 4058 C / 191 C / White C），内嵌 <strong>NXP NTAG216</strong>，13.56 MHz，ISO 14443A Type 2，出厂 <strong>NDEF 空白且未锁定</strong>（不得预写网址、不得上锁）。禁止酒红 / 酒红棕。本 SKU 禁止仅激光 <code>MED ID</code> 版面。芯片上禁止厂商短链 / 云平台网址。</td>
+    </tr>
+  </table>
+
+  <h2>2. Freight as its own line / 运费单独列示</h2>
+  <table class="bi">
+    <tr>
+      <td class="warn">Freight / shipping must appear as its <strong>own line</strong> on every quote, PO, Proforma, and commercial invoice. It may not be buried inside the unit price. Freight amount (or “TBD — bill actual”): <span class="blank s"></span> USD. Incoterms (counsel if blank): <span class="blank s"></span>.</td>
+      <td class="zh warn">运费须在报价单、采购订单、形式发票及商业发票上<strong>单独成行</strong>列示，不得并入单价。运费金额（或“待定—按实结算”）：<span class="blank s"></span> 美元。贸易术语（空白则交律师）：<span class="blank s"></span>。</td>
+    </tr>
+  </table>
+
+  <h2>3. Five-day QC window / 五日质检期</h2>
+  <table class="bi">
+    <tr>
+      <td>Buyer has <strong>five (5) calendar days</strong> after the lot arrives at the ship-to address (the “QC Window”) to inspect against Spec A and send <strong>written</strong> acceptance or rejection. Silence after the QC Window without written notice does not waive a latent Spec A defect discovered with reasonable diligence, but Buyer should still write within five days when possible.</td>
+      <td class="zh">货物到达收货地址后，买方有<strong>五（5）个日历日</strong>（“质检期”）按规格 A 检验，并发出<strong>书面</strong>接受或拒收通知。质检期届满未书面通知，并不放弃经合理勤勉发现的潜在规格 A 瑕疵；但买方仍应尽量在五日内书面回复。</td>
+    </tr>
+  </table>
+
+  <h2>4. No second deposit without written accept / reject<br><span class="zh">无书面接受 / 拒收，不得支付第二笔定金</span></h2>
+  <table class="bi">
+    <tr>
+      <td class="warn">Deposit 1 (on PO / mold start, if any): <span class="blank n"></span>% = <span class="blank s"></span> USD.<br>
+      <strong>No second deposit, balance, or production-MOQ release</strong> is due until Buyer issues <strong>written acceptance or written rejection</strong> of the Pre-50 QC lot. A rejection may request remake / repair under Spec A; remake restarts a new 5-day QC Window on re-receipt. Seller may not treat “we started production” as a reason to invoice Deposit 2 early.</td>
+      <td class="zh warn">第一笔定金（下单 / 开模，如有）：<span class="blank n"></span>% = <span class="blank s"></span> 美元。<br>
+      在买方就本预生产质检批次发出<strong>书面接受或书面拒收</strong>之前，<strong>不得</strong>要求第二笔定金、尾款或放行生产 MOQ。拒收可要求按规格 A 返工 / 重做；重做货再次到货后重新起算 5 日质检期。卖方不得以“已开始量产”为由提前开第二笔定金发票。</td>
+    </tr>
+  </table>
+
+  <h2>5. Verbal WhatsApp ≠ standing / 口头微信或 WhatsApp 不构成有效变更</h2>
+  <table class="bi">
+    <tr>
+      <td class="warn">Voice notes, calls, or casual chat on WhatsApp, WeChat, or phone do <strong>not</strong> amend the PO, Spec A, price, freight, deposit schedule, or QC outcome. Standing changes require a signed PDF, an email from the Buyer address on this Rider, or a written message that restates the change in full and is retained by both sides.</td>
+      <td class="zh warn">WhatsApp、微信或电话中的语音、通话或闲聊<strong>不</strong>构成对订单、规格 A、价格、运费、定金安排或质检结论的修改。有效变更须为：双方签署的 PDF、本条款所载买方邮箱发出的邮件，或完整重述变更内容并由双方留存的书面消息。</td>
+    </tr>
+  </table>
+
+  <h2>6. Blanks / 空白项</h2>
+  <table class="bi">
+    <tr>
+      <td><strong>[GUESS — counsel confirm]</strong> If a fill-in blank on this Rider remains empty after both sides sign, the <strong>written Spec A terms in this Rider and the locked band brief</strong> still control the goods, freight line, 5-day QC Window, and second-deposit gate. Empty counsel blanks (governing law, forum, signer title) do not erase those commercial locks.</td>
+      <td class="zh"><strong>【待律师确认】</strong>若双方签署后本条款仍有空白未填，则<strong>本补充条款所载书面规格 A 以及已锁定的腕带简报</strong>仍约束货物、运费单列、五日质检期及第二笔定金门槛。律师栏（准据法、管辖、签署人职务）空白，不取消上述商务锁定条款。</td>
+    </tr>
+  </table>
+
+  <h2>7. Governing law &amp; who signs / 准据法与签署人（counsel）</h2>
+  <table class="bi">
+    <tr>
+      <td><strong>Counsel owns</strong> choice of New Jersey vs Delaware vs PRC / China law, dispute forum, arbitration, and who may sign for Buyer once the LLC exists. Do not invent a governing-law line without counsel.<br>
+      Governing law (counsel): <span class="blank w"></span><br>
+      Forum / arbitration (counsel): <span class="blank w"></span><br>
+      Buyer signer name / title (after LLC): <span class="blank w"></span></td>
+      <td class="zh"><strong>由律师决定</strong>新泽西 / 特拉华 / 中国法之选择、争议解决地、仲裁，以及 LLC 成立后买方签署人。未经律师指示，不得自行填写准据法。<br>
+      准据法（律师）：<span class="blank w"></span><br>
+      管辖 / 仲裁（律师）：<span class="blank w"></span><br>
+      买方签署人姓名 / 职务（LLC 成立后）：<span class="blank w"></span></td>
+    </tr>
+  </table>
+
+  <h2>8. QC checklist (Buyer use) / 质检清单（买方用）</h2>
+  <ol class="tight">
+    <li>Color #232425 · 颜色符合 / Size ~240 mm · 尺寸 · Face 30×9 mm logo-print · 表面丝印 · Chip NTAG216 blank unlocked · 芯片空白未锁</li>
+    <li>Qty received = PO · 到货数量 · Freight line matches invoice · 运费行与发票一致</li>
+    <li>Written accept / reject inside 5 days · 五日内书面接受或拒收 · Then (only if accept) Deposit 2 · 仅接受后方可第二笔定金</li>
+  </ol>
+
+  <hr class="rule">
+  <table class="sigs">
+    <tr>
+      <td>
+        <strong>BUYER / 买方</strong>
+        <div class="line"></div>
+        <p class="cap">Signature / 签字<br>Name / title / date · 姓名 / 职务 / 日期</p>
+      </td>
+      <td>
+        <strong>SELLER / 卖方</strong>
+        <div class="line"></div>
+        <p class="cap">Signature / 签字<br>Name / title / date · 姓名 / 职务 / 日期</p>
+      </td>
+    </tr>
+  </table>
+  <p class="note">Electronic signatures OK if counsel agrees. Retain with the PO. Not for the public git tree once filled with addresses.</p>
+</article>
+</body>
+</html>

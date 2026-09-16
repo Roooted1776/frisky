@@ -52,6 +52,13 @@ listing are green ([`docs/ADVERTISING.md`](ADVERTISING.md)).
 Prototype (1–10): black `#232425` NTAG216 silicone with the locked logo-print face.  
 Production (100+): same mold/color/chip/face art, MOQ quote.
 
+**Pre-50 PO / QC:** attach the bilingual rider
+([`SPEC-EXHIBIT-A-PO-QC.md`](SPEC-EXHIBIT-A-PO-QC.md) /
+[`spec-exhibit-a-po-qc-rider.html`](spec-exhibit-a-po-qc-rider.html)) —
+freight as its own line, 5-day QC window, no second deposit without written
+accept/reject, verbal WhatsApp ≠ standing. Counsel owns NJ/DE vs China law
+and who signs once the LLC exists.
+
 ---
 
 ## Locked face-art brief
