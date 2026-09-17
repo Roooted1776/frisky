@@ -29,6 +29,29 @@ Keep `~/Library/Application Support/Cursor` and `~/.cursor`. That is chats/setti
 
 Until desktop reattaches, use the web agent. Do not kill a healthy cloud run to “reconnect.”
 
+### Cursor settings + colors (Mini → MacBook)
+
+Cloud agents cannot read either Mac’s Cursor profile. Sync locally.
+
+Theme and color overrides live in `~/Library/Application Support/Cursor/User/settings.json` (`workbench.colorTheme`, `workbench.colorCustomizations`, token color keys). Theme **extensions** must be installed too or the theme name resolves to a fallback.
+
+On the **Mini** (source of truth for prefs):
+
+```bash
+~/Documents/frisky/scripts/sync-cursor-settings-macos.sh export
+```
+
+AirDrop / USB / `scp` the tarball (`~/Documents/frisky/.local/cursor-user-sync/cursor-user-sync.tar.gz`) to the MacBook. Quit Cursor on the MacBook, then:
+
+```bash
+~/Documents/frisky/scripts/sync-cursor-settings-macos.sh import
+# or: ... import /path/to/cursor-user-sync.tar.gz
+```
+
+Reload Window. `status` prints the theme/color keys on the current Mac. Bundle stays under `.local/` (gitignored) — do not commit it (MCP tokens can sit in `~/.cursor/mcp.json`).
+
+UI alternative (also carries colors): Cmd+Shift+P → **Preferences: Open Profiles (UI)** → export profile on Mini → import + activate on MacBook.
+
 ## 2. Git (each Mac)
 
 Same steps on MacBook and Mini:
@@ -65,4 +88,5 @@ Any-location smoke (home, school, cafe): `gh auth status` and `git fetch` both s
 | Diverged / non-ff | You committed on this Mac without pulling. `git status`; do not force-push `main`. |
 | Cursor “Reconnect failed” | Tunnel attach. Reload Window, or open the agent in the browser. Not a git failure. |
 | Cursor “couldn’t update” | Section 1. Do not keep clicking Try Again. |
+| MacBook theme/colors ≠ Mini | Section 1 “Cursor settings + colors”. Export on Mini, import on MacBook; install listed theme extensions. |
 | Wrong remote `rooted1776/risky` | Does not exist. Repo is `Roooted1776/frisky` (three o’s). |

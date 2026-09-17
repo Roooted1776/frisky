@@ -1,5 +1,8 @@
 .derivedData/
 
+# Local Cursor user sync tarballs (may include MCP tokens). See docs/DUAL-MAC.md.
+.local/
+
 # macOS
 .DS_Store
 **/.DS_Store
