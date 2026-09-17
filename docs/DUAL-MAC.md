@@ -67,7 +67,7 @@ gh repo clone Roooted1776/frisky ~/Documents/frisky
 ~/Documents/frisky/scripts/setup-mac-git.sh
 ```
 
-The script logs you in as **Roooted1776** over HTTPS if needed, pins `origin`, refuses extra remotes, sets repo identity to `Max` / `m.aguilar-aasted@students.mccc.edu` when unset, then `fetch` + `pull --ff-only` + `push --dry-run`.
+The script logs you in as **Roooted1776** over HTTPS if needed, pins `origin`, refuses extra remotes, sets repo identity to `Max` / `mrmax115@gmail.com` (overwrites school / stale emails), then `fetch` + `pull --ff-only` + `push --dry-run`.
 
 Any-location smoke (home, school, cafe): `gh auth status` and `git fetch` both succeed on that Wi‑Fi.
 
