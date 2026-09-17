@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Copy Cursor user settings (theme + color customizations included) Mini ↔ MacBook.
-# Cloud agents cannot read either Mac. Run from Terminal.app on the Macs.
+# Copy Cursor user settings (theme + color customizations) MacBook ↔ Mini.
+# Both machines are peers. Cloud agents cannot read either Mac.
+# Run from Terminal.app on the Macs.
 #
-# Mini (source):
+# On the Mac that looks right:
 #   ~/Documents/frisky/scripts/sync-cursor-settings-macos.sh export
-# Copy the tarball to the MacBook (AirDrop / USB / scp).
-# MacBook:
+# Copy the tarball to the other Mac (AirDrop / USB / scp), then:
 #   ~/Documents/frisky/scripts/sync-cursor-settings-macos.sh import [path-to-tarball]
 #
 # Colors live in User/settings.json:
@@ -28,7 +28,7 @@ MODE="${1:-}"
 ARG2="${2:-}"
 
 if [[ "$(uname -s)" != "Darwin" && "${FRISKY_ALLOW_NON_DARWIN:-}" != "1" ]]; then
-  die "MacBook / Mac Mini only. This cloud VM has no Mini Cursor profile to import."
+  die "MacBook / Mac Mini only. This cloud VM has no Cursor User profile to import."
 fi
 
 require_user_dir() {
@@ -204,7 +204,7 @@ import_bundle() {
 
   echo
   echo "Reload Cursor: Cmd+Shift+P → Developer: Reload Window"
-  echo "If theme still wrong: Cmd+K Cmd+T and pick the Mini theme name from settings."
+  echo "If theme still wrong: Cmd+K Cmd+T and pick the exported theme name from settings."
 }
 
 status_cmd() {
@@ -241,8 +241,8 @@ usage: $0 export [dest.tar.gz]
        $0 import [src.tar.gz]
        $0 status
 
-export on the Mini (or whichever Mac has the good prefs/colors).
-import on the MacBook after copying the tarball.
+export on the Mac that has the good prefs/colors (MacBook or Mini).
+import on the other Mac after copying the tarball.
 EOF
     exit 1
     ;;
