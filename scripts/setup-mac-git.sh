@@ -7,7 +7,7 @@ REPO_SLUG="Roooted1776/frisky"
 REPO_HTTPS="https://github.com/${REPO_SLUG}.git"
 CLONE_DIR="${FRISKY_HOME:-$HOME/Documents/frisky}"
 WANT_NAME="Max"
-WANT_EMAIL="m.aguilar-aasted@students.mccc.edu"
+WANT_EMAIL="mrmax115@gmail.com"
 WANT_LOGIN="Roooted1776"
 
 ok() { printf 'OK  %s\n' "$*"; }
@@ -68,11 +68,12 @@ ok "no extra remotes"
 
 name="$(git config --local --get user.name || true)"
 email="$(git config --local --get user.email || true)"
-if [[ -z "$name" || "$name" == "Cursor Agent" ]]; then
+# Pin dual-Mac identity. Overwrite Cursor Agent / school / stale personal emails.
+if [[ -z "$name" || "$name" == "Cursor Agent" || "$name" != "$WANT_NAME" ]]; then
   git config --local user.name "$WANT_NAME"
   name="$WANT_NAME"
 fi
-if [[ -z "$email" || "$email" == "cursoragent@cursor.com" ]]; then
+if [[ -z "$email" || "$email" != "$WANT_EMAIL" ]]; then
   git config --local user.email "$WANT_EMAIL"
   email="$WANT_EMAIL"
 fi
