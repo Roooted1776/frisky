@@ -28,7 +28,7 @@ From Band hidden). CoreNFC source stays in tree. Restore via the checklist
 below — keep flag, entitlement, and usage string in lockstep.
 
 **Do not hide the owner NFC tab** — owners always get RedMed · 911 · Aid ·
-NFC; scanners never get NFC. The flag only gates CoreNFC sessions and the
+NFC; scanners / tapper never get Aid or NFC. The flag only gates CoreNFC sessions and the
 Load From Band button (Pack Band URL + Share Band URL + Preview when
 parked — no Write label). Linked after a real write + matching read-back,
 or Load From Band.

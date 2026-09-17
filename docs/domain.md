@@ -20,7 +20,7 @@ live interim host:
 | Public GitHub Pages `Roooted1776.github.io/tapper/` | **Live interim** — NFC write base. Repo `Roooted1776/Roooted1776.github.io` (Actions → Publish tapper copies from frisky). Do not flip `medicalCardBaseURL` onto another host until that host's `/tapper/` smoke is green. |
 | Cloudflare Pages `redmed.pages.dev` | Optional; 404 until CF secrets / Git connect |
 
-Smoke on the live interim: RedMed · 911 · Aid, no login. `pages-deploy.yml` **fails** when the write base 404s.
+Smoke on the live interim: RedMed · 911, no login. `pages-deploy.yml` **fails** when the write base 404s.
 
 ## Publish github.io
 
@@ -38,7 +38,7 @@ Do not change `AppConfig.medicalCardBaseURL` until that smoke is green.
 1. Register the custom domain (Cloudflare Registrar recommended so DNS + Pages stay together).
 2. Attach it to the Pages project that serves `tapper/`.
 3. Wait for HTTPS **Active**.
-4. Smoke: `https://<your-domain>/tapper/` loads RedMed · 911 · Aid. Bare `/` must land on `/tapper/` and keep `#d=`.
+4. Smoke: `https://<your-domain>/tapper/` loads RedMed · 911. Bare `/` must land on `/tapper/` and keep `#d=`.
 5. Optional: 301 old github.io / pages.dev URLs to the custom host; keep serving old hosts so already-written bands still open.
 6. Set `AppConfig.medicalCardCustomDomainTBD` to `https://<your-domain>/tapper/` and ship that build.
 7. New NFC writes use the custom host. Old github.io bands keep working if that host stays up.
