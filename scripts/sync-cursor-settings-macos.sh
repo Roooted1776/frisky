@@ -112,8 +112,10 @@ export_bundle() {
     cp -R "$USER_DIR/profiles/." "$staging/User/profiles/" 2>/dev/null || true
   fi
 
-  # Dotfiles: MCP + permissions. Skip auth tokens / large state DBs.
-  for f in mcp.json argv.json ide_state.json permissions.json cli-config.json; do
+  # Dotfiles: permissions + misc config. mcp.json is deliberately excluded —
+  # Cursor MCP server entries commonly embed API keys/tokens in `env`, and
+  # this bundle is meant to be moved around (AirDrop/USB/scp).
+  for f in argv.json ide_state.json permissions.json cli-config.json; do
     [[ -f "$DOT_DIR/$f" ]] && cp "$DOT_DIR/$f" "$staging/dot-cursor/"
   done
 
@@ -173,7 +175,7 @@ import_bundle() {
   fi
 
   if [[ -d "$staging/dot-cursor" ]]; then
-    for f in mcp.json argv.json permissions.json cli-config.json; do
+    for f in argv.json permissions.json cli-config.json; do
       [[ -f "$staging/dot-cursor/$f" ]] && cp "$staging/dot-cursor/$f" "$DOT_DIR/"
     done
   fi
