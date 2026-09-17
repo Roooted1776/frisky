@@ -32,3 +32,6 @@ redmed-*.png
 support.js
 ios-frame.jsx
 .tmp_*.png
+
+# Local-only Cursor User prefs dump (MacBook ↔ Mini). Never commit themes/secrets.
+.local/

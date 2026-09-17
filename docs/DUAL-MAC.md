@@ -29,15 +29,37 @@ Keep `~/Library/Application Support/Cursor` and `~/.cursor`. That is chats/setti
 
 Until desktop reattaches, use the web agent. Do not kill a healthy cloud run to “reconnect.”
 
-## 2. Git (each Mac)
+## 2. Cursor prefs + colors (MacBook ↔ Mini)
+
+Both machines are peers. Cloud agents cannot read either Mac’s Cursor User folder.
+
+Theme / colors live in `~/Library/Application Support/Cursor/User/settings.json` (`workbench.colorTheme`, `workbench.colorCustomizations`). Keybindings and snippets sit next to it. Do **not** copy `state.vscdb`, whole `Application Support/Cursor`, or `mcp.json` (secrets).
+
+**Script (Terminal.app, Cursor quit):**
+
+```bash
+# On the Mac that already looks right (MacBook or Mini):
+~/Documents/frisky/scripts/sync-cursor-prefs-macos.sh export
+
+# Carry ~/Documents/frisky/.local/cursor-user to the other Mac
+# (AirDrop, USB, or same path after you place the folder), then:
+~/Documents/frisky/scripts/sync-cursor-prefs-macos.sh import
+~/Documents/frisky/scripts/sync-cursor-prefs-macos.sh status
+```
+
+`.local/cursor-user/` is gitignored — do not commit it.
+
+**Profiles UI (also fine):** Command Palette → `Preferences: Open Profiles (UI)` → Export Profile on one Mac → Import Profile on the other → activate. Same MacBook ↔ Mini direction either way.
+
+## 3. Git (each Mac)
 
 Same steps on MacBook and Mini:
 
 ```bash
-# already cloned:
+# already cloned (either Mac):
 ~/Documents/frisky/scripts/setup-mac-git.sh
 
-# Mini with no clone yet:
+# MacBook or Mini with no clone yet:
 # install Homebrew if missing, then:
 gh repo clone Roooted1776/frisky ~/Documents/frisky
 ~/Documents/frisky/scripts/setup-mac-git.sh
@@ -47,7 +69,7 @@ The script logs you in as **Roooted1776** over HTTPS if needed, pins `origin`, r
 
 Any-location smoke (home, school, cafe): `gh auth status` and `git fetch` both succeed on that Wi‑Fi.
 
-## 3. Daily
+## 4. Daily
 
 1. Cloud / PR → squash-merge into `main` only.
 2. On the Mac you are about to open Xcode: Fetch + Pull `main` (GitHub Desktop or `git pull --ff-only origin main`).
@@ -65,4 +87,5 @@ Any-location smoke (home, school, cafe): `gh auth status` and `git fetch` both s
 | Diverged / non-ff | You committed on this Mac without pulling. `git status`; do not force-push `main`. |
 | Cursor “Reconnect failed” | Tunnel attach. Reload Window, or open the agent in the browser. Not a git failure. |
 | Cursor “couldn’t update” | Section 1. Do not keep clicking Try Again. |
+| Theme missing after import | Theme extension not installed on this Mac. Install it, or pick the theme once, then re-export. |
 | Wrong remote `rooted1776/risky` | Does not exist. Repo is `Roooted1776/frisky` (three o’s). |

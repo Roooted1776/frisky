@@ -39,7 +39,7 @@ frisky/
 | `../MAX.md` | Max profile + shipped history (agent memory; linked from `AGENTS.md`) |
 | `docs/SECURITY.md` | Advisory pointer into Document.html |
 | `docs/STRUCTURE.md` | This map |
-| `docs/DUAL-MAC.md` | MacBook + Mini: Cursor ShipIt repair + `gh` HTTPS push/pull |
+| `docs/DUAL-MAC.md` | MacBook + Mini: Cursor ShipIt repair, prefs/colors sync, `gh` HTTPS push/pull |
 | `docs/domain.md` | getredmed.com cutover |
 | `docs/NFC-RESTORE.md` | CoreNFC entitlement restore |
 | `docs/band-engraving-and-nfc-sourcing.md` | Hardware |
