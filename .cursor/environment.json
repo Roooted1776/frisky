@@ -8,5 +8,10 @@
       "command": "cd /workspace && if curl -sf -o /dev/null http://127.0.0.1:8787/tapper/; then echo 'pages server already running (started by start command); tailing log'; touch /tmp/pages.log; tail -f /tmp/pages.log; else python3 -m http.server 8787 --bind 127.0.0.1; fi"
     }
   ],
-  "ports": [8787]
+  "ports": [
+    {
+      "name": "pages",
+      "port": 8787
+    }
+  ]
 }
