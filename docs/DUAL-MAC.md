@@ -29,29 +29,31 @@ Keep `~/Library/Application Support/Cursor` and `~/.cursor`. That is chats/setti
 
 Until desktop reattaches, use the web agent. Do not kill a healthy cloud run to “reconnect.”
 
-## 2. Cursor prefs + colors (MacBook ↔ Mini)
+### Cursor settings + colors (MacBook ↔ Mini)
 
-Both machines are peers. Cloud agents cannot read either Mac’s Cursor User folder.
+Both machines are peers. Cloud agents cannot read either Mac’s Cursor profile. Sync locally.
 
-Theme / colors live in `~/Library/Application Support/Cursor/User/settings.json` (`workbench.colorTheme`, `workbench.colorCustomizations`). Keybindings and snippets sit next to it. Do **not** copy `state.vscdb`, whole `Application Support/Cursor`, or `mcp.json` (secrets).
+Theme and color overrides live in `~/Library/Application Support/Cursor/User/settings.json` (`workbench.colorTheme`, `workbench.colorCustomizations`, token color keys). Theme **extensions** must be installed too or the theme name resolves to a fallback. Do **not** copy `state.vscdb` or the whole Application Support tree by hand.
 
-**Script (Terminal.app, Cursor quit):**
+On the Mac that already looks right (MacBook **or** Mini):
 
 ```bash
-# On the Mac that already looks right (MacBook or Mini):
-~/Documents/frisky/scripts/sync-cursor-prefs-macos.sh export
-
-# Carry ~/Documents/frisky/.local/cursor-user to the other Mac
-# (AirDrop, USB, or same path after you place the folder), then:
-~/Documents/frisky/scripts/sync-cursor-prefs-macos.sh import
-~/Documents/frisky/scripts/sync-cursor-prefs-macos.sh status
+~/Documents/frisky/scripts/sync-cursor-settings-macos.sh export
 ```
 
-`.local/cursor-user/` is gitignored — do not commit it.
+AirDrop / USB / `scp` the tarball (`~/Documents/frisky/.local/cursor-user-sync/cursor-user-sync.tar.gz`) to the other Mac. Quit Cursor there, then:
 
-**Profiles UI (also fine):** Command Palette → `Preferences: Open Profiles (UI)` → Export Profile on one Mac → Import Profile on the other → activate. Same MacBook ↔ Mini direction either way.
+```bash
+~/Documents/frisky/scripts/sync-cursor-settings-macos.sh import
+# or: ... import /path/to/cursor-user-sync.tar.gz
+~/Documents/frisky/scripts/sync-cursor-settings-macos.sh status
+```
 
-## 3. Git (each Mac)
+Reload Window. Bundle stays under `.local/` (gitignored) — do not commit it (MCP tokens can sit in `~/.cursor/mcp.json`).
+
+UI alternative (also carries colors): Cmd+Shift+P → **Preferences: Open Profiles (UI)** → export profile on one Mac → import + activate on the other.
+
+## 2. Git (each Mac)
 
 Same steps on MacBook and Mini:
 
@@ -69,7 +71,7 @@ The script logs you in as **Roooted1776** over HTTPS if needed, pins `origin`, r
 
 Any-location smoke (home, school, cafe): `gh auth status` and `git fetch` both succeed on that Wi‑Fi.
 
-## 4. Daily
+## 3. Daily
 
 1. Cloud / PR → squash-merge into `main` only.
 2. On the Mac you are about to open Xcode: Fetch + Pull `main` (GitHub Desktop or `git pull --ff-only origin main`).
@@ -87,5 +89,5 @@ Any-location smoke (home, school, cafe): `gh auth status` and `git fetch` both s
 | Diverged / non-ff | You committed on this Mac without pulling. `git status`; do not force-push `main`. |
 | Cursor “Reconnect failed” | Tunnel attach. Reload Window, or open the agent in the browser. Not a git failure. |
 | Cursor “couldn’t update” | Section 1. Do not keep clicking Try Again. |
-| Theme missing after import | Theme extension not installed on this Mac. Install it, or pick the theme once, then re-export. |
+| Theme/colors don’t match the other Mac | Section 1 “Cursor settings + colors”. Export on the good Mac, import on the other; install listed theme extensions. |
 | Wrong remote `rooted1776/risky` | Does not exist. Repo is `Roooted1776/frisky` (three o’s). |
