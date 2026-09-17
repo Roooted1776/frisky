@@ -67,7 +67,17 @@ gh repo clone Roooted1776/frisky ~/Documents/frisky
 ~/Documents/frisky/scripts/setup-mac-git.sh
 ```
 
-The script logs you in as **Roooted1776** over HTTPS if needed, pins `origin`, refuses extra remotes, sets repo identity to `Max` / `mrmax115@gmail.com` (overwrites school / stale emails), then `fetch` + `pull --ff-only` + `push --dry-run`.
+The script logs you in as **Roooted1776** over HTTPS if needed, pins `origin`, refuses extra remotes, sets repo identity to `Max` / `maxaguilaraasted@gmail.com` (overwrites school / `mrmax115` / Cursor Agent emails), then `fetch` + `pull --ff-only` + `push --dry-run`.
+
+### Email split (intentional workaround)
+
+| Surface | Address | Notes |
+|---------|---------|-------|
+| Cursor / Grok Bot login | `m.aguilar-aasted@students.mccc.edu` | Keep. No account cutover required. |
+| Git author (MacBook + Mini) | `maxaguilaraasted@gmail.com` | GitHub-verified on this repo. `setup-mac-git.sh` pins it. |
+| Do not use for git | `mrmax115@gmail.com`, school email | Stale / never authored here. |
+
+Gmail MCP for agents: authorize via **Cursor** (connected), not a separate Grok Bot OAuth. “This app is blocked” on a Grok Gmail plugin is expected — use Cursor’s Gmail.
 
 Any-location smoke (home, school, cafe): `gh auth status` and `git fetch` both succeed on that Wi‑Fi.
 
