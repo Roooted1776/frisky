@@ -28,7 +28,7 @@ MODE="${1:-}"
 ARG2="${2:-}"
 
 if [[ "$(uname -s)" != "Darwin" && "${FRISKY_ALLOW_NON_DARWIN:-}" != "1" ]]; then
-  die "MacBook / Mac Mini only. This cloud VM has no Mini Cursor profile to import."
+  die "MacBook / Mac Mini only. This cloud VM has no Cursor User profile to import."
 fi
 
 require_user_dir() {
