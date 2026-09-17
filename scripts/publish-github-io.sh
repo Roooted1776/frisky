@@ -30,7 +30,7 @@ if grep -q 'Checking your phone' "$SHELL" \
   exit 1
 fi
 
-mkdir -p "$DEST/tapper" "$DEST/get" "$DEST/support" "$DEST/assets" "$DEST/.github/workflows" "$DEST/.well-known"
+mkdir -p "$DEST/tapper" "$DEST/get" "$DEST/support" "$DEST/assets" "$DEST/.github/workflows" "$DEST/.well-known" "$DEST/Document" "$DEST/privacy"
 cp -f index.html tapper.html card.html get.html sw.js \
   _headers _redirects apple-app-site-association \
   "$DEST/"
@@ -40,6 +40,13 @@ cp -f get/index.html "$DEST/get/index.html"
 # host is actually serving band writes today, not just Cloudflare Pages'
 # whole-repo deploy.
 cp -f support/index.html "$DEST/support/index.html"
+# Hosted Privacy URL (docs/APP-STORE.md) — /Document/ on the live band host,
+# same Document.html content as in-app Help. _redirects' /privacy and
+# /Document rules are Cloudflare-only syntax; GitHub Pages doesn't apply
+# them, so the real files must exist here too.
+cp -f Document/index.html Document/Document.html Document/legal-doc.css \
+  "$DEST/Document/"
+cp -f privacy/index.html "$DEST/privacy/index.html"
 cp -f tapper/index.html tapper/sw.js \
   tapper/pheart.png tapper/BrandLogo.png tapper/BrandWordmark.png \
   "$DEST/tapper/"
