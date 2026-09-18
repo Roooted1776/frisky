@@ -300,3 +300,9 @@ covered-entity / BA creep — different product
 
 KPI: demo nights run, quotes collected, (after company gate) POs. Not
 impressions.
+
+Executable leave-behind + bi-weekly bot copy (same claims as the brief
+above): [`ems-station-outreach.md`](ems-station-outreach.md),
+[`redmed-funding-growth-email-draft.md`](redmed-funding-growth-email-draft.md),
+[`biweekly-funding-bot-email.md`](biweekly-funding-bot-email.md). No live
+recipient lists in git.
