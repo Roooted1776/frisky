@@ -19,16 +19,21 @@ html,body{background:#fff7f7!important;margin:0}
 /* First paint = active panel only. Without this, the big stylesheet arrives late
    and every .panel is visible on cream until .panel{display:none} parses. */
 .panel{display:none} .panel.active{display:block}
-html.tab-911 .panel,html.tab-aid .panel{display:none}
-html.tab-911 #panel-911,html.tab-aid #panel-aid{display:block}
+html.tab-911 .panel{display:none}
+html.tab-911 #panel-911{display:block}
+/* Aid is owner-app only — keep panel out of passerby / Preview chrome. */
+#panel-aid{display:none!important}
 </style>
 <script>
 // Resolve the start tab before first paint. Bare open / #d= → medical (YOU).
-// Deep links: #911 #aid ?tab=911 #d=…&tab=aid. Never treat #d= as a tab id.
+// Deep links: #911 ?tab=911. Aid / NFC / Edit are owner-app only — legacy
+// #aid / &tab=aid fall through to medical. Never treat #d= as a tab id.
 (function () {
   function norm(id) {
     id = String(id || "").toLowerCase();
-    if (id === "911" || id === "aid") return id;
+    if (id === "911") return id;
+    // Passerby / Preview: RedMed · 911 only — no Aid (owner app), no NFC, no Edit.
+    if (id === "aid") return "medical";
     if (id === "rm" || id === "redmed" || id === "you" || id === "card" || id === "medical") return "medical";
     return "";
   }
@@ -63,7 +68,7 @@ html.tab-911 #panel-911,html.tab-aid #panel-aid{display:block}
   try {
     document.documentElement.setAttribute("data-start-tab", tab);
     document.documentElement.classList.remove("tab-911", "tab-aid");
-    if (tab === "911" || tab === "aid") document.documentElement.classList.add("tab-" + tab);
+    if (tab === "911") document.documentElement.classList.add("tab-911");
   } catch (e4) {}
 })();
 </script>
@@ -127,9 +132,9 @@ function redmedAssetURL(file) {
 <meta name="description" content="Tap the RedMed band to open the emergency card. Quick. No login. No server. No app — HTML only on this phone.">
 <!-- ONE scanner file: tapper.html (Pages + app bundle).
      Specs (permanent):
-     - Tabs: RedMed · 911 · Aid only — no Edit, no NFC
+     - Tabs: RedMed · 911 only — no Aid, no Edit, no NFC
      - Tapper / EMT / helper: passive HF NFC opens this HTML page — no RedMed
-       app required to view. Owner edit / NFC write live only in the native app.
+       app required to view. Owner Aid / Edit / NFC write live only in the native app.
      - Data: #d= only — no server DB. New writes: flat array → AES-GCM
        (public client key) → base64url. Legacy still works: named JSON,
        pre-AES compact arrays, optional 0x01 zlib.
@@ -141,9 +146,9 @@ function redmedAssetURL(file) {
        EMT open after first online load; activate clears prior CACHE buckets
        (bump redmed-tapper-vN). Never wait on network when a shell copy exists.
      - Real bracelet NFC tap (`tapper.html#d=…`) → everything stays on that phone
-       (profile, 911, Aid, SOS siren). Local only once tap — everyone and
+       (profile, 911, SOS siren). Local only once tap — everyone and
        everything. No server / no online. Bare /tapper/ without `#d=` and in-app
-       Preview/Scan (`?src=app`) do not auto-arm SOS. Stop on Find Help or Aid.
+       Preview/Scan (`?src=app`) do not auto-arm SOS. Stop on Find Help.
        Explicit SOS tap opens `tel:` immediately (no in-page confirm). Crash
        waits the US Crash Detection delay (10s alert + 30s countdown) then
        the same `tel:` unless Stop. Band-tap auto-arm is siren only.
@@ -153,7 +158,8 @@ function redmedAssetURL(file) {
        BLE / local-network ranging.
        Bare /tapper/ without `#d=` (and a failed / empty `#d=`) paints the
        No Patient empty state — not a blank YOU chart with dashes. #911 /
-       #aid / ?tab= still open those panels; #d= stays the profile payload.
+       ?tab=911 still open Find Help; legacy #aid falls to medical. #d= stays
+       the profile payload.
      - Layout: any phone + iPad, iOS 15+ (and Android). Fluid width, safe-area
        insets, no horizontal scroll. Tap-to-view: no account, no login, and no
        authentication gate before or on this page — EMT / helper open the card
@@ -246,7 +252,7 @@ function redmedAssetURL(file) {
       var(--bg);
     color: var(--dark);
     /* Flex shell: scroll `.app`, tabbar in-flow. Avoids position:fixed + dual-scroll
-       eating RedMed · 911 · Aid taps (WKWebView Preview and mobile Safari). */
+       eating RedMed · 911 taps (WKWebView Preview and mobile Safari). */
     height: 100%;
     max-height: 100%;
     min-height: 100vh;
@@ -367,9 +373,9 @@ function redmedAssetURL(file) {
   }
   /* Filled band / named card — status note is empty-state only. */
   .rm-note.is-filled { display: none; }
-  /* In-app RedMed tab embeds this shell — hide passerby tab chrome (native tabs own 911/Aid).
+  /* In-app RedMed tab embeds this shell — hide passerby tab chrome (native tabs own 911/Aid/NFC).
      Owner embed only: native boot sets `html.app-embed` before first paint; body class
-     mirrors it. Preview/Scan (?src=app) must NOT get app-embed — full HTML tabs stay.
+     mirrors it. Preview/Scan (?src=app) must NOT get app-embed — HTML RedMed · 911 stay.
      Native Help · Edit chrome sits *above* the WKWebView (sibling), so no top inset here. */
   html.app-embed body,
   body.app-embed {
@@ -1614,7 +1620,7 @@ function redmedAssetURL(file) {
         <div class="rm-empty-pill">No Patient</div>
         <h2>No Medical ID On This Page</h2>
         <p>A written MED ID band opens the person's name, blood type, allergies, and contacts here.</p>
-        <p class="rm-empty-foot">911 and Aid still work on this phone.</p>
+        <p class="rm-empty-foot">911 still works on this phone.</p>
       </div>
 
       <div class="card you-card">
@@ -1900,8 +1906,10 @@ function redmedAssetURL(file) {
       </div>
     </div>
 
-    <!-- Aid — same content-first chrome as owner AidView (no page header). -->
-    <div class="panel" id="panel-aid" data-panel="aid" role="tabpanel" aria-labelledby="tab-aid" aria-hidden="true">
+    <!-- Aid panel kept in DOM for topic markup parity with owner AidView, but
+         unreachable: no tab, showTab fail-closes, #panel-aid display:none.
+         Owner Aid lives in native AidView only. -->
+    <div class="panel" id="panel-aid" data-panel="aid" role="tabpanel" aria-labelledby="tab-aid" aria-hidden="true" hidden>
       <div class="page-pad">
         <!-- Pane + topic rows lockstep AidPaneCatalog / PaneCard (owner AidView). -->
         <div class="aid-grid">
@@ -1975,7 +1983,6 @@ function redmedAssetURL(file) {
     <div class="tabs" role="tablist" aria-label="Pages">
       <button class="tab active" type="button" role="tab" id="tab-medical" data-tab="medical" aria-selected="true" aria-controls="panel-medical" tabindex="0"><div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v1.5c0 .83.67 1.5 1.5 1.5h17c.83 0 1.5-.67 1.5-1.5V19c0-3.33-6.67-5-10-5z"/></svg></div><span class="tab-label">RedMed</span></button>
       <button class="tab" type="button" role="tab" id="tab-911" data-tab="911" aria-selected="false" aria-controls="panel-911" tabindex="-1"><div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.5 5.5-2.5 7.5-7.5 2.5 2.5-7.5 7.5-2.5z"/></svg></div><span class="tab-label">911</span></button>
-      <button class="tab" type="button" role="tab" id="tab-aid" data-tab="aid" aria-selected="false" aria-controls="panel-aid" tabindex="-1"><div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M17 6h-2.2l-.6-1.2A2 2 0 0012.4 4h-.8a2 2 0 00-1.8.8L9.2 6H7a3 3 0 00-3 3v8a3 3 0 003 3h10a3 3 0 003-3V9a3 3 0 00-3-3zm-1.25 7.75h-3v3h-1.5v-3h-3v-1.5h3v-3h1.5v3h3v1.5z"/></svg></div><span class="tab-label">Aid</span></button>
     </div>
     <div class="home-pill" aria-hidden="true"></div>
   </nav>
@@ -2462,8 +2469,8 @@ function redmedAssetURL(file) {
   }
 
   function showTab(id) {
-    // Bracelet / passerby / Preview shell: RedMed · 911 · Aid only — never NFC or Edit.
-    if (id !== 'medical' && id !== '911' && id !== 'aid') return;
+    // Bracelet / passerby / Preview shell: RedMed · 911 only — never Aid, NFC, or Edit.
+    if (id !== 'medical' && id !== '911') return;
     document.querySelectorAll('.panel').forEach(function (p) {
       var on = p.getAttribute('data-panel') === id;
       p.classList.toggle('active', on);
@@ -2477,7 +2484,7 @@ function redmedAssetURL(file) {
     });
     try {
       document.documentElement.classList.remove('tab-911', 'tab-aid');
-      if (id === '911' || id === 'aid') document.documentElement.classList.add('tab-' + id);
+      if (id === '911') document.documentElement.classList.add('tab-911');
       document.documentElement.setAttribute('data-start-tab', id);
     } catch (eCls) {}
     window.scrollTo(0, 0);
@@ -2486,14 +2493,11 @@ function redmedAssetURL(file) {
       var app = document.querySelector('.app');
       if (app) app.scrollTop = 0;
     } catch (e0) {}
-    // Paint the panel first — GPS / Aid chrome after the frame.
+    // Paint the panel first — GPS chrome after the frame.
     if (id === '911') {
       requestAnimationFrame(function () { ensureGeo(); });
     } else {
       stopGeo();
-    }
-    if (id === 'aid') {
-      requestAnimationFrame(function () { ensureAidChrome(); });
     }
   }
 
@@ -2747,7 +2751,7 @@ function redmedAssetURL(file) {
     });
   })();
 
-  var tabOrder = ['medical', '911', 'aid'];
+  var tabOrder = ['medical', '911'];
   document.querySelectorAll('.tab').forEach(function (t) {
     t.addEventListener('click', function () { showTab(t.getAttribute('data-tab')); });
     t.addEventListener('keydown', function (e) {
@@ -2802,13 +2806,13 @@ function redmedAssetURL(file) {
     try {
       if (typeof window.__redmedTabFromLocation === 'function') next = window.__redmedTabFromLocation();
     } catch (eH) {}
-    if (next !== '911' && next !== 'aid') next = 'medical';
+    if (next !== '911') next = 'medical';
     showTab(next);
     // Band payload lives in the fragment. A same-document #d= swap
     // (paste #d=, in-page test) must re-decode — first paint already ran.
     // Native embed keeps the injected profile. Do not re-arm SOS here
     // (redmed-profile-painted is once; first load owns auto-arm).
-    // Non-#d= fragments (#panel-medical, #911, #aid) only switch tabs —
+    // Non-#d= fragments (#panel-medical, #911) only switch tabs —
     // never re-decode to null and paint No Patient over a live card.
     if (window.__redmedNativeProfile || window.__REDMED_PROFILE) return;
     var h = '';
@@ -2819,18 +2823,15 @@ function redmedAssetURL(file) {
     });
   });
 
-  // Aid accordion + topic sheets — idle by default; eager when Aid tab opens.
+  // Aid accordion remains in DOM for asset parity but is unreachable — no Aid tab
+  // on passerby / Preview (owner AidView only). Do not idle-warm it.
   var aidChromeReady = false;
   function ensureAidChrome() {
     if (aidChromeReady) return;
     aidChromeReady = true;
     initAidChrome();
   }
-  document.addEventListener('click', function (ev) {
-    var t = ev.target;
-    if (!t || !t.closest) return;
-    if (t.closest('#panel-aid') || t.closest('[data-tab="aid"]')) ensureAidChrome();
-  }, true);
+  // No click / idle warm — showTab never opens Aid.
 
   function initAidChrome() {
     (function aidAccordion() {
@@ -3265,11 +3266,11 @@ function redmedAssetURL(file) {
       back.addEventListener('click', function () { closeSheet(); });
     })();
   }
-  scheduleIdle(ensureAidChrome);
+  // Aid is owner-app only — do not idle-warm passerby Aid chrome.
 
   // Owner RedMed embed only — native boot sets html.app-embed before first paint.
-  // Preview / Scan use ?src=app / __REDMED_APP_PREVIEW (no SOS) but keep full
-  // passerby HTML tabs (RedMed · 911 · Aid) — same tap-card shell as a band tap.
+  // Preview / Scan use ?src=app / __REDMED_APP_PREVIEW (no SOS) but keep
+  // passerby HTML tabs (RedMed · 911) — same tap-card shell as a band tap.
   (function applyAppEmbedChrome() {
     try {
       if (!document.documentElement.classList.contains('app-embed')) return;
@@ -3285,7 +3286,7 @@ function redmedAssetURL(file) {
     statusEl.__redmedNfcWired = true;
     function openNFC() {
       // Fail closed: only owner RedMed embed may jump to native NFC. Bracelet tap
-      // and Preview/Scan keep RedMed · 911 · Aid only — no NFC · no Edit.
+      // and Preview/Scan keep RedMed · 911 only — no Aid · no NFC · no Edit.
       if (!isAppEmbed()) return;
       try { location.href = 'redmed://nfc'; } catch (e) {}
     }
@@ -4135,7 +4136,7 @@ function redmedAssetURL(file) {
   }
 
   // Unmute SOS audio on first gesture only — do NOT request DeviceMotion here.
-  // iOS motion permission looks like an auth gate and interrupts RedMed · 911 · Aid
+  // iOS motion permission looks like an auth gate and interrupts RedMed · 911
   // taps. Motion is requested only from the SOS button (explicit).
   function onFirstGesture() {
     document.removeEventListener('touchstart', onFirstGesture, true);

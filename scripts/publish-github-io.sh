@@ -19,9 +19,12 @@ cd "$ROOT"
 
 SHELL="tapper/index.html"
 if ! grep -q 'data-tab="medical"' "$SHELL" \
-  || ! grep -q 'data-tab="911"' "$SHELL" \
-  || ! grep -q 'data-tab="aid"' "$SHELL"; then
-  echo "$SHELL is missing RedMed · 911 · Aid tabs — abort." >&2
+  || ! grep -q 'data-tab="911"' "$SHELL"; then
+  echo "$SHELL is missing RedMed · 911 tabs — abort." >&2
+  exit 1
+fi
+if grep -q 'id="tab-aid"' "$SHELL"; then
+  echo "$SHELL still has Aid tab — passerby is RedMed · 911 only — abort." >&2
   exit 1
 fi
 if grep -q 'Checking your phone' "$SHELL" \

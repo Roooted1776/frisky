@@ -2,19 +2,20 @@ import Foundation
 
 enum AppConfig {
     /// Passerby / rescuer shell written to passive NFC bands. Any phone that taps
-    /// the bracelet opens this page in a browser — read-only medical card + 911 +
-    /// Aid. No Face ID / biometrics / login / passcode to view — tap-to-view is
-    /// ungated on every phone. Nothing covers or blocks the tap card. Medical
-    /// data is only in the `#d=` fragment (flat array → AES-GCM → base64url; no
-    /// server storage). `sw.js` cache-first stores
-    /// the static layout for instant offline / EMT taps (activate clears prior
-    /// CACHE buckets). Owner edit / treatments live in `Main.swift`, not here.
+    /// the bracelet opens this page in a browser — read-only medical card + 911.
+    /// No Aid / NFC / Edit on the tap card (those are owner-app only). No Face ID /
+    /// biometrics / login / passcode to view — tap-to-view is ungated on every
+    /// phone. Nothing covers or blocks the tap card. Medical data is only in the
+    /// `#d=` fragment (flat array → AES-GCM → base64url; no server storage).
+    /// `sw.js` cache-first stores the static layout for instant offline / EMT taps
+    /// (activate clears prior CACHE buckets). Owner edit / treatments live in
+    /// `Main.swift`, not here.
     /// Source page: `tapper/index.html` (the only shell). Xcode copies it into
     /// the app bundle as `tapper.html` at build. Repo-root `tapper.html` is a
     /// `#d=`-preserving redirect to `/tapper/`. Legacy `card/` / `get/` URLs
     /// redirect to `/tapper/` (preserve `#d=`). NFC Preview / Scan always use
     /// the **bundled** tapper.html (local-only). Hosted Pages must serve the
-    /// tapper shell (RedMed · 911 · Aid).
+    /// tapper shell (RedMed · 911).
     /// Local: `./scripts/deploy-pages.sh`. Live: `DEPLOY=1` + CF tokens, or the
     /// `Pages tapper deploy` GitHub Action on `main`.
     ///
