@@ -6,8 +6,8 @@ import SwiftUI
 /// Permanent product rule (bracelet tap / scanner):
 /// - Owner (`isScannerSession == false`): RedMed · 911 · Aid · NFC (+ Edit chrome on RedMed, not on the YOU-card / Preview header).
 ///   Help chrome on every native screen except the Edit modal.
-/// - Scanner / tap (`isScannerSession == true` or HTML `tapper.html#d=`): RedMed · 911 · Aid
-///   only — **no Edit**, **no NFC**. Help is policies-only (no Settings / Erase / NFC write).
+/// - Scanner / tap (`isScannerSession == true` or HTML `tapper.html#d=`): RedMed · 911
+///   only — **no Aid**, **no Edit**, **no NFC**. Help is policies-only (no Settings / Erase / NFC write).
 ///
 /// Never gate the NFC tab on `AppConfig.nfcHardwareEnabled` — that flag only
 /// disables CoreNFC sessions inside `NFCBandManager` (`NFCWriter` / `NFCReader`).
@@ -24,7 +24,8 @@ struct ContentView: View {
     /// `AppConfig.nfcHardwareEnabled` is restored (paid Apple Developer).
     @StateObject private var nfcBandBox = NFCBandBox()
 
-    /// Owner-only fourth tab. Scanners never see NFC.
+    /// Owner-only tabs. Scanners never see Aid or NFC.
+    private var showsAid: Bool { !isScannerSession }
     private var showsNFC: Bool { !isScannerSession }
 
     private var activeTab: AppTab { scannerSafeTab.wrappedValue }
@@ -33,13 +34,16 @@ struct ContentView: View {
         Binding(
             get: {
                 if !showsNFC && tab == .nfc { return .redmed }
+                if !showsAid && tab == .aid { return .redmed }
                 return tab
             },
             set: { newValue in
                 // Mount in the same turn as `tab` — `onChange` ran *after* the
                 // first body pass, so 911 / Aid / NFC painted empty cream on
                 // first tap (the unreliable load).
-                let next: AppTab = (!showsNFC && newValue == .nfc) ? .redmed : newValue
+                var next = newValue
+                if !showsNFC && next == .nfc { next = .redmed }
+                if !showsAid && next == .aid { next = .redmed }
                 mountedTabs.insert(next)
                 tab = next
             }
@@ -62,7 +66,9 @@ struct ContentView: View {
                 mountedTab(.emergency, refreshOnHide: true) {
                     EmergencyView(isVisible: activeTab == .emergency)
                 }
-                mountedTab(.aid) { AidView() }
+                if showsAid {
+                    mountedTab(.aid) { AidView() }
+                }
                 if showsNFC {
                     mountedTab(.nfc, refreshOnHide: true) {
                         NFCView(isVisible: activeTab == .nfc, band: nfcBandBox.ensure())
@@ -72,7 +78,7 @@ struct ContentView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(.bottom, RedMedChrome.tabBarHeight)
 
-            CustomTabBar(tab: scannerSafeTab, showsNFC: showsNFC, onNFCWrite: {
+            CustomTabBar(tab: scannerSafeTab, showsAid: showsAid, showsNFC: showsNFC, onNFCWrite: {
                 startHoldToWriteFromNFCTab()
             })
         }
@@ -210,6 +216,9 @@ struct ContentView: View {
         if !showsNFC && tab == .nfc {
             tab = .redmed
         }
+        if !showsAid && tab == .aid {
+            tab = .redmed
+        }
     }
 
     /// Owner Main only. Scanner / passerby never start CoreMotion.
@@ -313,6 +322,7 @@ private struct FrozenKeepAliveContent<Content: View>: View, Equatable {
 
 struct CustomTabBar: View {
     @Binding var tab: AppTab
+    var showsAid: Bool = true
     var showsNFC: Bool = true
     /// Owner NFC tab tap — begin CoreNFC write on this gesture so hold finishes it.
     var onNFCWrite: (() -> Void)? = nil
@@ -337,8 +347,10 @@ struct CustomTabBar: View {
                 TabBarItem(icon: "safari.fill",  label: "911",    isOn: tab == .emergency) {
                     select(.emergency)
                 }
-                TabBarItem(icon: "cross.case.fill", label: "Aid", isOn: tab == .aid) {
-                    select(.aid)
+                if showsAid {
+                    TabBarItem(icon: "cross.case.fill", label: "Aid", isOn: tab == .aid) {
+                        select(.aid)
+                    }
                 }
                 if showsNFC {
                     TabBarItem(icon: "wave.3.right", label: "NFC", isOn: tab == .nfc) {

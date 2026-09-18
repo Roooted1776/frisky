@@ -3,14 +3,15 @@ import UIKit
 import WebKit
 
 /// NFC Preview / NFC Scan — same bundled `tapper.html#d=` shell a stranger
-/// gets on band tap (HTML RedMed · 911 · Aid tabs visible). Loads with
+/// gets on band tap (HTML RedMed · 911 tabs visible). Loads with
 /// `?src=app` / `__REDMED_APP_PREVIEW` so SOS does **not** auto-arm (real
 /// bracelet opens hosted `/tapper/#d=…` without that flag). Explicit SOS /
 /// DeviceMotion / 911 GPS still run in Preview — same as passerby HTML.
 /// Does **not** set `html.app-embed` / `__REDMED_APP_EMBED` — owner RedMed is
-/// a native YOU card. This shell is Preview / Scan (full HTML RedMed · 911 · Aid).
+/// a native YOU card. This shell is Preview / Scan (HTML RedMed · 911 only —
+/// **no Aid**, **no NFC**, **no Edit**; owner Aid lives in native `AidView`).
 /// Sets `html.app-preview` and disables WKWebView UIScrollView scrolling so
-/// flex tabbar taps work (fixed + dual-scroll ate RedMed · 911 · Aid switches).
+/// flex tabbar taps work (fixed + dual-scroll ate RedMed · 911 switches).
 /// Never calls `BiometricAuth` — passerby / Preview tap-to-view stays ungated.
 /// Native chrome is Back + Help only — **no Edit**. Owner Edit lives on the
 /// RedMed tab, off the YOU-card / tapper header.
