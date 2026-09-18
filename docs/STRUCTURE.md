@@ -13,6 +13,7 @@ Only what must live at the deploy / GitHub surface:
 | `AGENTS.md` | Cursor / agent rules (must be easy to find) |
 | `tapper.html` · `index.html` · `card.html` · `get.html` · `get/` | Identical `#d=` redirect stubs → `/tapper/` (`scripts/write-tapper-redirects.sh`) |
 | `sw.js` · `_headers` · `_redirects` · `wrangler.toml` | Cloudflare / SW |
+| `apple-app-site-association` · `.well-known/apple-app-site-association` | Universal Links — identical, both locations required (Apple checks root, then `.well-known/`) |
 | `.gitignore` · `.github/` · `.cursor/` | tooling |
 
 No brand PNGs at repo root — canonical in `assets/`, shell-relative copies in `tapper/`.
@@ -25,6 +26,8 @@ frisky/
 ├── RedMed-Xcode/          # native owner app (+ Document/ policies source)
 ├── tapper/                # passerby shell + shell-relative PNGs + sw.js
 ├── Document/              # hosted Help: index.html = full policy; Document.html = redirect
+├── privacy/               # /privacy bounce → /Document/#privacy (_redirects + privacy/index.html)
+├── support/               # App Store Connect Support URL (scripts/publish-github-io.sh)
 ├── assets/                # canonical brand PNGs / SVG
 ├── docs/                  # all long-form docs (this file, MAX, SECURITY, product notes)
 ├── scripts/               # run, deploy, smoke, sync-document, write-tapper-redirects, #d= codec
