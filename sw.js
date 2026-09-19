@@ -12,7 +12,7 @@
  * Owner app path is separate: WKWebView loads a Caches-staged tapper.html via
  * loadFileURL (BrandLogo beside it) — no network required for Preview / Scan.
  *
- * Shell strategy: cache-first with multi-key fallback (/tapper/ ↔ index.html);
+ * Shell strategy: cache-first with multi-key fallback (/tapper/ <-> index.html);
  * never wait on network when any shell copy exists. Background networkReload
  * refreshes the bucket. Activate deletes prior CACHE names so deploys clear
  * stale decrypt/layout. Bump CACHE in lockstep with root + bundled sw.js on
@@ -22,8 +22,15 @@
  * overwrite shell keys (that poison served PNG/JS as /tapper/). A response is
  * only replicated onto SHELL_KEYS when the body contains data-tab="medical"
  * — redirect stubs (card.html / get.html / index.html) must never land there.
+ *
+ * Fix #1 (Critical): putShell now clones all copies BEFORE reading body text
+ *   so no clone is made from a consumed/locked stream.
+ * Fix #4 (High): precache now catches shell precache failure gracefully so SW
+ *   install does not abort on first-offline visit.
+ * Fix #7 (Medium): putShell deduplicates SHELL_KEYS to avoid double-writing
+ *   the same cache entry when reqOrUrl already appears in SHELL_KEYS.
  */
-var CACHE = 'redmed-tapper-v161';
+var CACHE = 'redmed-tapper-v162';
 var ASSETS = [
   './pheart.png',
   './BrandLogo.png',
@@ -44,17 +51,26 @@ function networkReload(reqOrUrl) {
   return fetch(reqOrUrl, { cache: 'reload' });
 }
 
+// Fix #1 + #7: clone all copies BEFORE consuming body; deduplicate keys.
 function putShell(cache, reqOrUrl, res) {
   if (!res || !res.ok || (res.type !== 'basic' && res.type !== 'cors')) return Promise.resolve();
   var ct = (res.headers.get('content-type') || '').toLowerCase();
   if (ct && ct.indexOf('text/html') === -1 && ct.indexOf('application/xhtml') === -1) {
     return Promise.resolve();
   }
-  return res.clone().text().then(function (body) {
+  // Deduplicate: build the full key list once, removing duplicates.
+  var reqKey = typeof reqOrUrl === 'string' ? reqOrUrl : reqOrUrl.url;
+  var allKeys = [reqKey];
+  SHELL_KEYS.forEach(function (k) {
+    if (allKeys.indexOf(k) === -1) allKeys.push(k);
+  });
+  // Clone enough copies BEFORE reading any body — cloning a consumed stream throws.
+  var copies = allKeys.map(function () { return res.clone(); });
+  var reader = res.clone();
+  return reader.text().then(function (body) {
     if (body.indexOf('data-tab="medical"') === -1) return;
-    var writes = [cache.put(reqOrUrl, res.clone())];
-    SHELL_KEYS.forEach(function (key) {
-      writes.push(cache.put(key, res.clone()));
+    var writes = allKeys.map(function (key, i) {
+      return cache.put(key, copies[i]);
     });
     return Promise.all(writes).catch(function () { /* quota / opaque */ });
   }).catch(function () { /* unreadable body */ });
@@ -80,14 +96,18 @@ function precacheRequiredShell(cache, i) {
     });
 }
 
+// Fix #4: catch shell precache rejection so SW install does not abort when
+// both shell URLs are unreachable on a first-time offline visit.
 function precache(cache) {
-  return precacheRequiredShell(cache, 0).then(function () {
-    return Promise.all(ASSETS.map(function (url) {
-      return networkReload(url).then(function (res) {
-        return putAsset(cache, url, res);
-      }).catch(function () { /* optional assets */ });
-    }));
-  });
+  return precacheRequiredShell(cache, 0)
+    .catch(function () { /* first-time offline: shell will cache on next online visit */ })
+    .then(function () {
+      return Promise.all(ASSETS.map(function (url) {
+        return networkReload(url).then(function (res) {
+          return putAsset(cache, url, res);
+        }).catch(function () { /* optional assets */ });
+      }));
+    });
 }
 
 function cachedShell(req) {

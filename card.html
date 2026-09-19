@@ -8,10 +8,13 @@
 <meta name="referrer" content="no-referrer">
 <title>RedMed</title>
 <style>html,body{background:#fff7f7!important;margin:0}</style>
-<!-- Legacy / root URL. Canonical scanner shell is /tapper/ — preserve #d=. -->
+<!-- Legacy / root URL. Canonical scanner shell is /tapper/ — preserve #d=.
+     Fix #3: use URL construction to safely compose the destination. -->
 <script>
 (function () {
-  location.replace("/tapper/" + (location.search || "") + (location.hash || ""));
+  var dest = new URL('/tapper/', location.origin);
+  dest.search = location.search;
+  location.replace(dest.pathname + dest.search + location.hash);
 })();
 </script>
 <style>
@@ -31,10 +34,11 @@
 <body>
   <p><a id="fallback" href="/tapper/">Open emergency card</a></p>
   <script>
-    document.getElementById("fallback").href =
-      "/tapper/" + (location.search || "") + (location.hash || "");
+    var dest = new URL('/tapper/', location.origin);
+    dest.search = location.search;
+    document.getElementById("fallback").href = dest.pathname + dest.search + location.hash;
   </script>
-  <noscript><p>JavaScript is off. <a href="/tapper/">Open emergency card</a> (hash may drop — enable JS to keep #d=).</p></noscript>
+  <!-- Fix #9: clearer noscript message -->
+  <noscript><p>JavaScript is required to open this emergency card. Please enable JavaScript in your browser settings, then reload this page.</p></noscript>
 </body>
 </html>
-

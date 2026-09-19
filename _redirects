@@ -2,17 +2,24 @@
 # Hash fragments (#d=) are client-only and survive these hops.
 #
 # Canonical passerby shell stays under /tapper/ (SW + AppConfig.medicalCardBaseURL).
-# Root → /tapper/ so getredmed.com/ and redmed.pages.dev/ both land on the shell.
+# Root -> /tapper/ so getredmed.com/ and redmed.pages.dev/ both land on the shell.
 # Brand PNGs live under /assets/ (and /tapper/ for shell-relative loads).
+#
+# Fix #6: changed canonical shell redirects from 302 -> 301 (permanent).
+# Fix #11: added /tapper -> /tapper/ 301 for no-trailing-slash case.
 
-/ /tapper/ 302
-/index.html /tapper/ 302
-/tapper.html /tapper/ 302
-/card.html /tapper/ 302
-/get.html /tapper/ 302
-/get /tapper/ 302
-/get/ /tapper/ 302
-/get/index.html /tapper/ 302
+# Canonical shell — permanent redirects so browsers/CDN cache them.
+/ /tapper/ 301
+/index.html /tapper/ 301
+/tapper.html /tapper/ 301
+/card.html /tapper/ 301
+/get.html /tapper/ 301
+/get /tapper/ 301
+/get/ /tapper/ 301
+/get/index.html /tapper/ 301
+
+# Fix #11: no-trailing-slash tapper URL before SW is installed.
+/tapper /tapper/ 301
 
 # App Store 5.1.1 — Connect privacy-policy URL (do not send this to /tapper/).
 # privacy/index.html bounces to /Document/#privacy (same Document.html as Help).
@@ -20,7 +27,7 @@
 /privacy /privacy/ 301
 /Document /Document/ 301
 
-# Legacy root brand URLs → assets/
+# Legacy root brand URLs -> assets/
 /BrandLogo.png /assets/BrandLogo.png 301
 /BrandWordmark.png /assets/BrandWordmark.png 301
 /pheart.png /assets/pheart.png 301
