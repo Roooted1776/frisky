@@ -52,11 +52,9 @@ cp -f Document/index.html Document/Document.html Document/legal-doc.css \
 cp -f privacy/index.html "$DEST/privacy/index.html"
 cp -f tapper/index.html tapper/sw.js \
   tapper/pheart.png tapper/BrandLogo.png tapper/BrandWordmark.png \
-  tapper/app-icon.png tapper/apple-touch-icon.png \
   "$DEST/tapper/"
 # Canonical brand photos — assets/ only (no repo-root PNG copies).
 cp -f assets/pheart.png assets/BrandLogo.png assets/BrandWordmark.png \
-  assets/app-icon.png assets/apple-touch-icon.png \
   assets/BrandWordmark.svg \
   "$DEST/assets/"
 touch "$DEST/.nojekyll"

@@ -30,16 +30,12 @@
  * Fix #7 (Medium): putShell deduplicates SHELL_KEYS to avoid double-writing
  *   the same cache entry when reqOrUrl already appears in SHELL_KEYS.
  */
-var CACHE = 'redmed-tapper-v163';
+var CACHE = 'redmed-tapper-v162';
 var ASSETS = [
   './pheart.png',
   './BrandLogo.png',
-  './app-icon.png',
-  './apple-touch-icon.png',
   '../assets/pheart.png',
-  '../assets/BrandLogo.png',
-  '../assets/app-icon.png',
-  '../assets/apple-touch-icon.png'
+  '../assets/BrandLogo.png'
 ];
 /** Primary HTML shell — install must fail closed if neither key can be cached. */
 var REQUIRED_SHELLS = ['./index.html', './'];
