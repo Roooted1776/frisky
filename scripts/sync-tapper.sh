@@ -26,6 +26,12 @@ if grep -q 'data-tab="medical"' tapper.html; then
 fi
 grep -q 'tapper/' tapper.html
 
+# sw.js: root is source of truth. Auto-copy into sibling locations so a single
+# CACHE bump never causes cmp drift. The cmp checks below remain as a safety
+# net in case any path writes the copies directly.
+cp sw.js tapper/sw.js
+cp sw.js RedMed-Xcode/RedMed/sw.js
+
 # CACHE + precache list must match across Pages root, /tapper/, and the app bundle.
 if ! cmp -s sw.js tapper/sw.js; then
   echo "sw.js and tapper/sw.js drifted — bump CACHE in lockstep" >&2
