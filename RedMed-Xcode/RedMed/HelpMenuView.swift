@@ -501,7 +501,7 @@ struct HelpMenuView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.isScannerSession) private var isScannerSession
     @EnvironmentObject private var profile: ProfileData
-    /// Settings (Haptic feedback) lives on `ConsentGateView`. Location is on as part of Agree.
+    @AppStorage(RedMedHaptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
     var onOpenNFC: (() -> Void)? = nil
@@ -520,13 +520,13 @@ struct HelpMenuView: View {
         static let sectionGap: CGFloat = 22
     }
 
-    /// Owner-only: Erase, Write to NFC. Scanner Help is policies only.
-    /// Settings (Haptic feedback) lives on `ConsentGateView` now. Location is on as part of Agree.
+    /// Owner-only: Settings, Erase, Write to NFC. Scanner Help is policies only.
     private var showsOwnerTools: Bool { !isScannerSession }
 
     private var firstHelpSection: String {
-        if showsOwnerTools, onOpenNFC != nil { return "Bracelet" }
-        return "Policies"
+        if !showsOwnerTools { return "Policies" }
+        if onOpenNFC != nil { return "Bracelet" }
+        return "Settings"
     }
 
     var body: some View {
@@ -569,6 +569,49 @@ struct HelpMenuView: View {
                                         : AppConfig.NFCWriteCopy.packTitle
                                 )
                             }
+                        }
+
+                        if showsOwnerTools {
+                            helpSectionLabel("Settings")
+                            // flatten: false — these Toggles are live-editing
+                            // content; `.drawingGroup()` (the flattened
+                            // default) can leave a Toggle inside it visible
+                            // but unresponsive to taps (see redmedBox's doc
+                            // comment in Theme.swift).
+                            helpCard(flatten: false) {
+                                Toggle("Haptic feedback", isOn: $hapticsEnabled)
+                                    .font(.system(size: Metrics.font, weight: .medium))
+                                    .tint(.redmedAccent)
+                                    .padding(.horizontal, Metrics.rowHPad)
+                                    .padding(.vertical, Metrics.rowVPad)
+                                Divider().overlay(Color.redmedDivider).padding(.leading, Metrics.rowHPad)
+                                Toggle("Location", isOn: $locationEnabled)
+                                    .font(.system(size: Metrics.font, weight: .medium))
+                                    .tint(.redmedAccent)
+                                    .padding(.horizontal, Metrics.rowHPad)
+                                    .padding(.vertical, Metrics.rowVPad)
+                                    .onChange(of: locationEnabled) { _, on in
+                                        // Pref only — never call requestWhenInUseAuthorization here.
+                                        // Find Help prompts the system sheet once when GPS is actually needed.
+                                        if on { locationSuggester.refresh() }
+                                    }
+                                if locationEnabled && locationSuggester.mustOpenSettings {
+                                    Divider().overlay(Color.redmedDivider).padding(.leading, Metrics.rowHPad)
+                                    Button("Open iOS Location Settings") {
+                                        locationSuggester.openSettings()
+                                    }
+                                    .font(.system(size: Metrics.font, weight: .medium))
+                                    .foregroundColor(.redmedAccent)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal, Metrics.rowHPad)
+                                    .padding(.vertical, Metrics.rowVPad)
+                                }
+                            }
+                            Text("Location defaults on. No RedMed popup — iOS may ask Allow once the first time Find Help needs GPS (Apple requires that tap). Siren / max volume / brightness arm on crash or SOS only.")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.redmedMuted)
+                                .padding(.horizontal, 4)
+                                .padding(.top, 8)
                         }
 
                         helpSectionLabel("Policies")
