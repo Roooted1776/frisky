@@ -93,7 +93,9 @@ jobs:
           # They are NOT at repo root — do not test -f BrandLogo.png.
           for p in \
             assets/BrandLogo.png assets/BrandWordmark.png assets/pheart.png \
-            tapper/BrandLogo.png tapper/BrandWordmark.png tapper/pheart.png
+            tapper/BrandLogo.png tapper/BrandWordmark.png tapper/pheart.png \
+            assets/app-icon.png assets/apple-touch-icon.png \
+            tapper/app-icon.png tapper/apple-touch-icon.png
           do
             test -f "$p" || fail "missing $p (brand files are in assets/ + tapper/, not repo root)"
           done
