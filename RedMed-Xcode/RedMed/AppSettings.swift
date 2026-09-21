@@ -1,8 +1,8 @@
 import Foundation
 
-/// In-app prefs. Haptic feedback + Location toggles live in Help →
-/// Settings (owner only); Agree also turns Location on. Brightness +
-/// max volume + locator siren arm on crash / severe-impact or Find Help SOS.
+/// In-app prefs. Haptic lives on Before you continue. Location is on as
+/// part of Agree (no in-app Location toggle). Brightness + max volume +
+/// locator siren arm on crash / severe-impact or Find Help SOS.
 enum AppSettings {
     static let locationEnabledKey = "redmed.locationEnabled"
 

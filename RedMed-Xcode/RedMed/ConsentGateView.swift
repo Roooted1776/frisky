@@ -15,7 +15,7 @@ import UIKit
 /// — not proactively after Face ID. No cold interrupt, no yield stall.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
-    static let currentVersion = "4.17"
+    static let currentVersion = "4.16"
 
     static var hasAcceptedCurrent: Bool {
         UserDefaults.standard.string(forKey: acceptedVersionKey) == currentVersion
