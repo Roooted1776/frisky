@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Emergency Medical Info</title>
+<style>
+  :root {
+    --red: #c0182b;
+    --red-dark: #8f0f1f;
+    --ink: #1a1a1a;
+    --muted: #5c5c5c;
+    --border: #e2e2e2;
+    --bg: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #f4f4f4;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+  }
+  .wrap {
+    max-width: 480px;
+    margin: 0 auto;
+    background: var(--bg);
+    min-height: 100vh;
+  }
+  header {
+    background: var(--red);
+    color: #fff;
+    padding: 20px 20px 16px;
+    text-align: center;
+  }
+  header .cross {
+    font-size: 28px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 20px;
+    letter-spacing: 0.5px;
+  }
+  header p {
+    margin: 4px 0 0;
+    font-size: 13px;
+    opacity: 0.9;
+  }
+  .name-block {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .name-block .label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  .name-block .name {
+    font-size: 28px;
+    font-weight: 700;
+  }
+  .flags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 20px 20px;
+  }
+  .flag {
+    background: #fdeceb;
+    color: var(--red-dark);
+    border: 1px solid #f3c6c6;
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  section {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  section h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin: 0 0 8px;
+  }
+  section .value {
+    font-size: 17px;
+    line-height: 1.5;
+  }
+  section .value.empty {
+    color: #b3b3b3;
+    font-style: italic;
+  }
+  .contact {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+  .contact:last-child { margin-bottom: 0; }
+  .contact .cname {
+    font-weight: 700;
+    font-size: 16px;
+  }
+  .contact .crel {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  .contact a {
+    display: inline-block;
+    color: var(--red);
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 16px;
+  }
+  footer {
+    padding: 16px 20px 28px;
+    text-align: center;
+    font-size: 11px;
+    color: #a3a3a3;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="cross">✚</div>
+    <h1>EMERGENCY MEDICAL INFO</h1>
+    <p>In case of emergency — read before treating</p>
+  </header>
+
+  <div class="name-block">
+    <div class="label">Name</div>
+    <div class="name">[Full Name]</div>
+  </div>
+
+  <!--
+    FLAGS: short, high-priority tags a first responder should see in 2 seconds.
+    Delete any <div class="flag"> line that doesn't apply to you.
+    Edit the text between the tags.
+  -->
+  <div class="flags">
+    <div class="flag">Blood Type: [O+]</div>
+    <div class="flag">Pregnant: [No]</div>
+    <div class="flag">Deaf / Hard of Hearing</div>
+    <div class="flag">Vision Impaired</div>
+  </div>
+
+  <section>
+    <h2>Allergies</h2>
+    <div class="value">[List allergies here, e.g. Penicillin, Latex. Write "None known" if none.]</div>
+  </section>
+
+  <section>
+    <h2>Current Medications</h2>
+    <div class="value">[List medications and dosage that matter in an emergency, e.g. blood thinners, insulin. Write "None" if none.]</div>
+  </section>
+
+  <section>
+    <h2>Medical Conditions</h2>
+    <div class="value">[List conditions relevant to emergency treatment, e.g. diabetic, epileptic, cardiac condition. Keep this to what a responder needs to act safely — you decide what belongs here.]</div>
+  </section>
+
+  <section>
+    <h2>Notes</h2>
+    <div class="value">[Anything else a responder should know — implants, DNR status, language spoken, etc. Leave blank if none.]</div>
+  </section>
+
+  <section>
+    <h2>Emergency Contacts</h2>
+    <div class="contact">
+      <div class="cname">[Contact Name]</div>
+      <div class="crel">[Relationship]</div>
+      <a href="tel:+10000000000">📞 [Phone Number]</a>
+    </div>
+    <div class="contact">
+      <div class="cname">[Second Contact Name]</div>
+      <div class="crel">[Relationship]</div>
+      <a href="tel:+10000000000">📞 [Phone Number]</a>
+    </div>
+  </section>
+
+  <footer>
+    Last updated: [Month Year] · Generated for personal emergency NFC tag use
+  </footer>
+
+</div>
+</body>
+</html>
