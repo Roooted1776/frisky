@@ -7,13 +7,12 @@ import UIKit
 /// and motion while the app is open (Location pref auto-on). Face ID runs
 /// on cream (auto-retries until success; Open Settings only when biometry
 /// is unavailable) while Main warms underneath — once after Agree, and
-/// again on every cold re-entry after acknowledge — then iOS When-In-Use
-/// once when still `.notDetermined`, then Main is interactive.
+/// again on every cold re-entry after acknowledge — then Main is interactive.
 /// Same-session background → foreground does **not** re-prompt (no
 /// OwnerAppLock relock). Edit / Save / Erase / Load From Band still Face ID.
 /// Never on passerby tapper or in-app band / UL tap card (`BandTapIngress`).
-/// Apple’s Allow sheet cannot be skipped; we fire it after Face ID so 911
-/// is not the first ask. GPS still starts only on Find Help.
+/// Location prompt fires contextually on first GPS use (Find Help / hospitals)
+/// — not proactively after Face ID. No cold interrupt, no yield stall.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
     static let currentVersion = "4.16"
@@ -170,7 +169,7 @@ struct ConsentGateView<Content: View>: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("RedMed is a personal medical ID and first-aid reference on this iPhone. It is not a medical device, does not diagnose or treat, and does not replace emergency dispatch. Always call emergency services first in a real emergency.")
                         Text("Your profile stays on this iPhone, and on a band if you write one — RedMed runs no server for it.")
-                        Text("Agree covers location and motion while RedMed is on screen — Find Help GPS and crash detection for app users (default thresholds). Crash detect does not run when the phone is locked or you leave the app — even if RedMed was open; use iPhone Crash Detection if your device has it. GPS stops when you leave or close the app. Never sent to us. iOS may ask Allow once after Face ID so 911 is not blocked later.")
+                        Text("Agree covers location and motion while RedMed is on screen — Find Help GPS and crash detection for app users (default thresholds). Crash detect does not run when the phone is locked or you leave the app — even if RedMed was open; use iPhone Crash Detection if your device has it. GPS stops when you leave or close the app. Never sent to us. Location is requested the first time you use Find Help.")
                     }
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.redmedMuted)
@@ -292,10 +291,8 @@ struct ConsentGateView<Content: View>: View {
             contentArmed = true
             awaitingPostAgreeFaceID = true
         }
-        // Location is on as part of Agree. Do not fire iOS When-In-Use
-        // here — it would stack with Face ID. After Face ID, request
-        // When-In-Use so 911 is not blocked later. GPS still starts on
-        // Find Help.
+        // Location prompt fires contextually on first GPS use (Find Help /
+        // hospitals) — not here. No stall, no cold interrupt after Face ID.
         tryPromptPostAgreeFaceID()
     }
 
@@ -315,13 +312,10 @@ struct ConsentGateView<Content: View>: View {
             : "post-Agree Face ID"
         RedMedSignpost.coldLaunchMainReady(readyLabel)
         Task { @MainActor in
-            // Cream drop first — Keychain migrate / When-In-Use must not hitch
-            // the same turn as Face ID success revealing Main.
+            // Keychain migrate runs after cream drop — no yield stall needed
+            // now that When-In-Use is no longer requested here.
             await Task.yield()
             await profile.reloadAfterOwnerFaceID()
-            await Task.yield()
-            LocationAccessSuggester.shared.requestWhenInUseIfNeeded()
-            RedMedSignpost.coldMark("When-In-Use requested (if needed)")
         }
     }
 

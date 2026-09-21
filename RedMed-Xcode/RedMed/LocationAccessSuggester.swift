@@ -3,10 +3,11 @@ import CoreLocation
 import UIKit
 import Combine
 
-/// Location-denied status. Agree turns Location on. After post-Agree Face ID,
-/// present When-In-Use once so 911 is not blocked by Apple's Allow sheet.
-/// Does not start GPS — Find Help / hospitals still start updates. Do not
-/// request from `@main`, from Agree (would stack with Face ID), or from Help.
+/// Location-denied status. Agree turns Location on. When-In-Use is
+/// requested on first GPS use (Find Help / hospitals) — not after Face ID
+/// — so cream drop stays free of Apple's Allow sheet. Does not start GPS.
+/// Do not request from `@main`, from Agree (would stack with Face ID), or
+/// from Help.
 final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManagerDelegate {
     static let shared = LocationAccessSuggester()
 
@@ -30,9 +31,10 @@ final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManag
         apply(statusManager.authorizationStatus)
     }
 
-    /// Present When-In-Use if still `.notDetermined`. Call after Face ID
-    /// succeeds. Does not start GPS. In-app Location is always on (Agree);
-    /// iOS permission is the only off-switch.
+    /// Present When-In-Use if still `.notDetermined`. Call from Find Help /
+    /// hospitals when GPS is about to start — not from post-Face-ID cream.
+    /// Does not start GPS. In-app Location is always on (Agree); iOS
+    /// permission is the only off-switch.
     func requestWhenInUseIfNeeded() {
         if promptManager != nil { return }
         let status = statusManager.authorizationStatus

@@ -73,7 +73,7 @@ Engineer threat model: in-app Help → Security (`RedMed-Xcode/RedMed/Document/D
 ## Closed in-repo (do not reopen)
 
 - `#476` stripped `OwnerAppLock`. Do not remount as an app-wide or YOU-card cream lock.
-- `#474` named Overpass. Location is on as part of Agree (no in-app toggle). When-In-Use after post-Agree Face ID. GPS still starts only on Find Help.
+- `#474` named Overpass. Location is on as part of Agree (no in-app toggle). When-In-Use on first Find Help / hospital GPS use (not after Face ID). GPS still starts only on Find Help.
 - `#d=` extract strips at `&` (match tapper `#d=…&tab=aid`); decode fail-closed on non-base64url; write gate rejects `&`.
 - `KeychainStore.exists` unknown SecItem errors → `false`.
 - Encode clips to tapper `MAX_STR` / `MAX_LIST`.
