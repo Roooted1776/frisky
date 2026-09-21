@@ -61,4 +61,44 @@ grep -q 'location.replace("./"' "$DST/Document.html"
 # privacy/ is a bounce to Document — never a second policy tree.
 grep -q '/Document/' privacy/index.html
 
-echo "OK Document host lockstep with $SRC (index=full, Document.html=redirect)"
+# Honesty trio (audit P2/P3/P4): Help/Document must not cite the empty-file
+# era, HIPAA heading must not look like a badge, versions lockstep with consent.
+# Legal body is not rewritten here — these are fail-closed greps.
+SRC_HTML="$SRC/Document.html"
+if grep -q 'docs/SECURITY.md' "$SRC_HTML"; then
+  echo "FAIL $SRC_HTML still cites docs/SECURITY.md — point at Help → Security, not the pointer file" >&2
+  exit 1
+fi
+if grep -q 'HIPAA alignment (operator)' "$SRC_HTML"; then
+  echo "FAIL $SRC_HTML HIPAA heading still says alignment (operator)" >&2
+  exit 1
+fi
+grep -q 'HIPAA — not a covered entity' "$SRC_HTML" || {
+  echo "FAIL $SRC_HTML missing Security heading HIPAA — not a covered entity" >&2
+  exit 1
+}
+CONSENT="$(sed -n 's/^[[:space:]]*static let currentVersion = "\([^"]*\)".*/\1/p' RedMed-Xcode/RedMed/ConsentGateView.swift)"
+if [[ -z "$CONSENT" ]]; then
+  echo "FAIL could not read ConsentSettings.currentVersion" >&2
+  exit 1
+fi
+if grep -E '<strong>Version</strong> ' "$SRC_HTML" | grep -vqF "$CONSENT"; then
+  echo "FAIL Document Version line != consent $CONSENT" >&2
+  grep -E '<strong>Version</strong> ' "$SRC_HTML" >&2
+  exit 1
+fi
+VERSION_N="$(grep -cE '<strong>Version</strong> ' "$SRC_HTML" || true)"
+if [[ "$VERSION_N" -lt 5 ]]; then
+  echo "FAIL expected ≥5 Document Version lines, got $VERSION_N" >&2
+  exit 1
+fi
+if ! grep -q 'Document.html' docs/SECURITY.md || ! grep -q '#security' docs/SECURITY.md; then
+  echo "FAIL docs/SECURITY.md must stay a pointer into Document.html #security (do not restore the old dump)" >&2
+  exit 1
+fi
+if grep -qiE 'HIPAA certified|HIPAA-aligned product|HIPAA compliant' docs/SECURITY.md; then
+  echo "FAIL docs/SECURITY.md grew a HIPAA badge — keep it a pointer" >&2
+  exit 1
+fi
+
+echo "OK Document host lockstep with $SRC (index=full, Document.html=redirect; consent $CONSENT)"

@@ -40,7 +40,7 @@ frisky/
 | File | Role |
 |------|------|
 | `../MAX.md` | Max profile + shipped history (agent memory; linked from `AGENTS.md`) |
-| `docs/SECURITY.md` | Advisory pointer into Document.html |
+| `docs/SECURITY.md` | Pointer into Help → Security / `/Document/#security` (not a second threat model) |
 | `docs/STRUCTURE.md` | This map |
 | `docs/DUAL-MAC.md` | MacBook + Mini: Cursor ShipIt repair, prefs/colors sync, `gh` HTTPS push/pull |
 | `docs/domain.md` | getredmed.com cutover |
