@@ -1,19 +1,63 @@
-# Dual Mac (MacBook + Mini)
+# Dual Mac (MacBook Air + Mini)
 
 Hub is GitHub. Each Mac is a client. They never push to each other.
 
-| Machine | Clone | Origin |
-|---------|--------|--------|
-| MacBook | `~/Documents/frisky` | `https://github.com/Roooted1776/frisky.git` |
-| Mac Mini | `~/Documents/frisky` | same |
+| Machine | Clone | Origin | My Machines worker name |
+|---------|--------|--------|-------------------------|
+| MacBook Air | `~/Documents/frisky` | `https://github.com/Roooted1776/frisky.git` | `macbook-air` |
+| Mac Mini | `~/Documents/frisky` | same | `mac-mini` |
 
-On the current MacBook that is `/Users/claude/Documents/frisky`. Mini uses the same `~/Documents/frisky` even if the username differs. One clone per machine. GitHub Desktop may sit on that clone. Do not let it make a second folder.
+On the current MacBook Air that is `/Users/claude/Documents/frisky`. Mini uses the same `~/Documents/frisky` even if the username differs. One clone per machine. GitHub Desktop may sit on that clone. Do not let it make a second folder.
 
 HTTPS + `gh` (port 443). School/cafe Wi‑Fi often blocks SSH:22, and `Roooted1776` has no GitHub SSH keys. Do not copy Cloud Agent tokens onto either Mac.
 
+## 0. Cloud alongside both Macs (My Machines)
+
+Managed Linux Cloud Agents cover the static Pages / tapper shell. For iOS (`RedMed-Xcode/`) or any tool that must run on a Mac, keep a **My Machines** worker alive on that Mac. The agent brain stays in Cursor cloud; terminal / edits / (optional) GUI run on the Mac. Same Cursor account as Desktop, phone, and [cursor.com/agents](https://cursor.com/agents).
+
+Do this once per Mac (Terminal.app, after §2 git is green):
+
+```bash
+~/Documents/frisky/scripts/setup-mac-worker.sh install
+~/Documents/frisky/scripts/setup-mac-worker.sh login
+```
+
+Then leave a worker running:
+
+```bash
+# MacBook Air (day-to-day)
+~/Documents/frisky/scripts/setup-mac-worker.sh start macbook-air
+
+# Mac Mini (always-on; add --computer-use when the agent must drive Xcode / GUI)
+~/Documents/frisky/scripts/setup-mac-worker.sh start mac-mini
+# or:
+~/Documents/frisky/scripts/setup-mac-worker.sh start mac-mini --computer-use
+```
+
+Keep that Terminal window open (or run under a launch agent you trust). Check from either Mac:
+
+```bash
+~/Documents/frisky/scripts/setup-mac-worker.sh status
+~/Documents/frisky/scripts/setup-mac-worker.sh debug
+```
+
+### Pick where a task runs
+
+| Work | Target |
+|------|--------|
+| `tapper/`, `sw.js`, `#d=` codec, Pages smoke | Managed Linux Cloud Agent (this VM) |
+| Xcode / Simulator / device / Keychain-adjacent | `mac-mini` (or local Desktop on that Mac) |
+| Laptop-local tools while Air is open | `macbook-air` |
+
+From [cursor.com/agents](https://cursor.com/agents) (or phone): environment dropdown → **Cloud** (Linux) or **macbook-air** / **mac-mini**. From Slack/GitHub/Linear: `worker=mac-mini` or `worker=macbook-air` (name must match `--name`, same Cursor user, worker started inside `~/Documents/frisky`).
+
+With `--computer-use` on Mini: first start installs **Cursor Computer Use**; grant Accessibility + Screen Recording in System Settings → Privacy & Security (to that helper, not Terminal / Cursor.app).
+
+Workers need outbound HTTPS only (`api2.cursor.sh`, `api2direct.cursor.sh`, artifacts S3; plus `downloads.cursor.com` on first computer-use install). No inbound ports. Do not paste Cloud Agent / service-account tokens onto a Mac — use `agent login` or a **personal** API key.
+
 ## 1. Cursor update (each Mac)
 
-Desktop ShipIt is failing to replace `/Applications/Cursor.app` (quarantine / `com.apple.macl`). Retry inside Cursor will not clear it. Cloud agents stay up; this is the local app.
+Desktop ShipIt is failing to replace `/Applications/Cursor.app` (quarantine / `com.apple.macl`). Retry inside Cursor will not clear it. Cloud agents and My Machines workers stay up; this is the local app.
 
 Run from **Terminal.app**, not Cursor:
 
@@ -55,7 +99,7 @@ UI alternative (also carries colors): Cmd+Shift+P → **Preferences: Open Profil
 
 ## 2. Git (each Mac)
 
-Same steps on MacBook and Mini:
+Same steps on MacBook Air and Mini:
 
 ```bash
 # already cloned (either Mac):
@@ -74,7 +118,7 @@ The script logs you in as **Roooted1776** over HTTPS if needed, pins `origin`, r
 | Surface | Address | Notes |
 |---------|---------|-------|
 | Cursor / Grok Bot login | `m.aguilar-aasted@students.mccc.edu` | Keep. No account cutover required. |
-| Git author (MacBook + Mini) | `maxaguilaraasted@gmail.com` | GitHub-verified on this repo. `setup-mac-git.sh` pins it. |
+| Git author (MacBook Air + Mini) | `maxaguilaraasted@gmail.com` | GitHub-verified on this repo. `setup-mac-git.sh` pins it. |
 | Do not use for git | `mrmax115@gmail.com`, school email | Stale / never authored here. |
 
 Gmail MCP for agents: authorize via **Cursor** (connected), not a separate Grok Bot OAuth. “This app is blocked” on a Grok Gmail plugin is expected — use Cursor’s Gmail.
@@ -100,4 +144,7 @@ Any-location smoke (home, school, cafe): `gh auth status` and `git fetch` both s
 | Cursor “Reconnect failed” | Tunnel attach. Reload Window, or open the agent in the browser. Not a git failure. |
 | Cursor “couldn’t update” | Section 1. Do not keep clicking Try Again. |
 | Theme/colors don’t match the other Mac | Section 1 “Cursor settings + colors”. Export on the good Mac, import on the other; install listed theme extensions. |
+| Machine missing in agents environment dropdown | Section 0. Worker process stopped, wrong Cursor login, or not started inside `~/Documents/frisky`. Run `setup-mac-worker.sh status` / `debug`. |
+| `worker=mac-mini` rejected / wrong repo | Worker name or git remote mismatch. Restart with `start mac-mini` from the frisky clone. No silent fallback to Linux. |
+| Only Air shows online, not Mini | Mini worker not started (or asleep / offline). Section 0 on the Mini. |
 | Wrong remote `rooted1776/risky` | Does not exist. Repo is `Roooted1776/frisky` (three o’s). |

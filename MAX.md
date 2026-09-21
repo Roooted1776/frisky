@@ -4,7 +4,7 @@ Working notes. Product invariants live in `AGENTS.md`.
 
 ## Xcode (device)
 
-- One repo / one branch: `Roooted1776/frisky` → `main`. MacBook and Mini each clone `~/Documents/frisky` — [`docs/DUAL-MAC.md`](docs/DUAL-MAC.md). Pull → **Product → Clean Build Folder** → Run.
+- One repo / one branch: `Roooted1776/frisky` → `main`. MacBook Air and Mini each clone `~/Documents/frisky` — [`docs/DUAL-MAC.md`](docs/DUAL-MAC.md). Pull → **Product → Clean Build Folder** → Run.
 - **Xcode Run → phone lag is mostly Debug install + debugger attach — not the App Store binary.**
   Pre-app (before first cream / `@main`): SplashBoard + install + LLDB attach. App source ~1MB — not install bloat.
   Scheme `enableGPUValidationMode` must stay `"1"` (Disabled). `"2"` re-enables Metal API Validation (2cb8eaf flipped it wrong).
