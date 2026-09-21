@@ -16,7 +16,7 @@ import UIKit
 /// is not the first ask. GPS still starts only on Find Help.
 enum ConsentSettings {
     static let acceptedVersionKey = "redmed.consentAcceptedVersion"
-    static let currentVersion = "4.17"
+    static let currentVersion = "4.16"
 
     static var hasAcceptedCurrent: Bool {
         UserDefaults.standard.string(forKey: acceptedVersionKey) == currentVersion
