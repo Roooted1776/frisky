@@ -195,8 +195,9 @@ do {
     try ensureDir(wordDir)
     try ensureDir(iconDir)
 
-    // Drawn at RedMedChrome.logoSize (72pt) → 72 / 144 / 216. Do not ship
-    // 180-pt slots; iOS still decodes the extra pixels then downscales.
+    // Web display: BrandLogo.svg is primary (crisp on iPad). PNG densities
+    // BrandLogo.png / @2x / @3x cover <picture> fallbacks (216 / 432 / 648).
+    // Drawn at RedMedChrome.logoSize (72pt) → 72 / 144 / 216 for native imageset.
     let logoScales: [(String, Int)] = [
         ("BrandLogo.png", 72),
         ("BrandLogo@2x.png", 144),
@@ -223,7 +224,8 @@ do {
         to: iconDir.appendingPathComponent("AppIcon-1024.png")
     )
 
-    // Web display is 72 CSS px → 216 @3x; keep Pages / SW payloads small.
+    // Web: 216 base + denser PNGs for tablet CSS logo sizes when SVG is skipped.
+    // BrandLogo.svg in tapper/ + assets/ is hand-authored (vector); do not overwrite.
     // repoRoot BrandLogo.png is the source (read above), not a write target here.
     let sharedLogo = repoRoot.appendingPathComponent("assets/BrandLogo.png")
     if FileManager.default.fileExists(atPath: sharedLogo.deletingLastPathComponent().path) {
@@ -237,6 +239,15 @@ do {
         ]
         for target in sharedTargets {
             try savePNG(scaledSquare(brandLogo, size: 216), to: target)
+        }
+        let webDensities: [(String, Int)] = [
+            ("BrandLogo@2x.png", 432),
+            ("BrandLogo@3x.png", 648)
+        ]
+        for (name, px) in webDensities {
+            let png = scaledSquare(brandLogo, size: px)
+            try savePNG(png, to: repoRoot.appendingPathComponent("assets/\(name)"))
+            try savePNG(png, to: repoRoot.appendingPathComponent("tapper/\(name)"))
         }
         // Loose BrandWordmark.png is not bundled — native uses the imageset,
         // passerby HTML never loads a wordmark image.
