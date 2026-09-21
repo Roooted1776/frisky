@@ -89,9 +89,9 @@ html.is-unlinked #rmEmpty{display:block!important}
 })();
 </script>
 <script>
-/* Phone · tablet · wide before first paint — viewport short side + width.
-   Landscape phones stay phone (min(w,h) < 500). Cloudflare may already set
-   data-device-edge; ?view= / session lock wins. Body deviceViews() keeps it live. */
+/* Phone · tablet · wide. Auto = CSS @media (no html[data-device]).
+   Lock only for ?view= / session / View control — otherwise a Worker UA
+   hint painted desktop-wide before the static stylesheet. */
 (function () {
   function pickDevice(w, h) {
     w = w || 0;
@@ -103,30 +103,46 @@ html.is-unlinked #rmEmpty{display:block!important}
     return 'phone';
   }
   window.__redmedPickDevice = pickDevice;
+  function autoDevice() {
+    var w = window.innerWidth || document.documentElement.clientWidth || 0;
+    var h = window.innerHeight || document.documentElement.clientHeight || 0;
+    return pickDevice(w, h);
+  }
+  function appShell() {
+    try {
+      if (window.__REDMED_APP_PREVIEW || window.__REDMED_APP_EMBED) return true;
+      return new URLSearchParams(location.search || '').get('src') === 'app';
+    } catch (eApp) {
+      return !!(window.__REDMED_APP_PREVIEW || window.__REDMED_APP_EMBED);
+    }
+  }
   try {
     var q = '';
     try {
       q = (new URLSearchParams(location.search || '').get('view') || '').toLowerCase();
     } catch (e0) {}
-    if (q === 'phone' || q === 'tablet' || q === 'wide') {
-      document.documentElement.setAttribute('data-device', q);
-      document.documentElement.setAttribute('data-view-lock', q);
-      return;
-    }
     if (q === 'auto') {
       try { sessionStorage.removeItem('redmed-tapper-view'); } catch (e1) {}
     }
-    var stored = '';
-    try { stored = sessionStorage.getItem('redmed-tapper-view') || ''; } catch (e2) {}
-    if (stored === 'phone' || stored === 'tablet' || stored === 'wide') {
-      document.documentElement.setAttribute('data-device', stored);
-      document.documentElement.setAttribute('data-view-lock', stored);
-      return;
+    var lock = '';
+    if (q === 'phone' || q === 'tablet' || q === 'wide') lock = q;
+    if (!lock) {
+      try {
+        var stored = sessionStorage.getItem('redmed-tapper-view') || '';
+        if (stored === 'phone' || stored === 'tablet' || stored === 'wide') lock = stored;
+      } catch (e2) {}
     }
-    var w = window.innerWidth || document.documentElement.clientWidth || 0;
-    var h = window.innerHeight || document.documentElement.clientHeight || 0;
-    document.documentElement.setAttribute('data-device', pickDevice(w, h));
-    document.documentElement.removeAttribute('data-view-lock');
+    document.documentElement.setAttribute('data-device-auto', autoDevice());
+    if (lock) {
+      document.documentElement.setAttribute('data-device', lock);
+      document.documentElement.setAttribute('data-view-lock', lock);
+    } else {
+      document.documentElement.removeAttribute('data-device');
+      document.documentElement.removeAttribute('data-view-lock');
+    }
+    if (!appShell()) {
+      document.documentElement.setAttribute('data-view-chrome', '1');
+    }
   } catch (e3) {}
 })();
 </script>
@@ -143,44 +159,8 @@ function redmedAssetURL(file) {
 }
 </script>
 <!-- No logo preload. src is set after profile paint so #d= decrypt is not
-     racing BrandLogo.svg / PNG densities during HTML parse. -->
-<script>
-// Prefetch AES key while HTML parses — overlaps with body download on band taps.
-(function () {
-  try {
-    if (!window.crypto || !window.crypto.subtle) return;
-    if ((location.hash || '').indexOf('d=') < 0) return;
-    var label = 'RedMed-NFC-AES-GCM-v1';
-    window.__redmedAesKeyPromise = crypto.subtle
-      .digest('SHA-256', new TextEncoder().encode(label))
-      .then(function (hash) {
-        return crypto.subtle.importKey('raw', hash, { name: 'AES-GCM' }, false, ['decrypt']);
-      });
-  } catch (e) {}
-})();
-</script>
-<script>
-// Register SW ASAP so the next band tap is cache-first. Skip app Preview/Scan.
-// Payload stays in #d= only — SW never stores medical fields.
-(function () {
-  function appPreview() {
-    try {
-      if (window.__REDMED_APP_PREVIEW) return true;
-      return new URLSearchParams(location.search || '').get('src') === 'app';
-    } catch (e) { return !!window.__REDMED_APP_PREVIEW; }
-  }
-  if (appPreview()) return;
-  if (!('serviceWorker' in navigator)) return;
-  navigator.serviceWorker
-    .register('sw.js', { scope: './', updateViaCache: 'none' })
-    .then(function (reg) {
-      var run = function () { try { reg.update(); } catch (e) {} };
-      if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 4000 });
-      else setTimeout(run, 2500);
-    })
-    .catch(function () {});
-})();
-</script>
+     racing BrandLogo.svg / PNG densities during HTML parse.
+     Static CSS is next — AES prefetch + SW register wait until after it. -->
 <meta name="description" content="Tap the RedMed band to open the emergency card. Quick. No login. No server. No app — HTML only on this phone.">
 <!-- ONE scanner file: tapper.html (Pages + app bundle).
      Specs (permanent):
@@ -235,11 +215,11 @@ function redmedAssetURL(file) {
        until after profile paint so band-tap #d= decrypt wins the wire (in-app
        Preview / owner embed included). Shell is SW cache-first for almost-
        instant reopen; first visit still needs network once.
-     - Device views: phone · tablet · wide. Auto picks from viewport aspect
-       (short side + width; landscape phones stay phone). Cloudflare Worker
-       may set data-device-edge from UA / CF-Device-Type; client refines.
-       View control / ?view=phone|tablet|wide locks. Larger logo + type on
-       tablet/wide; wide uses a two-column medical layout (YOU card | lists).
+     - Device views: phone · tablet · wide. Auto is CSS @media (live, no JS).
+       Worker may set data-device-edge from UA / CF-Device-Type — not a lock.
+       View control / ?view=phone|tablet|wide sets html[data-device].
+       Larger logo + type on tablet/wide; emergency card stays one column
+       and grows with the page (container queries for section grid).
      - Legacy card.html / get.html /get/ / redmed-emergency.html redirect to /tapper/ and keep #d=
      Source of truth: tapper/index.html. Xcode copies it into the app bundle as tapper.html
      at build (pbxproj “Bundle passerby tapper”). Repo-root tapper.html is a #d=-preserving
@@ -712,17 +692,22 @@ function redmedAssetURL(file) {
     z-index: 1;
     pointer-events: auto;
   }
-  /* Max emergency card (tapper/emergency.html) — medical panel body. */
+  /* Max emergency card (tapper/emergency.html) — medical panel body.
+     Width tracks .app (--page-max from @media or a View lock). */
   .em-card {
     background: #fff;
     box-shadow: var(--shadow);
     overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    container-type: inline-size;
+    container-name: em-card;
   }
   .em-banner {
     background: #c0182b;
     color: #fff;
     text-align: center;
-    padding: 16px 16px 14px;
+    padding: clamp(12px, 3.4cqi, 20px) clamp(14px, 4cqi, 22px) clamp(10px, 3cqi, 16px);
   }
   .em-cross { font-size: 26px; line-height: 1; margin-bottom: 2px; }
   .em-banner-title {
@@ -764,6 +749,10 @@ function redmedAssetURL(file) {
     flex-wrap: wrap;
     gap: 8px;
     padding: 0 16px 14px;
+  }
+  .em-flags:not(:has(.em-flag:not([hidden]))) {
+    display: none;
+    padding: 0;
   }
   .em-flag {
     background: #fdeceb;
@@ -847,6 +836,18 @@ function redmedAssetURL(file) {
     text-align: center;
     font-size: 11px;
     color: #a3a3a3;
+  }
+  /* Wider cards: two-column vitals; notes + contacts span full width. */
+  @container em-card (min-width: 560px) {
+    .em-banner-title { font-size: clamp(17px, 3.2cqi, 22px); }
+    .em-name { font-size: clamp(26px, 5.4cqi, 34px); }
+    .em-card .em-sections {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    .em-card .em-section { min-width: 0; }
+    .em-card .em-section#rowNotesRow,
+    .em-card .em-section#dropContacts { grid-column: 1 / -1; }
   }
   /* Sections replace <details> — no chevron / open toggle. */
   .em-section.list-drop > .list-drop-title { cursor: default; }
@@ -1910,10 +1911,11 @@ function redmedAssetURL(file) {
     .seizure-strip { flex-wrap: wrap; }
   }
 
-  /* Wide / iPad: emergency card stays one column (name → flags → sections). */
+  /* Wide / iPad: emergency card stays a column that grows with --page-max. */
   @media (min-width: 1024px) {
     #panel-medical.panel.active {
-      display: block;
+      display: flex;
+      flex-direction: column;
     }
     #panel-medical > .rm-header,
     #panel-medical > .rm-empty {
@@ -1921,6 +1923,8 @@ function redmedAssetURL(file) {
     }
     #panel-medical > .you-card {
       margin-right: 0;
+      width: 100%;
+      max-width: 100%;
     }
     #panel-medical > .list-grid {
       margin-left: 0;
@@ -1930,7 +1934,8 @@ function redmedAssetURL(file) {
   html[data-device="phone"] #panel-medical.panel.active,
   html[data-device="tablet"] #panel-medical.panel.active,
   html[data-device="wide"] #panel-medical.panel.active {
-    display: block;
+    display: flex;
+    flex-direction: column;
   }
   html[data-device="wide"] #panel-medical > .rm-header,
   html[data-device="wide"] #panel-medical > .rm-empty {
@@ -1938,13 +1943,51 @@ function redmedAssetURL(file) {
   }
   html[data-device="wide"] #panel-medical > .you-card {
     margin-right: 0;
-    max-width: 560px;
+    width: 100%;
+    max-width: 100%;
   }
   html[data-device="wide"] #panel-medical > .list-grid {
     margin-left: 0;
     margin-top: 6px;
   }
 </style>
+<script>
+// Prefetch AES key after static CSS — overlaps body download on band taps.
+(function () {
+  try {
+    if (!window.crypto || !window.crypto.subtle) return;
+    if ((location.hash || '').indexOf('d=') < 0) return;
+    var label = 'RedMed-NFC-AES-GCM-v1';
+    window.__redmedAesKeyPromise = crypto.subtle
+      .digest('SHA-256', new TextEncoder().encode(label))
+      .then(function (hash) {
+        return crypto.subtle.importKey('raw', hash, { name: 'AES-GCM' }, false, ['decrypt']);
+      });
+  } catch (e) {}
+})();
+</script>
+<script>
+// Register SW after static CSS so first paint isn't waiting on it.
+// Skip app Preview/Scan. Payload stays in #d= only.
+(function () {
+  function appPreview() {
+    try {
+      if (window.__REDMED_APP_PREVIEW) return true;
+      return new URLSearchParams(location.search || '').get('src') === 'app';
+    } catch (e) { return !!window.__REDMED_APP_PREVIEW; }
+  }
+  if (appPreview()) return;
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker
+    .register('sw.js', { scope: './', updateViaCache: 'none' })
+    .then(function (reg) {
+      var run = function () { try { reg.update(); } catch (e) {} };
+      if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 4000 });
+      else setTimeout(run, 2500);
+    })
+    .catch(function () {});
+})();
+</script>
 </head>
 <body>
   <a class="skip-link" href="#panel-medical" id="skipToCard">Skip To Card</a>
@@ -2498,10 +2541,15 @@ function redmedAssetURL(file) {
       var lock = mode && mode !== 'auto' ? mode : '';
       var device = lock || autoDevice();
       try {
-        document.documentElement.setAttribute('data-device', device);
         document.documentElement.setAttribute('data-device-auto', device);
-        if (lock) document.documentElement.setAttribute('data-view-lock', lock);
-        else document.documentElement.removeAttribute('data-view-lock');
+        if (lock) {
+          document.documentElement.setAttribute('data-device', lock);
+          document.documentElement.setAttribute('data-view-lock', lock);
+        } else {
+          // Auto: CSS @media owns layout — do not stamp html[data-device].
+          document.documentElement.removeAttribute('data-device');
+          document.documentElement.removeAttribute('data-view-lock');
+        }
       } catch (e4) {}
       if (!chrome) return;
       var buttons = chrome.querySelectorAll('button[data-view]');
@@ -2540,17 +2588,30 @@ function redmedAssetURL(file) {
         setMode(v);
       });
     }
-    var resizeTimer = 0;
+    var resizeRaf = 0;
     function onViewportChange() {
-      if (resizeTimer) clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(function () {
+      if (resizeRaf) return;
+      resizeRaf = requestAnimationFrame(function () {
+        resizeRaf = 0;
         var lock = '';
         try { lock = document.documentElement.getAttribute('data-view-lock') || ''; } catch (e7) {}
         if (!lock) apply('auto');
-      }, 120);
+      });
     }
     window.addEventListener('resize', onViewportChange, { passive: true });
     window.addEventListener('orientationchange', onViewportChange, { passive: true });
+    try {
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', onViewportChange, { passive: true });
+      }
+    } catch (eVv) {}
+    try {
+      ['(max-width: 499px)', '(min-width: 768px)', '(min-width: 1024px)'].forEach(function (q) {
+        var mq = window.matchMedia(q);
+        if (mq.addEventListener) mq.addEventListener('change', onViewportChange);
+        else if (mq.addListener) mq.addListener(onViewportChange);
+      });
+    } catch (eMq) {}
   })();
 
   // After profile paint: load the YOU-card mark (Safari, Preview, owner embed).

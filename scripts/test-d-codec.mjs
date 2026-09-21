@@ -384,9 +384,17 @@ assert('fast sample keeps a 200 g/s jerk', Math.abs(stepG / fastDt - 200) < 1e-6
 
 assert('logo waits for profile paint', !tapper.includes('redmedLogoPreload') && !/id="rmLogo"[^>]*\ssrc=/.test(tapper));
 assert('GPS skips sub-5m jitter', /function metersBetween\(lat1, lon1, lat2, lon2\)/.test(tapper) && /moved = metersBetween\(prev\.latitude, prev\.longitude, lat, lon\) >= 5/.test(tapper));
+{
+  const cssMark = '.panel.active { display: block; }';
+  const cssIdx = tapper.indexOf(cssMark);
+  const swIdx = tapper.indexOf("navigator.serviceWorker");
+  assert('static CSS before SW register', cssIdx > -1 && swIdx > cssIdx);
+  assert('Auto layout does not stamp data-device', tapper.includes("document.documentElement.removeAttribute('data-device')"));
+  assert('emergency card uses named container', tapper.includes('container-name: em-card') && tapper.includes('@container em-card'));
+}
 
 const sw = readFileSync(join(ROOT, 'sw.js'), 'utf8');
-assert('sw cache v172', sw.includes("CACHE = 'redmed-tapper-v173'"));
+assert('sw cache v174', sw.includes("CACHE = 'redmed-tapper-v174'"));
 {
   const assetsBlock = sw.match(/var ASSETS = \[([\s\S]*?)\];/);
   assert('sw does not precache out-of-scope assets', !!(assetsBlock && !assetsBlock[1].includes('../')));

@@ -1,7 +1,8 @@
 // Cloudflare Workers — RedMed passerby emergency shell (static assets + device hint).
 // Production Worker: redmed-emergency (dashboard Settings → Domains & Routes / Observability).
 // build.command stages public shell → dist/passerby before deploy / versions upload
-// Worker injects data-device from UA / CF-Device-Type; client refines with viewport aspect.
+// Worker injects data-device-edge from UA / CF-Device-Type; ?view= locks data-device.
+// Auto layout is CSS @media (client View lock still sets html[data-device]).
 // Live band write base: https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/ (docs/domain.md).
 {
   "name": "redmed-emergency",
