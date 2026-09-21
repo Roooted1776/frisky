@@ -1,7 +1,7 @@
 // Cloudflare Workers — RedMed passerby emergency shell (static assets, no build).
 // Production Worker: redmed-emergency (dashboard Settings → Domains & Routes / Observability).
 // build.command stages public shell → dist/passerby before deploy / versions upload
-// Live band write base stays github.io until this host smokes green (docs/domain.md).
+// Live band write base: https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/ (docs/domain.md).
 {
   "name": "redmed-emergency",
   "account_id": "a2d8a74738a0280eb9d5a3e77acd59ea",

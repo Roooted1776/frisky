@@ -1,12 +1,13 @@
 # Optional Cloudflare Workers deploy for redmed-emergency (*.workers.dev).
-# Live band write base today is https://roooted1776.github.io/tapper/
-# (public GitHub Pages — see docs/domain.md). Custom host is TBD
-# (AppConfig.medicalCardCustomDomainTBD). Do not flip that flag onto a 404 host.
+# Live band write base: https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/
+# (AppConfig.medicalCardBaseURL). github.io remains a backup for old bands
+# (docs/domain.md). Custom host is TBD (AppConfig.medicalCardCustomDomainTBD).
+# Do not flip that flag onto a 404 host.
 #
 # Direct Upload needs CLOUDFLARE_API_TOKEN (Workers Scripts Edit).
 # Account ID is in wrangler.jsonc (a2d8a74738a0280eb9d5a3e77acd59ea).
-# Missing token skips CF upload (does not take down github.io).
-# Write-base smoke fails the job when that host 404s.
+# Missing token skips CF upload (does not take down workers.dev if Builds is
+# connected). Write-base smoke fails the job when that host 404s.
 # Production Settings: Workers → redmed-emergency → Settings (workers.dev + Observability).
 
 name: Pages tapper deploy
@@ -20,6 +21,7 @@ on:
       - 'index.html'
       - 'card.html'
       - 'get.html'
+      - 'redmed-emergency.html'
       - 'get/**'
       - 'support/**'
       - 'privacy/**'
@@ -47,6 +49,7 @@ on:
       - 'index.html'
       - 'card.html'
       - 'get.html'
+      - 'redmed-emergency.html'
       - 'get/**'
       - 'support/**'
       - 'privacy/**'
@@ -116,8 +119,8 @@ jobs:
         if: steps.cf.outputs.skip == 'true'
         run: |
           echo "::warning::CLOUDFLARE_API_TOKEN not set — skipping redmed-emergency Workers deploy."
-          echo "Live band write base is https://roooted1776.github.io/tapper/ (docs/domain.md)."
-          echo "To publish workers.dev: add CLOUDFLARE_API_TOKEN (Workers Scripts Edit), then re-run."
+          echo "Live band write base is https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/ (docs/domain.md)."
+          echo "Workers Builds may still deploy on push when the Worker is connected to this repo."
           echo "Dashboard: https://dash.cloudflare.com/a2d8a74738a0280eb9d5a3e77acd59ea/workers/services/view/redmed-emergency/production/settings"
 
       - name: Stage passerby assets for Worker
@@ -138,7 +141,7 @@ jobs:
           # AppConfig.medicalCardBaseURL is the URL written onto bands.
           # Fail closed when that host 404s — a green job with a dead write
           # base is how H1 stayed invisible. Do not flip AppConfig onto
-          # another 404 (workers.dev, a TBD domain, /frisky/ project Pages).
+          # another 404 (a TBD domain, /frisky/ project Pages).
           # GitHub Contents API rewrites drop the +x bit (file is 100644).
           ORIGIN="$(python3 scripts/write-base-origin.py)"
           echo "Write-base origin: ${ORIGIN} (AppConfig.medicalCardBaseURL)"
@@ -153,7 +156,7 @@ jobs:
           if [ "$ok" = 1 ]; then
             exit 0
           fi
-          echo "::error::Band write base ${ORIGIN}/tapper/ failed smoke (AppConfig.medicalCardBaseURL). Publish https://github.com/Roooted1776/Roooted1776.github.io (Actions → Publish tapper) or scripts/publish-github-io.sh. Do not flip medicalCardBaseURL onto another 404."
+          echo "::error::Band write base ${ORIGIN}/tapper/ failed smoke (AppConfig.medicalCardBaseURL). Confirm Worker redmed-emergency is live or restore github.io backup (docs/domain.md). Do not flip medicalCardBaseURL onto another 404."
           exit 1
 
       - name: Smoke redmed-emergency.workers.dev after CF deploy

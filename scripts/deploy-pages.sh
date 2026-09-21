@@ -2,10 +2,10 @@
 # Tapper shell deploy / local serve.
 #
 # Bracelet taps must open AppConfig.medicalCardBaseURL#d=… as RedMed · 911 · Aid.
-# Live interim: https://roooted1776.github.io/tapper/ (see docs/domain.md).
-# Cloudflare Worker redmed-emergency (*.workers.dev) after CLOUDFLARE_API_TOKEN.
+# Live interim: https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/ (docs/domain.md).
+# github.io kept as backup for already-written bands.
 # (quick, no login, no server, no app). Repo tapper/index.html is that shell.
-# Legacy /get/ redirects to /tapper/ and keeps #d=.
+# Legacy /get/ / redmed-emergency.html redirect to /tapper/ and keep #d=.
 #
 # Usage:
 #   ./scripts/deploy-pages.sh              # local http://127.0.0.1:8787/tapper/

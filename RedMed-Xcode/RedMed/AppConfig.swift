@@ -25,13 +25,14 @@ enum AppConfig {
     static let medicalCardCustomDomainTBD: String? = nil
 
     /// NFC write + passerby open URL. Uses the custom domain when set; otherwise
-    /// the live GitHub Pages interim so taps keep working.
+    /// the live Cloudflare Worker interim (`redmed-emergency`) so taps keep working.
+    /// github.io remains a backup host for already-written bands — do not delete it.
     static var medicalCardBaseURL: String {
         if let custom = medicalCardCustomDomainTBD?.trimmingCharacters(in: .whitespacesAndNewlines),
            !custom.isEmpty {
             return custom.hasSuffix("/") ? custom : custom + "/"
         }
-        return "https://roooted1776.github.io/tapper/"
+        return "https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/"
     }
 
     /// Deep link target for policy / card HTML “open owner app” redirects.
