@@ -2,8 +2,8 @@ import Foundation
 
 enum AppConfig {
     /// Passerby / rescuer shell written to passive NFC bands. Any phone that taps
-    /// the bracelet opens this page in a browser — read-only medical card + 911.
-    /// No Aid / NFC / Edit on the tap card (those are owner-app only). No Face ID /
+    /// the bracelet opens this page in a browser — read-only medical card + 911 + Aid.
+    /// No NFC / Edit on the tap card (those are owner-app only). No Face ID /
     /// biometrics / login / passcode to view — tap-to-view is ungated on every
     /// phone. Nothing covers or blocks the tap card. Medical data is only in the
     /// `#d=` fragment (flat array → AES-GCM → base64url; no server storage).
@@ -15,7 +15,7 @@ enum AppConfig {
     /// `#d=`-preserving redirect to `/tapper/`. Legacy `card/` / `get/` URLs
     /// redirect to `/tapper/` (preserve `#d=`). NFC Preview / Scan always use
     /// the **bundled** tapper.html (local-only). Hosted Pages must serve the
-    /// tapper shell (RedMed · 911).
+    /// tapper shell (RedMed · 911 · Aid).
     /// Local: `./scripts/deploy-pages.sh`. Live: `DEPLOY=1` + CF tokens, or the
     /// `Pages tapper deploy` GitHub Action on `main`.
     ///

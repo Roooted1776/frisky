@@ -33,8 +33,8 @@ extension EnvironmentValues {
     }
 }
 
-/// Dismisses the Preview scanner / ped shell. Shown on RedMed and 911
-/// (Aid / NFC are owner-only — scanner chrome never mounts them).
+/// Dismisses the Preview scanner / ped shell. Shown on RedMed, 911, and Aid
+/// (NFC is owner-only — scanner chrome never mounts it).
 /// Same `ChromeTextAction` as owner Help/Edit — accent red text, no chip box.
 struct ScannerBackButton: View {
     @Environment(\.scannerDismiss) private var scannerDismiss
