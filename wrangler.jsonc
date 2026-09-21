@@ -1,9 +1,11 @@
-// Cloudflare Workers — RedMed passerby emergency shell (static assets, no build).
+// Cloudflare Workers — RedMed passerby emergency shell (static assets + device hint).
 // Production Worker: redmed-emergency (dashboard Settings → Domains & Routes / Observability).
 // build.command stages public shell → dist/passerby before deploy / versions upload
+// Worker injects data-device from UA / CF-Device-Type; client refines with viewport aspect.
 // Live band write base: https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/ (docs/domain.md).
 {
   "name": "redmed-emergency",
+  "main": "worker/index.js",
   "account_id": "a2d8a74738a0280eb9d5a3e77acd59ea",
   "compatibility_date": "2026-09-21",
   "workers_dev": true,
@@ -12,7 +14,19 @@
     "command": "bash scripts/stage-worker-assets.sh"
   },
   "assets": {
-    "directory": "./dist/passerby"
+    "directory": "./dist/passerby",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/",
+      "/index.html",
+      "/tapper",
+      "/tapper/",
+      "/tapper/index.html",
+      "/card.html",
+      "/get.html",
+      "/get",
+      "/get/"
+    ]
   },
   "observability": {
     "enabled": true,

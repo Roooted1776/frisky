@@ -386,7 +386,7 @@ assert('logo waits for profile paint', !tapper.includes('redmedLogoPreload') && 
 assert('GPS skips sub-5m jitter', /function metersBetween\(lat1, lon1, lat2, lon2\)/.test(tapper) && /moved = metersBetween\(prev\.latitude, prev\.longitude, lat, lon\) >= 5/.test(tapper));
 
 const sw = readFileSync(join(ROOT, 'sw.js'), 'utf8');
-assert('sw cache v169', sw.includes("CACHE = 'redmed-tapper-v169'"));
+assert('sw cache v171', sw.includes("CACHE = 'redmed-tapper-v171'"));
 {
   const assetsBlock = sw.match(/var ASSETS = \[([\s\S]*?)\];/);
   assert('sw does not precache out-of-scope assets', !!(assetsBlock && !assetsBlock[1].includes('../')));
@@ -494,6 +494,9 @@ const tapper911 = tapperSrc.indexOf('id="panel-911"');
 const tapperAidPanel = tapperSrc.indexOf('id="panel-aid"');
 assert('Stop The Alarm lives on 911', tapper911 >= 0 && tapperAid > tapper911 && (tapperAidPanel < 0 || tapperAid < tapperAidPanel));
 assert('crash hint names Stop The Alarm', tapperSrc.includes('Tap Stop The Alarm to cancel'));
+assert('device aspect early pick', tapperSrc.includes('__redmedPickDevice') && tapperSrc.includes('shortSide < 500'));
+assert('device aspect auto aria-current', tapperSrc.includes("setAttribute('aria-current', 'true')"));
+assert('device aspect orientationchange', tapperSrc.includes("orientationchange"));
 const extracted = tapperSrc.match(/function profileHasContent\(p\) \{[\s\S]*?\n  \}/);
 assert('profileHasContent extract', !!extracted);
 if (extracted) {
