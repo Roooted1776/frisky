@@ -509,6 +509,8 @@ html {
   color: var(--text-muted);
   text-decoration: none;
   font-weight: var(--fw-medium);
+  -webkit-user-drag: none;
+  user-select: none;
 }
 .legal-footer a:hover { color: var(--accent); }
 .legal-footer p:first-child {
