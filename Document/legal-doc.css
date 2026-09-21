@@ -127,7 +127,9 @@ html {
   letter-spacing: 0.3px;
 }
 
-/* Nav — pill tabs, same on every policy page */
+/* Nav — pill tabs, same on every policy page.
+   Narrow phones: horizontal strip (full labels, no ellipsis “Ships When Rea…”).
+   Chips are taps, not draggable link ghosts. */
 .legal-nav {
   display: flex;
   flex-wrap: nowrap;
@@ -138,6 +140,19 @@ html {
   font-weight: var(--fw-medium);
   color: var(--text-muted);
   margin-bottom: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  touch-action: pan-x pan-y;
+}
+.legal-nav::-webkit-scrollbar {
+  height: 3px;
+}
+.legal-nav::-webkit-scrollbar-thumb {
+  background: rgba(28, 25, 23, 0.18);
+  border-radius: 2px;
 }
 .legal-nav a[href="#privacy"]  { --chip: var(--cat-privacy);  --chip-soft: var(--cat-privacy-soft);  --chip-shadow: var(--cat-privacy-shadow); }
 .legal-nav a[href="#security"] { --chip: var(--cat-security); --chip-soft: var(--cat-security-soft); --chip-shadow: var(--cat-security-shadow); }
@@ -151,18 +166,22 @@ html {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  flex: 1 1 0;
-  min-width: 0;
+  flex: 0 0 auto;
+  min-width: max-content;
   color: var(--chip);
   text-decoration: none;
   padding: 7px clamp(6px, 1.8cqi, 14px) 7px clamp(6px, 1.4cqi, 11px);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
   border-radius: 999px;
   border: 1px solid var(--chip-soft);
   background: var(--chip-soft);
   transition: color 0.15s, background 0.15s, border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
 }
 .legal-nav a:hover {
   border-color: var(--chip);
@@ -183,9 +202,23 @@ html {
   font-size: 16px;
   line-height: 1;
   opacity: 0.8;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
 }
 .legal-nav a[aria-current="page"] .legal-nav-ico { opacity: 1; }
 .legal-nav span[aria-hidden]:not(.legal-nav-ico) { display: none; }
+
+/* Wide sheet: grow chips evenly, but never below full label width.
+   Keep overflow-x auto so a tight 680px sheet still scrolls instead of
+   clipping “Ships When Ready”. */
+@container (min-width: 560px) {
+  .legal-nav a {
+    flex: 1 1 auto;
+    min-width: max-content;
+    justify-content: center;
+  }
+}
 
 .legal-nav-sticky {
   position: sticky;
@@ -286,7 +319,12 @@ html {
   letter-spacing: 1px;
   margin-bottom: 6px;
 }
-.legal-notice a { color: var(--accent); text-decoration: none; font-weight: var(--fw-semi); }
+.legal-notice a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: var(--fw-semi);
+  -webkit-user-drag: none;
+}
 .legal-notice a:hover { text-decoration: underline; }
 .legal-notice code {
   font-family: var(--font);
@@ -470,6 +508,8 @@ html {
   color: var(--text-muted);
   text-decoration: none;
   font-weight: var(--fw-medium);
+  -webkit-user-drag: none;
+  user-select: none;
 }
 .legal-footer a:hover { color: var(--accent); }
 .legal-footer p:first-child {
