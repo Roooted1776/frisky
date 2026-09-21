@@ -209,14 +209,13 @@ html {
 .legal-nav a[aria-current="page"] .legal-nav-ico { opacity: 1; }
 .legal-nav span[aria-hidden]:not(.legal-nav-ico) { display: none; }
 
-/* Wide sheet: stretch chips evenly when every label fits without scroll. */
+/* Wide sheet: grow chips evenly, but never below full label width.
+   Keep overflow-x auto so a tight 680px sheet still scrolls instead of
+   clipping “Ships When Ready”. */
 @container (min-width: 560px) {
-  .legal-nav {
-    overflow-x: visible;
-  }
   .legal-nav a {
-    flex: 1 1 0;
-    min-width: 0;
+    flex: 1 1 auto;
+    min-width: max-content;
     justify-content: center;
   }
 }
