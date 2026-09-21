@@ -12,7 +12,7 @@ Only what must live at the deploy / GitHub surface:
 | `README.md` | GitHub landing (product + run/deploy + dead-host note) |
 | `AGENTS.md` | Cursor / agent rules (must be easy to find) |
 | `tapper.html` · `index.html` · `card.html` · `get.html` · `get/` | Identical `#d=` redirect stubs → `/tapper/` (`scripts/write-tapper-redirects.sh`) |
-| `sw.js` · `_headers` · `_redirects` · `wrangler.jsonc` · `scripts/stage-worker-assets.sh` | Cloudflare Worker `redmed-emergency` / SW |
+| `sw.js` · `_headers` · `_redirects` · `wrangler.jsonc` · `scripts/stage-worker-assets.sh` · `worker/` | Cloudflare Worker `redmed-emergency` / SW / device-aspect hint |
 | `apple-app-site-association` · `.well-known/apple-app-site-association` | Universal Links — identical, both locations required (Apple checks root, then `.well-known/`) |
 | `.gitignore` · `.github/` · `.cursor/` | tooling |
 
@@ -25,6 +25,7 @@ frisky/
 ├── README.md · AGENTS.md · MAX.md
 ├── RedMed-Xcode/          # native owner app (+ Document/ policies source)
 ├── tapper/                # passerby shell + shell-relative PNGs + sw.js
+├── worker/                # redmed-emergency HTMLRewriter (device aspect hint)
 ├── Document/              # hosted Help: index.html = full policy; Document.html = redirect
 ├── privacy/               # /privacy bounce → /Document/#privacy (_redirects + privacy/index.html)
 ├── support/               # App Store Connect Support URL (scripts/publish-github-io.sh)

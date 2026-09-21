@@ -89,6 +89,48 @@ html.is-unlinked #rmEmpty{display:block!important}
 })();
 </script>
 <script>
+/* Phone · tablet · wide before first paint — viewport short side + width.
+   Landscape phones stay phone (min(w,h) < 500). Cloudflare may already set
+   data-device-edge; ?view= / session lock wins. Body deviceViews() keeps it live. */
+(function () {
+  function pickDevice(w, h) {
+    w = w || 0;
+    h = h || 0;
+    var shortSide = Math.min(w, h) || w;
+    if (shortSide > 0 && shortSide < 500) return 'phone';
+    if (w >= 1024) return 'wide';
+    if (w >= 768 || shortSide >= 600) return 'tablet';
+    return 'phone';
+  }
+  window.__redmedPickDevice = pickDevice;
+  try {
+    var q = '';
+    try {
+      q = (new URLSearchParams(location.search || '').get('view') || '').toLowerCase();
+    } catch (e0) {}
+    if (q === 'phone' || q === 'tablet' || q === 'wide') {
+      document.documentElement.setAttribute('data-device', q);
+      document.documentElement.setAttribute('data-view-lock', q);
+      return;
+    }
+    if (q === 'auto') {
+      try { sessionStorage.removeItem('redmed-tapper-view'); } catch (e1) {}
+    }
+    var stored = '';
+    try { stored = sessionStorage.getItem('redmed-tapper-view') || ''; } catch (e2) {}
+    if (stored === 'phone' || stored === 'tablet' || stored === 'wide') {
+      document.documentElement.setAttribute('data-device', stored);
+      document.documentElement.setAttribute('data-view-lock', stored);
+      return;
+    }
+    var w = window.innerWidth || document.documentElement.clientWidth || 0;
+    var h = window.innerHeight || document.documentElement.clientHeight || 0;
+    document.documentElement.setAttribute('data-device', pickDevice(w, h));
+    document.documentElement.removeAttribute('data-view-lock');
+  } catch (e3) {}
+})();
+</script>
+<script>
 // Same-origin asset paths for /tapper/, /tapper.html, and bundle roots.
 function redmedAssetURL(file) {
   try {
@@ -193,9 +235,11 @@ function redmedAssetURL(file) {
        until after profile paint so band-tap #d= decrypt wins the wire (in-app
        Preview / owner embed included). Shell is SW cache-first for almost-
        instant reopen; first visit still needs network once.
-     - Device views: phone · tablet · wide (auto from viewport, or View control
-       / ?view=phone|tablet|wide). Larger logo + type on tablet/wide; wide uses
-       a two-column medical layout (YOU card | lists).
+     - Device views: phone · tablet · wide. Auto picks from viewport aspect
+       (short side + width; landscape phones stay phone). Cloudflare Worker
+       may set data-device-edge from UA / CF-Device-Type; client refines.
+       View control / ?view=phone|tablet|wide locks. Larger logo + type on
+       tablet/wide; wide uses a two-column medical layout (YOU card | lists).
      - Legacy card.html / get.html /get/ redirect to /tapper/ and keep #d=
      Source of truth: tapper/index.html. Xcode copies it into the app bundle as tapper.html
      at build (pbxproj “Bundle passerby tapper”). Repo-root tapper.html is a #d=-preserving
@@ -463,6 +507,11 @@ function redmedAssetURL(file) {
     background: var(--surface);
     color: var(--dark);
     box-shadow: 0 1px 2px rgba(28,25,23,0.08);
+  }
+  /* Auto mode: highlight the detected Phone / Tablet / Wide without locking. */
+  .rm-view-chrome button[aria-current="true"]:not([aria-pressed="true"]) {
+    color: var(--dark);
+    box-shadow: inset 0 0 0 1px rgba(28,25,23,0.12);
   }
   .rm-view-chrome button:focus-visible {
     outline: 2px solid var(--accent);
@@ -2260,7 +2309,7 @@ function redmedAssetURL(file) {
     ensureIconLinks().forEach(function (el) { el.setAttribute('href', pngResolved); });
   }
 
-  // Phone / tablet / wide — auto from viewport, or View / ?view= lock.
+  // Phone / tablet / wide — auto from viewport aspect, or View / ?view= lock.
   (function deviceViews() {
     var KEY = 'redmed-tapper-view';
     var chrome = document.getElementById('rmViewChrome');
@@ -2287,8 +2336,14 @@ function redmedAssetURL(file) {
     }
     function autoDevice() {
       var w = window.innerWidth || document.documentElement.clientWidth || 0;
+      var h = window.innerHeight || document.documentElement.clientHeight || 0;
+      if (typeof window.__redmedPickDevice === 'function') {
+        return window.__redmedPickDevice(w, h);
+      }
+      var shortSide = Math.min(w, h) || w;
+      if (shortSide > 0 && shortSide < 500) return 'phone';
       if (w >= 1024) return 'wide';
-      if (w >= 768) return 'tablet';
+      if (w >= 768 || shortSide >= 600) return 'tablet';
       return 'phone';
     }
     function apply(mode) {
@@ -2296,6 +2351,7 @@ function redmedAssetURL(file) {
       var device = lock || autoDevice();
       try {
         document.documentElement.setAttribute('data-device', device);
+        document.documentElement.setAttribute('data-device-auto', device);
         if (lock) document.documentElement.setAttribute('data-view-lock', lock);
         else document.documentElement.removeAttribute('data-view-lock');
       } catch (e4) {}
@@ -2304,8 +2360,14 @@ function redmedAssetURL(file) {
       for (var i = 0; i < buttons.length; i++) {
         var btn = buttons[i];
         var id = btn.getAttribute('data-view');
+        // Auto mode: Auto stays pressed; matching Phone/Tablet/Wide gets aria-current.
         var on = (mode === 'auto' || !mode) ? id === 'auto' : id === mode;
         btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        if ((mode === 'auto' || !mode) && id === device) {
+          btn.setAttribute('aria-current', 'true');
+        } else {
+          btn.removeAttribute('aria-current');
+        }
       }
     }
     function setMode(mode) {
@@ -2331,14 +2393,16 @@ function redmedAssetURL(file) {
       });
     }
     var resizeTimer = 0;
-    window.addEventListener('resize', function () {
+    function onViewportChange() {
       if (resizeTimer) clearTimeout(resizeTimer);
       resizeTimer = setTimeout(function () {
         var lock = '';
         try { lock = document.documentElement.getAttribute('data-view-lock') || ''; } catch (e7) {}
         if (!lock) apply('auto');
       }, 120);
-    }, { passive: true });
+    }
+    window.addEventListener('resize', onViewportChange, { passive: true });
+    window.addEventListener('orientationchange', onViewportChange, { passive: true });
   })();
 
   // After profile paint: load the YOU-card mark (Safari, Preview, owner embed).
