@@ -461,7 +461,6 @@ enum PasserbyWebViewPool {
         webView.scrollView.showsVerticalScrollIndicator = true
         webView.scrollView.showsHorizontalScrollIndicator = false
         webView.scrollView.indicatorStyle = .default
-        webView.redmedLockPageZoom()
         return webView
     }
 }
@@ -484,7 +483,6 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         if appEmbed, let pooled = PasserbyWebViewPool.takeEmbed() {
             pooled.navigationDelegate = context.coordinator
             pooled.scrollView.isScrollEnabled = true
-            pooled.redmedLockPageZoom()
             context.coordinator.usingPooledShell = true
             context.coordinator.loadedShellKind = "embed"
             context.coordinator.loadedPayload = ""
@@ -498,7 +496,6 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         if !appEmbed, let pooled = PasserbyWebViewPool.takeFull() {
             pooled.navigationDelegate = context.coordinator
             pooled.scrollView.isScrollEnabled = false
-            pooled.redmedLockPageZoom()
             context.coordinator.usingPooledShell = true
             context.coordinator.loadedShellKind = "full"
             context.coordinator.loadedPayload = ""
@@ -508,14 +505,12 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         }
         let webView = PasserbyWebViewPool.makeConfiguredWebView(navigationDelegate: context.coordinator)
         webView.scrollView.isScrollEnabled = appEmbed
-        webView.redmedLockPageZoom()
         return webView
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
         context.coordinator.appEmbed = appEmbed
         webView.scrollView.isScrollEnabled = appEmbed
-        webView.redmedLockPageZoom()
         let shellKind = appEmbed ? "embed" : "full"
         let contentKey = "\(braceletLinked)|\(embedProfileJSON ?? "")"
         let payloadKey = encodedPayload
@@ -878,7 +873,6 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            webView.redmedLockPageZoom()
             cancelLoadDeadline()
             shellLoaded = true
             loadAttempts = 0

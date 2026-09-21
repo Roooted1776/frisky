@@ -11,7 +11,7 @@ STUB=$(cat <<'EOF'
 <html lang="en-US">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#fff7f7">
 <meta name="color-scheme" content="light">
 <meta name="referrer" content="no-referrer">
