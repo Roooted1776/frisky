@@ -1996,7 +1996,7 @@ function redmedAssetURL(file) {
         </div>
         <div class="em-name-block" id="rowNameRow">
           <div class="em-label">Name</div>
-          <div class="em-name v empty" id="rowName">—</div>
+          <div class="em-name v" id="rowName">RedMed</div>
           <div class="em-dob-row"><span class="em-label">Birth Date</span> <span class="v empty" id="rowDob">—</span></div>
         </div>
         <div class="em-flags">
@@ -2116,7 +2116,7 @@ function redmedAssetURL(file) {
         } catch (e3) {}
         var noteEl = document.querySelector('.rm-note');
         if (noteEl) noteEl.classList.add('is-filled');
-        setTxt('rowName', p.name);
+        setTxt('rowName', name || 'RedMed');
         setTxt('rowDob', p.dob);
         setTxt('rowBlood', p.blood);
         setTxt('rowDonor', p.donor ? 'Yes' : '');
@@ -3131,7 +3131,7 @@ function redmedAssetURL(file) {
         statusEl.removeAttribute('aria-label');
       }
     }
-    setRow('rowName', p.name);
+    setRow('rowName', rawName || 'RedMed');
     setRow('rowDob', formatDob(p.dob));
     setRow('rowBlood', p.blood);
     setRow('rowDonor', p.donor ? 'Yes' : '');
