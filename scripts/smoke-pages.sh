@@ -177,15 +177,15 @@ def main() -> int:
     else:
         print("OK   redirect tapper.html")
 
-    ok &= check("/tapper/", 'data-tab="medical"', 'data-tab="911"')
+    ok &= check("/tapper/", 'data-tab="medical"', 'data-tab="911"', 'id="tab-aid"')
     ok &= check("/tapper/index.html", 'data-tab="medical"')
-    # Passerby chrome: RedMed · 911 only — no Aid tab button.
+    # Passerby chrome: RedMed · 911 · Aid — no NFC tab button.
     code, body = fetch("/tapper/")
-    if code == 200 and b'id="tab-aid"' in body:
-        print("FAIL /tapper/ still has Aid tab (owner-only)")
+    if code == 200 and b'id="tab-nfc"' in body:
+        print("FAIL /tapper/ has NFC tab (owner-only)")
         ok = False
     elif code == 200:
-        print("OK   no Aid tab /tapper/")
+        print("OK   Aid tab present, no NFC tab /tapper/")
     ok &= check("/get/", "/tapper/")
     ok &= check("/get.html", "/tapper/")
     ok &= check("/card.html", "/tapper/")

@@ -380,7 +380,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -euo pipefail\nSRC=\"${SRCROOT}/../tapper/index.html\"\nDEST=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/tapper.html\"\ntest -f \"$SRC\" || { echo \"missing $SRC\" >&2; exit 1; }\ngrep -q 'data-tab=\"medical\"' \"$SRC\" || { echo \"$SRC is not the full passerby shell\" >&2; exit 1; }\ngrep -q 'data-tab=\"911\"' \"$SRC\" || { echo \"$SRC missing 911 tab\" >&2; exit 1; }\nif grep -q 'id=\"tab-aid\"' \"$SRC\"; then echo \"$SRC still has Aid tab — passerby is RedMed · 911 only\" >&2; exit 1; fi\nmkdir -p \"$(dirname \"$DEST\")\"\ncp -f \"$SRC\" \"$DEST\"\n";
+			shellScript = "set -euo pipefail\nSRC=\"${SRCROOT}/../tapper/index.html\"\nDEST=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/tapper.html\"\ntest -f \"$SRC\" || { echo \"missing $SRC\" >&2; exit 1; }\ngrep -q 'data-tab=\"medical\"' \"$SRC\" || { echo \"$SRC is not the full passerby shell\" >&2; exit 1; }\ngrep -q 'data-tab=\"911\"' \"$SRC\" || { echo \"$SRC missing 911 tab\" >&2; exit 1; }\ngrep -q 'id=\"tab-aid\"' \"$SRC\" || { echo \"$SRC missing Aid tab\" >&2; exit 1; }\nif grep -q 'id=\"tab-nfc\"' \"$SRC\"; then echo \"$SRC has NFC tab — passerby is RedMed · 911 · Aid only\" >&2; exit 1; fi\nmkdir -p \"$(dirname \"$DEST\")\"\ncp -f \"$SRC\" \"$DEST\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */

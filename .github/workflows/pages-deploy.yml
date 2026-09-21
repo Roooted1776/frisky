@@ -163,6 +163,6 @@ jobs:
             sleep 3
           done
           if [ "$ok" != 1 ]; then
-            echo "::error::https://redmed.pages.dev did not serve RedMed · 911 after deploy"
+            echo "::error::https://redmed.pages.dev did not serve RedMed · 911 · Aid after deploy"
             exit 1
           fi
