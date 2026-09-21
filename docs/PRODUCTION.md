@@ -43,7 +43,7 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 | Area | Status |
 |------|--------|
 | Band write host | Live: `https://roooted1776.github.io/tapper/` (smoke green 2026-08-31). In-repo CoreNFC parked (`nfcHardwareEnabled = false`, no TAG entitlement, no `NFCReaderUsageDescription`). Portal Tag Reading on `com.redmed.app` still required. Associated Domains is parked (`associatedDomainsEnabled = false`, no `applinks:` key) so Automatic Signing works on a personal/free team for that capability. Safari still tries `redmed://band#d=` before SOS. Restore Associated Domains via `docs/associated-domains-restore.md`. Write-from-app storefront gate: `docs/ADVERTISING.md` / `docs/NFC-RESTORE.md` |
-| `redmed.pages.dev` | 404 until CF secrets / Git connect |
+| `redmed-emergency` Worker | Empty / 404 until `CLOUDFLARE_API_TOKEN` + `wrangler deploy` (Settings: workers.dev + Observability on) |
 | XCTest | No iOS test target. Codec lockstep is Node, not XCTest |
 | App Store package | `PrivacyInfo.xcprivacy` + export flag exist; listing is parked |
 

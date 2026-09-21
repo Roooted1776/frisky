@@ -12,7 +12,7 @@ Only what must live at the deploy / GitHub surface:
 | `README.md` | GitHub landing (product + run/deploy + dead-host note) |
 | `AGENTS.md` | Cursor / agent rules (must be easy to find) |
 | `tapper.html` · `index.html` · `card.html` · `get.html` · `get/` | Identical `#d=` redirect stubs → `/tapper/` (`scripts/write-tapper-redirects.sh`) |
-| `sw.js` · `_headers` · `_redirects` · `wrangler.toml` | Cloudflare / SW |
+| `sw.js` · `_headers` · `_redirects` · `wrangler.jsonc` · `scripts/stage-worker-assets.sh` | Cloudflare Worker `redmed-emergency` / SW |
 | `apple-app-site-association` · `.well-known/apple-app-site-association` | Universal Links — identical, both locations required (Apple checks root, then `.well-known/`) |
 | `.gitignore` · `.github/` · `.cursor/` | tooling |
 

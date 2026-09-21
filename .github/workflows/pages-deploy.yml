@@ -1,15 +1,13 @@
-# Optional Cloudflare Pages deploy for redmed.pages.dev.
+# Optional Cloudflare Workers deploy for redmed-emergency (*.workers.dev).
 # Live band write base today is https://roooted1776.github.io/tapper/
 # (public GitHub Pages — see docs/domain.md). Custom host is TBD
 # (AppConfig.medicalCardCustomDomainTBD). Do not flip that flag onto a 404 host.
 #
-# Direct Upload needs CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID.
-# Missing secrets skip CF upload (does not take down github.io).
+# Direct Upload needs CLOUDFLARE_API_TOKEN (Workers Scripts Edit).
+# Account ID is in wrangler.jsonc (a2d8a74738a0280eb9d5a3e77acd59ea).
+# Missing token skips CF upload (does not take down github.io).
 # Write-base smoke fails the job when that host 404s.
-# Connect Pages project `redmed` in the Cloudflare dashboard instead
-# (`wrangler.toml` output dir = repo root) when you want pages.dev live.
-#
-# github.io is Roooted1776/Roooted1776.github.io (Actions → Publish tapper).
+# Production Settings: Workers → redmed-emergency → Settings (workers.dev + Observability).
 
 name: Pages tapper deploy
 
@@ -30,7 +28,7 @@ on:
       - 'sw.js'
       - '_headers'
       - '_redirects'
-      - 'wrangler.toml'
+      - 'wrangler.jsonc'
       - 'assets/**'
       - 'RedMed-Xcode/RedMed/AppConfig.swift'
       - 'scripts/sync-tapper.sh'
@@ -39,6 +37,8 @@ on:
       - 'scripts/write-base-origin.py'
       - 'scripts/publish-github-io.sh'
       - 'scripts/test-d-codec.mjs'
+      - 'scripts/deploy-pages.sh'
+      - 'scripts/stage-worker-assets.sh'
       - '.github/workflows/pages-deploy.yml'
   pull_request:
     paths:
@@ -55,7 +55,7 @@ on:
       - 'sw.js'
       - '_headers'
       - '_redirects'
-      - 'wrangler.toml'
+      - 'wrangler.jsonc'
       - 'assets/**'
       - 'RedMed-Xcode/RedMed/AppConfig.swift'
       - 'scripts/sync-tapper.sh'
@@ -64,6 +64,8 @@ on:
       - 'scripts/write-base-origin.py'
       - 'scripts/publish-github-io.sh'
       - 'scripts/test-d-codec.mjs'
+      - 'scripts/deploy-pages.sh'
+      - 'scripts/stage-worker-assets.sh'
       - '.github/workflows/pages-deploy.yml'
   workflow_dispatch:
 
@@ -103,9 +105,8 @@ jobs:
         id: cf
         env:
           TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          if [ -z "$TOKEN" ] || [ -z "$ACCOUNT" ]; then
+          if [ -z "$TOKEN" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
@@ -114,17 +115,22 @@ jobs:
       - name: Cloudflare secrets optional
         if: steps.cf.outputs.skip == 'true'
         run: |
-          echo "::warning::CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID not set — skipping redmed.pages.dev Direct Upload."
+          echo "::warning::CLOUDFLARE_API_TOKEN not set — skipping redmed-emergency Workers deploy."
           echo "Live band write base is https://roooted1776.github.io/tapper/ (docs/domain.md)."
-          echo "To publish pages.dev later: add the two secrets, or connect Pages project redmed to this repo."
+          echo "To publish workers.dev: add CLOUDFLARE_API_TOKEN (Workers Scripts Edit), then re-run."
+          echo "Dashboard: https://dash.cloudflare.com/a2d8a74738a0280eb9d5a3e77acd59ea/workers/services/view/redmed-emergency/production/settings"
 
-      - name: Deploy to Cloudflare Pages
+      - name: Stage passerby assets for Worker
+        if: github.event_name != 'pull_request' && steps.cf.outputs.skip != 'true'
+        run: bash scripts/stage-worker-assets.sh
+
+      - name: Deploy to Cloudflare Worker redmed-emergency
         if: github.event_name != 'pull_request' && steps.cf.outputs.skip != 'true'
         uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy . --project-name=redmed --commit-dirty=true
+          accountId: a2d8a74738a0280eb9d5a3e77acd59ea
+          command: deploy
 
       - name: Smoke live write base /tapper/
         run: |
@@ -132,7 +138,7 @@ jobs:
           # AppConfig.medicalCardBaseURL is the URL written onto bands.
           # Fail closed when that host 404s — a green job with a dead write
           # base is how H1 stayed invisible. Do not flip AppConfig onto
-          # another 404 (pages.dev, a TBD domain, /frisky/ project Pages).
+          # another 404 (workers.dev, a TBD domain, /frisky/ project Pages).
           # GitHub Contents API rewrites drop the +x bit (file is 100644).
           ORIGIN="$(python3 scripts/write-base-origin.py)"
           echo "Write-base origin: ${ORIGIN} (AppConfig.medicalCardBaseURL)"
@@ -150,19 +156,25 @@ jobs:
           echo "::error::Band write base ${ORIGIN}/tapper/ failed smoke (AppConfig.medicalCardBaseURL). Publish https://github.com/Roooted1776/Roooted1776.github.io (Actions → Publish tapper) or scripts/publish-github-io.sh. Do not flip medicalCardBaseURL onto another 404."
           exit 1
 
-      - name: Smoke redmed.pages.dev after CF deploy
+      - name: Smoke redmed-emergency.workers.dev after CF deploy
         if: github.event_name != 'pull_request' && steps.cf.outputs.skip != 'true'
+        env:
+          # Optional override; default is this account's workers.dev subdomain.
+          WORKERS_DEV_SUBDOMAIN: ${{ vars.CLOUDFLARE_WORKERS_DEV_SUBDOMAIN }}
         run: |
           set -euo pipefail
+          SUB="${WORKERS_DEV_SUBDOMAIN:-maxaguilaraasted}"
+          BASE="https://redmed-emergency.${SUB}.workers.dev"
+          echo "Smoking Worker: ${BASE}/tapper/"
           ok=0
           for i in 1 2 3 4 5 6 7 8 9 10; do
-            if BASE=https://redmed.pages.dev bash scripts/smoke-pages.sh; then
+            if BASE="$BASE" bash scripts/smoke-pages.sh; then
               ok=1
               break
             fi
             sleep 3
           done
           if [ "$ok" != 1 ]; then
-            echo "::error::https://redmed.pages.dev did not serve RedMed · 911 · Aid after deploy"
+            echo "::error::${BASE}/tapper/ did not serve RedMed · 911 · Aid after deploy"
             exit 1
           fi
