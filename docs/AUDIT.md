@@ -66,7 +66,7 @@ No committed secrets, no XSS in profile render (`textContent` / `esc()`), no aut
 | iOS CI | `.github/workflows/ios-build.yml` on push/PR for `RedMed-Xcode/**` |
 | Pages smoke | github.io fail-closed; Actions SHA-pinned |
 
-Engineer threat model: in-app Help → Security (`RedMed-Xcode/RedMed/Document/Document.html`). `docs/SECURITY.md` was emptied on purpose (5462194) — do not restore without Max. Restore playbooks: `docs/NFC-RESTORE.md`, `docs/associated-domains-restore.md`, `docs/healthkit-restore.md`. Sweep 2026-09-16: `docs/AUDIT-2026-09-16.md`.
+Engineer threat model: in-app Help → Security (`RedMed-Xcode/RedMed/Document/Document.html` `#security`). `docs/SECURITY.md` is a pointer into that page — do not restore the pre-5462194 dump. Restore playbooks: `docs/NFC-RESTORE.md`, `docs/associated-domains-restore.md`, `docs/healthkit-restore.md`. Sweep 2026-09-16: `docs/AUDIT-2026-09-16.md`.
 
 ---
 
