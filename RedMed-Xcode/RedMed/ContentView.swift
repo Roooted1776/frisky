@@ -78,8 +78,8 @@ struct ContentView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(.bottom, RedMedChrome.tabBarHeight)
 
-            CustomTabBar(tab: scannerSafeTab, showsAid: showsAid, showsNFC: showsNFC, onNFCWrite: {
-                startHoldToWriteFromNFCTab()
+            CustomTabBar(tab: scannerSafeTab, showsAid: showsAid, showsNFC: showsNFC, onNFCWrite: { retry in
+                startHoldToWriteFromNFCTab(retry: retry)
             })
         }
         .ignoresSafeArea(edges: .bottom)
@@ -167,7 +167,7 @@ struct ContentView: View {
             guard showsNFC else { return }
             tab = .nfc
             mountedTabs.insert(.nfc)
-            startHoldToWriteFromNFCTab()
+            startHoldToWriteFromNFCTab(retry: false)
         }
         // Associated Domains / redmed://band: foreign `#d=` presents via
         // `BandTapIngress` above ConsentGate (ungated). NFC Scan still uses
@@ -186,11 +186,16 @@ struct ContentView: View {
 
     /// Open the CoreNFC write sheet on the NFC-tab / Write CTA stack.
     /// Hold the band ~1–2″ finishes the program — iOS has no silent write.
-    private func startHoldToWriteFromNFCTab() {
+    /// Parked: first visit is Pack / Share only. Re-tap retries Pack Band URL.
+    private func startHoldToWriteFromNFCTab(retry: Bool) {
         guard showsNFC, !isScannerSession else { return }
-        guard AppConfig.nfcHardwareEnabled else { return }
-        guard profile.hasSensitiveProfileData else { return }
-        nfcBandBox.ensure().writeBand(from: profile, isScannerSession: false)
+        if AppConfig.nfcHardwareEnabled {
+            guard profile.hasSensitiveProfileData else { return }
+            nfcBandBox.ensure().writeBand(from: profile, isScannerSession: false)
+            return
+        }
+        guard retry else { return }
+        NotificationCenter.default.post(name: .redMedPackParkedBandURL, object: nil)
     }
 
     @ViewBuilder
@@ -324,8 +329,9 @@ struct CustomTabBar: View {
     @Binding var tab: AppTab
     var showsAid: Bool = true
     var showsNFC: Bool = true
-    /// Owner NFC tab tap — begin CoreNFC write on this gesture so hold finishes it.
-    var onNFCWrite: (() -> Void)? = nil
+    /// Owner NFC tab tap — begin CoreNFC write (or parked Pack retry) on this gesture.
+    /// `retry` is true when the NFC tab is already selected (re-tap).
+    var onNFCWrite: ((_ retry: Bool) -> Void)? = nil
 
     /// Continuous rounded top — polished bottom chrome without frost (opaque cream).
     private var barShape: UnevenRoundedRectangle {
@@ -388,8 +394,9 @@ struct CustomTabBar: View {
         // Selection haptic fires on press via TabBarItem (instant), not here.
         if tab == next {
             // Re-tap NFC → open write sheet again so hold can finish / retry.
+            // Parked: retry Pack Band URL (copy), not a silent no-op.
             if next == .nfc {
-                onNFCWrite?()
+                onNFCWrite?(true)
             }
             return
         }
@@ -397,7 +404,7 @@ struct CustomTabBar: View {
         // when mounted tabs suppress animation, and fights opacity keep-alive.
         tab = next
         if next == .nfc {
-            onNFCWrite?()
+            onNFCWrite?(false)
         }
     }
 }

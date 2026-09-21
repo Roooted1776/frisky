@@ -264,7 +264,12 @@ struct ConsentGateView<Content: View>: View {
     /// Record acceptance on Agree, dismiss ack UI, then Face ID before Main.
     private func enterApp() {
         checked = true
-        locationEnabled = true
+        // First Agree (or post-Erase) turns Location on as part of the ack.
+        // A later policy-bump Agree must not flip Help → Settings Location off.
+        let firstAgree = UserDefaults.standard.string(forKey: ConsentSettings.acceptedVersionKey) == nil
+        if firstAgree {
+            locationEnabled = true
+        }
         ConsentSettings.recordAcceptance()
         RedMedHaptics.success()
         SnapshotSafeCover.shared.reveal()

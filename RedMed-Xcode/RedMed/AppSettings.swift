@@ -6,7 +6,9 @@ import Foundation
 enum AppSettings {
     static let locationEnabledKey = "redmed.locationEnabled"
 
-    /// Find Help GPS. Default on. Agree writes true. Off switch is iOS Settings.
+    /// Find Help GPS. Default on. First Agree writes true. Policy-bump Agree
+    /// does not flip an owner Help → Settings off back on. Off switch is
+    /// Help → Settings or iOS Settings.
     static var locationEnabled: Bool {
         if UserDefaults.standard.object(forKey: locationEnabledKey) == nil { return true }
         return UserDefaults.standard.bool(forKey: locationEnabledKey)
