@@ -1,12 +1,3 @@
-#!/usr/bin/env bash
-# One #d=-preserving redirect stub → /tapper/ for every legacy Pages URL.
-# Source of truth for the shell remains tapper/index.html.
-set -euo pipefail
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$ROOT"
-
-# Heredoc (not a single-quoted string) so JS string literals keep their quotes.
-STUB=$(cat <<'EOF'
 <!doctype html>
 <html lang="en-US">
 <head>
@@ -51,19 +42,3 @@ STUB=$(cat <<'EOF'
   <noscript><p>JavaScript is required to open this emergency card. Please enable JavaScript in your browser settings, then reload this page.</p></noscript>
 </body>
 </html>
-EOF
-)
-
-mkdir -p get
-for f in index.html tapper.html card.html get.html get/index.html redmed-emergency.html; do
-  printf '%s\n' "$STUB" > "$f"
-done
-
-# Guard: stubs must never become a second shell.
-for f in index.html tapper.html card.html get.html get/index.html redmed-emergency.html; do
-  ! grep -q 'data-tab="medical"' "$f"
-  grep -q '/tapper/' "$f"
-  grep -q "new URL('/tapper/', location.origin)" "$f"
-done
-
-echo "OK unified tapper redirect stubs"

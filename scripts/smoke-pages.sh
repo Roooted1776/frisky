@@ -7,6 +7,7 @@ exec python3 - "$@" <<'PY'
 
 Usage:
   ./scripts/smoke-pages.sh
+  BASE=https://redmed-emergency.maxaguilaraasted.workers.dev ./scripts/smoke-pages.sh
   BASE=https://roooted1776.github.io ./scripts/smoke-pages.sh
 """
 from __future__ import annotations
@@ -176,6 +177,15 @@ def main() -> int:
         ok = False
     else:
         print("OK   redirect tapper.html")
+    emergency_stub = (REPO / "redmed-emergency.html").read_text(encoding="utf-8")
+    if "data-tab=\"medical\"" in emergency_stub:
+        print("FAIL redmed-emergency.html is a full shell copy — keep it a redirect")
+        ok = False
+    elif "tapper/" not in emergency_stub:
+        print("FAIL redmed-emergency.html missing tapper/ redirect")
+        ok = False
+    else:
+        print("OK   redirect redmed-emergency.html")
 
     ok &= check("/tapper/", 'data-tab="medical"', 'data-tab="911"', 'id="tab-aid"')
     ok &= check("/tapper/index.html", 'data-tab="medical"')
@@ -189,6 +199,7 @@ def main() -> int:
     ok &= check("/get/", "/tapper/")
     ok &= check("/get.html", "/tapper/")
     ok &= check("/card.html", "/tapper/")
+    ok &= check("/redmed-emergency.html", "/tapper/")
     ok &= check("/index.html", "tapper/")
     # Brand photos live under assets/ (canonical) + tapper/ (shell-relative).
     ok &= check("/assets/BrandLogo.png")

@@ -2,7 +2,7 @@
 // Production Worker: redmed-emergency (dashboard Settings → Domains & Routes / Observability).
 // build.command stages public shell → dist/passerby before deploy / versions upload
 // Worker injects data-device from UA / CF-Device-Type; client refines with viewport aspect.
-// Live band write base stays github.io until this host smokes green (docs/domain.md).
+// Live band write base: https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/ (docs/domain.md).
 {
   "name": "redmed-emergency",
   "main": "worker/index.js",

@@ -25,6 +25,7 @@ copy index.html
 copy card.html
 copy get.html
 copy tapper.html
+copy redmed-emergency.html
 copy sw.js
 copy apple-app-site-association
 copy tapper

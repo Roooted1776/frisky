@@ -240,12 +240,12 @@ function redmedAssetURL(file) {
        may set data-device-edge from UA / CF-Device-Type; client refines.
        View control / ?view=phone|tablet|wide locks. Larger logo + type on
        tablet/wide; wide uses a two-column medical layout (YOU card | lists).
-     - Legacy card.html / get.html /get/ redirect to /tapper/ and keep #d=
+     - Legacy card.html / get.html /get/ / redmed-emergency.html redirect to /tapper/ and keep #d=
      Source of truth: tapper/index.html. Xcode copies it into the app bundle as tapper.html
      at build (pbxproj “Bundle passerby tapper”). Repo-root tapper.html is a #d=-preserving
      redirect to /tapper/, not a second shell. Do not leave a stale RedMed-Xcode/RedMed/tapper.html.
-     Hosted AppConfig URL https://roooted1776.github.io/tapper/ (public GitHub Pages).
-     Cloudflare redmed.pages.dev / getredmed.com — see docs/domain.md. -->
+     Hosted AppConfig URL https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/
+     (Cloudflare Worker redmed-emergency). github.io backup + custom domain TBD — docs/domain.md. -->
 <style>
   :root {
     --accent: #e11d48; /* Color.redmedAccent */

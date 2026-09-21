@@ -15,7 +15,7 @@ Grok is in this repo. Treat instructions here as binding when Grok edits RedMed.
 
 ## Surfaces (do not mix)
 
-- **Static Cloudflare Worker shell** — Worker `redmed-emergency` (`wrangler.jsonc` assets = staged `dist/passerby`; `worker/` injects phone·tablet·wide `data-device` on HTML). Serves `tapper/`, redirect stubs, `sw.js`, `Document/`, `assets/`. Local: `python3 -m http.server`. CI: `.github/workflows/pages-deploy.yml` (`wrangler deploy` when `CLOUDFLARE_API_TOKEN` is set). Dashboard: Workers → `redmed-emergency` → production Settings. Before merge: `bash scripts/sync-tapper.sh`, `node scripts/test-d-codec.mjs`, and `node scripts/test-worker-device.mjs`.
+- **Static Cloudflare Worker shell** — Worker `redmed-emergency` (`wrangler.jsonc` → `scripts/stage-worker-assets.sh` → `dist/passerby`; `worker/` injects phone·tablet·wide `data-device` on HTML). Serves `tapper/`, redirect stubs (`index.html`, `redmed-emergency.html`, …), `sw.js`, `Document/`, `assets/`. No app build. Local: `python3 -m http.server`. CI: `.github/workflows/pages-deploy.yml` (`wrangler deploy` when `CLOUDFLARE_API_TOKEN` is set). Live interim write base: `https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/`. Dashboard: Workers → `redmed-emergency` → production Settings. Before merge: `bash scripts/sync-tapper.sh`, `node scripts/test-d-codec.mjs`, and `node scripts/test-worker-device.mjs`.
 - **Native iOS app** — `RedMed-Xcode/`. macOS only. `ios-build.yml` on `macos-latest`.
 
 Keep `sw.js`, `tapper/sw.js`, and `RedMed-Xcode/RedMed/sw.js` CACHE versions in lockstep.
