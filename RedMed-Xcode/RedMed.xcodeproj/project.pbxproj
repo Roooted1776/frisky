@@ -32,6 +32,7 @@
 		AABB0000000000000000001F /* NFCReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000001F /* NFCReader.swift */; };
 		AABB00000000000000000020 /* EmergencyNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000020 /* EmergencyNumber.swift */; };
 		AABB00000000000000000022 /* BrandLogo.png in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000022 /* BrandLogo.png */; };
+		AABB0000000000000000005D /* BrandLogo.svg in Resources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000005D /* BrandLogo.svg */; };
 		AABB00000000000000000023 /* Main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000023 /* Main.swift */; };
 		AABB00000000000000000025 /* sw.js in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000025 /* sw.js */; };
 		AABB00000000000000000029 /* PrivacySnapshotGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000029 /* PrivacySnapshotGuard.swift */; };
@@ -85,6 +86,7 @@
 		AAAA0000000000000000001F /* NFCReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFCReader.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000020 /* EmergencyNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyNumber.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000022 /* BrandLogo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BrandLogo.png; sourceTree = "<group>"; };
+		AAAA0000000000000000005D /* BrandLogo.svg */ = {isa = PBXFileReference; lastKnownFileType = text; path = BrandLogo.svg; sourceTree = "<group>"; };
 		AAAA00000000000000000023 /* Main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Main.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000025 /* sw.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = sw.js; sourceTree = "<group>"; };
 		AAAA00000000000000000029 /* PrivacySnapshotGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacySnapshotGuard.swift; sourceTree = "<group>"; };
@@ -236,6 +238,7 @@
 			children = (
 				AAAA00000000000000000025 /* sw.js */,
 				AAAA00000000000000000022 /* BrandLogo.png */,
+				AAAA0000000000000000005D /* BrandLogo.svg */,
 				AAAA00000000000000000054 /* pheart.png */,
 			);
 			name = "Passerby Bundle";
@@ -351,6 +354,7 @@
 				AABB00000000000000000050 /* Document.html in Resources */,
 				AABB00000000000000000025 /* sw.js in Resources */,
 				AABB00000000000000000022 /* BrandLogo.png in Resources */,
+				AABB0000000000000000005D /* BrandLogo.svg in Resources */,
 				AABB00000000000000000054 /* pheart.png in Resources */,
 				AABB0000000000000000001A /* legal-doc.css in Resources */,
 				AABB0000000000000000005A /* PrivacyInfo.xcprivacy in Resources */,

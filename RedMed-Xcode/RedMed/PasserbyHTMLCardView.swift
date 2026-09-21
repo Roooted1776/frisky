@@ -265,10 +265,20 @@ enum PasserbyShellStaging {
         } catch {
             return nil
         }
-        if let logo = Bundle.main.url(forResource: "BrandLogo", withExtension: "png") {
-            let dest = dir.appendingPathComponent("BrandLogo.png")
+        // Stage every BrandLogo density the passerby shell may request (SVG for
+        // crisp iPad/retina; PNG fallbacks when SVG is missing).
+        let logoFiles: [(String, String)] = [
+            ("BrandLogo", "png"),
+            ("BrandLogo", "svg"),
+            ("BrandLogo@2x", "png"),
+            ("BrandLogo@3x", "png"),
+            ("pheart", "png")
+        ]
+        for (name, ext) in logoFiles {
+            guard let src = Bundle.main.url(forResource: name, withExtension: ext) else { continue }
+            let dest = dir.appendingPathComponent("\(name).\(ext)")
             if !FileManager.default.fileExists(atPath: dest.path) {
-                try? FileManager.default.copyItem(at: logo, to: dest)
+                try? FileManager.default.copyItem(at: src, to: dest)
             }
         }
         cachedDir = dir
