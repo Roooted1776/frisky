@@ -10,9 +10,10 @@ cd "$ROOT"
 test -f tapper/index.html
 grep -q 'data-tab="medical"' tapper/index.html
 grep -q 'data-tab="911"' tapper/index.html
-# Passerby / Preview: RedMed · 911 only — Aid is owner-app (native AidView).
-if grep -q 'id="tab-aid"' tapper/index.html; then
-  echo "tapper/index.html still has Aid tab — remove it (owner Aid only)" >&2
+grep -q 'id="tab-aid"' tapper/index.html
+# Passerby / Preview: RedMed · 911 · Aid — NFC is owner-app only.
+if grep -q 'id="tab-nfc"' tapper/index.html; then
+  echo "tapper/index.html has NFC tab — remove it (owner NFC only)" >&2
   exit 1
 fi
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Tapper shell deploy / local serve.
 #
-# Bracelet taps must open AppConfig.medicalCardBaseURL#d=… as RedMed · 911.
+# Bracelet taps must open AppConfig.medicalCardBaseURL#d=… as RedMed · 911 · Aid.
 # Live interim: https://roooted1776.github.io/tapper/ (see docs/domain.md).
 # Cloudflare redmed.pages.dev / getredmed.com after secrets + domain cutover.
 # (quick, no login, no server, no app). Repo tapper/index.html is that shell.
@@ -23,12 +23,13 @@ cd "$ROOT"
 SHELL="tapper/index.html"
 # Sanity: refuse to serve/deploy if the tapper shell is missing tabs or is band-setup.
 if ! grep -q 'data-tab="medical"' "$SHELL" \
-  || ! grep -q 'data-tab="911"' "$SHELL"; then
-  echo "$SHELL is missing RedMed · 911 tabs — abort." >&2
+  || ! grep -q 'data-tab="911"' "$SHELL" \
+  || ! grep -q 'id="tab-aid"' "$SHELL"; then
+  echo "$SHELL is missing RedMed · 911 · Aid tabs — abort." >&2
   exit 1
 fi
-if grep -q 'id="tab-aid"' "$SHELL"; then
-  echo "$SHELL still has Aid tab — passerby is RedMed · 911 only — abort." >&2
+if grep -q 'id="tab-nfc"' "$SHELL"; then
+  echo "$SHELL has NFC tab — passerby is RedMed · 911 · Aid only — abort." >&2
   exit 1
 fi
 if grep -q 'Checking your phone' "$SHELL" \

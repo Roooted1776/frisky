@@ -8,8 +8,8 @@ import WebKit
 /// bracelet opens hosted `/tapper/#d=…` without that flag). Explicit SOS /
 /// DeviceMotion / 911 GPS still run in Preview — same as passerby HTML.
 /// Does **not** set `html.app-embed` / `__REDMED_APP_EMBED` — owner RedMed is
-/// a native YOU card. This shell is Preview / Scan (HTML RedMed · 911 only —
-/// **no Aid**, **no NFC**, **no Edit**; owner Aid lives in native `AidView`).
+/// a native YOU card. This shell is Preview / Scan (HTML RedMed · 911 · Aid —
+/// **no NFC**, **no Edit**; owner NFC lives in native `NFCView`).
 /// Sets `html.app-preview` and disables WKWebView UIScrollView scrolling so
 /// flex tabbar taps work (fixed + dual-scroll ate RedMed · 911 switches).
 /// Never calls `BiometricAuth` — passerby / Preview tap-to-view stays ungated.
