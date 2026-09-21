@@ -1,6 +1,6 @@
 // Cloudflare Workers — RedMed passerby emergency shell (static assets, no build).
 // Production Worker: redmed-emergency (dashboard Settings → Domains & Routes / Observability).
-// Stage first: bash scripts/stage-worker-assets.sh  →  dist/passerby
+// build.command stages public shell → dist/passerby before deploy / versions upload
 // Live band write base stays github.io until this host smokes green (docs/domain.md).
 {
   "name": "redmed-emergency",
@@ -8,6 +8,9 @@
   "compatibility_date": "2026-09-21",
   "workers_dev": true,
   "preview_urls": true,
+  "build": {
+    "command": "bash scripts/stage-worker-assets.sh"
+  },
   "assets": {
     "directory": "./dist/passerby"
   },
