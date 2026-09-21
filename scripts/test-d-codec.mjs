@@ -386,7 +386,7 @@ assert('logo waits for profile paint', !tapper.includes('redmedLogoPreload') && 
 assert('GPS skips sub-5m jitter', /function metersBetween\(lat1, lon1, lat2, lon2\)/.test(tapper) && /moved = metersBetween\(prev\.latitude, prev\.longitude, lat, lon\) >= 5/.test(tapper));
 
 const sw = readFileSync(join(ROOT, 'sw.js'), 'utf8');
-assert('sw cache v172', sw.includes("CACHE = 'redmed-tapper-v172'"));
+assert('sw cache v172', sw.includes("CACHE = 'redmed-tapper-v173'"));
 {
   const assetsBlock = sw.match(/var ASSETS = \[([\s\S]*?)\];/);
   assert('sw does not precache out-of-scope assets', !!(assetsBlock && !assetsBlock[1].includes('../')));
