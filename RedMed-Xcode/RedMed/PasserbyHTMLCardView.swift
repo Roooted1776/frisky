@@ -449,6 +449,9 @@ enum PasserbyWebViewPool {
         let cream = UIColor(Color.redmedBg)
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = navigationDelegate
+        if let ui = navigationDelegate as? WKUIDelegate {
+            webView.uiDelegate = ui
+        }
         webView.allowsBackForwardNavigationGestures = false
         webView.isOpaque = true
         webView.backgroundColor = cream
@@ -482,6 +485,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         // pageVisible to trigger recoverIfNeeded.
         if appEmbed, let pooled = PasserbyWebViewPool.takeEmbed() {
             pooled.navigationDelegate = context.coordinator
+            pooled.uiDelegate = context.coordinator
             pooled.scrollView.isScrollEnabled = true
             context.coordinator.usingPooledShell = true
             context.coordinator.loadedShellKind = "embed"
@@ -495,6 +499,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         // tab's own load for first paint.
         if !appEmbed, let pooled = PasserbyWebViewPool.takeFull() {
             pooled.navigationDelegate = context.coordinator
+            pooled.uiDelegate = context.coordinator
             pooled.scrollView.isScrollEnabled = false
             context.coordinator.usingPooledShell = true
             context.coordinator.loadedShellKind = "full"
@@ -759,7 +764,7 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
         return String(wrapped.dropFirst().dropLast())
     }
 
-    final class Coordinator: NSObject, WKNavigationDelegate {
+    final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
         var loadedKey: String?
         var loadedPayload: String?
         var loadedContentKey: String?
@@ -935,6 +940,23 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
                 decisionHandler(.cancel)
             default:
                 decisionHandler(.cancel)
+            }
+        }
+
+        /// Preview / Scan Find Help uses `navigator.geolocation`. Owner already
+        /// accepted location in emergency terms (Agree) — grant WK geolocation
+        /// when Location is on; deny when Help → Settings turned it off.
+        /// Does not bypass Apple’s When-In-Use sheet (Core Location).
+        func webView(
+            _ webView: WKWebView,
+            requestGeolocationPermissionFor origin: WKSecurityOrigin,
+            initiatedByFrame frame: WKFrameInfo,
+            decisionHandler: @escaping (WKPermissionDecision) -> Void
+        ) {
+            if AppSettings.locationEnabled && ConsentSettings.hasAcceptedCurrent {
+                decisionHandler(.grant)
+            } else {
+                decisionHandler(.deny)
             }
         }
 
