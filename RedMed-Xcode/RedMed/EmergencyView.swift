@@ -184,7 +184,7 @@ private struct CrashDialCountdownStrip: View {
 
     var body: some View {
         if let remaining = survivalAlarm.crashDialRemaining {
-            Text("Calling \(EmergencyNumber.current) in \(format(remaining))")
+            Text("Calling \(EmergencyNumber.current) in \(format(remaining)). Tap Stop The Alarm to cancel.")
                 .font(.system(size: 13, weight: .bold))
                 .foregroundColor(.redmedAccent)
                 .frame(maxWidth: .infinity, alignment: .leading)

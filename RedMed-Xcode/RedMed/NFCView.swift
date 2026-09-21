@@ -239,9 +239,8 @@ struct NFCView: View {
                 handlePrimaryAction()
             }
 
-            tipRow(AppConfig.NFCWriteCopy.holdTopTip)
-
             if AppConfig.nfcHardwareEnabled {
+                tipRow(AppConfig.NFCWriteCopy.holdTopTip)
                 previewButton
                 OutlineButton(
                     title: band.isReading ? "Hold Near The Band…" : "Load From Band",

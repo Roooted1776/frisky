@@ -457,7 +457,7 @@ enum ProfileNFCCodec {
         func list(_ i: Int) -> [String] {
             guard i < arr.count else { return [] }
             if let a = arr[i] as? [Any] {
-                return a.compactMap { $0 as? String }.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+                return flattenListItems(a.compactMap { $0 as? String })
             }
             return splitList(str(i))
         }
@@ -520,7 +520,7 @@ enum ProfileNFCCodec {
         func strs(_ i: Int) -> [String] {
             guard i < arr.count else { return [] }
             if let a = arr[i] as? [Any] {
-                return a.compactMap { $0 as? String }
+                return flattenListItems(a.compactMap { $0 as? String })
             }
             return splitList(str(i))
         }
@@ -574,7 +574,7 @@ enum ProfileNFCCodec {
         }
         func list(_ key: String) -> [String] {
             if let a = obj[key] as? [Any] {
-                return a.compactMap { $0 as? String }
+                return flattenListItems(a.compactMap { $0 as? String })
             }
             return splitList(str(key))
         }
@@ -648,17 +648,28 @@ enum ProfileNFCCodec {
         s.count <= maxStr ? s : String(s.prefix(maxStr))
     }
 
+    /// Commas are the list delimiter on the wire. Flatten so one typed item
+    /// that contains a comma packs the same way decode already splits it.
+    private nonisolated static func flattenListItems(_ items: [String]) -> [String] {
+        var out: [String] = []
+        out.reserveCapacity(min(items.count, maxList))
+        for item in items {
+            for part in item.split(separator: ",", omittingEmptySubsequences: true) {
+                let t = clipStr(part.trimmingCharacters(in: .whitespacesAndNewlines))
+                guard !t.isEmpty else { continue }
+                out.append(t)
+                if out.count >= maxList { return out }
+            }
+        }
+        return out
+    }
+
     private nonisolated static func joinList(_ items: [String]) -> String {
-        Array(items.prefix(maxList))
-            .map { clipStr($0.trimmingCharacters(in: .whitespacesAndNewlines)) }
-            .filter { !$0.isEmpty }
-            .joined(separator: ", ")
+        flattenListItems(items).joined(separator: ", ")
     }
 
     private static func splitList(_ raw: String) -> [String] {
-        raw.split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
+        flattenListItems([raw])
     }
 
     private static func tryUTF8JSON(_ data: Data) -> Any? {

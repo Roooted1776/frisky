@@ -58,7 +58,7 @@ No committed secrets, no XSS in profile render (`textContent` / `esc()`), no aut
 | ATS | Arbitrary loads + local networking **false** |
 | WKWebView Help | `Document.html` + `legal-doc.css` only |
 | WKWebView tapper | No `WKScriptMessageHandler`. file/about allow; http(s)/tel/mailto/redmed open outside or cancel; default deny |
-| SW cache | Shell HTML only; `#d=` is a fragment; activate drops old `CACHE` names (`redmed-tapper-v163`) |
+| SW cache | Shell HTML only; `#d=` is a fragment; activate drops old `CACHE` names (`redmed-tapper-v164`) |
 | Zlib bound | Swift 64 KiB; JS `MAX_INFLATED = 65536` |
 | Scanner isolation | `isScannerSession` hides NFC / Edit; `persist()` no-ops when `persists == false` |
 | Linked flag | `setBraceletPaired(true)` requires `nfcHardwareEnabled` |
