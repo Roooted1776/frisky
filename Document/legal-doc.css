@@ -52,6 +52,10 @@
 body {
   font-family: var(--font);
   -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* No double-tap zoom in Help WKWebView or hosted /Document/. */
+  touch-action: manipulation;
   background:
     radial-gradient(120% 60% at 50% -10%, #ffe8eb 0%, transparent 58%),
     var(--bg);
@@ -59,6 +63,13 @@ body {
   font-size: var(--fs-base);
   line-height: var(--lh);
   min-height: 100vh;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  touch-action: manipulation;
+  scroll-padding-top: 72px;
 }
 
 .legal-sheet {
@@ -479,8 +490,6 @@ body {
   .legal-doc-title { font-size: 22px; }
 }
 
-
-html { scroll-padding-top: 72px; }
 
 .skip-link {
   position: absolute;

@@ -24,7 +24,7 @@ cat > "$DST/Document.html" <<'EOF'
 <html lang="en-US">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#fff7f7">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="refresh" content="0;url=./">
