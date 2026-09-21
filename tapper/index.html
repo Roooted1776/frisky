@@ -100,14 +100,8 @@ function redmedAssetURL(file) {
   return file;
 }
 </script>
-<!-- Logo after #d= decrypt — do not steal bandwidth on band-tap open. -->
-<link rel="preload" as="image" href="BrandLogo.svg" type="image/svg+xml" fetchpriority="low" id="redmedLogoPreload">
-<script>
-(function () {
-  var link = document.getElementById('redmedLogoPreload');
-  if (link) link.href = redmedAssetURL('BrandLogo.svg');
-})();
-</script>
+<!-- No logo preload. src is set after profile paint so #d= decrypt is not
+     racing BrandLogo.svg / PNG densities during HTML parse. -->
 <script>
 // Prefetch AES key while HTML parses — overlaps with body download on band taps.
 (function () {
@@ -569,7 +563,7 @@ function redmedAssetURL(file) {
     opacity: 1;
     image-rendering: auto;
   }
-  /* Preset src on #rmLogo; resolveLogo falls back on error. */
+  /* src is applied after profile paint (resolveLogo). Hide the empty box. */
   .rm-logo:not([src]) { visibility: hidden; }
   .rm-name {
     font-size: var(--fs-name);
@@ -1783,12 +1777,11 @@ function redmedAssetURL(file) {
         <p class="rm-note">Tap To Scan · No Login · No Server · No App</p>
         <div class="rm-title-row">
           <picture>
-            <source type="image/svg+xml" srcset="BrandLogo.svg" id="rmLogoSvgSource">
+            <source type="image/svg+xml" id="rmLogoSvgSource">
             <source type="image/png"
-              srcset="BrandLogo.png 216w, BrandLogo@2x.png 432w, BrandLogo@3x.png 648w"
               sizes="(min-width: 1024px) 108px, (min-width: 768px) 96px, (min-width: 600px) 80px, 72px"
               id="rmLogoPngSource">
-            <img class="rm-logo" id="rmLogo" src="BrandLogo.png" width="72" height="72" alt="RedMed" decoding="async" fetchpriority="low" loading="lazy">
+            <img class="rm-logo" id="rmLogo" width="72" height="72" alt="RedMed" decoding="async">
           </picture>
           <div>
             <h1 class="rm-name" id="name">RedMed</h1>
@@ -2224,7 +2217,8 @@ function redmedAssetURL(file) {
 
 
   // YOU-card mark — empty and named cards keep the heart next to the name.
-  // After profile paint only — band-tap open prioritizes #d= decrypt over logo.
+  // Called only after profile paint. Markup ships with no src/srcset so parse
+  // does not fetch SVG + PNG densities while #d= is still decrypting.
   // Prefer SVG (crisp on iPad); PNG densities cover srcset fallbacks.
   function resolveLogo() {
     var img = document.getElementById('rmLogo');
@@ -2254,43 +2248,16 @@ function redmedAssetURL(file) {
       }
     }
     setPictureSources();
-    var preset = img.getAttribute('src');
-    if (preset) {
-      var file = preset.replace(/^\.\//, '');
-      // Prefer SVG when the preset was a PNG/SVG basename.
-      var prefer = /BrandLogo\.(png|svg)$/i.test(file) ? 'BrandLogo.svg' : file;
-      var resolved = redmedAssetURL(prefer);
-      // img src stays PNG for broad favicon / older WebKit fallbacks.
-      var pngResolved = redmedAssetURL('BrandLogo.png');
-      if (img.getAttribute('src') !== pngResolved) img.setAttribute('src', pngResolved);
-      ensureIconLinks().forEach(function (el) { el.setAttribute('href', pngResolved); });
-      img.onerror = function () {
-        img.onerror = null;
-        img.setAttribute('src', redmedAssetURL('pheart.png'));
-      };
-      return;
-    }
-    var candidates = [
-      redmedAssetURL('BrandLogo.svg'),
-      redmedAssetURL('BrandLogo.png'),
-      '../assets/pheart.png',
-      'assets/pheart.png'
-    ];
-    var i = 0;
-    function apply(src) {
-      img.src = src;
-      ensureIconLinks().forEach(function (el) {
-        el.setAttribute('href', /\.svg$/i.test(src) ? redmedAssetURL('BrandLogo.png') : src);
-      });
-    }
-    function tryNext() {
-      if (i >= candidates.length) return;
-      var src = candidates[i++];
-      img.onerror = tryNext;
-      img.onload = function () { img.onerror = null; img.onload = null; };
-      apply(src);
-    }
-    tryNext();
+    // img src stays PNG. <picture> prefers the SVG source when it loads.
+    var pngResolved = redmedAssetURL('BrandLogo.png');
+    try { img.loading = 'eager'; } catch (eLoad) {}
+    try { img.setAttribute('fetchpriority', 'low'); } catch (ePri) {}
+    img.onerror = function () {
+      img.onerror = null;
+      img.setAttribute('src', redmedAssetURL('pheart.png'));
+    };
+    if (img.getAttribute('src') !== pngResolved) img.setAttribute('src', pngResolved);
+    ensureIconLinks().forEach(function (el) { el.setAttribute('href', pngResolved); });
   }
 
   // Phone / tablet / wide — auto from viewport, or View / ?view= lock.
@@ -3430,12 +3397,22 @@ function redmedAssetURL(file) {
       var cprCount = 0;
       var cprPhase = 'compress';
       var cprAudioCtx = null;
+      // Ideal fire time for the next beat. setTimeout drifts late under load
+      // (siren + DOM), which slowed the 110 bpm metronome. Compensate here.
+      var cprNextAt = 0;
+
+      function cprBeatDelay(prevAt, now, ms) {
+        var at = prevAt ? prevAt + ms : now + ms;
+        if (at < now) at = now + ms;
+        return { at: at, delay: at - now };
+      }
 
       function stopCPR() {
         if (cprTimer) {
           clearTimeout(cprTimer);
           cprTimer = null;
         }
+        cprNextAt = 0;
         cprRunning = false;
         cprCount = 0;
         cprPhase = 'compress';
@@ -3492,9 +3469,12 @@ function redmedAssetURL(file) {
       }
 
       function scheduleCPR(ms) {
+        var now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+        var beat = cprBeatDelay(cprNextAt, now, ms);
+        cprNextAt = beat.at;
         cprTimer = setTimeout(function () {
           tickCPR();
-        }, ms);
+        }, beat.delay);
       }
 
       function tickCPR() {
@@ -3663,11 +3643,25 @@ function redmedAssetURL(file) {
     if (pill) pill.textContent = title;
   }
 
+  // Same 5 m gate as LocationManager (EmergencyView): skip jitter that
+  // rewrote the GPS card on every watchPosition tick and hitched 911.
+  function metersBetween(lat1, lon1, lat2, lon2) {
+    var R = 6371000;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
   function setCoords(lat, lon, acc, force) {
     if (!isFinite(lat) || !isFinite(lon)) return;
     var prev = window.__redmedLoc;
-    if (!force && prev && isFinite(acc) && acc > 0 && prev.accuracy > 0 && acc > prev.accuracy + 20) {
-      return;
+    if (!force && prev && isFinite(prev.latitude) && isFinite(prev.longitude)) {
+      var better = isFinite(acc) && acc >= 0 && isFinite(prev.accuracy) && prev.accuracy >= 0 && acc < prev.accuracy - 5;
+      var moved = metersBetween(prev.latitude, prev.longitude, lat, lon) >= 5;
+      if (!better && !moved) return;
     }
     document.getElementById('coords').textContent = coordText(lat, lon);
     document.getElementById('gpsAcc').textContent = acc > 0
@@ -3790,6 +3784,7 @@ function redmedAssetURL(file) {
     var elapsed = 0;
     var startedAt = 0;
     var timerId = null;
+    var chromeKey = '';
     var timeEl = document.getElementById('seizureTime');
     var hintEl = document.getElementById('seizureHint');
     var btn = document.getElementById('seizureBtn');
@@ -3811,6 +3806,11 @@ function redmedAssetURL(file) {
       timeEl.textContent = format(elapsed);
       timeEl.classList.toggle('hot', past);
       hintEl.classList.toggle('hot', past);
+      // Time ticks every second. Rebuilding the hint (and the Call control)
+      // on each tick laid out the 911 strip for the whole seizure.
+      var key = (past ? 'p' : 'w') + (running ? 'r' : 's') + ((!running && elapsed === 0) ? 'z' : 't');
+      if (key === chromeKey) return;
+      chromeKey = key;
       var num = ((document.querySelector('.emg') || {}).textContent || '112');
       hintEl.textContent = '';
       var existingCall = document.getElementById('seizureCallBtn');
@@ -3958,6 +3958,15 @@ function redmedAssetURL(file) {
   var SAMPLE_HZ = 50.0;
   var COOLDOWN_S = 90.0;
   var DT = 1.0 / SAMPLE_HZ;
+  var lastSampleAt = 0;
+  // Real inter-sample gap when it is a live DeviceMotion interval.
+  // Outside that band, fall back to the 50 Hz design DT.
+  function jerkSampleDt(lastAt, now, fallback) {
+    if (!lastAt) return fallback;
+    var elapsed = now - lastAt;
+    if (elapsed >= 0.008 && elapsed <= 0.2) return elapsed;
+    return fallback;
+  }
   // Apple Support 104959 (US): 10s alert + 30s countdown, then emergency call.
   var US_CRASH_ALERT_S = 10;
   var US_CRASH_COUNTDOWN_S = 30;
@@ -4293,6 +4302,7 @@ function redmedAssetURL(file) {
 
   function resetMotionTransient() {
     lastMagnitude = 0;
+    lastSampleAt = 0;
     freefallSince = 0;
     freefallEndedAt = 0;
     recentHumanPeaks = [];
@@ -4340,9 +4350,9 @@ function redmedAssetURL(file) {
   }
 
   function isRhythmicHumanActivity(now) {
-    var peaks = recentHumanPeaks.filter(function (t) {
-      return now - t <= HUMAN_WINDOW_S;
-    });
+    // Caller already pruned recentHumanPeaks to HUMAN_WINDOW_S.
+    // filter() here allocated a new array on every DeviceMotion sample.
+    var peaks = recentHumanPeaks;
     if (peaks.length < RHYTHM_HIT_COUNT + 1) return false;
     var hits = 0;
     for (var i = 1; i < peaks.length; i++) {
@@ -4360,7 +4370,12 @@ function redmedAssetURL(file) {
     if (lastArmAt && now - lastArmAt < COOLDOWN_S) return;
 
     var magnitude = Math.sqrt(ax * ax + ay * ay + az * az) / G;
-    var jerk = Math.abs(magnitude - lastMagnitude) / DT;
+    // DeviceMotion is not locked to 50 Hz. Dividing by a fixed DT under-reports
+    // jerk on a fast phone (real impacts never clear 140 g/s) and over-reports
+    // it when samples bunch up. Use the real gap; keep DT across a long pause.
+    var dt = jerkSampleDt(lastSampleAt, now, DT);
+    lastSampleAt = now;
+    var jerk = Math.abs(magnitude - lastMagnitude) / dt;
     lastMagnitude = magnitude;
 
     // No user-accel (gravity-only): treat as busy unless freefall — sex/daily
@@ -4390,11 +4405,12 @@ function redmedAssetURL(file) {
       humanBurstStart = 0;
     }
     prune(recentHumanPeaks, now, HUMAN_WINDOW_S);
+    var rhythmic = isRhythmicHumanActivity(now);
 
     if (humanBurstStart && now - humanBurstStart >= SUSTAINED_HUMAN_S && recentHumanPeaks.length) {
       markBusy(now);
     }
-    if (isRhythmicHumanActivity(now)) {
+    if (rhythmic) {
       markBusy(now);
     }
     if (recentHumanPeaks.length >= HUMAN_SPIKE_COUNT) {
@@ -4415,7 +4431,7 @@ function redmedAssetURL(file) {
     var isBusy = now < busyUntil
       || recentHandSpins.length > 0
       || recentHumanPeaks.length >= HUMAN_SPIKE_COUNT
-      || isRhythmicHumanActivity(now);
+      || rhythmic;
 
     if (magnitude <= FREEFALL_MAX_G) {
       if (!freefallSince) freefallSince = now;

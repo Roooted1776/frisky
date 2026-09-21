@@ -354,6 +354,44 @@ assert('early vitals expandBlood', /function expandBloodEarly/.test(tapper) && /
 assert('GPS pill status lockstep', /id="gpsPill"/.test(tapper) && /setGpsPill\('LIVE GPS'\)/.test(tapper) && /ACQUIRING GPS/.test(tapper));
 assert('CPR Beat & Breath on tapper', /id="cprToggle"/.test(tapper) && /Start Beat/.test(tapper) && /scheduleCPR\(545\)/.test(tapper));
 
+function extractFn(name, params) {
+  const re = new RegExp('function ' + name + '\\(' + params + '\\) \\{([\\s\\S]*?)\\n\\s*\\}');
+  const m = tapper.match(re);
+  if (!m) throw new Error('missing ' + name);
+  return new Function(...params.split(', '), m[1]);
+}
+
+const cprBeatDelay = extractFn('cprBeatDelay', 'prevAt, now, ms');
+{
+  const first = cprBeatDelay(0, 1000, 545);
+  assert('cpr first beat is 545ms', first.delay === 545 && first.at === 1545);
+  // Fired 55ms late — next delay shortens so the 110 bpm grid does not slip.
+  const late = cprBeatDelay(first.at, 1600, 545);
+  assert('cpr late tick catches up', late.at === 2090 && late.delay === 490);
+  const stalled = cprBeatDelay(late.at, 5000, 545);
+  assert('cpr stall does not burst', stalled.delay === 545 && stalled.at === 5545);
+}
+
+const jerkSampleDt = extractFn('jerkSampleDt', 'lastAt, now, fallback');
+assert('jerk uses 50Hz until a sample exists', jerkSampleDt(0, 1, 0.02) === 0.02);
+assert('jerk uses real 60Hz gap', Math.abs(jerkSampleDt(1, 1.0167, 0.02) - 0.0167) < 1e-9);
+assert('jerk ignores a long pause', jerkSampleDt(1, 1.5, 0.02) === 0.02);
+// 2g step at 100Hz is 200 g/s. Fixed 0.02s DT reports only 100 and drops it.
+const stepG = 2;
+const fastDt = jerkSampleDt(1, 1.01, 0.02);
+assert('fixed DT would hide a fast jerk', (stepG / 0.02) < 140 && (stepG / fastDt) >= 140);
+assert('fast sample keeps a 200 g/s jerk', Math.abs(stepG / fastDt - 200) < 1e-6);
+
+assert('logo waits for profile paint', !tapper.includes('redmedLogoPreload') && !/id="rmLogo"[^>]*\ssrc=/.test(tapper));
+assert('GPS skips sub-5m jitter', /function metersBetween\(lat1, lon1, lat2, lon2\)/.test(tapper) && /moved = metersBetween\(prev\.latitude, prev\.longitude, lat, lon\) >= 5/.test(tapper));
+
+const sw = readFileSync(join(ROOT, 'sw.js'), 'utf8');
+assert('sw cache v169', sw.includes("CACHE = 'redmed-tapper-v169'"));
+{
+  const assetsBlock = sw.match(/var ASSETS = \[([\s\S]*?)\];/);
+  assert('sw does not precache out-of-scope assets', !!(assetsBlock && !assetsBlock[1].includes('../')));
+}
+
 // --- plaintext named JSON (smoke / Linux preview path) ---
 const named = {
   name: 'Jane Doe',
