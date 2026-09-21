@@ -1,5 +1,16 @@
 import SwiftUI
 import UIKit
+import WebKit
+
+extension WKWebView {
+    /// Policies, Help, Preview / Scan — no pinch or double-tap zoom.
+    func redmedLockPageZoom() {
+        scrollView.minimumZoomScale = 1
+        scrollView.maximumZoomScale = 1
+        scrollView.bouncesZoom = false
+        scrollView.pinchGestureRecognizer?.isEnabled = false
+    }
+}
 
 /// Shared springs / fades for owner + scanner chrome. Keep short — presence, not noise.
 enum RedMedMotion {

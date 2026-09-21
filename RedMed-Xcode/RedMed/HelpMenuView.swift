@@ -157,6 +157,7 @@ enum PolicyWebViewPool {
         webView.scrollView.alwaysBounceVertical = true
         webView.scrollView.showsVerticalScrollIndicator = true
         webView.scrollView.showsHorizontalScrollIndicator = false
+        webView.redmedLockPageZoom()
         return webView
     }
 }
@@ -184,6 +185,7 @@ struct LocalWebView: UIViewRepresentable {
             context.coordinator.loadedKey = "\(filename)#\(fragment ?? "")"
             context.coordinator.fragment = fragment
             context.coordinator.onPolicyChange = onPolicyChange
+            pooled.redmedLockPageZoom()
             return pooled
         }
 
@@ -206,6 +208,7 @@ struct LocalWebView: UIViewRepresentable {
         webView.scrollView.alwaysBounceVertical = true
         webView.scrollView.showsVerticalScrollIndicator = true
         webView.scrollView.showsHorizontalScrollIndicator = false
+        webView.redmedLockPageZoom()
         return webView
     }
 
@@ -336,6 +339,7 @@ struct LocalWebView: UIViewRepresentable {
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            webView.redmedLockPageZoom()
             webView.scrollView.flashScrollIndicators()
             scrollToFragment(in: webView)
         }
