@@ -39,6 +39,7 @@ on:
       - 'scripts/test-d-codec.mjs'
       - 'scripts/deploy-pages.sh'
       - 'scripts/stage-worker-assets.sh'
+      - 'worker/**'
       - '.github/workflows/pages-deploy.yml'
   pull_request:
     paths:
@@ -66,6 +67,7 @@ on:
       - 'scripts/test-d-codec.mjs'
       - 'scripts/deploy-pages.sh'
       - 'scripts/stage-worker-assets.sh'
+      - 'worker/**'
       - '.github/workflows/pages-deploy.yml'
   workflow_dispatch:
 
@@ -87,6 +89,7 @@ jobs:
           # Do not require three identical files (that gate is stale).
           bash scripts/sync-tapper.sh
           node scripts/test-d-codec.mjs
+          node scripts/test-worker-device.mjs
           f=tapper/index.html
           ! grep -q 'Checking your phone' "$f" || fail "$f still has Checking your phone"
           ! grep -q 'Set up your RedMed band' "$f" || fail "$f still has band-setup copy"
