@@ -8,8 +8,8 @@ Dual-Mac / git identity: `docs/DUAL-MAC.md`.
 | Agent | Role | How it lands code |
 | --- | --- | --- |
 | **Grok (xAI)** | Owner-side agent. GitHub connector on `Roooted1776`. Reads/writes this repo, opens/merges PRs, keeps `main` current. | Commits via GitHub as `Roooted1776`. Do not invent a separate Grok GitHub user. |
-| **Cursor Agent** | Cloud + local IDE agent. Linux Cloud Agent covers the static Pages / tapper shell only. | PRs from `cursor/*` or `main-*` branches. iOS (`RedMed-Xcode/`) is macOS/Xcode, not the Linux Cloud Agent. |
-| **Owner (Max)** | Source of truth for product calls. | MacBook + Mini clones at `~/Documents/frisky` → `main`. |
+| **Cursor Agent** | Cloud + local IDE agent. Linux Cloud Agent covers the static Pages / tapper shell only. MacBook Air / Mini **My Machines** workers (`macbook-air`, `mac-mini`) run tool calls on that Mac for iOS / Xcode — see `docs/DUAL-MAC.md` §0. | PRs from `cursor/*` or `main-*` branches. iOS (`RedMed-Xcode/`) is macOS/Xcode, not the Linux Cloud Agent. |
+| **Owner (Max)** | Source of truth for product calls. | MacBook Air + Mini clones at `~/Documents/frisky` → `main`. |
 
 Grok is in this repo. Treat instructions here as binding when Grok edits RedMed.
 
