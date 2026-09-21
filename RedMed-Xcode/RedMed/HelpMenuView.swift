@@ -596,7 +596,7 @@ struct HelpMenuView: View {
                                     .padding(.vertical, Metrics.rowVPad)
                                     .onChange(of: locationEnabled) { _, on in
                                         // Pref only — never call requestWhenInUseAuthorization here.
-                                        // Find Help prompts the system sheet once when GPS is actually needed.
+                                        // When-In-Use is requested once after Face ID (Agree / cold open).
                                         if on { locationSuggester.refresh() }
                                     }
                                 if locationEnabled && locationSuggester.mustOpenSettings {
@@ -611,7 +611,7 @@ struct HelpMenuView: View {
                                     .padding(.vertical, Metrics.rowVPad)
                                 }
                             }
-                            Text("Location defaults on. No RedMed popup — iOS may ask Allow once the first time Find Help needs GPS (Apple requires that tap). Siren / max volume / brightness arm on crash or SOS only.")
+                            Text("Location defaults on with Agree (emergency terms). No RedMed popup — iOS may ask Allow once after Face ID (Apple requires that tap). GPS still starts only on Find Help. Siren / max volume / brightness arm on crash or SOS only.")
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundColor(.redmedMuted)
                                 .padding(.horizontal, 4)
