@@ -46,12 +46,20 @@ function b64urlDecode(raw) {
 function clipStr(s) {
   return String(s ?? '').slice(0, MAX_STR);
 }
+function flattenListItems(items) {
+  const out = [];
+  for (const raw of items || []) {
+    for (const part of String(raw).split(',')) {
+      const t = clipStr(part.trim());
+      if (t) out.push(t);
+      if (out.length >= MAX_LIST) return out;
+    }
+  }
+  return out;
+}
+
 function joinList(items) {
-  return (items || [])
-    .slice(0, MAX_LIST)
-    .map((s) => clipStr(String(s).trim()))
-    .filter(Boolean)
-    .join(', ');
+  return flattenListItems(items).join(', ');
 }
 
 /** Swift `compactArray` — current AES writes. */
@@ -137,10 +145,10 @@ function isLegacyCompactArray(arr) {
 
 function splitList(v) {
   if (Array.isArray(v)) {
-    return v.filter((x) => typeof x === 'string').slice(0, MAX_LIST).map((s) => s.slice(0, MAX_STR));
+    return flattenListItems(v.filter((x) => typeof x === 'string'));
   }
   if (typeof v !== 'string' || !v) return [];
-  return v.split(',').map((s) => s.trim().slice(0, MAX_STR)).filter(Boolean).slice(0, MAX_LIST);
+  return flattenListItems([v]);
 }
 
 function profileFromCurrentArray(arr) {
@@ -427,6 +435,9 @@ const long = 'x'.repeat(250);
 assert('clipStr 200', clipStr(long).length === MAX_STR);
 const many = Array.from({ length: 50 }, (_, i) => `item${i}`);
 assert('joinList 40', joinList(many).split(', ').length === MAX_LIST);
+assert('joinList flattens comma in item', joinList(['Penicillin, Sulfa']) === 'Penicillin, Sulfa');
+assert('splitList flattens comma in item', splitList('Penicillin, Sulfa').join('|') === 'Penicillin|Sulfa');
+assert('splitList flattens comma in array item', splitList(['Penicillin, Sulfa']).join('|') === 'Penicillin|Sulfa');
 
 // --- passerby empty-state / SOS auto-arm gates (tapper/index.html) ---
 const tapperSrc = readFileSync(join(ROOT, 'tapper/index.html'), 'utf8');
@@ -440,6 +451,11 @@ assert('paintedFromBand requires content', tapperSrc.includes('paintedFromBand =
 assert('treat-first early vitals script', tapperSrc.includes('__redmedEarlyVitals') && tapperSrc.includes('Treat-first:'));
 assert('hashchange re-decodes #d=', tapperSrc.includes('decodeProfile().then(function (p)') && tapperSrc.includes('hashchange'));
 assert('own-phone handoff before SOS', tapperSrc.includes('redmed://band') && tapperSrc.includes('handoffToInstalledAppThenMaybeArm'));
+const tapperAid = tapperSrc.indexOf('id="aidStopAlarm"');
+const tapper911 = tapperSrc.indexOf('id="panel-911"');
+const tapperAidPanel = tapperSrc.indexOf('id="panel-aid"');
+assert('Stop The Alarm lives on 911', tapper911 >= 0 && tapperAid > tapper911 && (tapperAidPanel < 0 || tapperAid < tapperAidPanel));
+assert('crash hint names Stop The Alarm', tapperSrc.includes('Tap Stop The Alarm to cancel'));
 const extracted = tapperSrc.match(/function profileHasContent\(p\) \{[\s\S]*?\n  \}/);
 assert('profileHasContent extract', !!extracted);
 if (extracted) {

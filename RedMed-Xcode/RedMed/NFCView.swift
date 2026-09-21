@@ -239,9 +239,8 @@ struct NFCView: View {
                 handlePrimaryAction()
             }
 
-            tipRow(AppConfig.NFCWriteCopy.holdTopTip)
-
             if AppConfig.nfcHardwareEnabled {
+                tipRow(AppConfig.NFCWriteCopy.holdTopTip)
                 previewButton
                 OutlineButton(
                     title: band.isReading ? "Hold Near The Band…" : "Load From Band",
@@ -285,7 +284,7 @@ struct NFCView: View {
                     tipRow("Linked after write + matching read-back, or after Load From Band.")
                 } else {
                     tipRow(AppConfig.BraceletRF.hardwareParkedSummary)
-                    tipRow("Preview is the same HTML a helper sees. Blank chips + Share honesty until Write The Band is proven on a blank NTAG216.")
+                    tipRow("Preview is the same HTML a helper sees. It is not a chip write.")
                 }
             }
             .padding(.top, 2)

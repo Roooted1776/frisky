@@ -151,6 +151,12 @@ def main() -> int:
     elif "Couldn't Read This Band" not in tapper_src:
         print("FAIL tapper/index.html missing decode-fail empty copy")
         ok = False
+    elif tapper_src.find('id="panel-911"') < 0 or tapper_src.find('id="aidStopAlarm"') < tapper_src.find('id="panel-911"'):
+        print("FAIL tapper/index.html Stop The Alarm is not on the 911 panel")
+        ok = False
+    elif "Tap Stop The Alarm to cancel" not in tapper_src:
+        print("FAIL tapper/index.html crash hint missing Stop The Alarm")
+        ok = False
     else:
         print("OK   empty-state gates tapper/index.html")
     if "copyTextToClipboard" not in tapper_src or "enableHighAccuracy: true" not in tapper_src:

@@ -845,6 +845,7 @@ function redmedAssetURL(file) {
   #panel-911 .page-pad > .gps-actions,
   #panel-911 .page-pad > .seizure-strip,
   #panel-911 .page-pad > .crash-dial-hint,
+  #panel-911 .page-pad > .aid-stop-alarm,
   #panel-911 .page-pad > .info {
     margin: 0;
   }
@@ -1177,7 +1178,7 @@ function redmedAssetURL(file) {
     text-align: left;
     cursor: pointer;
   }
-  .aid-stop-alarm.show { display: block; }
+  .aid-stop-alarm.show { display: block !important; }
   .aid-stop-alarm .x {
     float: right;
     color: var(--accent);
@@ -1897,6 +1898,7 @@ function redmedAssetURL(file) {
         <button class="btn btn-sos" type="button" id="sosBtn" aria-pressed="false">SOS · Locate Me</button>
         <p class="survival-note">Crash detect only while this page is open. Not Apple Crash Detection. SOS · Locate Me is this phone's siren.</p>
         <p class="crash-dial-hint" id="crashDialHint" hidden></p>
+        <button class="aid-stop-alarm" type="button" id="aidStopAlarm" hidden>Stop The Alarm <span class="x" aria-hidden="true">✕</span></button>
         <a class="btn btn-call" id="callEmergency911" href="tel:112">Call <span class="emg">112</span></a>
         <div class="seizure-strip" id="seizureStrip">
           <div>
@@ -1994,8 +1996,6 @@ function redmedAssetURL(file) {
             </div>
           </details>
         </div>
-
-        <button class="aid-stop-alarm" type="button" id="aidStopAlarm">Stop The Alarm <span class="x" aria-hidden="true">✕</span></button>
 
         <p class="foot-note">First-aid reference only. Not medical advice and not a substitute for emergency dispatch. Call emergency services and follow their instructions.</p>
         <!-- lockstep AppConfig.Satellite.localOnlyLine (owner AidView) -->
@@ -2141,10 +2141,15 @@ function redmedAssetURL(file) {
 
   function asStringArray(v) {
     if (!Array.isArray(v)) return [];
-    return v
-      .filter(function (x) { return typeof x === 'string'; })
-      .slice(0, MAX_LIST)
-      .map(function (s) { return s.slice(0, MAX_STR); });
+    var out = [];
+    v.forEach(function (x) {
+      if (typeof x !== 'string') return;
+      String(x).split(',').forEach(function (part) {
+        var t = part.trim().slice(0, MAX_STR);
+        if (t && out.length < MAX_LIST) out.push(t);
+      });
+    });
+    return out;
   }
 
   function sanitizePhone(v) {
@@ -3781,7 +3786,7 @@ function redmedAssetURL(file) {
     var digits = emergencyDigits() || '911';
     crashDialHint.hidden = false;
     crashDialHint.classList.add('show');
-    crashDialHint.textContent = 'Calling ' + digits + ' in ' + formatDialRemain(remainSec);
+    crashDialHint.textContent = 'Calling ' + digits + ' in ' + formatDialRemain(remainSec) + '. Tap Stop The Alarm to cancel.';
   }
 
   function clearCrashDial() {
@@ -3812,7 +3817,10 @@ function redmedAssetURL(file) {
     sosBtn.textContent = label;
     sosBtn.classList.toggle('armed', armed);
     sosBtn.setAttribute('aria-pressed', armed ? 'true' : 'false');
-    if (aidStop) aidStop.classList.toggle('show', armed);
+    if (aidStop) {
+      aidStop.classList.toggle('show', armed);
+      aidStop.hidden = !armed;
+    }
   }
 
   function writeU16(view, offset, v) { view.setUint16(offset, v, true); }

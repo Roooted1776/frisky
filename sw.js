@@ -30,7 +30,7 @@
  * Fix #7 (Medium): putShell deduplicates SHELL_KEYS to avoid double-writing
  *   the same cache entry when reqOrUrl already appears in SHELL_KEYS.
  */
-var CACHE = 'redmed-tapper-v163';
+var CACHE = 'redmed-tapper-v165';
 var ASSETS = [
   './pheart.png',
   './BrandLogo.png',

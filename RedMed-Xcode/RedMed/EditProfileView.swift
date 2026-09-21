@@ -538,6 +538,19 @@ struct EditProfileView: View {
 
     // MARK: - Persistence
 
+    /// Pack / decode already split list fields on comma. Save the same way so
+    /// Edit, Preview, and the band card stay one-to-one.
+    private static func flattenedMedicalLines(_ lines: [DraftLine]) -> [String] {
+        var out: [String] = []
+        for line in lines {
+            for part in line.text.split(separator: ",", omittingEmptySubsequences: true) {
+                let t = part.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !t.isEmpty { out.append(t) }
+            }
+        }
+        return out
+    }
+
     /// Server-side-of-the-UI backstop — the live editor already blocks typing
     /// past the limit, but paste / programmatic seeds can still land here.
     private static func capToWordLimit(_ text: String, limit: Int) -> String {
@@ -760,9 +773,9 @@ struct EditProfileView: View {
             return birthDate.trimmingCharacters(in: .whitespacesAndNewlines)
         }()
         let nextBlood = bloodType.trimmingCharacters(in: .whitespacesAndNewlines)
-        let nextAllergies = allergies.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-        let nextMeds = medications.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-        let nextConditions = conditions.map(\.text).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        let nextAllergies = Self.flattenedMedicalLines(allergies)
+        let nextMeds = Self.flattenedMedicalLines(medications)
+        let nextConditions = Self.flattenedMedicalLines(conditions)
         let nextNotes = String(Self.capToWordLimit(
             notes.trimmingCharacters(in: .whitespacesAndNewlines),
             limit: Self.notesWordLimit
@@ -1041,6 +1054,13 @@ private struct DraftLinesEditor: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+
+        Text("One item per row. A comma becomes two items on the card.")
+            .font(.system(size: 12, weight: .medium))
+            .foregroundColor(.redmedMuted)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, Metrics.rowHPad)
+            .padding(.bottom, 10)
     }
 }
 
