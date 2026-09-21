@@ -201,10 +201,9 @@ struct TopicDetailView: View {
     }
 }
 
-/// Owns MapKit + CLLocationManager only when the trauma-hospitals topic is open
-/// and Location is enabled.
+/// Owns MapKit + CLLocationManager only when the trauma-hospitals topic is open.
+/// iOS Location permission is the off-switch (no in-app Location toggle).
 private struct LiveNearbyHospitalsSection: View {
-    @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @StateObject private var hospitalFinder = NearbyHospitalFinder()
 
     var body: some View {
@@ -218,12 +217,7 @@ private struct LiveNearbyHospitalsSection: View {
                 .padding(.bottom, 6)
                 .padding(.top, 24)
 
-            if !locationEnabled {
-                Text("Location is off. Allow Location in iOS Settings to find nearby hospitals. This screen uses Apple Maps on this phone. A band tap in a browser uses OpenStreetMap Overpass instead.")
-                    .font(.system(size: 13))
-                    .foregroundColor(.redmedMuted)
-                    .padding(.vertical, 12)
-            } else if hospitalFinder.isLoading {
+            if hospitalFinder.isLoading {
                 HStack {
                     ProgressView()
                     Text("Finding Hospitals Near You…")
@@ -286,11 +280,7 @@ private struct LiveNearbyHospitalsSection: View {
             }
         }
         .task {
-            guard locationEnabled else { return }
             hospitalFinder.search()
-        }
-        .onChange(of: locationEnabled) { _, on in
-            if on { hospitalFinder.search() }
         }
     }
 }

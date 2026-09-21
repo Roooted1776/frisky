@@ -506,7 +506,6 @@ struct HelpMenuView: View {
     @Environment(\.isScannerSession) private var isScannerSession
     @EnvironmentObject private var profile: ProfileData
     /// Settings (Haptic feedback) lives on `ConsentGateView`. Location is on as part of Agree.
-    @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
     var onOpenNFC: (() -> Void)? = nil
 
@@ -644,7 +643,7 @@ struct HelpMenuView: View {
             .onAppear {
                 // Warm Document.html while the Help list is on screen.
                 PolicyWebViewPool.warm()
-                guard showsOwnerTools, locationEnabled else { return }
+                guard showsOwnerTools else { return }
                 locationSuggester.refresh()
             }
             .confirmationDialog(
