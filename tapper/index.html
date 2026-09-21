@@ -23,6 +23,11 @@ html.tab-911 .panel{display:none}
 html.tab-911 #panel-911{display:block}
 /* Aid is owner-app only — keep panel out of passerby / Preview chrome. */
 #panel-aid{display:none!important}
+/* Bare /tapper/ (no #d=): hide the dash YOU chart on first paint. The head
+   script adds html.is-unlinked before <body> so this cannot flash dashes. */
+html.is-unlinked .you-card,
+html.is-unlinked .list-grid{display:none!important}
+html.is-unlinked #rmEmpty{display:block!important}
 </style>
 <script>
 // Resolve the start tab before first paint. Bare open / #d= → medical (YOU).
@@ -70,6 +75,21 @@ html.tab-911 #panel-911{display:block}
     document.documentElement.classList.remove("tab-911", "tab-aid");
     if (tab === "911") document.documentElement.classList.add("tab-911");
   } catch (e4) {}
+  // First-paint empty state: no #d= and not in-app Preview/embed → No Patient.
+  // #d= stays off this class until decode settles (treat-first / renderProfile).
+  try {
+    var startHash = "";
+    var startSearch = "";
+    try { startHash = location.hash || ""; } catch (e5) {}
+    try { startSearch = location.search || ""; } catch (e6) {}
+    var appSrc = false;
+    try { appSrc = new URLSearchParams(startSearch).get("src") === "app"; } catch (e7) {}
+    var appShell = false;
+    try { appShell = !!(window.__REDMED_APP_PREVIEW || window.__REDMED_APP_EMBED || appSrc); } catch (e8) {}
+    if (!appShell && !/^#d=/i.test(startHash)) {
+      document.documentElement.classList.add("is-unlinked");
+    }
+  } catch (e9) {}
 })();
 </script>
 <script>
@@ -1617,9 +1637,9 @@ function redmedAssetURL(file) {
       </div>
 
       <div class="rm-empty" id="rmEmpty" hidden>
-        <div class="rm-empty-pill">No Patient</div>
-        <h2>No Medical ID On This Page</h2>
-        <p>A written MED ID band opens the person's name, blood type, allergies, and contacts here.</p>
+        <div class="rm-empty-pill" id="rmEmptyPill">No Patient</div>
+        <h2 id="rmEmptyTitle">No Medical ID On This Page</h2>
+        <p id="rmEmptyBody">A written MED ID band opens the person's name, blood type, allergies, and contacts here.</p>
         <p class="rm-empty-foot">911 still works on this phone.</p>
       </div>
 
@@ -1734,9 +1754,21 @@ function redmedAssetURL(file) {
           if (name) document.title = name + ' · RedMed';
         } catch (e2) {}
         var emptyEl = document.getElementById('rmEmpty');
+        var hasContent = !!(name || (p.dob || '').trim() || blood
+          || (p.notes || '').trim() || p.donor || p.pregnant || p.deafOrVisionImpaired);
+        if (!hasContent) {
+          var earlyLists = [p.allergies, p.meds, p.conditions];
+          for (var ei = 0; ei < earlyLists.length && !hasContent; ei++) {
+            var ev = earlyLists[ei];
+            if (typeof ev === 'string' && ev.trim()) hasContent = true;
+            else if (Array.isArray(ev) && ev.length) hasContent = true;
+          }
+        }
         try {
-          document.documentElement.classList.remove('is-unlinked');
-          if (emptyEl) emptyEl.hidden = true;
+          if (hasContent) {
+            document.documentElement.classList.remove('is-unlinked');
+            if (emptyEl) emptyEl.hidden = true;
+          }
         } catch (e3) {}
         var noteEl = document.querySelector('.rm-note');
         if (noteEl) noteEl.classList.add('is-filled');
@@ -2501,7 +2533,12 @@ function redmedAssetURL(file) {
     }
   }
 
+  /// Set when decode fails for a reason testers / helpers should see
+  /// (older zlib bands on Safari < 16.4). Cleared on each decode attempt.
+  var lastDecodeHint = '';
+
   function decodeProfile() {
+    lastDecodeHint = '';
     try {
       // In-app embed / Preview: Swift injects plaintext so first paint skips WebCrypto.
       if (window.__REDMED_PROFILE) {
@@ -2526,6 +2563,10 @@ function redmedAssetURL(file) {
         var direct = tryParseJSON(bytes);
         if (direct != null) return Promise.resolve(sanitizeProfile(direct));
       } catch (e) { /* fall through to zlib */ }
+      if (typeof DecompressionStream === 'undefined') {
+        lastDecodeHint = 'This phone cannot decode older band formats. Try a newer phone or call 911.';
+        return Promise.resolve(null);
+      }
       var body = bytes[0] === ZLIB_VERSION ? bytes.subarray(1) : bytes;
       return inflateZlib(body).then(function (inflated) {
         var parsed = tryParseJSON(inflated);
@@ -2557,6 +2598,31 @@ function redmedAssetURL(file) {
     return false;
   }
 
+  function hashHadPayload() {
+    try {
+      var h = location.hash || '';
+      return /^#d=/i.test(h) && h.length > 3;
+    } catch (eH) { return false; }
+  }
+
+  function paintEmptyStateCopy(showEmpty) {
+    var pill = document.getElementById('rmEmptyPill');
+    var title = document.getElementById('rmEmptyTitle');
+    var body = document.getElementById('rmEmptyBody');
+    var noteEl = document.querySelector('.rm-note');
+    var decodeFailed = !!showEmpty && hashHadPayload();
+    if (pill) pill.textContent = decodeFailed ? "Couldn't Read" : 'No Patient';
+    if (title) title.textContent = decodeFailed ? "Couldn't Read This Band" : 'No Medical ID On This Page';
+    if (body) {
+      body.textContent = decodeFailed
+        ? 'This tap did not decode a medical ID. Tap the band again or call 911. Data stays on the chip.'
+        : "A written MED ID band opens the person's name, blood type, allergies, and contacts here.";
+    }
+    if (noteEl && lastDecodeHint && decodeFailed) {
+      noteEl.textContent = lastDecodeHint;
+    }
+  }
+
   function renderProfile(p, fromBand) {
     var hasPatient = profileHasContent(p);
     paintedFromBand = !!fromBand && hasPatient;
@@ -2569,12 +2635,13 @@ function redmedAssetURL(file) {
     var statusEl = document.getElementById('statusLine');
     var noteEl = document.querySelector('.rm-note');
     var emptyEl = document.getElementById('rmEmpty');
-    // Bare /tapper/ and failed / empty `#d=` → No Patient. Owner embed keeps
+    // Bare /tapper/ and failed / empty `#d=` → empty card. Owner embed keeps
     // the YOU card (html.app-embed.is-unlinked hides .rm-empty).
     try {
       var showEmpty = !isAppEmbed() && !hasPatient;
       document.documentElement.classList.toggle('is-unlinked', showEmpty);
       if (emptyEl) emptyEl.hidden = !showEmpty;
+      paintEmptyStateCopy(showEmpty);
     } catch (eUn) {}
     nameEl.textContent = displayName;
     try {
@@ -2592,7 +2659,10 @@ function redmedAssetURL(file) {
       var linked = isAppPreview()
         ? (!!window.__REDMED_BRACELET_LINKED && youComplete)
         : (!!fromBand && youComplete);
-      statusEl.textContent = linked ? 'Linked Bracelet' : 'Not Linked';
+      // Passerby: a decoded #d= is a loaded URL, not a verified NTAG216 write.
+      // Owner Preview / embed keep "Linked Bracelet" (Swift __REDMED_BRACELET_LINKED).
+      var linkedLabel = (isAppPreview() || isAppEmbed()) ? 'Linked Bracelet' : 'Medical ID Loaded';
+      statusEl.textContent = linked ? linkedLabel : 'Not Linked';
       statusEl.classList.toggle('linked', linked);
       if (isAppEmbed()) {
         statusEl.classList.add('rm-status-link');

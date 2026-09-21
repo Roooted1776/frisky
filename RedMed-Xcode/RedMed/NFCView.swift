@@ -125,6 +125,10 @@ struct NFCView: View {
             guard verified, !band.isWriting else { return }
             linkBraceletIfVerified()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .redMedPackParkedBandURL)) { _ in
+            guard isVisible else { return }
+            copyParkedBandURL()
+        }
     }
 
     /// Linked only after a matching read-back. Written-but-unverified stays Not linked.

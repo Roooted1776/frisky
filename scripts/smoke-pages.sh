@@ -142,8 +142,14 @@ def main() -> int:
     elif "classList.toggle('is-unlinked'" not in tapper_src:
         print("FAIL tapper/index.html never toggles is-unlinked")
         ok = False
+    elif 'classList.add("is-unlinked")' not in tapper_src and "classList.add('is-unlinked')" not in tapper_src:
+        print("FAIL tapper/index.html missing first-paint is-unlinked")
+        ok = False
     elif "No Patient" not in tapper_src:
         print("FAIL tapper/index.html missing No Patient empty state")
+        ok = False
+    elif "Couldn't Read This Band" not in tapper_src:
+        print("FAIL tapper/index.html missing decode-fail empty copy")
         ok = False
     else:
         print("OK   empty-state gates tapper/index.html")

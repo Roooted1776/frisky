@@ -683,6 +683,8 @@ extension Notification.Name {
     /// Owner RedMed embed tapped Not linked / Linked bracelet — ContentView selects NFC
     /// and begins CoreNFC write on that same gesture (hold finishes the program).
     static let redMedOpenNFCTab = Notification.Name("redMedOpenNFCTab")
+    /// Parked NFC tab re-tap — retry Pack Band URL (copy). Not a chip write.
+    static let redMedPackParkedBandURL = Notification.Name("redMedPackParkedBandURL")
     /// Preview / Scan tap card presented — PrivacySnapshotGuard must not cover it.
     static let redMedTapCardPresentationDidChange = Notification.Name("redMedTapCardPresentationDidChange")
     /// ConsentGate Face ID succeeded — Main is hit-testable. ContentView may

@@ -32,7 +32,7 @@ enum HealthKitProfileImport {
         }
     }
 
-    static var isAvailable: Bool { false }
+    static var isAvailable: Bool { AppConfig.healthKitImportEnabled }
 
     @MainActor
     static func readCharacteristics() async throws -> Draft {
