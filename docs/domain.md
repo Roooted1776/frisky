@@ -18,7 +18,7 @@ live interim host:
 |------|--------|
 | Custom HTML app URL | **TBD** — set `AppConfig.medicalCardCustomDomainTBD` when ready |
 | Public GitHub Pages `Roooted1776.github.io/tapper/` | **Live interim** — NFC write base. Repo `Roooted1776/Roooted1776.github.io` (Actions → Publish tapper copies from frisky). Do not flip `medicalCardBaseURL` onto another host until that host's `/tapper/` smoke is green. |
-| Cloudflare Pages `redmed.pages.dev` | Optional; 404 until CF secrets / Git connect |
+| Cloudflare Worker `redmed-emergency` | Optional `*.workers.dev`; empty until `CLOUDFLARE_API_TOKEN` + `wrangler deploy` |
 
 Smoke on the live interim: RedMed · 911 · Aid, no login. `pages-deploy.yml` **fails** when the write base 404s.
 
@@ -36,7 +36,7 @@ Do not change `AppConfig.medicalCardBaseURL` until that smoke is green.
 ## When you pick the domain
 
 1. Register the custom domain (Cloudflare Registrar recommended so DNS + Pages stay together).
-2. Attach it to the Pages project that serves `tapper/`.
+2. Attach it as a custom domain on Worker `redmed-emergency` (or the Pages project, if still used) that serves `tapper/`.
 3. Wait for HTTPS **Active**.
 4. Smoke: `https://<your-domain>/tapper/` loads RedMed · 911 · Aid. Bare `/` must land on `/tapper/` and keep `#d=`.
 5. Optional: 301 old github.io / pages.dev URLs to the custom host; keep serving old hosts so already-written bands still open.
@@ -51,6 +51,6 @@ Path stays **`/tapper/`** so SW cache keys and legacy `/get/` → `/tapper/` red
 |------|-----|
 | Product HTML app | Custom domain, **TBD** |
 | Current AppConfig write base | `https://roooted1776.github.io/tapper/` |
-| Cloudflare Pages (optional) | `https://redmed.pages.dev/tapper/` |
+| Cloudflare Worker (optional) | `https://redmed-emergency.<subdomain>.workers.dev/tapper/` |
 
 `getredmed.com` / `redmed.band` are examples only — not locked. Skip premium names (`redmed.com`, etc.) unless you buy them.

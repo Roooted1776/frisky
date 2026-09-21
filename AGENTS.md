@@ -8,14 +8,14 @@ Dual-Mac / git identity: `docs/DUAL-MAC.md`.
 | Agent | Role | How it lands code |
 | --- | --- | --- |
 | **Grok (xAI)** | Owner-side agent. GitHub connector on `Roooted1776`. Reads/writes this repo, opens/merges PRs, keeps `main` current. | Commits via GitHub as `Roooted1776`. Do not invent a separate Grok GitHub user. |
-| **Cursor Agent** | Cloud + local IDE agent. Linux Cloud Agent covers the static Pages / tapper shell only. MacBook Air / Mini **My Machines** workers (`macbook-air`, `mac-mini`) run tool calls on that Mac for iOS / Xcode — see `docs/DUAL-MAC.md` §0. | PRs from `cursor/*` or `main-*` branches. iOS (`RedMed-Xcode/`) is macOS/Xcode, not the Linux Cloud Agent. |
+| **Cursor Agent** | Cloud + local IDE agent. Linux Cloud Agent covers the static Worker / tapper shell only. MacBook Air / Mini **My Machines** workers (`macbook-air`, `mac-mini`) run tool calls on that Mac for iOS / Xcode — see `docs/DUAL-MAC.md` §0. | PRs from `cursor/*` or `main-*` branches. iOS (`RedMed-Xcode/`) is macOS/Xcode, not the Linux Cloud Agent. |
 | **Owner (Max)** | Source of truth for product calls. | MacBook Air + Mini clones at `~/Documents/frisky` → `main`. |
 
 Grok is in this repo. Treat instructions here as binding when Grok edits RedMed.
 
 ## Surfaces (do not mix)
 
-- **Static Cloudflare Pages shell** — `tapper/`, redirect stubs, `sw.js`, `Document/`, `assets/`. No build. Local: `python3 -m http.server`. CI: `.github/workflows/pages-deploy.yml`. Before merge: `bash scripts/sync-tapper.sh` and `node scripts/test-d-codec.mjs`.
+- **Static Cloudflare Worker shell** — Worker `redmed-emergency` (`wrangler.jsonc` assets = repo root; `_headers` / `_redirects`). Serves `tapper/`, redirect stubs, `sw.js`, `Document/`, `assets/`. No build. Local: `python3 -m http.server`. CI: `.github/workflows/pages-deploy.yml` (`wrangler deploy` when `CLOUDFLARE_API_TOKEN` is set). Dashboard: Workers → `redmed-emergency` → production Settings. Before merge: `bash scripts/sync-tapper.sh` and `node scripts/test-d-codec.mjs`.
 - **Native iOS app** — `RedMed-Xcode/`. macOS only. `ios-build.yml` on `macos-latest`.
 
 Keep `sw.js`, `tapper/sw.js`, and `RedMed-Xcode/RedMed/sw.js` CACHE versions in lockstep.
