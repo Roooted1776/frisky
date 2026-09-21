@@ -193,5 +193,18 @@
   </footer>
 
 </div>
+<!-- Band taps use /tapper/#d= (RedMed · 911 · Aid). This page is the medical-card
+     layout source of truth; intentional NFC range is ~1–2″ (not feet). -->
+<script>
+(function () {
+  try {
+    var hash = location.hash || '';
+    if (!/^#d=/i.test(hash)) return;
+    var dest = new URL('index.html', location.href);
+    dest.search = location.search;
+    location.replace(dest.pathname + dest.search + hash);
+  } catch (e) {}
+})();
+</script>
 </body>
 </html>

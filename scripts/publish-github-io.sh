@@ -36,7 +36,10 @@ if grep -q 'Checking your phone' "$SHELL" \
 fi
 
 mkdir -p "$DEST/tapper" "$DEST/get" "$DEST/support" "$DEST/assets" "$DEST/.github/workflows" "$DEST/.well-known" "$DEST/Document" "$DEST/privacy"
-cp -f index.html tapper.html card.html get.html sw.js \
+# Same passerby include set as scripts/stage-worker-assets.sh (stubs + tapper +
+# assets + policies). Do not invent extra excludes — omit RedMed-Xcode / docs /
+# scripts by only copying this list.
+cp -f index.html tapper.html card.html get.html redmed-emergency.html sw.js \
   _headers _redirects apple-app-site-association \
   "$DEST/"
 cp -f .well-known/apple-app-site-association "$DEST/.well-known/apple-app-site-association"
@@ -52,13 +55,18 @@ cp -f support/index.html "$DEST/support/index.html"
 cp -f Document/index.html Document/Document.html Document/legal-doc.css \
   "$DEST/Document/"
 cp -f privacy/index.html "$DEST/privacy/index.html"
-cp -f tapper/index.html tapper/sw.js \
-  tapper/pheart.png tapper/BrandLogo.png tapper/BrandWordmark.png \
+cp -f tapper/index.html tapper/emergency.html tapper/sw.js \
+  tapper/pheart.png tapper/BrandLogo.png tapper/BrandLogo.svg \
+  tapper/BrandLogo@2x.png tapper/BrandLogo@3x.png tapper/BrandWordmark.png \
   "$DEST/tapper/"
 # Canonical brand photos — assets/ only (no repo-root PNG copies).
 cp -f assets/pheart.png assets/BrandLogo.png assets/BrandWordmark.png \
   assets/BrandWordmark.svg \
   "$DEST/assets/"
+# Optional densities when present in assets/ (stage-worker copies whole assets/).
+for f in assets/BrandLogo.svg assets/BrandLogo@2x.png assets/BrandLogo@3x.png; do
+  if [[ -f "$f" ]]; then cp -f "$f" "$DEST/assets/"; fi
+done
 touch "$DEST/.nojekyll"
 
 echo "copied passerby shell → $DEST"
