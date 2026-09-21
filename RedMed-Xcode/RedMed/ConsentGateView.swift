@@ -265,8 +265,9 @@ struct ConsentGateView<Content: View>: View {
     /// Record acceptance on Agree, dismiss ack UI, then Face ID before Main.
     private func enterApp() {
         checked = true
-        // Agree to emergency terms auto-accepts Location (Help → Settings
-        // stays on). Owner can still turn it off later in Help → Settings.
+        // Agree covers location while the app is open. Write true so a leftover
+        // Help → Settings off cannot stick (that toggle is gone). iOS Settings
+        // is the only off-switch.
         locationEnabled = true
         ConsentSettings.recordAcceptance()
         RedMedHaptics.success()

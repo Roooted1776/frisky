@@ -31,9 +31,9 @@ final class LocationAccessSuggester: NSObject, ObservableObject, CLLocationManag
     }
 
     /// Present When-In-Use if still `.notDetermined`. Call after Face ID
-    /// succeeds. Does not start GPS.
+    /// succeeds. Does not start GPS. In-app Location is always on (Agree);
+    /// iOS permission is the only off-switch.
     func requestWhenInUseIfNeeded() {
-        guard AppSettings.locationEnabled else { return }
         if promptManager != nil { return }
         let status = statusManager.authorizationStatus
         switch status {

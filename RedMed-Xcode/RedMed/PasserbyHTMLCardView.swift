@@ -955,15 +955,14 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
 
         /// Preview / Scan Find Help uses `navigator.geolocation`. Owner already
         /// accepted location in emergency terms (Agree) — grant WK geolocation
-        /// when Location is on; deny when Help → Settings turned it off.
-        /// Does not bypass Apple’s When-In-Use sheet (Core Location).
+        /// after Agree. Does not bypass Apple’s When-In-Use sheet (Core Location).
         func webView(
             _ webView: WKWebView,
             requestGeolocationPermissionFor origin: WKSecurityOrigin,
             initiatedByFrame frame: WKFrameInfo,
             decisionHandler: @escaping (WKPermissionDecision) -> Void
         ) {
-            if AppSettings.locationEnabled && ConsentSettings.hasAcceptedCurrent {
+            if ConsentSettings.hasAcceptedCurrent {
                 decisionHandler(.grant)
             } else {
                 decisionHandler(.deny)

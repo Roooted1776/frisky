@@ -55,22 +55,19 @@ struct EmergencyView: View {
 
 private struct FindHelpLocationBlock: View {
     var isVisible: Bool = true
-    @AppStorage(AppSettings.locationEnabledKey) private var locationEnabled = true
     @ObservedObject private var locationSuggester = LocationAccessSuggester.shared
     @StateObject private var locationManager = LocationManager()
     @State private var copied = false
     @State private var copyReset: Task<Void, Never>?
 
+    /// iOS Location denied/restricted is the only GPS off-switch.
     private var gpsBlocked: Bool {
-        !locationEnabled || locationSuggester.mustOpenSettings
+        locationSuggester.mustOpenSettings
     }
 
     private var copyTitle: String {
         if locationSuggester.mustOpenSettings {
             return "Location Denied — Open Settings"
-        }
-        if !locationEnabled {
-            return "Location Off — Allow It In iOS Settings"
         }
         return copied ? "Copied" : "Copy Coordinates"
     }
@@ -112,15 +109,11 @@ private struct FindHelpLocationBlock: View {
             try? await Task.sleep(nanoseconds: 40_000_000)
             guard !Task.isCancelled, isVisible else { return }
             locationSuggester.refresh()
-            if locationEnabled, !locationSuggester.mustOpenSettings { locationManager.start() }
-        }
-        .onChange(of: locationEnabled) { _, on in
-            guard isVisible else { return }
-            if on, !locationSuggester.mustOpenSettings { locationManager.start() } else { locationManager.stop() }
+            if !locationSuggester.mustOpenSettings { locationManager.start() }
         }
         .onChange(of: locationSuggester.mustOpenSettings) { _, denied in
             guard isVisible else { return }
-            if denied { locationManager.stop() } else if locationEnabled { locationManager.start() }
+            if denied { locationManager.stop() } else { locationManager.start() }
         }
         .onDisappear {
             locationManager.stop()
@@ -129,7 +122,7 @@ private struct FindHelpLocationBlock: View {
     }
 
     private func copyCoordinates() {
-        guard locationEnabled, let loc = locationManager.location, loc.horizontalAccuracy >= 0 else { return }
+        guard !gpsBlocked, let loc = locationManager.location, loc.horizontalAccuracy >= 0 else { return }
         SecurePasteboard.copyCoordinates(GPSCard.coordinateText(loc))
         RedMedHaptics.light()
         copied = true
@@ -328,7 +321,7 @@ private final class SeizureTimerEngine {
 
 struct GPSCard: View {
     let location: CLLocation?
-    /// Mirrors the in-app location flag — badge must not say LIVE when off.
+    /// False when GPS is blocked (iOS Location denied). Badge must not say LIVE.
     var locationEnabled: Bool = true
     /// Six decimals (~11 cm). Same string the card shows and Copy Coordinates writes.
     static func coordinateText(_ location: CLLocation) -> String {

@@ -13,6 +13,8 @@ struct RedMedApp: App {
         // Multi-second app.init → firstFrame under Debug Run is usually LLDB —
         // A/B with scheme RedMed-NoDebug / Run Without Debugging.
         RedMedSignpost.coldLaunchMark("app.init")
+        // Help → Settings Location toggle is gone; leftover false had no UI.
+        AppSettings.migrateRemovedLocationToggle()
         // Register switcher-cover observers before the first resign (Debug
         // attach can resign before any SwiftUI .task).
         SnapshotSafeCover.activate()

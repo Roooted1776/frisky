@@ -6,12 +6,20 @@ import Foundation
 enum AppSettings {
     static let locationEnabledKey = "redmed.locationEnabled"
 
-    /// Find Help GPS. Default on. Agree (including policy bump / Erase) writes
-    /// true as part of emergency terms. Off switch is Help → Settings or iOS
-    /// Settings. When-In-Use is requested once after Face ID when still
-    /// `.notDetermined`.
+    /// Find Help GPS. In-app Location is always on after Agree. The Help →
+    /// Settings toggle was removed; leftover `redmed.locationEnabled == false`
+    /// had no UI recovery. iOS When-In-Use / Settings is the only off-switch.
     static var locationEnabled: Bool {
-        if UserDefaults.standard.object(forKey: locationEnabledKey) == nil { return true }
-        return UserDefaults.standard.bool(forKey: locationEnabledKey)
+        migrateRemovedLocationToggle()
+        return true
+    }
+
+    /// Unstick UserDefaults so leftover `@AppStorage` readers see on.
+    /// Call from `@main` init before SwiftUI mounts.
+    static func migrateRemovedLocationToggle() {
+        let defaults = UserDefaults.standard
+        if defaults.object(forKey: locationEnabledKey) as? Bool == false {
+            defaults.set(true, forKey: locationEnabledKey)
+        }
     }
 }
