@@ -284,7 +284,7 @@ struct NFCView: View {
                     tipRow("Linked after write + matching read-back, or after Load From Band.")
                 } else {
                     tipRow(AppConfig.BraceletRF.hardwareParkedSummary)
-                    tipRow("Preview is the same HTML a helper sees. Blank chips + Share honesty until Write The Band is proven on a blank NTAG216.")
+                    tipRow("Preview is the same HTML a helper sees. It is not a chip write.")
                 }
             }
             .padding(.top, 2)

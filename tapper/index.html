@@ -845,6 +845,7 @@ function redmedAssetURL(file) {
   #panel-911 .page-pad > .gps-actions,
   #panel-911 .page-pad > .seizure-strip,
   #panel-911 .page-pad > .crash-dial-hint,
+  #panel-911 .page-pad > .aid-stop-alarm,
   #panel-911 .page-pad > .info {
     margin: 0;
   }
@@ -1177,7 +1178,7 @@ function redmedAssetURL(file) {
     text-align: left;
     cursor: pointer;
   }
-  .aid-stop-alarm.show { display: block; }
+  .aid-stop-alarm.show { display: block !important; }
   .aid-stop-alarm .x {
     float: right;
     color: var(--accent);
@@ -1897,7 +1898,7 @@ function redmedAssetURL(file) {
         <button class="btn btn-sos" type="button" id="sosBtn" aria-pressed="false">SOS · Locate Me</button>
         <p class="survival-note">Crash detect only while this page is open. Not Apple Crash Detection. SOS · Locate Me is this phone's siren.</p>
         <p class="crash-dial-hint" id="crashDialHint" hidden></p>
-        <button class="aid-stop-alarm" type="button" id="aidStopAlarm">Stop The Alarm <span class="x" aria-hidden="true">✕</span></button>
+        <button class="aid-stop-alarm" type="button" id="aidStopAlarm" hidden>Stop The Alarm <span class="x" aria-hidden="true">✕</span></button>
         <a class="btn btn-call" id="callEmergency911" href="tel:112">Call <span class="emg">112</span></a>
         <div class="seizure-strip" id="seizureStrip">
           <div>
@@ -3816,7 +3817,10 @@ function redmedAssetURL(file) {
     sosBtn.textContent = label;
     sosBtn.classList.toggle('armed', armed);
     sosBtn.setAttribute('aria-pressed', armed ? 'true' : 'false');
-    if (aidStop) aidStop.classList.toggle('show', armed);
+    if (aidStop) {
+      aidStop.classList.toggle('show', armed);
+      aidStop.hidden = !armed;
+    }
   }
 
   function writeU16(view, offset, v) { view.setUint16(offset, v, true); }
