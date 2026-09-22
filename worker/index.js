@@ -1,9 +1,10 @@
 /**
  * redmed-emergency — static passerby assets + edge device aspect hint.
- * Injects data-device / data-device-edge on HTML so phone · tablet · wide
- * CSS applies on first paint; client JS refines with viewport aspect ratio.
+ * Injects data-device-edge from UA / CF-Device-Type. Auto layout is CSS
+ * @media — only ?view=phone|tablet|wide locks html[data-device] before paint.
+ * Forcing UA data-device on Auto painted desktop-wide before static CSS.
  */
-import { deviceFromRequest, isHtmlPath } from './device.js';
+import { deviceFromRequest, isHtmlPath, viewLockFromRequest } from './device.js';
 
 export default {
   async fetch(request, env) {
@@ -22,6 +23,7 @@ export default {
     }
 
     const device = deviceFromRequest(request);
+    const lock = viewLockFromRequest(request);
     const headers = new Headers(assetResponse.headers);
     headers.set('Vary', mergeVary(headers.get('Vary'), 'User-Agent, CF-Device-Type'));
 
@@ -31,10 +33,18 @@ export default {
           // Do not override an explicit client lock already in the file.
           const existing = el.getAttribute('data-view-lock');
           if (existing === 'phone' || existing === 'tablet' || existing === 'wide') {
+            el.setAttribute('data-device-edge', device);
             return;
           }
-          el.setAttribute('data-device', device);
           el.setAttribute('data-device-edge', device);
+          if (lock) {
+            el.setAttribute('data-device', lock);
+            el.setAttribute('data-view-lock', lock);
+          } else {
+            // Auto: leave data-device unset so :root @media is live on first paint.
+            el.removeAttribute('data-device');
+            el.removeAttribute('data-view-lock');
+          }
         },
       })
       .transform(
