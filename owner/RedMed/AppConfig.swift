@@ -251,7 +251,7 @@ enum AppConfig {
         static var noBluetoothSummary: String { carrierVsBluetoothSummary }
 
         static var hardwareParkedSummary: String {
-            "This build cannot write a band. NFC Tag Reading needs a paid Apple Developer team, which RedMed does not have yet. Pack Band URL and Preview copy the same #d= a later Write will use — they do not write the chip and do not mark Linked."
+            "This build cannot save to a band yet. NFC Tag Reading needs a paid Apple Developer team, which RedMed does not have yet. Copy Band Link and Preview use the same card a later Save to Band will put on the chip — they do not write the chip and do not mark Linked."
         }
 
         /// NFC tab tip under the primary CTA — BraceletRF inches, not a hardcoded range.
@@ -260,17 +260,67 @@ enum AppConfig {
         }
     }
 
-    /// NFC tab Write / Pack CTA + after-write states. Parked never uses Write copy.
+    /// NFC tab Save / Copy / Import CTAs + after-save states.
+    /// Parked never uses Save-to-band copy (Copy Band Link + Share + Preview only).
     enum NFCWriteCopy {
-        static let packTitle = "Pack Band URL"
-        static let packHelp = "Copy the link your band will open"
-        static let writeTitle = "Write The Band"
-        static let writeHelp = "Save your medical ID to this band"
+        static let packTitle = "Copy Band Link"
+        static let packHelp = "Same link helpers open when they tap"
+        static let packBusyTitle = "Copying…"
+        static let packCopiedStatus = "Band link copied."
+        static let shareTitle = "Share Band Link"
+        static let writeTitle = "Save to Band"
+        static let writeHelp = "Hold phone to chip to save your card"
+        static let writeBusyTitle = "Hold Near The Band…"
+        static let loadTitle = "Import From Band"
+        static let loadBusyTitle = "Hold Near The Band…"
         static let successTitle = "Linked"
         static let successDetail = "Anyone can tap this band to open your card."
-        static let failTitle = "Couldn't write"
+        static let failTitle = "Couldn't save"
         static let failDetail = "Hold the top of the phone still, then try again."
         static var holdTopTip: String { BraceletRF.holdTopOfPhoneTip }
+
+        /// NFC tab hero — one line under the hold diagram.
+        static var pageIntro: String {
+            AppConfig.nfcHardwareEnabled
+                ? "Save your card onto the band. Helpers tap it — no app, no login."
+                : "Try the band link now. Saving to the chip needs Tag Reading — Copy and Preview use the same card."
+        }
+
+        /// Hold-diagram caption (uses BraceletRF inches).
+        static var holdDiagramCaption: String {
+            AppConfig.nfcHardwareEnabled
+                ? "Top of iPhone to the chip · \(BraceletRF.intentionalTapRangeLabel)"
+                : "Same hold later for Save to Band · \(BraceletRF.intentionalTapRangeLabel)"
+        }
+
+        /// Three-step tutorial on the NFC tab (owner-facing; not RF engineering).
+        static var tutorialSteps: [(icon: String, title: String, detail: String)] {
+            if AppConfig.nfcHardwareEnabled {
+                return [
+                    ("person.text.rectangle", "1 · Fill RedMed", "Name, birth date, blood type, and anything EMS should see."),
+                    ("wave.3.right", "2 · Save to Band", "Tap Save to Band, then hold the top of your iPhone to the chip until Linked."),
+                    ("person.2.fill", "3 · Anyone can tap", "A helper’s phone opens your card in the browser — quick, no login.")
+                ]
+            }
+            return [
+                ("person.text.rectangle", "1 · Fill RedMed", "Name, birth date, blood type, and anything EMS should see."),
+                ("link", "2 · Copy Band Link", "Copy or Share the same link Save to Band will put on the chip later. Does not mark Linked."),
+                ("eye", "3 · Preview the card", "See the exact helper page. Preview never writes the chip.")
+            ]
+        }
+
+        /// One short honesty line when CoreNFC is parked — not the long RF paragraph.
+        static var parkedHonestyShort: String {
+            "This build cannot save to the chip yet. Copy and Preview are practice — not Linked."
+        }
+
+        static let aboutBandLabel = "Band details"
+        static let doThisNowLabel = "Do this now"
+        static let howItWorksLabel = "How it works"
+        static let fillBeforeWrite =
+            "Fill RedMed before saving or previewing. Import From Band reads a written bracelet into this iPhone."
+        static let fillBeforePack =
+            "Fill RedMed before copying or previewing the band link."
     }
 
     /// Quiet prayer on owner Aid only (`AidView`, not scanner / tapper shells).
