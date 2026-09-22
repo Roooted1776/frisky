@@ -384,9 +384,28 @@ assert('fast sample keeps a 200 g/s jerk', Math.abs(stepG / fastDt - 200) < 1e-6
 
 assert('logo waits for profile paint', !tapper.includes('redmedLogoPreload') && !/id="rmLogo"[^>]*\ssrc=/.test(tapper));
 assert('GPS skips sub-5m jitter', /function metersBetween\(lat1, lon1, lat2, lon2\)/.test(tapper) && /moved = metersBetween\(prev\.latitude, prev\.longitude, lat, lon\) >= 5/.test(tapper));
+{
+  const cssMark = '.panel.active { display: block; }';
+  const cssIdx = tapper.indexOf(cssMark);
+  const swIdx = tapper.indexOf("navigator.serviceWorker");
+  assert('static CSS before SW register', cssIdx > -1 && swIdx > cssIdx);
+  assert('emergency card uses named container', tapper.includes('container-name: em-card') && tapper.includes('@container em-card'));
+  assert('Help on RedMed chrome', /aria-label="Help · Policies"/.test(tapper) && /<a href="\.\.\/Document\/"/.test(tapper));
+  assert('no Edit tab on tapper', !/id="tab-edit"/.test(tapper) && !/data-tab="edit"/.test(tapper) && !/id="tab-nfc"/.test(tapper));
+  assert('hashchange keeps Aid', /if \(next !== '911' && next !== 'aid'\) next = 'medical'/.test(tapper));
+  const pick = tapper.match(/function pickDevice\(w, h\) \{[\s\S]*?return 'phone';\n  \}/);
+  assert('pickDevice extract', !!pick);
+  if (pick) {
+    const pickDevice = new Function(`${pick[0]}; return pickDevice;`)();
+    assert('portrait phone', pickDevice(390, 844) === 'phone');
+    assert('landscape phone stays phone', pickDevice(844, 390) === 'phone');
+    assert('portrait tablet', pickDevice(820, 1180) === 'tablet');
+    assert('wide desktop', pickDevice(1280, 800) === 'wide');
+  }
+}
 
 const sw = readFileSync(join(ROOT, 'sw.js'), 'utf8');
-assert('sw cache v172', sw.includes("CACHE = 'redmed-tapper-v173'"));
+assert('sw cache v175', sw.includes("CACHE = 'redmed-tapper-v175'"));
 {
   const assetsBlock = sw.match(/var ASSETS = \[([\s\S]*?)\];/);
   assert('sw does not precache out-of-scope assets', !!(assetsBlock && !assetsBlock[1].includes('../')));
