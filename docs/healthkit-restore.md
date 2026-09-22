@@ -26,7 +26,7 @@ while parked so Review does not see an unused Health purpose string.
 ## Restore (paid Program)
 
 1. Add `com.apple.developer.healthkit` = `true` back to
-   `RedMed-Xcode/RedMed/RedMed.entitlements`.
+   `owner/RedMed/RedMed.entitlements`.
 2. Flip `AppConfig.healthKitImportEnabled` to `true`.
 3. Add `NSHealthShareUsageDescription` to `Info.plist`:
    `RedMed reads birth date and blood type from Apple Health to fill your medical ID. Nothing is written back to Health, and nothing is sent off this iPhone.`

@@ -37,7 +37,7 @@ fi
 
 mkdir -p "$DEST/tapper" "$DEST/get" "$DEST/support" "$DEST/assets" "$DEST/.github/workflows" "$DEST/.well-known" "$DEST/Document" "$DEST/privacy"
 # Same passerby include set as scripts/stage-worker-assets.sh (stubs + tapper +
-# assets + policies). Do not invent extra excludes — omit RedMed-Xcode / docs /
+# assets + policies). Do not invent extra excludes — omit owner / docs /
 # scripts by only copying this list.
 cp -f index.html tapper.html card.html get.html redmed-emergency.html sw.js \
   _headers _redirects apple-app-site-association \

@@ -23,8 +23,8 @@ No brand PNGs at repo root — canonical in `assets/`, shell-relative copies in 
 ```text
 frisky/
 ├── README.md · AGENTS.md · MAX.md
-├── RedMed-Xcode/          # native owner app (+ Document/ policies source)
-├── tapper/                # passerby shell + shell-relative PNGs + sw.js
+├── owner/                 # App Store wearer app (SwiftUI) + Document/ policy source
+├── tapper/                # tap pages only — passerby shell, no owner-app features
 ├── worker/                # redmed-emergency HTMLRewriter (device aspect hint)
 ├── Document/              # hosted Help: index.html = full policy; Document.html = redirect
 ├── privacy/               # /privacy bounce → /Document/#privacy (_redirects + privacy/index.html)
@@ -58,11 +58,22 @@ frisky/
 | `docs/spec-exhibit-a-po-qc-rider.html` | Printable bilingual EN/中文 rider (sign; do not commit the filled copy) |
 | `docs/FOUNDER-WHY.md` | Careful founder-why paste (categories only) — About / station insert / Arrival Day Pack |
 
-Hosted `/Document/` stays lockstep with `RedMed-Xcode/RedMed/Document/` via `scripts/sync-document.sh`: `Document/index.html` is the full policy; `Document/Document.html` is a thin hash-preserving redirect to `/Document/` (one tree, no twin full copy). Band tap Help opens `/Document/` straight — no start screen. `/privacy` redirects there.
+Hosted `/Document/` stays lockstep with `owner/RedMed/Document/` via `scripts/sync-document.sh`: `Document/index.html` is the full policy; `Document/Document.html` is a thin hash-preserving redirect to `/Document/` (one tree, no twin full copy). Band tap Help opens `/Document/` straight — no start screen. `/privacy` redirects there.
+
+## Surfaces (tapper vs owner)
+
+| | `tapper/` | `owner/` |
+| --- | --- | --- |
+| **Who** | Stranger who tapped the band | Wearer with the App Store app |
+| **What** | Web tap pages (`/tapper/#d=…`), 911 · Aid | SwiftUI app: Edit, NFC, Keychain, Face ID |
+| **Claims** | No ads, no auth, no trackers | General Wellness ICE card — **not** HIPAA-certified |
+| **Do not put here** | NFC tab, Edit, owner Keychain, App Store copy | Passerby-only redirect stubs, Worker device hints |
+
+Xcode bundles `tapper/index.html` as read-only `tapper.html` for NFC Preview — one source file, not a fork.
 
 ## Code organization (logical)
 
-Xcode groups under target **RedMed**. Disk stays flat under `RedMed-Xcode/RedMed/`
+Xcode groups under target **RedMed**. Disk stays flat under `owner/RedMed/`
 except policies: `Document/Document.html` + `Document/legal-doc.css` (Xcode group
 `Document`, path = Document). `Bundle.main` loads by basename; WKWebView read
 access is the Document folder so the stylesheet resolves. Legacy
