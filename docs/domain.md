@@ -18,7 +18,8 @@ band URL `#d=` fragment only — the browser decodes it on the phone.
 | Product HTML app | **`https://redmed.live/tapper/`** — Hostinger site `u666300215`, files in `public_html`. Deploy: `bash scripts/stage-worker-assets.sh` then `node scripts/deploy-hostinger-static.mjs redmed.live` (needs `HOSTINGER_API_TOKEN`, `axios`, `tus-js-client`). |
 | Public GitHub Pages `Roooted1776.github.io/tapper/` | **Backup** for already-written bands. Keep publishing (`scripts/publish-github-io.sh`). Do not delete. |
 | Legacy filename `redmed-emergency.html` | Redirect stub → `/tapper/` (same as `index.html` / `card.html`) |
-| Cloudflare Worker `redmed-emergency` | **Not used.** Product host is Hostinger. Do not recreate for bands. |
+| Cloudflare DNS + SSL | **Planned soon** — nameservers + orange-cloud HTTPS in front of Hostinger origin. Not a Worker recreate. |
+| Cloudflare Worker `redmed-emergency` | **Not used** for the product shell. Do not recreate for bands. |
 
 Smoke after DNS: `BASE=https://redmed.live bash scripts/smoke-pages.sh`.
 Origin check (DNS independent): `BASE=http://195.35.60.70 HOST_HEADER=redmed.live bash scripts/smoke-pages.sh`.
@@ -32,30 +33,36 @@ Repo `Roooted1776/Roooted1776.github.io` already exists. Re-publish:
 2. Or locally: `./scripts/publish-github-io.sh /path/to/Roooted1776.github.io`, then commit and push `main`.
 3. Smoke: `BASE=https://roooted1776.github.io bash scripts/smoke-pages.sh`
 
-## DNS cutover (`redmed.live`) — required for phones
+## DNS / SSL cutover (`redmed.live`)
 
-Domain is registered at **Namecheap** (nameservers `dns1.registrar-servers.com`).
-Hostinger already serves the shell at plan IP **`195.35.60.70`**. Until DNS
-points there, `https://redmed.live` stays on Namecheap parking and times out.
+Domain is registered at **Namecheap** (nameservers still `dns1.registrar-servers.com`
+parking). Hostinger already serves the static shell at plan IP **`195.35.60.70`**.
 
-At Namecheap → Domain List → **redmed.live** → **Advanced DNS**:
+**Planned (in a day or two): Cloudflare DNS + SSL** — move nameservers to Cloudflare,
+point `@` / `www` at Hostinger origin `195.35.60.70`, enable Cloudflare proxy (orange
+cloud) for HTTPS. Keep Hostinger as the static file origin only — no RedMed server,
+no database, no Worker required for bands.
 
-1. Remove parking records (`A @` → `162.255.119.128`, `CNAME www` → `parkingpage.namecheap.com`).
-2. Add **`A @` → `195.35.60.70`** (TTL Automatic).
-3. Add **`A www` → `195.35.60.70`** (or `CNAME www` → `redmed.live`).
-4. Wait for propagation (minutes–24h). Hostinger issues HTTPS once DNS resolves.
-
-Verify:
+Until that lands, `https://redmed.live` stays on Namecheap parking. Origin smoke
+(independent of public DNS):
 
 ```bash
-dig +short redmed.live A    # must print 195.35.60.70
+BASE=http://195.35.60.70 HOST_HEADER=redmed.live bash scripts/smoke-pages.sh
+```
+
+After Cloudflare DNS/SSL is live:
+
+```bash
+dig +short redmed.live A    # Cloudflare proxy IPs (or 195.35.60.70 if DNS-only)
 BASE=https://redmed.live bash scripts/smoke-pages.sh
 ```
 
-Open `https://redmed.live/tapper/` on a phone (external browser — no app).
+**Do not** recreate Worker `redmed-emergency` just for SSL — Cloudflare DNS/SSL in
+front of Hostinger static is enough.
 
-Alternative: point Namecheap nameservers to Hostinger values from Plan details
-and manage DNS in hPanel.
+Optional interim (skip if waiting on Cloudflare): at Namecheap Advanced DNS, point
+`A @` / `www` → `195.35.60.70` so Hostinger can issue its own cert before the CF move.
+
 
 ## Product rules
 
