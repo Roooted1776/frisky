@@ -293,9 +293,9 @@ enum AppConfig {
     /// Keep `tapperNote` in lockstep with `tapper/index.html`.
     enum CrashAlarmCopy {
         static let findHelpNote =
-            "Crash detect (default thresholds) only for RedMed app users while RedMed is open. Locking the phone or leaving the app stops new detection — even if RedMed was open. Not Apple Crash Detection. For lock or kill, use iPhone Crash Detection if your device has it. SOS is full sound and full light — only when you tap SOS · Locate Me, or when collision is detected (US Crash Detection delay)."
+            "SOS is full sound and full light so helpers can find you on a dark rainy night after a motorist ejects from a vehicle — only when you tap SOS · Locate Me, or when collision is detected (US Crash Detection delay). Crash detect (default thresholds) only for RedMed app users while RedMed is open. Locking the phone or leaving the app stops new detection — even if RedMed was open. Not Apple Crash Detection. For lock or kill, use iPhone Crash Detection if your device has it."
         static let tapperNote =
-            "SOS is full sound and full light — only when you tap SOS · Locate Me, or when collision is detected (US Crash Detection delay). Not Apple Crash Detection. Crash detect only while this page is open. Band tap does not arm SOS."
+            "SOS is full sound and full light so helpers can find someone on a dark rainy night after a motorist ejects from a vehicle — only when you tap SOS · Locate Me, or when collision is detected (US Crash Detection delay). Not Apple Crash Detection. Crash detect only while this page is open. Band tap does not arm SOS."
     }
 
     /// Carrier notes + local-only rule for Aid footers.
