@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Stage the passerby shell into dist/passerby for Workers Assets deploy.
-# Keeps RedMed-Xcode / docs / scripts out of the public Worker upload.
+# Keeps owner / docs / scripts out of the public Worker upload.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

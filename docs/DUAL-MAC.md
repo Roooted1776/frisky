@@ -13,7 +13,7 @@ HTTPS + `gh` (port 443). School/cafe Wi‑Fi often blocks SSH:22, and `Roooted17
 
 ## 0. Cloud alongside both Macs (My Machines)
 
-Managed Linux Cloud Agents cover the static Pages / tapper shell. For iOS (`RedMed-Xcode/`) or any tool that must run on a Mac, keep a **My Machines** worker alive on that Mac. The agent brain stays in Cursor cloud; terminal / edits / (optional) GUI run on the Mac. Same Cursor account as Desktop, phone, and [cursor.com/agents](https://cursor.com/agents).
+Managed Linux Cloud Agents cover the static Pages / tapper shell. For iOS (`owner/`) or any tool that must run on a Mac, keep a **My Machines** worker alive on that Mac. The agent brain stays in Cursor cloud; terminal / edits / (optional) GUI run on the Mac. Same Cursor account as Desktop, phone, and [cursor.com/agents](https://cursor.com/agents).
 
 Do this once per Mac (Terminal.app, after §2 git is green):
 

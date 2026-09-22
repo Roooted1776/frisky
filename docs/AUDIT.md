@@ -19,7 +19,7 @@ No committed secrets, no XSS in profile render (`textContent` / `esc()`), no aut
 | Associated Domains | Parked (`associatedDomainsEnabled = false`, no `applinks:`). Safari still tries `redmed://band#d=` before SOS |
 | HealthKit | Parked (`healthKitImportEnabled = false`) |
 | `redmed.pages.dev` | 404 until CF secrets / Git connect |
-| iOS CI | Push/PR on `RedMed-Xcode/**` (unsigned Simulator compile). Not XCTest |
+| iOS CI | Push/PR on `owner/**` (unsigned Simulator compile). Not XCTest |
 | `#d=` codec | `node scripts/test-d-codec.mjs` on pages-deploy + local |
 | Policies | Bundled `Document/Document.html` + `legal-doc.css`. Legacy `Help.html` is a hash-preserving redirect stub (not bundled) |
 | Notes | Ride both Keychain and chip (`NFCChipProfile.notes`, compact index 12) |
@@ -63,10 +63,10 @@ No committed secrets, no XSS in profile render (`textContent` / `esc()`), no aut
 | Scanner isolation | `isScannerSession` hides NFC / Edit; `persist()` no-ops when `persists == false` |
 | Linked flag | `setBraceletPaired(true)` requires `nfcHardwareEnabled` |
 | `IPHONEOS_DEPLOYMENT_TARGET` | Literal `17.0` × 4 (never `$(RECOMMENDED_…)`) |
-| iOS CI | `.github/workflows/ios-build.yml` on push/PR for `RedMed-Xcode/**` |
+| iOS CI | `.github/workflows/ios-build.yml` on push/PR for `owner/**` |
 | Pages smoke | github.io fail-closed; Actions SHA-pinned |
 
-Engineer threat model: in-app Help → Security (`RedMed-Xcode/RedMed/Document/Document.html` `#security`). `docs/SECURITY.md` is a pointer into that page — do not restore the pre-5462194 dump. Restore playbooks: `docs/NFC-RESTORE.md`, `docs/associated-domains-restore.md`, `docs/healthkit-restore.md`. Sweep 2026-09-16: `docs/AUDIT-2026-09-16.md`.
+Engineer threat model: in-app Help → Security (`owner/RedMed/Document/Document.html` `#security`). `docs/SECURITY.md` is a pointer into that page — do not restore the pre-5462194 dump. Restore playbooks: `docs/NFC-RESTORE.md`, `docs/associated-domains-restore.md`, `docs/healthkit-restore.md`. Sweep 2026-09-16: `docs/AUDIT-2026-09-16.md`.
 
 ---
 

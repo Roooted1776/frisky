@@ -8,17 +8,24 @@ Dual-Mac / git identity: `docs/DUAL-MAC.md`.
 | Agent | Role | How it lands code |
 | --- | --- | --- |
 | **Grok (xAI)** | Owner-side agent. GitHub connector on `Roooted1776`. Reads/writes this repo, opens/merges PRs, keeps `main` current. | Commits via GitHub as `Roooted1776`. Do not invent a separate Grok GitHub user. |
-| **Cursor Agent** | Cloud + local IDE agent. Linux Cloud Agent covers the static Worker / tapper shell only. MacBook Air / Mini **My Machines** workers (`macbook-air`, `mac-mini`) run tool calls on that Mac for iOS / Xcode — see `docs/DUAL-MAC.md` §0. | PRs from `cursor/*` or `main-*` branches. iOS (`RedMed-Xcode/`) is macOS/Xcode, not the Linux Cloud Agent. |
+| **Cursor Agent** | Cloud + local IDE agent. Linux Cloud Agent covers the static Worker / **tapper** shell only. MacBook Air / Mini **My Machines** workers (`macbook-air`, `mac-mini`) run tool calls on that Mac for iOS / Xcode — see `docs/DUAL-MAC.md` §0. | PRs from `cursor/*` or `main-*` branches. **Owner** app (`owner/`) is macOS/Xcode, not the Linux Cloud Agent. |
 | **Owner (Max)** | Source of truth for product calls. | MacBook Air + Mini clones at `~/Documents/frisky` → `main`. |
 
 Grok is in this repo. Treat instructions here as binding when Grok edits RedMed.
 
 ## Surfaces (do not mix)
 
-- **Static Cloudflare Worker shell** — Worker `redmed-emergency` (`wrangler.jsonc` → `scripts/stage-worker-assets.sh` → `dist/passerby`; `worker/` injects phone·tablet·wide `data-device` on HTML). Serves `tapper/`, redirect stubs (`index.html`, `redmed-emergency.html`, …), `sw.js`, `Document/`, `assets/`. No app build. Local: `python3 -m http.server`. CI: `.github/workflows/pages-deploy.yml` (`wrangler deploy` when `CLOUDFLARE_API_TOKEN` is set). Live interim write base: `https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/`. Dashboard: Workers → `redmed-emergency` → production Settings. Before merge: `bash scripts/sync-tapper.sh`, `node scripts/test-d-codec.mjs`, and `node scripts/test-worker-device.mjs`.
-- **Native iOS app** — `RedMed-Xcode/`. macOS only. `ios-build.yml` on `macos-latest`.
+Two folders, two audiences — never cross owner-only features into tapper.
 
-Keep `sw.js`, `tapper/sw.js`, and `RedMed-Xcode/RedMed/sw.js` CACHE versions in lockstep.
+| Surface | Folder | Audience | Scope |
+| --- | --- | --- | --- |
+| **Tapper** | `tapper/` | Passerby / responder | Tap pages, band `#d=` decode, RedMed · 911 · Aid web shell only. No NFC tab, Edit, Face ID, Keychain, or App Store flows. No-auth, no-ads. |
+| **Owner** | `owner/` | App Store wearer | Native iOS / SwiftUI (`com.redmed.app`). Profile, Edit, NFC Write/Scan, Face ID chrome, Keychain, HealthKit import. **Not** HIPAA-certified — local-only ICE card. |
+
+- **Tapper (static Worker shell)** — Worker `redmed-emergency` (`wrangler.jsonc` → `scripts/stage-worker-assets.sh` → `dist/passerby`; `worker/` injects phone·tablet·wide `data-device` on HTML). Serves `tapper/`, redirect stubs (`index.html`, `redmed-emergency.html`, …), `sw.js`, `Document/`, `assets/`. No app build. Local: `python3 -m http.server`. CI: `.github/workflows/pages-deploy.yml` (`wrangler deploy` when `CLOUDFLARE_API_TOKEN` is set). Live interim write base: `https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/`. Dashboard: Workers → `redmed-emergency` → production Settings. Before merge: `bash scripts/sync-tapper.sh`, `node scripts/test-d-codec.mjs`, and `node scripts/test-worker-device.mjs`.
+- **Owner (native iOS app)** — `owner/RedMed.xcodeproj`. macOS only. `ios-build.yml` on `macos-latest`. Xcode copies `tapper/index.html` into the bundle as `tapper.html` for NFC Preview only — that copy is read-only embed, not a second shell fork.
+
+Keep `sw.js`, `tapper/sw.js`, and `owner/RedMed/sw.js` CACHE versions in lockstep.
 
 ## Git identity
 

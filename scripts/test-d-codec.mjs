@@ -284,10 +284,10 @@ function sampleChip() {
 }
 
 // --- constant lockstep ---
-const swift = readFileSync(join(ROOT, 'RedMed-Xcode/RedMed/ProfileNFCCodec.swift'), 'utf8');
+const swift = readFileSync(join(ROOT, 'owner/RedMed/ProfileNFCCodec.swift'), 'utf8');
 const tapper = readFileSync(join(ROOT, 'tapper/index.html'), 'utf8');
-const appConfig = readFileSync(join(ROOT, 'RedMed-Xcode/RedMed/AppConfig.swift'), 'utf8');
-const profileData = readFileSync(join(ROOT, 'RedMed-Xcode/RedMed/ProfileData.swift'), 'utf8');
+const appConfig = readFileSync(join(ROOT, 'owner/RedMed/AppConfig.swift'), 'utf8');
+const profileData = readFileSync(join(ROOT, 'owner/RedMed/ProfileData.swift'), 'utf8');
 const support = readFileSync(join(ROOT, 'support/index.html'), 'utf8');
 
 assert('KEY_LABEL in Swift', swift.includes(`keyLabel = "${KEY_LABEL}"`));
