@@ -23,6 +23,9 @@ band URL `#d=` fragment only — the browser decodes it on the phone.
 
 Smoke after DNS: `BASE=https://redmed.live bash scripts/smoke-pages.sh`.
 Origin check (DNS independent): `BASE=http://195.35.60.70 HOST_HEADER=redmed.live bash scripts/smoke-pages.sh`.
+CI (`Pages tapper deploy`) also hard-smokes the github.io backup, soft-warns on
+Namecheap parking DNS, and soft-warns Hostinger origin 403s from Actions IPs until
+`@` / Cloudflare points off parking.
 
 ## Publish github.io (backup host)
 

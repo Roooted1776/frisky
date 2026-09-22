@@ -104,18 +104,31 @@ def check_tapper_no_ads(path: Path) -> bool:
     return ok
 
 
+# Abort further GETs after this many transport failures (SSL/timeout/refused).
+# Prevents ~15×20s hangs against Namecheap parking / dead hosts.
+_transport_fails = 0
+_TRANSPORT_FAIL_LIMIT = 2
+# Shorter than before: dead HTTPS should fail CI fast; live hosts answer quickly.
+_FETCH_TIMEOUT = 8
+
+
 def fetch(path: str) -> tuple[int, bytes]:
+    global _transport_fails
+    if _transport_fails >= _TRANSPORT_FAIL_LIMIT:
+        print(f"FAIL SKIP {path} (transport fail budget exhausted)")
+        return 0, b""
     url = BASE + path
     headers = {"User-Agent": UA}
     if HOST_HEADER:
         headers["Host"] = HOST_HEADER
     req = urllib.request.Request(url, headers=headers)
     try:
-        with urllib.request.urlopen(req, timeout=20) as resp:
+        with urllib.request.urlopen(req, timeout=_FETCH_TIMEOUT) as resp:
             return resp.status, resp.read()
     except urllib.error.HTTPError as e:
         return e.code, e.read() if e.fp else b""
     except Exception as e:
+        _transport_fails += 1
         print(f"FAIL ERR {path} {e}")
         return 0, b""
 
