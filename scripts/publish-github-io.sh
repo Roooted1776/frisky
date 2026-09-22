@@ -2,7 +2,7 @@
 # Copy the public passerby shell into Roooted1776.github.io.
 # No PHI, no iOS source — HTML/SW/assets only. Profile data stays in #d=.
 #
-# Backup host for already-written bands (AppConfig write base is workers.dev —
+# Backup host for already-written bands (AppConfig write base is redmed.live —
 # see docs/domain.md). Keep publishing so old chips still open.
 # CI publish: Roooted1776/Roooted1776.github.io → Actions → Publish tapper
 # (checks out this repo and runs this script).

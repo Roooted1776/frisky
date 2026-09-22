@@ -18,7 +18,7 @@ const ZLIB_VERSION = 0x01;
 const MAX_PAYLOAD = 8192;
 const MAX_STR = 200;
 const MAX_LIST = 40;
-const WRITE_BASE = 'https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/';
+const WRITE_BASE = 'https://redmed.live/tapper/';
 const KEY = createHash('sha256').update(KEY_LABEL).digest();
 
 let failed = 0;

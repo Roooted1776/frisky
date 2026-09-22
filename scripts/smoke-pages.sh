@@ -7,7 +7,8 @@ exec python3 - "$@" <<'PY'
 
 Usage:
   ./scripts/smoke-pages.sh
-  BASE=https://redmed-emergency.maxaguilaraasted.workers.dev ./scripts/smoke-pages.sh
+  BASE=https://redmed.live ./scripts/smoke-pages.sh
+  BASE=http://195.35.60.70 HOST_HEADER=redmed.live ./scripts/smoke-pages.sh
   BASE=https://roooted1776.github.io ./scripts/smoke-pages.sh
 """
 from __future__ import annotations
@@ -19,6 +20,7 @@ import urllib.request
 from pathlib import Path
 
 BASE = os.environ.get("BASE", "http://127.0.0.1:8787").rstrip("/")
+HOST_HEADER = os.environ.get("HOST_HEADER", "").strip()
 UA = "RedMed-smoke-pages/1.0 (+https://github.com/Roooted1776/frisky)"
 REPO = Path(os.environ["REPO_ROOT"])
 
@@ -104,7 +106,10 @@ def check_tapper_no_ads(path: Path) -> bool:
 
 def fetch(path: str) -> tuple[int, bytes]:
     url = BASE + path
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    headers = {"User-Agent": UA}
+    if HOST_HEADER:
+        headers["Host"] = HOST_HEADER
+    req = urllib.request.Request(url, headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=20) as resp:
             return resp.status, resp.read()

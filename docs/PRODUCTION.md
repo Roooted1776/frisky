@@ -42,8 +42,8 @@ Do not add a profile backend. Do not require login to view a tapped card. Do not
 
 | Area | Status |
 |------|--------|
-| Band write host | Live: `https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/` (smoke green). github.io kept as backup for already-written bands. In-repo CoreNFC parked (`nfcHardwareEnabled = false`, no TAG entitlement, no `NFCReaderUsageDescription`). Portal Tag Reading on `com.redmed.app` still required. Associated Domains is parked (`associatedDomainsEnabled = false`, no `applinks:` key) so Automatic Signing works on a personal/free team for that capability. Safari still tries `redmed://band#d=` before SOS. Restore Associated Domains via `docs/associated-domains-restore.md`. Write-from-app storefront gate: `docs/ADVERTISING.md` / `docs/NFC-RESTORE.md` |
-| `redmed-emergency` Worker | Live at `https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/` (Workers Assets + Observability). Redeploy: `CLOUDFLARE_API_TOKEN` + `wrangler deploy` / Workers Builds |
+| Band write host | Live product: `https://redmed.live/tapper/` on Hostinger static (smoke green after Namecheap DNS → `195.35.60.70`). github.io kept as backup for already-written bands. In-repo CoreNFC parked (`nfcHardwareEnabled = false`, no TAG entitlement, no `NFCReaderUsageDescription`). Portal Tag Reading on `com.redmed.app` still required. Associated Domains is parked (`associatedDomainsEnabled = false`, no `applinks:` key) so Automatic Signing works on a personal/free team for that capability. Safari still tries `redmed://band#d=` before SOS. Restore Associated Domains via `docs/associated-domains-restore.md`. Write-from-app storefront gate: `docs/ADVERTISING.md` / `docs/NFC-RESTORE.md` |
+| Hostinger `redmed.live` | Static passerby shell at plan IP `195.35.60.70`. Redeploy: `HOSTINGER_API_TOKEN` + `bash scripts/stage-worker-assets.sh` + `node scripts/deploy-hostinger-static.mjs redmed.live` |
 | XCTest | No iOS test target. Codec lockstep is Node, not XCTest |
 | App Store package | `PrivacyInfo.xcprivacy` + export flag exist; listing is parked |
 

@@ -2,7 +2,7 @@
 # Tapper shell deploy / local serve.
 #
 # Bracelet taps must open AppConfig.medicalCardBaseURL#d=… as RedMed · 911 · Aid.
-# Live interim: https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/ (docs/domain.md).
+# Live product host: https://redmed.live/tapper/ on Hostinger (docs/domain.md).
 # github.io kept as backup for already-written bands.
 # (quick, no login, no server, no app). Repo tapper/index.html is that shell.
 # Legacy /get/ / redmed-emergency.html redirect to /tapper/ and keep #d=.
@@ -10,11 +10,11 @@
 # Usage:
 #   ./scripts/deploy-pages.sh              # local http://127.0.0.1:8787/tapper/
 #   PORT=9000 ./scripts/deploy-pages.sh
-#   DEPLOY=1 ./scripts/deploy-pages.sh     # push to Cloudflare Worker (needs token)
+#   DEPLOY=1 ./scripts/deploy-pages.sh     # push to Hostinger (needs HOSTINGER_API_TOKEN)
 #
-# Cloudflare:
-#   export CLOUDFLARE_API_TOKEN=…
-#   export CLOUDFLARE_ACCOUNT_ID=a2d8a74738a0280eb9d5a3e77acd59ea  # optional; in wrangler.jsonc
+# Hostinger:
+#   export HOSTINGER_API_TOKEN=…
+#   npm install --no-save axios tus-js-client   # once per machine
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -38,17 +38,16 @@ if grep -q 'Checking your phone' "$SHELL" \
 fi
 
 if [[ "${DEPLOY:-0}" == "1" ]]; then
-  if [[ -z "${CLOUDFLARE_API_TOKEN:-}" ]]; then
-    echo "DEPLOY=1 needs CLOUDFLARE_API_TOKEN (Workers Edit on account a2d8a747…)." >&2
+  if [[ -z "${HOSTINGER_API_TOKEN:-}" ]]; then
+    echo "DEPLOY=1 needs HOSTINGER_API_TOKEN (hPanel → API Tokens). See docs/domain.md." >&2
     exit 1
   fi
-  export CLOUDFLARE_ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID:-a2d8a74738a0280eb9d5a3e77acd59ea}"
   bash scripts/stage-worker-assets.sh
-  echo "Deploying tapper shell → Cloudflare Worker redmed-emergency"
-  if command -v wrangler >/dev/null 2>&1; then
-    exec wrangler deploy
+  echo "Deploying tapper shell → Hostinger redmed.live"
+  if ! node -e "import('axios')" 2>/dev/null || ! node -e "import('tus-js-client')" 2>/dev/null; then
+    npm install --no-save axios tus-js-client
   fi
-  exec npx --yes wrangler@4 deploy
+  exec node scripts/deploy-hostinger-static.mjs redmed.live
 fi
 
 PORT="${PORT:-8787}"
@@ -58,7 +57,7 @@ ROOT_URL="http://${HOST}:${PORT}/"
 echo "Local tapper shell → ${URL}"
 echo "  Site root ${ROOT_URL} redirects to /tapper/ (any device browser)."
 echo "  Use 127.0.0.1 (not a LAN IP) so #d= AES decrypt works."
-echo "  Live push: DEPLOY=1 CLOUDFLARE_API_TOKEN=… $0"
+echo "  Live push: DEPLOY=1 HOSTINGER_API_TOKEN=… $0"
 echo "Ctrl-C to stop."
 
 (

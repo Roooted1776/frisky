@@ -16,23 +16,23 @@ enum AppConfig {
     /// redirect to `/tapper/` (preserve `#d=`). NFC Preview / Scan always use
     /// the **bundled** tapper.html (local-only). Hosted Pages must serve the
     /// tapper shell (RedMed · 911 · Aid).
-    /// Local: `./scripts/deploy-pages.sh`. Live: `DEPLOY=1` + CF tokens, or the
-    /// `Pages tapper deploy` GitHub Action on `main`.
+    /// Local: `./scripts/deploy-pages.sh`. Live Hostinger: stage +
+    /// `node scripts/deploy-hostinger-static.mjs redmed.live` (`docs/domain.md`),
+    /// or the `Pages tapper deploy` GitHub Action on `main`.
     ///
-    /// Product HTML app URL is a **custom domain, TBD**. Fill this with
-    /// `https://<your-domain>/tapper/` only after HTTPS is Active (`docs/domain.md`).
-    /// `nil` = do not encode a placeholder onto bands.
-    static let medicalCardCustomDomainTBD: String? = nil
+    /// Product HTML app URL — Hostinger static only. No RedMed server, no DB,
+    /// no HIPAA backend. Profile stays in `#d=` on the band. github.io remains
+    /// a backup host for already-written bands — do not delete it.
+    static let medicalCardCustomDomainTBD: String? = "https://redmed.live/tapper/"
 
-    /// NFC write + passerby open URL. Uses the custom domain when set; otherwise
-    /// the live Cloudflare Worker interim (`redmed-emergency`) so taps keep working.
+    /// NFC write + passerby open URL. Hostinger `redmed.live` static shell.
     /// github.io remains a backup host for already-written bands — do not delete it.
     static var medicalCardBaseURL: String {
         if let custom = medicalCardCustomDomainTBD?.trimmingCharacters(in: .whitespacesAndNewlines),
            !custom.isEmpty {
             return custom.hasSuffix("/") ? custom : custom + "/"
         }
-        return "https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/"
+        return "https://redmed.live/tapper/"
     }
 
     /// Deep link target for policy / card HTML “open owner app” redirects.
