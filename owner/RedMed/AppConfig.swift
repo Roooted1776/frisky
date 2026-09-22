@@ -224,13 +224,14 @@ enum AppConfig {
         /// What can still open the URL later (Apple OS path; phone off / locked OK).
         /// Associated Domains (when enabled): phone with RedMed opens the app
         /// instead of Safari (own wrist band must not hijack that iPhone).
-        /// Parked: Safari tries `redmed://band` before SOS. Passerby / no-app
-        /// keeps Safari + SOS auto-arm. No BLE / local-network band ranging.
+        /// Parked: Safari tries `redmed://band` so the app can claim the tap.
+        /// Assist SOS never auto-arms on band tap — toggle or US crash only.
+        /// No BLE / local-network band ranging.
         static var backgroundTagReadingSummary: String {
             let installPath = AppConfig.associatedDomainsEnabled
                 ? "With RedMed installed, Associated Domains opens the app instead of Safari so your own wrist band does not take over this iPhone."
-                : "With RedMed installed, Safari tries redmed://band before SOS so the app can claim the tap; Associated Domains is parked until paid Program."
-            return "iOS Background Tag Reading can still open the card later — phone can be off or locked; a deliberate tap (phone top \(intentionalTapRangeLabel) from the band) still works. \(installPath) Passerby phones without RedMed still get Safari. Wrist + pocket is usually fine; phone pressed to the clasp can still couple. Writing the chip does not change that. Band stays passive — no battery, no Bluetooth to find nearby."
+                : "With RedMed installed, Safari tries redmed://band so the app can claim the tap; Associated Domains is parked until paid Program."
+            return "iOS Background Tag Reading can still open the card later — phone can be off or locked; a deliberate tap (phone top \(intentionalTapRangeLabel) from the band) still works. \(installPath) Passerby phones without RedMed still get Safari Assist. Wrist + pocket is usually fine; phone pressed to the clasp can still couple. Writing the chip does not change that. Band stays passive — no battery, no Bluetooth to find nearby."
         }
 
         static var paymentPOSSummary: String {
@@ -292,9 +293,9 @@ enum AppConfig {
     /// Keep `tapperNote` in lockstep with `tapper/index.html`.
     enum CrashAlarmCopy {
         static let findHelpNote =
-            "Crash detect (default thresholds) only for RedMed app users while RedMed is open. Locking the phone or leaving the app stops new detection — even if RedMed was open. Not Apple Crash Detection. For lock or kill, use iPhone Crash Detection if your device has it. SOS · Locate Me still sounds after you arm it."
+            "Crash detect (default thresholds) only for RedMed app users while RedMed is open. Locking the phone or leaving the app stops new detection — even if RedMed was open. Not Apple Crash Detection. For lock or kill, use iPhone Crash Detection if your device has it. SOS is full sound and full light — only when you tap SOS · Locate Me, or when collision is detected (US Crash Detection delay)."
         static let tapperNote =
-            "Crash detect only while this page is open. Not Apple Crash Detection. SOS · Locate Me is this phone's siren."
+            "SOS is full sound and full light — only when you tap SOS · Locate Me, or when collision is detected (US Crash Detection delay). Not Apple Crash Detection. Crash detect only while this page is open. Band tap does not arm SOS."
     }
 
     /// Carrier notes + local-only rule for Aid footers.

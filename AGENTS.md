@@ -24,7 +24,7 @@ Two folders, two audiences — never cross owner-only features into Assist.
 
 - **Assist (static Hostinger shell)** — Product write base `https://redmed.live/tapper/` (`docs/domain.md`). Stage with `scripts/stage-worker-assets.sh` → `dist/passerby`; deploy with `node scripts/deploy-hostinger-static.mjs redmed.live` (`HOSTINGER_API_TOKEN`). Serves `tapper/`, redirect stubs (`index.html`, `redmed-emergency.html`, …), `sw.js`, `Document/`, `assets/`. No app build. No RedMed server / DB. Local: `python3 -m http.server`. CI: `.github/workflows/pages-deploy.yml`. Before merge: `bash scripts/sync-tapper.sh`, `node scripts/test-d-codec.mjs`, and `node scripts/test-worker-device.mjs`.
 - **Owner (native iOS app)** — `owner/RedMed.xcodeproj`. macOS only. `ios-build.yml` on `macos-latest`. Xcode copies `tapper/index.html` into the bundle as `tapper.html` for NFC Preview only — that copy is read-only embed, not a second shell fork.
-- **Own-band SOS** — After the owner writes their custom band and has RedMed installed, tapping that band on the wearer’s phone must **not** auto-arm the Assist siren (no distance / BLE ranging). Safari claims the tap via Associated Domains when live, else `redmed://band#d=` handoff before SOS so the owner phone stays quiet. Passerby phones without the app still get SOS on a real `#d=` open.
+- **Own-band / Assist SOS** — SOS is **full sound + full light**. It arms only when the helper toggles **SOS · Locate Me**, or when collision is detected using **US Crash Detection** timing (Apple Support 104959: 10s alert + 30s countdown → `tel:` unless Stop) — not Apple's Crash Detection API. Band tap never auto-arms SOS. After the owner writes their custom band and has RedMed installed, Safari claims the tap via Associated Domains when live, else `redmed://band#d=` handoff (no distance / BLE ranging).
 
 Keep `sw.js`, `tapper/sw.js`, and `owner/RedMed/sw.js` CACHE versions in lockstep.
 
@@ -41,5 +41,5 @@ Gmail for automations: Cursor Gmail MCP, not a separate Grok Gmail plugin.
 - No HIPAA-certified / fake App Store ID claims.
 - Face ID is UI-only. Keychain stays `WhenPasscodeSetThisDeviceOnly` with no biometry ACL.
 - Assist at `https://redmed.live/tapper/` is no-auth, no-ads. `#d=` codec lockstep tests must stay green.
-- Owner phone with RedMed + their written band: SOS does not auto-arm (handoff / applinks). No fake band-distance ranging.
+- SOS = full sound + full light; arms only on SOS toggle or US Crash Detection collision timing — never on band tap alone. Owner phone with RedMed + written band: handoff / applinks claim the tap. No fake band-distance ranging.
 - One repo, one branch for shipping: `Roooted1776/frisky` `main`.
