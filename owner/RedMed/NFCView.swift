@@ -1,14 +1,17 @@
 // Owner-only NFC bracelet setup. Ped/EMS scanner shells never mount this tab —
 // see ContentView.showsNFC / scannerSafeTab.
-// One page: live Save to Band + Preview + Import From Band.
-// When `AppConfig.nfcHardwareEnabled` is true, Save starts a CoreNFC
+// One page: live Write The Band + Preview + Import From Band.
+// Write flow: fill card → band in front → tap Write The Band while holding
+// the phone ~1–2″ above the chip. Helpers open the card only by the same
+// close tap; it loads in their external browser (no Share link).
+// When `AppConfig.nfcHardwareEnabled` is true, Write starts a CoreNFC
 // NDEF session and programs `medicalCardBaseURL#d=` from the live profile.
 // Preview packs the live profile into the same tapper card helpers get.
 // Import From Band reads `#d=` off the chip, Face IDs, then persist()s into
 // owner Keychain (empty funnel restore). Scanners never.
 // Linked after write + matching read-back, or after a successful Import.
-// Parked (`false`): Copy Band Link + Share Band Link + Preview
-// (never a Save button, never flips Linked; Import is hidden).
+// Parked (`false`): Copy Band Link + Preview (never a Write button, never
+// flips Linked; Import is hidden).
 import SwiftUI
 
 struct NFCView: View {
@@ -21,8 +24,8 @@ struct NFCView: View {
     /// Owned by ContentView so the NFC tab tap can begin write on the same gesture.
     @ObservedObject var band: NFCBandManager
     @State private var previewSession: PreviewSession?
-    /// Parked CoreNFC: packed `medicalCardBaseURL#d=` for Share Band Link only
-    /// (copy/export — Share honesty, not a chip write, not Linked).
+    /// Parked CoreNFC: packed `medicalCardBaseURL#d=` for Copy Band Link only
+    /// (clipboard check — not a chip write, not Linked, not a share path).
     /// Nil until pack finishes; never used to flip Linked.
     @State private var parkedBandURL: String?
     @State private var parkedPackNote: String = ""
@@ -356,7 +359,6 @@ struct NFCView: View {
                 .accessibilityLabel(AppConfig.NFCWriteCopy.loadTitle)
                 .accessibilityHint("Reads the bracelet into this iPhone. Face ID required. Replaces the RedMed ID here.")
             } else {
-                parkedShareControl
                 previewButton
                 Text(AppConfig.NFCWriteCopy.parkedHonestyShort)
                     .font(.system(size: 13, weight: .medium))
@@ -459,42 +461,6 @@ struct NFCView: View {
                 .foregroundColor(statusIsError ? .redmedAccent : .redmedMuted)
                 .fixedSize(horizontal: false, vertical: true)
         }
-    }
-
-    @ViewBuilder
-    private var parkedShareControl: some View {
-        if let parkedBandURL {
-            ShareLink(item: parkedBandURL) {
-                shareBandURLLabel
-            }
-            .disabled(band.isBusy)
-            .opacity(band.isBusy ? 0.72 : 1)
-            .accessibilityLabel(AppConfig.NFCWriteCopy.shareTitle)
-            .accessibilityHint("Shares the same link Save to Band will put on the chip when Tag Reading is restored. Does not write the band and does not mark Linked.")
-        } else {
-            shareBandURLLabel
-                .opacity(RedMedChrome.disabledOpacity)
-                .accessibilityLabel(AppConfig.NFCWriteCopy.shareTitle)
-                .accessibilityHint("Fill RedMed first to share the band link.")
-        }
-    }
-
-    private var shareBandURLLabel: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "square.and.arrow.up")
-                .font(.system(size: 17, weight: .semibold))
-            Text(AppConfig.NFCWriteCopy.shareTitle)
-                .font(.system(size: 16, weight: .bold))
-        }
-        .foregroundColor(.redmedAccent)
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 15)
-        .background(Color.redmedBg)
-        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: RedMedChrome.boxRadius, style: .continuous)
-                .strokeBorder(Color.redmedAccent.opacity(0.45), lineWidth: 1.5)
-        )
     }
 
     private func refreshParkedBandURL() async {
