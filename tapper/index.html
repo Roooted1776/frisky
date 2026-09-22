@@ -89,9 +89,9 @@ html.is-unlinked #rmEmpty{display:block!important}
 })();
 </script>
 <script>
-/* Phone · tablet · wide. Auto = CSS @media (no html[data-device]).
-   Lock only for ?view= / session / View control — otherwise a Worker UA
-   hint painted desktop-wide before the static stylesheet. */
+/* Phone · tablet · wide are three separate layouts in this one /tapper/ page.
+   Auto picks from viewport aspect (short side). Landscape phones stay phone
+   (min(w,h) < 500). View / ?view=phone|tablet|wide locks one of the three. */
 (function () {
   function pickDevice(w, h) {
     w = w || 0;
@@ -132,14 +132,11 @@ html.is-unlinked #rmEmpty{display:block!important}
         if (stored === 'phone' || stored === 'tablet' || stored === 'wide') lock = stored;
       } catch (e2) {}
     }
-    document.documentElement.setAttribute('data-device-auto', autoDevice());
-    if (lock) {
-      document.documentElement.setAttribute('data-device', lock);
-      document.documentElement.setAttribute('data-view-lock', lock);
-    } else {
-      document.documentElement.removeAttribute('data-device');
-      document.documentElement.removeAttribute('data-view-lock');
-    }
+    var device = lock || autoDevice();
+    document.documentElement.setAttribute('data-device', device);
+    document.documentElement.setAttribute('data-device-auto', device);
+    if (lock) document.documentElement.setAttribute('data-view-lock', lock);
+    else document.documentElement.removeAttribute('data-view-lock');
     if (!appShell()) {
       document.documentElement.setAttribute('data-view-chrome', '1');
     }
@@ -215,11 +212,11 @@ function redmedAssetURL(file) {
        until after profile paint so band-tap #d= decrypt wins the wire (in-app
        Preview / owner embed included). Shell is SW cache-first for almost-
        instant reopen; first visit still needs network once.
-     - Device views: phone · tablet · wide. Auto is CSS @media (live, no JS lock).
-       Worker may set data-device-edge from UA / CF-Device-Type — not a lock.
-       View control / ?view=phone|tablet|wide sets html[data-device].
-       Larger logo + type on tablet/wide; emergency card stays one column
-       and grows with the page (container queries for section grid).
+     - Device views: three separate layouts in this one /tapper/ page —
+       phone · tablet · wide — picked from viewport aspect (short side).
+       Landscape phones stay phone. View / ?view= locks one layout.
+       Worker may set data-device-edge from UA — not a lock; client aspect wins.
+       Emergency card stays one column and grows with --page-max.
      - Legacy card.html / get.html /get/ / redmed-emergency.html redirect to /tapper/ and keep #d=
      Source of truth: tapper/index.html. Xcode copies it into the app bundle as tapper.html
      at build (pbxproj “Bundle passerby tapper”). Repo-root tapper.html is a #d=-preserving
@@ -262,11 +259,13 @@ function redmedAssetURL(file) {
     --safe-b: env(safe-area-inset-bottom, 0px);
     --safe-l: env(safe-area-inset-left, 0px);
   }
-  /* Auto breakpoints — overridden by html[data-device] when View is locked. */
-  @media (min-width: 600px) {
+  /* No-JS fallback. Auto JS stamps html[data-device] from short-side aspect.
+     Gate tablet/wide on min-height: 500px so landscape phones (844×390)
+     stay the phone layout — width-only min-width would promote them. */
+  @media (min-width: 600px) and (min-height: 500px) {
     :root { --page-max: 560px; --logo: 80px; --tabbar-h: 69.5px; }
   }
-  @media (min-width: 768px) {
+  @media (min-width: 768px) and (min-height: 500px) {
     :root {
       --page-max: 720px;
       --logo: 96px;
@@ -280,7 +279,7 @@ function redmedAssetURL(file) {
       --fs-btn-max: 20px;
     }
   }
-  @media (min-width: 1024px) {
+  @media (min-width: 1024px) and (min-height: 500px) {
     :root {
       --page-max: 960px;
       --logo: 108px;
@@ -292,7 +291,7 @@ function redmedAssetURL(file) {
       --fs-btn-max: 21px;
     }
   }
-  @media (min-width: 900px) and (orientation: landscape) {
+  @media (min-width: 900px) and (min-height: 500px) and (orientation: landscape) {
     :root { --page-max: min(980px, 94vw); --logo: 108px; }
   }
   /* Locked device views (View control / ?view=). */
@@ -2541,15 +2540,12 @@ function redmedAssetURL(file) {
       var lock = mode && mode !== 'auto' ? mode : '';
       var device = lock || autoDevice();
       try {
+        // Three separate layouts. Auto stamps the aspect pick so landscape
+        // phones stay phone — do not clear data-device (that flashes width CSS).
+        document.documentElement.setAttribute('data-device', device);
         document.documentElement.setAttribute('data-device-auto', device);
-        if (lock) {
-          document.documentElement.setAttribute('data-device', lock);
-          document.documentElement.setAttribute('data-view-lock', lock);
-        } else {
-          // Auto: CSS @media owns layout — do not stamp html[data-device].
-          document.documentElement.removeAttribute('data-device');
-          document.documentElement.removeAttribute('data-view-lock');
-        }
+        if (lock) document.documentElement.setAttribute('data-view-lock', lock);
+        else document.documentElement.removeAttribute('data-view-lock');
       } catch (e4) {}
       if (!chrome) return;
       var buttons = chrome.querySelectorAll('button[data-view]');
@@ -3396,7 +3392,7 @@ function redmedAssetURL(file) {
     try {
       if (typeof window.__redmedTabFromLocation === 'function') next = window.__redmedTabFromLocation();
     } catch (eH) {}
-    if (next !== '911') next = 'medical';
+    if (next !== '911' && next !== 'aid') next = 'medical';
     showTab(next);
     // Band payload lives in the fragment. A same-document #d= swap
     // (paste #d=, in-page test) must re-decode — first paint already ran.
