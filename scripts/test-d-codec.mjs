@@ -405,7 +405,7 @@ assert('GPS skips sub-5m jitter', /function metersBetween\(lat1, lon1, lat2, lon
 }
 
 const sw = readFileSync(join(ROOT, 'sw.js'), 'utf8');
-assert('sw cache v175', sw.includes("CACHE = 'redmed-tapper-v175'"));
+assert('sw cache v176', sw.includes("CACHE = 'redmed-tapper-v176'"));
 {
   const assetsBlock = sw.match(/var ASSETS = \[([\s\S]*?)\];/);
   assert('sw does not precache out-of-scope assets', !!(assetsBlock && !assetsBlock[1].includes('../')));
@@ -501,6 +501,8 @@ const tapperSrc = readFileSync(join(ROOT, 'tapper/index.html'), 'utf8');
 assert('profileHasContent in tapper', tapperSrc.includes('function profileHasContent'));
 assert('is-unlinked toggle in tapper', tapperSrc.includes("classList.toggle('is-unlinked'"));
 assert('first-paint is-unlinked without #d=', tapperSrc.includes('classList.add("is-unlinked")') || tapperSrc.includes("classList.add('is-unlinked')"));
+assert('rmEmpty has no HTML hidden attr', !/<div class="rm-empty" id="rmEmpty"[^>]*\bhidden\b/.test(tapperSrc));
+assert('first-paint empty via is-unlinked CSS', /html\.is-unlinked\s+\.rm-empty\s*\{[^}]*display\s*:\s*block/i.test(tapperSrc));
 assert('decode-fail empty copy', tapperSrc.includes("Couldn't Read This Band") && tapperSrc.includes('function paintEmptyStateCopy'));
 assert('zlib missing DecompressionStream hint', tapperSrc.includes('cannot decode older band formats'));
 assert('passerby loaded not Linked Bracelet', tapperSrc.includes('Medical ID Loaded'));
