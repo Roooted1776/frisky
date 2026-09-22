@@ -1,7 +1,8 @@
-# RedMed domain — custom host TBD
+# RedMed domain — `redmed.live` (Hostinger)
 
-The HTML tap app (passerby shell) ships on a **custom domain**. The name is
-**TBD** — not locked to `getredmed.com` or any other pick.
+The HTML tap app (passerby shell) ships on a **custom domain**. Production host:
+**`https://redmed.live/tapper/`** (Hostinger static deploy). NFC bands should use
+that base once DNS is pointed (see **DNS cutover** below).
 
 Profile data stays in `#d=` only. No RedMed PHI backend.
 
@@ -16,8 +17,8 @@ live interim host:
 
 | Path | Status |
 |------|--------|
-| Custom HTML app URL | **TBD** — set `AppConfig.medicalCardCustomDomainTBD` when ready |
-| Cloudflare Worker `redmed-emergency` | **Live interim** — NFC write base. Smoke: `BASE=https://redmed-emergency.maxaguilaraasted.workers.dev bash scripts/smoke-pages.sh`. Deploys via Workers Builds / `wrangler deploy` when `CLOUDFLARE_API_TOKEN` is set. |
+| Custom HTML app URL | **`redmed.live`** — Hostinger site `u666300215`. Deploy: `bash scripts/stage-worker-assets.sh` then `node scripts/deploy-hostinger-static.mjs redmed.live` (needs `HOSTINGER_API_TOKEN`, `axios`, `tus-js-client`). Smoke: `BASE=https://redmed.live bash scripts/smoke-pages.sh` after DNS. |
+| Cloudflare Worker `redmed-emergency` | **Live interim / backup** — keep until `redmed.live` DNS is green everywhere. Smoke: `BASE=https://redmed-emergency.maxaguilaraasted.workers.dev bash scripts/smoke-pages.sh`. |
 | Public GitHub Pages `Roooted1776.github.io/tapper/` | **Backup** for already-written bands. Keep publishing (`scripts/publish-github-io.sh`) so old chips still open. Do not delete. |
 | Legacy filename `redmed-emergency.html` | Redirect stub → `/tapper/` (same as `index.html` / `card.html`) |
 
@@ -32,15 +33,31 @@ Repo `Roooted1776/Roooted1776.github.io` already exists. Re-publish:
 2. Or locally: `./scripts/publish-github-io.sh /path/to/Roooted1776.github.io`, then commit and push `main`.
 3. Smoke: `BASE=https://roooted1776.github.io bash scripts/smoke-pages.sh`
 
-## When you pick the domain
+## DNS cutover (`redmed.live`)
 
-1. Register the custom domain (Cloudflare Registrar recommended so DNS + Worker stay together).
-2. Attach it as a custom domain on Worker `redmed-emergency` that serves `tapper/`.
-3. Wait for HTTPS **Active**.
-4. Smoke: `https://<your-domain>/tapper/` loads RedMed · 911 · Aid. Bare `/` must land on `/tapper/` and keep `#d=`.
-5. Optional: 301 old workers.dev / github.io URLs to the custom host; keep serving old hosts so already-written bands still open.
-6. Set `AppConfig.medicalCardCustomDomainTBD` to `https://<your-domain>/tapper/` and ship that build.
-7. New NFC writes use the custom host. Old workers.dev / github.io bands keep working if those hosts stay up.
+Domain is registered at **Namecheap** (nameservers `dns1.registrar-servers.com`). Hostinger
+hosts the static passerby shell; DNS must point at the Hostinger plan IP (shown in hPanel →
+Websites → redmed.live → Plan details — verified working: **`195.35.60.70`**).
+
+At Namecheap → Domain List → redmed.live → Advanced DNS:
+
+1. Remove parking records (`A @` → `162.255.119.128`, `CNAME www` → `parkingpage.namecheap.com`).
+2. Add **`A @` → `195.35.60.70`** (TTL Automatic).
+3. Add **`A www` → `195.35.60.70`** (or `CNAME www` → `redmed.live`).
+4. Wait for propagation (minutes–24h). Hostinger issues HTTPS once DNS resolves.
+
+Verify: `BASE=https://redmed.live bash scripts/smoke-pages.sh` and open
+`https://redmed.live/tapper/` on a phone (external browser — no app required).
+
+Alternative: point Namecheap nameservers to Hostinger values from Plan details
+(often `ns1.dns-parking.com` / `ns2.dns-parking.com`) and manage DNS in hPanel.
+
+## When custom domain is fully green
+
+1. Smoke: `https://redmed.live/tapper/` loads RedMed · 911 · Aid. Bare `/` lands on `/tapper/` and keeps `#d=`.
+2. Set `AppConfig.medicalCardCustomDomainTBD` to `https://redmed.live/tapper/` and ship that iOS build.
+3. New NFC writes use `redmed.live`. Keep Worker + github.io backup hosts for old bands.
+4. Optional: 301 workers.dev / github.io to `redmed.live`; keep old hosts serving until bands are rewritten.
 
 Path stays **`/tapper/`** so SW cache keys and legacy `/get/` → `/tapper/` redirects stay coherent.
 
@@ -48,8 +65,8 @@ Path stays **`/tapper/`** so SW cache keys and legacy `/get/` → `/tapper/` red
 
 | Role | URL |
 |------|-----|
-| Product HTML app | Custom domain, **TBD** |
-| Current AppConfig write base | `https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/` |
+| Product HTML app | `https://redmed.live/tapper/` (after DNS) |
+| Current AppConfig write base | `https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/` until AppConfig cutover |
 | Backup host (old bands) | `https://roooted1776.github.io/tapper/` |
 
-`getredmed.com` / `redmed.band` are examples only — not locked. Skip premium names (`redmed.com`, etc.) unless you buy them.
+Deploy deps (one-off): `npm install --no-save axios tus-js-client` before running `scripts/deploy-hostinger-static.mjs`.
