@@ -4215,13 +4215,15 @@ function redmedAssetURL(file) {
 </script>
 <script>
 // Survival alarm — hardware-local only (this phone).
-// SOS = full sound + full light. Arms only when the helper toggles
-// SOS · Locate Me, or when DeviceMotion detects a collision using US Crash
-// Detection timing (Apple Support 104959: 10s alert + 30s countdown, then
-// tel: unless Stop). Band tap never auto-arms SOS. Explicit SOS tap: tel:
-// immediately (no in-page confirm), then full alarm. Crash path ignores sex,
-// masturbation, walking, eating, daily rhythm (same gates as native
-// CrashMotionGuard). Web Audio + wake lock + full-viewport light flash.
+// Built for dark rainy nights after a motorist ejects from a vehicle:
+// SOS = full sound + full light so helpers can find the person. Arms only
+// when the helper toggles SOS · Locate Me, or when DeviceMotion detects a
+// collision using US Crash Detection timing (Apple Support 104959: 10s alert
+// + 30s countdown, then tel: unless Stop). Band tap never auto-arms SOS.
+// Explicit SOS tap: tel: immediately (no in-page confirm), then full alarm.
+// Crash path ignores sex, masturbation, walking, eating, daily rhythm (same
+// gates as native CrashMotionGuard). Web Audio + wake lock + full-viewport
+// light flash.
 (function () {
   function appPreview() {
     try {
