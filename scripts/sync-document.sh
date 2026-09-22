@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Keep hosted /Document/ lockstep with the in-app Help source of truth.
-# Source: RedMed-Xcode/RedMed/Document/{Document.html,legal-doc.css}
+# Source: owner/RedMed/Document/{Document.html,legal-doc.css}
 # Host:   Document/index.html (full policy) + Document.html (thin #hash redirect)
 #         + legal-doc.css
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-SRC=RedMed-Xcode/RedMed/Document
+SRC=owner/RedMed/Document
 DST=Document
 
 test -f "$SRC/Document.html"
@@ -77,7 +77,7 @@ grep -q 'HIPAA — not a covered entity' "$SRC_HTML" || {
   echo "FAIL $SRC_HTML missing Security heading HIPAA — not a covered entity" >&2
   exit 1
 }
-CONSENT="$(sed -n 's/^[[:space:]]*static let currentVersion = "\([^"]*\)".*/\1/p' RedMed-Xcode/RedMed/ConsentGateView.swift)"
+CONSENT="$(sed -n 's/^[[:space:]]*static let currentVersion = "\([^"]*\)".*/\1/p' owner/RedMed/ConsentGateView.swift)"
 if [[ -z "$CONSENT" ]]; then
   echo "FAIL could not read ConsentSettings.currentVersion" >&2
   exit 1

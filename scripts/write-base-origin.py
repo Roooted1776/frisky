@@ -12,7 +12,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
-SWIFT = ROOT / "RedMed-Xcode" / "RedMed" / "AppConfig.swift"
+SWIFT = ROOT / "owner" / "RedMed" / "AppConfig.swift"
 
 
 def write_base_url(text: str) -> str:

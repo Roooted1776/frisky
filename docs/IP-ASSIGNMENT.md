@@ -24,7 +24,7 @@ Apple Developer / App ID `com.redmed.app` / GitHub stay in your personal account
 
 | Bucket | What |
 |--------|------|
-| Code | `Roooted1776/frisky`, `RedMed-Xcode` (SwiftUI), bundle ID `com.redmed.app` |
+| Code | `Roooted1776/frisky`, `owner` (SwiftUI), bundle ID `com.redmed.app` |
 | Tapper | `tapper/` HTML/JS, redirects, SW, Pages host copies |
 | Brand | REDMED / RedMed / MED ID, BrandLogo, BrandWordmark, cream UI, black band trade dress |
 | Band | Adult black silicone (`#232425`), logo-print RedMed face (30×9 mm), NXP NTAG216 blank NDEF — same as `docs/band-engraving-and-nfc-sourcing.md` |

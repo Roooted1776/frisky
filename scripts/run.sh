@@ -3,13 +3,13 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-PROJ="$ROOT/RedMed-Xcode/RedMed.xcodeproj"
+PROJ="$ROOT/owner/RedMed.xcodeproj"
 SCHEME="RedMed"
 BUNDLE_ID="com.redmed.app"
 DD="$ROOT/.derivedData"
 APP="$DD/Build/Products/Debug-iphonesimulator/RedMed.app"
 STAMP="$DD/.last-install.stamp"
-SRC_DIR="$ROOT/RedMed-Xcode/RedMed"
+SRC_DIR="$ROOT/owner/RedMed"
 
 # Default to iOS 27.0; override with SIM_OS=26.5 etc.
 SIM_OS="${SIM_OS:-27.0}"
