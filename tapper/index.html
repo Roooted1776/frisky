@@ -22,10 +22,13 @@ html,body{background:#fff7f7!important;margin:0}
 html.tab-911 .panel,html.tab-aid .panel{display:none}
 html.tab-911 #panel-911,html.tab-aid #panel-aid{display:block}
 /* Bare /tapper/ (no #d=): hide the dash YOU chart on first paint. The head
-   script adds html.is-unlinked before <body> so this cannot flash dashes. */
+   script adds html.is-unlinked before <body> so this cannot flash dashes.
+   Do not use the HTML hidden attribute on #rmEmpty — UA [hidden] is
+   display:none !important and cannot be overridden by author CSS, which
+   left lookup opens blank until late JS cleared the attribute. */
 html.is-unlinked .you-card,
 html.is-unlinked .list-grid{display:none!important}
-html.is-unlinked #rmEmpty{display:block!important}
+html.is-unlinked .rm-empty{display:block!important}
 </style>
 <script>
 // Resolve the start tab before first paint. Bare open / #d= → medical (YOU).
@@ -159,10 +162,13 @@ function redmedAssetURL(file) {
      racing BrandLogo.svg / PNG densities during HTML parse.
      Static CSS is next — AES prefetch + SW register wait until after it. -->
 <meta name="description" content="Tap the RedMed band to open the emergency card. Quick. No login. No server. No app — HTML only on this phone.">
-<!-- ONE scanner file: tapper.html (Pages + app bundle).
+<!-- ONE Assist shell file: tapper/index.html (Pages + app bundle).
+     Product name: Assist = the person tapping the band (passerby / responder).
+     Owner = the person with the RedMed app on their phone. URL path stays
+     https://redmed.live/tapper/ so already-written bands keep working.
      Specs (permanent):
      - Tabs: RedMed · 911 · Aid only — no Edit, no NFC
-     - Tapper / EMT / helper: passive HF NFC opens this HTML page — no RedMed
+     - Assist / EMT / helper: passive HF NFC opens this HTML page — no RedMed
        app required to view. Owner Edit / NFC write live only in the native app.
      - Data: #d= only — no server DB. New writes: flat array → AES-GCM
        (public client key) → base64url. Legacy still works: named JSON,
@@ -174,17 +180,18 @@ function redmedAssetURL(file) {
      - Offline: sw.js Cache Storage — cache-first multi-key shell for almost-instant
        EMT open after first online load; activate clears prior CACHE buckets
        (bump redmed-tapper-vN). Never wait on network when a shell copy exists.
-     - Real bracelet NFC tap (`tapper.html#d=…`) → everything stays on that phone
-       (profile, 911, Aid, SOS siren). Local only once tap — everyone and
-       everything. No server / no online. Bare /tapper/ without `#d=` and in-app
-       Preview/Scan (`?src=app`) do not auto-arm SOS. Stop on Find Help or Aid.
-       Explicit SOS tap opens `tel:` immediately (no in-page confirm). Crash
-       waits the US Crash Detection delay (10s alert + 30s countdown) then
-       the same `tel:` unless Stop. Band-tap auto-arm is siren only.
-       Phones with RedMed installed should not hit this Safari SOS path:
-       Associated Domains when AASA is live, else `redmed://band#d=` handoff
-       before arm (own band quiet; other band in-app card). Do not invent
-       BLE / local-network ranging.
+     - Real bracelet NFC tap (`https://redmed.live/tapper/#d=…`) → medical ID
+       stays on that phone (profile, 911, Aid). Local only once tap — no server.
+       Bare /tapper/ without `#d=` and in-app Preview/Scan (`?src=app`) do not
+       arm SOS. SOS = full sound + full light and arms only when the helper
+       toggles SOS · Locate Me, or when collision is detected using US Crash
+       Detection timing (10s alert + 30s countdown → tel: unless Stop). Band
+       tap never auto-arms SOS. Explicit SOS tap opens `tel:` immediately
+       (no in-page confirm). Crash waits the US Crash Detection delay then
+       the same `tel:` unless Stop. Owner with RedMed installed + their custom
+       band written: Associated Domains when AASA is live, else
+       `redmed://band#d=` handoff so the wearer's phone claims the tap (no
+       SOS from Assist). Do not invent BLE / local-network ranging.
        Bare /tapper/ without `#d=` (and a failed / empty `#d=`) paints the
        No Patient empty state — not a blank YOU chart with dashes. #911 /
        #aid / ?tab= still open those panels; #d= stays the profile payload.
@@ -1459,6 +1466,25 @@ function redmedAssetURL(file) {
     line-height: 1.35;
     text-align: left;
   }
+  /* SOS full light — browsers cannot force system brightness; flash the
+     viewport white/red so the alarm is visually maxed with the siren. */
+  .sos-light-flash {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    pointer-events: none;
+    background: #fff;
+    mix-blend-mode: normal;
+  }
+  .sos-light-flash.on {
+    display: block;
+    animation: sos-light-pulse 0.55s ease-in-out infinite alternate;
+  }
+  @keyframes sos-light-pulse {
+    from { background: #fff; opacity: 0.92; }
+    to { background: #ffe4e9; opacity: 1; }
+  }
   .aid-stop-alarm {
     display: none;
     width: 100%;
@@ -2021,7 +2047,10 @@ function redmedAssetURL(file) {
         </div>
       </div>
 
-      <div class="rm-empty" id="rmEmpty" hidden>
+      <!-- Visibility: html.is-unlinked only (.rm-empty { display:none } by default).
+           Never put the HTML hidden attribute here — UA [hidden]!important wins
+           over author CSS and blanked bare /tapper/ lookups before JS ran. -->
+      <div class="rm-empty" id="rmEmpty">
         <div class="rm-empty-pill" id="rmEmptyPill">No Patient</div>
         <h2 id="rmEmptyTitle">No Medical ID On This Page</h2>
         <p id="rmEmptyBody">A written MED ID band opens the person's name, blood type, allergies, and contacts here.</p>
@@ -2139,7 +2168,6 @@ function redmedAssetURL(file) {
         try {
           if (name) document.title = name + ' · RedMed';
         } catch (e2) {}
-        var emptyEl = document.getElementById('rmEmpty');
         var hasContent = !!(name || (p.dob || '').trim() || blood
           || (p.notes || '').trim() || p.donor || p.pregnant || p.deafOrVisionImpaired);
         if (!hasContent) {
@@ -2153,7 +2181,6 @@ function redmedAssetURL(file) {
         try {
           if (hasContent) {
             document.documentElement.classList.remove('is-unlinked');
-            if (emptyEl) emptyEl.hidden = true;
           }
         } catch (e3) {}
         var noteEl = document.querySelector('.rm-note');
@@ -2290,7 +2317,7 @@ function redmedAssetURL(file) {
           <div class="gps-acc" id="gpsAcc">Accuracy ––</div>
         </div>
         <button class="btn btn-sos" type="button" id="sosBtn" aria-pressed="false">SOS · Locate Me</button>
-        <p class="survival-note">Crash detect only while this page is open. Not Apple Crash Detection. SOS · Locate Me is this phone's siren.</p>
+        <p class="survival-note">SOS is full sound and full light so helpers can find someone on a dark rainy night after a motorist ejects from a vehicle — only when you tap SOS · Locate Me, or when collision is detected (US Crash Detection delay). Not Apple Crash Detection. Crash detect only while this page is open. Band tap does not arm SOS.</p>
         <p class="crash-dial-hint" id="crashDialHint" hidden></p>
         <button class="aid-stop-alarm" type="button" id="aidStopAlarm" hidden>Stop The Alarm <span class="x" aria-hidden="true">✕</span></button>
         <a class="btn btn-call" id="callEmergency911" href="tel:112">Call <span class="emg">112</span></a>
@@ -2412,12 +2439,15 @@ function redmedAssetURL(file) {
     <div class="home-pill" aria-hidden="true"></div>
   </nav>
 
+  <!-- SOS full light overlay — shown only while the survival alarm is armed. -->
+  <div class="sos-light-flash" id="sosLightFlash" aria-hidden="true"></div>
+
   <script>
 (function () {
   // Tap physics lockstep with AppConfig.BraceletRF: 1–2″ tap, walk-by 6–8″
   // does not fire, coupling dies past ~4″, passive 13.56 MHz HF NFC.
 
-  // In-app RedMed tab / Preview / Scan — ?src=app or injected flag. No SOS auto-arm.
+  // In-app RedMed tab / Preview / Scan — ?src=app or injected flag. No SOS from band tap.
   function isAppPreview() {
     try {
       if (window.__REDMED_APP_PREVIEW) return true;
@@ -3090,7 +3120,7 @@ function redmedAssetURL(file) {
 
   var firstPhone = '';
   /// True only after a successful `decodeProfile()` (or native embed) that
-  /// actually has medical fields. Used to refuse SOS auto-arm on garbage
+  /// actually has medical fields. Used to refuse SOS arming on garbage
   /// `#d=`, empty `{}` / `[]`, and the No Patient empty state.
   var paintedFromBand = false;
 
@@ -3146,13 +3176,13 @@ function redmedAssetURL(file) {
     var nameEl = document.getElementById('name');
     var statusEl = document.getElementById('statusLine');
     var noteEl = document.querySelector('.rm-note');
-    var emptyEl = document.getElementById('rmEmpty');
     // Bare /tapper/ and failed / empty `#d=` → empty card. Owner embed keeps
     // the YOU card (html.app-embed.is-unlinked hides .rm-empty).
+    // Visibility is css html.is-unlinked only — never toggle the HTML hidden
+    // attribute on #rmEmpty (UA [hidden]!important blanked lookup opens).
     try {
       var showEmpty = !isAppEmbed() && !hasPatient;
       document.documentElement.classList.toggle('is-unlinked', showEmpty);
-      if (emptyEl) emptyEl.hidden = !showEmpty;
       paintEmptyStateCopy(showEmpty);
     } catch (eUn) {}
     nameEl.textContent = displayName;
@@ -4185,12 +4215,15 @@ function redmedAssetURL(file) {
 </script>
 <script>
 // Survival alarm — hardware-local only (this phone).
-// Real bracelet NFC open with #d= → arm + PLAY local siren (no server).
-// Explicit SOS tap: tel: immediately (no in-page confirm), then siren.
-// DeviceMotion crash: US Crash Detection delay (10s + 30s) then tel: unless Stop.
-// Band-tap auto-arm is siren only (Safari / no-app path). Crash path ignores sex, masturbation, walking,
-// eating, daily rhythm (same gates as native CrashMotionGuard).
-// Web Audio + wake lock only.
+// Built for dark rainy nights after a motorist ejects from a vehicle:
+// SOS = full sound + full light so helpers can find the person. Arms only
+// when the helper toggles SOS · Locate Me, or when DeviceMotion detects a
+// collision using US Crash Detection timing (Apple Support 104959: 10s alert
+// + 30s countdown, then tel: unless Stop). Band tap never auto-arms SOS.
+// Explicit SOS tap: tel: immediately (no in-page confirm), then full alarm.
+// Crash path ignores sex, masturbation, walking, eating, daily rhythm (same
+// gates as native CrashMotionGuard). Web Audio + wake lock + full-viewport
+// light flash.
 (function () {
   function appPreview() {
     try {
@@ -4310,6 +4343,7 @@ function redmedAssetURL(file) {
   var reclaimLock = false;
   var crashDialTimer = null;
   var crashDialHint = document.getElementById('crashDialHint');
+  var sosLightFlash = document.getElementById('sosLightFlash');
 
   function emergencyTelHref() {
     var call = document.getElementById('callEmergency911');
@@ -4376,6 +4410,12 @@ function redmedAssetURL(file) {
     if (aidStop) {
       aidStop.classList.toggle('show', armed);
       aidStop.hidden = !armed;
+    }
+    // Full light with full sound — viewport flash (system brightness is
+    // owner-app only via BrightnessBoost).
+    if (sosLightFlash) {
+      sosLightFlash.classList.toggle('on', armed);
+      sosLightFlash.setAttribute('aria-hidden', armed ? 'false' : 'true');
     }
   }
 
@@ -4542,7 +4582,7 @@ function redmedAssetURL(file) {
     if (AC) {
       ctx = new AC();
       gain = ctx.createGain();
-      gain.gain.value = 0.55;
+      gain.gain.value = 1;
       gain.connect(ctx.destination);
 
       osc = ctx.createOscillator();
@@ -4843,56 +4883,28 @@ function redmedAssetURL(file) {
     }
   } catch (e) {}
 
-  // Real HF NFC band tap brings #d= that decrypts — arm local SOS on this phone
-  // only when Safari opened the card (passerby / no RedMed app). No auto-arm for
-  // bare /tapper/, garbage `#d=`, or in-app Preview/Scan (?src=app). Phones with
-  // RedMed installed: Associated Domains (applinks) when AASA is live, else
-  // `redmed://band#d=` handoff before SOS so the wearer's own iPhone stays quiet.
-  // See docs/associated-domains-restore.md. No BLE / local-network band ranging.
+  // Band tap opens Assist with #d= for the medical card only — never arms SOS.
+  // SOS = full sound + full light, only via SOS · Locate Me toggle or US Crash
+  // Detection collision timing. Owner with RedMed installed: try redmed://band
+  // so the app can claim the tap (own band quiet). No BLE / ranging.
+  // See docs/associated-domains-restore.md.
   function hasBandPayload() {
     // Require non-empty fragment after #d= — bare "#d=" is not a real band tap.
     var h = location.hash || '';
     return /^#d=.+/.test(h) && !appPreview();
   }
-  function shouldAutoArm() {
-    return hasBandPayload() && paintedFromBand && !appPreview();
-  }
   // Installed RedMed claims the tap via custom scheme when UL did not.
-  // If the page hides / blurs (app opened), cancel SOS. No app → arm after a
-  // short wait so helpers without RedMed still get the siren.
-  function handoffToInstalledAppThenMaybeArm() {
-    if (!shouldAutoArm()) {
-      paint();
-      return;
-    }
-    var settled = false;
-    function finish(doArm) {
-      if (settled) return;
-      settled = true;
-      try {
-        document.removeEventListener('visibilitychange', onLeave);
-        window.removeEventListener('pagehide', onLeave);
-        window.removeEventListener('blur', onLeave);
-      } catch (e) {}
-      if (doArm && shouldAutoArm() && !document.hidden) arm();
-      else paint();
-    }
-    function onLeave() {
-      if (document.hidden) finish(false);
-    }
-    document.addEventListener('visibilitychange', onLeave);
-    window.addEventListener('pagehide', onLeave);
-    window.addEventListener('blur', onLeave);
+  // Never auto-arm SOS after the handoff wait.
+  function handoffToInstalledApp() {
+    paint();
+    if (!hasBandPayload() || !paintedFromBand) return;
     try {
       // Keep #d= on the custom URL so the app can own-match / show a foreign card.
       window.location.href = 'redmed://band' + (location.hash || '');
     } catch (e) {}
-    setTimeout(function () {
-      finish(!(document.hidden));
-    }, 650);
   }
   // Band tap: vitals already on screen from the early #d= script when possible.
-  // Card-session wake + SOS arm after that treat paint — siren must not delay ID.
+  // Card-session wake after treat paint — medical ID first; SOS is toggle/crash only.
   // Wake API matches main (#523) / MedicalCardScreenWake naming.
   document.addEventListener('redmed-profile-painted', function () {
     function afterVitals(fn) {
@@ -4904,7 +4916,7 @@ function redmedAssetURL(file) {
     }
     afterVitals(function () {
       setCardSessionAwake(true);
-      handoffToInstalledAppThenMaybeArm();
+      handoffToInstalledApp();
     });
   }, { once: true });
   // iOS may need a gesture before Wake Lock sticks — re-request on first tap.

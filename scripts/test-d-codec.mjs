@@ -405,7 +405,7 @@ assert('GPS skips sub-5m jitter', /function metersBetween\(lat1, lon1, lat2, lon
 }
 
 const sw = readFileSync(join(ROOT, 'sw.js'), 'utf8');
-assert('sw cache v175', sw.includes("CACHE = 'redmed-tapper-v175'"));
+assert('sw cache v177', sw.includes("CACHE = 'redmed-tapper-v177'"));
 {
   const assetsBlock = sw.match(/var ASSETS = \[([\s\S]*?)\];/);
   assert('sw does not precache out-of-scope assets', !!(assetsBlock && !assetsBlock[1].includes('../')));
@@ -496,18 +496,22 @@ assert('joinList flattens comma in item', joinList(['Penicillin, Sulfa']) === 'P
 assert('splitList flattens comma in item', splitList('Penicillin, Sulfa').join('|') === 'Penicillin|Sulfa');
 assert('splitList flattens comma in array item', splitList(['Penicillin, Sulfa']).join('|') === 'Penicillin|Sulfa');
 
-// --- passerby empty-state / SOS auto-arm gates (tapper/index.html) ---
+// --- Assist empty-state / SOS gates (tapper/index.html) ---
 const tapperSrc = readFileSync(join(ROOT, 'tapper/index.html'), 'utf8');
 assert('profileHasContent in tapper', tapperSrc.includes('function profileHasContent'));
 assert('is-unlinked toggle in tapper', tapperSrc.includes("classList.toggle('is-unlinked'"));
 assert('first-paint is-unlinked without #d=', tapperSrc.includes('classList.add("is-unlinked")') || tapperSrc.includes("classList.add('is-unlinked')"));
+assert('rmEmpty has no HTML hidden attr', !/<div class="rm-empty" id="rmEmpty"[^>]*\bhidden\b/.test(tapperSrc));
+assert('first-paint empty via is-unlinked CSS', /html\.is-unlinked\s+\.rm-empty\s*\{[^}]*display\s*:\s*block/i.test(tapperSrc));
 assert('decode-fail empty copy', tapperSrc.includes("Couldn't Read This Band") && tapperSrc.includes('function paintEmptyStateCopy'));
 assert('zlib missing DecompressionStream hint', tapperSrc.includes('cannot decode older band formats'));
 assert('passerby loaded not Linked Bracelet', tapperSrc.includes('Medical ID Loaded'));
 assert('paintedFromBand requires content', tapperSrc.includes('paintedFromBand = !!fromBand && hasPatient'));
 assert('treat-first early vitals script', tapperSrc.includes('__redmedEarlyVitals') && tapperSrc.includes('Treat-first:'));
 assert('hashchange re-decodes #d=', tapperSrc.includes('decodeProfile().then(function (p)') && tapperSrc.includes('hashchange'));
-assert('own-phone handoff before SOS', tapperSrc.includes('redmed://band') && tapperSrc.includes('handoffToInstalledAppThenMaybeArm'));
+assert('own-phone handoff no SOS auto-arm', tapperSrc.includes('redmed://band') && tapperSrc.includes('handoffToInstalledApp') && !tapperSrc.includes('handoffToInstalledAppThenMaybeArm') && !tapperSrc.includes('function shouldAutoArm'));
+assert('SOS full sound and light', tapperSrc.includes('sos-light-flash') && tapperSrc.includes('gain.gain.value = 1') && tapperSrc.includes('Band tap does not arm SOS') && tapperSrc.includes('dark rainy night'));
+assert('SOS only toggle or US crash', tapperSrc.includes('US Crash Detection') && tapperSrc.includes('US_CRASH_ALERT_S = 10') && tapperSrc.includes('US_CRASH_COUNTDOWN_S = 30'));
 const tapperAid = tapperSrc.indexOf('id="aidStopAlarm"');
 const tapper911 = tapperSrc.indexOf('id="panel-911"');
 const tapperAidPanel = tapperSrc.indexOf('id="panel-aid"');
