@@ -40,3 +40,4 @@ ios-frame.jsx
 dist/
 .wrangler/
 
+node_modules/

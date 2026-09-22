@@ -1,8 +1,18 @@
 /**
  * Map request → phone | tablet | wide for passerby tapper layout.
  * Prefer CF-Device-Type when present; else User-Agent (APO-style).
- * Viewport JS on the client still refines after paint using aspect ratio.
+ * Auto layout is CSS @media on first paint — only ?view=phone|tablet|wide
+ * locks html[data-device]. UA / CF type is data-device-edge (hint), not a lock.
  */
+export function viewLockFromRequest(request) {
+  try {
+    const q = (new URL(request.url).searchParams.get('view') || '').toLowerCase();
+    if (q === 'phone' || q === 'tablet' || q === 'wide') return q;
+  } catch (_) {
+    /* ignore */
+  }
+  return '';
+}
 export function deviceFromUserAgent(ua) {
   const s = String(ua || '');
   // Mobile phones (not tablets). Same idea as Cloudflare APO cache-by-device.

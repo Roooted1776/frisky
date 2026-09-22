@@ -3,7 +3,7 @@
  * Worker device-aspect mapping lockstep (UA / CF-Device-Type / ?view=).
  *   node scripts/test-worker-device.mjs
  */
-import { deviceFromUserAgent, deviceFromCfHeader, deviceFromRequest, isHtmlPath } from '../worker/device.js';
+import { deviceFromUserAgent, deviceFromCfHeader, deviceFromRequest, isHtmlPath, viewLockFromRequest } from '../worker/device.js';
 
 let failed = 0;
 function assert(name, cond, detail) {
@@ -50,6 +50,19 @@ assert(
 assert(
   'UA fallback',
   deviceFromRequest(req('https://example.com/tapper/', { 'User-Agent': 'Mozilla/5.0 (iPhone)' })) === 'phone',
+);
+
+assert(
+  'view lock ?view=phone',
+  viewLockFromRequest(req('https://example.com/tapper/?view=phone')) === 'phone',
+);
+assert(
+  'view=auto is not a lock',
+  viewLockFromRequest(req('https://example.com/tapper/?view=auto')) === '',
+);
+assert(
+  'bare /tapper/ is Auto (no lock)',
+  viewLockFromRequest(req('https://example.com/tapper/')) === '',
 );
 
 assert('html /tapper/', isHtmlPath('/tapper/') === true);

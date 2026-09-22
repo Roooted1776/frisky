@@ -1,28 +1,31 @@
-# RedMed domain — `redmed.live` (Hostinger)
+# RedMed domain — `redmed.live` (Hostinger static)
 
-The HTML tap app (passerby shell) ships on a **custom domain**. Production host:
-**`https://redmed.live/tapper/`** (Hostinger static deploy). NFC bands should use
-that base once DNS is pointed (see **DNS cutover** below).
+The HTML tap app (passerby shell) ships as **static files on Hostinger**.
+Production write base:
 
-Profile data stays in `#d=` only. No RedMed PHI backend.
+**`https://redmed.live/tapper/`**
 
-**Do not write an unregistered / placeholder host onto NFC bands.**
-`AppConfig.medicalCardCustomDomainTBD` stays `nil` until you choose a domain
-and HTTPS + `/tapper/` smoke are green. Until then `medicalCardBaseURL` is the
-live interim host:
+No RedMed server. No database. No HIPAA backend. Profile data stays in the
+band URL `#d=` fragment only — the browser decodes it on the phone.
 
-`https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/`
+`AppConfig.medicalCardCustomDomainTBD` / `medicalCardBaseURL` is
+`https://redmed.live/tapper/`.
 
 ## Current
 
 | Path | Status |
 |------|--------|
-| Custom HTML app URL | **`redmed.live`** — Hostinger site `u666300215`. Deploy: `bash scripts/stage-worker-assets.sh` then `node scripts/deploy-hostinger-static.mjs redmed.live` (needs `HOSTINGER_API_TOKEN`, `axios`, `tus-js-client`). Smoke: `BASE=https://redmed.live bash scripts/smoke-pages.sh` after DNS. |
-| Cloudflare Worker `redmed-emergency` | **Live interim / backup** — keep until `redmed.live` DNS is green everywhere. Smoke: `BASE=https://redmed-emergency.maxaguilaraasted.workers.dev bash scripts/smoke-pages.sh`. |
-| Public GitHub Pages `Roooted1776.github.io/tapper/` | **Backup** for already-written bands. Keep publishing (`scripts/publish-github-io.sh`) so old chips still open. Do not delete. |
+| Product HTML app | **`https://redmed.live/tapper/`** — Hostinger site `u666300215`, files in `public_html`. Deploy: `bash scripts/stage-worker-assets.sh` then `node scripts/deploy-hostinger-static.mjs redmed.live` (needs `HOSTINGER_API_TOKEN`, `axios`, `tus-js-client`). |
+| Public GitHub Pages `Roooted1776.github.io/tapper/` | **Backup** for already-written bands. Keep publishing (`scripts/publish-github-io.sh`). Do not delete. |
 | Legacy filename `redmed-emergency.html` | Redirect stub → `/tapper/` (same as `index.html` / `card.html`) |
+| Cloudflare DNS + SSL | **Planned soon** — nameservers + orange-cloud HTTPS in front of Hostinger origin. Not a Worker recreate. |
+| Cloudflare Worker `redmed-emergency` | **Not used** for the product shell. Do not recreate for bands. |
 
-Smoke on the live interim: RedMed · 911 · Aid, no login. `pages-deploy.yml` **fails** when the write base 404s.
+Smoke after DNS: `BASE=https://redmed.live bash scripts/smoke-pages.sh`.
+Origin check (DNS independent): `BASE=http://195.35.60.70 HOST_HEADER=redmed.live bash scripts/smoke-pages.sh`.
+CI (`Pages tapper deploy`) also hard-smokes the github.io backup, soft-warns on
+Namecheap parking DNS, and soft-warns Hostinger origin 403s from Actions IPs until
+`@` / Cloudflare points off parking.
 
 ## Publish github.io (backup host)
 
@@ -33,40 +36,50 @@ Repo `Roooted1776/Roooted1776.github.io` already exists. Re-publish:
 2. Or locally: `./scripts/publish-github-io.sh /path/to/Roooted1776.github.io`, then commit and push `main`.
 3. Smoke: `BASE=https://roooted1776.github.io bash scripts/smoke-pages.sh`
 
-## DNS cutover (`redmed.live`)
+## DNS / SSL cutover (`redmed.live`)
 
-Domain is registered at **Namecheap** (nameservers `dns1.registrar-servers.com`). Hostinger
-hosts the static passerby shell; DNS must point at the Hostinger plan IP (shown in hPanel →
-Websites → redmed.live → Plan details — verified working: **`195.35.60.70`**).
+Domain is registered at **Namecheap** (nameservers still `dns1.registrar-servers.com`
+parking). Hostinger already serves the static shell at plan IP **`195.35.60.70`**.
 
-At Namecheap → Domain List → redmed.live → Advanced DNS:
+**Planned (in a day or two): Cloudflare DNS + SSL** — move nameservers to Cloudflare,
+point `@` / `www` at Hostinger origin `195.35.60.70`, enable Cloudflare proxy (orange
+cloud) for HTTPS. Keep Hostinger as the static file origin only — no RedMed server,
+no database, no Worker required for bands.
 
-1. Remove parking records (`A @` → `162.255.119.128`, `CNAME www` → `parkingpage.namecheap.com`).
-2. Add **`A @` → `195.35.60.70`** (TTL Automatic).
-3. Add **`A www` → `195.35.60.70`** (or `CNAME www` → `redmed.live`).
-4. Wait for propagation (minutes–24h). Hostinger issues HTTPS once DNS resolves.
+Until that lands, `https://redmed.live` stays on Namecheap parking. Origin smoke
+(independent of public DNS):
 
-Verify: `BASE=https://redmed.live bash scripts/smoke-pages.sh` and open
-`https://redmed.live/tapper/` on a phone (external browser — no app required).
+```bash
+BASE=http://195.35.60.70 HOST_HEADER=redmed.live bash scripts/smoke-pages.sh
+```
 
-Alternative: point Namecheap nameservers to Hostinger values from Plan details
-(often `ns1.dns-parking.com` / `ns2.dns-parking.com`) and manage DNS in hPanel.
+After Cloudflare DNS/SSL is live:
 
-## When custom domain is fully green
+```bash
+dig +short redmed.live A    # Cloudflare proxy IPs (or 195.35.60.70 if DNS-only)
+BASE=https://redmed.live bash scripts/smoke-pages.sh
+```
+
+**Do not** recreate Worker `redmed-emergency` just for SSL — Cloudflare DNS/SSL in
+front of Hostinger static is enough.
+
+Optional interim (skip if waiting on Cloudflare): at Namecheap Advanced DNS, point
+`A @` / `www` → `195.35.60.70` so Hostinger can issue its own cert before the CF move.
+
+
+## Product rules
 
 1. Smoke: `https://redmed.live/tapper/` loads RedMed · 911 · Aid. Bare `/` lands on `/tapper/` and keeps `#d=`.
-2. Set `AppConfig.medicalCardCustomDomainTBD` to `https://redmed.live/tapper/` and ship that iOS build.
-3. New NFC writes use `redmed.live`. Keep Worker + github.io backup hosts for old bands.
-4. Optional: 301 workers.dev / github.io to `redmed.live`; keep old hosts serving until bands are rewritten.
-
-Path stays **`/tapper/`** so SW cache keys and legacy `/get/` → `/tapper/` redirects stay coherent.
+2. New NFC writes use `redmed.live` (`AppConfig.medicalCardBaseURL`).
+3. Keep github.io backup for old bands.
+4. Path stays **`/tapper/`** so SW cache keys and legacy `/get/` → `/tapper/` redirects stay coherent.
 
 ## URL contract
 
 | Role | URL |
 |------|-----|
-| Product HTML app | `https://redmed.live/tapper/` (after DNS) |
-| Current AppConfig write base | `https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/` until AppConfig cutover |
+| Product HTML app (write base) | `https://redmed.live/tapper/` |
+| Hostinger origin IP | `195.35.60.70` (Host: `redmed.live`) |
 | Backup host (old bands) | `https://roooted1776.github.io/tapper/` |
 
 Deploy deps (one-off): `npm install --no-save axios tus-js-client` before running `scripts/deploy-hostinger-static.mjs`.

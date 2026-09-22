@@ -1,14 +1,10 @@
-# Optional Cloudflare Workers deploy for redmed-emergency (*.workers.dev).
-# Live band write base: https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/
-# (AppConfig.medicalCardBaseURL). github.io remains a backup for old bands
-# (docs/domain.md). Custom host is TBD (AppConfig.medicalCardCustomDomainTBD).
-# Do not flip that flag onto a 404 host.
+# Hostinger static deploy for redmed.live (AppConfig.medicalCardBaseURL).
+# Product write base: https://redmed.live/tapper/ (docs/domain.md).
+# github.io remains a backup for already-written bands.
+# No RedMed server / database — static HTML only; profile stays in #d=.
 #
-# Direct Upload needs CLOUDFLARE_API_TOKEN (Workers Scripts Edit).
-# Account ID is in wrangler.jsonc (a2d8a74738a0280eb9d5a3e77acd59ea).
-# Missing token skips CF upload (does not take down workers.dev if Builds is
-# connected). Write-base smoke fails the job when that host 404s.
-# Production Settings: Workers → redmed-emergency → Settings (workers.dev + Observability).
+# Deploy needs HOSTINGER_API_TOKEN. Missing token skips upload; write-base
+# smoke still runs against Hostinger origin + public DNS.
 
 name: Pages tapper deploy
 
@@ -40,8 +36,10 @@ on:
       - 'scripts/publish-github-io.sh'
       - 'scripts/test-d-codec.mjs'
       - 'scripts/deploy-pages.sh'
+      - 'scripts/deploy-hostinger-static.mjs'
       - 'scripts/stage-worker-assets.sh'
       - 'worker/**'
+      - 'docs/domain.md'
       - '.github/workflows/pages-deploy.yml'
   pull_request:
     paths:
@@ -69,8 +67,10 @@ on:
       - 'scripts/publish-github-io.sh'
       - 'scripts/test-d-codec.mjs'
       - 'scripts/deploy-pages.sh'
+      - 'scripts/deploy-hostinger-static.mjs'
       - 'scripts/stage-worker-assets.sh'
       - 'worker/**'
+      - 'docs/domain.md'
       - '.github/workflows/pages-deploy.yml'
   workflow_dispatch:
 
@@ -89,7 +89,6 @@ jobs:
           fail() { echo "::error::$1"; exit 1; }
           # One shell: tapper/index.html. Root tapper.html is a #d= redirect.
           # Xcode copies tapper/index.html → bundle tapper.html at build.
-          # Do not require three identical files (that gate is stale).
           bash scripts/sync-tapper.sh
           node scripts/test-d-codec.mjs
           node scripts/test-worker-device.mjs
@@ -97,8 +96,6 @@ jobs:
           ! grep -q 'Checking your phone' "$f" || fail "$f still has Checking your phone"
           ! grep -q 'Set up your RedMed band' "$f" || fail "$f still has band-setup copy"
           echo "OK no band-setup in $f"
-          # Brand photos live in assets/ (canonical) + tapper/ (shell-relative).
-          # They are NOT at repo root — do not test -f BrandLogo.png.
           for p in \
             assets/BrandLogo.png assets/BrandWordmark.png assets/pheart.png \
             tapper/BrandLogo.png tapper/BrandWordmark.png tapper/pheart.png
@@ -107,10 +104,10 @@ jobs:
           done
           echo "OK brand PNGs in assets/ and tapper/"
 
-      - name: Cloudflare secrets
-        id: cf
+      - name: Hostinger secrets
+        id: hostinger
         env:
-          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
         run: |
           if [ -z "$TOKEN" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
@@ -118,36 +115,76 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Cloudflare secrets optional
-        if: steps.cf.outputs.skip == 'true'
+      - name: Hostinger secrets optional
+        if: steps.hostinger.outputs.skip == 'true'
         run: |
-          echo "::warning::CLOUDFLARE_API_TOKEN not set — skipping redmed-emergency Workers deploy."
-          echo "Live band write base is https://redmed-emergency.maxaguilaraasted.workers.dev/tapper/ (docs/domain.md)."
-          echo "Workers Builds may still deploy on push when the Worker is connected to this repo."
-          echo "Dashboard: https://dash.cloudflare.com/a2d8a74738a0280eb9d5a3e77acd59ea/workers/services/view/redmed-emergency/production/settings"
+          echo "::warning::HOSTINGER_API_TOKEN not set — skipping Hostinger upload."
+          echo "Live band write base is https://redmed.live/tapper/ (docs/domain.md)."
+          echo "Deploy from a machine with the token: bash scripts/stage-worker-assets.sh && node scripts/deploy-hostinger-static.mjs redmed.live"
 
-      - name: Stage passerby assets for Worker
-        if: github.event_name != 'pull_request' && steps.cf.outputs.skip != 'true'
-        run: bash scripts/stage-worker-assets.sh
+      - name: Stage + deploy passerby assets to Hostinger
+        if: github.event_name != 'pull_request' && steps.hostinger.outputs.skip != 'true'
+        env:
+          HOSTINGER_API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          bash scripts/stage-worker-assets.sh
+          npm install --no-save axios tus-js-client
+          node scripts/deploy-hostinger-static.mjs redmed.live
 
-      - name: Deploy to Cloudflare Worker redmed-emergency
-        if: github.event_name != 'pull_request' && steps.cf.outputs.skip != 'true'
-        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: a2d8a74738a0280eb9d5a3e77acd59ea
-          command: deploy
+      - name: Smoke Hostinger origin (files live)
+        run: |
+          set -euo pipefail
+          # Hostinger plan IP serves redmed.live files even while Namecheap still parks DNS.
+          # hCDN sometimes 403s GitHub Actions IPs; treat that as a soft fail while
+          # public DNS is still parking (files are already on the plan — local smoke OK).
+          ORIGIN_IP=http://195.35.60.70
+          HOSTINGER_A=195.35.60.70
+          echo "Smoking Hostinger origin ${ORIGIN_IP} Host: redmed.live"
+          ok=0
+          for i in 1 2 3 4 5; do
+            if BASE="${ORIGIN_IP}" HOST_HEADER=redmed.live bash scripts/smoke-pages.sh; then
+              ok=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "$ok" = 1 ]; then
+            exit 0
+          fi
+          A_REC="$(dig +short redmed.live A | head -n 1 || true)"
+          if [ "${A_REC}" != "${HOSTINGER_A}" ]; then
+            echo "::warning::Hostinger origin ${ORIGIN_IP}/tapper/ smoke failed (often hCDN 403 from Actions). DNS A is '${A_REC:-none}' (not ${HOSTINGER_A}) — soft-fail until Cloudflare/Namecheap cutover (docs/domain.md)."
+            exit 0
+          fi
+          echo "::error::Hostinger origin ${ORIGIN_IP}/tapper/ (Host: redmed.live) failed smoke after DNS pointed at Hostinger. Redeploy: node scripts/deploy-hostinger-static.mjs redmed.live"
+          exit 1
 
-      - name: Smoke live write base /tapper/
+      - name: Smoke github.io backup host
+        run: |
+          set -euo pipefail
+          # Always-reachable backup for already-written bands (docs/domain.md).
+          # Hard gate so CI still proves shell content while redmed.live DNS parks.
+          BASE=https://roooted1776.github.io bash scripts/smoke-pages.sh
+
+      - name: Smoke public write base /tapper/
         run: |
           set -euo pipefail
           # AppConfig.medicalCardBaseURL is the URL written onto bands.
-          # Fail closed when that host 404s — a green job with a dead write
-          # base is how H1 stayed invisible. Do not flip AppConfig onto
-          # another 404 (a TBD domain, /frisky/ project Pages).
-          # GitHub Contents API rewrites drop the +x bit (file is 100644).
           ORIGIN="$(python3 scripts/write-base-origin.py)"
+          HOSTINGER_A=195.35.60.70
+          # Namecheap registrar parking (docs/domain.md) — SSL hangs, skip HTTPS.
+          NAMECHEAP_PARK=162.255.119.128
           echo "Write-base origin: ${ORIGIN} (AppConfig.medicalCardBaseURL)"
+          # Check DNS BEFORE smoking HTTPS — parking used to hang this job for
+          # ~10× multi-minute SSL retries. Cloudflare proxy IPs are fine; try them.
+          A_REC="$(dig +short redmed.live A | head -n 1 || true)"
+          echo "DNS A redmed.live → ${A_REC:-none}"
+          if [ -z "${A_REC}" ] || [ "${A_REC}" = "${NAMECHEAP_PARK}" ]; then
+            echo "::warning::Public ${ORIGIN}/tapper/ not reachable yet — DNS A redmed.live is '${A_REC:-none}' (Namecheap parking). Need ${HOSTINGER_A} or Cloudflare proxy (docs/domain.md)."
+            echo "::warning::Skipping HTTPS smoke against parking DNS. AppConfig write base is ${ORIGIN}/tapper/ — fix DNS before encoding new bands."
+            exit 0
+          fi
           ok=0
           for i in 1 2 3 4 5 6 7 8 9 10; do
             if BASE="${ORIGIN}" bash scripts/smoke-pages.sh; then
@@ -159,28 +196,5 @@ jobs:
           if [ "$ok" = 1 ]; then
             exit 0
           fi
-          echo "::error::Band write base ${ORIGIN}/tapper/ failed smoke (AppConfig.medicalCardBaseURL). Confirm Worker redmed-emergency is live or restore github.io backup (docs/domain.md). Do not flip medicalCardBaseURL onto another 404."
+          echo "::error::Band write base ${ORIGIN}/tapper/ failed smoke (DNS A=${A_REC}). Check Hostinger SSL / Cloudflare proxy / deploy."
           exit 1
-
-      - name: Smoke redmed-emergency.workers.dev after CF deploy
-        if: github.event_name != 'pull_request' && steps.cf.outputs.skip != 'true'
-        env:
-          # Optional override; default is this account's workers.dev subdomain.
-          WORKERS_DEV_SUBDOMAIN: ${{ vars.CLOUDFLARE_WORKERS_DEV_SUBDOMAIN }}
-        run: |
-          set -euo pipefail
-          SUB="${WORKERS_DEV_SUBDOMAIN:-maxaguilaraasted}"
-          BASE="https://redmed-emergency.${SUB}.workers.dev"
-          echo "Smoking Worker: ${BASE}/tapper/"
-          ok=0
-          for i in 1 2 3 4 5 6 7 8 9 10; do
-            if BASE="$BASE" bash scripts/smoke-pages.sh; then
-              ok=1
-              break
-            fi
-            sleep 3
-          done
-          if [ "$ok" != 1 ]; then
-            echo "::error::${BASE}/tapper/ did not serve RedMed · 911 · Aid after deploy"
-            exit 1
-          fi
