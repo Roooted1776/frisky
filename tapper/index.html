@@ -162,10 +162,13 @@ function redmedAssetURL(file) {
      racing BrandLogo.svg / PNG densities during HTML parse.
      Static CSS is next — AES prefetch + SW register wait until after it. -->
 <meta name="description" content="Tap the RedMed band to open the emergency card. Quick. No login. No server. No app — HTML only on this phone.">
-<!-- ONE scanner file: tapper.html (Pages + app bundle).
+<!-- ONE Assist shell file: tapper/index.html (Pages + app bundle).
+     Product name: Assist = the person tapping the band (passerby / responder).
+     Owner = the person with the RedMed app on their phone. URL path stays
+     https://redmed.live/tapper/ so already-written bands keep working.
      Specs (permanent):
      - Tabs: RedMed · 911 · Aid only — no Edit, no NFC
-     - Tapper / EMT / helper: passive HF NFC opens this HTML page — no RedMed
+     - Assist / EMT / helper: passive HF NFC opens this HTML page — no RedMed
        app required to view. Owner Edit / NFC write live only in the native app.
      - Data: #d= only — no server DB. New writes: flat array → AES-GCM
        (public client key) → base64url. Legacy still works: named JSON,
@@ -177,17 +180,18 @@ function redmedAssetURL(file) {
      - Offline: sw.js Cache Storage — cache-first multi-key shell for almost-instant
        EMT open after first online load; activate clears prior CACHE buckets
        (bump redmed-tapper-vN). Never wait on network when a shell copy exists.
-     - Real bracelet NFC tap (`tapper.html#d=…`) → everything stays on that phone
-       (profile, 911, Aid, SOS siren). Local only once tap — everyone and
-       everything. No server / no online. Bare /tapper/ without `#d=` and in-app
-       Preview/Scan (`?src=app`) do not auto-arm SOS. Stop on Find Help or Aid.
-       Explicit SOS tap opens `tel:` immediately (no in-page confirm). Crash
-       waits the US Crash Detection delay (10s alert + 30s countdown) then
-       the same `tel:` unless Stop. Band-tap auto-arm is siren only.
-       Phones with RedMed installed should not hit this Safari SOS path:
-       Associated Domains when AASA is live, else `redmed://band#d=` handoff
-       before arm (own band quiet; other band in-app card). Do not invent
-       BLE / local-network ranging.
+     - Real bracelet NFC tap (`https://redmed.live/tapper/#d=…`) → everything stays
+       on that phone (profile, 911, Aid, SOS siren). Local only once tap —
+       everyone and everything. No server / no online. Bare /tapper/ without
+       `#d=` and in-app Preview/Scan (`?src=app`) do not auto-arm SOS. Stop on
+       Find Help or Aid. Explicit SOS tap opens `tel:` immediately (no in-page
+       confirm). Crash waits the US Crash Detection delay (10s alert + 30s
+       countdown) then the same `tel:` unless Stop. Band-tap auto-arm is siren
+       only. Owner with RedMed installed + their custom band written: siren
+       must not go off on that phone regardless of NFC distance — Associated
+       Domains when AASA is live, else `redmed://band#d=` handoff before arm
+       (own band quiet; other band in-app card). Do not invent BLE /
+       local-network ranging.
        Bare /tapper/ without `#d=` (and a failed / empty `#d=`) paints the
        No Patient empty state — not a blank YOU chart with dashes. #911 /
        #aid / ?tab= still open those panels; #d= stays the profile payload.
@@ -4848,11 +4852,13 @@ function redmedAssetURL(file) {
   } catch (e) {}
 
   // Real HF NFC band tap brings #d= that decrypts — arm local SOS on this phone
-  // only when Safari opened the card (passerby / no RedMed app). No auto-arm for
-  // bare /tapper/, garbage `#d=`, or in-app Preview/Scan (?src=app). Phones with
-  // RedMed installed: Associated Domains (applinks) when AASA is live, else
-  // `redmed://band#d=` handoff before SOS so the wearer's own iPhone stays quiet.
-  // See docs/associated-domains-restore.md. No BLE / local-network band ranging.
+  // only when Safari opened the Assist card (passerby / no RedMed app). No
+  // auto-arm for bare /tapper/, garbage `#d=`, or in-app Preview/Scan (?src=app).
+  // Owner with RedMed + their written custom band: siren must not go off on
+  // that phone regardless of NFC distance — no BLE / local-network ranging.
+  // Associated Domains (applinks) when AASA is live, else `redmed://band#d=`
+  // handoff before SOS so the wearer's own iPhone stays quiet.
+  // See docs/associated-domains-restore.md.
   function hasBandPayload() {
     // Require non-empty fragment after #d= — bare "#d=" is not a real band tap.
     var h = location.hash || '';
