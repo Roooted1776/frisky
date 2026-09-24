@@ -91,6 +91,28 @@ def check_tapper_no_auth(path: Path) -> bool:
     return ok
 
 
+def check_tapper_no_remote_connect(path: Path) -> bool:
+    """Aid tutorials ship inline. A band tap must reach no third-party origin,
+    so CSP connect-src stays 'self' — that is what blocks the owner-app-only
+    hospital lookup (overpass-api.de) from ever firing in the passerby shell."""
+    raw = path.read_text(encoding="utf-8")
+    for line in raw.splitlines():
+        if "Content-Security-Policy" not in line:
+            continue
+        directive = ""
+        for part in line.split(";"):
+            if "connect-src" in part:
+                directive = part.strip().strip('"')
+                break
+        if directive != "connect-src 'self'":
+            print(f"FAIL {path} CSP connect-src must be 'self', got: {directive!r}")
+            return False
+        print(f"OK   csp-connect-self {path.relative_to(REPO)}")
+        return True
+    print(f"FAIL {path} missing Content-Security-Policy")
+    return False
+
+
 def check_tapper_no_ads(path: Path) -> bool:
     raw = path.read_text(encoding="utf-8")
     lower = raw.lower()
@@ -154,6 +176,7 @@ def main() -> int:
     # Static: band-tap shell never ships an auth gate (runs even if server is down).
     ok &= check_tapper_no_auth(REPO / "tapper/index.html")
     ok &= check_tapper_no_ads(REPO / "tapper/index.html")
+    ok &= check_tapper_no_remote_connect(REPO / "tapper/index.html")
     tapper_src = (REPO / "tapper/index.html").read_text(encoding="utf-8")
     if "function profileHasContent" not in tapper_src:
         print("FAIL tapper/index.html missing profileHasContent")

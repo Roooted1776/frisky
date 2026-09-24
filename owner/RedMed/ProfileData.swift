@@ -147,6 +147,13 @@ private enum ProfilePersistence {
 /// On-device RedMed profile. Empty on first launch; Keychain-backed when `persists` is true.
 class ProfileData: ObservableObject {
     private static let keychainAccount = "medicalProfile.v1"
+
+    // ProfilePersistence is file-private, so views cannot read the launch gate
+    // through it. Kept as two calls, not one: prefersLockOnLaunch is a
+    // UserDefaults read and is safe per-body, hasStoredProfile() hits SecItem.
+    static func hasStoredProfile() -> Bool { ProfilePersistence.hasStoredProfile() }
+    static var prefersLockOnLaunch: Bool { ProfilePersistence.prefersLockOnLaunch }
+
     private let persists: Bool
 
     /// >0 while `apply` / purge batch field writes — one `objectWillChange` at the end.
