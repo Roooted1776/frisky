@@ -10,7 +10,7 @@
 <meta name="color-scheme" content="light">
 <!-- media-src needs blob: — the SOS siren WAV is built in JS and played from a
      blob: URL; default-src 'self' alone blocks it and the alarm goes silent. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; media-src 'self' blob: data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; worker-src 'self'; connect-src 'self' https://overpass-api.de; manifest-src 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; media-src 'self' blob: data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; worker-src 'self'; connect-src 'self'; manifest-src 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="no-referrer">
 <!-- Favicon wired in resolveLogo from BrandLogo.png (preset src + fallbacks). -->
 <title>RedMed — tap to scan</title>
@@ -21,19 +21,20 @@ html,body{background:#fff7f7!important;margin:0}
 .panel{display:none} .panel.active{display:block}
 html.tab-911 .panel{display:none}
 html.tab-911 #panel-911{display:block}
-/* Aid is owner-app only — keep panel out of passerby / Preview chrome. */
-#panel-aid{display:none!important}
+html.tab-aid .panel{display:none}
+html.tab-aid #panel-aid{display:block}
 </style>
 <script>
 // Resolve the start tab before first paint. Bare open / #d= → medical (YOU).
-// Deep links: #911 ?tab=911. Aid / NFC / Edit are owner-app only — legacy
-// #aid / &tab=aid fall through to medical. Never treat #d= as a tab id.
+// Deep links: #911 ?tab=911, #aid ?tab=aid. NFC / Edit stay owner-app only.
+// Never treat #d= as a tab id.
 (function () {
   function norm(id) {
     id = String(id || "").toLowerCase();
     if (id === "911") return id;
-    // Passerby / Preview: RedMed · 911 only — no Aid (owner app), no NFC, no Edit.
-    if (id === "aid") return "medical";
+    // Aid carries first-aid tutorials only — the hospital lookup (the one
+    // network call) stays owner-app, so a band tap still reaches no server.
+    if (id === "aid") return "aid";
     if (id === "rm" || id === "redmed" || id === "you" || id === "card" || id === "medical") return "medical";
     return "";
   }
@@ -69,6 +70,7 @@ html.tab-911 #panel-911{display:block}
     document.documentElement.setAttribute("data-start-tab", tab);
     document.documentElement.classList.remove("tab-911", "tab-aid");
     if (tab === "911") document.documentElement.classList.add("tab-911");
+    else if (tab === "aid") document.documentElement.classList.add("tab-aid");
   } catch (e4) {}
 })();
 </script>
@@ -1913,11 +1915,9 @@ function redmedAssetURL(file) {
       <div class="page-pad">
         <!-- Pane + topic rows lockstep AidPaneCatalog / PaneCard (owner AidView). -->
         <div class="aid-grid">
-          <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🏥</span><span class="aid-title">Nearby Hospitals</span><span class="aid-chevron" aria-hidden="true"></span></span></summary>
-            <div class="aid-topics">
-            <button class="aid-topic" type="button" data-topic="trauma-hospitals"><span class="aid-topic-label">Find Nearby Hospitals</span><span class="aid-topic-chevron" aria-hidden="true"></span></button>
-            </div>
-          </details>
+          <!-- No Nearby Hospitals here: that topic posts coordinates to
+               overpass-api.de. Passerby stays server-free — it lives in the
+               owner app (AidView), which asks Apple Maps on-device instead. -->
           <details class="aid"><summary><span class="aid-summary-row"><span class="aid-emoji">🚗</span><span class="aid-title">Crash &amp; Head</span><span class="aid-chevron" aria-hidden="true"></span></span></summary>
             <div class="aid-topics">
             <button class="aid-topic" type="button" data-topic="car-crash"><span class="aid-topic-label">Car Crash</span><span class="aid-topic-chevron" aria-hidden="true"></span></button>
@@ -1967,7 +1967,7 @@ function redmedAssetURL(file) {
 
         <p class="foot-note">First-aid reference only. Not medical advice and not a substitute for emergency dispatch. Call emergency services and follow their instructions.</p>
         <!-- lockstep AppConfig.Satellite.localOnlyLine (owner AidView) -->
-        <p class="foot-note">Local only once tap — no RedMed servers. No Bluetooth · passive HF NFC. Call uses system tel: only (no profile, no GPS on the call). Nearby hospitals in the app asks Apple Maps on this phone. On a band tap in a browser, hospital search sends coordinates to OpenStreetMap Overpass (overpass-api.de). Neither is a RedMed upload.</p>
+        <p class="foot-note">Local only once tap — no RedMed servers. No Bluetooth · passive HF NFC. Call uses system tel: only (no profile, no GPS on the call). Nearby hospitals is app-only and asks Apple Maps on this phone. A band tap in a browser shows first-aid tutorials built into the page and reaches no server.</p>
       </div>
     </div>
   </div>
@@ -1983,6 +1983,7 @@ function redmedAssetURL(file) {
     <div class="tabs" role="tablist" aria-label="Pages">
       <button class="tab active" type="button" role="tab" id="tab-medical" data-tab="medical" aria-selected="true" aria-controls="panel-medical" tabindex="0"><div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v1.5c0 .83.67 1.5 1.5 1.5h17c.83 0 1.5-.67 1.5-1.5V19c0-3.33-6.67-5-10-5z"/></svg></div><span class="tab-label">RedMed</span></button>
       <button class="tab" type="button" role="tab" id="tab-911" data-tab="911" aria-selected="false" aria-controls="panel-911" tabindex="-1"><div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.5 5.5-2.5 7.5-7.5 2.5 2.5-7.5 7.5-2.5z"/></svg></div><span class="tab-label">911</span></button>
+      <button class="tab" type="button" role="tab" id="tab-aid" data-tab="aid" aria-selected="false" aria-controls="panel-aid" tabindex="-1"><div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M9 2h6a1 1 0 0 1 1 1v5h5a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-5v5a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-5H3a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1h5V3a1 1 0 0 1 1-1z"/></svg></div><span class="tab-label">Aid</span></button>
     </div>
     <div class="home-pill" aria-hidden="true"></div>
   </nav>
@@ -2469,8 +2470,8 @@ function redmedAssetURL(file) {
   }
 
   function showTab(id) {
-    // Bracelet / passerby / Preview shell: RedMed · 911 only — never Aid, NFC, or Edit.
-    if (id !== 'medical' && id !== '911') return;
+    // Bracelet / passerby / Preview shell: RedMed · 911 · Aid — never NFC or Edit.
+    if (id !== 'medical' && id !== '911' && id !== 'aid') return;
     document.querySelectorAll('.panel').forEach(function (p) {
       var on = p.getAttribute('data-panel') === id;
       p.classList.toggle('active', on);
@@ -2485,6 +2486,7 @@ function redmedAssetURL(file) {
     try {
       document.documentElement.classList.remove('tab-911', 'tab-aid');
       if (id === '911') document.documentElement.classList.add('tab-911');
+      else if (id === 'aid') document.documentElement.classList.add('tab-aid');
       document.documentElement.setAttribute('data-start-tab', id);
     } catch (eCls) {}
     window.scrollTo(0, 0);
@@ -2498,6 +2500,10 @@ function redmedAssetURL(file) {
       requestAnimationFrame(function () { ensureGeo(); });
     } else {
       stopGeo();
+    }
+    // Aid accordions / topic sheets bind lazily — first open costs the work.
+    if (id === 'aid') {
+      requestAnimationFrame(function () { ensureAidChrome(); });
     }
   }
 
@@ -2751,7 +2757,7 @@ function redmedAssetURL(file) {
     });
   })();
 
-  var tabOrder = ['medical', '911'];
+  var tabOrder = ['medical', '911', 'aid'];
   document.querySelectorAll('.tab').forEach(function (t) {
     t.addEventListener('click', function () { showTab(t.getAttribute('data-tab')); });
     t.addEventListener('keydown', function (e) {
@@ -2806,7 +2812,7 @@ function redmedAssetURL(file) {
     try {
       if (typeof window.__redmedTabFromLocation === 'function') next = window.__redmedTabFromLocation();
     } catch (eH) {}
-    if (next !== '911') next = 'medical';
+    if (next !== '911' && next !== 'aid') next = 'medical';
     showTab(next);
     // Band payload lives in the fragment. A same-document #d= swap
     // (paste #d=, in-page test) must re-decode — first paint already ran.
@@ -3266,7 +3272,8 @@ function redmedAssetURL(file) {
       back.addEventListener('click', function () { closeSheet(); });
     })();
   }
-  // Aid is owner-app only — do not idle-warm passerby Aid chrome.
+  // Aid chrome binds on first Aid tab open (showTab), not at idle — a band tap
+  // that never leaves the card must not pay for it.
 
   // Owner RedMed embed only — native boot sets html.app-embed before first paint.
   // Preview / Scan use ?src=app / __REDMED_APP_PREVIEW (no SOS) but keep
