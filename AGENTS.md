@@ -53,7 +53,7 @@ merge (`pages-deploy.yml` and `ios-build.yml` both run it). Rule detail for
 IDE agents: `.cursor/rules/nfc-hardware.mdc`.
 
 - **Chip**: product band is **NXP NTAG216** only (13.56 MHz, ISO 14443A
-  Type 2, NDEF blank unlocked). Never NTAG213, MIFARE, LF, or UHF.
+  Type 2, NDEF blank unlocked). Never NTAG213/215, MIFARE, LF, or UHF.
 - **Tap geometry**: deliberate antenna tap ~1–2″ (`AppConfig.BraceletRF`);
   walk-by (~6–8″) must never fire a session. RedMed only starts CoreNFC on
   an explicit Write/Scan action, never on mere proximity.

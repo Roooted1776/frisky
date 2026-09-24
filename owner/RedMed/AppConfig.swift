@@ -140,7 +140,7 @@ enum AppConfig {
     ///   Band stays passive — no battery (not AirTag / BLE).
     /// - Band RF is **HF NFC at 13.56 MHz**, **ISO 14443A Type 2**, **NXP NTAG216**
     ///   NDEF blank unlocked. Different carrier from Bluetooth (~2.4 GHz).
-    ///   Do not source NTAG213, MIFARE, LF (~125 kHz), or UHF (~860–960 MHz).
+    ///   Do not source NTAG213, NTAG215, MIFARE, LF (~125 kHz), or UHF (~860–960 MHz).
     /// - Factory: no pre-encode, no lock. Owner Write programs NDEF.
     /// - Face art is logo-print RedMed heart + wordmark (30×9 mm) on black `#232425` — not laser MED ID.
     /// - Contactless payment POS also uses 13.56 MHz but speaks EMV, not NDEF
@@ -201,7 +201,7 @@ enum AppConfig {
         }
 
         static var chipSpecSummary: String {
-            "\(chipPart), \(carrierLabel), ISO 14443A Type 2, NDEF blank unlocked. No pre-encode, no lock. Not NTAG213, MIFARE, LF, or UHF."
+            "\(chipPart), \(carrierLabel), ISO 14443A Type 2, NDEF blank unlocked. No pre-encode, no lock. Not NTAG213/215, MIFARE, LF, or UHF."
         }
 
         /// Hardware SKU: bracelet ships finished. Owner only programs NDEF.

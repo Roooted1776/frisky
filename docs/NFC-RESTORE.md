@@ -5,7 +5,7 @@ CoreNFC write/read is wired in production via `NFCBandManager` (owns
 read-back verify, NDEF URI strip, and CryptoKit AES-GCM via `ProfileNFCCodec`.
 
 **Target band:** blank unlocked **NXP NTAG216**, 13.56 MHz, ISO 14443A Type 2,
-NDEF empty at factory. No pre-encode, no lock. Not NTAG213, MIFARE, LF, or UHF.
+NDEF empty at factory. No pre-encode, no lock. Not NTAG213/215, MIFARE, LF, or UHF.
 Owner **Write** on the NFC tab programs the chip; locked or non-NDEF tags are
 rejected with a clear error. Face art is logo-print RedMed heart + wordmark on black `#232425` (30×9 mm) — not laser MED ID.
 
@@ -54,7 +54,7 @@ button.
 
 - Bracelet is **passive** HF NFC at **13.56 MHz** (`AppConfig.BraceletRF`) —
   **NXP NTAG216**, ISO 14443A Type 2, NDEF blank unlocked. No battery, no BLE.
-  Not NTAG213, MIFARE, LF, or UHF. Factory does not pre-encode or lock.
+  Not NTAG213/215, MIFARE, LF, or UHF. Factory does not pre-encode or lock.
 - Chip must be **rewritable** (NDEF not permanently locked). Factory-blank or
   overwriteable stub only — see `docs/band-engraving-and-nfc-sourcing.md`.
 - **Owner data independence:** `NFCWriter` / `ProfileNFCCodec` write only
@@ -75,7 +75,7 @@ button.
   - Do not market these as a tunable read range
   - `NFCBandManager` / `NFCWriter` / `NFCReader` only `begin()` after Write or Load From Band
   - Deliberate stranger tap must still open the emergency card
-- Do **not** source NTAG213, MIFARE, LF (~125 kHz), or UHF chips.
+- Do **not** source NTAG213, NTAG215, MIFARE, LF (~125 kHz), or UHF chips.
 - Payment POS may share 13.56 MHz but speaks EMV, not RedMed NDEF URLs
   (`ignoredByPaymentPOS`) — protocol, not distance.
 - **iOS Background Tag Reading (not RedMed):** what can still open the URL later

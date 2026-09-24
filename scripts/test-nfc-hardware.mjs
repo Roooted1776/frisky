@@ -38,9 +38,10 @@ const doc = readFileSync(join(ROOT, 'owner/RedMed/Document/Document.html'), 'utf
 // --- Chip model (NTAG216-only) ---
 assert('chip part is NXP NTAG216', appConfig.includes('static let chipPart = "NXP NTAG216"'));
 assert('chip family ISO 14443A Type 2 (NXP NTAG216)', appConfig.includes('static let family = "ISO 14443A Type 2 (NXP NTAG216)"'));
-assert('writer rejects non-NTAG216 families by name', writer.includes('Not NTAG213, MIFARE, LF, or UHF'));
+assert('writer rejects non-NTAG216 families by name', writer.includes('Not NTAG213/215, MIFARE, LF, or UHF'));
 assert('writer capacity error names NXP NTAG216', writer.includes('Product band is NXP NTAG216'));
 assert('codec capacity note names NXP NTAG216', codec.includes('too large for NXP NTAG216') && codec.includes('bytes on tag — NXP NTAG216'));
+assert('AppConfig chip-sourcing comment names NTAG215 alongside NTAG213', appConfig.includes('Do not source NTAG213, NTAG215, MIFARE, LF (~125 kHz), or UHF (~860–960 MHz).'));
 assert('Document.html names passive NXP NTAG216 chip', doc.includes('<strong>passive NXP NTAG216</strong> at 13.56 MHz (ISO 14443A Type 2, NDEF blank unlocked)'));
 
 // --- RF constants ---
