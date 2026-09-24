@@ -1,6 +1,43 @@
 import SwiftUI
 import UIKit
 
+private enum EditProfileDraftMapper {
+    static func flattenedMedicalLines(_ lines: [DraftLine]) -> [String] {
+        var out: [String] = []
+        for line in lines {
+            for part in line.text.split(separator: ",", omittingEmptySubsequences: true) {
+                let t = part.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !t.isEmpty { out.append(t) }
+            }
+        }
+        return out
+    }
+
+    static func capToWordLimit(_ text: String, limit: Int) -> String {
+        guard limit > 0 else { return "" }
+        var wordsSeen = 0
+        var inWord = false
+        var cutIndex: String.Index?
+        var idx = text.startIndex
+        while idx < text.endIndex {
+            let isSeparator = text[idx].isWhitespace || text[idx].isNewline
+            if isSeparator {
+                inWord = false
+            } else if !inWord {
+                inWord = true
+                wordsSeen += 1
+                if wordsSeen > limit {
+                    cutIndex = idx
+                    break
+                }
+            }
+            idx = text.index(after: idx)
+        }
+        guard let cutIndex else { return text }
+        return String(text[text.startIndex..<cutIndex]).trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
 struct EditProfileView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.dismiss) var dismiss
@@ -773,10 +810,10 @@ struct EditProfileView: View {
             return birthDate.trimmingCharacters(in: .whitespacesAndNewlines)
         }()
         let nextBlood = bloodType.trimmingCharacters(in: .whitespacesAndNewlines)
-        let nextAllergies = Self.flattenedMedicalLines(allergies)
-        let nextMeds = Self.flattenedMedicalLines(medications)
-        let nextConditions = Self.flattenedMedicalLines(conditions)
-        let nextNotes = String(Self.capToWordLimit(
+        let nextAllergies = EditProfileDraftMapper.flattenedMedicalLines(allergies)
+        let nextMeds = EditProfileDraftMapper.flattenedMedicalLines(medications)
+        let nextConditions = EditProfileDraftMapper.flattenedMedicalLines(conditions)
+        let nextNotes = String(EditProfileDraftMapper.capToWordLimit(
             notes.trimmingCharacters(in: .whitespacesAndNewlines),
             limit: Self.notesWordLimit
         ).prefix(Self.notesCharLimit))

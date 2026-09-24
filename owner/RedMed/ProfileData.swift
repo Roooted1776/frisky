@@ -5,81 +5,214 @@ enum AppTab {
     case redmed, emergency, aid, nfc
 }
 
+private struct MedicalProfileState: Equatable {
+    var name: String = ""
+    var birthDate: String = ""
+    var bloodType: String = ""
+    var allergies: [String] = []
+    var medications: [String] = []
+    var conditions: [String] = []
+    var contacts: [EmergencyContact] = []
+    var braceletLinked: Bool = false
+    var isOrganDonor: Bool = false
+    var isPregnant: Bool = false
+    var isDeafOrVisionImpaired: Bool = false
+    var lastUpdated: String = ""
+    var notes: String = ""
+
+    init() {}
+
+    init(profile: PersistedProfile) {
+        name = profile.name
+        birthDate = profile.birthDate
+        bloodType = profile.bloodType
+        allergies = profile.allergies
+        medications = profile.medications
+        conditions = profile.conditions
+        contacts = profile.contacts.map { $0.asEmergencyContact() }
+        braceletLinked = profile.braceletLinked
+        isOrganDonor = profile.isOrganDonor
+        isPregnant = profile.isPregnant
+        isDeafOrVisionImpaired = profile.isDeafOrVisionImpaired
+        lastUpdated = profile.lastUpdated
+        notes = profile.notes
+    }
+
+    var hasData: Bool {
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var isEmergencyProfileConfigured: Bool {
+        hasData
+            && !birthDate.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !bloodType.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var hasSensitiveProfileData: Bool {
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            || !birthDate.isEmpty
+            || !bloodType.isEmpty
+            || isOrganDonor
+            || isPregnant
+            || isDeafOrVisionImpaired
+            || !allergies.isEmpty
+            || !medications.isEmpty
+            || !conditions.isEmpty
+            || !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            || contacts.contains {
+                !$0.name.isEmpty || !$0.relationship.isEmpty || !$0.phone.isEmpty
+            }
+    }
+
+    func asPersistedProfile(stampedAt dateString: String? = nil) -> PersistedProfile {
+        PersistedProfile(
+            name: name,
+            birthDate: birthDate,
+            bloodType: bloodType,
+            allergies: allergies,
+            medications: medications,
+            conditions: conditions,
+            contacts: contacts.map {
+                PersistedContact(name: $0.name, relationship: $0.relationship, phone: $0.phone)
+            },
+            braceletLinked: braceletLinked,
+            isOrganDonor: isOrganDonor,
+            isPregnant: isPregnant,
+            isDeafOrVisionImpaired: isDeafOrVisionImpaired,
+            lastUpdated: dateString ?? lastUpdated,
+            notes: notes
+        )
+    }
+
+    func snapshotCopy() -> MedicalProfileState {
+        MedicalProfileState(profile: asPersistedProfile())
+    }
+
+    static func cleared() -> MedicalProfileState {
+        MedicalProfileState()
+    }
+}
+
+private enum ProfilePersistence {
+    static let keychainAccount = "medicalProfile.v1"
+    static let storedProfileGateKey = "redmed.hasStoredProfileGate"
+
+    static func hasStoredProfile() -> Bool {
+        KeychainStore.exists(account: keychainAccount)
+    }
+
+    static var prefersLockOnLaunch: Bool {
+        UserDefaults.standard.bool(forKey: storedProfileGateKey)
+    }
+
+    static func setStoredProfileGate(_ on: Bool) {
+        UserDefaults.standard.set(on, forKey: storedProfileGateKey)
+    }
+
+    static func decodeBlob(_ data: Data?) -> PersistedProfile? {
+        guard let data,
+              let decoded = try? JSONDecoder().decode(PersistedProfile.self, from: data) else {
+            return nil
+        }
+        return decoded
+    }
+
+    static func load(allowInteractive: Bool = false) -> PersistedProfile? {
+        decodeBlob(KeychainStore.load(account: keychainAccount, allowInteractive: allowInteractive))
+    }
+
+    static func loadAsync(allowInteractive: Bool = false) async -> PersistedProfile? {
+        if allowInteractive || BiometricAuth.peekAuthenticationContext() != nil {
+            return load(allowInteractive: allowInteractive)
+        }
+        return await Task.detached(priority: .userInitiated) {
+            decodeBlob(KeychainStore.load(account: keychainAccount, allowInteractive: false))
+        }.value
+    }
+
+    static func save(_ profile: PersistedProfile) -> Bool {
+        guard let data = try? JSONEncoder().encode(profile) else { return false }
+        let ok = KeychainStore.save(data, account: keychainAccount)
+        if ok { setStoredProfileGate(true) }
+        return ok
+    }
+
+    static func deleteAll() -> Bool {
+        let gone = KeychainStore.deleteIncludingStaging(account: keychainAccount)
+        if gone { setStoredProfileGate(false) }
+        return gone
+    }
+}
+
 /// On-device RedMed profile. Empty on first launch; Keychain-backed when `persists` is true.
 class ProfileData: ObservableObject {
     private static let keychainAccount = "medicalProfile.v1"
+
+    // ProfilePersistence is file-private, so views cannot read the launch gate
+    // through it. Kept as two calls, not one: prefersLockOnLaunch is a
+    // UserDefaults read and is safe per-body, hasStoredProfile() hits SecItem.
+    static func hasStoredProfile() -> Bool { ProfilePersistence.hasStoredProfile() }
+    static var prefersLockOnLaunch: Bool { ProfilePersistence.prefersLockOnLaunch }
+
     private let persists: Bool
 
     /// >0 while `apply` / purge batch field writes — one `objectWillChange` at the end.
     private var bulkUpdateDepth = 0
-
-    private var _name: String = ""
-    private var _birthDate: String = ""
-    private var _bloodType: String = ""
-    private var _allergies: [String] = []
-    private var _medications: [String] = []
-    private var _conditions: [String] = []
-    private var _contacts: [EmergencyContact] = []
-    private var _braceletLinked: Bool = false
-    private var _isOrganDonor: Bool = false
-    private var _isPregnant: Bool = false
-    private var _isDeafOrVisionImpaired: Bool = false
-    private var _lastUpdated: String = ""
-    private var _notes: String = ""
+    private var state = MedicalProfileState()
 
     var name: String {
-        get { _name }
-        set { setField(&_name, newValue) }
+        get { state.name }
+        set { setField(\.name, newValue) }
     }
     var birthDate: String {
-        get { _birthDate }
-        set { setField(&_birthDate, newValue) }
+        get { state.birthDate }
+        set { setField(\.birthDate, newValue) }
     }
     var bloodType: String {
-        get { _bloodType }
-        set { setField(&_bloodType, newValue) }
+        get { state.bloodType }
+        set { setField(\.bloodType, newValue) }
     }
     var allergies: [String] {
-        get { _allergies }
-        set { setField(&_allergies, newValue) }
+        get { state.allergies }
+        set { setField(\.allergies, newValue) }
     }
     var medications: [String] {
-        get { _medications }
-        set { setField(&_medications, newValue) }
+        get { state.medications }
+        set { setField(\.medications, newValue) }
     }
     var conditions: [String] {
-        get { _conditions }
-        set { setField(&_conditions, newValue) }
+        get { state.conditions }
+        set { setField(\.conditions, newValue) }
     }
     var contacts: [EmergencyContact] {
-        get { _contacts }
-        set { setField(&_contacts, newValue) }
+        get { state.contacts }
+        set { setField(\.contacts, newValue) }
     }
     var braceletLinked: Bool {
-        get { _braceletLinked }
-        set { setField(&_braceletLinked, newValue) }
+        get { state.braceletLinked }
+        set { setField(\.braceletLinked, newValue) }
     }
     var isOrganDonor: Bool {
-        get { _isOrganDonor }
-        set { setField(&_isOrganDonor, newValue) }
+        get { state.isOrganDonor }
+        set { setField(\.isOrganDonor, newValue) }
     }
     var isPregnant: Bool {
-        get { _isPregnant }
-        set { setField(&_isPregnant, newValue) }
+        get { state.isPregnant }
+        set { setField(\.isPregnant, newValue) }
     }
     var isDeafOrVisionImpaired: Bool {
-        get { _isDeafOrVisionImpaired }
-        set { setField(&_isDeafOrVisionImpaired, newValue) }
+        get { state.isDeafOrVisionImpaired }
+        set { setField(\.isDeafOrVisionImpaired, newValue) }
     }
     var lastUpdated: String {
-        get { _lastUpdated }
-        set { setField(&_lastUpdated, newValue) }
+        get { state.lastUpdated }
+        set { setField(\.lastUpdated, newValue) }
     }
     /// Free-text notes. Capped in Edit so Keychain and the chip hold the same
     /// text (NTAG216 / `MAX_STR`). Shown on the YOU card and packed into `#d=`.
     var notes: String {
-        get { _notes }
-        set { setField(&_notes, newValue) }
+        get { state.notes }
+        set { setField(\.notes, newValue) }
     }
     /// True while owner Edit holds draft PHI that may not yet be in Keychain.
     @Published var holdsEditingSession: Bool = false
@@ -102,16 +235,16 @@ class ProfileData: ObservableObject {
     /// but not yet set `didAttemptLaunchRestore`).
     private var didScheduleLaunchAdopt = false
 
-    private func setField<T: Equatable>(_ storage: inout T, _ newValue: T) {
-        guard storage != newValue else { return }
+    private func setField<Value: Equatable>(_ keyPath: WritableKeyPath<MedicalProfileState, Value>, _ newValue: Value) {
+        guard state[keyPath: keyPath] != newValue else { return }
         if bulkUpdateDepth == 0 { objectWillChange.send() }
-        storage = newValue
+        state[keyPath: keyPath] = newValue
     }
 
     private func withBulkUpdate(_ body: () -> Void) {
         // ObservableObject: emit *before* mutations so SwiftUI snapshots the
         // empty YOU card, then reads the filled blob on the next body pass.
-        // Sending after apply left native rows stuck on "\u2014" (PR 465).
+        // Sending after apply left native rows stuck on "—" (PR 465).
         if bulkUpdateDepth == 0 { objectWillChange.send() }
         bulkUpdateDepth += 1
         body()
@@ -119,9 +252,7 @@ class ProfileData: ObservableObject {
         cardEpoch &+= 1
     }
 
-    var hasData: Bool {
-        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
+    var hasData: Bool { state.hasData }
 
     /// YOU-card identity filled (Name, birth date, blood type). Lists may stay empty.
     var isEmergencyProfileConfigured: Bool {
@@ -158,7 +289,7 @@ class ProfileData: ObservableObject {
         self.persists = persisting
         // UserDefaults gate only on the main thread — never SecItem / LAContext
         // / exists() here (that contended with Face ID and blocked first frame).
-        guard persisting, Self.prefersLockOnLaunch else { return }
+        guard persisting, ProfilePersistence.prefersLockOnLaunch else { return }
         self.isRestoringFromKeychain = true
         if ConsentSettings.hasAcceptedCurrent {
             // Returning cold: race SplashBoard / Face ID cream so YOU can
@@ -185,7 +316,7 @@ class ProfileData: ObservableObject {
     func beginLaunchPrefetch() {
         guard persists else { return }
         guard !didAttemptLaunchRestore else { return }
-        guard Self.prefersLockOnLaunch else { return }
+        guard ProfilePersistence.prefersLockOnLaunch else { return }
         if !isRestoringFromKeychain { isRestoringFromKeychain = true }
         if launchPrefetchTask == nil {
             startLaunchPrefetchTask()
@@ -203,70 +334,22 @@ class ProfileData: ObservableObject {
 
     private func startLaunchPrefetchTask(priority: TaskPriority = .userInitiated) {
         guard launchPrefetchTask == nil else { return }
-        let account = Self.keychainAccount
         launchPrefetchTask = Task.detached(priority: priority) {
-            Self.decodeBlob(KeychainStore.load(account: account, allowInteractive: false))
+            await ProfilePersistence.loadAsync(allowInteractive: false)
         }
-    }
-
-    /// Lightweight presence check — no JSON decode. True for old biometry ACL
-    /// rows that cannot be read without interaction (`exists` treats
-    /// errSecInteractionNotAllowed / errSecAuthFailed as present).
-    static func hasStoredProfile() -> Bool {
-        KeychainStore.exists(account: keychainAccount)
-    }
-
-    /// UserDefaults mirror of Keychain presence — hints that a stored ID is
-    /// expected so the empty funnel stays hidden until restore finishes.
-    static let storedProfileGateKey = "redmed.hasStoredProfileGate"
-
-    static var prefersLockOnLaunch: Bool {
-        UserDefaults.standard.bool(forKey: storedProfileGateKey)
-    }
-
-    static func setStoredProfileGate(_ on: Bool) {
-        UserDefaults.standard.set(on, forKey: storedProfileGateKey)
     }
 
     /// Detached copy for scanner / preview — mutations never touch the owner profile or Keychain.
     func snapshot() -> ProfileData {
         let copy = ProfileData(persisting: false)
-        copy.name = name
-        copy.birthDate = birthDate
-        copy.bloodType = bloodType
-        copy.allergies = allergies
-        copy.medications = medications
-        copy.conditions = conditions
-        copy.contacts = contacts.map {
-            EmergencyContact(name: $0.name, relationship: $0.relationship, phone: $0.phone)
-        }
-        copy.braceletLinked = braceletLinked
-        copy.isOrganDonor = isOrganDonor
-        copy.isPregnant = isPregnant
-        copy.isDeafOrVisionImpaired = isDeafOrVisionImpaired
-        copy.lastUpdated = lastUpdated
-        copy.notes = notes
+        copy.state = state.snapshotCopy()
         return copy
     }
 
     /// Revert RAM fields from a `snapshot()` after a failed Keychain persist.
     func restore(from other: ProfileData) {
         withBulkUpdate {
-            name = other.name
-            birthDate = other.birthDate
-            bloodType = other.bloodType
-            allergies = other.allergies
-            medications = other.medications
-            conditions = other.conditions
-            contacts = other.contacts.map {
-                EmergencyContact(name: $0.name, relationship: $0.relationship, phone: $0.phone)
-            }
-            braceletLinked = other.braceletLinked
-            isOrganDonor = other.isOrganDonor
-            isPregnant = other.isPregnant
-            isDeafOrVisionImpaired = other.isDeafOrVisionImpaired
-            lastUpdated = other.lastUpdated
-            notes = other.notes
+            state = other.state.snapshotCopy()
         }
     }
 
@@ -281,34 +364,15 @@ class ProfileData: ObservableObject {
     @discardableResult
     func persist() -> Bool {
         guard persists else { return false }
-        // Empty Keychain write would set the stored-profile gate and hide the
-        // setup funnel behind a blank YOU card — refuse every empty persist.
-        if !hasSensitiveProfileData {
-            return false
-        }
+        guard hasSensitiveProfileData else { return false }
+
         let stamp = DateFormatter.localizedString(from: Date(), dateStyle: .medium, timeStyle: .none)
-        if hasSensitiveProfileData { lastUpdated = stamp }
-        let blob = PersistedProfile(
-            name: name,
-            birthDate: birthDate,
-            bloodType: bloodType,
-            allergies: allergies,
-            medications: medications,
-            conditions: conditions,
-            contacts: contacts.map {
-                PersistedContact(name: $0.name, relationship: $0.relationship, phone: $0.phone)
-            },
-            braceletLinked: braceletLinked,
-            isOrganDonor: isOrganDonor,
-            isPregnant: isPregnant,
-            isDeafOrVisionImpaired: isDeafOrVisionImpaired,
-            lastUpdated: lastUpdated,
-            notes: notes
-        )
-        guard let data = try? JSONEncoder().encode(blob) else { return false }
-        let ok = KeychainStore.save(data, account: Self.keychainAccount)
+        if lastUpdated != stamp {
+            lastUpdated = stamp
+        }
+
+        let ok = ProfilePersistence.save(state.asPersistedProfile(stampedAt: lastUpdated))
         if ok {
-            Self.setStoredProfileGate(true)
             cardEpoch &+= 1
         }
         return ok
@@ -318,19 +382,7 @@ class ProfileData: ObservableObject {
     func purgeFromMemory() {
         guard persists else { return }
         withBulkUpdate {
-            name = ""
-            birthDate = ""
-            bloodType = ""
-            allergies = []
-            medications = []
-            conditions = []
-            contacts = []
-            braceletLinked = false
-            isOrganDonor = false
-            isPregnant = false
-            isDeafOrVisionImpaired = false
-            lastUpdated = ""
-            notes = ""
+            state = .cleared()
         }
         holdsEditingSession = false
     }
@@ -339,7 +391,9 @@ class ProfileData: ObservableObject {
     @discardableResult
     func reloadFromKeychain() -> Bool {
         guard persists else { return false }
-        return loadFromKeychain()
+        guard let blob = ProfilePersistence.load() else { return false }
+        apply(blob)
+        return true
     }
 
     /// Apply prefetch as soon as the detached decode finishes. Does not
@@ -355,7 +409,7 @@ class ProfileData: ObservableObject {
             if let blob = await task.value {
                 didAttemptLaunchRestore = true
                 apply(blob)
-                Self.setStoredProfileGate(true)
+                ProfilePersistence.setStoredProfileGate(true)
                 isRestoringFromKeychain = false
                 RedMedSignpost.coldMark("adoptLaunchPrefetch applied")
                 return
@@ -375,11 +429,11 @@ class ProfileData: ObservableObject {
         guard persists else { return }
         guard !didAttemptLaunchRestore else { return }
 
-        if launchPrefetchTask == nil && Self.prefersLockOnLaunch {
+        if launchPrefetchTask == nil && ProfilePersistence.prefersLockOnLaunch {
             beginLaunchPrefetch()
         }
 
-        let expected = Self.prefersLockOnLaunch || launchPrefetchTask != nil || Self.hasStoredProfile()
+        let expected = ProfilePersistence.prefersLockOnLaunch || launchPrefetchTask != nil || ProfilePersistence.hasStoredProfile()
         if !expected {
             didAttemptLaunchRestore = true
             isRestoringFromKeychain = false
@@ -396,7 +450,7 @@ class ProfileData: ObservableObject {
             launchPrefetchTask = nil
             if let blob = await task.value {
                 apply(blob)
-                Self.setStoredProfileGate(true)
+                ProfilePersistence.setStoredProfileGate(true)
                 isRestoringFromKeychain = false
                 return
             }
@@ -408,18 +462,18 @@ class ProfileData: ObservableObject {
         if expected {
             let ok = await reloadFromKeychainAsync(allowInteractive: false)
             if ok {
-                Self.setStoredProfileGate(true)
+                ProfilePersistence.setStoredProfileGate(true)
                 isRestoringFromKeychain = false
                 return
             }
             // Stale gate + empty Keychain must not hide Get Started forever.
             // Keep the gate only when RAM already has an ID or a row still exists
             // (leftover ACL waits for Face ID retry).
-            if !hasSensitiveProfileData && !Self.hasStoredProfile() {
-                Self.setStoredProfileGate(false)
+            if !hasSensitiveProfileData && !ProfilePersistence.hasStoredProfile() {
+                ProfilePersistence.setStoredProfileGate(false)
             }
         } else {
-            Self.setStoredProfileGate(false)
+            ProfilePersistence.setStoredProfileGate(false)
         }
         isRestoringFromKeychain = false
     }
@@ -438,15 +492,15 @@ class ProfileData: ObservableObject {
             scheduleDeferredKeychainMigrate()
             return
         }
-        guard Self.prefersLockOnLaunch || Self.hasStoredProfile() else { return }
+        guard ProfilePersistence.prefersLockOnLaunch || ProfilePersistence.hasStoredProfile() else { return }
         isRestoringFromKeychain = true
         let ok = await reloadFromKeychainAsync(allowInteractive: false)
         if ok {
-            Self.setStoredProfileGate(true)
+            ProfilePersistence.setStoredProfileGate(true)
             RedMedSignpost.coldMark("reloadAfterOwnerFaceID applied")
         } else if !hasSensitiveProfileData {
             // Face ID already ran; still empty → return Get Started / funnel.
-            Self.setStoredProfileGate(false)
+            ProfilePersistence.setStoredProfileGate(false)
         }
         isRestoringFromKeychain = false
     }
@@ -490,80 +544,19 @@ class ProfileData: ObservableObject {
     @discardableResult
     func reloadFromKeychainAsync(allowInteractive: Bool = false) async -> Bool {
         guard persists else { return false }
-        let account = Self.keychainAccount
-        let blob: PersistedProfile?
-        if allowInteractive {
-            // Interactive migrate may present Face ID — stay on main.
-            let data = KeychainStore.load(account: account, allowInteractive: true)
-            blob = Self.decodeBlob(data)
-        } else if BiometricAuth.peekAuthenticationContext() != nil {
-            // Parked context must be used on main — don't hop to detached.
-            blob = Self.decodeBlob(KeychainStore.load(account: account, allowInteractive: false))
-        } else {
-            blob = await Task.detached(priority: .userInitiated) {
-                Self.decodeBlob(KeychainStore.load(account: account, allowInteractive: false))
-            }.value
+        guard let blob = await ProfilePersistence.loadAsync(allowInteractive: allowInteractive) else {
+            return false
         }
-        guard let blob else { return false }
-        apply(blob)
-        return true
-    }
-
-    private static func decodeBlob(_ data: Data?) -> PersistedProfile? {
-        guard let data,
-              let decoded = try? JSONDecoder().decode(PersistedProfile.self, from: data) else {
-            return nil
-        }
-        return decoded
-    }
-
-    /// - Returns: `true` when a profile blob was loaded from Keychain.
-    @discardableResult
-    private func loadFromKeychain() -> Bool {
-        guard let data = KeychainStore.load(account: Self.keychainAccount),
-              let blob = try? JSONDecoder().decode(PersistedProfile.self, from: data) else { return false }
         apply(blob)
         return true
     }
 
     private func apply(_ blob: PersistedProfile) {
-        let nextContacts = blob.contacts.map { $0.asEmergencyContact() }
-        // Compare fields only — EmergencyContact.id is a fresh UUID each map.
-        let contactsChanged = contacts.count != nextContacts.count
-            || zip(contacts, nextContacts).contains {
-                $0.name != $1.name || $0.relationship != $1.relationship || $0.phone != $1.phone
-            }
-        let changed = name != blob.name
-            || birthDate != blob.birthDate
-            || bloodType != blob.bloodType
-            || allergies != blob.allergies
-            || medications != blob.medications
-            || conditions != blob.conditions
-            || contactsChanged
-            || braceletLinked != blob.braceletLinked
-            || isOrganDonor != blob.isOrganDonor
-            || isPregnant != blob.isPregnant
-            || isDeafOrVisionImpaired != blob.isDeafOrVisionImpaired
-            || lastUpdated != blob.lastUpdated
-            || notes != blob.notes
-        // Identical blob (prefetch already adopted) must not objectWillChange
-        // or bump cardEpoch — that remounts parked RedMed after Face ID.
-        guard changed else { return }
+        let nextState = MedicalProfileState(profile: blob)
+        guard state != nextState else { return }
         // One objectWillChange for the whole blob — unlock must not storm the tab tree.
         withBulkUpdate {
-            if name != blob.name { name = blob.name }
-            if birthDate != blob.birthDate { birthDate = blob.birthDate }
-            if bloodType != blob.bloodType { bloodType = blob.bloodType }
-            if allergies != blob.allergies { allergies = blob.allergies }
-            if medications != blob.medications { medications = blob.medications }
-            if conditions != blob.conditions { conditions = blob.conditions }
-            if contactsChanged { contacts = nextContacts }
-            if braceletLinked != blob.braceletLinked { braceletLinked = blob.braceletLinked }
-            if isOrganDonor != blob.isOrganDonor { isOrganDonor = blob.isOrganDonor }
-            if isPregnant != blob.isPregnant { isPregnant = blob.isPregnant }
-            if isDeafOrVisionImpaired != blob.isDeafOrVisionImpaired { isDeafOrVisionImpaired = blob.isDeafOrVisionImpaired }
-            if lastUpdated != blob.lastUpdated { lastUpdated = blob.lastUpdated }
-            if notes != blob.notes { notes = blob.notes }
+            state = nextState
         }
     }
 
@@ -664,9 +657,7 @@ class ProfileData: ObservableObject {
     func eraseAllLocalData() -> Bool {
         guard persists else { return false }
         PasserbyShellStaging.wipe()
-        let gone = KeychainStore.deleteIncludingStaging(account: Self.keychainAccount)
-        guard gone else { return false }
-        Self.setStoredProfileGate(false)
+        guard ProfilePersistence.deleteAll() else { return false }
         ConsentSettings.clearAcceptance()
         purgeFromMemory()
         SecurePasteboard.clear()
