@@ -1,0 +1,100 @@
+---
+description: NFC band hardware contract — chip, RF, write gate, NDEF, CoreNFC session rules
+globs: owner/RedMed/NFCWriter.swift,owner/RedMed/NFCReader.swift,owner/RedMed/NFCBandManager.swift,owner/RedMed/ProfileNFCCodec.swift,owner/RedMed/AppConfig.swift
+alwaysApply: false
+---
+
+# NFC hardware contract
+
+Enforced statically by `scripts/test-nfc-hardware.mjs` (48 checks, runs on
+Linux CI — no Xcode needed). Run it after touching any file this rule globs.
+
+## NTAG216-only
+
+- The product band is **NXP NTAG216**, HF NFC, **13.56 MHz**, **ISO 14443A
+  Type 2**, NDEF blank unlocked (`AppConfig.BraceletRF`). Never source or
+  special-case NTAG213, MIFARE, LF (~125 kHz), or UHF (~860–960 MHz).
+- Every user-facing capacity/format error must name **NXP NTAG216** by name
+  (`NFCWriter.swift`, `ProfileNFCCodec.swift`) so a bad chip is diagnosable
+  from the message alone.
+
+## Tap geometry
+
+- Deliberate antenna tap is **~1–2″** (`intentionalTapInchesMin/Max`).
+  Walk-by/casual standoff (~6–8″) must never fire a session — RedMed only
+  starts CoreNFC on an explicit Write/Scan tap
+  (`BraceletRF.requiresExplicitUserSession = true`), never because a band is
+  merely nearby.
+- Beyond ~4″ (`reliableCouplingInchesMax`) is outside reliable ISO 14443
+  coupling — don't advertise longer range in copy.
+- Face art is logo-print RedMed heart + wordmark on black silicone
+  (`#232425`) at **30×9 mm**. Keep `AppConfig.swift` and
+  `owner/RedMed/Document/Document.html` in lockstep on this string.
+
+## Write gate
+
+- `NFCBandManager.writeBand` must refuse: scanner sessions
+  (`isScannerSession`), a busy session (`isBusy`), and an empty profile
+  (`profile.hasSensitiveProfileData`) — in that order, before touching
+  CoreNFC.
+- Enforce the **850-byte** NTAG216 cap on the packed `#d=` URL before
+  writing; refuse and tell the owner to shorten RedMed rather than
+  truncating silently.
+- `NFCWriter.writeURL` must refuse anything that is not a
+  `AppConfig.OwnerBandURI.isValidWriteURL` (`medicalCardBaseURL#d=…`) —
+  never a vendor cloud, social/short link, or App Store URL.
+- All hardware entry points stay gated on `AppConfig.nfcHardwareEnabled`
+  (single kill switch) and `NFCNDEFReaderSession.readingAvailable`. When
+  hardware is parked (`false`), `NFCBandManager` must only pack a URL
+  (Copy Band Link / Preview) — it must never open a live CoreNFC session or
+  mark the band Linked.
+
+## NDEF contract
+
+- Hand-build the NDEF record as **NFC Forum Well Known Type "U"**
+  (`NFCURICodec.wellKnownURIRecord`) so the `#d=` fragment survives iOS
+  Background Tag Reading — don't rely on Apple's
+  `wellKnownTypeURIPayload(url:)` helper alone; it can drop the fragment.
+- The written message is always a single-record `NFCNDEFMessage`. Check
+  `message.length` against the tag's reported `capacity` before writing,
+  and refuse (don't clip) when it's too big.
+- Handle `queryNDEFStatus` exhaustively: `.notSupported` (wrong chip),
+  `.readOnly` (locked tag), `.readWrite` (write path), and `@unknown
+  default`. Never fall through silently.
+- Decoding a chip must go through `NFCURICodec.string(from:)` and
+  `ProfileNFCCodec.decodeProfile`, which requires a `#d=` fragment — a bare
+  string or URL without it must not decode as a chip profile.
+
+## Read-back requirement
+
+- Every write is followed by a `tag.readNDEF` read-back before reporting
+  success. Compare the read-back URL to what was written with
+  `NFCURICodec.match` — do not trust `writeNDEF`'s completion alone.
+- `success` / `verified` only become `true` when that read-back matches.
+  `NFCBandManager.linkBracelet` (marking the bracelet Linked/paired) must
+  require `writeVerified`, never just `writeSucceeded`.
+
+## No permanent lock bytes
+
+- The band ships **factory blank and unlocked**
+  (`factoryLock = false`, `factoryPreEncode = false`, `isRewritable = true`).
+  RedMed must never lock, permalock, or otherwise make the tag read-only.
+- A tag that reports `.readOnly` is refused with a "locked/read-only —
+  needs NDEF blank unlocked" message, never force-written.
+
+## CoreNFC session rules
+
+- Use only `NFCNDEFReaderSession` (`NFCWriter`, `NFCReader`), never
+  `NFCTagReaderSession` — the raw tag session that would allow lock-byte /
+  low-level manipulation. NDEF stays the only supported technology.
+- Writer sessions use `invalidateAfterFirstRead: false` (write, then
+  read-back, then invalidate on this same session). Reader sessions use
+  `invalidateAfterFirstRead: true`.
+- No Simulator fake-success path anywhere in `NFCWriter` / `NFCReader` —
+  failures stay failures; a session only succeeds after a real device
+  round-trip.
+- Keep `AppConfig.nfcHardwareEnabled`, `RedMed.entitlements`
+  (`com.apple.developer.nfc.readersession`), and `Info.plist`'s
+  `NFCReaderUsageDescription` in lockstep — restoring hardware means
+  flipping all three together (see `docs/NFC-RESTORE.md`), never just the
+  Swift flag.

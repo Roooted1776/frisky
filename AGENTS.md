@@ -42,4 +42,36 @@ Gmail for automations: Cursor Gmail MCP, not a separate Grok Gmail plugin.
 - Face ID is UI-only. Keychain stays `WhenPasscodeSetThisDeviceOnly` with no biometry ACL.
 - Assist at `https://redmed.live/tapper/` is no-auth, no-ads. `#d=` codec lockstep tests must stay green.
 - SOS = full sound + full light; arms only on SOS toggle or US Crash Detection collision timing — never on band tap alone. Owner phone with RedMed + written band: handoff / applinks claim the tap. No fake band-distance ranging.
+- Band is factory blank NDEF-unlocked NXP NTAG216 — no permanent lock bytes, ever. `scripts/test-nfc-hardware.mjs` (48 checks) must stay green.
 - One repo, one branch for shipping: `Roooted1776/frisky` `main`.
+
+## NFC hardware contract
+
+`scripts/test-nfc-hardware.mjs` statically enforces the bracelet hardware
+contract on Linux CI (no Xcode needed) — 48 checks, must all pass before
+merge (`pages-deploy.yml` and `ios-build.yml` both run it). Rule detail for
+IDE agents: `.cursor/rules/nfc-hardware.mdc`.
+
+- **Chip**: product band is **NXP NTAG216** only (13.56 MHz, ISO 14443A
+  Type 2, NDEF blank unlocked). Never NTAG213, MIFARE, LF, or UHF.
+- **Tap geometry**: deliberate antenna tap ~1–2″ (`AppConfig.BraceletRF`);
+  walk-by (~6–8″) must never fire a session. RedMed only starts CoreNFC on
+  an explicit Write/Scan action, never on mere proximity.
+- **Write gate**: `NFCBandManager.writeBand` refuses scanner sessions, a
+  busy session, and an empty profile before touching CoreNFC; enforces the
+  850-byte NTAG216 cap; `NFCWriter.writeURL` refuses anything that is not a
+  `medicalCardBaseURL#d=` URL. Parked builds (`AppConfig.nfcHardwareEnabled
+  == false`) only pack a URL — never open a live session, never mark Linked.
+- **NDEF contract**: hand-built Well Known Type "U" record (keeps `#d=`
+  intact for iOS Background Tag Reading); single-record message checked
+  against tag capacity before writing; `queryNDEFStatus` handled
+  exhaustively (`.notSupported` / `.readOnly` / `.readWrite` / `@unknown`).
+- **Read-back**: every write is followed by a `readNDEF` read-back compared
+  via `NFCURICodec.match`; `writeVerified` (not just `writeSucceeded`) gates
+  `linkBracelet`.
+- **No permanent lock bytes**: band ships factory blank and unlocked
+  (`factoryLock = false`, `isRewritable = true`); a `.readOnly` tag is
+  refused, never force-written; RedMed never calls a lock/permalock API.
+- **CoreNFC session type**: `NFCNDEFReaderSession` only — never
+  `NFCTagReaderSession` (raw tag access, lock-byte capable). No Simulator
+  fake-success path anywhere.
