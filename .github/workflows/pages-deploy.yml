@@ -35,6 +35,7 @@ on:
       - 'scripts/write-base-origin.py'
       - 'scripts/publish-github-io.sh'
       - 'scripts/test-d-codec.mjs'
+      - 'scripts/test-nfc-hardware.mjs'
       - 'scripts/deploy-pages.sh'
       - 'scripts/deploy-hostinger-static.mjs'
       - 'scripts/stage-worker-assets.sh'
@@ -66,6 +67,7 @@ on:
       - 'scripts/write-base-origin.py'
       - 'scripts/publish-github-io.sh'
       - 'scripts/test-d-codec.mjs'
+      - 'scripts/test-nfc-hardware.mjs'
       - 'scripts/deploy-pages.sh'
       - 'scripts/deploy-hostinger-static.mjs'
       - 'scripts/stage-worker-assets.sh'
@@ -91,6 +93,7 @@ jobs:
           # Xcode copies tapper/index.html → bundle tapper.html at build.
           bash scripts/sync-tapper.sh
           node scripts/test-d-codec.mjs
+          node scripts/test-nfc-hardware.mjs
           node scripts/test-worker-device.mjs
           f=tapper/index.html
           ! grep -q 'Checking your phone' "$f" || fail "$f still has Checking your phone"

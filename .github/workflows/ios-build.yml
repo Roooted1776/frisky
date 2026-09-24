@@ -11,10 +11,12 @@ on:
     branches: [main]
     paths:
       - 'owner/**'
+      - 'scripts/test-nfc-hardware.mjs'
       - '.github/workflows/ios-build.yml'
   pull_request:
     paths:
       - 'owner/**'
+      - 'scripts/test-nfc-hardware.mjs'
       - '.github/workflows/ios-build.yml'
   workflow_dispatch:
 
@@ -43,6 +45,9 @@ jobs:
           fi
           python3 -c "import xml.etree.ElementTree as ET; ET.parse('$f')"
           echo "OK $f is valid XML plist"
+
+      - name: NFC hardware contract
+        run: node scripts/test-nfc-hardware.mjs
 
       - name: Build RedMed
         run: |
