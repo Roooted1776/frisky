@@ -14,17 +14,18 @@ RedMed installed, iOS opens the **app** instead of Safari.
 | --- | --- |
 | RedMed installed, `#d=` matches owner Keychain | App foreground only — no Safari, no SOS, no card sheet |
 | RedMed installed, other person's `#d=` (or empty owner funnel) | Ungated in-app tap card above ConsentGate — no Face ID, no Before You Continue, no Keychain write, no SOS |
-| RedMed **not** installed | Safari card + band-tap SOS auto-arm (passerby / EMT unchanged) |
+| RedMed **not** installed | Safari Assist medical card only — band tap does **not** arm SOS (SOS is toggle or US Crash Detection collision) |
 
 AASA is live (`apple-app-site-association` + `.well-known/`, paths
 `/tapper`, `/tapper/`, `/tapper/*`, plus `components` / `appIDs`). After
 restore + merge, re-run Publish tapper / `scripts/publish-github-io.sh` so
 github.io picks up the widened AASA.
 
-**Safari fallback (AASA stale / UL miss / entitlement parked):** passerby
-`tapper` tries `redmed://band#d=` before SOS auto-arm. Installed RedMed
-claims it (same quiet rules via `onOpenURL`). No app → page stays put → SOS
-arms after ~650ms. Custom scheme needs no Associated Domains entitlement.
+**Safari fallback (AASA stale / UL miss / entitlement parked):** Assist
+tries `redmed://band#d=` so installed RedMed can claim the tap (same quiet
+rules via `onOpenURL`). No app → page stays put with the medical card.
+SOS never auto-arms from band tap. Custom scheme needs no Associated
+Domains entitlement.
 
 ## Currently parked (personal team signing)
 
@@ -61,11 +62,12 @@ local network. HF NFC physics + Universal Links are the controls.
 ## Device tests
 
 1. RedMed installed + tap **own** wrist band → app foreground (or already
-   open stays put), **no Safari**, no SOS auto-arm, no tap card.
+   open stays put), **no Safari**, no SOS, no tap card.
 2. RedMed installed + tap **another** RedMed band → ungated in-app tap card
    (no Face ID / Before You Continue / login), no Keychain write, no SOS.
-3. RedMed **not** installed + tap any band → Safari card + SOS auto-arm
-   (no login, no biometrics, no start screen).
+3. RedMed **not** installed + tap any band → Safari Assist medical card only
+   (no login, no biometrics, no start screen). SOS arms only via SOS · Locate
+   Me toggle or US Crash Detection collision — never from band tap alone.
 4. After custom domain cutover (`docs/domain.md`), update `applinks:` host and
    both AASA files together.
 

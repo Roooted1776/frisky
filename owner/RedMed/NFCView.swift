@@ -1,14 +1,17 @@
 // Owner-only NFC bracelet setup. Ped/EMS scanner shells never mount this tab —
 // see ContentView.showsNFC / scannerSafeTab.
-// One page: live Write The Band + Preview + Load From Band.
+// One page: live Write The Band + Preview + Import From Band.
+// Write flow: fill card → band in front → tap Write The Band while holding
+// the phone ~1–2″ above the chip. Helpers open the card only by the same
+// close tap; it loads in their external browser (no Share link).
 // When `AppConfig.nfcHardwareEnabled` is true, Write starts a CoreNFC
 // NDEF session and programs `medicalCardBaseURL#d=` from the live profile.
 // Preview packs the live profile into the same tapper card helpers get.
-// Load From Band reads `#d=` off the chip, Face IDs, then persist()s into
+// Import From Band reads `#d=` off the chip, Face IDs, then persist()s into
 // owner Keychain (empty funnel restore). Scanners never.
-// Linked after write + matching read-back, or after a successful Load.
-// Parked (`false`): Pack Band URL (copy) + Share Band URL + Preview
-// (never a Write button, never flips Linked; Load is hidden).
+// Linked after write + matching read-back, or after a successful Import.
+// Parked (`false`): Copy Band Link + Preview (never a Write button, never
+// flips Linked; Import is hidden).
 import SwiftUI
 
 struct NFCView: View {
@@ -21,8 +24,8 @@ struct NFCView: View {
     /// Owned by ContentView so the NFC tab tap can begin write on the same gesture.
     @ObservedObject var band: NFCBandManager
     @State private var previewSession: PreviewSession?
-    /// Parked CoreNFC: packed `medicalCardBaseURL#d=` for Share Band URL only
-    /// (pack/export — Share honesty, not a chip write, not Linked).
+    /// Parked CoreNFC: packed `medicalCardBaseURL#d=` for Copy Band Link only
+    /// (clipboard check — not a chip write, not Linked, not a share path).
     /// Nil until pack finishes; never used to flip Linked.
     @State private var parkedBandURL: String?
     @State private var parkedPackNote: String = ""
@@ -30,6 +33,8 @@ struct NFCView: View {
     @State private var showLoadOverwriteConfirm = false
     @State private var showLoadAuthFailedAlert = false
     @State private var loadAuthUnavailableMessage: String?
+    /// One-shot pulse on the hold diagram when the tab is front — SF Symbol only.
+    @State private var holdPulse = false
 
     private struct PreviewSession: Identifiable {
         let id = UUID()
@@ -55,11 +60,15 @@ struct NFCView: View {
                     if profile.showsBraceletAsLinked {
                         completeBanner
                             .padding(.top, 4)
+                    } else {
+                        holdDiagram
+                            .padding(.top, 4)
+                        howItWorksCard
                     }
-                    factsCard
-                        .padding(.top, profile.showsBraceletAsLinked ? 0 : 4)
-                    setupCard
-                        .padding(.top, 4)
+                    actionsCard
+                    if !profile.showsBraceletAsLinked {
+                        aboutBandDisclosure
+                    }
                 }
                 .padding(.horizontal, RedMedChrome.pagePadX)
                 .padding(.top, 4)
@@ -113,9 +122,17 @@ struct NFCView: View {
             // HTML string only, off the main actor. Do not create a WKWebView
             // on this tab — that was the long NFC load.
             // Session cancel on leave is ContentView (owns the band).
-            guard isVisible else { return }
+            guard isVisible else {
+                holdPulse = false
+                return
+            }
             PasserbyHTMLCardView.scheduleShellWarmOnce()
             await refreshParkedBandURL()
+            // Cheap SF Symbol opacity pulse — no images, no drawingGroup.
+            holdPulse = false
+            try? await Task.sleep(nanoseconds: 120_000_000)
+            guard !Task.isCancelled, isVisible else { return }
+            withAnimation(RedMedMotion.snappy) { holdPulse = true }
         }
         .onChange(of: band.isWriting) { _, writing in
             guard !writing else { return }
@@ -180,53 +197,140 @@ struct NFCView: View {
         .accessibilityLabel("\(AppConfig.NFCWriteCopy.successTitle). \(AppConfig.NFCWriteCopy.successDetail)")
     }
 
-    private var factsCard: some View {
-        let rf = AppConfig.BraceletRF.self
-        let status = linkStatus
-        return VStack(alignment: .leading, spacing: 0) {
-            // When linked, the complete banner owns the done signal — keep a
-            // compact Linked row here so the facts card still reads as a unit.
-            if !status.linked {
-                HStack(alignment: .center, spacing: 12) {
-                    Image(systemName: "link")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.redmedMuted)
-                        .frame(width: 28, alignment: .center)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(status.title)
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundColor(.redmedDark)
-                        Text(status.detail)
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.redmedMuted)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    Spacer(minLength: 0)
-                }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 14)
+    /// Phone → chip hold cue. SF Symbols + shapes only — no bitmap assets.
+    private var holdDiagram: some View {
+        VStack(spacing: 14) {
+            Text(AppConfig.NFCWriteCopy.pageIntro)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(.redmedDark)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
 
-                thinRule
+            HStack(spacing: 18) {
+                diagramGlyph(systemName: "iphone", label: "Phone")
+                Image(systemName: "wave.3.right")
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundColor(.redmedAccent)
+                    .opacity(holdPulse ? 1 : 0.35)
+                    .scaleEffect(holdPulse ? 1.05 : 0.92)
+                    .accessibilityHidden(true)
+                diagramBandGlyph
             }
+            .padding(.vertical, 6)
 
-            factRow(icon: "cpu", text: rf.chipSpecSummary)
-            thinRule
-            factRow(icon: "hand.point.up.left.fill", text: rf.tapDistanceSummary)
-            thinRule
-            factRow(icon: "iphone.radiowaves.left.and.right", text: rf.powerOnTapSummary)
-            thinRule
-            factRow(icon: "lock.open.fill", text: rf.backgroundTagReadingSummary)
-            thinRule
-            factRow(icon: "person.2.fill", text: rf.passerbyTapSummary)
-            thinRule
-            factRow(icon: "internaldrive", text: AppConfig.OwnerBandURI.storesIndependenceSummary)
+            Text(AppConfig.NFCWriteCopy.holdDiagramCaption)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(.redmedMuted)
+                .multilineTextAlignment(.center)
+
+            statusChip
         }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 18)
+        .redmedBox()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(AppConfig.NFCWriteCopy.pageIntro). \(AppConfig.NFCWriteCopy.holdDiagramCaption). \(linkStatus.title).")
+    }
+
+    private var diagramBandGlyph: some View {
+        VStack(spacing: 6) {
+            ZStack {
+                Capsule(style: .continuous)
+                    .fill(Color.redmedDark.opacity(0.92))
+                    .frame(width: 56, height: 28)
+                Image(systemName: "heart.fill")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.redmedAccentLift)
+            }
+            Text("Band")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(.redmedMuted)
+        }
+        .accessibilityHidden(true)
+    }
+
+    private func diagramGlyph(systemName: String, label: String) -> some View {
+        VStack(spacing: 6) {
+            Image(systemName: systemName)
+                .font(.system(size: 36, weight: .regular))
+                .foregroundColor(.redmedDark)
+                .frame(width: 52, height: 52)
+                .background(Color.redmedWash.opacity(0.65))
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            Text(label)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(.redmedMuted)
+        }
+        .accessibilityHidden(true)
+    }
+
+    private var statusChip: some View {
+        let status = linkStatus
+        return HStack(spacing: 8) {
+            Circle()
+                .fill(status.linked ? Color.redmedAccent : Color.redmedMuted.opacity(0.45))
+                .frame(width: 8, height: 8)
+            Text(status.title)
+                .font(.system(size: 13, weight: .bold))
+                .foregroundColor(.redmedDark)
+            Text("·")
+                .foregroundColor(.redmedMuted)
+            Text(status.detail)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.redmedMuted)
+                .lineLimit(2)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(Color.redmedBg)
+        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: RedMedChrome.boxRadius, style: .continuous)
+                .strokeBorder(Color.redmedDivider, lineWidth: 1)
+        )
+    }
+
+    private var howItWorksCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionLabel(text: AppConfig.NFCWriteCopy.howItWorksLabel)
+            ForEach(Array(AppConfig.NFCWriteCopy.tutorialSteps.enumerated()), id: \.offset) { index, step in
+                tutorialStepRow(icon: step.icon, title: step.title, detail: step.detail)
+                if index < AppConfig.NFCWriteCopy.tutorialSteps.count - 1 {
+                    thinRule
+                }
+            }
+        }
+        .padding(16)
         .redmedBox()
     }
 
-    private var setupCard: some View {
+    private func tutorialStepRow(icon: String, title: String, detail: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(.redmedAccent)
+                .frame(width: 32, height: 32)
+                .background(Color.redmedWash.opacity(0.7))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(.redmedDark)
+                Text(detail)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.redmedMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var actionsCard: some View {
         VStack(alignment: .leading, spacing: 14) {
-            SectionLabel(text: "Set Up")
+            SectionLabel(text: AppConfig.NFCWriteCopy.doThisNowLabel)
 
             PrimaryButton(
                 title: primaryActionTitle,
@@ -243,25 +347,30 @@ struct NFCView: View {
                 tipRow(AppConfig.NFCWriteCopy.holdTopTip)
                 previewButton
                 OutlineButton(
-                    title: band.isReading ? "Hold Near The Band…" : "Load From Band",
+                    title: band.isReading
+                        ? AppConfig.NFCWriteCopy.loadBusyTitle
+                        : AppConfig.NFCWriteCopy.loadTitle,
                     systemImage: band.isReading ? nil : "arrow.down.to.line",
                     busy: band.isReading,
                     disabled: band.isBusy
                 ) {
                     startLoadFromBand()
                 }
-                .accessibilityLabel("Load From Band")
+                .accessibilityLabel(AppConfig.NFCWriteCopy.loadTitle)
                 .accessibilityHint("Reads the bracelet into this iPhone. Face ID required. Replaces the RedMed ID here.")
             } else {
-                parkedShareControl
                 previewButton
+                Text(AppConfig.NFCWriteCopy.parkedHonestyShort)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.redmedMuted)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             if !profile.hasSensitiveProfileData {
                 Text(
                     AppConfig.nfcHardwareEnabled
-                        ? "Fill RedMed before writing or previewing. Load From Band reads a written bracelet into this iPhone."
-                        : "Fill RedMed before packing or previewing the band."
+                        ? AppConfig.NFCWriteCopy.fillBeforeWrite
+                        : AppConfig.NFCWriteCopy.fillBeforePack
                 )
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.redmedAccent)
@@ -275,21 +384,40 @@ struct NFCView: View {
                     .foregroundColor(.redmedAccent)
                     .fixedSize(horizontal: false, vertical: true)
             }
-
-            VStack(alignment: .leading, spacing: 8) {
-                if AppConfig.nfcHardwareEnabled {
-                    tipRow("Write packs #d= onto the chip only — never a vendor cloud or social/short link.")
-                    tipRow("Preview: same HTML card helpers get — quick, no login, no server, no app.")
-                    tipRow("Load From Band reads #d= into this iPhone (Face ID). Replaces RedMed here.")
-                    tipRow("Linked after write + matching read-back, or after Load From Band.")
-                } else {
-                    tipRow(AppConfig.BraceletRF.hardwareParkedSummary)
-                    tipRow("Preview is the same HTML a helper sees. It is not a chip write.")
-                }
-            }
-            .padding(.top, 2)
         }
         .padding(16)
+        .redmedBox()
+    }
+
+    /// Deep RF / chip facts stay available but off the first read.
+    private var aboutBandDisclosure: some View {
+        DisclosureGroup {
+            VStack(alignment: .leading, spacing: 0) {
+                factRow(icon: "cpu", text: AppConfig.BraceletRF.chipSpecSummary)
+                thinRule
+                factRow(icon: "hand.point.up.left.fill", text: AppConfig.BraceletRF.tapDistanceSummary)
+                thinRule
+                factRow(icon: "iphone.radiowaves.left.and.right", text: AppConfig.BraceletRF.powerOnTapSummary)
+                thinRule
+                factRow(icon: "lock.open.fill", text: AppConfig.BraceletRF.backgroundTagReadingSummary)
+                thinRule
+                factRow(icon: "person.2.fill", text: AppConfig.BraceletRF.passerbyTapSummary)
+                thinRule
+                factRow(icon: "internaldrive", text: AppConfig.OwnerBandURI.storesIndependenceSummary)
+                if !AppConfig.nfcHardwareEnabled {
+                    thinRule
+                    factRow(icon: "info.circle", text: AppConfig.BraceletRF.hardwareParkedSummary)
+                }
+            }
+            .padding(.top, 8)
+        } label: {
+            Text(AppConfig.NFCWriteCopy.aboutBandLabel)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.redmedMuted)
+        }
+        .tint(.redmedAccent)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
         .redmedBox()
     }
 
@@ -333,42 +461,6 @@ struct NFCView: View {
                 .foregroundColor(statusIsError ? .redmedAccent : .redmedMuted)
                 .fixedSize(horizontal: false, vertical: true)
         }
-    }
-
-    @ViewBuilder
-    private var parkedShareControl: some View {
-        if let parkedBandURL {
-            ShareLink(item: parkedBandURL) {
-                shareBandURLLabel
-            }
-            .disabled(band.isBusy)
-            .opacity(band.isBusy ? 0.72 : 1)
-            .accessibilityLabel("Share Band URL")
-            .accessibilityHint("Packs the same #d= URL CoreNFC Write will put on the chip when Tag Reading is restored. Does not write the band and does not mark Linked.")
-        } else {
-            shareBandURLLabel
-                .opacity(RedMedChrome.disabledOpacity)
-                .accessibilityLabel("Share Band URL")
-                .accessibilityHint("Pack RedMed first to share the band URL.")
-        }
-    }
-
-    private var shareBandURLLabel: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "square.and.arrow.up")
-                .font(.system(size: 17, weight: .semibold))
-            Text("Share Band URL")
-                .font(.system(size: 16, weight: .bold))
-        }
-        .foregroundColor(.redmedAccent)
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 15)
-        .background(Color.redmedBg)
-        .clipShape(RoundedRectangle(cornerRadius: RedMedChrome.boxRadius, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: RedMedChrome.boxRadius, style: .continuous)
-                .strokeBorder(Color.redmedAccent.opacity(0.45), lineWidth: 1.5)
-        )
     }
 
     private func refreshParkedBandURL() async {
@@ -500,7 +592,9 @@ struct NFCView: View {
 
     private var primaryActionTitle: String {
         if band.isWriting {
-            return AppConfig.nfcHardwareEnabled ? "Hold Near The Band…" : "Packing…"
+            return AppConfig.nfcHardwareEnabled
+                ? AppConfig.NFCWriteCopy.writeBusyTitle
+                : AppConfig.NFCWriteCopy.packBusyTitle
         }
         return AppConfig.nfcHardwareEnabled
             ? AppConfig.NFCWriteCopy.writeTitle
@@ -528,14 +622,14 @@ struct NFCView: View {
         if let url = parkedBandURL {
             SecurePasteboard.copyEphemeral(url, lifetimeSeconds: 120)
             parkedPackNote = ""
-            band.statusMessage = "Copied the band URL."
+            band.statusMessage = AppConfig.NFCWriteCopy.packCopiedStatus
             return
         }
         Task { @MainActor in
             await refreshParkedBandURL()
             guard let url = parkedBandURL else { return }
             SecurePasteboard.copyEphemeral(url, lifetimeSeconds: 120)
-            band.statusMessage = "Copied the band URL."
+            band.statusMessage = AppConfig.NFCWriteCopy.packCopiedStatus
         }
     }
 
@@ -572,7 +666,8 @@ struct NFCView: View {
         if msg.contains("Couldn't") || msg.contains("failed") || msg.contains("Failed") {
             return true
         }
-        if msg.hasPrefix("Loaded") || msg.hasPrefix("This band matches") || msg.hasPrefix("Copied") {
+        if msg.hasPrefix("Loaded") || msg.hasPrefix("This band matches")
+            || msg == AppConfig.NFCWriteCopy.packCopiedStatus {
             return false
         }
         return !band.writeSucceeded && !msg.isEmpty && !band.isWriting && !band.isReading
@@ -598,7 +693,7 @@ struct NFCView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, 4)
         .padding(.vertical, 12)
     }
 

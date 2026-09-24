@@ -12,7 +12,7 @@ Only what must live at the deploy / GitHub surface:
 | `README.md` | GitHub landing (product + run/deploy + dead-host note) |
 | `AGENTS.md` | Cursor / agent rules (must be easy to find) |
 | `tapper.html` · `index.html` · `card.html` · `get.html` · `get/` · `redmed-emergency.html` | Identical `#d=` redirect stubs → `/tapper/` (`scripts/write-tapper-redirects.sh`) |
-| `sw.js` · `_headers` · `_redirects` · `scripts/stage-worker-assets.sh` · `scripts/deploy-hostinger-static.mjs` | Hostinger static deploy for `redmed.live` / SW |
+| `sw.js` · `_headers` · `_redirects` · `scripts/stage-worker-assets.sh` · `scripts/deploy-hostinger-static.mjs` · `scripts/setup-cloudflare-dns.mjs` · `scripts/verify-cf-dns-cutover.sh` | Hostinger static deploy + Cloudflare DNS/SSL cutover for `redmed.live` / SW |
 | `wrangler.jsonc` · `worker/` | Optional leftover Worker tooling — product host is Hostinger (`docs/domain.md`) |
 | `apple-app-site-association` · `.well-known/apple-app-site-association` | Universal Links — identical, both locations required (Apple checks root, then `.well-known/`) |
 | `.gitignore` · `.github/` · `.cursor/` | tooling |
@@ -45,7 +45,7 @@ frisky/
 | `docs/SECURITY.md` | Pointer into Help → Security / `/Document/#security` (not a second threat model) |
 | `docs/STRUCTURE.md` | This map |
 | `docs/DUAL-MAC.md` | MacBook + Mini: Cursor ShipIt repair, prefs/colors sync, `gh` HTTPS push/pull |
-| `docs/domain.md` | getredmed.com cutover |
+| `docs/domain.md` | `redmed.live` Namecheap → Cloudflare DNS/SSL → Hostinger static |
 | `docs/NFC-RESTORE.md` | CoreNFC entitlement restore |
 | `docs/band-engraving-and-nfc-sourcing.md` | Hardware |
 | `docs/ADVERTISING.md` | Two ad views: wearer/family (DTC) and facility/EMS; shared gate + banned claims |

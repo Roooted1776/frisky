@@ -10,7 +10,7 @@ RedMed is a native iOS medical ID plus a static passerby HTML shell. There is no
 
 ## Current posture
 
-No committed secrets, no XSS in profile render (`textContent` / `esc()`), no autodial on SOS auto-arm, no scanner write into owner Keychain. **The band write host is live.** In-repo CoreNFC is parked (flag + entitlement + usage string); restore via `docs/NFC-RESTORE.md`. Portal Tag Reading + proven Write on blank NTAG216 remain. Storefront / dept “write from the app” stays off until that checklist is green — blank chips + Share honesty only.
+No committed secrets, no XSS in profile render (`textContent` / `esc()`), no autodial on band tap, no scanner write into owner Keychain. **The band write host is live.** In-repo CoreNFC is parked (flag + entitlement + usage string); restore via `docs/NFC-RESTORE.md`. Portal Tag Reading + proven Write on blank NTAG216 remain. Storefront / dept “write from the app” stays off until that checklist is green — blank chips + Share honesty only.
 
 | Area | Status |
 |------|--------|
@@ -43,7 +43,7 @@ No committed secrets, no XSS in profile render (`textContent` / `esc()`), no aut
 - **Public AES packing key** (`RedMed-NFC-AES-GCM-v1`). Anyone who loads tapper can forge a valid `#d=`. Trust boundary is physical band + intentional tap. Do not market the chip as confidential (`docs/DO-NOT.md`).
 - **Passerby hospital search** POSTs coordinates to `overpass-api.de`. Native uses MapKit. Disclosed in Document.html / Satellite / Info.plist. Not removed.
 - **CSP `unsafe-inline`** for decrypt / SOS / SW register. Host compromise of github.io is still game over for the shell; field XSS is the surface we harden.
-- **Crash-motion false positives** can siren. Thresholds are vehicle-crash-only. SOS tap autodials; crash waits US 10s+30s; band-tap auto-arm is siren only.
+- **Crash-motion false positives** can siren. Thresholds are vehicle-crash-only. SOS tap autodials + full sound/light; crash waits US 10s+30s; band tap never arms SOS.
 - **No background crash sensing.** CoreMotion is owner foreground + `.inactive` only (`stopMonitoring()` on `.background`). Short post-Home window is parked (`docs/DO-NOT.md`). Find Help / support / Terms: app users only, on-screen only; lock or leave stops new detection even if RedMed was open; iPhone Crash Detection for lock/killed.
 
 ---
