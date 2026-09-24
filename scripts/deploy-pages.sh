@@ -1,21 +1,20 @@
 #!/usr/bin/env bash
 # Tapper shell deploy / local serve.
 #
-# Bracelet taps must open AppConfig.medicalCardBaseURL#d=… as RedMed · 911.
-# Live interim: https://roooted1776.github.io/tapper/ (see docs/domain.md).
-# Cloudflare redmed.pages.dev / getredmed.com after secrets + domain cutover.
+# Bracelet taps must open AppConfig.medicalCardBaseURL#d=… as RedMed · 911 · Aid.
+# Live product host: https://redmed.live/tapper/ on Hostinger (docs/domain.md).
+# github.io kept as backup for already-written bands.
 # (quick, no login, no server, no app). Repo tapper/index.html is that shell.
-# Legacy /get/ redirects to /tapper/ and keeps #d=.
+# Legacy /get/ / redmed-emergency.html redirect to /tapper/ and keep #d=.
 #
 # Usage:
 #   ./scripts/deploy-pages.sh              # local http://127.0.0.1:8787/tapper/
 #   PORT=9000 ./scripts/deploy-pages.sh
-#   DEPLOY=1 ./scripts/deploy-pages.sh     # push to Cloudflare Pages (needs tokens)
+#   DEPLOY=1 ./scripts/deploy-pages.sh     # push to Hostinger (needs HOSTINGER_API_TOKEN)
 #
-# Cloudflare:
-#   export CLOUDFLARE_API_TOKEN=…
-#   export CLOUDFLARE_ACCOUNT_ID=…
-#   export CLOUDFLARE_PAGES_PROJECT=redmed   # optional
+# Hostinger:
+#   export HOSTINGER_API_TOKEN=…
+#   npm install --no-save axios tus-js-client   # once per machine
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -23,12 +22,13 @@ cd "$ROOT"
 SHELL="tapper/index.html"
 # Sanity: refuse to serve/deploy if the tapper shell is missing tabs or is band-setup.
 if ! grep -q 'data-tab="medical"' "$SHELL" \
-  || ! grep -q 'data-tab="911"' "$SHELL"; then
-  echo "$SHELL is missing RedMed · 911 tabs — abort." >&2
+  || ! grep -q 'data-tab="911"' "$SHELL" \
+  || ! grep -q 'id="tab-aid"' "$SHELL"; then
+  echo "$SHELL is missing RedMed · 911 · Aid tabs — abort." >&2
   exit 1
 fi
-if grep -q 'id="tab-aid"' "$SHELL"; then
-  echo "$SHELL still has Aid tab — passerby is RedMed · 911 only — abort." >&2
+if grep -q 'id="tab-nfc"' "$SHELL"; then
+  echo "$SHELL has NFC tab — passerby is RedMed · 911 · Aid only — abort." >&2
   exit 1
 fi
 if grep -q 'Checking your phone' "$SHELL" \
@@ -38,16 +38,16 @@ if grep -q 'Checking your phone' "$SHELL" \
 fi
 
 if [[ "${DEPLOY:-0}" == "1" ]]; then
-  if [[ -z "${CLOUDFLARE_API_TOKEN:-}" || -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]]; then
-    echo "DEPLOY=1 needs CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID." >&2
+  if [[ -z "${HOSTINGER_API_TOKEN:-}" ]]; then
+    echo "DEPLOY=1 needs HOSTINGER_API_TOKEN (hPanel → API Tokens). See docs/domain.md." >&2
     exit 1
   fi
-  PROJECT="${CLOUDFLARE_PAGES_PROJECT:-redmed}"
-  echo "Deploying tapper shell → Cloudflare Pages project '${PROJECT}'"
-  if command -v wrangler >/dev/null 2>&1; then
-    exec wrangler pages deploy . --project-name="$PROJECT" --commit-dirty=true
+  bash scripts/stage-worker-assets.sh
+  echo "Deploying tapper shell → Hostinger redmed.live"
+  if ! node -e "import('axios')" 2>/dev/null || ! node -e "import('tus-js-client')" 2>/dev/null; then
+    npm install --no-save axios tus-js-client
   fi
-  exec npx --yes wrangler@3 pages deploy . --project-name="$PROJECT" --commit-dirty=true
+  exec node scripts/deploy-hostinger-static.mjs redmed.live
 fi
 
 PORT="${PORT:-8787}"
@@ -57,7 +57,7 @@ ROOT_URL="http://${HOST}:${PORT}/"
 echo "Local tapper shell → ${URL}"
 echo "  Site root ${ROOT_URL} redirects to /tapper/ (any device browser)."
 echo "  Use 127.0.0.1 (not a LAN IP) so #d= AES decrypt works."
-echo "  Live push: DEPLOY=1 CLOUDFLARE_API_TOKEN=… CLOUDFLARE_ACCOUNT_ID=… $0"
+echo "  Live push: DEPLOY=1 HOSTINGER_API_TOKEN=… $0"
 echo "Ctrl-C to stop."
 
 (

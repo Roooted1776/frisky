@@ -36,3 +36,8 @@ support.js
 ios-frame.jsx
 .tmp_*.png
 
+# Workers Assets staging (scripts/stage-worker-assets.sh → wrangler deploy)
+dist/
+.wrangler/
+
+node_modules/

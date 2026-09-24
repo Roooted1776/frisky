@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>RedMed — Emergency Medical Info</title>
+<style>
+  :root {
+    --red: #c0182b;
+    --red-dark: #8f0f1f;
+    --ink: #1a1a1a;
+    --muted: #5c5c5c;
+    --border: #e2e2e2;
+    --bg: #ffffff;
+    --page-max: 480px;
+  }
+  @media (min-width: 768px) {
+    :root { --page-max: 720px; }
+  }
+  @media (min-width: 1024px) {
+    :root { --page-max: 960px; }
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #f4f4f4;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+  }
+  .wrap {
+    max-width: var(--page-max);
+    width: 100%;
+    margin: 0 auto;
+    background: var(--bg);
+    min-height: 100vh;
+    min-height: 100dvh;
+    container-type: inline-size;
+    container-name: em-card;
+  }
+  header {
+    background: var(--red);
+    color: #fff;
+    padding: clamp(16px, 4cqi, 24px) clamp(16px, 4cqi, 24px) 16px;
+    text-align: center;
+  }
+  header .cross {
+    font-size: 28px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  header h1 {
+    margin: 0;
+    font-size: clamp(18px, 4.2cqi, 24px);
+    letter-spacing: 0.5px;
+  }
+  header p {
+    margin: 4px 0 0;
+    font-size: 13px;
+    opacity: 0.9;
+  }
+  .name-block {
+    padding: clamp(16px, 4cqi, 24px);
+    border-bottom: 1px solid var(--border);
+  }
+  .name-block .label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  .name-block .name {
+    font-size: clamp(24px, 6cqi, 34px);
+    font-weight: 700;
+  }
+  .flags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 20px 20px;
+  }
+  .flags:empty { display: none; padding: 0; }
+  .flag {
+    background: #fdeceb;
+    color: var(--red-dark);
+    border: 1px solid #f3c6c6;
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  section {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  section h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin: 0 0 8px;
+  }
+  section .value {
+    font-size: 17px;
+    line-height: 1.5;
+  }
+  section .value.empty {
+    color: #b3b3b3;
+    font-style: italic;
+  }
+  .contact {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+  .contact:last-child { margin-bottom: 0; }
+  .contact .cname {
+    font-weight: 700;
+    font-size: 16px;
+  }
+  .contact .crel {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  .contact a {
+    display: inline-block;
+    color: var(--red);
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 16px;
+  }
+  footer {
+    padding: 16px 20px 28px;
+    text-align: center;
+    font-size: 11px;
+    color: #a3a3a3;
+  }
+  @container em-card (min-width: 560px) {
+    .sections {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    .sections section { min-width: 0; }
+    .sections section:nth-child(n+4) { grid-column: 1 / -1; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="cross">✚</div>
+    <h1>EMERGENCY MEDICAL INFO</h1>
+    <p>In case of emergency — read before treating</p>
+  </header>
+
+  <div class="name-block">
+    <div class="label">Name</div>
+    <div class="name">RedMed</div>
+  </div>
+
+  <!--
+    FLAGS: short, high-priority tags a first responder should see in 2 seconds.
+    Owner profile / #d= fills these on a real band tap via /tapper/.
+  -->
+  <div class="flags">
+    <!-- Empty until a written band opens /tapper/#d= -->
+  </div>
+
+  <div class="sections">
+  <section>
+    <h2>Allergies</h2>
+    <div class="value empty">None on this card yet</div>
+  </section>
+
+  <section>
+    <h2>Current Medications</h2>
+    <div class="value empty">None on this card yet</div>
+  </section>
+
+  <section>
+    <h2>Medical Conditions</h2>
+    <div class="value empty">None on this card yet</div>
+  </section>
+
+  <section>
+    <h2>Notes</h2>
+    <div class="value empty">RedMed — App Store name soon. Band tap ~1–2″ opens the live card.</div>
+  </section>
+
+  <section>
+    <h2>Emergency Contacts</h2>
+    <div class="value empty">Add contacts in the RedMed app, then write the band</div>
+  </section>
+  </div>
+
+  <footer>
+    RedMed · emergency NFC card · data stays in #d= on the phone that taps
+  </footer>
+
+</div>
+<!-- Band taps use /tapper/#d= (RedMed · 911 · Aid). This page is the medical-card
+     layout source of truth; intentional NFC range is ~1–2″ (not feet). -->
+<script>
+(function () {
+  try {
+    var hash = location.hash || '';
+    if (!/^#d=/i.test(hash)) return;
+    var dest = new URL('index.html', location.href);
+    dest.search = location.search;
+    location.replace(dest.pathname + dest.search + hash);
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

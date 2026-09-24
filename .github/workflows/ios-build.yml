@@ -10,11 +10,11 @@ on:
   push:
     branches: [main]
     paths:
-      - 'RedMed-Xcode/**'
+      - 'owner/**'
       - '.github/workflows/ios-build.yml'
   pull_request:
     paths:
-      - 'RedMed-Xcode/**'
+      - 'owner/**'
       - '.github/workflows/ios-build.yml'
   workflow_dispatch:
 
@@ -36,7 +36,7 @@ jobs:
       - name: Refuse merge-conflict markers in entitlements
         run: |
           set -euo pipefail
-          f=RedMed-Xcode/RedMed/RedMed.entitlements
+          f=owner/RedMed/RedMed.entitlements
           if grep -qE '^(<<<<<<<|=======|>>>>>>>)' "$f"; then
             echo "::error::$f has unresolved merge conflict markers — Automatic Signing will fail"
             exit 1
@@ -47,7 +47,7 @@ jobs:
       - name: Build RedMed
         run: |
           xcodebuild build \
-            -project RedMed-Xcode/RedMed.xcodeproj \
+            -project owner/RedMed.xcodeproj \
             -scheme RedMed \
             -configuration Debug \
             -destination 'generic/platform=iOS Simulator' \

@@ -18,7 +18,7 @@ const ZLIB_VERSION = 0x01;
 const MAX_PAYLOAD = 8192;
 const MAX_STR = 200;
 const MAX_LIST = 40;
-const WRITE_BASE = 'https://roooted1776.github.io/tapper/';
+const WRITE_BASE = 'https://redmed.live/tapper/';
 const KEY = createHash('sha256').update(KEY_LABEL).digest();
 
 let failed = 0;
@@ -46,12 +46,20 @@ function b64urlDecode(raw) {
 function clipStr(s) {
   return String(s ?? '').slice(0, MAX_STR);
 }
+function flattenListItems(items) {
+  const out = [];
+  for (const raw of items || []) {
+    for (const part of String(raw).split(',')) {
+      const t = clipStr(part.trim());
+      if (t) out.push(t);
+      if (out.length >= MAX_LIST) return out;
+    }
+  }
+  return out;
+}
+
 function joinList(items) {
-  return (items || [])
-    .slice(0, MAX_LIST)
-    .map((s) => clipStr(String(s).trim()))
-    .filter(Boolean)
-    .join(', ');
+  return flattenListItems(items).join(', ');
 }
 
 /** Swift `compactArray` — current AES writes. */
@@ -137,10 +145,10 @@ function isLegacyCompactArray(arr) {
 
 function splitList(v) {
   if (Array.isArray(v)) {
-    return v.filter((x) => typeof x === 'string').slice(0, MAX_LIST).map((s) => s.slice(0, MAX_STR));
+    return flattenListItems(v.filter((x) => typeof x === 'string'));
   }
   if (typeof v !== 'string' || !v) return [];
-  return v.split(',').map((s) => s.trim().slice(0, MAX_STR)).filter(Boolean).slice(0, MAX_LIST);
+  return flattenListItems([v]);
 }
 
 function profileFromCurrentArray(arr) {
@@ -276,10 +284,10 @@ function sampleChip() {
 }
 
 // --- constant lockstep ---
-const swift = readFileSync(join(ROOT, 'RedMed-Xcode/RedMed/ProfileNFCCodec.swift'), 'utf8');
+const swift = readFileSync(join(ROOT, 'owner/RedMed/ProfileNFCCodec.swift'), 'utf8');
 const tapper = readFileSync(join(ROOT, 'tapper/index.html'), 'utf8');
-const appConfig = readFileSync(join(ROOT, 'RedMed-Xcode/RedMed/AppConfig.swift'), 'utf8');
-const profileData = readFileSync(join(ROOT, 'RedMed-Xcode/RedMed/ProfileData.swift'), 'utf8');
+const appConfig = readFileSync(join(ROOT, 'owner/RedMed/AppConfig.swift'), 'utf8');
+const profileData = readFileSync(join(ROOT, 'owner/RedMed/ProfileData.swift'), 'utf8');
 const support = readFileSync(join(ROOT, 'support/index.html'), 'utf8');
 
 assert('KEY_LABEL in Swift', swift.includes(`keyLabel = "${KEY_LABEL}"`));
@@ -345,6 +353,63 @@ assert('Aid localOnlyLine lockstep', !!(localOnly && tapper.includes(localOnly[1
 assert('early vitals expandBlood', /function expandBloodEarly/.test(tapper) && /EARLY_BLOOD/.test(tapper));
 assert('GPS pill status lockstep', /id="gpsPill"/.test(tapper) && /setGpsPill\('LIVE GPS'\)/.test(tapper) && /ACQUIRING GPS/.test(tapper));
 assert('CPR Beat & Breath on tapper', /id="cprToggle"/.test(tapper) && /Start Beat/.test(tapper) && /scheduleCPR\(545\)/.test(tapper));
+
+function extractFn(name, params) {
+  const re = new RegExp('function ' + name + '\\(' + params + '\\) \\{([\\s\\S]*?)\\n\\s*\\}');
+  const m = tapper.match(re);
+  if (!m) throw new Error('missing ' + name);
+  return new Function(...params.split(', '), m[1]);
+}
+
+const cprBeatDelay = extractFn('cprBeatDelay', 'prevAt, now, ms');
+{
+  const first = cprBeatDelay(0, 1000, 545);
+  assert('cpr first beat is 545ms', first.delay === 545 && first.at === 1545);
+  // Fired 55ms late — next delay shortens so the 110 bpm grid does not slip.
+  const late = cprBeatDelay(first.at, 1600, 545);
+  assert('cpr late tick catches up', late.at === 2090 && late.delay === 490);
+  const stalled = cprBeatDelay(late.at, 5000, 545);
+  assert('cpr stall does not burst', stalled.delay === 545 && stalled.at === 5545);
+}
+
+const jerkSampleDt = extractFn('jerkSampleDt', 'lastAt, now, fallback');
+assert('jerk uses 50Hz until a sample exists', jerkSampleDt(0, 1, 0.02) === 0.02);
+assert('jerk uses real 60Hz gap', Math.abs(jerkSampleDt(1, 1.0167, 0.02) - 0.0167) < 1e-9);
+assert('jerk ignores a long pause', jerkSampleDt(1, 1.5, 0.02) === 0.02);
+// 2g step at 100Hz is 200 g/s. Fixed 0.02s DT reports only 100 and drops it.
+const stepG = 2;
+const fastDt = jerkSampleDt(1, 1.01, 0.02);
+assert('fixed DT would hide a fast jerk', (stepG / 0.02) < 140 && (stepG / fastDt) >= 140);
+assert('fast sample keeps a 200 g/s jerk', Math.abs(stepG / fastDt - 200) < 1e-6);
+
+assert('logo waits for profile paint', !tapper.includes('redmedLogoPreload') && !/id="rmLogo"[^>]*\ssrc=/.test(tapper));
+assert('GPS skips sub-5m jitter', /function metersBetween\(lat1, lon1, lat2, lon2\)/.test(tapper) && /moved = metersBetween\(prev\.latitude, prev\.longitude, lat, lon\) >= 5/.test(tapper));
+{
+  const cssMark = '.panel.active { display: block; }';
+  const cssIdx = tapper.indexOf(cssMark);
+  const swIdx = tapper.indexOf("navigator.serviceWorker");
+  assert('static CSS before SW register', cssIdx > -1 && swIdx > cssIdx);
+  assert('emergency card uses named container', tapper.includes('container-name: em-card') && tapper.includes('@container em-card'));
+  assert('Help on RedMed chrome', /aria-label="Help · Policies"/.test(tapper) && /<a href="\.\.\/Document\/"/.test(tapper));
+  assert('no Edit tab on tapper', !/id="tab-edit"/.test(tapper) && !/data-tab="edit"/.test(tapper) && !/id="tab-nfc"/.test(tapper));
+  assert('hashchange keeps Aid', /if \(next !== '911' && next !== 'aid'\) next = 'medical'/.test(tapper));
+  const pick = tapper.match(/function pickDevice\(w, h\) \{[\s\S]*?return 'phone';\n  \}/);
+  assert('pickDevice extract', !!pick);
+  if (pick) {
+    const pickDevice = new Function(`${pick[0]}; return pickDevice;`)();
+    assert('portrait phone', pickDevice(390, 844) === 'phone');
+    assert('landscape phone stays phone', pickDevice(844, 390) === 'phone');
+    assert('portrait tablet', pickDevice(820, 1180) === 'tablet');
+    assert('wide desktop', pickDevice(1280, 800) === 'wide');
+  }
+}
+
+const sw = readFileSync(join(ROOT, 'sw.js'), 'utf8');
+assert('sw cache v177', sw.includes("CACHE = 'redmed-tapper-v177'"));
+{
+  const assetsBlock = sw.match(/var ASSETS = \[([\s\S]*?)\];/);
+  assert('sw does not precache out-of-scope assets', !!(assetsBlock && !assetsBlock[1].includes('../')));
+}
 
 // --- plaintext named JSON (smoke / Linux preview path) ---
 const named = {
@@ -427,15 +492,34 @@ const long = 'x'.repeat(250);
 assert('clipStr 200', clipStr(long).length === MAX_STR);
 const many = Array.from({ length: 50 }, (_, i) => `item${i}`);
 assert('joinList 40', joinList(many).split(', ').length === MAX_LIST);
+assert('joinList flattens comma in item', joinList(['Penicillin, Sulfa']) === 'Penicillin, Sulfa');
+assert('splitList flattens comma in item', splitList('Penicillin, Sulfa').join('|') === 'Penicillin|Sulfa');
+assert('splitList flattens comma in array item', splitList(['Penicillin, Sulfa']).join('|') === 'Penicillin|Sulfa');
 
-// --- passerby empty-state / SOS auto-arm gates (tapper/index.html) ---
+// --- Assist empty-state / SOS gates (tapper/index.html) ---
 const tapperSrc = readFileSync(join(ROOT, 'tapper/index.html'), 'utf8');
 assert('profileHasContent in tapper', tapperSrc.includes('function profileHasContent'));
 assert('is-unlinked toggle in tapper', tapperSrc.includes("classList.toggle('is-unlinked'"));
+assert('first-paint is-unlinked without #d=', tapperSrc.includes('classList.add("is-unlinked")') || tapperSrc.includes("classList.add('is-unlinked')"));
+assert('rmEmpty has no HTML hidden attr', !/<div class="rm-empty" id="rmEmpty"[^>]*\bhidden\b/.test(tapperSrc));
+assert('first-paint empty via is-unlinked CSS', /html\.is-unlinked\s+\.rm-empty\s*\{[^}]*display\s*:\s*block/i.test(tapperSrc));
+assert('decode-fail empty copy', tapperSrc.includes("Couldn't Read This Band") && tapperSrc.includes('function paintEmptyStateCopy'));
+assert('zlib missing DecompressionStream hint', tapperSrc.includes('cannot decode older band formats'));
+assert('passerby loaded not Linked Bracelet', tapperSrc.includes('Medical ID Loaded'));
 assert('paintedFromBand requires content', tapperSrc.includes('paintedFromBand = !!fromBand && hasPatient'));
 assert('treat-first early vitals script', tapperSrc.includes('__redmedEarlyVitals') && tapperSrc.includes('Treat-first:'));
 assert('hashchange re-decodes #d=', tapperSrc.includes('decodeProfile().then(function (p)') && tapperSrc.includes('hashchange'));
-assert('own-phone handoff before SOS', tapperSrc.includes('redmed://band') && tapperSrc.includes('handoffToInstalledAppThenMaybeArm'));
+assert('own-phone handoff no SOS auto-arm', tapperSrc.includes('redmed://band') && tapperSrc.includes('handoffToInstalledApp') && !tapperSrc.includes('handoffToInstalledAppThenMaybeArm') && !tapperSrc.includes('function shouldAutoArm'));
+assert('SOS full sound and light', tapperSrc.includes('sos-light-flash') && tapperSrc.includes('gain.gain.value = 1') && tapperSrc.includes('Band tap does not arm SOS') && tapperSrc.includes('dark rainy night'));
+assert('SOS only toggle or US crash', tapperSrc.includes('US Crash Detection') && tapperSrc.includes('US_CRASH_ALERT_S = 10') && tapperSrc.includes('US_CRASH_COUNTDOWN_S = 30'));
+const tapperAid = tapperSrc.indexOf('id="aidStopAlarm"');
+const tapper911 = tapperSrc.indexOf('id="panel-911"');
+const tapperAidPanel = tapperSrc.indexOf('id="panel-aid"');
+assert('Stop The Alarm lives on 911', tapper911 >= 0 && tapperAid > tapper911 && (tapperAidPanel < 0 || tapperAid < tapperAidPanel));
+assert('crash hint names Stop The Alarm', tapperSrc.includes('Tap Stop The Alarm to cancel'));
+assert('device aspect early pick', tapperSrc.includes('__redmedPickDevice') && tapperSrc.includes('shortSide < 500'));
+assert('device aspect auto aria-current', tapperSrc.includes("setAttribute('aria-current', 'true')"));
+assert('device aspect orientationchange', tapperSrc.includes("orientationchange"));
 const extracted = tapperSrc.match(/function profileHasContent\(p\) \{[\s\S]*?\n  \}/);
 assert('profileHasContent extract', !!extracted);
 if (extracted) {

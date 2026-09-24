@@ -2,7 +2,7 @@
 
 **Not submitting.** No paid App Store listing / Connect app yet. Leave NFC and HealthKit parked. Do not encode a fake `apps.apple.com` URL. Restore this checklist when a paid Program and app ID exist.
 
-**Privacy source of truth:** in-app Help → Policies → Privacy (`RedMed-Xcode/RedMed/Document/Document.html`).
+**Privacy source of truth:** in-app Help → Policies → Privacy (`owner/RedMed/Document/Document.html`).
 
 This repo is **public**. Do not list a jsDelivr `@main` URL of `Roooted1776/redmed-privacy` as Connect’s privacy policy — that is a second git tree with a days-long CDN cache. Pick a tagged / hashed document on the live band host after `/tapper/` is green — **same Privacy wording as Help**, not a rewrite.
 
@@ -33,7 +33,7 @@ parked; review notes + Promotional Text below are pack/Share only).
 | Encryption | Exempt (CryptoKit AES-GCM pack + public client key; `ITSAppUsesNonExemptEncryption` = false) |
 | Tracking | No |
 | App Privacy | Data Not Collected |
-| Privacy Policy URL | TBD — must serve the **same** Help → Privacy text (`/Document/` = `Document/index.html`, lockstep with in-app `RedMed-Xcode/RedMed/Document/Document.html`); never a second policy tree |
+| Privacy Policy URL | TBD — must serve the **same** Help → Privacy text (`/Document/` = `Document/index.html`, lockstep with in-app `owner/RedMed/Document/Document.html`); never a second policy tree |
 | Support | help.RedMed@gmail.com + `support/index.html` (troubleshooting only — never request full profiles; delete threads when resolved) |
 | Regulated medical device | No |
 | Contact | help.RedMed@gmail.com |

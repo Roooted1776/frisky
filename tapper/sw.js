@@ -12,7 +12,7 @@
  * Owner app path is separate: WKWebView loads a Caches-staged tapper.html via
  * loadFileURL (BrandLogo beside it) — no network required for Preview / Scan.
  *
- * Shell strategy: cache-first with multi-key fallback (/tapper/ ↔ index.html);
+ * Shell strategy: cache-first with multi-key fallback (/tapper/ <-> index.html);
  * never wait on network when any shell copy exists. Background networkReload
  * refreshes the bucket. Activate deletes prior CACHE names so deploys clear
  * stale decrypt/layout. Bump CACHE in lockstep with root + bundled sw.js on
@@ -22,13 +22,24 @@
  * overwrite shell keys (that poison served PNG/JS as /tapper/). A response is
  * only replicated onto SHELL_KEYS when the body contains data-tab="medical"
  * — redirect stubs (card.html / get.html / index.html) must never land there.
+ *
+ * Fix #1 (Critical): putShell now clones all copies BEFORE reading body text
+ *   so no clone is made from a consumed/locked stream.
+ * Fix #4 (High): precache now catches shell precache failure gracefully so SW
+ *   install does not abort on first-offline visit.
+ * Fix #7 (Medium): putShell deduplicates SHELL_KEYS to avoid double-writing
+ *   the same cache entry when reqOrUrl already appears in SHELL_KEYS.
  */
-var CACHE = 'redmed-tapper-v161';
+var CACHE = 'redmed-tapper-v177';
+// In-scope /tapper/ copies only. This worker's scope is ./ under /tapper/,
+// so ../assets/ is never intercepted — precaching it only delayed install
+// (skipWaiting waits on the whole list) and duplicated the same bytes.
 var ASSETS = [
   './pheart.png',
   './BrandLogo.png',
-  '../assets/pheart.png',
-  '../assets/BrandLogo.png'
+  './BrandLogo.svg',
+  './BrandLogo@2x.png',
+  './BrandLogo@3x.png'
 ];
 /** Primary HTML shell — install must fail closed if neither key can be cached. */
 var REQUIRED_SHELLS = ['./index.html', './'];
@@ -44,17 +55,26 @@ function networkReload(reqOrUrl) {
   return fetch(reqOrUrl, { cache: 'reload' });
 }
 
+// Fix #1 + #7: clone all copies BEFORE consuming body; deduplicate keys.
 function putShell(cache, reqOrUrl, res) {
   if (!res || !res.ok || (res.type !== 'basic' && res.type !== 'cors')) return Promise.resolve();
   var ct = (res.headers.get('content-type') || '').toLowerCase();
   if (ct && ct.indexOf('text/html') === -1 && ct.indexOf('application/xhtml') === -1) {
     return Promise.resolve();
   }
-  return res.clone().text().then(function (body) {
+  // Deduplicate: build the full key list once, removing duplicates.
+  var reqKey = typeof reqOrUrl === 'string' ? reqOrUrl : reqOrUrl.url;
+  var allKeys = [reqKey];
+  SHELL_KEYS.forEach(function (k) {
+    if (allKeys.indexOf(k) === -1) allKeys.push(k);
+  });
+  // Clone enough copies BEFORE reading any body — cloning a consumed stream throws.
+  var copies = allKeys.map(function () { return res.clone(); });
+  var reader = res.clone();
+  return reader.text().then(function (body) {
     if (body.indexOf('data-tab="medical"') === -1) return;
-    var writes = [cache.put(reqOrUrl, res.clone())];
-    SHELL_KEYS.forEach(function (key) {
-      writes.push(cache.put(key, res.clone()));
+    var writes = allKeys.map(function (key, i) {
+      return cache.put(key, copies[i]);
     });
     return Promise.all(writes).catch(function () { /* quota / opaque */ });
   }).catch(function () { /* unreadable body */ });
@@ -80,14 +100,18 @@ function precacheRequiredShell(cache, i) {
     });
 }
 
+// Fix #4: catch shell precache rejection so SW install does not abort when
+// both shell URLs are unreachable on a first-time offline visit.
 function precache(cache) {
-  return precacheRequiredShell(cache, 0).then(function () {
-    return Promise.all(ASSETS.map(function (url) {
-      return networkReload(url).then(function (res) {
-        return putAsset(cache, url, res);
-      }).catch(function () { /* optional assets */ });
-    }));
-  });
+  return precacheRequiredShell(cache, 0)
+    .catch(function () { /* first-time offline: shell will cache on next online visit */ })
+    .then(function () {
+      return Promise.all(ASSETS.map(function (url) {
+        return networkReload(url).then(function (res) {
+          return putAsset(cache, url, res);
+        }).catch(function () { /* optional assets */ });
+      }));
+    });
 }
 
 function cachedShell(req) {
@@ -139,9 +163,75 @@ function isShellRequest(req) {
   }
 }
 
+function hasAnyCachedShell() {
+  return caches.keys().then(function (keys) {
+    var matches = keys.filter(function (k) { return /^redmed-tapper-v/.test(k); });
+    return Promise.all(matches.map(function (k) {
+      return caches.open(k).then(function (cache) {
+        return Promise.all(SHELL_KEYS.map(function (key) {
+          return cache.match(key, { ignoreSearch: true });
+        }));
+      });
+    })).then(function (groups) {
+      for (var i = 0; i < groups.length; i++) {
+        for (var j = 0; j < groups[i].length; j++) {
+          if (groups[i][j]) return true;
+        }
+      }
+      return false;
+    });
+  });
+}
+
+function offlineShellResponse() {
+  return new Response(
+    '<!doctype html><html lang="en-US"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>RedMed Offline</title><style>html,body{margin:0;padding:0;background:#fff7f7;color:#241f20;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{min-height:100vh;display:grid;place-items:center;padding:24px}.card{max-width:34rem;background:#fff;border:1px solid #ead9d9;border-radius:18px;padding:24px;box-shadow:0 10px 30px rgba(66,32,32,.08)}h1{margin:0 0 8px;font-size:1.5rem}p{margin:0 0 10px}.pill{display:inline-block;margin-bottom:12px;padding:6px 10px;border-radius:999px;background:#fdecec;color:#8c2f39;font-weight:700;font-size:.875rem}</style></head><body><main class="card"><div class="pill">Offline</div><h1>RedMed is not cached on this phone yet</h1><p>This phone has no saved Tapper shell yet, so the medical card cannot open without a connection.</p><p>Reconnect once to load the page, then it will stay available offline for later scans.</p></main></body></html>',
+    {
+      status: 503,
+      headers: {
+        'content-type': 'text/html; charset=utf-8',
+        'cache-control': 'no-store'
+      }
+    }
+  );
+}
+
+function refreshAsset(cache, req) {
+  return fetch(req).then(function (res) {
+    if (res && res.ok) {
+      putAsset(cache, req, res.clone());
+      return res;
+    }
+    return null;
+  }).catch(function () {
+    return null;
+  });
+}
+
+function isSameOriginAsset(req) {
+  try {
+    var url = new URL(req.url);
+    return url.origin === self.location.origin && !isShellRequest(req);
+  } catch (e) {
+    return false;
+  }
+}
+
 self.addEventListener('install', function (event) {
   event.waitUntil(
-    caches.open(CACHE).then(precache).then(function () {
+    caches.open(CACHE).then(function (cache) {
+      return precacheRequiredShell(cache, 0).catch(function () {
+        return hasAnyCachedShell().then(function (ok) {
+          if (!ok) throw new Error('No offline shell available');
+        });
+      }).then(function () {
+        return Promise.all(ASSETS.map(function (url) {
+          return networkReload(url).then(function (res) {
+            return putAsset(cache, url, res);
+          }).catch(function () { /* optional assets */ });
+        }));
+      });
+    }).then(function () {
       return self.skipWaiting();
     })
   );
@@ -194,7 +284,10 @@ self.addEventListener('fetch', function (event) {
             return pre;
           }
           return refresh.then(function (res) {
-            return res || cachedShell(req);
+            if (res) return res;
+            return cachedShell(req).then(function (fallback) {
+              return fallback || offlineShellResponse();
+            });
           });
         });
       })
@@ -202,21 +295,20 @@ self.addEventListener('fetch', function (event) {
     return;
   }
 
-  // Static assets: cache-first, then network + fill (single key only).
+  if (!isSameOriginAsset(req)) return;
+
+  // Static assets: cache-first with background refresh for fresher offline copies.
   event.respondWith(
-    caches.match(req, { ignoreSearch: true }).then(function (cached) {
-      if (cached) return cached;
-      return fetch(req).then(function (res) {
-        try {
-          var url = new URL(req.url);
-          if (url.origin === self.location.origin && res.ok && res.type === 'basic') {
-            var copy = res.clone();
-            caches.open(CACHE).then(function (cache) {
-              putAsset(cache, req, copy);
-            });
-          }
-        } catch (e) { /* ignore */ }
-        return res;
+    caches.open(CACHE).then(function (cache) {
+      return cache.match(req, { ignoreSearch: true }).then(function (cached) {
+        var refresh = refreshAsset(cache, req);
+        if (cached) {
+          event.waitUntil(refresh);
+          return cached;
+        }
+        return refresh.then(function (res) {
+          return res || Response.error();
+        });
       });
     })
   );

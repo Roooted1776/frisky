@@ -10,7 +10,7 @@ RedMed is a native iOS medical ID plus a static passerby HTML shell. There is no
 
 ## Current posture
 
-No committed secrets, no XSS in profile render (`textContent` / `esc()`), no autodial on SOS auto-arm, no scanner write into owner Keychain. **The band write host is live.** In-repo CoreNFC is parked (flag + entitlement + usage string); restore via `docs/NFC-RESTORE.md`. Portal Tag Reading + proven Write on blank NTAG216 remain. Storefront / dept “write from the app” stays off until that checklist is green — blank chips + Share honesty only.
+No committed secrets, no XSS in profile render (`textContent` / `esc()`), no autodial on band tap, no scanner write into owner Keychain. **The band write host is live.** In-repo CoreNFC is parked (flag + entitlement + usage string); restore via `docs/NFC-RESTORE.md`. Portal Tag Reading + proven Write on blank NTAG216 remain. Storefront / dept “write from the app” stays off until that checklist is green — blank chips + Share honesty only.
 
 | Area | Status |
 |------|--------|
@@ -19,7 +19,7 @@ No committed secrets, no XSS in profile render (`textContent` / `esc()`), no aut
 | Associated Domains | Parked (`associatedDomainsEnabled = false`, no `applinks:`). Safari still tries `redmed://band#d=` before SOS |
 | HealthKit | Parked (`healthKitImportEnabled = false`) |
 | `redmed.pages.dev` | 404 until CF secrets / Git connect |
-| iOS CI | Push/PR on `RedMed-Xcode/**` (unsigned Simulator compile). Not XCTest |
+| iOS CI | Push/PR on `owner/**` (unsigned Simulator compile). Not XCTest |
 | `#d=` codec | `node scripts/test-d-codec.mjs` on pages-deploy + local |
 | Policies | Bundled `Document/Document.html` + `legal-doc.css`. Legacy `Help.html` is a hash-preserving redirect stub (not bundled) |
 | Notes | Ride both Keychain and chip (`NFCChipProfile.notes`, compact index 12) |
@@ -43,7 +43,7 @@ No committed secrets, no XSS in profile render (`textContent` / `esc()`), no aut
 - **Public AES packing key** (`RedMed-NFC-AES-GCM-v1`). Anyone who loads tapper can forge a valid `#d=`. Trust boundary is physical band + intentional tap. Do not market the chip as confidential (`docs/DO-NOT.md`).
 - **Passerby hospital search** POSTs coordinates to `overpass-api.de`. Native uses MapKit. Disclosed in Document.html / Satellite / Info.plist. Not removed.
 - **CSP `unsafe-inline`** for decrypt / SOS / SW register. Host compromise of github.io is still game over for the shell; field XSS is the surface we harden.
-- **Crash-motion false positives** can siren. Thresholds are vehicle-crash-only. SOS tap autodials; crash waits US 10s+30s; band-tap auto-arm is siren only.
+- **Crash-motion false positives** can siren. Thresholds are vehicle-crash-only. SOS tap autodials + full sound/light; crash waits US 10s+30s; band tap never arms SOS.
 - **No background crash sensing.** CoreMotion is owner foreground + `.inactive` only (`stopMonitoring()` on `.background`). Short post-Home window is parked (`docs/DO-NOT.md`). Find Help / support / Terms: app users only, on-screen only; lock or leave stops new detection even if RedMed was open; iPhone Crash Detection for lock/killed.
 
 ---
@@ -58,22 +58,22 @@ No committed secrets, no XSS in profile render (`textContent` / `esc()`), no aut
 | ATS | Arbitrary loads + local networking **false** |
 | WKWebView Help | `Document.html` + `legal-doc.css` only |
 | WKWebView tapper | No `WKScriptMessageHandler`. file/about allow; http(s)/tel/mailto/redmed open outside or cancel; default deny |
-| SW cache | Shell HTML only; `#d=` is a fragment; activate drops old `CACHE` names (`redmed-tapper-v160`) |
+| SW cache | Shell HTML only; `#d=` is a fragment; activate drops old `CACHE` names (`redmed-tapper-v165`) |
 | Zlib bound | Swift 64 KiB; JS `MAX_INFLATED = 65536` |
 | Scanner isolation | `isScannerSession` hides NFC / Edit; `persist()` no-ops when `persists == false` |
 | Linked flag | `setBraceletPaired(true)` requires `nfcHardwareEnabled` |
 | `IPHONEOS_DEPLOYMENT_TARGET` | Literal `17.0` × 4 (never `$(RECOMMENDED_…)`) |
-| iOS CI | `.github/workflows/ios-build.yml` on push/PR for `RedMed-Xcode/**` |
+| iOS CI | `.github/workflows/ios-build.yml` on push/PR for `owner/**` |
 | Pages smoke | github.io fail-closed; Actions SHA-pinned |
 
-Engineer threat model: in-app Help → Security (`RedMed-Xcode/RedMed/Document/Document.html`). `docs/SECURITY.md` was emptied on purpose (5462194) — do not restore without Max. Restore playbooks: `docs/NFC-RESTORE.md`, `docs/associated-domains-restore.md`, `docs/healthkit-restore.md`. Sweep 2026-09-16: `docs/AUDIT-2026-09-16.md`.
+Engineer threat model: in-app Help → Security (`owner/RedMed/Document/Document.html` `#security`). `docs/SECURITY.md` is a pointer into that page — do not restore the pre-5462194 dump. Restore playbooks: `docs/NFC-RESTORE.md`, `docs/associated-domains-restore.md`, `docs/healthkit-restore.md`. Sweep 2026-09-16: `docs/AUDIT-2026-09-16.md`.
 
 ---
 
 ## Closed in-repo (do not reopen)
 
 - `#476` stripped `OwnerAppLock`. Do not remount as an app-wide or YOU-card cream lock.
-- `#474` named Overpass. Location is on as part of Agree (no in-app toggle). When-In-Use after post-Agree Face ID. GPS still starts only on Find Help.
+- `#474` named Overpass. Location is on as part of Agree (no in-app toggle). When-In-Use on first Find Help / hospital GPS use (not after Face ID). GPS still starts only on Find Help.
 - `#d=` extract strips at `&` (match tapper `#d=…&tab=aid`); decode fail-closed on non-base64url; write gate rejects `&`.
 - `KeychainStore.exists` unknown SecItem errors → `false`.
 - Encode clips to tapper `MAX_STR` / `MAX_LIST`.

@@ -5,7 +5,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-STUB='<!doctype html>
+# Heredoc (not a single-quoted string) so JS string literals keep their quotes.
+STUB=$(cat <<'EOF'
+<!doctype html>
 <html lang="en-US">
 <head>
 <meta charset="utf-8">
@@ -15,10 +17,13 @@ STUB='<!doctype html>
 <meta name="referrer" content="no-referrer">
 <title>RedMed</title>
 <style>html,body{background:#fff7f7!important;margin:0}</style>
-<!-- Legacy / root URL. Canonical scanner shell is /tapper/ — preserve #d=. -->
+<!-- Legacy / root URL. Canonical scanner shell is /tapper/ — preserve #d=.
+     Fix #3: use URL construction to safely compose the destination. -->
 <script>
 (function () {
-  location.replace("/tapper/" + (location.search || "") + (location.hash || ""));
+  var dest = new URL('/tapper/', location.origin);
+  dest.search = location.search;
+  location.replace(dest.pathname + dest.search + location.hash);
 })();
 </script>
 <style>
@@ -38,23 +43,27 @@ STUB='<!doctype html>
 <body>
   <p><a id="fallback" href="/tapper/">Open emergency card</a></p>
   <script>
-    document.getElementById("fallback").href =
-      "/tapper/" + (location.search || "") + (location.hash || "");
+    var dest = new URL('/tapper/', location.origin);
+    dest.search = location.search;
+    document.getElementById("fallback").href = dest.pathname + dest.search + location.hash;
   </script>
-  <noscript><p>JavaScript is off. <a href="/tapper/">Open emergency card</a> (hash may drop — enable JS to keep #d=).</p></noscript>
+  <!-- Fix #9: clearer noscript message -->
+  <noscript><p>JavaScript is required to open this emergency card. Please enable JavaScript in your browser settings, then reload this page.</p></noscript>
 </body>
 </html>
-'
+EOF
+)
 
 mkdir -p get
-for f in index.html tapper.html card.html get.html get/index.html; do
+for f in index.html tapper.html card.html get.html get/index.html redmed-emergency.html; do
   printf '%s\n' "$STUB" > "$f"
 done
 
 # Guard: stubs must never become a second shell.
-for f in index.html tapper.html card.html get.html get/index.html; do
+for f in index.html tapper.html card.html get.html get/index.html redmed-emergency.html; do
   ! grep -q 'data-tab="medical"' "$f"
   grep -q '/tapper/' "$f"
+  grep -q "new URL('/tapper/', location.origin)" "$f"
 done
 
 echo "OK unified tapper redirect stubs"
