@@ -5,7 +5,7 @@ CoreNFC write/read is wired in production via `NFCBandManager` (owns
 read-back verify, NDEF URI strip, and CryptoKit AES-GCM via `ProfileNFCCodec`.
 
 **Target band:** blank unlocked **NXP NTAG216**, 13.56 MHz, ISO 14443A Type 2,
-NDEF empty at factory. No pre-encode, no lock. Not NTAG213, MIFARE, LF, or UHF.
+NDEF empty at factory. No pre-encode, no lock. Not NTAG213/215, MIFARE, LF, or UHF.
 Owner **Write** on the NFC tab programs the chip; locked or non-NDEF tags are
 rejected with a clear error. Face art is logo-print RedMed heart + wordmark on black `#232425` (30×9 mm) — not laser MED ID.
 
@@ -14,47 +14,41 @@ still simulates Write/Scan by packing the compact `tapper.html#d=` URL. Real
 CoreNFC has **no** Simulator fake-success: if hardware is enabled and NFC is
 unavailable, write fails and the band is not marked linked.
 
-**Linked** after a real CoreNFC write **and** matching read-back
-(`writeVerified`), or after owner **Load From Band** persist()s the chip.
-Written-but-unverified stays Not linked.
+**Linked** only after a real CoreNFC write **and** matching read-back
+(`writeVerified`). Written-but-unverified stays Not linked.
 
 ## Currently parked (in-repo)
 
 `AppConfig.nfcHardwareEnabled = false`,
 `RedMed.entitlements` has no `com.apple.developer.nfc.readersession.formats`
 key, and `Info.plist` has no `NFCReaderUsageDescription`. Owner NFC tab stays
-visible with Pack Band URL + Share Band URL + Preview (no Write label; Load
-From Band hidden). CoreNFC source stays in tree. Restore via the checklist
-below — keep flag, entitlement, and usage string in lockstep.
+visible with its two buttons: **Write The Band** (disabled while parked, with
+a one-line reason) + **Preview**. CoreNFC source stays in tree. Restore via
+the checklist below — keep flag, entitlement, and usage string in lockstep.
 
 **Do not hide the owner NFC tab** — owners always get RedMed · 911 · Aid ·
-NFC; scanners / tapper never get Aid or NFC. The flag only gates CoreNFC sessions and the
-Load From Band button (Pack Band URL + Share Band URL + Preview when
-parked — no Write label). Linked after a real write + matching read-back,
-or Load From Band.
+NFC; scanners / tapper never get Aid or NFC. The flag only gates CoreNFC
+sessions (Write The Band is disabled while parked). Linked only after a real
+write + matching read-back.
 
 **Write-from-app storefront gate:** storefront / dept “write from the app”
 stays off until Tag Reading is live on the App ID **and** Write The Band is
 proven on a blank NTAG216 (device test below). Until then: sell **blank chips
-only** + **Share honesty** — Share Band URL / Preview pack the same `#d=`
-Write will use; they do not write the chip and do not mark Linked. Do **not**
+only** + **Share honesty** — Preview packs the same `#d=` Write will use; it
+does not write the chip and does not mark Linked. Do **not**
 tell owners to program the chip with Shortcuts / NFC Tools. Factory “NDEF
 blank unlocked” is the chip procurement + blank SKU spec.
 
-When hardware is on, owner NFC keeps **Write The Band**, **Preview**, and
-**Load From Band** on one screen (Share Band URL is hidden). Load path:
-read chip → empty-band alert / match→link / mismatch+existing→Replace
-confirm / empty funnel→adopt. Face ID (`force: true`) before link and
-adopt. Write stays ungated. Preview does not persist. After a verified
-write: **Linked** — anyone can tap this band to open your card. Parked
-(flag off): **Pack Band URL** + Share Band URL + Preview — no Write
-button.
+The owner NFC tab has exactly two buttons: **Write The Band** and **Preview**.
+Write stays ungated (no Face ID). Preview does not persist. After a verified
+write: **Linked** — anyone can tap this band to open your card. Parked (flag
+off): same two buttons, Write The Band disabled.
 
 ## RF / hardware contract
 
 - Bracelet is **passive** HF NFC at **13.56 MHz** (`AppConfig.BraceletRF`) —
   **NXP NTAG216**, ISO 14443A Type 2, NDEF blank unlocked. No battery, no BLE.
-  Not NTAG213, MIFARE, LF, or UHF. Factory does not pre-encode or lock.
+  Not NTAG213/215, MIFARE, LF, or UHF. Factory does not pre-encode or lock.
 - Chip must be **rewritable** (NDEF not permanently locked). Factory-blank or
   overwriteable stub only — see `docs/band-engraving-and-nfc-sourcing.md`.
 - **Owner data independence:** `NFCWriter` / `ProfileNFCCodec` write only
@@ -73,9 +67,9 @@ button.
   - Intentional tap: ~1–2″ to the phone antenna
   - Walk-by / no-fire margin: ~6–8″ (already dead past ~4″ of reliable ISO 14443)
   - Do not market these as a tunable read range
-  - `NFCBandManager` / `NFCWriter` / `NFCReader` only `begin()` after Write or Load From Band
+  - `NFCBandManager` / `NFCWriter` only `begin()` after an explicit Write The Band
   - Deliberate stranger tap must still open the emergency card
-- Do **not** source NTAG213, MIFARE, LF (~125 kHz), or UHF chips.
+- Do **not** source NTAG213, NTAG215, MIFARE, LF (~125 kHz), or UHF chips.
 - Payment POS may share 13.56 MHz but speaks EMV, not RedMed NDEF URLs
   (`ignoredByPaymentPOS`) — protocol, not distance.
 - **iOS Background Tag Reading (not RedMed):** what can still open the URL later
@@ -99,7 +93,7 @@ provision NFC Tag Reading — then flip all three in-repo switches together:
 3. Developer portal → App ID `com.redmed.app` → enable **NFC Tag Reading**
 4. Xcode → Signing & Capabilities → **Near Field Communication Tag Reading**
 5. `NFCReaderUsageDescription` in `Info.plist`:
-   `RedMed writes your medical ID onto your NFC bracelet and can load a written band into this iPhone. Tag reading starts only when you tap Write or Load From Band.`
+   `RedMed writes your medical ID onto your NFC bracelet. Tag reading starts only when you tap Write The Band.`
 6. Device test on **verified blank NTAG216** stock: Write → second phone Safari
    tap → emergency card. Linked only if read-back matches.
 

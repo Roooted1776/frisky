@@ -175,7 +175,7 @@ extension NFCWriter: NFCNDEFReaderSessionDelegate {
                 switch status {
                 case .notSupported:
                     session.invalidate(
-                        errorMessage: "Not a blank unlocked NXP NTAG216 (13.56 MHz, ISO 14443A Type 2). Not NTAG213, MIFARE, LF, or UHF."
+                        errorMessage: "Not a blank unlocked NXP NTAG216 (13.56 MHz, ISO 14443A Type 2). Not NTAG213/215, MIFARE, LF, or UHF."
                     )
                 case .readOnly:
                     session.invalidate(

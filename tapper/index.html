@@ -704,7 +704,8 @@ function redmedAssetURL(file) {
     background: #fff;
     box-shadow: var(--shadow);
     overflow: hidden;
-    width: 100%;
+    /* auto, not 100%: .card adds side margins, so 100% overflowed the viewport. */
+    width: auto;
     max-width: 100%;
     container-type: inline-size;
     container-name: em-card;
@@ -1947,8 +1948,7 @@ function redmedAssetURL(file) {
       grid-column: auto;
     }
     #panel-medical > .you-card {
-      margin-right: 0;
-      width: 100%;
+      width: auto;
       max-width: 100%;
     }
     #panel-medical > .list-grid {
@@ -1967,8 +1967,7 @@ function redmedAssetURL(file) {
     grid-column: auto;
   }
   html[data-device="wide"] #panel-medical > .you-card {
-    margin-right: 0;
-    width: 100%;
+    width: auto;
     max-width: 100%;
   }
   html[data-device="wide"] #panel-medical > .list-grid {

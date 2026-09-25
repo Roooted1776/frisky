@@ -554,9 +554,7 @@ struct HelpMenuView: View {
                                             .font(.system(size: 17))
                                             .frame(width: 22, alignment: .center)
                                             .accessibilityHidden(true)
-                                        Text(AppConfig.nfcHardwareEnabled
-                                             ? AppConfig.NFCWriteCopy.writeTitle
-                                             : AppConfig.NFCWriteCopy.packTitle)
+                                        Text(AppConfig.NFCWriteCopy.writeTitle)
                                             .font(.system(size: Metrics.font, weight: .medium))
                                             .foregroundColor(.redmedDark)
                                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -566,11 +564,7 @@ struct HelpMenuView: View {
                                     .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
-                                .accessibilityLabel(
-                                    AppConfig.nfcHardwareEnabled
-                                        ? AppConfig.NFCWriteCopy.writeTitle
-                                        : AppConfig.NFCWriteCopy.packTitle
-                                )
+                                .accessibilityLabel(AppConfig.NFCWriteCopy.writeTitle)
                             }
                         }
 

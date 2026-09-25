@@ -47,7 +47,6 @@ enum AppConfig {
     /// Unused in Swift (in-app Help is bundled `Document/Document.html`). Connect placeholders
     /// stay in this repo — not jsDelivr `@main` of a second tree.
     static let supportURL = "https://github.com/Roooted1776/frisky/blob/main/support/index.html"
-    static let privacyPolicyURL = "https://github.com/Roooted1776/frisky/blob/main/owner/RedMed/Document/Document.html"
 
     /// Owner band NDEF contract (permanent): write only
     /// `medicalCardBaseURL + "#d=" + base64url`. Profile stays in the fragment —
@@ -103,9 +102,8 @@ enum AppConfig {
     /// `medicalCardBaseURL#d=` (`OwnerBandURI`). Requires NFC Tag Reading on App ID
     /// `com.redmed.app` + paid Apple Developer — see `docs/NFC-RESTORE.md`.
     /// Keep this flag in lockstep with `RedMed.entitlements` + `NFCReaderUsageDescription`.
-    /// `false` parks hardware sessions (Copy Band Link +
-    /// Preview; no Write label; Import From Band button hidden). Gate logic
-    /// stays correct for restore — see `docs/NFC-RESTORE.md`.
+    /// `false` parks hardware sessions (Write The Band shown disabled +
+    /// Preview). Gate logic stays correct for restore — see `docs/NFC-RESTORE.md`.
     /// Parked: entitlement + `NFCReaderUsageDescription` removed (bf3ee60).
     /// Keep flag false until restore steps in `docs/NFC-RESTORE.md`.
     /// No Share control — helpers open the card only by tapping the band
@@ -140,7 +138,7 @@ enum AppConfig {
     ///   Band stays passive — no battery (not AirTag / BLE).
     /// - Band RF is **HF NFC at 13.56 MHz**, **ISO 14443A Type 2**, **NXP NTAG216**
     ///   NDEF blank unlocked. Different carrier from Bluetooth (~2.4 GHz).
-    ///   Do not source NTAG213, MIFARE, LF (~125 kHz), or UHF (~860–960 MHz).
+    ///   Do not source NTAG213, NTAG215, MIFARE, LF (~125 kHz), or UHF (~860–960 MHz).
     /// - Factory: no pre-encode, no lock. Owner Write programs NDEF.
     /// - Face art is logo-print RedMed heart + wordmark (30×9 mm) on black `#232425` — not laser MED ID.
     /// - Contactless payment POS also uses 13.56 MHz but speaks EMV, not NDEF
@@ -201,7 +199,7 @@ enum AppConfig {
         }
 
         static var chipSpecSummary: String {
-            "\(chipPart), \(carrierLabel), ISO 14443A Type 2, NDEF blank unlocked. No pre-encode, no lock. Not NTAG213, MIFARE, LF, or UHF."
+            "\(chipPart), \(carrierLabel), ISO 14443A Type 2, NDEF blank unlocked. No pre-encode, no lock. Not NTAG213/215, MIFARE, LF, or UHF."
         }
 
         /// Hardware SKU: bracelet ships finished. Owner only programs NDEF.
@@ -253,7 +251,7 @@ enum AppConfig {
         static var noBluetoothSummary: String { carrierVsBluetoothSummary }
 
         static var hardwareParkedSummary: String {
-            "This build cannot write a band yet. NFC Tag Reading needs a paid Apple Developer team, which RedMed does not have yet. Preview shows the helper card; Copy Band Link is the same URL Write The Band will put on the chip later — neither writes the chip nor marks Linked. Helpers only open the card by holding any NFC phone \(intentionalTapRangeLabel) from the band — it loads in their browser."
+            "This build cannot write a band yet. NFC Tag Reading needs a paid Apple Developer team, which RedMed does not have yet. Preview shows the helper card — it does not write the chip or mark Linked. Helpers only open the card by holding any NFC phone \(intentionalTapRangeLabel) from the band — it loads in their browser."
         }
 
         /// NFC tab tip under the primary CTA — BraceletRF inches, not a hardcoded range.
@@ -262,19 +260,17 @@ enum AppConfig {
         }
     }
 
-    /// NFC tab Write / Copy / Import CTAs + after-write states.
-    /// Parked never uses Write copy (Copy Band Link + Preview only).
+    /// NFC tab has two CTAs only: Write The Band + Preview.
+    /// Parked shows Write The Band disabled, with `writeHelp` saying why.
     /// No Share — the card opens only on a close band tap, in the helper’s browser.
     enum NFCWriteCopy {
-        static let packTitle = "Copy Band Link"
-        static let packHelp = "Same link the band will open in a browser"
-        static let packBusyTitle = "Copying…"
-        static let packCopiedStatus = "Band link copied."
         static let writeTitle = "Write The Band"
-        static let writeHelp = "Hold phone above the band, then write"
+        static var writeHelp: String {
+            AppConfig.nfcHardwareEnabled
+                ? "Hold phone above the band, then write"
+                : "Needs NFC Tag Reading (paid Apple Developer team). Preview works now."
+        }
         static let writeBusyTitle = "Hold Above The Band…"
-        static let loadTitle = "Import From Band"
-        static let loadBusyTitle = "Hold Above The Band…"
         static let successTitle = "Linked"
         static var successDetail: String {
             "Any NFC phone held \(BraceletRF.intentionalTapRangeLabel) from this band opens your card in that phone’s browser."
@@ -311,18 +307,11 @@ enum AppConfig {
             ]
         }
 
-        /// One short honesty line when CoreNFC is parked — not the long RF paragraph.
-        static var parkedHonestyShort: String {
-            "This build cannot write the chip yet. Preview is practice — not Linked. No share link: helpers only open the card by tapping the band, and it loads in their browser."
-        }
-
         static let aboutBandLabel = "Band details"
         static let doThisNowLabel = "Do this now"
         static let howItWorksLabel = "How it works"
         static let fillBeforeWrite =
-            "Fill your card before writing or previewing. Import From Band reads a written bracelet into this iPhone."
-        static let fillBeforePack =
-            "Fill your card before previewing."
+            "Fill your card before writing or previewing."
     }
 
     /// Quiet prayer on owner Aid only (`AidView`, not scanner / tapper shells).

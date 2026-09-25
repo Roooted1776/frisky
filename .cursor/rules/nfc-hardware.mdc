@@ -13,7 +13,7 @@ Linux CI — no Xcode needed). Run it after touching any file this rule globs.
 
 - The product band is **NXP NTAG216**, HF NFC, **13.56 MHz**, **ISO 14443A
   Type 2**, NDEF blank unlocked (`AppConfig.BraceletRF`). Never source or
-  special-case NTAG213, MIFARE, LF (~125 kHz), or UHF (~860–960 MHz).
+  special-case NTAG213, NTAG215, MIFARE, LF (~125 kHz), or UHF (~860–960 MHz).
 - Every user-facing capacity/format error must name **NXP NTAG216** by name
   (`NFCWriter.swift`, `ProfileNFCCodec.swift`) so a bad chip is diagnosable
   from the message alone.

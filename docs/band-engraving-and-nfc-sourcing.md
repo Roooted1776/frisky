@@ -82,9 +82,9 @@ Medical detail lives on-chip via owner Write (`tapper.html#d=`), not on the face
 
 | Need | Spec |
 |------|------|
-| Chip | **NXP NTAG216** only (888 B user memory). Not NTAG213, MIFARE, LF, or UHF. |
+| Chip | **NXP NTAG216** only (888 B user memory). Not NTAG213/215, MIFARE, LF, or UHF. |
 | RF | 13.56 MHz HF, ISO 14443A Type 2, NDEF **blank unlocked** — no factory pre-encode, no lock |
-| Avoid | NTAG213, MIFARE, LF 125 kHz, UHF, pre-encoded vendor URLs, password-locked UID products you cannot overwrite from CoreNFC |
+| Avoid | NTAG213, NTAG215, MIFARE, LF 125 kHz, UHF, pre-encoded vendor URLs, password-locked UID products you cannot overwrite from CoreNFC |
 | Factory NDEF | Leave **empty** (or a harmless stub). Owner overwrites on first Write in the NFC tab (`OwnerBandURI` / `#d=` only). |
 | QR (optional, outer only) | Only a live App Store URL (`AppConfig.appStoreURL`). Currently `nil` — **omit QR** until a listing exists. **Do not** QR-encode `tapper/#d=…`. If the face only fits one mark, the **logo-print 30×9 mm** mark wins. |
 | Chip (NDEF) | `AppConfig.medicalCardBaseURL#d=<base64url>` — `https://redmed.live/tapper/#d=` (`OwnerBandURI`). Hostinger static; see `docs/domain.md`. |
