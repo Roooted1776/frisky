@@ -252,7 +252,10 @@ enum AppConfig {
         static var noBluetoothSummary: String { carrierVsBluetoothSummary }
 
         static var hardwareParkedSummary: String {
-            "This build cannot write a band yet. NFC Tag Reading needs a paid Apple Developer team, which RedMed does not have yet. Preview shows the helper card — it does not write the chip or mark Linked. Helpers only open the card by holding any NFC phone \(intentionalTapRangeLabel) from the band — it loads in their browser."
+            // Max product note (2026-09-08): until Tag Reading is restored,
+            // in-app Write is parked; blank NTAG216 chips stay OK for
+            // Shortcuts / NFC Tools. No Developer-team jargon on this line.
+            "In-app Write is parked until Tag Reading is restored. Blank factory-unlocked NXP NTAG216 chips are still fine for Shortcuts or NFC Tools. RedMed will not write the chip or mark Linked here. After a band is written, helpers open it by holding any NFC phone \(intentionalTapRangeLabel) from the chip — the card loads in their browser."
         }
 
         /// NFC tab tip under the primary CTA — BraceletRF inches, not a hardcoded range.
@@ -262,14 +265,15 @@ enum AppConfig {
     }
 
     /// NFC tab has one CTA only: Write The Band.
-    /// Parked shows Write The Band disabled, with `writeHelp` saying why.
+    /// Parked shows Write The Band disabled, with `writeHelp` saying why
+    /// in owner-facing words (no Developer-team jargon on primary chrome).
     /// No Share — the card opens only on a close band tap, in the helper’s browser.
     enum NFCWriteCopy {
         static let writeTitle = "Write The Band"
         static var writeHelp: String {
             AppConfig.nfcHardwareEnabled
                 ? "Hold phone above the band, then write"
-                : "Needs NFC Tag Reading (paid Apple Developer team)."
+                : "Parked until Tag Reading is restored."
         }
         static let writeBusyTitle = "Hold Above The Band…"
         static let successTitle = "Linked"
@@ -284,7 +288,7 @@ enum AppConfig {
         static var pageIntro: String {
             AppConfig.nfcHardwareEnabled
                 ? "Fill your card, put the band in front of you, then Write The Band while holding your phone above it."
-                : "Write The Band needs Tag Reading. Helpers open it only by tapping the band — it loads in their browser."
+                : "In-app Write is parked until Tag Reading is restored. Blank NTAG216 bands stay OK. Helpers open a written band only by tapping it — the card loads in their browser."
         }
 
         /// Hold-diagram caption (uses BraceletRF inches).
@@ -293,17 +297,18 @@ enum AppConfig {
         }
 
         /// Three-step tutorial on the NFC tab (owner-facing; not RF engineering).
+        /// Step 2 uses `applewatch` — `wristwatch` paints blank on current Simulator SDKs.
         static var tutorialSteps: [(icon: String, title: String, detail: String)] {
             if AppConfig.nfcHardwareEnabled {
                 return [
                     ("person.text.rectangle", "1 · Fill your card", "Name, birth date, blood type, and anything EMS should see on RedMed."),
-                    ("wristwatch", "2 · Band in front of you", "Lay the band where you can reach it with the top of your iPhone."),
+                    ("applewatch", "2 · Band in front of you", "Lay the band where you can reach it with the top of your iPhone."),
                     ("wave.3.right", "3 · Write The Band", "Tap Write The Band and hold your phone \(BraceletRF.intentionalTapRangeLabel) above the chip until Linked.")
                 ]
             }
             return [
                 ("person.text.rectangle", "1 · Fill your card", "Name, birth date, blood type, and anything EMS should see on RedMed."),
-                ("wristwatch", "2 · Band in front of you", "Lay the band where you can reach it with the top of your iPhone."),
+                ("applewatch", "2 · Band in front of you", "Lay the band where you can reach it with the top of your iPhone."),
                 ("safari", "3 · Helpers tap to open", "After Write The Band ships: any NFC phone held \(BraceletRF.intentionalTapRangeLabel) above the band opens your card in that phone’s browser — no share link.")
             ]
         }
