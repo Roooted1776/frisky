@@ -69,7 +69,6 @@ final class NFCBandManager: ObservableObject {
     /// Pack + `session.begin()` stay on this tap's stack (NFC tab open / Write).
     /// Once the sheet is up, hold the band ~1–2″ to finish. CoreNFC drops the
     /// sheet if Write hops through `Task` / `Task.detached` first.
-    /// Parked Share Band URL on the NFC tab is the same `OwnerBandURI` string.
     /// No Face ID here — post-Agree / Edit / Save / Erase only
     /// (not viewing the YOU card).
     /// Linked / Not linked flips only after a real verified CoreNFC write —

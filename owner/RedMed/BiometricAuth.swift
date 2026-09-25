@@ -5,8 +5,8 @@ import UIKit
 /// NFC Preview, or in-app band / UL tap card (`BandTapIngress`) — tap-to-view
 /// stays ungated (no Face ID, no passcode, no login).
 ///
-/// Post-Agree / returning cold re-entry Face ID, Edit, Save, Erase, and
-/// Load From Band pass `force: true`. NFC write, 911, Aid, same-session
+/// Post-Agree / returning cold re-entry Face ID, Edit, Save, and Erase
+/// pass `force: true`. NFC write, 911, Aid, same-session
 /// resume, and tapper do not. Before You Continue itself is Agree-only.
 /// After cold-open Face ID, viewing the YOU card does not prompt again.
 /// Edit has field-level Clear only (blood type / birth date) — blank-all +
@@ -184,7 +184,7 @@ enum BiometricAuth {
 
     /// Live `evaluatePolicy` in progress (including the teardown wait).
     /// Scene `.inactive` during this is the Face ID sheet on post-Agree /
-    /// Edit / Save / Erase / Load From Band — do not treat it as a leave.
+    /// Edit / Save / Erase — do not treat it as a leave.
     static var isEvaluating: Bool {
         parkLock.lock()
         defer { parkLock.unlock() }

@@ -360,7 +360,7 @@ class ProfileData: ObservableObject {
     /// or blank-all over a stored blob). First-install Save of a newly
     /// filled ID is fine. Explicit erase deletes Keychain first.
     /// The band is a separate copy (`#d=` on the chip) — persist() does not
-    /// write NFC; owner Write / Share Band URL does.
+    /// write NFC; owner Write The Band does.
     @discardableResult
     func persist() -> Bool {
         guard persists else { return false }
