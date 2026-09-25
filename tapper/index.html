@@ -12,6 +12,19 @@
      blob: URL; default-src 'self' alone blocks it and the alarm goes silent. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; media-src 'self' blob: data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; worker-src 'self'; connect-src 'self'; manifest-src 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="no-referrer">
+<script>
+// Clickjacking guard: frame-ancestors is ignored in <meta>, and Hostinger /
+// Cloudflare proxy / github.io do not serve _headers. Top-level loads (Safari,
+// the app's WKWebView) never enter this branch. Framed: hide, then try to
+// break out; if the browser blocks that, the card stays hidden in the frame.
+(function () {
+  var framed = true;
+  try { framed = window.top !== window.self; } catch (e) {}
+  if (!framed) return;
+  document.documentElement.style.display = 'none';
+  try { window.top.location.replace(window.location.href); } catch (e2) {}
+})();
+</script>
 <!-- Favicon wired in resolveLogo from BrandLogo.png (SVG mark + PNG densities). -->
 <title>RedMed — tap to scan</title>
 <style>
