@@ -21,11 +21,17 @@ AASA is live (`apple-app-site-association` + `.well-known/`, paths
 restore + merge, re-run Publish tapper / `scripts/publish-github-io.sh` so
 github.io picks up the widened AASA.
 
-**Safari fallback (AASA stale / UL miss / entitlement parked):** Assist
-tries `redmed://band#d=` so installed RedMed can claim the tap (same quiet
-rules via `onOpenURL`). No app → page stays put with the medical card.
-SOS never auto-arms from band tap. Custom scheme needs no Associated
-Domains entitlement.
+**No custom-scheme fallback.** Assist used to jump to `redmed://band#d=`
+after painting. Removed: custom URL schemes are not exclusive on iOS, so any
+installed app registering `redmed` received the tapped patient's profile
+(the `#d=` key is public), and Safari errors on phones without RedMed. The
+app no longer ingests `redmed://band` either. Universal Links are the only
+band-tap path into the app. SOS never auto-arms from band tap.
+
+**Ship rule:** NFC write (`nfcHardwareEnabled`) and Associated Domains need
+the same paid Program, so they ship together — `test-nfc-hardware.mjs`
+fails if `nfcHardwareEnabled` is true without `associatedDomainsEnabled` +
+`applinks:` in the entitlements.
 
 ## Currently parked (personal team signing)
 
@@ -38,9 +44,9 @@ entitlement is present — the same class of problem as CoreNFC
 (`docs/NFC-RESTORE.md`).
 
 Leave `onContinueUserActivity` in place — no-op without the entitlement.
-Without the entitlement, wrist proximity can Safari-open again on a phone
-that has RedMed installed. Safari `redmed://band` is the remaining claim
-path.
+Without the entitlement, a band tap opens Safari Assist even on a phone
+that has RedMed installed. That is acceptable only while no app-written
+bands exist (NFC write parked).
 
 ## Rejected: local-network / BLE band ranging
 

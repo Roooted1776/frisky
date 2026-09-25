@@ -116,8 +116,9 @@ enum AppConfig {
     /// on App ID `com.redmed.app` + paid Apple Developer — see
     /// `docs/associated-domains-restore.md`. Keep in lockstep with the entitlement.
     /// Parked (`false`): personal/free teams cannot provision Associated Domains
-    /// (same class of problem as CoreNFC). Safari still tries `redmed://band#d=`
-    /// before SOS. Restore after paid Program.
+    /// (same class of problem as CoreNFC). No custom-scheme fallback — Safari
+    /// keeps the tap. Restore after paid Program; nfcHardwareEnabled requires
+    /// this (test-nfc-hardware.mjs).
     static let associatedDomainsEnabled = false
 
     /// Product kill switch for the optional Apple Health import on the empty-profile
@@ -224,13 +225,13 @@ enum AppConfig {
         /// What can still open the URL later (Apple OS path; phone off / locked OK).
         /// Associated Domains (when enabled): phone with RedMed opens the app
         /// instead of Safari (own wrist band must not hijack that iPhone).
-        /// Parked: Safari tries `redmed://band` so the app can claim the tap.
+        /// Parked: Safari keeps the tap (no redmed:// handoff — not exclusive).
         /// Assist SOS never auto-arms on band tap — toggle or US crash only.
         /// No BLE / local-network band ranging.
         static var backgroundTagReadingSummary: String {
             let installPath = AppConfig.associatedDomainsEnabled
                 ? "With RedMed installed, Associated Domains opens the app instead of Safari so your own wrist band does not take over this iPhone."
-                : "With RedMed installed, Safari tries redmed://band so the app can claim the tap; Associated Domains is parked until paid Program."
+                : "Until Associated Domains ships with band writing, a tap opens the card in Safari even with RedMed installed."
             return "iOS Background Tag Reading can still open the card later — phone can be off or locked; a deliberate tap (phone top \(intentionalTapRangeLabel) from the band) still works. \(installPath) Passerby phones without RedMed still get Safari Assist. Wrist + pocket is usually fine; phone pressed to the clasp can still couple. Writing the chip does not change that. Band stays passive — no battery, no Bluetooth to find nearby."
         }
 

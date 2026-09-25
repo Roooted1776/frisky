@@ -189,9 +189,8 @@ function redmedAssetURL(file) {
        tap never auto-arms SOS. Explicit SOS tap opens `tel:` immediately
        (no in-page confirm). Crash waits the US Crash Detection delay then
        the same `tel:` unless Stop. Owner with RedMed installed + their custom
-       band written: Associated Domains when AASA is live, else
-       `redmed://band#d=` handoff so the wearer's phone claims the tap (no
-       SOS from Assist). Do not invent BLE / local-network ranging.
+       band written: Associated Domains (Universal Links) claim the tap —
+       never a `redmed://` handoff carrying #d= (no SOS from Assist). Do not invent BLE / local-network ranging.
        Bare /tapper/ without `#d=` (and a failed / empty `#d=`) paints the
        No Patient empty state — not a blank YOU chart with dashes. #911 /
        #aid / ?tab= still open those panels; #d= stays the profile payload.
@@ -4661,23 +4660,15 @@ function redmedAssetURL(file) {
 
   // Band tap opens Assist with #d= for the medical card only — never arms SOS.
   // SOS = full sound + full light, only via SOS · Locate Me toggle or US Crash
-  // Detection collision timing. Owner with RedMed installed: try redmed://band
-  // so the app can claim the tap (own band quiet). No BLE / ranging.
+  // Detection collision timing. Owner with RedMed installed: Universal Links
+  // (AASA /tapper/*) claim the tap before Safari loads. No custom-scheme
+  // handoff: redmed:// is not exclusive, so #d= would reach any app that
+  // registers it, and Safari errors on phones without RedMed. No BLE / ranging.
   // See docs/associated-domains-restore.md.
   function hasBandPayload() {
     // Require non-empty fragment after #d= — bare "#d=" is not a real band tap.
     var h = location.hash || '';
     return /^#d=.+/.test(h) && !appPreview();
-  }
-  // Installed RedMed claims the tap via custom scheme when UL did not.
-  // Never auto-arm SOS after the handoff wait.
-  function handoffToInstalledApp() {
-    paint();
-    if (!hasBandPayload() || !paintedFromBand) return;
-    try {
-      // Keep #d= on the custom URL so the app can own-match / show a foreign card.
-      window.location.href = 'redmed://band' + (location.hash || '');
-    } catch (e) {}
   }
   // Band tap: vitals already on screen from the early #d= script when possible.
   // Card-session wake after treat paint — medical ID first; SOS is toggle/crash only.
@@ -4692,7 +4683,7 @@ function redmedAssetURL(file) {
     }
     afterVitals(function () {
       setCardSessionAwake(true);
-      handoffToInstalledApp();
+      paint();
     });
   }, { once: true });
   // iOS may need a gesture before Wake Lock sticks — re-request on first tap.

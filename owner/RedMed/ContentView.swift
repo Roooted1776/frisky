@@ -169,7 +169,7 @@ struct ContentView: View {
             mountedTabs.insert(.nfc)
             startHoldToWriteFromNFCTab()
         }
-        // Associated Domains / redmed://band: foreign `#d=` presents via
+        // Associated Domains: foreign `#d=` presents via
         // `BandTapIngress` above ConsentGate (ungated). NFC Scan still uses
         // scannedCard on this tree after owner Face ID.
         .fullScreenCover(item: nfcBandBox.scannedCardBinding) { session in

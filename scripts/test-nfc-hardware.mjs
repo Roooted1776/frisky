@@ -108,6 +108,15 @@ assert('NFCReader also requires hardware NFC availability', reader.includes('gua
     hardwareEnabled === entitled,
     `nfcHardwareEnabled=${hardwareEnabled} entitled=${entitled}`,
   );
+  // Written bands need Universal Links to reach the owner's app: the tapper
+  // has no redmed:// fallback. Never ship chip writes without applinks.
+  const udlEnabled = /static let associatedDomainsEnabled = true/.test(appConfig);
+  const udlEntitled = entitlements.includes('com.apple.developer.associated-domains') && entitlements.includes('applinks:');
+  assert(
+    'nfcHardwareEnabled requires Associated Domains (applinks) enabled + entitled',
+    !hardwareEnabled || (udlEnabled && udlEntitled),
+    `nfcHardwareEnabled=${hardwareEnabled} associatedDomainsEnabled=${udlEnabled} applinks=${udlEntitled}`,
+  );
 }
 
 console.log(`\n${total} check(s), ${failed} failed.`);
