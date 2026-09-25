@@ -9,7 +9,7 @@ import UIKit
 /// is unavailable) while Main warms underneath — once after Agree, and
 /// again on every cold re-entry after acknowledge — then Main is interactive.
 /// Same-session background → foreground does **not** re-prompt (no
-/// OwnerAppLock relock). Edit / Save / Erase / Load From Band still Face ID.
+/// OwnerAppLock relock). Edit / Save / Erase still Face ID.
 /// Never on passerby tapper or in-app band / UL tap card (`BandTapIngress`).
 /// Location prompt fires contextually on first GPS use (Find Help / hospitals)
 /// — not proactively after Face ID. No cold interrupt, no yield stall.

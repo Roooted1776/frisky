@@ -24,11 +24,11 @@ final class NFCBandManager: ObservableObject {
     @Published var writeVerified = false
     @Published var lastPackedURL: String?
     /// Scan / simulate → full passerby shell (item present; payload never empty).
-    /// NFC UI uses Preview for the helper card; this path remains for hardware verifyBand.
+    /// This path is for hardware verifyBand, not owner-facing NFC tab UI.
     @Published var scannedCard: ScannedCardSession?
     @Published var alertMessage: String?
 
-    /// One-shot Scan open — same shape as NFCView.PreviewSession.
+    /// One-shot Scan open.
     struct ScannedCardSession: Identifiable {
         let id = UUID()
         let payload: String
@@ -69,7 +69,6 @@ final class NFCBandManager: ObservableObject {
     /// Pack + `session.begin()` stay on this tap's stack (NFC tab open / Write).
     /// Once the sheet is up, hold the band ~1–2″ to finish. CoreNFC drops the
     /// sheet if Write hops through `Task` / `Task.detached` first.
-    /// Parked Share Band URL on the NFC tab is the same `OwnerBandURI` string.
     /// No Face ID here — post-Agree / Edit / Save / Erase only
     /// (not viewing the YOU card).
     /// Linked / Not linked flips only after a real verified CoreNFC write —

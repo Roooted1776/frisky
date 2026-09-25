@@ -102,8 +102,8 @@ enum AppConfig {
     /// `medicalCardBaseURL#d=` (`OwnerBandURI`). Requires NFC Tag Reading on App ID
     /// `com.redmed.app` + paid Apple Developer — see `docs/NFC-RESTORE.md`.
     /// Keep this flag in lockstep with `RedMed.entitlements` + `NFCReaderUsageDescription`.
-    /// `false` parks hardware sessions (Write The Band shown disabled +
-    /// Preview). Gate logic stays correct for restore — see `docs/NFC-RESTORE.md`.
+    /// `false` parks hardware sessions (Write The Band shown disabled).
+    /// Gate logic stays correct for restore — see `docs/NFC-RESTORE.md`.
     /// Parked: entitlement + `NFCReaderUsageDescription` removed (bf3ee60).
     /// Keep flag false until restore steps in `docs/NFC-RESTORE.md`.
     /// No Share control — helpers open the card only by tapping the band
@@ -116,8 +116,9 @@ enum AppConfig {
     /// on App ID `com.redmed.app` + paid Apple Developer — see
     /// `docs/associated-domains-restore.md`. Keep in lockstep with the entitlement.
     /// Parked (`false`): personal/free teams cannot provision Associated Domains
-    /// (same class of problem as CoreNFC). Safari still tries `redmed://band#d=`
-    /// before SOS. Restore after paid Program.
+    /// (same class of problem as CoreNFC). No custom-scheme fallback — Safari
+    /// keeps the tap. Restore after paid Program; nfcHardwareEnabled requires
+    /// this (test-nfc-hardware.mjs).
     static let associatedDomainsEnabled = false
 
     /// Product kill switch for the optional Apple Health import on the empty-profile
@@ -224,13 +225,13 @@ enum AppConfig {
         /// What can still open the URL later (Apple OS path; phone off / locked OK).
         /// Associated Domains (when enabled): phone with RedMed opens the app
         /// instead of Safari (own wrist band must not hijack that iPhone).
-        /// Parked: Safari tries `redmed://band` so the app can claim the tap.
+        /// Parked: Safari keeps the tap (no redmed:// handoff — not exclusive).
         /// Assist SOS never auto-arms on band tap — toggle or US crash only.
         /// No BLE / local-network band ranging.
         static var backgroundTagReadingSummary: String {
             let installPath = AppConfig.associatedDomainsEnabled
                 ? "With RedMed installed, Associated Domains opens the app instead of Safari so your own wrist band does not take over this iPhone."
-                : "With RedMed installed, Safari tries redmed://band so the app can claim the tap; Associated Domains is parked until paid Program."
+                : "Until Associated Domains ships with band writing, a tap opens the card in Safari even with RedMed installed."
             return "iOS Background Tag Reading can still open the card later — phone can be off or locked; a deliberate tap (phone top \(intentionalTapRangeLabel) from the band) still works. \(installPath) Passerby phones without RedMed still get Safari Assist. Wrist + pocket is usually fine; phone pressed to the clasp can still couple. Writing the chip does not change that. Band stays passive — no battery, no Bluetooth to find nearby."
         }
 
@@ -260,7 +261,7 @@ enum AppConfig {
         }
     }
 
-    /// NFC tab has two CTAs only: Write The Band + Preview.
+    /// NFC tab has one CTA only: Write The Band.
     /// Parked shows Write The Band disabled, with `writeHelp` saying why.
     /// No Share — the card opens only on a close band tap, in the helper’s browser.
     enum NFCWriteCopy {
@@ -268,7 +269,7 @@ enum AppConfig {
         static var writeHelp: String {
             AppConfig.nfcHardwareEnabled
                 ? "Hold phone above the band, then write"
-                : "Needs NFC Tag Reading (paid Apple Developer team). Preview works now."
+                : "Needs NFC Tag Reading (paid Apple Developer team)."
         }
         static let writeBusyTitle = "Hold Above The Band…"
         static let successTitle = "Linked"
@@ -283,7 +284,7 @@ enum AppConfig {
         static var pageIntro: String {
             AppConfig.nfcHardwareEnabled
                 ? "Fill your card, put the band in front of you, then Write The Band while holding your phone above it."
-                : "Preview the helper card now. Write The Band needs Tag Reading. Helpers open it only by tapping the band — it loads in their browser."
+                : "Write The Band needs Tag Reading. Helpers open it only by tapping the band — it loads in their browser."
         }
 
         /// Hold-diagram caption (uses BraceletRF inches).
@@ -302,7 +303,7 @@ enum AppConfig {
             }
             return [
                 ("person.text.rectangle", "1 · Fill your card", "Name, birth date, blood type, and anything EMS should see on RedMed."),
-                ("eye", "2 · Preview the card", "See the same page a helper gets in their browser. Preview never writes the chip."),
+                ("wristwatch", "2 · Band in front of you", "Lay the band where you can reach it with the top of your iPhone."),
                 ("safari", "3 · Helpers tap to open", "After Write The Band ships: any NFC phone held \(BraceletRF.intentionalTapRangeLabel) above the band opens your card in that phone’s browser — no share link.")
             ]
         }
@@ -311,7 +312,7 @@ enum AppConfig {
         static let doThisNowLabel = "Do this now"
         static let howItWorksLabel = "How it works"
         static let fillBeforeWrite =
-            "Fill your card before writing or previewing."
+            "Fill your card before writing."
     }
 
     /// Quiet prayer on owner Aid only (`AidView`, not scanner / tapper shells).

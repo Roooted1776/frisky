@@ -63,7 +63,7 @@ enum USCrashDetectionCall {
 /// after Stop / disarm.
 /// Main starts monitoring once owner tabs are up. SOS / survival hold is
 /// separate — stopMonitoring does not cancel an armed siren. Face ID gates
-/// post-Agree / Edit / Save / Erase / Load From Band — not viewing
+/// post-Agree / Edit / Save / Erase — not viewing
 /// the YOU card; crash motion is not gated on a YOU-view unlock.
 /// Scene policy: keep listening through `.inactive`; hard-stop on
 /// `.background`. That inactive keep-listening path is the only

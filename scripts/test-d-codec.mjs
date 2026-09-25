@@ -509,7 +509,8 @@ assert('passerby loaded not Linked Bracelet', tapperSrc.includes('Medical ID Loa
 assert('paintedFromBand requires content', tapperSrc.includes('paintedFromBand = !!fromBand && hasPatient'));
 assert('treat-first early vitals script', tapperSrc.includes('__redmedEarlyVitals') && tapperSrc.includes('Treat-first:'));
 assert('hashchange re-decodes #d=', tapperSrc.includes('decodeProfile().then(function (p)') && tapperSrc.includes('hashchange'));
-assert('own-phone handoff no SOS auto-arm', tapperSrc.includes('redmed://band') && tapperSrc.includes('handoffToInstalledApp') && !tapperSrc.includes('handoffToInstalledAppThenMaybeArm') && !tapperSrc.includes('function shouldAutoArm'));
+assert('no redmed:// #d= handoff (non-exclusive scheme leaks PHI)', !tapperSrc.includes("'redmed://band'") && !tapperSrc.includes('handoffToInstalledApp') && !/location\.href\s*=\s*['"]redmed:\/\/band/.test(tapperSrc));
+assert('band tap never auto-arms SOS', !tapperSrc.includes('handoffToInstalledAppThenMaybeArm') && !tapperSrc.includes('function shouldAutoArm'));
 assert('SOS full sound and light', tapperSrc.includes('sos-light-flash') && tapperSrc.includes('gain.gain.value = 1') && tapperSrc.includes('Band tap does not arm SOS') && tapperSrc.includes('dark rainy night'));
 assert('SOS only toggle or US crash', tapperSrc.includes('US Crash Detection') && tapperSrc.includes('US_CRASH_ALERT_S = 10') && tapperSrc.includes('US_CRASH_COUNTDOWN_S = 30'));
 const tapperAid = tapperSrc.indexOf('id="aidStopAlarm"');

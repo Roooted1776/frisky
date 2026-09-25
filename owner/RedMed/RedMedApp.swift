@@ -48,14 +48,11 @@ struct RedMedApp: App {
                     NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
                     return
                 }
-                // Safari tapper handoff when Associated Domains / AASA did not
-                // claim the tap (stale github.io AASA, personal-team signing).
-                // `redmed://band#d=` — same quiet rules as Universal Links.
-                if scheme == "redmed", host == "band" || host == "tapper" {
-                    bandTap.ingest(url.absoluteString, profile: profile)
-                }
+                // No `redmed://band#d=` ingest: custom schemes are not exclusive
+                // and any page could push a forged card. Band taps arrive only
+                // via Universal Links below.
             }
-            // Associated Domains (applinks:roooted1776.github.io).
+            // Associated Domains (applinks:) — the only band-tap path into the app.
             // Wrist-band proximity must not Safari-hijack an iPhone that already
             // has RedMed. BTR / NFC opens this app instead of Safari.
             // Own matching `#d=` → foreground only (no card sheet).
@@ -66,7 +63,7 @@ struct RedMedApp: App {
             // the patient card to a start screen.
             // UL often drops the URL fragment — no `#d=` still means quiet
             // (owner phone must not scream). Phones without RedMed keep Safari
-            // + band-tap SOS; tapper also tries `redmed://band` before arming.
+            // Assist; band tap never arms SOS.
             .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
                 guard let url = activity.webpageURL else { return }
                 let path = url.path.lowercased()

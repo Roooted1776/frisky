@@ -295,7 +295,9 @@ enum PasserbyShellStaging {
         lock.lock()
         defer { lock.unlock() }
         do {
-            try html.write(to: url, atomically: true, encoding: .utf8)
+            // HTML embeds the profile as plaintext JSON. Match the Keychain
+            // item (WhenPasscodeSet…): unreadable while the device is locked.
+            try Data(html.utf8).write(to: url, options: [.atomic, .completeFileProtection])
             return url
         } catch {
             return nil
@@ -975,14 +977,22 @@ private struct PasserbyHTMLWebView: UIViewRepresentable {
             for navigationAction: WKNavigationAction,
             windowFeatures: WKWindowFeatures
         ) -> WKWebView? {
-            if let url = navigationAction.request.url, !url.isFileURL {
-                if (url.scheme ?? "").lowercased() == "redmed", Self.isNFCTabURL(url) {
+            guard let url = navigationAction.request.url, !url.isFileURL else { return nil }
+            // Same scheme allowlist as decidePolicyFor — window.open must not
+            // hand arbitrary app schemes to UIApplication.
+            switch (url.scheme ?? "").lowercased() {
+            case "http", "https", "mailto", "tel":
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+            case "redmed":
+                if Self.isNFCTabURL(url) {
                     if appEmbed {
                         NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
                     }
                 } else {
                     UIApplication.shared.open(url, options: [:], completionHandler: nil)
                 }
+            default:
+                break
             }
             return nil
         }

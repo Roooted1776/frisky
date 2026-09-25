@@ -36,6 +36,9 @@ on:
       - 'scripts/publish-github-io.sh'
       - 'scripts/test-d-codec.mjs'
       - 'scripts/test-nfc-hardware.mjs'
+      - 'scripts/test-sw-offline.mjs'
+      - 'scripts/package.json'
+      - 'scripts/package-lock.json'
       - 'scripts/deploy-pages.sh'
       - 'scripts/deploy-hostinger-static.mjs'
       - 'scripts/stage-worker-assets.sh'
@@ -68,6 +71,9 @@ on:
       - 'scripts/publish-github-io.sh'
       - 'scripts/test-d-codec.mjs'
       - 'scripts/test-nfc-hardware.mjs'
+      - 'scripts/test-sw-offline.mjs'
+      - 'scripts/package.json'
+      - 'scripts/package-lock.json'
       - 'scripts/deploy-pages.sh'
       - 'scripts/deploy-hostinger-static.mjs'
       - 'scripts/stage-worker-assets.sh'
@@ -95,6 +101,7 @@ jobs:
           node scripts/test-d-codec.mjs
           node scripts/test-nfc-hardware.mjs
           node scripts/test-worker-device.mjs
+          node scripts/test-sw-offline.mjs
           f=tapper/index.html
           ! grep -q 'Checking your phone' "$f" || fail "$f still has Checking your phone"
           ! grep -q 'Set up your RedMed band' "$f" || fail "$f still has band-setup copy"
@@ -132,7 +139,8 @@ jobs:
         run: |
           set -euo pipefail
           bash scripts/stage-worker-assets.sh
-          npm install --no-save axios tus-js-client
+          # Lockfile-pinned, no lifecycle scripts — this step holds the deploy token.
+          npm ci --ignore-scripts --prefix scripts
           node scripts/deploy-hostinger-static.mjs redmed.live
 
       - name: Smoke Hostinger origin (files live)

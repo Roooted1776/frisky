@@ -10,7 +10,7 @@
  * cache — even with no signal.
  *
  * Owner app path is separate: WKWebView loads a Caches-staged tapper.html via
- * loadFileURL (BrandLogo beside it) — no network required for Preview / Scan.
+ * loadFileURL (BrandLogo beside it) — no network required for Scan / band tap.
  *
  * Shell strategy: cache-first with multi-key fallback (/tapper/ <-> index.html);
  * never wait on network when any shell copy exists. Background networkReload
@@ -26,7 +26,9 @@
  * Fix #1 (Critical): putShell now clones all copies BEFORE reading body text
  *   so no clone is made from a consumed/locked stream.
  * Fix #4 (High): precache now catches shell precache failure gracefully so SW
- *   install does not abort on first-offline visit.
+ *   install does not abort on first-offline visit. On that failure the last
+ *   good shell is carried over from an older CACHE bucket first — activate
+ *   deletes those buckets, and a stale card beats no card for an offline EMT.
  * Fix #7 (Medium): putShell deduplicates SHELL_KEYS to avoid double-writing
  *   the same cache entry when reqOrUrl already appears in SHELL_KEYS.
  */
@@ -100,11 +102,38 @@ function precacheRequiredShell(cache, i) {
     });
 }
 
+// Copy the first shell found in an older bucket onto every SHELL_KEY here.
+function carryOverShell(cache) {
+  return caches.keys().then(function (keys) {
+    var older = keys.filter(function (k) { return /^redmed-tapper-v/.test(k) && k !== CACHE; });
+    return older.reduce(function (found, k) {
+      return found.then(function (hit) {
+        if (hit) return hit;
+        return caches.open(k).then(function (old) {
+          return Promise.all(SHELL_KEYS.map(function (key) {
+            return old.match(key, { ignoreSearch: true });
+          })).then(function (hits) {
+            for (var i = 0; i < hits.length; i++) {
+              if (hits[i]) return hits[i];
+            }
+            return null;
+          });
+        });
+      });
+    }, Promise.resolve(null));
+  }).then(function (hit) {
+    if (!hit) return;
+    return Promise.all(SHELL_KEYS.map(function (key) {
+      return cache.put(key, hit.clone());
+    }));
+  }).catch(function () { /* quota / storage unavailable */ });
+}
+
 // Fix #4: catch shell precache rejection so SW install does not abort when
 // both shell URLs are unreachable on a first-time offline visit.
 function precache(cache) {
   return precacheRequiredShell(cache, 0)
-    .catch(function () { /* first-time offline: shell will cache on next online visit */ })
+    .catch(function () { return carryOverShell(cache); })
     .then(function () {
       return Promise.all(ASSETS.map(function (url) {
         return networkReload(url).then(function (res) {
@@ -147,6 +176,39 @@ function refreshShell(cache, req) {
     });
 }
 
+function offlineShellResponse() {
+  return new Response(
+    '<!doctype html><html lang="en-US"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>RedMed Offline</title><style>html,body{margin:0;padding:0;background:#fff7f7;color:#241f20;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{min-height:100vh;display:grid;place-items:center;padding:24px}.card{max-width:34rem;background:#fff;border:1px solid #ead9d9;border-radius:18px;padding:24px;box-shadow:0 10px 30px rgba(66,32,32,.08)}h1{margin:0 0 8px;font-size:1.5rem}p{margin:0 0 10px}.pill{display:inline-block;margin-bottom:12px;padding:6px 10px;border-radius:999px;background:#fdecec;color:#8c2f39;font-weight:700;font-size:.875rem}</style></head><body><main class="card"><div class="pill">Offline</div><h1>RedMed is not saved on this phone yet</h1><p>This phone has not opened a RedMed card before, so the medical card cannot open without a connection.</p><p>Reconnect and tap the band again. After that it opens offline too.</p></main></body></html>',
+    {
+      status: 503,
+      headers: {
+        'content-type': 'text/html; charset=utf-8',
+        'cache-control': 'no-store'
+      }
+    }
+  );
+}
+
+// Pass every network answer through (404s, opaqueredirect for redirect-stub
+// navigations); only ok responses are cached. null = network unreachable.
+function refreshAsset(cache, req) {
+  return fetch(req).then(function (res) {
+    if (res && res.ok) putAsset(cache, req, res.clone());
+    return res || null;
+  }).catch(function () {
+    return null;
+  });
+}
+
+function isSameOriginAsset(req) {
+  try {
+    var url = new URL(req.url);
+    return url.origin === self.location.origin && !isShellRequest(req);
+  } catch (e) {
+    return false;
+  }
+}
+
 function isShellRequest(req) {
   try {
     var url = new URL(req.url);
@@ -163,75 +225,9 @@ function isShellRequest(req) {
   }
 }
 
-function hasAnyCachedShell() {
-  return caches.keys().then(function (keys) {
-    var matches = keys.filter(function (k) { return /^redmed-tapper-v/.test(k); });
-    return Promise.all(matches.map(function (k) {
-      return caches.open(k).then(function (cache) {
-        return Promise.all(SHELL_KEYS.map(function (key) {
-          return cache.match(key, { ignoreSearch: true });
-        }));
-      });
-    })).then(function (groups) {
-      for (var i = 0; i < groups.length; i++) {
-        for (var j = 0; j < groups[i].length; j++) {
-          if (groups[i][j]) return true;
-        }
-      }
-      return false;
-    });
-  });
-}
-
-function offlineShellResponse() {
-  return new Response(
-    '<!doctype html><html lang="en-US"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>RedMed Offline</title><style>html,body{margin:0;padding:0;background:#fff7f7;color:#241f20;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{min-height:100vh;display:grid;place-items:center;padding:24px}.card{max-width:34rem;background:#fff;border:1px solid #ead9d9;border-radius:18px;padding:24px;box-shadow:0 10px 30px rgba(66,32,32,.08)}h1{margin:0 0 8px;font-size:1.5rem}p{margin:0 0 10px}.pill{display:inline-block;margin-bottom:12px;padding:6px 10px;border-radius:999px;background:#fdecec;color:#8c2f39;font-weight:700;font-size:.875rem}</style></head><body><main class="card"><div class="pill">Offline</div><h1>RedMed is not cached on this phone yet</h1><p>This phone has no saved Tapper shell yet, so the medical card cannot open without a connection.</p><p>Reconnect once to load the page, then it will stay available offline for later scans.</p></main></body></html>',
-    {
-      status: 503,
-      headers: {
-        'content-type': 'text/html; charset=utf-8',
-        'cache-control': 'no-store'
-      }
-    }
-  );
-}
-
-function refreshAsset(cache, req) {
-  return fetch(req).then(function (res) {
-    if (res && res.ok) {
-      putAsset(cache, req, res.clone());
-      return res;
-    }
-    return null;
-  }).catch(function () {
-    return null;
-  });
-}
-
-function isSameOriginAsset(req) {
-  try {
-    var url = new URL(req.url);
-    return url.origin === self.location.origin && !isShellRequest(req);
-  } catch (e) {
-    return false;
-  }
-}
-
 self.addEventListener('install', function (event) {
   event.waitUntil(
-    caches.open(CACHE).then(function (cache) {
-      return precacheRequiredShell(cache, 0).catch(function () {
-        return hasAnyCachedShell().then(function (ok) {
-          if (!ok) throw new Error('No offline shell available');
-        });
-      }).then(function () {
-        return Promise.all(ASSETS.map(function (url) {
-          return networkReload(url).then(function (res) {
-            return putAsset(cache, url, res);
-          }).catch(function () { /* optional assets */ });
-        }));
-      });
-    }).then(function () {
+    caches.open(CACHE).then(precache).then(function () {
       return self.skipWaiting();
     })
   );
@@ -297,7 +293,7 @@ self.addEventListener('fetch', function (event) {
 
   if (!isSameOriginAsset(req)) return;
 
-  // Static assets: cache-first with background refresh for fresher offline copies.
+  // Static assets: cache-first with background refresh (single key only).
   event.respondWith(
     caches.open(CACHE).then(function (cache) {
       return cache.match(req, { ignoreSearch: true }).then(function (cached) {
