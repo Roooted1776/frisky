@@ -169,6 +169,28 @@ struct RedMedView: View {
         screenWakeHold.active = want
     }
 
+    /// Banner detail when identity is incomplete — name, birth date, and blood
+    /// type are all required for `isEmergencyProfileConfigured`.
+    private var finishMedicalIDDetail: String {
+        let needsName = profile.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let needsBirth = profile.birthDate.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let needsBlood = profile.bloodType.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        var parts: [String] = []
+        if needsName { parts.append("name") }
+        if needsBirth { parts.append("birth date") }
+        if needsBlood { parts.append("blood type") }
+        if parts.isEmpty {
+            return "Add birth date and blood type so helpers see a complete ID."
+        }
+        let joined: String
+        switch parts.count {
+        case 1: joined = parts[0]
+        case 2: joined = "\(parts[0]) and \(parts[1])"
+        default: joined = "\(parts[0]), \(parts[1]), and \(parts[2])"
+        }
+        return "Add \(joined) so helpers see a complete ID."
+    }
+
     /// Sibling above the YOU card — never an overlay on the tap card.
     /// Hidden while restore is in flight and until one commit past settle so
     /// the banner does not insert in the same commit as Keychain field fill.
@@ -180,11 +202,13 @@ struct RedMedView: View {
             OwnerNextStepBanner(
                 icon: "square.and.pencil",
                 title: "Finish Your Medical ID",
-                detail: "Add birth date and blood type so helpers see a complete ID.",
+                detail: finishMedicalIDDetail,
                 actionTitle: "Edit",
                 action: { requestEdit() }
             )
-        } else if !profile.showsBraceletAsLinked {
+        } else if AppConfig.nfcHardwareEnabled, !profile.showsBraceletAsLinked {
+            // Parked builds: no Write next-step — AGENTS.md forbids fake
+            // “write from the app” storefront until Tag Reading ships.
             OwnerNextStepBanner(
                 icon: "wave.3.right",
                 title: AppConfig.NFCWriteCopy.writeTitle,
@@ -349,11 +373,11 @@ private struct OwnerYouCard: View {
             Divider().overlay(Color.redmedDivider)
             youRow(label: "Blood Type", value: profile.bloodType.trimmingCharacters(in: .whitespacesAndNewlines))
             Divider().overlay(Color.redmedDivider)
-            youRow(label: "Organ Donor", value: profile.isOrganDonor ? "Yes" : "")
+            youRow(label: "Organ Donor", value: profile.isOrganDonor ? "Yes" : "No")
             Divider().overlay(Color.redmedDivider)
-            youRow(label: "Pregnant", value: profile.isPregnant ? "Yes" : "")
+            youRow(label: "Pregnant", value: profile.isPregnant ? "Yes" : "No")
             Divider().overlay(Color.redmedDivider)
-            youRow(label: "Deaf / Vision Impaired", value: profile.isDeafOrVisionImpaired ? "Yes" : "")
+            youRow(label: "Deaf / Vision Impaired", value: profile.isDeafOrVisionImpaired ? "Yes" : "No")
             Divider().overlay(Color.redmedDivider)
             youRow(label: "Notes", value: profile.notes.trimmingCharacters(in: .whitespacesAndNewlines))
         }

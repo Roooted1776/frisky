@@ -41,11 +41,14 @@ struct NFCView: View {
                     } else {
                         holdDiagram
                             .padding(.top, 4)
+                        // Write CTA before How it works so “Do this now” is
+                        // on-screen above the tab bar without a first scroll.
+                        actionsCard
                         howItWorksCard
-                    }
-                    actionsCard
-                    if !profile.showsBraceletAsLinked {
                         aboutBandDisclosure
+                    }
+                    if profile.showsBraceletAsLinked {
+                        actionsCard
                     }
                 }
                 .padding(.horizontal, RedMedChrome.pagePadX)

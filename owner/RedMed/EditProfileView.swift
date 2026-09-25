@@ -163,7 +163,8 @@ struct EditProfileView: View {
                         birthDateRow
                         Divider().padding(.leading, Metrics.labelWidth + 12 + Metrics.rowHPad)
                         bloodTypeRow
-                        Divider().padding(.leading, Metrics.labelWidth + 12 + Metrics.rowHPad)
+                        // Full-width rules under toggles (no label-column indent).
+                        Divider().overlay(Color.redmedDivider)
                         Toggle(isOn: $isOrganDonor) {
                             Text("Organ Donor")
                                 .font(.system(size: Metrics.font, weight: .medium))
@@ -172,7 +173,7 @@ struct EditProfileView: View {
                         .tint(.redmedAccent)
                         .padding(.horizontal, Metrics.rowHPad)
                         .padding(.vertical, Metrics.rowVPad)
-                        Divider().padding(.leading, Metrics.labelWidth + 12 + Metrics.rowHPad)
+                        Divider().overlay(Color.redmedDivider)
                         Toggle(isOn: $isPregnant) {
                             Text("Pregnant")
                                 .font(.system(size: Metrics.font, weight: .medium))
@@ -181,7 +182,7 @@ struct EditProfileView: View {
                         .tint(.redmedAccent)
                         .padding(.horizontal, Metrics.rowHPad)
                         .padding(.vertical, Metrics.rowVPad)
-                        Divider().padding(.leading, Metrics.labelWidth + 12 + Metrics.rowHPad)
+                        Divider().overlay(Color.redmedDivider)
                         Toggle(isOn: $isDeafOrVisionImpaired) {
                             Text("Deaf / Vision Impaired")
                                 .font(.system(size: Metrics.font, weight: .medium))
