@@ -2,6 +2,8 @@ import SwiftUI
 import UIKit
 
 private enum EditProfileDraftMapper {
+    /// Pack / decode already split list fields on comma. Save the same way so
+    /// Edit, Preview, and the band card stay one-to-one.
     static func flattenedMedicalLines(_ lines: [DraftLine]) -> [String] {
         var out: [String] = []
         for line in lines {
@@ -13,6 +15,8 @@ private enum EditProfileDraftMapper {
         return out
     }
 
+    /// Server-side-of-the-UI backstop — the live editor already blocks typing
+    /// past the limit, but paste / programmatic seeds can still land here.
     static func capToWordLimit(_ text: String, limit: Int) -> String {
         guard limit > 0 else { return "" }
         var wordsSeen = 0
@@ -574,45 +578,6 @@ struct EditProfileView: View {
     }
 
     // MARK: - Persistence
-
-    /// Pack / decode already split list fields on comma. Save the same way so
-    /// Edit, Preview, and the band card stay one-to-one.
-    private static func flattenedMedicalLines(_ lines: [DraftLine]) -> [String] {
-        var out: [String] = []
-        for line in lines {
-            for part in line.text.split(separator: ",", omittingEmptySubsequences: true) {
-                let t = part.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !t.isEmpty { out.append(t) }
-            }
-        }
-        return out
-    }
-
-    /// Server-side-of-the-UI backstop — the live editor already blocks typing
-    /// past the limit, but paste / programmatic seeds can still land here.
-    private static func capToWordLimit(_ text: String, limit: Int) -> String {
-        guard limit > 0 else { return "" }
-        var wordsSeen = 0
-        var inWord = false
-        var cutIndex: String.Index?
-        var idx = text.startIndex
-        while idx < text.endIndex {
-            let isSeparator = text[idx].isWhitespace || text[idx].isNewline
-            if isSeparator {
-                inWord = false
-            } else if !inWord {
-                inWord = true
-                wordsSeen += 1
-                if wordsSeen > limit {
-                    cutIndex = idx
-                    break
-                }
-            }
-            idx = text.index(after: idx)
-        }
-        guard let cutIndex else { return text }
-        return String(text[text.startIndex..<cutIndex]).trimmingCharacters(in: .whitespacesAndNewlines)
-    }
 
     private static func parseBirthDate(_ raw: String) -> Date? {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
