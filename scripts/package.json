@@ -1,0 +1,9 @@
+{
+  "name": "redmed-deploy-scripts",
+  "private": true,
+  "description": "Pinned deps for scripts/deploy-hostinger-static.mjs. Install with: npm ci --ignore-scripts --prefix scripts",
+  "dependencies": {
+    "axios": "1.20.0",
+    "tus-js-client": "4.3.1"
+  }
+}
