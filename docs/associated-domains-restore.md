@@ -56,14 +56,19 @@ local network. HF NFC physics + Universal Links are the controls.
 
 ## Restore (paid Program)
 
-1. Put `com.apple.developer.associated-domains` → `applinks:roooted1776.github.io`
-   back in `RedMed.entitlements`.
+1. Put `com.apple.developer.associated-domains` back in `RedMed.entitlements`
+   with **`applinks:redmed.live`** — the host bands are written with
+   (`AppConfig.medicalCardBaseURL` = `https://redmed.live/tapper/`) — plus
+   `applinks:roooted1776.github.io` for older bands. `redmed.live` must serve
+   `/.well-known/apple-app-site-association` over valid HTTPS with no
+   redirect (staged by `stage-worker-assets.sh`). `test-nfc-hardware.mjs`
+   fails if the write-base host is missing from the entitlement.
 2. Set `AppConfig.associatedDomainsEnabled = true`.
 3. Developer portal → App ID `com.redmed.app` → enable **Associated Domains**.
 4. Xcode → Signing & Capabilities → **Associated Domains** (same `applinks:`).
 5. Build with a paid Apple Developer Program team (not a personal / free team).
-6. After custom domain cutover (`docs/domain.md`), update `applinks:` host and
-   both AASA files together.
+6. If the write base ever moves, update `medicalCardBaseURL`, the `applinks:`
+   host and both AASA files together.
 
 ## Device tests
 
@@ -74,8 +79,10 @@ local network. HF NFC physics + Universal Links are the controls.
 3. RedMed **not** installed + tap any band → Safari Assist medical card only
    (no login, no biometrics, no start screen). SOS arms only via SOS · Locate
    Me toggle or US Crash Detection collision — never from band tap alone.
-4. After custom domain cutover (`docs/domain.md`), update `applinks:` host and
-   both AASA files together.
+4. Tap an `https://redmed.live/tapper/#d=…` band with RedMed installed and
+   confirm `webpageURL` still carries `#d=` (unverified: an earlier audit
+   says Universal Links can drop the fragment). If it is dropped, a helper
+   who has RedMed gets no card — fix before shipping NFC write.
 
 ## Park again (personal team only)
 

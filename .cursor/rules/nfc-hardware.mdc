@@ -6,7 +6,7 @@ alwaysApply: false
 
 # NFC hardware contract
 
-Enforced statically by `scripts/test-nfc-hardware.mjs` (50 checks, runs on
+Enforced statically by `scripts/test-nfc-hardware.mjs` (51 checks, runs on
 Linux CI — no Xcode needed). Run it after touching any file this rule globs.
 
 ## NTAG216-only
