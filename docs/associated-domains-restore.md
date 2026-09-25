@@ -56,14 +56,18 @@ local network. HF NFC physics + Universal Links are the controls.
 
 ## Restore (paid Program)
 
-1. Put `com.apple.developer.associated-domains` → `applinks:roooted1776.github.io`
-   back in `RedMed.entitlements`.
+1. Put `com.apple.developer.associated-domains` → `applinks:redmed.live`
+   back in `RedMed.entitlements` (`redmed.live` is the live custom domain per
+   `docs/domain.md` — do not restore the old `roooted1776.github.io` backup
+   host here).
 2. Set `AppConfig.associatedDomainsEnabled = true`.
 3. Developer portal → App ID `com.redmed.app` → enable **Associated Domains**.
 4. Xcode → Signing & Capabilities → **Associated Domains** (same `applinks:`).
 5. Build with a paid Apple Developer Program team (not a personal / free team).
-6. After custom domain cutover (`docs/domain.md`), update `applinks:` host and
-   both AASA files together.
+6. Confirm both AASA files (`apple-app-site-association` and
+   `.well-known/apple-app-site-association`) are still serving from
+   `redmed.live` — they already are (`docs/domain.md`); this step is only a
+   re-check, not a pending migration.
 
 ## Device tests
 
@@ -74,8 +78,8 @@ local network. HF NFC physics + Universal Links are the controls.
 3. RedMed **not** installed + tap any band → Safari Assist medical card only
    (no login, no biometrics, no start screen). SOS arms only via SOS · Locate
    Me toggle or US Crash Detection collision — never from band tap alone.
-4. After custom domain cutover (`docs/domain.md`), update `applinks:` host and
-   both AASA files together.
+4. Confirm `applinks:` in the entitlements and both AASA files agree on
+   `redmed.live` (custom domain cutover already landed, `docs/domain.md`).
 
 ## Park again (personal team only)
 
