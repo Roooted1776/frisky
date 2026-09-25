@@ -1,36 +1,25 @@
 // Owner-only NFC bracelet setup. Ped/EMS scanner shells never mount this tab —
 // see ContentView.showsNFC / scannerSafeTab.
-// Two buttons only: Write The Band + Preview.
+// One button only: Write The Band.
 // Write flow: fill card → band in front → tap Write The Band while holding
 // the phone ~1–2″ above the chip. Helpers open the card only by the same
 // close tap; it loads in their external browser (no Share link).
 // When `AppConfig.nfcHardwareEnabled` is true, Write starts a CoreNFC
 // NDEF session and programs `medicalCardBaseURL#d=` from the live profile.
-// Preview packs the live profile into the same tapper card helpers get.
 // Linked only after write + matching read-back.
-// Parked (`false`): Write The Band is disabled (never writes, never flips
-// Linked); Preview still works.
+// Parked (`false`): Write The Band is disabled (never writes, never flips Linked).
 import SwiftUI
 
 struct NFCView: View {
     @EnvironmentObject var profile: ProfileData
     @Environment(\.isScannerSession) private var isScannerSession
     /// ContentView keep-alive never calls `onDisappear`. HTML cache may warm
-    /// while this tab is front — never spawn a WKWebView here (Preview
-    /// creates one when opened).
+    /// while this tab is front — never spawn a WKWebView here.
     var isVisible: Bool = true
     /// Owned by ContentView so the NFC tab tap can begin write on the same gesture.
     @ObservedObject var band: NFCBandManager
-    @State private var previewSession: PreviewSession?
     /// One-shot pulse on the hold diagram when the tab is front — SF Symbol only.
     @State private var holdPulse = false
-
-    private struct PreviewSession: Identifiable {
-        let id = UUID()
-        let payload: String
-        let embedJSON: String?
-        let linked: Bool
-    }
 
     var body: some View {
         if isScannerSession {
@@ -64,15 +53,6 @@ struct NFCView: View {
                 .padding(.bottom, 28)
             }
             .scrollIndicators(.visible)
-        }
-        .fullScreenCover(item: $previewSession) { session in
-            PasserbyHTMLCardView(
-                payloadOrURL: session.payload,
-                braceletLinked: session.linked,
-                embedProfileJSON: session.embedJSON
-            )
-            .environment(\.isScannerSession, true)
-            .presentationBackground(Color.redmedBg)
         }
         // scannedCard cover lives on ContentView so Universal Link opens work
         // even before the NFC tab is mounted.
@@ -301,7 +281,6 @@ struct NFCView: View {
             if AppConfig.nfcHardwareEnabled {
                 tipRow(AppConfig.NFCWriteCopy.holdTopTip)
             }
-            previewButton
 
             if !profile.hasSensitiveProfileData {
                 Text(AppConfig.NFCWriteCopy.fillBeforeWrite)
@@ -347,16 +326,6 @@ struct NFCView: View {
         .redmedBox()
     }
 
-    private var previewButton: some View {
-        OutlineButton(
-            title: "Preview",
-            systemImage: "eye",
-            disabled: !profile.hasSensitiveProfileData || band.isBusy || previewSession != nil
-        ) {
-            openFirstResponderPreview()
-        }
-    }
-
     @ViewBuilder
     private var writeOutcomeBlock: some View {
         if showsWriteFailCopy {
@@ -386,27 +355,6 @@ struct NFCView: View {
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(statusIsError ? .redmedAccent : .redmedMuted)
                 .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-
-    private func openFirstResponderPreview() {
-        guard !isScannerSession, profile.hasSensitiveProfileData, previewSession == nil else { return }
-        let chip = ProfileNFCCodec.chipProfile(from: profile)
-        let linked = profile.showsBraceletAsLinked
-        Task { @MainActor in
-            let packed = await Task.detached(priority: .userInitiated) {
-                (
-                    ProfileNFCCodec.previewPayload(from: chip)
-                        ?? ProfileNFCCodec.placeholderPreviewPayload,
-                    ProfileNFCCodec.embedProfileJSON(from: chip)
-                )
-            }.value
-            guard previewSession == nil else { return }
-            previewSession = PreviewSession(
-                payload: packed.0,
-                embedJSON: packed.1,
-                linked: linked
-            )
         }
     }
 

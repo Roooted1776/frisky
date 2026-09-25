@@ -24,11 +24,11 @@ final class NFCBandManager: ObservableObject {
     @Published var writeVerified = false
     @Published var lastPackedURL: String?
     /// Scan / simulate → full passerby shell (item present; payload never empty).
-    /// NFC UI uses Preview for the helper card; this path remains for hardware verifyBand.
+    /// This path is for hardware verifyBand, not owner-facing NFC tab UI.
     @Published var scannedCard: ScannedCardSession?
     @Published var alertMessage: String?
 
-    /// One-shot Scan open — same shape as NFCView.PreviewSession.
+    /// One-shot Scan open.
     struct ScannedCardSession: Identifiable {
         let id = UUID()
         let payload: String

@@ -22,8 +22,8 @@ unavailable, write fails and the band is not marked linked.
 `AppConfig.nfcHardwareEnabled = false`,
 `RedMed.entitlements` has no `com.apple.developer.nfc.readersession.formats`
 key, and `Info.plist` has no `NFCReaderUsageDescription`. Owner NFC tab stays
-visible with its two buttons: **Write The Band** (disabled while parked, with
-a one-line reason) + **Preview**. CoreNFC source stays in tree. Restore via
+visible with its one button: **Write The Band** (disabled while parked, with
+a one-line reason). CoreNFC source stays in tree. Restore via
 the checklist below — keep flag, entitlement, and usage string in lockstep.
 
 **Do not hide the owner NFC tab** — owners always get RedMed · 911 · Aid ·
@@ -34,15 +34,14 @@ write + matching read-back.
 **Write-from-app storefront gate:** storefront / dept “write from the app”
 stays off until Tag Reading is live on the App ID **and** Write The Band is
 proven on a blank NTAG216 (device test below). Until then: sell **blank chips
-only** + **Share honesty** — Preview packs the same `#d=` Write will use; it
-does not write the chip and does not mark Linked. Do **not**
+only**. Do **not**
 tell owners to program the chip with Shortcuts / NFC Tools. Factory “NDEF
 blank unlocked” is the chip procurement + blank SKU spec.
 
-The owner NFC tab has exactly two buttons: **Write The Band** and **Preview**.
-Write stays ungated (no Face ID). Preview does not persist. After a verified
+The owner NFC tab has exactly one button: **Write The Band**.
+Write stays ungated (no Face ID). After a verified
 write: **Linked** — anyone can tap this band to open your card. Parked (flag
-off): same two buttons, Write The Band disabled.
+off): same button, Write The Band disabled.
 
 ## RF / hardware contract
 
