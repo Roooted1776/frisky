@@ -16,7 +16,7 @@ No committed secrets, no XSS in profile render (`textContent` / `esc()`), no aut
 |------|--------|
 | Passerby host | `https://roooted1776.github.io/tapper/` live (HTTP 200, smoke-pages green) |
 | CoreNFC | In-repo parked (`nfcHardwareEnabled = false`, no TAG entitlement, no `NFCReaderUsageDescription`). Restore via `docs/NFC-RESTORE.md`. Portal Tag Reading on `com.redmed.app` still required for device Write |
-| Associated Domains | Parked (`associatedDomainsEnabled = false`, no `applinks:`). Safari still tries `redmed://band#d=` before SOS |
+| Associated Domains | Parked (`associatedDomainsEnabled = false`, no `applinks:`). Band taps open Safari Assist; no `redmed://` handoff. Restore with `applinks:redmed.live` |
 | HealthKit | Parked (`healthKitImportEnabled = false`) |
 | `redmed.pages.dev` | 404 until CF secrets / Git connect |
 | iOS CI | Push/PR on `owner/**` (unsigned Simulator compile). Not XCTest |

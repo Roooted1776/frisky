@@ -111,9 +111,12 @@ assert('NFCReader also requires hardware NFC availability', reader.includes('gua
   // Written bands need Universal Links to reach the owner's app: the tapper
   // has no redmed:// fallback. Never ship chip writes without applinks.
   const udlEnabled = /static let associatedDomainsEnabled = true/.test(appConfig);
-  const udlEntitled = entitlements.includes('com.apple.developer.associated-domains') && entitlements.includes('applinks:');
+  // Must cover the host bands are written with, not just any applinks: entry.
+  const baseHost = (/static var medicalCardBaseURL[\s\S]*?return "https:\/\/([^/"]+)\//.exec(appConfig) || [])[1] || '';
+  assert('medicalCardBaseURL host parsed for applinks check', /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(baseHost), `host=${baseHost}`);
+  const udlEntitled = entitlements.includes('com.apple.developer.associated-domains') && !!baseHost && entitlements.includes(`applinks:${baseHost}`);
   assert(
-    'nfcHardwareEnabled requires Associated Domains (applinks) enabled + entitled',
+    'nfcHardwareEnabled requires Associated Domains enabled + applinks:<write-base host>',
     !hardwareEnabled || (udlEnabled && udlEntitled),
     `nfcHardwareEnabled=${hardwareEnabled} associatedDomainsEnabled=${udlEnabled} applinks=${udlEntitled}`,
   );

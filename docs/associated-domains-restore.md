@@ -58,8 +58,14 @@ local network. HF NFC physics + Universal Links are the controls.
 
 1. Put `com.apple.developer.associated-domains` → `applinks:redmed.live`
    back in `RedMed.entitlements` (`redmed.live` is the live custom domain per
-   `docs/domain.md` — do not restore the old `roooted1776.github.io` backup
-   host here).
+   `docs/domain.md` and the host bands are written with —
+   `AppConfig.medicalCardBaseURL` = `https://redmed.live/tapper/`). Do not
+   swap it back to the old `roooted1776.github.io` backup host.
+   `test-nfc-hardware.mjs` fails if `applinks:redmed.live` is missing.
+   Optional extra: `applinks:roooted1776.github.io` as a second entry, only
+   so bands written before the cutover also open the app (github.io still
+   serves them). `redmed.live` must serve the AASA over valid HTTPS with no
+   redirect (staged by `stage-worker-assets.sh`).
 2. Set `AppConfig.associatedDomainsEnabled = true`.
 3. Developer portal → App ID `com.redmed.app` → enable **Associated Domains**.
 4. Xcode → Signing & Capabilities → **Associated Domains** (same `applinks:`).
@@ -67,7 +73,8 @@ local network. HF NFC physics + Universal Links are the controls.
 6. Confirm both AASA files (`apple-app-site-association` and
    `.well-known/apple-app-site-association`) are still serving from
    `redmed.live` — they already are (`docs/domain.md`); this step is only a
-   re-check, not a pending migration.
+   re-check, not a pending migration. If the write base ever moves, update
+   `medicalCardBaseURL`, the `applinks:` host and both AASA files together.
 
 ## Device tests
 
@@ -80,6 +87,10 @@ local network. HF NFC physics + Universal Links are the controls.
    Me toggle or US Crash Detection collision — never from band tap alone.
 4. Confirm `applinks:` in the entitlements and both AASA files agree on
    `redmed.live` (custom domain cutover already landed, `docs/domain.md`).
+5. Tap an `https://redmed.live/tapper/#d=…` band with RedMed installed and
+   confirm `webpageURL` still carries `#d=` (unverified: an earlier audit
+   says Universal Links can drop the fragment). If it is dropped, a helper
+   who has RedMed gets no card — fix before shipping NFC write.
 
 ## Park again (personal team only)
 
