@@ -4841,6 +4841,12 @@ function redmedAssetURL(file) {
   sosBtn.addEventListener('click', function (e) {
     e.preventDefault();
     if (armed) {
+      // Tap-To-Play state: this click IS the user gesture — resume audio,
+      // don't disarm the alarm the button claims to be unmuting.
+      if (audioNeedsGesture) {
+        reclaimAudio();
+        return;
+      }
       disarm();
       return;
     }
