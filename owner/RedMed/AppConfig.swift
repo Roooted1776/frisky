@@ -103,9 +103,8 @@ enum AppConfig {
     /// `medicalCardBaseURL#d=` (`OwnerBandURI`). Requires NFC Tag Reading on App ID
     /// `com.redmed.app` + paid Apple Developer — see `docs/NFC-RESTORE.md`.
     /// Keep this flag in lockstep with `RedMed.entitlements` + `NFCReaderUsageDescription`.
-    /// `false` parks hardware sessions (Copy Band Link +
-    /// Preview; no Write label; Import From Band button hidden). Gate logic
-    /// stays correct for restore — see `docs/NFC-RESTORE.md`.
+    /// `false` parks hardware sessions (Write The Band shown disabled +
+    /// Preview). Gate logic stays correct for restore — see `docs/NFC-RESTORE.md`.
     /// Parked: entitlement + `NFCReaderUsageDescription` removed (bf3ee60).
     /// Keep flag false until restore steps in `docs/NFC-RESTORE.md`.
     /// No Share control — helpers open the card only by tapping the band
@@ -253,7 +252,7 @@ enum AppConfig {
         static var noBluetoothSummary: String { carrierVsBluetoothSummary }
 
         static var hardwareParkedSummary: String {
-            "This build cannot write a band yet. NFC Tag Reading needs a paid Apple Developer team, which RedMed does not have yet. Preview shows the helper card; Copy Band Link is the same URL Write The Band will put on the chip later — neither writes the chip nor marks Linked. Helpers only open the card by holding any NFC phone \(intentionalTapRangeLabel) from the band — it loads in their browser."
+            "This build cannot write a band yet. NFC Tag Reading needs a paid Apple Developer team, which RedMed does not have yet. Preview shows the helper card — it does not write the chip or mark Linked. Helpers only open the card by holding any NFC phone \(intentionalTapRangeLabel) from the band — it loads in their browser."
         }
 
         /// NFC tab tip under the primary CTA — BraceletRF inches, not a hardcoded range.
@@ -262,19 +261,17 @@ enum AppConfig {
         }
     }
 
-    /// NFC tab Write / Copy / Import CTAs + after-write states.
-    /// Parked never uses Write copy (Copy Band Link + Preview only).
+    /// NFC tab has two CTAs only: Write The Band + Preview.
+    /// Parked shows Write The Band disabled, with `writeHelp` saying why.
     /// No Share — the card opens only on a close band tap, in the helper’s browser.
     enum NFCWriteCopy {
-        static let packTitle = "Copy Band Link"
-        static let packHelp = "Same link the band will open in a browser"
-        static let packBusyTitle = "Copying…"
-        static let packCopiedStatus = "Band link copied."
         static let writeTitle = "Write The Band"
-        static let writeHelp = "Hold phone above the band, then write"
+        static var writeHelp: String {
+            AppConfig.nfcHardwareEnabled
+                ? "Hold phone above the band, then write"
+                : "Needs NFC Tag Reading (paid Apple Developer team). Preview works now."
+        }
         static let writeBusyTitle = "Hold Above The Band…"
-        static let loadTitle = "Import From Band"
-        static let loadBusyTitle = "Hold Above The Band…"
         static let successTitle = "Linked"
         static var successDetail: String {
             "Any NFC phone held \(BraceletRF.intentionalTapRangeLabel) from this band opens your card in that phone’s browser."
@@ -311,18 +308,11 @@ enum AppConfig {
             ]
         }
 
-        /// One short honesty line when CoreNFC is parked — not the long RF paragraph.
-        static var parkedHonestyShort: String {
-            "This build cannot write the chip yet. Preview is practice — not Linked. No share link: helpers only open the card by tapping the band, and it loads in their browser."
-        }
-
         static let aboutBandLabel = "Band details"
         static let doThisNowLabel = "Do this now"
         static let howItWorksLabel = "How it works"
         static let fillBeforeWrite =
-            "Fill your card before writing or previewing. Import From Band reads a written bracelet into this iPhone."
-        static let fillBeforePack =
-            "Fill your card before previewing."
+            "Fill your card before writing or previewing."
     }
 
     /// Quiet prayer on owner Aid only (`AidView`, not scanner / tapper shells).

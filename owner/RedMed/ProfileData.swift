@@ -600,30 +600,8 @@ class ProfileData: ObservableObject {
         notes = chip.notes
     }
 
-    /// Owner-only: replace RAM + Keychain with a band `#d=` snapshot.
-    /// Notes ride the chip (empty on old bands). Marks Linked when hardware
-    /// is on (this read *is* the band).
-    /// Scanners / `persists == false` snapshots must not call this.
-    @discardableResult
-    func adoptBandSnapshot(_ chip: NFCChipProfile) -> Bool {
-        guard persists else { return false }
-        guard chip.hasAnyProfileData else { return false }
-        let previous = snapshot()
-        withBulkUpdate {
-            applyChipFields(chip)
-            if AppConfig.nfcHardwareEnabled {
-                braceletLinked = true
-            }
-        }
-        guard persist() else {
-            restore(from: previous)
-            return false
-        }
-        return true
-    }
-
     /// Band pairing flag for Main / NFC chrome.
-    /// `true` only after a real CoreNFC write or Load From Band; cleared when RedMed is edited.
+    /// `true` only after a real CoreNFC write + matching read-back; cleared when RedMed is edited.
     /// Callers must not set `true` from pack/simulate paths.
     /// Returns `false` if a Keychain persist was required and failed — callers
     /// should surface that rather than let the in-memory flag drift from disk.
@@ -674,8 +652,6 @@ extension Notification.Name {
     /// Owner RedMed embed tapped Not linked / Linked bracelet — ContentView selects NFC
     /// and begins CoreNFC write on that same gesture (hold finishes the program).
     static let redMedOpenNFCTab = Notification.Name("redMedOpenNFCTab")
-    /// Parked NFC tab re-tap — retry Pack Band URL (copy). Not a chip write.
-    static let redMedPackParkedBandURL = Notification.Name("redMedPackParkedBandURL")
     /// Preview / Scan tap card presented — PrivacySnapshotGuard must not cover it.
     static let redMedTapCardPresentationDidChange = Notification.Name("redMedTapCardPresentationDidChange")
     /// ConsentGate Face ID succeeded — Main is hit-testable. ContentView may

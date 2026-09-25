@@ -19,21 +19,6 @@ struct NFCChipProfile: Codable, Equatable, Sendable {
     /// Free-text note. Same cap as other strings (`maxStr`). On-chip so the
     /// band matches this iPhone — not Keychain-only.
     var notes: String = ""
-
-    /// Anything persist() would treat as a real ID. Empty `#d=` must not clobber Keychain.
-    var hasAnyProfileData: Bool {
-        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            || !dob.isEmpty
-            || !blood.isEmpty
-            || donor
-            || pregnant
-            || deafOrVisionImpaired
-            || !allergies.isEmpty
-            || !meds.isEmpty
-            || !conditions.isEmpty
-            || contacts.contains { !$0.name.isEmpty || !$0.phone.isEmpty }
-            || !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
 }
 
 struct NFCChipContact: Codable, Equatable, Sendable {

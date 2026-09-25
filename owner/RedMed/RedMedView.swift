@@ -187,12 +187,8 @@ struct RedMedView: View {
         } else if !profile.showsBraceletAsLinked {
             OwnerNextStepBanner(
                 icon: "wave.3.right",
-                title: AppConfig.nfcHardwareEnabled
-                    ? AppConfig.NFCWriteCopy.writeTitle
-                    : AppConfig.NFCWriteCopy.packTitle,
-                detail: AppConfig.nfcHardwareEnabled
-                    ? AppConfig.NFCWriteCopy.writeHelp
-                    : AppConfig.NFCWriteCopy.packHelp,
+                title: AppConfig.NFCWriteCopy.writeTitle,
+                detail: AppConfig.NFCWriteCopy.writeHelp,
                 actionTitle: "NFC",
                 action: {
                     NotificationCenter.default.post(name: .redMedOpenNFCTab, object: nil)
@@ -658,12 +654,8 @@ private struct OwnerSetupFunnel: View {
             Divider().overlay(Color.redmedDivider).padding(.leading, 54)
             stepRow(
                 number: "3",
-                title: AppConfig.nfcHardwareEnabled
-                    ? AppConfig.NFCWriteCopy.writeTitle
-                    : AppConfig.NFCWriteCopy.packTitle,
-                detail: AppConfig.nfcHardwareEnabled
-                    ? "\(AppConfig.NFCWriteCopy.writeHelp) \(AppConfig.BraceletRF.completeBandSummary)"
-                    : "\(AppConfig.NFCWriteCopy.packHelp) \(AppConfig.BraceletRF.completeBandSummary)"
+                title: AppConfig.NFCWriteCopy.writeTitle,
+                detail: "\(AppConfig.NFCWriteCopy.writeHelp) \(AppConfig.BraceletRF.completeBandSummary)"
             )
         }
         .redmedBox()
