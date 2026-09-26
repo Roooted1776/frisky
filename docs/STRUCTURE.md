@@ -27,6 +27,7 @@ No brand PNGs at repo root — canonical in `assets/`, shell-relative copies in 
 RedMed-V1-Official/
 ├── README.md · AGENTS.md · MAX.md
 ├── owner/                 # App Store wearer app (SwiftUI) + Document/ policy source
+├── RedMed-Xcode → owner/  # compatibility symlink only (do not recreate as a real folder)
 ├── tapper/                # tap pages only — passerby shell, no owner-app features
 ├── mcp/                   # RedMed master ops MCP (stdio + remote HTTP: Supabase + Hostinger VPS/SSH; no Assist/#d= PHI)
 ├── worker/                # NON-PRODUCT leftover HTMLRewriter (device aspect hint)
