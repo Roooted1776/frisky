@@ -6,6 +6,16 @@
         "Authorization": "Bearer ${env:CURSOR_GITHUB_TOKEN}"
       }
     },
+    "redmed": {
+      "command": "npx",
+      "args": ["tsx", "src/index.ts"],
+      "cwd": "mcp",
+      "env": {
+        "SUPABASE_URL": "${env:SUPABASE_URL}",
+        "SUPABASE_PUBLISHABLE_KEY": "${env:SUPABASE_PUBLISHABLE_KEY}",
+        "SUPABASE_SECRET_KEY": "${env:SUPABASE_SECRET_KEY}"
+      }
+    },
     "cloudflare": {
       "url": "https://mcp.cloudflare.com/mcp"
     },

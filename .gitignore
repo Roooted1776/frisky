@@ -41,3 +41,7 @@ dist/
 .wrangler/
 
 node_modules/
+
+# RedMed MCP local secrets (never commit keys)
+mcp/.env
+mcp/.env.local
