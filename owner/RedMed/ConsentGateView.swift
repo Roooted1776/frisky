@@ -134,11 +134,12 @@ struct ConsentGateView<Content: View>: View {
             Spacer(minLength: 0)
             if let unavailableReason {
                 Text(unavailableReason.message)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.headline.weight(.semibold))
                     .foregroundColor(.redmedAccent)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, RedMedChrome.pagePadX)
+                    .accessibilityAddTraits(.isStaticText)
                 PrimaryButton(title: "Open Settings", flatten: false) {
                     guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
                     UIApplication.shared.open(url)
@@ -159,68 +160,95 @@ struct ConsentGateView<Content: View>: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("Before You Continue")
-                        .font(.system(size: 22, weight: .bold))
+                    Text("Set Up RedMed Safely")
+                        .font(.title3.weight(.bold))
                         .kerning(-0.4)
                         .foregroundColor(.redmedDark)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.top, 20)
+                        .padding(.bottom, 6)
+                        .accessibilityAddTraits(.isHeader)
 
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("RedMed is a personal medical ID and first-aid reference on this iPhone. It is not a medical device, does not diagnose or treat, and does not replace emergency dispatch. Always call emergency services first in a real emergency.")
-                        Text("Your profile stays on this iPhone, and on a band if you write one — RedMed runs no server for it.")
-                        Text("Agree covers location and motion while RedMed is on screen — Find Help GPS and crash detection for app users (default thresholds). Crash detect does not run when the phone is locked or you leave the app — even if RedMed was open; use iPhone Crash Detection if your device has it. GPS stops when you leave or close the app. Never sent to us. Location is requested the first time you use Find Help.")
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("RedMed stores your self-reported emergency medical ID on this iPhone and shows helpful information in an emergency. It is not a medical device and does not replace professional care or emergency services. In a real emergency, call 911 first.")
+                        Text("Your medical profile stays on this iPhone and, if you write one later, on your band. RedMed does not run a profile server for this data.")
                     }
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.body.weight(.medium))
                     .foregroundColor(.redmedMuted)
                     .padding(14)
-                    // Static copy — flatten for cheaper first ack paint.
                     .redmedBox(flatten: true)
 
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("What Agree includes")
+                            .font(.headline.weight(.semibold))
+                            .foregroundColor(.redmedDark)
+                            .accessibilityAddTraits(.isHeader)
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            consentBullet("Location and motion are used only while RedMed is open on this iPhone.")
+                            consentBullet("This supports features like Find Help GPS and on-screen crash detection defaults for app users.")
+                            consentBullet("RedMed does not receive your GPS. Location is requested the first time you use Find Help, and it stops when you leave or close the app.")
+                            consentBullet("Crash detection does not run when the phone is locked or after you leave the app.")
+                        }
+                    }
+                    .padding(14)
+                    .redmedBox(flatten: true)
+                    .padding(.bottom, 6)
+
                     VStack(spacing: 0) {
-                        Toggle("Haptic Feedback", isOn: $hapticsEnabled)
-                            .font(.system(size: RedMedChrome.rowFont, weight: .medium))
+                        Toggle("Vibration Feedback", isOn: $hapticsEnabled)
+                            .font(.body.weight(.medium))
                             .tint(.redmedAccent)
                             .padding(.horizontal, RedMedChrome.pagePadX)
                             .padding(.vertical, RedMedChrome.rowVPad)
                     }
-                    // Live Toggle — flatten:false so compositingGroup cannot eat taps.
                     .redmedBox(flatten: false)
 
-                    VStack(spacing: 0) {
-                        ForEach(Array(HelpDocument.Policy.allCases.enumerated()), id: \.element.id) { index, policy in
-                            if index > 0 {
-                                Divider().overlay(Color.redmedDivider)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Read the full policies")
+                            .font(.headline.weight(.semibold))
+                            .foregroundColor(.redmedDark)
+                            .padding(.horizontal, 14)
+                            .padding(.top, 12)
+                            .accessibilityAddTraits(.isHeader)
+
+                        VStack(spacing: 0) {
+                            ForEach(Array(HelpDocument.Policy.allCases.enumerated()), id: \.element.id) { index, policy in
+                                if index > 0 {
+                                    Divider().overlay(Color.redmedDivider)
+                                }
+                                Button {
+                                    RedMedHaptics.light()
+                                    openPolicy = policy
+                                } label: {
+                                    HelpPolicyRowLabel(policy: policy, titleWeight: .semibold)
+                                }
+                                .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
+                                .accessibilityAddTraits(.isButton)
+                                .accessibilityLabel(policy.title)
+                                .accessibilityHint("Opens \(policy.title)")
                             }
-                            Button {
-                                RedMedHaptics.light()
-                                openPolicy = policy
-                            } label: {
-                                HelpPolicyRowLabel(policy: policy, titleWeight: .semibold)
-                            }
-                            .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
-                            .accessibilityAddTraits(.isButton)
-                            .accessibilityLabel(policy.title)
-                            .accessibilityHint("Opens \(policy.title)")
                         }
                     }
                     .redmedBox(flatten: true)
+                    .padding(.top, 4)
                 }
                 .padding(.horizontal, RedMedChrome.pagePadX)
                 .padding(.bottom, 12)
             }
 
-            VStack(spacing: 12) {
+            VStack(spacing: 16) {
                 Button {
                     RedMedHaptics.light()
                     checked.toggle()
                 } label: {
                     HStack(alignment: .top, spacing: 10) {
                         Image(systemName: checked ? "checkmark.square.fill" : "square")
-                            .font(.system(size: 22))
+                            .font(.title3)
                             .foregroundColor(checked ? .redmedAccent : .redmedMuted)
-                        Text("I have read and agree to the RedMed Policies document (Privacy, Security, Terms, Medical Disclaimer, and Ships When Ready), including the medical-device disclaimer, liability limits, and binding arbitration / class-action waiver in Terms. Agree includes using location and motion on this iPhone while RedMed is on screen; crash detect does not run when the phone is locked or you leave the app.")
-                            .font(.system(size: 13, weight: .medium))
+                            .accessibilityHidden(true)
+                        Text("I have read and agree to the RedMed Policies, including Privacy, Security, Terms, Medical Disclaimer, and Ships When Ready. I understand RedMed is not a medical device, that location and motion are used only while the app is open as described here, and that the Terms include liability limits and arbitration provisions.")
+                            .font(.footnote.weight(.medium))
                             .foregroundColor(.redmedDark)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -228,15 +256,20 @@ struct ConsentGateView<Content: View>: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(RedMedPressStyle(scale: 0.99, haptic: nil))
-                .accessibilityAddTraits(checked ? [.isButton, .isSelected] : .isButton)
+                .accessibilityAddTraits(.isButton)
+                .accessibilityLabel("Agree to the RedMed Policies")
+                .accessibilityValue(checked ? "Checked" : "Unchecked")
+                .accessibilityHint("Double tap to toggle agreement")
 
-                PrimaryButton(title: "Agree And Continue", flatten: false) {
+                PrimaryButton(title: "Agree and Continue", flatten: false) {
                     guard checked else { return }
                     enterApp()
                 }
+                .disabled(!checked)
+                .accessibilityHint(checked ? "Continues to Face ID" : "Disabled until you agree to the RedMed Policies")
             }
             .padding(.horizontal, RedMedChrome.pagePadX)
-            .padding(.top, 8)
+            .padding(.top, 16)
             .padding(.bottom, 20)
             .background(Color.redmedBg)
         }
@@ -259,6 +292,17 @@ struct ConsentGateView<Content: View>: View {
             ConsentPolicySheet(policy: policy)
                 .presentationBackground(Color.redmedBg)
         }
+    }
+
+    private func consentBullet(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Text("•")
+                .foregroundColor(.redmedAccent)
+            Text(text)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .font(.system(size: 14, weight: .medium))
+        .foregroundColor(.redmedMuted)
     }
 
     /// Record acceptance on Agree, dismiss ack UI, then Face ID before Main.
