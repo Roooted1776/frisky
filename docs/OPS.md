@@ -12,7 +12,7 @@ Ops is separate from the Assist band write path. **Never** put ICE profiles, Ass
 | **Backup Assist** | `Roooted1776.github.io` via `scripts/publish-github-io.sh` |
 | **VPS** | Hostinger KVM `2010795` / `srv2010795.hstgr.cloud` / `2.25.249.204` — Docker/Traefik for **ops tools only** |
 | **Supabase** | Project `mohxobgyjkcmkqxijgeg` (`RedMed Secure Data`) — ops/metadata only; no PHI |
-| **MCP** | In-repo `mcp/redmed-mcp` (v0.2) + Cursor Hostinger product MCPs |
+| **MCP** | In-repo [`mcp/`](../mcp/) (v0.2; [`docs/mcp.md`](mcp.md)) + Cursor Hostinger product MCPs |
 
 ## VPS (ops only)
 
@@ -37,20 +37,21 @@ Store in 1Password / CI secrets. Do not commit tokens.
 
 ## RedMed MCP product wall
 
-Tools in `mcp/redmed-mcp` may call Hostinger API, SSH, and Supabase **status**. They must refuse:
+Tools in `mcp/` may call Hostinger API, SSH, and Supabase **status**. They must refuse:
 
 - Decoding or storing Assist `#d=` fragments
 - Reading/writing Owner ICE / Keychain-shaped profiles
 - Shipping medical data to Supabase or VPS disk
 
-See `mcp/redmed-mcp/README.md` and `AGENTS.md` § Product wall.
+See [`docs/mcp.md`](mcp.md), [`mcp/README.md`](../mcp/README.md), and `AGENTS.md` § Product wall.
 
 ## Stack status
 
 ```bash
-# Prefer MCP tool redmed_stack_status when Cursor is connected to redmed-mcp
-node mcp/redmed-mcp/bin/redmed-stack-status.mjs
+# Prefer MCP tool redmed_stack_status (Cursor entry `redmed` / `redmed-remote`)
+cd mcp && npm run smoke
 ```
+
 
 ## Side repos
 

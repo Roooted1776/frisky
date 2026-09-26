@@ -11,7 +11,7 @@ Local clones: `~/Documents/RedMed-V1-Official` (legacy `~/Documents/frisky` OK u
 
 Assist `#d=` / ICE profiles / Owner medical Keychain data must **never** pass through:
 
-- RedMed MCP (`mcp/redmed-mcp`)
+- RedMed MCP (`mcp/` — see `docs/mcp.md`)
 - Supabase (`mohxobgyjkcmkqxijgeg` — ops/metadata only)
 - Hostinger VPS (`2010795` / `2.25.249.204`) shell or Traefik routes
 
@@ -36,7 +36,7 @@ Two folders, two audiences — never cross owner-only features into Assist.
 | **Assist** | `tapper/` → `https://redmed.live/tapper/` | The person **tapping** the band (passerby / responder) | Tap pages, band `#d=` decode, RedMed · 911 · Aid web shell only. No NFC tab, Edit, Face ID, Keychain, or App Store flows. No-auth, no-ads. Folder + URL path stay `tapper/` so already-written bands keep working. |
 | **Owner** | `owner/` | The person with the **app on their phone** (App Store wearer) | Native iOS / SwiftUI (`com.redmed.app`). Profile, Edit, NFC Write/Scan, Face ID chrome, Keychain, HealthKit import. **Not** HIPAA-certified — local-only ICE card. |
 
-- **Assist (static Hostinger shell)** — Product write base `https://redmed.live/tapper/` (`docs/domain.md`). Stage with `scripts/stage-worker-assets.sh` → `dist/passerby`; deploy with `node scripts/deploy-hostinger-static.mjs redmed.live` (`HOSTINGER_API_TOKEN`). Serves `tapper/`, redirect stubs (`index.html`, `redmed-emergency.html`, …), `sw.js`, `Document/`, `assets/`, `.htaccess` (AASA Content-Type on Apache). No app build. No RedMed server / DB. Local: `python3 -m http.server`. CI: `.github/workflows/pages-deploy.yml`. Before merge: `bash scripts/sync-tapper.sh`, `node scripts/test-d-codec.mjs`, and `node scripts/test-worker-device.mjs`. Ops MCP: `mcp/redmed-mcp` (product wall above).
+- **Assist (static Hostinger shell)** — Product write base `https://redmed.live/tapper/` (`docs/domain.md`). Stage with `scripts/stage-worker-assets.sh` → `dist/passerby`; deploy with `node scripts/deploy-hostinger-static.mjs redmed.live` (`HOSTINGER_API_TOKEN`). Serves `tapper/`, redirect stubs (`index.html`, `redmed-emergency.html`, …), `sw.js`, `Document/`, `assets/`, `.htaccess` (AASA Content-Type on Apache). No app build. No RedMed server / DB. Local: `python3 -m http.server`. CI: `.github/workflows/pages-deploy.yml`. Before merge: `bash scripts/sync-tapper.sh`, `node scripts/test-d-codec.mjs`, and `node scripts/test-worker-device.mjs`. Ops MCP: `mcp/` (`docs/mcp.md`; product wall above).
 - **Owner (native iOS app)** — `owner/RedMed.xcodeproj`. macOS only. `ios-build.yml` on `macos-latest`. Xcode copies `tapper/index.html` into the bundle as `tapper.html` for NFC Preview only — that copy is read-only embed, not a second shell fork.
 - **Own-band / Assist SOS** — SOS exists so helpers can find someone on a **dark rainy night after a motorist ejects from a vehicle**: **full sound + full light**. It arms only when the helper toggles **SOS · Locate Me**, or when collision is detected using **US Crash Detection** timing (Apple Support 104959: 10s alert + 30s countdown → `tel:` unless Stop) — not Apple's Crash Detection API. Band tap never auto-arms SOS. After the owner writes their custom band and has RedMed installed, Associated Domains (Universal Links) claims the tap — never a `redmed://` handoff carrying `#d=` (custom schemes are not exclusive; any app registering `redmed` would get the profile). NFC write ships only with Associated Domains (enforced by `test-nfc-hardware.mjs`). No distance / BLE ranging.
 

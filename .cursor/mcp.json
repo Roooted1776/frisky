@@ -1,13 +1,37 @@
 {
   "mcpServers": {
     "redmed": {
-      "command": "node",
-      "args": ["mcp/redmed-mcp/bin/redmed-mcp.mjs"],
+      "command": "/Users/claude/frisky/mcp/bin/run-stdio.sh",
       "env": {
-        "REDMED_SSH_HOST": "2.25.249.204",
-        "REDMED_SSH_KEY": "${env:HOME}/.ssh/hostinger_vps",
-        "REDMED_SUPABASE_REF": "mohxobgyjkcmkqxijgeg",
-        "HOSTINGER_API_TOKEN": "${env:HOSTINGER_API_TOKEN}"
+        "PATH": "/opt/homebrew/opt/node@22/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+        "HOME": "/Users/claude",
+        "REDMED_EXEC_MODE": "ssh",
+        "REDMED_VPS_HOST": "hostinger-vps",
+        "REDMED_VPS_USER": "root",
+        "REDMED_VPS_IDENTITY": "/Users/claude/.ssh/hostinger_vps",
+        "HOSTINGER_API_TOKEN": "${env:HOSTINGER_API_TOKEN}",
+        "SUPABASE_URL": "${env:SUPABASE_URL}",
+        "SUPABASE_PUBLISHABLE_KEY": "${env:SUPABASE_PUBLISHABLE_KEY}",
+        "SUPABASE_SECRET_KEY": "${env:SUPABASE_SECRET_KEY}"
+      }
+    },
+    "redmed-remote": {
+      "url": "https://srv2010795.hstgr.cloud/mcp",
+      "headers": {
+        "Authorization": "Bearer ${env:REDMED_MCP_TOKEN}"
+      }
+    },
+    "hostinger-vps-ssh": {
+      "command": "/opt/homebrew/opt/node@22/bin/npx",
+      "args": [
+        "-y",
+        "@yawlabs/ssh-mcp@latest"
+      ],
+      "env": {
+        "PATH": "/opt/homebrew/opt/node@22/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+        "HOME": "${env:HOME}",
+        "SSH_HOST": "hostinger-vps",
+        "SSH_DEFAULT_HOST": "hostinger-vps"
       }
     },
     "github": {

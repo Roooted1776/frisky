@@ -15,7 +15,11 @@ test -f dist/passerby/.htaccess
 
 echo
 echo "== Stack status =="
-node mcp/redmed-mcp/bin/redmed-stack-status.mjs || true
+if [[ -f mcp/package.json ]]; then
+  (cd mcp && npm run smoke) || true
+else
+  echo "mcp/ missing — pull main and see docs/mcp.md"
+fi
 
 echo
 echo "== Max / secrets (agent cannot finish without these) =="

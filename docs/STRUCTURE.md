@@ -14,7 +14,7 @@ Only what must live at the deploy / GitHub surface:
 | `tapper.html` · `index.html` · `card.html` · `get.html` · `get/` · `redmed-emergency.html` | Identical `#d=` redirect stubs → `/tapper/` (`scripts/write-tapper-redirects.sh`) |
 | `sw.js` · `_headers` · `_redirects` · `scripts/stage-worker-assets.sh` · `scripts/deploy-hostinger-static.mjs` · `scripts/setup-cloudflare-dns.mjs` · `scripts/verify-cf-dns-cutover.sh` | Hostinger static deploy + Cloudflare DNS/SSL cutover for `redmed.live` / SW |
 | `wrangler.jsonc` · `worker/` | **Non-product leftover** — do not recreate Worker for bands; product host is Hostinger (`docs/domain.md`) |
-| `mcp/redmed-mcp/` | Ops MCP (Hostinger/SSH/Supabase status) — product wall in `AGENTS.md` / `docs/OPS.md` |
+| `mcp/` | RedMed master ops MCP (stdio + remote HTTP: Supabase + Hostinger VPS/SSH; no Assist/`#d=` PHI) — see `docs/mcp.md` / `docs/OPS.md` |
 | `.htaccess` | Hostinger Apache AASA Content-Type (staged into `dist/passerby`) |
 | `apple-app-site-association` · `.well-known/apple-app-site-association` | Universal Links — identical, both locations required (Apple checks root, then `.well-known/`) |
 | `.gitignore` · `.github/` · `.cursor/` | tooling |
@@ -28,8 +28,8 @@ RedMed-V1-Official/
 ├── README.md · AGENTS.md · MAX.md
 ├── owner/                 # App Store wearer app (SwiftUI) + Document/ policy source
 ├── tapper/                # tap pages only — passerby shell, no owner-app features
+├── mcp/                   # RedMed master ops MCP (stdio + remote HTTP: Supabase + Hostinger VPS/SSH; no Assist/#d= PHI)
 ├── worker/                # NON-PRODUCT leftover HTMLRewriter (device aspect hint)
-├── mcp/redmed-mcp/        # ops MCP v0.2 — no ICE/#d=/PHI
 ├── Document/              # hosted Help: index.html = full policy; Document.html = redirect
 ├── privacy/               # /privacy bounce → /Document/#privacy (_redirects + privacy/index.html)
 ├── support/               # App Store Connect Support URL (scripts/publish-github-io.sh)
@@ -49,6 +49,7 @@ RedMed-V1-Official/
 | `docs/STRUCTURE.md` | This map |
 | `docs/DUAL-MAC.md` | MacBook + Mini: Cursor ShipIt repair, prefs/colors sync, `gh` HTTPS push/pull |
 | `docs/domain.md` | `redmed.live` Namecheap → Cloudflare DNS/SSL → Hostinger static |
+| `docs/mcp.md` | RedMed master ops MCP (`mcp/`) — Supabase + Hostinger VPS/SSH, stdio + `mcp.redmed.live`, no PHI |
 | `docs/OPS.md` | VPS / MCP / Supabase / secrets — ops only, product wall |
 | `docs/AUDIT-V1-GOLIVE.md` | V1 go-live deployability audit |
 | `docs/NFC-RESTORE.md` | CoreNFC entitlement restore |
