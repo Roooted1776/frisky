@@ -26,6 +26,7 @@ frisky/
 ├── README.md · AGENTS.md · MAX.md
 ├── owner/                 # App Store wearer app (SwiftUI) + Document/ policy source
 ├── tapper/                # tap pages only — passerby shell, no owner-app features
+├── mcp/                   # RedMed ops MCP (Cursor stdio + Supabase; no Assist/#d= PHI)
 ├── worker/                # redmed-emergency HTMLRewriter (device aspect hint)
 ├── Document/              # hosted Help: index.html = full policy; Document.html = redirect
 ├── privacy/               # /privacy bounce → /Document/#privacy (_redirects + privacy/index.html)
@@ -46,6 +47,7 @@ frisky/
 | `docs/STRUCTURE.md` | This map |
 | `docs/DUAL-MAC.md` | MacBook + Mini: Cursor ShipIt repair, prefs/colors sync, `gh` HTTPS push/pull |
 | `docs/domain.md` | `redmed.live` Namecheap → Cloudflare DNS/SSL → Hostinger static |
+| `docs/mcp.md` | RedMed ops MCP (`mcp/`) — Supabase project, stdio v1, no PHI |
 | `docs/NFC-RESTORE.md` | CoreNFC entitlement restore |
 | `docs/band-engraving-and-nfc-sourcing.md` | Hardware |
 | `docs/ADVERTISING.md` | Two ad views: wearer/family (DTC) and facility/EMS; shared gate + banned claims |
