@@ -1,7 +1,7 @@
 # RedMed tree map
 
-Single source of truth: **git `main`** → `Roooted1776/frisky`.
-Local path (one clone per machine): **`~/Documents/frisky`** on MacBook and Mac Mini. See [`DUAL-MAC.md`](DUAL-MAC.md).
+Single source of truth: **git `main`** → `Roooted1776/RedMed-V1-Official` (legacy `frisky` until remotes cut over).
+Local path (one clone per machine): **`~/Documents/RedMed-V1-Official`** (legacy `~/Documents/frisky` OK). See [`DUAL-MAC.md`](DUAL-MAC.md).
 
 ## Root (intentionally small)
 
@@ -13,7 +13,9 @@ Only what must live at the deploy / GitHub surface:
 | `AGENTS.md` | Cursor / agent rules (must be easy to find) |
 | `tapper.html` · `index.html` · `card.html` · `get.html` · `get/` · `redmed-emergency.html` | Identical `#d=` redirect stubs → `/tapper/` (`scripts/write-tapper-redirects.sh`) |
 | `sw.js` · `_headers` · `_redirects` · `scripts/stage-worker-assets.sh` · `scripts/deploy-hostinger-static.mjs` · `scripts/setup-cloudflare-dns.mjs` · `scripts/verify-cf-dns-cutover.sh` | Hostinger static deploy + Cloudflare DNS/SSL cutover for `redmed.live` / SW |
-| `wrangler.jsonc` · `worker/` | Optional leftover Worker tooling — product host is Hostinger (`docs/domain.md`) |
+| `wrangler.jsonc` · `worker/` | **Non-product leftover** — do not recreate Worker for bands; product host is Hostinger (`docs/domain.md`) |
+| `mcp/redmed-mcp/` | Ops MCP (Hostinger/SSH/Supabase status) — product wall in `AGENTS.md` / `docs/OPS.md` |
+| `.htaccess` | Hostinger Apache AASA Content-Type (staged into `dist/passerby`) |
 | `apple-app-site-association` · `.well-known/apple-app-site-association` | Universal Links — identical, both locations required (Apple checks root, then `.well-known/`) |
 | `.gitignore` · `.github/` · `.cursor/` | tooling |
 
@@ -22,18 +24,19 @@ No brand PNGs at repo root — canonical in `assets/`, shell-relative copies in 
 ## Folders
 
 ```text
-frisky/
+RedMed-V1-Official/
 ├── README.md · AGENTS.md · MAX.md
 ├── owner/                 # App Store wearer app (SwiftUI) + Document/ policy source
 ├── tapper/                # tap pages only — passerby shell, no owner-app features
-├── worker/                # redmed-emergency HTMLRewriter (device aspect hint)
+├── worker/                # NON-PRODUCT leftover HTMLRewriter (device aspect hint)
+├── mcp/redmed-mcp/        # ops MCP v0.2 — no ICE/#d=/PHI
 ├── Document/              # hosted Help: index.html = full policy; Document.html = redirect
 ├── privacy/               # /privacy bounce → /Document/#privacy (_redirects + privacy/index.html)
 ├── support/               # App Store Connect Support URL (scripts/publish-github-io.sh)
 ├── assets/                # canonical brand PNGs / SVG
-├── docs/                  # all long-form docs (this file, MAX, SECURITY, product notes)
+├── docs/                  # all long-form docs (this file, OPS, domain, PRODUCTION)
 ├── scripts/               # run, deploy, smoke, sync-document, write-tapper-redirects, #d= codec
-├── Pages surface files    # identical redirect stubs, sw, wrangler (see table)
+├── Pages surface files    # redirect stubs, sw, .htaccess, wrangler leftover (see table)
 └── .github/workflows/
 ```
 
@@ -46,6 +49,8 @@ frisky/
 | `docs/STRUCTURE.md` | This map |
 | `docs/DUAL-MAC.md` | MacBook + Mini: Cursor ShipIt repair, prefs/colors sync, `gh` HTTPS push/pull |
 | `docs/domain.md` | `redmed.live` Namecheap → Cloudflare DNS/SSL → Hostinger static |
+| `docs/OPS.md` | VPS / MCP / Supabase / secrets — ops only, product wall |
+| `docs/AUDIT-V1-GOLIVE.md` | V1 go-live deployability audit |
 | `docs/NFC-RESTORE.md` | CoreNFC entitlement restore |
 | `docs/band-engraving-and-nfc-sourcing.md` | Hardware |
 | `docs/ADVERTISING.md` | Two ad views: wearer/family (DTC) and facility/EMS; shared gate + banned claims |

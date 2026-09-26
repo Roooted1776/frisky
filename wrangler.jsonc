@@ -1,9 +1,9 @@
-// Cloudflare Workers — RedMed passerby emergency shell (static assets + device hint).
-// Production Worker: redmed-emergency (dashboard Settings → Domains & Routes / Observability).
+// NON-PRODUCT LEFTOVER — do not recreate Worker redmed-emergency for bands.
+// Product write base is Hostinger static https://redmed.live/tapper/ (docs/domain.md).
+// Kept only so historical device-aspect HTMLRewriter tooling still builds locally.
+// Cloudflare Workers — passerby emergency shell (static assets + device hint).
 // build.command stages public shell → dist/passerby before deploy / versions upload
 // Worker injects data-device from UA / CF-Device-Type; client refines with viewport aspect.
-// NOT the band write base and not used for the product shell (docs/domain.md):
-// bands point at https://redmed.live/tapper/ (Hostinger). workers.dev /tapper/ 404s.
 {
   "name": "redmed-emergency",
   "main": "worker/index.js",

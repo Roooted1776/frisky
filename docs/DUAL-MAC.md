@@ -4,10 +4,10 @@ Hub is GitHub. Each Mac is a client. They never push to each other.
 
 | Machine | Clone | Origin | My Machines worker name |
 |---------|--------|--------|-------------------------|
-| MacBook Air | `~/Documents/frisky` | `https://github.com/Roooted1776/frisky.git` | `macbook-air` |
-| Mac Mini | `~/Documents/frisky` | same | `mac-mini` |
+| MacBook Air | `~/Documents/RedMed-V1-Official` | `https://github.com/Roooted1776/RedMed-V1-Official.git` | `macbook-air` |
+| Mac Mini | `~/Documents/RedMed-V1-Official` | same | `mac-mini` |
 
-On the current MacBook Air that is `/Users/claude/Documents/frisky`. Mini uses the same `~/Documents/frisky` even if the username differs. One clone per machine. GitHub Desktop may sit on that clone. Do not let it make a second folder.
+Legacy path `~/Documents/frisky` → `Roooted1776/frisky` is fine until you re-clone. Prefer V1 Official as the remote name. One clone per machine. GitHub Desktop may sit on that clone. Do not let it make a second folder.
 
 HTTPS + `gh` (port 443). School/cafe Wi‑Fi often blocks SSH:22, and `Roooted1776` has no GitHub SSH keys. Do not copy Cloud Agent tokens onto either Mac.
 
@@ -18,27 +18,27 @@ Managed Linux Cloud Agents cover the static Pages / tapper shell. For iOS (`owne
 Do this once per Mac (Terminal.app, after §2 git is green):
 
 ```bash
-~/Documents/frisky/scripts/setup-mac-worker.sh install
-~/Documents/frisky/scripts/setup-mac-worker.sh login
+~/Documents/RedMed-V1-Official/scripts/setup-mac-worker.sh install
+~/Documents/RedMed-V1-Official/scripts/setup-mac-worker.sh login
 ```
 
 Then leave a worker running:
 
 ```bash
 # MacBook Air (day-to-day)
-~/Documents/frisky/scripts/setup-mac-worker.sh start macbook-air
+~/Documents/RedMed-V1-Official/scripts/setup-mac-worker.sh start macbook-air
 
 # Mac Mini (always-on; add --computer-use when the agent must drive Xcode / GUI)
-~/Documents/frisky/scripts/setup-mac-worker.sh start mac-mini
+~/Documents/RedMed-V1-Official/scripts/setup-mac-worker.sh start mac-mini
 # or:
-~/Documents/frisky/scripts/setup-mac-worker.sh start mac-mini --computer-use
+~/Documents/RedMed-V1-Official/scripts/setup-mac-worker.sh start mac-mini --computer-use
 ```
 
 Keep that Terminal window open (or run under a launch agent you trust). Check from either Mac:
 
 ```bash
-~/Documents/frisky/scripts/setup-mac-worker.sh status
-~/Documents/frisky/scripts/setup-mac-worker.sh debug
+~/Documents/RedMed-V1-Official/scripts/setup-mac-worker.sh status
+~/Documents/RedMed-V1-Official/scripts/setup-mac-worker.sh debug
 ```
 
 ### Pick where a task runs
@@ -49,7 +49,7 @@ Keep that Terminal window open (or run under a launch agent you trust). Check fr
 | Xcode / Simulator / device / Keychain-adjacent | `mac-mini` (or local Desktop on that Mac) |
 | Laptop-local tools while Air is open | `macbook-air` |
 
-From [cursor.com/agents](https://cursor.com/agents) (or phone): environment dropdown → **Cloud** (Linux) or **macbook-air** / **mac-mini**. From Slack/GitHub/Linear: `worker=mac-mini` or `worker=macbook-air` (name must match `--name`, same Cursor user, worker started inside `~/Documents/frisky`).
+From [cursor.com/agents](https://cursor.com/agents) (or phone): environment dropdown → **Cloud** (Linux) or **macbook-air** / **mac-mini**. From Slack/GitHub/Linear: `worker=mac-mini` or `worker=macbook-air` (name must match `--name`, same Cursor user, worker started inside `~/Documents/RedMed-V1-Official`).
 
 With `--computer-use` on Mini: first start installs **Cursor Computer Use**; grant Accessibility + Screen Recording in System Settings → Privacy & Security (to that helper, not Terminal / Cursor.app).
 
@@ -62,9 +62,9 @@ Desktop ShipIt is failing to replace `/Applications/Cursor.app` (quarantine / `c
 Run from **Terminal.app**, not Cursor:
 
 ```bash
-~/Documents/frisky/scripts/fix-cursor-update-macos.sh diagnose
-~/Documents/frisky/scripts/fix-cursor-update-macos.sh repair
-~/Documents/frisky/scripts/fix-cursor-update-macos.sh reinstall-prep
+~/Documents/RedMed-V1-Official/scripts/fix-cursor-update-macos.sh diagnose
+~/Documents/RedMed-V1-Official/scripts/fix-cursor-update-macos.sh repair
+~/Documents/RedMed-V1-Official/scripts/fix-cursor-update-macos.sh reinstall-prep
 ```
 
 Then: empty Trash → download https://cursor.com/download → install **one** copy into `/Applications` (not Downloads, not the mounted DMG) → open it.
@@ -82,15 +82,15 @@ Theme and color overrides live in `~/Library/Application Support/Cursor/User/set
 On the Mac that already looks right (MacBook **or** Mini):
 
 ```bash
-~/Documents/frisky/scripts/sync-cursor-settings-macos.sh export
+~/Documents/RedMed-V1-Official/scripts/sync-cursor-settings-macos.sh export
 ```
 
-AirDrop / USB / `scp` the tarball (`~/Documents/frisky/.local/cursor-user-sync/cursor-user-sync.tar.gz`) to the other Mac. Quit Cursor there, then:
+AirDrop / USB / `scp` the tarball (`~/Documents/RedMed-V1-Official/.local/cursor-user-sync/cursor-user-sync.tar.gz`) to the other Mac. Quit Cursor there, then:
 
 ```bash
-~/Documents/frisky/scripts/sync-cursor-settings-macos.sh import
+~/Documents/RedMed-V1-Official/scripts/sync-cursor-settings-macos.sh import
 # or: ... import /path/to/cursor-user-sync.tar.gz
-~/Documents/frisky/scripts/sync-cursor-settings-macos.sh status
+~/Documents/RedMed-V1-Official/scripts/sync-cursor-settings-macos.sh status
 ```
 
 Reload Window. Bundle stays under `.local/` (gitignored) — do not commit it (MCP tokens can sit in `~/.cursor/mcp.json`).
@@ -103,12 +103,12 @@ Same steps on MacBook Air and Mini:
 
 ```bash
 # already cloned (either Mac):
-~/Documents/frisky/scripts/setup-mac-git.sh
+~/Documents/RedMed-V1-Official/scripts/setup-mac-git.sh
 
 # MacBook or Mini with no clone yet:
 # install Homebrew if missing, then:
-gh repo clone Roooted1776/frisky ~/Documents/frisky
-~/Documents/frisky/scripts/setup-mac-git.sh
+gh repo clone Roooted1776/RedMed-V1-Official ~/Documents/RedMed-V1-Official
+~/Documents/RedMed-V1-Official/scripts/setup-mac-git.sh
 ```
 
 The script logs you in as **Roooted1776** over HTTPS if needed, pins `origin`, refuses extra remotes, sets repo identity to `Max` / `maxaguilaraasted@gmail.com` (overwrites school / `mrmax115` / Cursor Agent emails), then `fetch` + `pull --ff-only` + `push --dry-run`.
@@ -144,7 +144,7 @@ Any-location smoke (home, school, cafe): `gh auth status` and `git fetch` both s
 | Cursor “Reconnect failed” | Tunnel attach. Reload Window, or open the agent in the browser. Not a git failure. |
 | Cursor “couldn’t update” | Section 1. Do not keep clicking Try Again. |
 | Theme/colors don’t match the other Mac | Section 1 “Cursor settings + colors”. Export on the good Mac, import on the other; install listed theme extensions. |
-| Machine missing in agents environment dropdown | Section 0. Worker process stopped, wrong Cursor login, or not started inside `~/Documents/frisky`. Run `setup-mac-worker.sh status` / `debug`. |
+| Machine missing in agents environment dropdown | Section 0. Worker process stopped, wrong Cursor login, or not started inside `~/Documents/RedMed-V1-Official`. Run `setup-mac-worker.sh status` / `debug`. |
 | `worker=mac-mini` rejected / wrong repo | Worker name or git remote mismatch. Restart with `start mac-mini` from the frisky clone. No silent fallback to Linux. |
 | Only Air shows online, not Mini | Mini worker not started (or asleep / offline). Section 0 on the Mini. |
-| Wrong remote `rooted1776/risky` | Does not exist. Repo is `Roooted1776/frisky` (three o’s). |
+| Wrong remote `rooted1776/risky` | Does not exist. Repo is `Roooted1776/RedMed-V1-Official` (three o’s). |

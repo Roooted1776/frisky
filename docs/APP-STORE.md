@@ -33,7 +33,7 @@ parked; review notes + Promotional Text below are pack/Share only).
 | Encryption | Exempt (CryptoKit AES-GCM pack + public client key; `ITSAppUsesNonExemptEncryption` = false) |
 | Tracking | No |
 | App Privacy | Data Not Collected |
-| Privacy Policy URL | TBD — must serve the **same** Help → Privacy text (`/Document/` = `Document/index.html`, lockstep with in-app `owner/RedMed/Document/Document.html`); never a second policy tree |
+| Privacy Policy URL | **`https://redmed.live/Document/`** once Phase 1 DNS cutover is green (same Help → Privacy text as `Document/index.html` / in-app `owner/RedMed/Document/Document.html`); never `redmed-privacy` or jsDelivr |
 | Support | help.RedMed@gmail.com + `support/index.html` (troubleshooting only — never request full profiles; delete threads when resolved) |
 | Regulated medical device | No |
 | Contact | help.RedMed@gmail.com |
