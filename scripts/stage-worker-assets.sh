@@ -35,6 +35,10 @@ copy Document
 copy privacy
 copy support
 copy .well-known
+# Hostinger Apache AASA Content-Type (CF _headers is ignored on origin)
+if [[ -f .htaccess ]]; then
+  cp -a .htaccess "$OUT/.htaccess"
+fi
 
 # Sanity: Aid tab present, no NFC tab.
 SHELL="$OUT/tapper/index.html"
