@@ -1,0 +1,20 @@
+# Hostinger Apache — AASA Content-Type + basic static hints.
+# Cloudflare _headers is ignored on Hostinger origin; this file is staged into
+# dist/passerby by scripts/stage-worker-assets.sh when present at repo root.
+
+<IfModule mod_headers.c>
+  <Files "apple-app-site-association">
+    Header set Content-Type "application/json"
+  </Files>
+</IfModule>
+
+<IfModule mod_mime.c>
+  AddType application/json .well-known/apple-app-site-association
+</IfModule>
+
+# Serve AASA without forcing .json extension
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^apple-app-site-association$ - [T=application/json]
+  RewriteRule ^\.well-known/apple-app-site-association$ - [T=application/json]
+</IfModule>

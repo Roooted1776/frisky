@@ -22,12 +22,12 @@ band URL `#d=` fragment only — the browser decodes it on the phone.
 
 | Path | Status |
 |------|--------|
-| Product HTML app | Hostinger site `u666300215`, files in `public_html` / plan IP **`195.35.60.70`**. Deploy: `bash scripts/stage-worker-assets.sh` then `node scripts/deploy-hostinger-static.mjs redmed.live` (`HOSTINGER_API_TOKEN`). |
+| Product HTML app | Hostinger site `u666300215`, files in `public_html` / plan IP **`195.35.60.70`**. Deploy: `bash scripts/stage-worker-assets.sh` then `node scripts/deploy-hostinger-static.mjs redmed.live` (`HOSTINGER_API_TOKEN`). Stage includes `.htaccess` for AASA Content-Type on Apache. |
 | Hostinger domain product | **None** — domains portfolio is empty. Website hostname `redmed.live` lives on the hosting plan only. |
-| Public DNS | Namecheap parking until Cloudflare NS cutover (`dns1`/`dns2.registrar-servers.com`). |
+| Public DNS | **Parking** as of V1 go-live audit — Hostinger `dns-parking` NS / parked HTML on `https://redmed.live/tapper/`. Must finish Cloudflare NS cutover before bands use this host. |
 | Cloudflare DNS + SSL | **Cutover ready** — `node scripts/setup-cloudflare-dns.mjs` (needs `CLOUDFLARE_API_TOKEN`), then Namecheap Custom DNS → Cloudflare NS. Verify: `bash scripts/verify-cf-dns-cutover.sh`. |
-| Cloudflare Worker `redmed-emergency` | **Not used** for the product shell. Do not recreate for bands. |
-| Public GitHub Pages `Roooted1776.github.io/tapper/` | **Backup** for already-written bands. Keep publishing (`scripts/publish-github-io.sh`). |
+| Cloudflare Worker `redmed-emergency` | **Non-product leftover** — do not recreate for bands. |
+| Public GitHub Pages `Roooted1776.github.io/tapper/` | **Backup** (and current live Assist while `redmed.live` parks). Keep publishing (`scripts/publish-github-io.sh`). |
 
 Smoke after DNS: `BASE=https://redmed.live bash scripts/smoke-pages.sh`.
 Origin check (DNS independent): `BASE=http://195.35.60.70 HOST_HEADER=redmed.live bash scripts/smoke-pages.sh`.
