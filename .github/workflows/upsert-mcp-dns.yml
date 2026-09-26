@@ -1,0 +1,22 @@
+# One-shot: grey-cloud A mcp.redmed.live → VPS (for Traefik LE).
+# Uses repo secret CLOUDFLARE_API_TOKEN. workflow_dispatch only.
+name: Upsert mcp.redmed.live DNS
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dns:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Upsert A mcp → 2.25.249.204 (dns-only)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node scripts/upsert-mcp-dns.mjs

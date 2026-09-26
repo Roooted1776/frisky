@@ -1,8 +1,22 @@
 /**
- * Non-stdio smoke: call the same logic paths the MCP tools use.
- * Run: SUPABASE_*=… npm run smoke
+ * Non-stdio smoke for RedMed master MCP backends.
+ * Run: npm run smoke  (loads mcp/.env if present)
  */
 
+import { loadDotEnv } from "./dotenv.js";
+import {
+  hostingerTokenPresent,
+  identityFilePresent,
+  resolveExecMode,
+  resolveVpsSshConfig,
+} from "./env.js";
+import {
+  REDMED_DOMAIN,
+  REDMED_VPS_ID,
+  listVirtualMachines,
+  listWebsites,
+} from "./hostinger.js";
+import { sshProbe } from "./ssh.js";
 import {
   DEFAULT_SUPABASE_URL,
   PROJECT_REF,
@@ -10,18 +24,28 @@ import {
   readEnvPresence,
   resolveSupabaseUrl,
 } from "./supabase.js";
+import { SERVER_VERSION } from "./server.js";
 
 async function main() {
+  loadDotEnv();
+
   const presence = readEnvPresence();
   console.log(
     JSON.stringify(
       {
         step: "redmed_ping",
         server: "redmed-mcp",
-        version: "0.1.0",
+        version: SERVER_VERSION,
+        role: "master",
         projectRef: PROJECT_REF,
-        env: presence,
+        execMode: resolveExecMode(),
+        env: {
+          ...presence,
+          hostingerToken: hostingerTokenPresent(),
+          vpsIdentity: identityFilePresent(),
+        },
         defaultUrl: DEFAULT_SUPABASE_URL,
+        ssh: resolveVpsSshConfig(),
       },
       null,
       2
@@ -113,15 +137,67 @@ async function main() {
     );
   }
 
-  if (!healthRes.ok && !key) {
-    console.error("Smoke: set SUPABASE_PUBLISHABLE_KEY and/or SUPABASE_SECRET_KEY for a full check.");
-    process.exit(2);
-  }
-  if (!healthRes.ok) {
-    console.error("Smoke: health endpoint not reachable.");
+  const vms = await listVirtualMachines();
+  const vm = vms.data?.find((v) => v.id === REDMED_VPS_ID) ?? null;
+  console.log(
+    JSON.stringify(
+      {
+        step: "hostinger_vps_info",
+        ok: vms.ok && Boolean(vm),
+        error: vms.error,
+        vm: vm
+          ? {
+              id: vm.id,
+              hostname: vm.hostname,
+              state: vm.state,
+              ipv4: vm.ipv4?.[0]?.address,
+            }
+          : null,
+      },
+      null,
+      2
+    )
+  );
+
+  const sites = await listWebsites(REDMED_DOMAIN);
+  console.log(
+    JSON.stringify(
+      {
+        step: "hostinger_websites",
+        ok: sites.ok,
+        error: sites.error,
+        total: sites.data?.meta?.total ?? sites.data?.data?.length ?? 0,
+      },
+      null,
+      2
+    )
+  );
+
+  const ssh = await sshProbe();
+  console.log(
+    JSON.stringify(
+      {
+        step: "hostinger_ssh_probe",
+        ok: ssh.ok,
+        detail: ssh.detail,
+        mode: resolveExecMode(),
+        error: ssh.result.error,
+      },
+      null,
+      2
+    )
+  );
+
+  const failures: string[] = [];
+  if (!healthRes.ok) failures.push("supabase health");
+  if (!vms.ok || !vm) failures.push("hostinger vps");
+  if (!ssh.ok) failures.push("ssh");
+
+  if (failures.length) {
+    console.error(`Smoke: failed — ${failures.join(", ")}`);
     process.exit(1);
   }
-  console.error("Smoke: ok");
+  console.error("Smoke: ok (master stack)");
 }
 
 main().catch((err) => {

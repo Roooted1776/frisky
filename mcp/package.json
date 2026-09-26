@@ -1,25 +1,27 @@
 {
   "name": "redmed-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "RedMed ops MCP server (stdio) — Supabase-backed, no Assist/#d= PHI",
+  "description": "RedMed master ops MCP (stdio) — Supabase + Hostinger VPS/SSH + static host, no Assist/#d= PHI",
   "type": "module",
   "engines": {
     "node": ">=20"
   },
   "scripts": {
     "start": "tsx src/index.ts",
+    "start:http": "tsx src/http.ts",
     "typecheck": "tsc --noEmit",
-    "smoke": "tsx src/smoke.ts"
+    "smoke": "tsx src/smoke.ts",
+    "smoke:remote": "tsx src/remote-smoke.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.0",
     "@supabase/supabase-js": "^2.89.0",
+    "tsx": "^4.20.0",
     "zod": "^3.25.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
-    "tsx": "^4.20.0",
     "typescript": "^5.9.0"
   }
 }
