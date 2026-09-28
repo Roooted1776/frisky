@@ -1,0 +1,6 @@
+# RedMed — /assets/ cache headers (from ../../_headers, /assets/pheart.png /assets/BrandLogo.png /assets/BrandWordmark.png)
+<IfModule mod_headers.c>
+  <FilesMatch "^(pheart\.png|BrandLogo\.png|BrandWordmark\.png)$">
+    Header set Cache-Control "public, max-age=604800, stale-while-revalidate=2592000"
+  </FilesMatch>
+</IfModule>

@@ -1,0 +1,18 @@
+# RedMed — /tapper/ shell headers (from ../../_headers, /tapper /tapper/ /tapper/index.html /tapper/*)
+<IfModule mod_headers.c>
+  # Blanket bundle for everything under /tapper/
+  Header set Cache-Control "public, max-age=60, stale-while-revalidate=86400"
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "no-referrer"
+  Header set X-Frame-Options "DENY"
+  Header set Permissions-Policy "camera=(), microphone=(), payment=(), usb=(), interest-cohort=()"
+  Header set Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; media-src 'self' blob: data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; worker-src 'self'; connect-src 'self' https://overpass-api.de; manifest-src 'self'; upgrade-insecure-requests"
+
+  # Overrides — Cache-Control only, security headers above still apply
+  <FilesMatch "^sw\.js$">
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+  </FilesMatch>
+  <FilesMatch "^(pheart\.png|BrandLogo\.png|BrandWordmark\.png)$">
+    Header set Cache-Control "public, max-age=604800, stale-while-revalidate=2592000"
+  </FilesMatch>
+</IfModule>

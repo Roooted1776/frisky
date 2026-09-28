@@ -1,0 +1,6 @@
+# RedMed — AASA content-type (from ../../_headers, /.well-known/apple-app-site-association)
+<IfModule mod_headers.c>
+  <FilesMatch "^apple-app-site-association$">
+    Header set Content-Type "application/json"
+  </FilesMatch>
+</IfModule>
