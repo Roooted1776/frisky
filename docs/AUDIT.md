@@ -1,7 +1,7 @@
 # RedMed codebase audit
 
 **Repo:** [Roooted1776/frisky](https://github.com/Roooted1776/frisky)  
-**Checked:** 2026-09-08 against `main` (post Document.html + entitlements conflict fix)  
+**Checked:** 2026-10-02 against `main` (HEAD `e28c35a`, Hostinger tapper shell Sep 28)  
 **Method:** static read of Swift / HTML / CI / docs on this tree, plus live HTTP probes. No iOS Simulator here (Linux VM). No secrets found that needed rotation.
 
 RedMed is a native iOS medical ID plus a static passerby HTML shell. There is no application server and no profile API.
